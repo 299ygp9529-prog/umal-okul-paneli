@@ -43,7 +43,7 @@
     if (error || !rol) {
       girisGoster();
       $('#girisBilgi').textContent = error ? 'Sunucuya ulaşılamadı: ' + hataYaz(error) : 'Bu e-postanın panele erişimi yok. Okul yönetiminden eklenmenizi isteyin.';
-      await sb.auth.signOut();
+      await sb.auth.signOut({ scope: 'local' });
       return;
     }
     D.rol = rol;
@@ -81,7 +81,7 @@
   $('#kod').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#girisYap').click(); });
   $('#eposta').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#kodGonder').click(); });
   $('#geri').onclick = () => { $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#girisBilgi').textContent = ''; };
-  $('#cikis').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  $('#cikis').onclick = async () => { await sb.auth.signOut({ scope: 'local' }); location.reload(); };
 
   // Masaüstü simgesi: Edge / Chrome "uygulama olarak yükle" (tek tıkla açılır, adres çubuğu yok).
   let kurulum = null;
