@@ -506,3 +506,13 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .pj-dugme.pj-ac { color: #4fd18b; border-color: #4fd18b; } .pj-dugme.pj-kapa { color: #ff5d6c; border-color: #ff5d6c; }
 @media (max-width: 1100px) { .pj-kutular { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } .pj-satir { grid-template-columns: 1fr; } }
 .pj-ust b { white-space: nowrap; } .pj-dugme { flex: none; white-space: nowrap; padding: 2px 6px; }
+
+/* Rehberlik: sınıf açıkken üst kısım gizli, plan ekranı doldurur */
+#icerik.reh-acik > h1, #icerik.reh-acik #rehIc > .satir { display: none; }
+#icerik.reh-acik #rehIc { margin-top: 0 !important; }
+#icerik.reh-acik .sinav-ust { margin-top: 0; flex-wrap: nowrap; } #icerik.reh-acik .sinav-ust > .soluk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#icerik.reh-acik .turuncu-neonlar { flex-wrap: nowrap; flex: none; } #icerik.reh-acik .turuncu-neonlar .birincil { white-space: nowrap; padding: 7px 12px; }
+#rehGeri { white-space: nowrap; flex: none; }
+.pj-sayi { font-size: 12.5px; font-weight: 800; color: var(--sv); }
+.pj-cubuk { height: 5px; border-radius: 3px; background: rgba(42,68,104,.7); margin-top: 7px; overflow: hidden; } .pj-cubuk i { display: block; height: 100%; background: var(--sv); box-shadow: 0 0 6px var(--sv); }
+@media (max-width: 1200px) { #icerik.reh-acik .sinav-ust, #icerik.reh-acik .turuncu-neonlar { flex-wrap: wrap; } }

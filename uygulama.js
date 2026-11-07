@@ -141,7 +141,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici);
-    $('#icerik').classList.remove('salon-acik', 'sinif-acik');
+    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     b.ciz().catch(e => { $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
   }
@@ -1327,20 +1327,28 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return baslikSatiri(f.id, esc(f.tanim.ad), `${esc(gunAdi(f.tanim.baslangic || bugunISO()))}${f.tanim.bitis ? ' – ' + esc(gunAdi(f.tanim.bitis)) : ''} · ${ss.length} sınıf · ${d}/${n} doldurdu`, acikMi(f) ? '<span class="durum-etiketi yeşil">açık</span>' : '<span class="durum-etiketi soluk">kapalı</span>') + (acik === f.id ? '<div id="rehAyrinti"></div>' : '');
       }).join('') + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
       if (acik === 'proje') projeBolumu();
-      else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : anketSiniflari(form)[0]; ciz(); }
+      else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : null; ciz(); }
+      else $('#icerik').classList.remove('reh-acik');
     };
     const ciz = () => {
       const ss = anketSiniflari(form);
       const k = katilanlar(form, sinif).slice().sort((x, y) => (+x.no) - (+y.no));
       const dolu = k.filter(x => cevap(form, sinif, String(x.no)));
       const cok = dolu.filter(x => isaretler(form, cevap(form, sinif, String(x.no))).length >= 3);
-      $('#rehAyrinti').innerHTML = `<div class="kart">
-        <div class="cipler" id="rehSinif">${ss.map(s => { const kk = katilanlar(form, s), n = kk.filter(x => cevap(form, s, String(x.no))).length; return `<button class="cip ${s === sinif ? 'secili' : ''}" data-s="${esc(s)}">${esc(s)} ${n}/${kk.length}</button>`; }).join('')}</div>
-        <div class="kutular"><div><b class="neon">${dolu.length}</b><span>doldurdu</span></div><div><b class="turuncu">${k.length - dolu.length}</b><span>bekleyen</span></div><div><b class="kirmizi">${cok.length}</b><span>3+ işaret</span></div></div>
-        ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}
-        <div class="dugmeler"><button class="birincil" id="rExcel">${esc(sinif)} Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">${esc(sinif)} PDF</button></div>
-        </div>`;
-      $('#rehSinif').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); } };
+      if (!sinif) {   // bütün sınıflar: seviye satırları
+        $('#icerik').classList.remove('reh-acik');
+        $('#rehAyrinti').innerHTML = `<div class="kart">${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length; return `<button class="pj-kutu ${n && n === kk.length ? 'acik' : ''}" data-s="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${kk.length}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, kk.length)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}</div>`;
+        $('#rehAyrinti').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); window.scrollTo(0, 0); } };
+        return;
+      }
+      $('#icerik').classList.add('reh-acik');
+      $('#rehAyrinti').onclick = null;
+      $('#rehAyrinti').innerHTML = `<div class="sinav-ust"><button class="ikincil" id="rehGeri">← Sınıflar</button><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(form.tanim.ad)}</span>
+          <span class="turuncu-neonlar"><span class="t-neon">${dolu.length} doldurdu</span><span class="t-neon">${k.length - dolu.length} bekleyen</span><span class="t-neon kirmizi-neon">${cok.length} öğrenci 3+ işaret</span><button class="birincil" id="rExcel">Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">PDF</button></span></div>
+        ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}`;
+      $('#rehGeri').onclick = () => { sinif = null; ciz(); };
+      planiSigdir();
+
       fotolariYukle(k.map(x => String(x.no)));
       $('#rehAyrinti').querySelectorAll('[data-ogr]').forEach(b => b.onclick = () => {
         const x = k.find(y => String(y.no) === b.dataset.ogr), c = cevap(form, sinif, String(x.no));
