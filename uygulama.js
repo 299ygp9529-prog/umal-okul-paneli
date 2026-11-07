@@ -123,6 +123,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici);
+    $('#icerik').classList.remove('salon-acik');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     b.ciz().catch(e => { $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
   }
@@ -316,18 +317,35 @@
     const kisi = (masa - 14 - 7) / 2 - 16;                                        // fotoğraf eni
     return Math.round(Math.max(190, kisi / .77 + 66 + 12 + 14 + 12));
   }
+  // Planın tamamı kaydırmadan ekrana sığsın: satır yüksekliği kalan ekran yüksekliğine göre (bilgisayarda)
+  function planiSigdir() {
+    document.querySelectorAll('.masalar[data-h]').forEach(el => {
+      const H = +el.dataset.h, en = +el.dataset.en;
+      let satir = en;
+      if (window.innerWidth > 760) {
+        const ust = el.getBoundingClientRect().top + window.scrollY;
+        const bos = window.innerHeight - ust - 22 - (+el.dataset.arka ? 30 : 0) - (el.closest('.sinif-plan').nextElementSibling ? 54 : 0);
+        satir = Math.max(92, Math.min(en, Math.floor(bos / H)));
+      }
+      el.style.setProperty('--satir', satir + 'px');
+      el.classList.toggle('sikisik', satir < 176);
+      el.classList.toggle('cok-sikisik', satir < 150);
+    });
+  }
+  window.addEventListener('resize', () => { clearTimeout(planiSigdir.z); planiSigdir.z = setTimeout(planiSigdir, 120); });
+  document.addEventListener('fullscreenchange', () => setTimeout(planiSigdir, 80));
   function oturmaPlani(salon, L, gel) {
     const lay = salonDuzeni(salon, L), bySira = Object.fromEntries(L.map(r => [r.sira, r]));
     // masalar koridora doğru genişler (Atlas desk_extend: koridorun %30'u kalır)
     const xs = [...new Set(lay.desks.map(d => d[0]))].sort((a, b) => a - b);
     let bos = 1e9; lay.desks.forEach(([x, y, w]) => lay.desks.forEach(([x2, y2]) => { if (y2 === y && x2 > x) bos = Math.min(bos, x2 - x - w); }));
     const ext = bos < 1e9 && bos > 0 ? bos * 0.7 : 0, ux = 100 / (lay.W + ext), SATIR = sinifSatir(lay, ext);
-    const desks = lay.desks.map(([x, y, w, ns]) => `<div class="masa" style="left:calc(${x * ux}% + 3px);width:calc(${(w > 1 ? w + ext : w) * ux}% - 6px);top:${y * SATIR}px;height:${SATIR - 12}px;grid-template-columns:repeat(${ns.length},1fr)">${ns.map(n => siraKarti(bySira[n], n, bySira[n] && gel.has(bySira[n].no))).join('')}</div>`).join('');
+    const desks = lay.desks.map(([x, y, w, ns]) => `<div class="masa" style="left:calc(${x * ux}% + 3px);width:calc(${(w > 1 ? w + ext : w) * ux}% - 6px);top:calc(var(--satir) * ${y});height:calc(var(--satir) - 12px);grid-template-columns:repeat(${ns.length},1fr)">${ns.map(n => siraKarti(bySira[n], n, bySira[n] && gel.has(bySira[n].no))).join('')}</div>`).join('');
     const on = lay.on.map(([ad, yer]) => `<span class="on-${yer} ${ad === 'Öğretmen masası' ? 'ogretmen' : /KAPI/.test(ad) ? 'kapi' : ad === 'BEYAZ TAHTA' ? 'beyaz' : 'tahta-on'}">${esc(ad)}</span>`).join('');
     const disarida = L.filter(r => !lay.seats.has(r.sira));
     return `<div class="sinif-plan"><div class="on-serit ${lay.on.length >= 4 ? 'dort' : ''}">${on}</div>
       <div class="plan-govde">${lay.sol ? `<div class="duvar">${lay.sol.split('').join('<br>')}</div>` : '<div class="duvar"></div>'}
-      <div class="masalar" style="height:${lay.H * SATIR}px">${desks}</div>
+      <div class="masalar" data-h="${lay.H}" data-arka="${lay.arka ? 1 : 0}" data-en="${SATIR}" style="--satir:${SATIR}px;height:calc(var(--satir) * ${lay.H})">${desks}</div>
       ${lay.sag ? `<div class="duvar">${lay.sag.split('').join('<br>')}</div>` : '<div class="duvar"></div>'}</div>
       ${lay.arka ? `<div class="arka-duvar">${lay.arka}</div>` : ''}
       ${disarida.length ? `<div class="turuncu kucuk" style="margin-top:8px">Düzen dışı: ${disarida.map(r => `${r.sira} ${esc(baslik(r.ad))} (${esc(r.sinif)})`).join(', ')}</div>` : ''}</div>`;
@@ -380,12 +398,16 @@
       const gel = new Set((v.gelmedi || []).map(g => String(g.no))), st = sinavSaati(secili);
       const dersler = [...new Set(L.map(r => baslik(r.ders || '')).filter(Boolean))];
       const msj = (v.mesajlar || []).filter(m => m.tur !== 'geldi' && m.metin);
-      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi">${esc(dersler.slice(0, 3).join(' / '))}</span>`;
-      $('#ustNeon').innerHTML = `<span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}<span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
+      const hap = `<span class="t-neon">${esc(secili.ders)}${st.aralik ? ' · ' + st.aralik : ''}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span><span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
+      $('#ustNeon').innerHTML = '';
+      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span><button class="ikincil" id="tamEkran" title="Tam ekran">⛶</button>`;
       $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik((secili.gozcu || {})[x] || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span></div>
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
-      $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; ciz(); };
+      $('#icerik').classList.add('salon-acik');
+      $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; $('#icerik').classList.remove('salon-acik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); ciz(); };
+      $('#tamEkran').onclick = () => { const m = $('#icerik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (m.requestFullscreen) m.requestFullscreen().catch(() => {}); else if (m.webkitRequestFullscreen) m.webkitRequestFullscreen(); };
+      planiSigdir();
       if (vurgu) { const k = document.querySelector(`.koltuk[data-ogr="${CSS.escape(vurgu)}"]`); if (k) { k.classList.add('vurgu'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
       fotolariYukle(L.map(r => r.no));
     };
@@ -478,6 +500,7 @@
       const pr = simdikiDers(secili);
       $('#ogrIc').innerHTML = `<div class="sinav-ust"><span class="neon-tabela">${esc(secili)}</span><span class="soluk">${L.length} öğrenci${pr ? ` · şu an ${pr.no}. ders: <span class="sari-yazi" style="font-size:15px">${esc(pr.ders)}</span>${pr.ogretmen.length ? ' · ' + esc(pr.ogretmen.map(baslik).join(', ')) : ''}` : ''}</span></div>
         <div class="soluk kucuk" style="margin-bottom:10px">Okul numarasına göre, öğretmen masasının önünden başlayarak sütun sütun.</div>${sinifOturmaPlani(secili, L)}`;
+      planiSigdir();
       fotolariYukle(L.map(o => o.no));
     };
     $('#ogrAra').oninput = () => {

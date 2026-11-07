@@ -363,3 +363,24 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 .seviye-satir { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 10px; } .seviye-satir .seviye-aciklama { margin: 0; }
 .kyazi small .kno2 { font-style: normal; color: #fff; font-weight: 800; }
 .b-tur { white-space: normal; overflow: visible; text-overflow: clip; max-width: 62%; line-height: 1.35; } .b-ust { align-items: flex-start; }
+
+/* Sığdırma: kart yüksekliği satıra bağlı, fotoğraf kalan yeri doldurur */
+.masa { grid-template-rows: 100%; }
+.koltuk { height: 100%; min-height: 0; }
+.koltuk .foto { flex: 1 1 auto; min-height: 0; width: auto; height: auto; max-width: 100%; align-self: center; aspect-ratio: .77; }
+.masalar.sikisik .kyazi b { font-size: clamp(10px, 10cqi, 13px); }
+.masalar.sikisik .kyazi em { -webkit-line-clamp: 1; font-size: clamp(9.5px, 8.5cqi, 11.5px); }
+.masalar.cok-sikisik .kyazi em { display: none; }
+.masalar.sikisik .koltuk { padding-top: 4px; padding-bottom: 4px; gap: 3px; }
+/* Salon açıkken üst başlık gizlenir, bilgiler salon satırında */
+#icerik.salon-acik > .ust, #icerik.salon-acik > #planlar, #icerik.salon-acik > #planAd, #icerik.salon-acik > #sinavBul { display: none; }
+#icerik.salon-acik .sinav-ust { margin-top: 0; flex-wrap: nowrap; }
+.ders-uzun { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#icerik.salon-acik .turuncu-neonlar { flex-wrap: nowrap; flex: none; }
+#tamEkran { padding: 6px 12px; font-size: 18px; flex: none; }
+#icerik:fullscreen { background: var(--zemin); padding: 14px 20px; overflow: auto; }
+#icerik:-webkit-full-screen { background: var(--zemin); padding: 14px 20px; overflow: auto; }
+@media (max-width: 1100px) { #icerik.salon-acik .sinav-ust { flex-wrap: wrap; } #icerik.salon-acik .turuncu-neonlar { flex-wrap: wrap; } }
+#salonGeri, .neon-tabela { white-space: nowrap; flex: none; }
+#icerik.salon-acik .neon-tabela { font-size: 24px; padding: 2px 14px; }
+.ders-uzun { white-space: normal; text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 15.5px; line-height: 1.2; }
