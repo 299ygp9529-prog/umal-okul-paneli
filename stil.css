@@ -568,3 +568,10 @@ button.og-kutu { cursor: pointer; }
   .gelmedi-etiket { font-size: 7.5px; padding: 1px 3px; }
   .tik-isaret { font-size: 14px; }
 }
+
+/* Bilet: gözcü öğrenci adının karşısında, tam adıyla, turuncu neon */
+.b-yolcu > div:nth-child(2) { flex: 1; min-width: 0; }
+.b-gozcu { flex: none; max-width: 34%; text-align: right; align-self: flex-start; padding: 6px 10px; border: 1.5px solid #ff9a3a; border-radius: 10px; background: rgba(40,20,4,.6); box-shadow: 0 0 8px rgba(255,154,58,.5), inset 0 0 6px rgba(255,154,58,.2); }
+.b-gozcu .b-etk { color: #ffb867; }
+.b-gozcu b { display: block; color: #ffd2a1; font-size: 15px; font-weight: 800; line-height: 1.2; text-shadow: 0 0 8px rgba(255,154,58,.8); overflow-wrap: anywhere; }
+@media (max-width: 760px) { .b-gozcu { max-width: 40%; padding: 5px 8px; } .b-gozcu b { font-size: 13px; } }
