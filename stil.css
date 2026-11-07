@@ -548,3 +548,23 @@ button.og-kutu { cursor: pointer; }
 .sahne .yazi-cay{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:var(--soluk);font-size:13px}
 .sahne .yazi-cay b{color:var(--neon)}
 @media (prefers-reduced-motion: reduce){.sahne .buhar path{animation-duration:7s}}
+
+/* Telefon: oturma planı ekran enine sığar (kaydırma yok); kartta fotoğraf, numara ve ilk ad. Dokununca bilet. */
+.kyazi .ilkad { display: none; }
+@media (max-width: 760px) {
+  .masalar { min-width: 0 !important; } .plan-govde { overflow: visible !important; }
+  .sinif-plan { padding: 8px 4px !important; }
+  .duvar { width: 14px; font-size: 9px; line-height: 1.15; }
+  .on-serit { position: static; height: auto; margin: 0 2px 8px; display: flex; gap: 4px; justify-content: space-between; }
+  .on-serit span { position: static !important; transform: none !important; min-width: 0 !important; height: 24px; font-size: 10.5px; padding: 0 7px; flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .on-serit .on-orta { flex: 1.4 1 0; }
+  .masa { padding: 3px !important; gap: 3px !important; border-radius: 8px !important; }
+  .koltuk { padding: 2px 2px 3px 4px !important; gap: 2px !important; border-radius: 6px !important; }
+  .koltuk .foto { border-radius: 5px; font-size: 11px; }
+  .kyazi b, .kyazi em, .kyazi small { display: none !important; }
+  .kyazi .ilkad { display: block; font-style: normal; font-size: 9.5px; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .koltuk .kno { left: 5px; top: 3px; font-size: 8.5px; padding: 0 3px; }
+  .koltuk.bos .bosyazi { font-size: 9px; }
+  .gelmedi-etiket { font-size: 7.5px; padding: 1px 3px; }
+  .tik-isaret { font-size: 14px; }
+}

@@ -395,12 +395,18 @@
     const c = seviyeRenk(r.sinif);
     return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''} ${r.tamam ? 'tamam' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">${r.tamam ? '<span class="tik-isaret">✓</span>' : ''}
       ${r.etiket === '' ? '' : `<span class="kno">${esc(r.etiket ?? no)}</span>`}${foto(r.no, r.ad)}
-      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}</small></span>
+      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><i class="ilkad">${esc(baslik(String(r.ad || '').trim().split(/\s+/)[0] || ''))}</i><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}</small></span>
       ${gelmedi ? '<span class="gelmedi-etiket">GELMEDİ</span>' : ''}</button>`;
   }
   // satır yüksekliği: kart eni (sayfa enine göre) × fotoğraf oranı + yazı payı; foto büyük, ad sığar
   function sinifSatir(lay, ext) {
     const gen = window.innerWidth > 760;
+    if (!gen) {   // telefon: plan ekran enine sığar; kartta fotoğraf, numara ve ilk ad
+      const mW = window.innerWidth - 32 - 16 - 28;
+      const masa = mW * (2 + ext) / (lay.W + ext) - 6;
+      const kisi = (masa - 6 - 4) / 2 - 6;
+      return Math.round(Math.max(64, kisi / .77 + 26));
+    }
     const mW = Math.max(640, window.innerWidth - (gen ? 220 + 48 : 32) - 20 - 64);   // masaların toplam eni (px)
     const masa = mW * (2 + ext) / (lay.W + ext) - 6;                             // iki kişilik masa eni
     const kisi = (masa - 14 - 7) / 2 - 16;                                        // fotoğraf eni
@@ -428,7 +434,7 @@
     // masalar koridora doğru genişler (Atlas desk_extend: koridorun %30'u kalır)
     const xs = [...new Set(lay.desks.map(d => d[0]))].sort((a, b) => a - b);
     let bos = 1e9; lay.desks.forEach(([x, y, w]) => lay.desks.forEach(([x2, y2]) => { if (y2 === y && x2 > x) bos = Math.min(bos, x2 - x - w); }));
-    const ext = bos < 1e9 && bos > 0 ? bos * 0.7 : 0, ux = 100 / (lay.W + ext), SATIR = sinifSatir(lay, ext);
+    const ext = bos < 1e9 && bos > 0 ? bos * (window.innerWidth > 760 ? 0.7 : 0.9) : 0, ux = 100 / (lay.W + ext), SATIR = sinifSatir(lay, ext);
     const desks = lay.desks.map(([x, y, w, ns]) => `<div class="masa" style="left:calc(${x * ux}% + 3px);width:calc(${(w > 1 ? w + ext : w) * ux}% - 6px);top:calc(var(--satir) * ${y});height:calc(var(--satir) - 12px);grid-template-columns:repeat(${ns.length},1fr)">${ns.map(n => siraKarti(bySira[n], n, bySira[n] && gel.has(bySira[n].no))).join('')}</div>`).join('');
     const on = lay.on.map(([ad, yer]) => `<span class="on-${yer} ${ad === 'Öğretmen masası' ? 'ogretmen' : /KAPI/.test(ad) ? 'kapi' : ad === 'BEYAZ TAHTA' ? 'beyaz' : 'tahta-on'}">${esc(ad)}</span>`).join('');
     const disarida = L.filter(r => !lay.seats.has(r.sira));
