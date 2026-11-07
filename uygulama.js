@@ -350,7 +350,7 @@
     D.planlar = data || [];
     let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null;
     const ciz = async () => {
-      if (!secili) { $('#sinavIc').innerHTML = '<div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok. Öğrenci aranınca sınıfı görünür.</div>'; return; }
+      if (!secili) { $('#ustNeon').innerHTML = ''; $('#sinavIc').innerHTML = '<div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok. Öğrenci aranınca sınıfı görünür.</div>'; return; }
       const { data: sal } = await sb.from('umal_sinav_salon').select('salon,veri,guncel').eq('tarih', secili.tarih).eq('ders', secili.ders);
       yok = {}; (sal || []).forEach(x => { yok[x.salon] = x.veri || {}; });
       if (acikSalon) return salonCiz();
@@ -359,7 +359,8 @@
       const top = salonlar.reduce((t, x) => t + (secili.salonlar[x] || []).length, 0);
       const gelmeyen = salonlar.reduce((t, x) => t + ((yok[x] || {}).gelmedi || []).length, 0);
       const bekleyen = st.basladi ? salonlar.filter(x => !(yok[x] || {}).zaman).length : null;
-      $('#sinavUst').innerHTML = `<span class="turuncu-neonlar"><span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}</span>`;
+      $('#sinavUst').innerHTML = '';
+      $('#ustNeon').innerHTML = `<span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
       $('#sinavIc').innerHTML = `<div class="ist">
           <div><span>Salon</span><b>${salonlar.length}</b></div><div><span>Öğrenci</span><b>${top}</b></div>
           <div><span>Gelmeyen</span><b class="kirmizi">${gelmeyen}</b></div>
@@ -379,15 +380,16 @@
       const gel = new Set((v.gelmedi || []).map(g => String(g.no))), st = sinavSaati(secili);
       const dersler = [...new Set(L.map(r => baslik(r.ders || '')).filter(Boolean))];
       const msj = (v.mesajlar || []).filter(m => m.tur !== 'geldi' && m.metin);
-      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar"><span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}<span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}</span>`;
-      $('#sinavIc').innerHTML = `${seviyeAciklama()}<div class="soluk kucuk" style="margin:-4px 0 10px">Gözcü: ${esc(baslik((secili.gozcu || {})[x] || '—'))}${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</div>
+      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi">${esc(dersler.slice(0, 3).join(' / '))}</span>`;
+      $('#ustNeon').innerHTML = `<span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}<span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
+      $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik((secili.gozcu || {})[x] || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span></div>
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
       $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; ciz(); };
       if (vurgu) { const k = document.querySelector(`.koltuk[data-ogr="${CSS.escape(vurgu)}"]`); if (k) { k.classList.add('vurgu'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
       fotolariYukle(L.map(r => r.no));
     };
-    $('#icerik').innerHTML = `<div class="ust"><h1>Sınav merkezi</h1><div class="ara" style="margin:0;flex:1;max-width:520px"><input id="sinavAra" placeholder="Öğrenci adı ya da numarası: nerede sınava giriyor?"></div></div>
+    $('#icerik').innerHTML = `<div class="ust"><h1>Sınav merkezi</h1><div class="sag-ust"><div class="ara" style="margin:0"><input id="sinavAra" placeholder="Öğrenci adı ya da numarası: nerede sınava giriyor?"></div><div class="turuncu-neonlar" id="ustNeon"></div></div></div>
       <div class="cipler" id="planlar">${D.planlar.map((p, i) => `<button class="cip ${i === 0 ? 'secili' : ''}" data-i="${i}">${esc(gunAdi(p.tarih))} · ${esc(p.ders)}</button>`).join('')}</div>
       <div class="soluk kucuk" id="planAd">${esc((secili && secili.sinav) || '')}</div><div id="sinavBul"></div>
       <div class="sinav-ust" id="sinavUst"></div><div id="sinavIc"></div>`;
