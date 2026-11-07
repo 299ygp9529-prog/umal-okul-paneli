@@ -516,3 +516,17 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .pj-sayi { font-size: 12.5px; font-weight: 800; color: var(--sv); }
 .pj-cubuk { height: 5px; border-radius: 3px; background: rgba(42,68,104,.7); margin-top: 7px; overflow: hidden; } .pj-cubuk i { display: block; height: 100%; background: var(--sv); box-shadow: 0 0 6px var(--sv); }
 @media (max-width: 1200px) { #icerik.reh-acik .sinav-ust, #icerik.reh-acik .turuncu-neonlar { flex-wrap: wrap; } }
+
+/* K-340: öğretmen kutuları (branş branş) */
+.og-gruplar { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.og-grup { border: 1.5px solid var(--sv); border-radius: 12px; padding: 8px 10px 10px; background: color-mix(in srgb, var(--sv) 5%, var(--koyu)); box-shadow: 0 0 8px color-mix(in srgb, var(--sv) 30%, transparent); }
+.og-bas { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.og-bas b { color: var(--sv); text-shadow: 0 0 8px var(--sv); font-size: 14px; }
+.og-sayi { color: var(--soluk); font-size: 12px; font-variant-numeric: tabular-nums; }
+.og-hepsi { margin-left: auto; background: transparent; border: 1px solid var(--sv); color: var(--sv); border-radius: 8px; padding: 3px 10px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.og-kutular { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.og-kutu { position: relative; min-width: 0; min-height: 40px; display: flex; align-items: center; padding: 5px 24px 5px 8px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 8px; color: var(--yazi); font: inherit; font-size: 12px; font-weight: 600; line-height: 1.2; text-align: left; }
+button.og-kutu { cursor: pointer; }
+.og-kutu span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.og-kutu.og-tik { border-color: var(--sv); background: color-mix(in srgb, var(--sv) 16%, var(--koyu)); }
+.og-kutu.og-tik::after { content: "✓"; position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; background: #3ef08a; color: #06202b; font-size: 11px; font-weight: 900; display: grid; place-items: center; box-shadow: 0 0 6px #3ef08a; }

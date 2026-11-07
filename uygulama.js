@@ -897,6 +897,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return `<div class="kart">${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const [n, k] = say(x); return `<button class="pj-kutu ${n && n === k ? 'acik' : ''}" data-${veri}="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${k}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, k)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}${siniflar.filter(x => !/^(9|10|11|12)-/.test(x)).map(x => { const [n, k] = say(x); return `<div class="pj-satir" style="--sv:#5cc8ff"><div class="pj-duzey">Diğer</div><div class="pj-kutular"><button class="pj-kutu" data-${veri}="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${k}</span></div></button></div></div>`; }).join('')}</div>`;
   }
   async function sinifKatilimPlani(a, sinif) {
+    if (sinif === OGRETMEN_ODASI) {   // K-340: öğretmen anketi — branş branş kutular, cevaplayanda tik
+      await programYukle();
+      const k = katilanlar(a, sinif), dolu = new Set(k.filter(x => cevap(a, sinif, String(x.no))).map(x => x.ad));
+      pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">Öğretmenler</span><span class="soluk">${esc(a.tanim.ad)}</span><span class="turuncu-neonlar"><span class="t-neon">${dolu.size} cevapladı</span><span class="t-neon">${k.length - dolu.size} bekleyen</span></span></div>${ogretmenKutulari(k.map(x => x.ad), dolu, false)}`);
+      $('#pencere .pencere-ic').classList.add('genis');
+      return;
+    }
     await ogrencileriYukle();
     const k = katilanlar(a, sinif).slice().sort((x, y) => (+x.no) - (+y.no)), dolu = k.filter(x => cevap(a, sinif, String(x.no)));
     pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(a.tanim.ad)}</span><span class="turuncu-neonlar"><span class="t-neon">${dolu.length} cevapladı</span><span class="t-neon">${k.length - dolu.length} bekleyen</span></span></div>
@@ -1042,6 +1049,45 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     if (q.kosulSoru != null && !q.kosulDeger) return 'Koşul cevabı seçilmedi';
     return null;
   }
+  // K-340: öğretmenin branşı — ders programında en çok girdiği dersin alanı (Rehberlik, proje gibi saatler sayılmaz)
+  const BRANS_SIRA = ['Edebiyat', 'Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Din Kültürü', 'İngilizce', 'Beden Eğitimi', 'Görsel Sanatlar / Müzik', 'Bilişim', 'Diğer'];
+  const BRANS_RENK = { 'Edebiyat': '#ff9a3a', 'Matematik': '#22e8ff', 'Fizik': '#b06bff', 'Kimya': '#3ef08a', 'Biyoloji': '#7ddc4a', 'Tarih': '#ffcf4d', 'Coğrafya': '#4fb8ff', 'Felsefe': '#ff7bc8', 'Din Kültürü': '#e0b070', 'İngilizce': '#ff5d6c', 'Beden Eğitimi': '#5cf0d0', 'Görsel Sanatlar / Müzik': '#d08cff', 'Bilişim': '#8fa6ff', 'Diğer': '#9fb3cc' };
+  function dersBransi(d) {
+    const x = String(d || '').toLocaleLowerCase(tr);
+    if (/rehberlik|proje|girişimcilik|astronomi|sağlık/.test(x)) return null;
+    if (/matematik/.test(x)) return 'Matematik';
+    if (/fizik/.test(x)) return 'Fizik';
+    if (/kimya/.test(x)) return 'Kimya';
+    if (/biyoloji/.test(x)) return 'Biyoloji';
+    if (/edebiyat|metin tahlil|türk dili/.test(x)) return 'Edebiyat';
+    if (/tarih|inkılap/.test(x)) return 'Tarih';
+    if (/coğrafya/.test(x)) return 'Coğrafya';
+    if (/felsefe/.test(x)) return 'Felsefe';
+    if (/din|kur'an|peygamber|ahlak|adab/.test(x)) return 'Din Kültürü';
+    if (/ingilizce/.test(x)) return 'İngilizce';
+    if (/beden|spor/.test(x)) return 'Beden Eğitimi';
+    if (/müzik|görsel|sanat/.test(x)) return 'Görsel Sanatlar / Müzik';
+    if (/bilişim/.test(x)) return 'Bilişim';
+    return 'Diğer';
+  }
+  function ogretmenBranslari() {
+    const say = {};
+    Object.values((D.program || {}).siniflar || {}).forEach(g => Object.values(g).forEach(d => { const b = dersBransi(d.ders); if (b) (d.ogretmen || []).forEach(o => { if (o) { say[o] = say[o] || {}; say[o][b] = (say[o][b] || 0) + 1; } }); }));
+    const out = {};
+    for (const [o, m] of Object.entries(say)) out[o] = Object.entries(m).sort((x, y) => y[1] - x[1] || BRANS_SIRA.indexOf(x[0]) - BRANS_SIRA.indexOf(y[0]))[0][0];
+    return out;
+  }
+  /** Branş branş küçük öğretmen kutuları; tikli olanın kutusunda tik. secilebilir: kutular düğme (data-o="=ad"), başlıkta "Hepsi" (data-og="branş"). */
+  function ogretmenKutulari(adlar, tikli, secilebilir) {
+    const br = ogretmenBranslari(), G = {};
+    adlar.forEach(a => (G[br[a] || 'Diğer'] = G[br[a] || 'Diğer'] || []).push(a));
+    const html = BRANS_SIRA.filter(b => G[b]).map(b => {
+      const L = G[b].sort((x, y) => baslik(x).localeCompare(baslik(y), tr)), n = L.filter(a => tikli.has(a)).length;
+      const kutu = a => `<${secilebilir ? 'button' : 'div'} class="og-kutu ${tikli.has(a) ? 'og-tik' : ''}" ${secilebilir ? `data-o="=${esc(a)}"` : ''} title="${esc(baslik(a))}"><span>${esc(baslik(a))}</span></${secilebilir ? 'button' : 'div'}>`;
+      return `<div class="og-grup" style="--sv:${BRANS_RENK[b]}"><div class="og-bas"><b>${esc(b)}</b><span class="og-sayi">${n}/${L.length}</span>${secilebilir ? `<button class="og-hepsi" data-og="${esc(b)}">${n === L.length ? 'Kaldır' : 'Hepsi'}</button>` : ''}</div><div class="og-kutular">${L.map(kutu).join('')}</div></div>`;
+    }).join('');
+    return html ? `<div class="og-gruplar">${html}</div>` : '<span class="cok-soluk kucuk">Bulunamadı.</span>';
+  }
   function ogretmenListesi() {
     const ad = new Set();
     Object.values((D.program || {}).siniflar || {}).forEach(g => Object.values(g).forEach(d => (d.ogretmen || []).forEach(o => o && ad.add(o))));
@@ -1117,7 +1163,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const eski = [...T.ogretmenler].filter(a => !tumOgretmenler.includes(a));
       const L = tumOgretmenler.concat(eski).filter(a => !q || baslik(a).toLocaleLowerCase(tr).includes(q));
       return `<div class="cipler"><button class="cip ${tumOgretmenler.length && tumOgretmenler.every(a => T.ogretmenler.has(a)) ? 'secili' : ''}" data-o="hepsi">Bütün Öğretmenler</button>${T.ogretmenler.size ? '<button class="cip" data-o="temizle">Temizle</button>' : ''}</div>
-        <div class="cipler">${L.map(a => `<button class="cip kucukcip ${T.ogretmenler.has(a) ? 'secili' : ''}" data-o="=${esc(a)}">${esc(baslik(a))}</button>`).join('') || '<span class="cok-soluk kucuk">Bulunamadı.</span>'}</div>`;
+        ${ogretmenKutulari(L, T.ogretmenler, true)}`;
     };
     const hedefCiz = () => ogretmen()
       ? `<input id="hzOgrAra" placeholder="Öğretmen ara…" value="${esc(ogrAra)}" style="margin:6px 0"><div id="hzOgretmenler">${ogretmenCipleri()}</div>`
@@ -1227,6 +1273,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return ac('anket');
       }
       if (b.dataset.k) { T.kimler = b.dataset.k; ciz(); return; }
+      if (b.dataset.og) {
+        const br = ogretmenBranslari(), L = tumOgretmenler.filter(a => (br[a] || 'Diğer') === b.dataset.og), tam = L.every(a => T.ogretmenler.has(a));
+        L.forEach(a => tam ? T.ogretmenler.delete(a) : T.ogretmenler.add(a));
+        $('#hzOgretmenler').innerHTML = ogretmenCipleri(); durumCiz(); return;
+      }
       if (b.dataset.o) {
         const v = b.dataset.o;
         if (v === 'temizle') T.ogretmenler.clear();
