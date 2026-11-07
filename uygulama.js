@@ -124,7 +124,7 @@
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
-    { id: 'gonder', ad: 'Gönder', roller: ['bas', 'yonetici', 'rehberlik'], ciz: () => gonder(false) },
+    // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
   function menuKur() {
