@@ -5,7 +5,15 @@
   'use strict';
   const URL_ = 'https://ceqdghykweubeaokwadt.supabase.co';
   const ANAHTAR = 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ';   // açık istemci anahtarı; yetkiyi RLS belirler
-  const sb = window.supabase.createClient(URL_, ANAHTAR, { auth: { persistSession: true, autoRefreshToken: true } });
+  // Beni hatırla: işaretliyse oturum bu cihazda kalır (localStorage); değilse tarayıcı kapanınca biter (sessionStorage).
+  const hatirlaMi = () => { try { return localStorage.getItem('atlas-hatirla') !== '0'; } catch (e) { return true; } };
+  const depo = () => { try { return hatirlaMi() ? localStorage : sessionStorage; } catch (e) { return null; } };
+  const oturumDeposu = {
+    getItem: k => { try { return depo().getItem(k) ?? (hatirlaMi() ? null : localStorage.getItem(k)); } catch (e) { return null; } },
+    setItem: (k, v) => { try { depo().setItem(k, v); if (!hatirlaMi()) localStorage.removeItem(k); } catch (e) {} },
+    removeItem: k => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  const sb = window.supabase.createClient(URL_, ANAHTAR, { auth: { persistSession: true, autoRefreshToken: true, storage: oturumDeposu, storageKey: 'sb-ceqdghykweubeaokwadt-auth-token' } });
   const FOTO_GIZLI = new Set(['101']);
   const $ = s => document.querySelector(s);
   const tr = 'tr-TR';
@@ -72,6 +80,7 @@
     const e = $('#eposta').value.trim().toLowerCase(), k = $('#kod').value.replace(/\D/g, '');
     if (k.length < 6 || k.length > 10) { $('#girisBilgi').textContent = 'E-postadaki kodun tamamını yazın.'; return; }
     $('#girisYap').disabled = true;
+    try { localStorage.setItem('atlas-hatirla', $('#hatirla').checked ? '1' : '0'); } catch (e) {}
     const { error } = await sb.auth.verifyOtp({ email: e, token: k, type: 'email' });
     $('#girisYap').disabled = false;
     if (error) { $('#girisBilgi').textContent = 'Kod doğru değil ya da süresi doldu.'; return; }
