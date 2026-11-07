@@ -390,3 +390,5 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 #icerik.sinif-acik > :not(#ogrIc) { display: none; }
 #icerik.sinif-acik .sinav-ust { margin-top: 0; }
 #sinifGeri { white-space: nowrap; flex: none; }
+/* Düğme ve çip yazılarında her kelimenin ilk harfi büyük (Türkçe: lang="tr") */
+.cip, .birincil, .ikincil, .tehlike, .menu-oge, .t-neon { text-transform: capitalize; }
