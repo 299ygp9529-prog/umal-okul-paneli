@@ -542,7 +542,7 @@
     };
     const biletGoster = (o, sec) => {
       const tum = sinavlari(o.no), x = (sec && tum.find(y => D.planlar.indexOf(y.p) === sec[0] && y.s === sec[1])) || tum[0] || null;
-      $('#sinavBul').innerHTML = bilet(o, x, tum.filter(y => y !== x));
+      $('#sinavBul').innerHTML = `<div class="bilet-cerceve"><button class="bilet-kapat" data-kapat="1" title="Kapat (Esc)">✕</button>${bilet(o, x, tum.filter(y => y !== x))}</div>`;
       $('#sinavBul').dataset.no = o.no;
       fotolariYukle([o.no]);
     };
@@ -553,9 +553,13 @@
       const tam = D.ogrenciler.find(o => o.no === q);
       const L = tam ? [tam] : (/^\d+$/.test(q) ? D.ogrenciler.filter(o => o.no.startsWith(q)) : D.ogrenciler.filter(o => o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 20);
       if (L.length === 1) return biletGoster(L[0]);
-      $('#sinavBul').innerHTML = L.length ? `<div class="satirlar" style="margin:8px 0">${L.map(o => { const n = sinavlari(o.no).length; return `<button class="satir" data-ob="${esc(o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)};color:${seviyeRenk(o.sinif)}"></span><div class="ana"><b>${esc(baslik(o.ad))} · ${esc(o.sinif)} · ${esc(o.no)}</b><small>${n ? `${n} sınavı var` : 'Sınava girmeyecek'}</small></div><span class="neon">Bilet ›</span></button>`; }).join('')}</div>` : '<div class="soluk" style="margin:8px 0">Bulunamadı.</div>';
+      $('#sinavBul').innerHTML = L.length ? `<div class="bilet-cerceve"><button class="bilet-kapat" data-kapat="1" title="Kapat (Esc)">✕</button><div class="satirlar" style="margin:8px 0">${L.map(o => { const n = sinavlari(o.no).length; return `<button class="satir" data-ob="${esc(o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)};color:${seviyeRenk(o.sinif)}"></span><div class="ana"><b>${esc(baslik(o.ad))} · ${esc(o.sinif)} · ${esc(o.no)}</b><small>${n ? `${n} sınavı var` : 'Sınava girmeyecek'}</small></div><span class="neon">Bilet ›</span></button>`; }).join('')}</div></div>` : '<div class="soluk" style="margin:8px 0">Bulunamadı.</div>';
     };
+    const biletKapat = () => { $('#sinavBul').innerHTML = ''; $('#sinavAra').value = ''; };
+    $('#sinavAra').onkeydown = ev => { if (ev.key === 'Escape') biletKapat(); };
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('#sinavBul') && $('#sinavBul').innerHTML && $('#pencere').classList.contains('gizli')) biletKapat(); });
     $('#sinavBul').onclick = ev => {
+      if (ev.target.closest('[data-kapat]')) return biletKapat();
       const ob = ev.target.closest('[data-ob]'); if (ob) return biletGoster(D.ogrenciler.find(o => o.no === ob.dataset.ob));
       const mb = ev.target.closest('[data-mb]'); if (mb) { const [pi, sl] = mb.dataset.mb.split('|'); return biletGoster(D.ogrenciler.find(o => o.no === $('#sinavBul').dataset.no), [+pi, sl]); }
       const b = ev.target.closest('[data-plan]'); if (!b) return;

@@ -456,3 +456,8 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .b-barkod { flex: 1 1 auto; min-height: 64px; margin: 14px -4px 0; border-radius: 4px; opacity: .9;
   background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 5px, currentColor 5px 6px, transparent 6px 9px, currentColor 9px 13px, transparent 13px 15px, currentColor 15px 16px, transparent 16px 20px, currentColor 20px 22px, transparent 22px 24px); }
 @media (max-width: 760px) { .b-kocan { display: grid; } .b-barkod { min-height: 52px; margin: 12px 0 0; } }
+
+.bilet-cerceve { position: relative; max-width: 980px; }
+.bilet-kapat { position: absolute; right: 0; top: 0; z-index: 5; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #ff9a3a; background: rgba(40,20,4,.9); color: #ffd2a1; font-size: 17px; font-weight: 900; box-shadow: 0 0 10px rgba(255,154,58,.55); }
+.bilet-cerceve .bilet { margin-right: 48px; } .bilet-cerceve .satirlar { margin-right: 48px !important; }
+.bilet-kapat:hover { background: #ff9a3a; color: #1a1206; }
