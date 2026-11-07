@@ -274,6 +274,29 @@
     const l = Object.entries(kg).filter(([, n]) => n);
     return l.length ? 'Kâğıt eksik: ' + l.map(([c, n]) => `${c} ${n}`).join(', ') : '';
   }
+  // Salon bildirimleri (kâğıt eksik, mesaj): bu bilgisayarda "Gördüm" denene kadar kutu yanıp söner, yeni gelince ses
+  const GORDUM_ANAHTAR = 'atlas-gordum';
+  const gordum = (() => { try { return new Set(JSON.parse(localStorage.getItem(GORDUM_ANAHTAR) || '[]')); } catch (e) { return new Set(); } })();
+  const gordumKaydet = () => { try { localStorage.setItem(GORDUM_ANAHTAR, JSON.stringify([...gordum].slice(-400))); } catch (e) {} };
+  function acikBildirimler(v) {
+    const ms = (v && v.mesajlar) || [], gel = new Set(ms.filter(m => m.tur === 'geldi').map(m => m.ref));
+    return ms.filter(m => m.tur !== 'geldi' && !gel.has(m.id) && (m.metin || Object.values(m.kagit || {}).some(Boolean)));
+  }
+  const bildirimKimlik = (salon, m) => `${salon}|${m.id || m.zaman || m.metin}`;
+  let sesBaglam = null;
+  function uyariSesi() {
+    try {
+      sesBaglam = sesBaglam || new (window.AudioContext || window.webkitAudioContext)();
+      const t = sesBaglam.currentTime;
+      [[880, 0], [1175, .16], [880, .32]].forEach(([f, d]) => {
+        const o = sesBaglam.createOscillator(), g = sesBaglam.createGain();
+        o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(.22, t + d + .02); g.gain.exponentialRampToValueAtTime(.001, t + d + .14);
+        o.connect(g); g.connect(sesBaglam.destination); o.start(t + d); o.stop(t + d + .15);
+      });
+    } catch (e) {}
+  }
+  document.addEventListener('click', () => { try { if (sesBaglam && sesBaglam.state === 'suspended') sesBaglam.resume(); else if (!sesBaglam) sesBaglam = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }, { once: true });
+  const duyulan = new Set();
   function salonDurumu(v, st, n) {
     const g = ((v || {}).gelmedi || []).length;
     if (!st.basladi) return { yazi: st.a != null && st.suruyor ? `Yoklama ${String(Math.floor((st.a + YOKLAMA_BASLA) / 60)).padStart(2, '0')}.${String((st.a + YOKLAMA_BASLA) % 60).padStart(2, '0')}` : 'Sınav başlamadı', sinif: '' };
@@ -384,13 +407,14 @@
     const { data, error } = await sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders');
     if (error) throw error;
     D.planlar = data || [];
-    let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null;
+    let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null, ilkCizimBitti = false;
     const ciz = async () => {
       if (!secili) { $('#ustNeon').innerHTML = ''; $('#sinavIc').innerHTML = '<div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok. Öğrenci aranınca sınıfı görünür.</div>'; return; }
       const { data: sal } = await sb.from('umal_sinav_salon').select('salon,veri,guncel').eq('tarih', secili.tarih).eq('ders', secili.ders);
       yok = {}; (sal || []).forEach(x => { yok[x.salon] = x.veri || {}; });
       if (acikSalon) return salonCiz();
       const st = sinavSaati(secili);
+      let sesCal = false;
       const salonlar = Object.keys(secili.salonlar || {}).sort(sinifSira);
       const top = salonlar.reduce((t, x) => t + (secili.salonlar[x] || []).length, 0);
       const gelmeyen = salonlar.reduce((t, x) => t + ((yok[x] || {}).gelmedi || []).length, 0);
@@ -406,10 +430,14 @@
         <div class="salonlar">${salonlar.map(x => {
           const v = yok[x], L = (secili.salonlar[x] || []).map(siraKaydi), d = salonDurumu(v, st, L.length), kg = kagitDurumu(v);
           const msj = ((v || {}).mesajlar || []).filter(m => m.tur !== 'geldi').length;
-          return `<button class="salon ${d.sinif}" data-salon="${esc(x)}"><div class="s-ust"><b>${esc(x)}</b>${msj ? `<span class="zarf">✉ ${msj}</span>` : `<span class="soluk">${L.length} öğr.</span>`}</div>
-            <div class="s-gozcu">${esc(baslik((secili.gozcu || {})[x] || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}
+          const yeni = acikBildirimler(v).filter(m => !gordum.has(bildirimKimlik(x, m)));
+          yeni.forEach(m => { const k = bildirimKimlik(x, m); if (!duyulan.has(k)) { duyulan.add(k); sesCal = true; } });
+          return `<button class="salon ${d.sinif} ${yeni.length ? 'uyari' : ''}" data-salon="${esc(x)}"><div class="s-ust"><b>${esc(x)}</b>${msj ? `<span class="zarf">✉ ${msj}</span>` : `<span class="soluk">${L.length} öğr.</span>`}</div>
+            <div class="s-gozcu">${esc(baslik((secili.gozcu || {})[x] || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}${yeni.length ? `<span class="gordum" data-gordum="${esc(x)}">✓ Gördüm</span>` : ''}
             <div class="s-durum">${esc(d.yazi)}</div>${seviyeSeridi(L)}</button>`;
         }).join('')}</div>`;
+      if (sesCal && ilkCizimBitti) uyariSesi();
+      ilkCizimBitti = true;
     };
     const salonCiz = () => {
       const x = acikSalon, v = yok[x] || {}, L = (secili.salonlar[x] || []).map(siraKaydi).sort((a, b) => a.sira - b.sira);
@@ -442,6 +470,8 @@
       ciz();
     };
     $('#sinavIc').onclick = ev => {
+      const gd = ev.target.closest('[data-gordum]');
+      if (gd) { ev.stopPropagation(); const x = gd.dataset.gordum; acikBildirimler(yok[x]).forEach(m => gordum.add(bildirimKimlik(x, m))); gordumKaydet(); ciz(); return; }
       const o = ev.target.closest('[data-ogr]'); if (o) { ogrencileriYukle().then(() => ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.ogr))); return; }
       const b = ev.target.closest('[data-salon]'); if (b) { acikSalon = b.dataset.salon; salonCiz(); window.scrollTo(0, 0); }
     };

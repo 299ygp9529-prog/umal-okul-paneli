@@ -414,3 +414,10 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .saat-kutu .tarih { text-align: center; color: #9fb3cc; font-size: 13px; line-height: 1.4; } .saat-kutu .tarih b { color: #7ff6ff; font-weight: 700; }
 @media (max-height: 720px) { .analog { width: 110px; height: 110px; } .dijital { font-size: 24px; } }
 @media (max-width: 760px) { .saat-kutu { display: none; } }
+
+/* Salon bildirimi: karargâh gibi yanıp söner */
+.salon.uyari { animation: salonUyari 1s steps(1) infinite; border-color: #ffb020 !important; }
+@keyframes salonUyari { 0% { background: #5a3a08; box-shadow: 0 0 0 4px rgba(255,176,32,.35), 0 0 22px rgba(255,176,32,.55); } 50% { background: #16243a; box-shadow: none; } }
+.salon.uyari .s-kagit { color: #ffd78a; font-size: 14px; }
+.gordum { align-self: flex-start; margin-top: 6px; background: #ffb020; color: #1a1206; font-weight: 800; font-size: 12.5px; border-radius: 9px; padding: 4px 10px; box-shadow: 0 0 10px rgba(255,176,32,.7); cursor: pointer; z-index: 2; }
+.gordum:hover { background: #ffd78a; }
