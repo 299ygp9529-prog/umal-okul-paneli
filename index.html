@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UMAL Okul Paneli</title>
+<meta name="theme-color" content="#0d1726">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="simge-192.png">
+<link rel="stylesheet" href="stil.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<div id="giris" class="giris gizli">
+  <div class="kutu">
+    <div class="marka">UMAL Okul Paneli</div>
+    <div class="alt">Ümraniye Merkez Anadolu Lisesi</div>
+    <div id="adim1">
+      <label for="eposta">E-posta</label>
+      <input id="eposta" type="email" autocomplete="email" placeholder="ornek@okul.k12.tr">
+      <button id="kodGonder" class="birincil">Kod gönder</button>
+    </div>
+    <div id="adim2" class="gizli">
+      <label for="kod">E-postanıza gelen 6 haneli kod</label>
+      <input id="kod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+      <button id="girisYap" class="birincil">Giriş</button>
+      <button id="geri" class="ikincil">Başka e-posta</button>
+    </div>
+    <div id="girisBilgi" class="bilgi"></div>
+    <div class="not">Şifre yok. Bu bilgisayarda açık kalır. Yalnız okul yönetiminin eklediği kişiler girebilir.</div>
+  </div>
+</div>
+
+<div id="uygulama" class="uygulama gizli">
+  <nav class="yan">
+    <div class="marka">UMAL Okul Paneli</div>
+    <div id="menu"></div>
+    <div class="kullanici"><span id="kim"></span><span id="rolEtiket" class="etiket"></span><button id="cikis" class="bag">Çıkış</button></div>
+  </nav>
+  <main id="icerik"></main>
+</div>
+
+<div id="pencere" class="pencere gizli"><div class="pencere-ic"><button class="kapat" id="pencereKapat" aria-label="Kapat">✕</button><div id="pencereIcerik"></div></div></div>
+<div id="yazdir" class="yazdir"></div>
+<script src="zip.js"></script>
+<script src="uygulama.js"></script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>
