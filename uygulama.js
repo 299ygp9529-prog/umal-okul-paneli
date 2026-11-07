@@ -1059,19 +1059,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         baslangic: kopya ? bugunISO() : (h.baslangic || bugunISO()), bitis: kopya ? gunEkle(bugunISO(), 3) : (h.bitis || bugunISO()),
         siniflar: new Set(Object.keys(h.siniflar || {}).filter(s => s !== OGRETMEN_ODASI)), isimli: h.isimli !== false,
         rehberlik: mevcut.bolum === 'rehberlik', kimler: h.kimler || 'ogrenci', dersler: new Set(h.dersler || []),
-        otokapat: !!h.otokapat, sonucGoster: !!h.sonuc_goster, sorular: (h.sorular || []).map(soruTaslagi),
+        otokapat: !!h.otokapat, sonucGoster: !!h.sonuc_goster, kilit: !!h.kilit, sorular: (h.sorular || []).map(soruTaslagi),
+        ogretmenler: new Set(((h.siniflar || {})[OGRETMEN_ODASI] || []).map(o => o.ad)),
         hazirlayan: kopya ? D.eposta : (h.hazirlayan || ''), yeni: !!kopya };
     } else {
       T = { id: yeniKimlik(), ad: '', aciklama: '', baslangic: bugunISO(), bitis: gunEkle(bugunISO(), 3), siniflar: new Set(), isimli: true,
-        rehberlik: false, kimler: 'ogrenci', dersler: new Set(), otokapat: false, sonucGoster: false, sorular: [], hazirlayan: D.eposta, yeni: true };
+        rehberlik: false, kimler: 'ogrenci', dersler: new Set(), otokapat: false, sonucGoster: false, kilit: false, ogretmenler: new Set(), sorular: [], hazirlayan: D.eposta, yeni: true };
     }
-    let bilgi = '', kaydediliyor = false;
+    let bilgi = '', kaydediliyor = false, ogrAra = '';
+    const tumOgretmenler = ogretmenListesi();
     const ogretmen = () => T.kimler === 'ogretmen';
-    const kisiSayisi = () => ogretmen() ? ogretmenListesi().length : D.ogrenciler.filter(o => T.siniflar.has(o.sinif)).length;
+    const kisiSayisi = () => ogretmen() ? T.ogretmenler.size : D.ogrenciler.filter(o => T.siniflar.has(o.sinif)).length;
     const sorun = () => {
       if (!T.ad.trim()) return 'Anket adını yazın.';
       if (!ogretmen() && !T.siniflar.size) return 'En az bir sınıf seçin.';
-      if (!kisiSayisi()) return ogretmen() ? 'Ders programında öğretmen yok.' : 'Seçilen sınıfların öğrenci listesi yok.';
+      if (ogretmen() && !tumOgretmenler.length) return 'Ders programında öğretmen yok.';
+      if (!kisiSayisi()) return ogretmen() ? 'En az bir öğretmen seçin.' : 'Seçilen sınıfların öğrenci listesi yok.';
       if (T.bitis < T.baslangic) return 'Bitiş, başlangıçtan önce olamaz.';
       if (!T.sorular.length) return 'En az bir soru ekleyin.';
       const i = T.sorular.findIndex(q => soruHatasi(q));
@@ -1079,13 +1082,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const tanimMetni = () => {
       const siniflar = {};
-      if (ogretmen()) siniflar[OGRETMEN_ODASI] = ogretmenListesi().map((ad, i) => ({ no: 'T' + (i + 1), ad, katilir: true }));
+      // K-339: yalnız seçilen öğretmenler; numara bütün listedeki sırasıdır (cevaplar kaymasın)
+      if (ogretmen()) siniflar[OGRETMEN_ODASI] = [...T.ogretmenler].map(ad => [ad, tumOgretmenler.indexOf(ad)]).sort((x, y) => baslik(x[0]).localeCompare(baslik(y[0]), tr)).map(([ad, i]) => ({ no: 'T' + (i >= 0 ? i + 1 : 900 + tumOgretmenler.length + [...T.ogretmenler].indexOf(ad)), ad, katilir: true }));
       else for (const s of T.siniflar) siniflar[s] = D.ogrenciler.filter(o => o.sinif === s).sort((x, y) => (+x.no) - (+y.no)).map(o => ({ no: o.no, ad: o.ad, katilir: true }));
       const t = { id: T.id, ad: T.ad.trim(), baslangic: T.baslangic, bitis: T.bitis, isimli: T.isimli, bolum: T.rehberlik ? 'rehberlik' : 'anket',
         kaynak: 'dersmap', sorular: T.sorular.map(soruSozluk), siniflar, kimler: T.kimler, hazirlayan: T.hazirlayan || D.eposta };
       if (T.dersler.size) t.dersler = [...T.dersler].sort((a, b) => a - b);
       if (T.otokapat) t.otokapat = true;
       if (T.sonucGoster) t.sonuc_goster = true;
+      if (T.kilit && !ogretmen()) t.kilit = true;
       if (T.aciklama.trim()) t.aciklama = T.aciklama.trim();
       return JSON.stringify(t);
     };
@@ -1107,6 +1112,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       return `<div class="cipler"><button class="cip ${tam(tumSiniflar) ? 'secili' : ''}" data-s="okul">Bütün okul</button>${['9', '10', '11', '12'].filter(d => duzey(d).length).map(d => `<button class="cip ${tam(duzey(d)) ? 'secili' : ''}" data-s="d${d}">${d}. sınıflar</button>`).join('')}${T.siniflar.size ? '<button class="cip" data-s="temizle">Temizle</button>' : ''}</div>
         <div class="cipler">${tumSiniflar.map(s => `<button class="cip kucukcip ${T.siniflar.has(s) ? 'secili' : ''}" data-s="=${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
     };
+    const ogretmenCipleri = () => {
+      const q = ogrAra.trim().toLocaleLowerCase(tr);
+      const eski = [...T.ogretmenler].filter(a => !tumOgretmenler.includes(a));
+      const L = tumOgretmenler.concat(eski).filter(a => !q || baslik(a).toLocaleLowerCase(tr).includes(q));
+      return `<div class="cipler"><button class="cip ${tumOgretmenler.length && tumOgretmenler.every(a => T.ogretmenler.has(a)) ? 'secili' : ''}" data-o="hepsi">Bütün Öğretmenler</button>${T.ogretmenler.size ? '<button class="cip" data-o="temizle">Temizle</button>' : ''}</div>
+        <div class="cipler">${L.map(a => `<button class="cip kucukcip ${T.ogretmenler.has(a) ? 'secili' : ''}" data-o="=${esc(a)}">${esc(baslik(a))}</button>`).join('') || '<span class="cok-soluk kucuk">Bulunamadı.</span>'}</div>`;
+    };
+    const hedefCiz = () => ogretmen()
+      ? `<input id="hzOgrAra" placeholder="Öğretmen ara…" value="${esc(ogrAra)}" style="margin:6px 0"><div id="hzOgretmenler">${ogretmenCipleri()}</div>`
+      : sinifCipleri();
     const soruKarti = (q, i) => {
       const onceki = T.sorular.slice(0, i).map((p, j) => [j, p]).filter(([, p]) => soruCevaplari(p).length);
       const h = soruHatasi(q);
@@ -1129,7 +1144,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const durumCiz = () => {
       const s = sorun();
       $('#hzOnizleme').innerHTML = onizleme();
-      $('#hzOzet').textContent = ogretmen() ? `Öğretmenler odası tahtası · ${kisiSayisi()} öğretmen` : (T.siniflar.size ? `Seçili: ${T.siniflar.size} şube · ${kisiSayisi()} öğrenci` : 'Henüz sınıf seçilmedi');
+      $('#hzOzet').textContent = ogretmen() ? (T.ogretmenler.size ? `Öğretmenler odası tahtası · ${kisiSayisi()} öğretmen seçili` : 'Henüz öğretmen seçilmedi') : (T.siniflar.size ? `Seçili: ${T.siniflar.size} şube · ${kisiSayisi()} öğrenci` : 'Henüz sınıf seçilmedi');
       $('#hzSorun').textContent = bilgi || s || '';
       $('#hzSorun').className = 'kucuk ' + (bilgi && !bilgi.startsWith('Kaydedilemedi') ? 'neon' : (bilgi ? 'kirmizi' : 'turuncu'));
       $('#hzYayinla').disabled = kaydediliyor || !!s;
@@ -1147,12 +1162,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <div><label>Başlangıç</label><input type="date" data-g="baslangic" value="${T.baslangic}"></div><div><label>Bitiş</label><input type="date" data-g="bitis" value="${T.bitis}"></div></div>
             <span class="etk">Kimler cevaplar</span>
             <div class="cipler"><button class="cip ${ogretmen() ? '' : 'secili'}" data-k="ogrenci">Öğrenciler</button><button class="cip ${ogretmen() ? 'secili' : ''}" data-k="ogretmen">Öğretmenler (öğretmenler odası tahtası)</button></div>
-            <div id="hzSiniflar">${ogretmen() ? '' : sinifCipleri()}</div>
+            <div id="hzSiniflar">${hedefCiz()}</div>
             <div class="soluk kucuk" id="hzOzet"></div>
             <span class="etk">Ne zaman açık</span>
             <div class="cipler"><button class="cip ${T.dersler.size ? '' : 'secili'}" data-d="hepsi">Bütün gün</button>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip kucukcip ${T.dersler.has(n) ? 'secili' : ''}" data-d="${n}">${n}. ders</button>`).join('')}</div>
             <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>
-            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik bölümünde (tahtada Rehberlik altında; cevapları yalnız rehberlik görür)') : ''}</div>
+            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${ogretmen() ? '' : tik('g:kilit', T.kilit, 'Tahtayı kilitle: ders saatinde tahtada yalnız anket kalır, sınıfta herkes doldurunca açılır (öğretmen 3 sn basılı tutarak o ders için açabilir)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik bölümünde (tahtada Rehberlik altında; cevapları yalnız rehberlik görür)') : ''}</div>
           </div>
           <h2>Sorular</h2><div id="hzSorular">${T.sorular.map(soruKarti).join('')}</div>
           <div class="dugmeler"><button class="ikincil" id="hzSoruEkle">+ Soru ekle</button><button class="ikincil" id="hzOnceki">Önceki anketlerden soru al</button></div>
@@ -1169,6 +1184,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     ic.oninput = ev => {
       const e = ev.target; bilgi = '';
       if (e.dataset.g) { T[e.dataset.g] = e.value; durumCiz(); return; }
+      if (e.id === 'hzOgrAra') { ogrAra = e.value; $('#hzOgretmenler').innerHTML = ogretmenCipleri(); return; }
       if (e.dataset.q == null) return;
       const q = T.sorular[+e.dataset.q];
       if (e.dataset.sec != null) q.secenekler[+e.dataset.sec] = e.value;
@@ -1211,6 +1227,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return ac('anket');
       }
       if (b.dataset.k) { T.kimler = b.dataset.k; ciz(); return; }
+      if (b.dataset.o) {
+        const v = b.dataset.o;
+        if (v === 'temizle') T.ogretmenler.clear();
+        else if (v === 'hepsi') { const tam = tumOgretmenler.every(a => T.ogretmenler.has(a)); tumOgretmenler.forEach(a => tam ? T.ogretmenler.delete(a) : T.ogretmenler.add(a)); }
+        else { const a = v.slice(1); T.ogretmenler.has(a) ? T.ogretmenler.delete(a) : T.ogretmenler.add(a); }
+        $('#hzOgretmenler').innerHTML = ogretmenCipleri(); durumCiz(); return;
+      }
       if (b.dataset.s) {
         const v = b.dataset.s, l = v === 'okul' ? tumSiniflar : v[0] === 'd' ? tumSiniflar.filter(s => s.startsWith(v.slice(1) + '-')) : null;
         if (v === 'temizle') T.siniflar.clear();
