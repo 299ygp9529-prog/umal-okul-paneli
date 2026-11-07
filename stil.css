@@ -580,3 +580,6 @@ button.og-kutu { cursor: pointer; }
 /* Rapor önizlemesi */
 .rp-cerceve { margin-top: 12px; height: min(74vh, 900px); border-radius: 12px; overflow: hidden; border: 1px solid var(--cizgi); background: #5a6477; }
 .rp-cerceve iframe { width: 100%; height: 100%; border: 0; display: block; background: #5a6477; }
+
+.cip.acil-cip { border-color: #ff9a3a; color: #ffb867; }
+.cip.acil-cip.secili { background: #ff9a3a; color: #1a0d00; box-shadow: 0 0 12px rgba(255,154,58,.6); }

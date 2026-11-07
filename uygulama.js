@@ -1129,12 +1129,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         baslangic: kopya ? bugunISO() : (h.baslangic || bugunISO()), bitis: kopya ? gunEkle(bugunISO(), 3) : (h.bitis || bugunISO()),
         siniflar: new Set(Object.keys(h.siniflar || {}).filter(s => s !== OGRETMEN_ODASI)), isimli: h.isimli !== false,
         rehberlik: mevcut.bolum === 'rehberlik', kimler: h.kimler || 'ogrenci', dersler: new Set(h.dersler || []),
-        otokapat: !!h.otokapat, sonucGoster: !!h.sonuc_goster, kilit: !!h.kilit, sorular: (h.sorular || []).map(soruTaslagi),
+        otokapat: !!h.otokapat, sonucGoster: !!h.sonuc_goster, kilit: h.acil ? 'acil' : (h.kilit ? 'ders' : ''), sorular: (h.sorular || []).map(soruTaslagi),
         ogretmenler: new Set(((h.siniflar || {})[OGRETMEN_ODASI] || []).map(o => o.ad)),
         hazirlayan: kopya ? D.eposta : (h.hazirlayan || ''), yeni: !!kopya };
     } else {
       T = { id: yeniKimlik(), ad: '', aciklama: '', baslangic: bugunISO(), bitis: gunEkle(bugunISO(), 3), siniflar: new Set(), isimli: true,
-        rehberlik: false, kimler: 'ogrenci', dersler: new Set(), otokapat: false, sonucGoster: false, kilit: false, ogretmenler: new Set(), sorular: [], hazirlayan: D.eposta, yeni: true };
+        rehberlik: false, kimler: 'ogrenci', dersler: new Set(), otokapat: false, sonucGoster: false, kilit: '', ogretmenler: new Set(), sorular: [], hazirlayan: D.eposta, yeni: true };
     }
     let bilgi = '', kaydediliyor = false, ogrAra = '';
     const tumOgretmenler = ogretmenListesi();
@@ -1160,7 +1160,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (T.dersler.size) t.dersler = [...T.dersler].sort((a, b) => a - b);
       if (T.otokapat) t.otokapat = true;
       if (T.sonucGoster) t.sonuc_goster = true;
-      if (T.kilit && !ogretmen()) t.kilit = true;
+      if (T.kilit && !ogretmen()) { t.kilit = true; if (T.kilit === 'acil') t.acil = true; }
       if (T.aciklama.trim()) t.aciklama = T.aciklama.trim();
       return JSON.stringify(t);
     };
@@ -1182,6 +1182,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       return `<div class="cipler"><button class="cip ${tam(tumSiniflar) ? 'secili' : ''}" data-s="okul">Bütün okul</button>${['9', '10', '11', '12'].filter(d => duzey(d).length).map(d => `<button class="cip ${tam(duzey(d)) ? 'secili' : ''}" data-s="d${d}">${d}. sınıflar</button>`).join('')}${T.siniflar.size ? '<button class="cip" data-s="temizle">Temizle</button>' : ''}</div>
         <div class="cipler">${tumSiniflar.map(s => `<button class="cip kucukcip ${T.siniflar.has(s) ? 'secili' : ''}" data-s="=${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
     };
+    const kilitBilgi = () => T.kilit === 'acil' ? 'Yayınlanınca açık tahtalar en geç 1 dakikada öne gelir, uyarı sesi çalar; ders ya da teneffüs fark etmez, sınıfta herkes doldurana kadar tahtada yalnız anket kalır. Sınav her zaman önce gelir; öğretmen 3 sn basılı tutarak o ders / teneffüs için açabilir.'
+      : T.kilit === 'ders' ? 'Ders saatinde tahtada yalnız anket kalır; sınıfta herkes doldurunca açılır. Teneffüs serbest; öğretmen 3 sn basılı tutarak o ders için açabilir.' : 'Tahta serbest; anket Okul araçları → Anket\'ten açılır.';
     const ogretmenCipleri = () => {
       const q = ogrAra.trim().toLocaleLowerCase(tr);
       const eski = [...T.ogretmenler].filter(a => !tumOgretmenler.includes(a));
@@ -1234,10 +1236,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <div class="cipler"><button class="cip ${ogretmen() ? '' : 'secili'}" data-k="ogrenci">Öğrenciler</button><button class="cip ${ogretmen() ? 'secili' : ''}" data-k="ogretmen">Öğretmenler (öğretmenler odası tahtası)</button></div>
             <div id="hzSiniflar">${hedefCiz()}</div>
             <div class="soluk kucuk" id="hzOzet"></div>
+            ${ogretmen() ? '' : `<span class="etk">Tahtayı kaplasın mı</span><div class="cipler" id="hzKilit"><button class="cip ${!T.kilit ? 'secili' : ''}" data-kl="">Hayır</button><button class="cip ${T.kilit === 'ders' ? 'secili' : ''}" data-kl="ders">Ders saatinde kilitle</button><button class="cip acil-cip ${T.kilit === 'acil' ? 'secili' : ''}" data-kl="acil">ACİL · hemen kaplasın</button></div>
+            <div class="kucuk ${T.kilit === 'acil' ? 'turuncu' : 'cok-soluk'}" id="hzKilitBilgi">${kilitBilgi()}</div>`}
             <span class="etk">Ne zaman açık</span>
             <div class="cipler"><button class="cip ${T.dersler.size ? '' : 'secili'}" data-d="hepsi">Bütün gün</button>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip kucukcip ${T.dersler.has(n) ? 'secili' : ''}" data-d="${n}">${n}. ders</button>`).join('')}</div>
             <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>
-            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${ogretmen() ? '' : tik('g:kilit', T.kilit, 'Tahtayı kilitle: ders saatinde tahtada yalnız anket kalır, sınıfta herkes doldurunca açılır (öğretmen 3 sn basılı tutarak o ders için açabilir)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik bölümünde (tahtada Rehberlik altında; cevapları yalnız rehberlik görür)') : ''}</div>
+            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik bölümünde (tahtada Rehberlik altında; cevapları yalnız rehberlik görür)') : ''}</div>
           </div>
           <h2>Sorular</h2><div id="hzSorular">${T.sorular.map(soruKarti).join('')}</div>
           <div class="dugmeler"><button class="ikincil" id="hzSoruEkle">+ Soru ekle</button><button class="ikincil" id="hzOnceki">Önceki anketlerden soru al</button></div>
@@ -1297,6 +1301,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return ac('anket');
       }
       if (b.dataset.k) { T.kimler = b.dataset.k; ciz(); return; }
+      if (b.dataset.kl != null) {
+        T.kilit = b.dataset.kl;
+        document.querySelectorAll('#hzKilit [data-kl]').forEach(x => x.classList.toggle('secili', x.dataset.kl === T.kilit));
+        $('#hzKilitBilgi').className = 'kucuk ' + (T.kilit === 'acil' ? 'turuncu' : 'cok-soluk'); $('#hzKilitBilgi').textContent = kilitBilgi(); durumCiz(); return;
+      }
       if (b.dataset.og) {
         const br = ogretmenBranslari(), L = tumOgretmenler.filter(a => (br[a] || 'Diğer') === b.dataset.og), tam = L.every(a => T.ogretmenler.has(a));
         L.forEach(a => tam ? T.ogretmenler.delete(a) : T.ogretmenler.add(a));
