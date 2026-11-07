@@ -64,7 +64,6 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 @keyframes parilti { 0%, 60% { left: -60%; } 100% { left: 130%; } }
 .giris .birincil:hover { box-shadow: 0 0 28px rgba(34,232,255,.8); } .giris .birincil:active { transform: scale(.985); }
 #kod { letter-spacing: 6px; font-size: 24px; font-weight: 800; text-align: center; }
-@media (prefers-reduced-motion: reduce) { .giris *, .giris::before { animation: none !important; } .atlas span { opacity: 1; } }
 @media (max-width: 480px) { .giris .kutu { padding: 30px 22px 24px; } .atlas { font-size: 34px; letter-spacing: 10px; margin-right: -10px; } }
 .marka { color: var(--neonacik); font-weight: 800; font-size: 18px; }
 .alt, .not { color: var(--soluk); font-size: 12px; margin-top: 4px; }
@@ -200,7 +199,7 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 .para .on { transform: translateZ(4.5px); }
 .para .arka { transform: rotateY(180deg) translateZ(4.5px); }
 @keyframes para { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-@media (prefers-reduced-motion: reduce) { .para { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .para { animation-duration: 14s; } .isik { animation-duration: 40s; } }
 @media (max-width: 760px) {
   .logo3d { width: 42px; height: 42px; margin: 0 10px 0 0; flex: none; filter: drop-shadow(0 0 8px rgba(34,232,255,.45)); }
   .para i { inset: 1px; }
