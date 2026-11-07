@@ -183,3 +183,14 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 @media (max-width: 1000px) { .ikili { grid-template-columns: 1fr; } .onz { position: static; max-height: none; } .tip { grid-template-columns: repeat(3, 1fr); } }
 
 .giris .yukle { margin-top: 18px; height: 44px; font-size: 14px; animation: belir .7s ease-out both 1.85s; }
+
+/* Yan menüde 3B dönen okul logosu (logo değişmez, olduğu yerde döner) */
+.logo3d { width: 104px; height: 104px; margin: 4px auto 20px; perspective: 700px; filter: drop-shadow(0 0 14px rgba(34,232,255,.45)); }
+.para { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; animation: para 7s linear infinite; }
+.para i { position: absolute; inset: 1px; border-radius: 50%; background: #1c3f9e; box-shadow: inset 0 0 0 2px #3f6fe0; }
+.para .yuz { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.para .on { transform: translateZ(4.5px); }
+.para .arka { transform: rotateY(180deg) translateZ(4.5px); }
+@keyframes para { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+@media (prefers-reduced-motion: reduce) { .para { animation: none; } }
+@media (max-width: 760px) { .logo3d { width: 56px; height: 56px; margin: 0 8px 0 0; } }

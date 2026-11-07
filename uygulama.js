@@ -780,30 +780,36 @@
   async function rehberlik() {
     await anketVerisi();
     const formlar = D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak');
-    let form = formlar[0], sinif = form ? anketSiniflari(form)[0] : null;
+    let acik = null, form = null, sinif = null;
     const isaretler = (a, c) => (a.tanim.sorular || []).map((q, i) => i).filter(i => {
       const q = a.tanim.sorular[i], v = secimler((c.c || [])[i]);
       return q.tur === 'yazi' ? v.length > 0 : v.includes('Evet');
     });
+    const baslikSatiri = (id, ad, alt, sag) => `<button class="satir acilir" data-ac="${esc(id)}" style="${acik === id ? 'border-color:var(--neon)' : ''}"><div class="ana"><b>${ad}</b><small>${alt}</small></div>${sag || ''}<span class="neon">${acik === id ? '▴' : '▾'}</span></button>`;
+    const liste = () => {
+      $('#rehIc').innerHTML = formlar.map(f => {
+        const ss = anketSiniflari(f), n = ss.reduce((t, x) => t + katilanlar(f, x).length, 0), d = ss.reduce((t, x) => t + katilanlar(f, x).filter(k => cevap(f, x, String(k.no))).length, 0);
+        return baslikSatiri(f.id, esc(f.tanim.ad), `${esc(gunAdi(f.tanim.baslangic || bugunISO()))}${f.tanim.bitis ? ' – ' + esc(gunAdi(f.tanim.bitis)) : ''} · ${ss.length} sınıf · ${d}/${n} doldurdu`, acikMi(f) ? '<span class="durum-etiketi yeşil">açık</span>' : '<span class="durum-etiketi soluk">kapalı</span>') + (acik === f.id ? '<div id="rehAyrinti"></div>' : '');
+      }).join('') + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
+      if (acik === 'proje') projeBolumu();
+      else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : anketSiniflari(form)[0]; ciz(); }
+    };
     const ciz = () => {
-      if (!form) { $('#rehIc').innerHTML = '<div class="kart soluk">Henüz rehberlik formu yok.</div>'; return; }
       const ss = anketSiniflari(form);
       const k = katilanlar(form, sinif).slice().sort((x, y) => (+x.no) - (+y.no));
       const dolu = k.filter(x => cevap(form, sinif, String(x.no)));
       const cok = dolu.filter(x => isaretler(form, cevap(form, sinif, String(x.no))).length >= 3);
-      $('#rehIc').innerHTML = `${formlar.length > 1 ? `<div class="cipler" id="formlar">${formlar.map(f => `<button class="cip ${f.id === form.id ? 'secili' : ''}" data-f="${esc(f.id)}">${esc(f.tanim.ad)}</button>`).join('')}</div>` : ''}
-        <div class="kart"><b>${esc(form.tanim.ad)}</b><div class="soluk kucuk">${esc(gunAdi(form.tanim.baslangic))} – ${esc(gunAdi(form.tanim.bitis))}</div>
-        <div class="cipler" id="rehSinif">${ss.map(s => { const kk = katilanlar(form, s), n = kk.filter(x => cevap(form, s, String(x.no))).length; return `<button class="cip ${s === sinif ? 'secili' : ''}" data-s="${esc(s)}">${esc(s)} ${n}/${kk.length}</button>`; }).join('')}</div></div>
+      $('#rehAyrinti').innerHTML = `<div class="kart">
+        <div class="cipler" id="rehSinif">${ss.map(s => { const kk = katilanlar(form, s), n = kk.filter(x => cevap(form, s, String(x.no))).length; return `<button class="cip ${s === sinif ? 'secili' : ''}" data-s="${esc(s)}">${esc(s)} ${n}/${kk.length}</button>`; }).join('')}</div>
         <div class="kutular"><div><b class="neon">${dolu.length}</b><span>doldurdu</span></div><div><b class="turuncu">${k.length - dolu.length}</b><span>bekleyen</span></div><div><b class="kirmizi">${cok.length}</b><span>3+ işaret</span></div></div>
         <div class="satirlar">${k.map(x => {
           const c = cevap(form, sinif, String(x.no)), im = c ? isaretler(form, c) : [];
           return `<button class="satir" data-no="${esc(x.no)}" ${c ? '' : 'disabled'}><div class="ana"><b>${esc(baslik(x.ad))} · ${esc(x.no)}</b><small>${c ? (im.length ? esc(im.slice(0, 2).map(i => form.tanim.sorular[i].metin).join(' · ')) + (im.length > 2 ? ` · +${im.length - 2}` : '') : 'işaret yok') : '<span class="turuncu">henüz doldurmadı</span>'}</small></div>${c ? `<span class="durum-etiketi ${im.length >= 3 ? 'kirmizi' : im.length ? 'neon' : 'yeşil'}">${im.length}</span>` : ''}</button>`;
         }).join('')}</div>
         <div class="dugmeler"><button class="birincil" id="rExcel">${esc(sinif)} Excel (MEB şablonu)</button><button class="ikincil" id="rPdf">${esc(sinif)} PDF (yazdır)</button></div>
-        <div class="cok-soluk kucuk">Öğrenciye tıklayınca bütün maddeler açılır.</div>`;
-      if ($('#formlar')) $('#formlar').onclick = ev => { const b = ev.target.closest('[data-f]'); if (b) { form = formlar.find(f => f.id === b.dataset.f); sinif = anketSiniflari(form)[0]; ciz(); } };
+        <div class="cok-soluk kucuk">Öğrenciye tıklayınca bütün maddeler açılır.</div></div>`;
       $('#rehSinif').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); } };
-      $('#rehIc').querySelectorAll('[data-no]').forEach(b => b.onclick = () => {
+      $('#rehAyrinti').querySelectorAll('[data-no]').forEach(b => b.onclick = () => {
         const x = k.find(y => String(y.no) === b.dataset.no), c = cevap(form, sinif, String(x.no));
         pencereAc(`<h1>${esc(baslik(x.ad))}</h1><div class="neon">${esc(sinif)} · ${esc(x.no)}</div><div class="satirlar" style="margin-top:12px">${(form.tanim.sorular || []).map((q, i) => { const v = secimler((c.c || [])[i]).join(', '); const isaret = q.tur === 'yazi' ? !!v : v === 'Evet'; return `<div class="satir"><div class="ana"><b style="white-space:normal">${i + 1}. ${esc(q.metin)}</b></div><span class="${isaret ? 'kirmizi' : 'soluk'}">${esc(v || '—')}</span></div>`; }).join('')}</div>`);
       });
@@ -823,9 +829,9 @@
           <tr><th colspan="4">TOPLAM</th>${top.map(t => `<th>${t}</th>`).join('')}</tr></table>`);
       };
     };
-    $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="soluk kucuk">Öğrenci bilgi formu (risk haritası) ve proje ödevi tercihi.</div><div id="rehIc" style="margin-top:12px"></div><div id="projeIc"></div>`;
-    ciz();
-    projeBolumu();
+    $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="soluk kucuk">Öğrenci bilgi formu (risk haritası) ve proje ödevi tercihi. Açmak için karta dokunun.</div><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
+    $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
+    liste();
   }
   async function projeBolumu() {
     const [p, d] = await Promise.all([hepsi('umal_proje', 'sinif,donem,veri').catch(() => []), hepsi('umal_proje_durum', 'sinif,durum,zaman').catch(() => [])]);
@@ -839,7 +845,8 @@
     };
     await ogrencileriYukle().catch(() => []);
     const siniflar = [...new Set([...D.ogrenciler.map(o => o.sinif), ...Object.keys(son)])].sort(sinifSira);
-    $('#projeIc').innerHTML = `<h2>Proje ödevi tercihi</h2><div class="kart"><div class="dugmeler"><button class="ikincil" data-p="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-p="*" data-d="kapali">Hepsini kapat</button></div>
+    if (!$('#projeIc')) return;
+    $('#projeIc').innerHTML = `<div><div class="dugmeler"><button class="ikincil" data-p="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-p="*" data-d="kapali">Hepsini kapat</button></div>
       <div class="satirlar">${siniflar.map(s => { const v = (son[s] || {}).veri || {}, [t, bek] = durum(s); const ad = { acik: 'açık', dagitildi: 'dağıtıldı' }[t] || 'kapalı';
         return `<div class="satir"><div class="ana"><b>${esc(s)}</b><small>${v.tercihler ? Object.keys(v.tercihler).length + ' tercih' : 'tahtadan bilgi yok'}${v.son_gun ? ' · son gün ' + esc(gunAdi(v.son_gun)) : ''}</small></div><span class="durum-etiketi ${t === 'acik' ? 'yeşil' : t === 'dagitildi' ? 'neon' : 'soluk'}">${ad}${bek ? ' · bekliyor' : ''}</span>${t !== 'dagitildi' ? `<button class="ikincil" data-p="${esc(s)}" data-d="${t === 'acik' ? 'kapali' : 'acik'}">${t === 'acik' ? 'Kapat' : 'Aç'}</button>` : ''}</div>`; }).join('')}</div>
       <div class="cok-soluk kucuk" id="projeBilgi">Tahtalar 1 dakika içinde uygular. Kurası çekilmiş sınıf buradan açılmaz.</div></div>`;
