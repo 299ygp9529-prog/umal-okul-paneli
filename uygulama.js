@@ -197,6 +197,34 @@
   }
 
   // ------------------------------------------------------------------ Harita
+  let sinifHaritasiSon = {};
+  const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+  // Sınıfa dokununca: şu anki ders ve öğretmeni; yoksa (ve her durumda altta) o günün ders programı
+  function sinifDersPenceresi(sinif, t) {
+    const p = D.program || {}, simdi = new Date(), gun0 = (simdi.getDay() + 6) % 7, okulGunu = gun0 < 5;
+    const gun = okulGunu ? gun0 : 0;   // hafta sonu: pazartesinin programı
+    const on = t && Date.now() - new Date(t.gorulme) < 6 * 60000, ds = on ? ((t.durum || {}).ders_simdi || {}) : {};
+    const pr = simdikiDers(sinif);
+    const ders = ds.durum === 'sinav' ? 'Sınav' + (ds.ders ? ' · ' + ds.ders : '') : (ds.ders || (pr && pr.ders) || '');
+    const ogr = (ds.ogretmen && ds.ogretmen.length ? ds.ogretmen : (pr ? pr.ogretmen : [])).map(baslik);
+    const zil = (p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || [], h = (p.siniflar || {})[sinif] || {};
+    const satirlar = zil.filter(z => /^\d+$/.test(String(z.ders))).map(z => {
+      const n = parseInt(z.ders, 10), c = h[`${gun}-${n}`], simdiki = okulGunu && pr && pr.no === n;
+      return `<div class="prog-satir ${simdiki ? 'simdi' : ''} ${c ? '' : 'bos'}"><span class="p-no">${n}</span><span class="p-saat">${esc(String(z.bas).replace(':', '.'))}–${esc(String(z.bit).replace(':', '.'))}</span><span class="p-ders">${c ? esc(c.ders) : 'Boş'}</span><span class="p-ogr">${c ? esc((c.ogretmen || []).map(baslik).join(', ')) : ''}</span>${simdiki ? '<span class="p-simdi">şimdi</span>' : ''}</div>`;
+    }).join('');
+    const ust = ders && ogr.length
+      ? `<div class="simdi-kart"><div class="b-etk">Şu an${pr ? ` · ${pr.no}. ders · ${pr.saat}` : ''}</div><div class="s-ogr">${esc(ogr.join(', '))}</div><div class="s-ders">${esc(ders)}</div></div>`
+      : `<div class="simdi-kart bosta"><div class="b-etk">Şu an</div><div class="s-ders">${okulGunu ? (pr ? 'Bu saatte dersi yok' : 'Ders saati değil') : 'Bugün okul yok'}</div></div>`;
+    pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${on ? '<span class="yeşil">● tahta açık</span>' : 'tahta kapalı'}</span></div>${ust}
+      <h2>${okulGunu ? `Bugünkü ders programı · ${GUNLER[gun]}` : 'Pazartesi ders programı'}</h2><div class="prog">${satirlar || '<div class="soluk">Ders programı yok.</div>'}</div>`);
+  }
+  function haritaOdak(siniflar) {
+    document.querySelectorAll('.tahta.odak').forEach(e => e.classList.remove('odak'));
+    const el = siniflar.map(s => document.querySelector(`.tahta[data-sinif="${CSS.escape(s)}"]`)).filter(Boolean);
+    if (!el.length) return;
+    el[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.forEach(e => { void e.offsetWidth; e.classList.add('odak'); });
+  }
   async function harita() {
     await programYukle();
     const ciz = async () => {
@@ -211,6 +239,7 @@
         if (!eski || new Date(t.gorulme) > new Date(eski.gorulme)) sinifHaritasi[s] = t;
       }
       const siniflar = Object.keys(sinifHaritasi).sort(sinifSira);
+      sinifHaritasiSon = sinifHaritasi;
       const acik = siniflar.filter(s => simdi - new Date(sinifHaritasi[s].gorulme) < 6 * 60000);
       const arama = ($('#haritaAra') && $('#haritaAra').value) || '';
       const q = arama.toLocaleLowerCase(tr);
@@ -221,23 +250,34 @@
         const pr = simdikiDers(s);
         const ders = sinavda ? 'SINAV' + (ds.ders ? ' · ' + ds.ders : '') : (ds.ders || (pr && pr.ders) || '');
         const ogr = (ds.ogretmen && ds.ogretmen.length ? ds.ogretmen : (pr ? pr.ogretmen : [])).map(baslik).join(', ');
-        return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
+        return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}" data-sinif="${esc(s)}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
           <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${on && d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}</div>`;
       };
-      let liste = siniflar;
-      if (q) liste = siniflar.filter(s => {
+      // Arama: liste süzülmez; eşleşen sınıfa kayılır, kartı büyüyüp çerçevesi yanıp söner
+      const eslesen = !q ? [] : siniflar.filter(s => {
         const t = sinifHaritasi[s], ds = (simdi - new Date(t.gorulme) < 6 * 60000 ? (t.durum || {}).ders_simdi : null) || {}, pr = simdikiDers(s);
         const o = [...(ds.ogretmen || []), ...(pr ? pr.ogretmen : [])].join(' ').toLocaleLowerCase(tr);
-        return s.toLocaleLowerCase(tr).includes(q) || o.includes(q);
+        return s.toLocaleLowerCase(tr) === q || (q.length >= 3 && o.includes(q));
       });
       const pr0 = simdikiDers(siniflar[0] || '9-A');
-      $('#haritaIzgara').innerHTML = liste.map(kart).join('') || '<div class="soluk">Eşleşen tahta yok.</div>';
+      $('#haritaIzgara').innerHTML = siniflar.map(kart).join('');
+      let bilgi = '';
+      if (q.length >= 3 && !eslesen.length) {   // derste değilse bugünkü dersleri
+        const p = D.program || {}, gun = (new Date().getDay() + 6) % 7, bugun = [];
+        if (gun < 5) for (const [sn, h] of Object.entries(p.siniflar || {})) for (const [k, c] of Object.entries(h)) if (k.startsWith(gun + '-') && (c.ogretmen || []).join(' ').toLocaleLowerCase(tr).includes(q)) bugun.push([+k.split('-')[1], sn, c.ders]);
+        bugun.sort((a, b) => a[0] - b[0]);
+        bilgi = `<div class="kart" style="margin-bottom:10px"><b class="turuncu">Şu an derste değil.</b>${bugun.length ? ` <span class="soluk">Bugün:</span> ${bugun.map(([n, sn, d]) => `<button class="cip kucukcip" data-git="${esc(sn)}">${n}. ders · ${esc(sn)}</button>`).join(' ')}` : ' <span class="soluk">Bugün dersi yok.</span>'}</div>`;
+      }
+      $('#haritaBilgi').innerHTML = bilgi;
+      if (eslesen.length) haritaOdak(eslesen);
       $('#haritaAlt').innerHTML = `${pr0 ? `<span class="t-neon">${pr0.no}. ders · ${pr0.saat}</span>` : ''}<span class="t-neon buyuk-neon">${acik.length} / ${siniflar.length} tahta açık</span>`;
     };
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Harita</h1><div class="turuncu-neonlar" id="haritaAlt"></div></div>
-      <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div class="izgara" id="haritaIzgara"></div>
-      <div class="cok-soluk kucuk" style="margin-top:12px">Yeşil çerçeve: tahta açık. Turuncu: sınav. Ders ve öğretmen tahtanın bildirdiğinden, yoksa ders programından.</div>`;
-    $('#haritaAra').oninput = () => ciz();
+      <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div id="haritaBilgi"></div><div class="izgara" id="haritaIzgara"></div>
+      <div class="cok-soluk kucuk" style="margin-top:12px">Turuncu neon: tahta açık. Kırmızı: sınav. Sınıfa dokununca şu anki ders ve günün programı. Ders ve öğretmen tahtanın bildirdiğinden, yoksa ders programından.</div>`;
+    let araZ; $('#haritaAra').oninput = () => { clearTimeout(araZ); araZ = setTimeout(ciz, 250); };
+    $('#haritaIzgara').onclick = ev => { const k = ev.target.closest('[data-sinif]'); if (k) sinifDersPenceresi(k.dataset.sinif, sinifHaritasiSon[k.dataset.sinif]); };
+    $('#haritaBilgi').onclick = ev => { const b = ev.target.closest('[data-git]'); if (b) haritaOdak([b.dataset.git]); };
     await ciz();
     yenile(ciz, 60);
   }
