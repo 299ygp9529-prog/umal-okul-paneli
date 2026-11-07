@@ -123,7 +123,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici);
-    $('#icerik').classList.remove('salon-acik');
+    $('#icerik').classList.remove('salon-acik', 'sinif-acik');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     b.ciz().catch(e => { $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
   }
@@ -357,7 +357,7 @@
     const lay = salonDuzeni(sinif, L.map((_, i) => ({ sira: i + 1 })));
     let sira = lay.desks.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]).flatMap(d => d[3]);
     if (OZEL_SIRA[sinif]) sira = OZEL_SIRA[sinif].filter(n => lay.seats.has(n)).concat(sira.filter(n => !OZEL_SIRA[sinif].includes(n)));
-    const kayit = L.slice(0, sira.length).map((o, i) => ({ sira: sira[i], no: o.no, ad: o.ad, sinif: o.sinif, ek: 'No ' + o.no, etiket: '' }));
+    const kayit = L.slice(0, sira.length).map((o, i) => ({ sira: sira[i], no: o.no, ad: o.ad, sinif: o.sinif, etiket: '' }));
     return oturmaPlani(sinif, kayit, new Set()) + (L.length > sira.length ? `<div class="turuncu kucuk" style="margin-top:8px">Sırada yeri olmayan: ${L.slice(sira.length).map(o => esc(baslik(o.ad))).join(', ')}</div>` : '');
   }
 
@@ -499,8 +499,10 @@
       document.querySelectorAll('#sinifCip .cip').forEach(c => c.classList.toggle('secili', c === b));
       const L = D.ogrenciler.filter(o => o.sinif === secili).sort((a, b) => (+a.no) - (+b.no));
       const pr = simdikiDers(secili);
-      $('#ogrIc').innerHTML = `<div class="sinav-ust"><span class="neon-tabela">${esc(secili)}</span><span class="soluk">${L.length} öğrenci${pr ? ` · şu an ${pr.no}. ders: <span class="sari-yazi" style="font-size:15px">${esc(pr.ders)}</span>${pr.ogretmen.length ? ' · ' + esc(pr.ogretmen.map(baslik).join(', ')) : ''}` : ''}</span></div>
-        <div class="soluk kucuk" style="margin-bottom:10px">Okul numarasına göre, öğretmen masasının önünden başlayarak sütun sütun.</div>${sinifOturmaPlani(secili, L)}`;
+      $('#icerik').classList.add('sinif-acik'); window.scrollTo(0, 0);
+      $('#ogrIc').innerHTML = `<div class="sinav-ust"><button class="ikincil" id="sinifGeri">← Sınıflar</button><span class="neon-tabela">${esc(secili)}</span><span class="soluk">${L.length} öğrenci${pr ? ` · şu an ${pr.no}. ders: <span class="sari-yazi" style="font-size:15px">${esc(pr.ders)}</span>${pr.ogretmen.length ? ' · ' + esc(pr.ogretmen.map(baslik).join(', ')) : ''}` : ''}</span></div>
+        ${sinifOturmaPlani(secili, L)}`;
+      $('#sinifGeri').onclick = () => { $('#icerik').classList.remove('sinif-acik'); secili = null; document.querySelectorAll('#sinifCip .cip').forEach(c => c.classList.remove('secili')); $('#ogrIc').innerHTML = ''; };
       planiSigdir();
       fotolariYukle(L.map(o => o.no));
     };
