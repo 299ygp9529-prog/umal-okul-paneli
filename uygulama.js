@@ -1369,8 +1369,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const siniflar = [...new Set([...D.ogrenciler.map(o => o.sinif), ...Object.keys(son)])].sort(sinifSira);
     if (!$('#projeIc')) return;
     $('#projeIc').innerHTML = `<div><div class="dugmeler"><button class="ikincil" data-p="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-p="*" data-d="kapali">Hepsini kapat</button></div>
-      <div class="satirlar">${siniflar.map(s => { const v = (son[s] || {}).veri || {}, [t, bek] = durum(s); const ad = { acik: 'açık', dagitildi: 'dağıtıldı' }[t] || 'kapalı';
-        return `<div class="satir"><div class="ana"><b>${esc(s)}</b><small>${v.tercihler ? Object.keys(v.tercihler).length + ' tercih' : 'tahtadan bilgi yok'}${v.son_gun ? ' · son gün ' + esc(gunAdi(v.son_gun)) : ''}</small></div><span class="durum-etiketi ${t === 'acik' ? 'yeşil' : t === 'dagitildi' ? 'neon' : 'soluk'}">${ad}${bek ? ' · bekliyor' : ''}</span>${t !== 'dagitildi' ? `<button class="ikincil" data-p="${esc(s)}" data-d="${t === 'acik' ? 'kapali' : 'acik'}">${t === 'acik' ? 'Kapat' : 'Aç'}</button>` : ''}</div>`; }).join('')}</div>
+      ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(s => { const v = (son[s] || {}).veri || {}, [t, bek] = durum(s);
+        return `<div class="pj-kutu ${t}"><div class="pj-ust"><b>${esc(s)}</b>${t !== 'dagitildi' ? `<button class="pj-dugme ${t === 'acik' ? 'pj-kapa' : 'pj-ac'}" data-p="${esc(s)}" data-d="${t === 'acik' ? 'kapali' : 'acik'}">${t === 'acik' ? 'Kapat' : 'Aç'}</button>` : ''}</div><small>${t === 'acik' ? 'açık' : t === 'dagitildi' ? 'dağıtıldı' : 'kapalı'}${bek ? ' · bekliyor' : ''}${v.tercihler ? ' · ' + Object.keys(v.tercihler).length + ' tercih' : ''}</small></div>`; }).join('')}</div></div>`; }).join('')}
       <div class="cok-soluk kucuk" id="projeBilgi"></div></div>`;
     $('#projeIc').onclick = async ev => {
       const b = ev.target.closest('[data-p]'); if (!b) return;
