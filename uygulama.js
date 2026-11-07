@@ -274,7 +274,7 @@
     };
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Harita</h1><div class="turuncu-neonlar" id="haritaAlt"></div></div>
       <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div id="haritaBilgi"></div><div class="izgara" id="haritaIzgara"></div>
-      <div class="cok-soluk kucuk" style="margin-top:12px">Turuncu neon: tahta açık. Kırmızı: sınav. Sınıfa dokununca şu anki ders ve günün programı. Ders ve öğretmen tahtanın bildirdiğinden, yoksa ders programından.</div>`;
+`;
     let araZ; $('#haritaAra').oninput = () => { clearTimeout(araZ); araZ = setTimeout(ciz, 250); };
     $('#haritaIzgara').onclick = ev => { const k = ev.target.closest('[data-sinif]'); if (k) sinifDersPenceresi(k.dataset.sinif, sinifHaritasiSon[k.dataset.sinif]); };
     $('#haritaBilgi').onclick = ev => { const b = ev.target.closest('[data-git]'); if (b) haritaOdak([b.dataset.git]); };
@@ -573,7 +573,7 @@
     await Promise.all([ogrencileriYukle(), programYukle()]);
     const siniflar = [...new Set(D.ogrenciler.map(o => o.sinif))].sort(sinifSira);
     let secili = null;
-    $('#icerik').innerHTML = `<h1>Öğrenciler</h1><div class="soluk kucuk">${D.ogrenciler.length} öğrenci · ${siniflar.length} şube</div>
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenciler</h1><div class="turuncu-neonlar"><span class="t-neon">${siniflar.length} şube</span><span class="t-neon buyuk-neon">${D.ogrenciler.length} öğrenci</span></div></div>
       <div class="ara"><input id="ogrAra" placeholder="Öğrenci adı ya da numarası"></div>
       <div class="cipler" id="sinifCip">${siniflar.map(s => `<button class="cip" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <div id="ogrIc"></div>`;
@@ -747,7 +747,7 @@
         <h2>Sınıf sınıf katılım · en düşük üstte</h2>
         ${Object.keys(gruplar).sort(sinifSira).map(d => gruplar[d].sort((x, y) => oran(x) - oran(y)).map(s => { const k = katilanlar(a, s), n = k.filter(x => cevap(a, s, String(x.no))).length; return `<div class="cubuk"><span class="ad">${esc(s)}</span><span class="yol"><i style="width:${yuzde(n, k.length)}%;background:${oran(s) >= .5 ? 'var(--neon)' : 'var(--turuncu)'}"></i></span><span class="sayi">${n}/${k.length}</span></div>`; }).join('')).join('')}
         <div class="dugmeler"><button class="ikincil" id="aExcel">Excel</button><button class="ikincil" id="aPdf">PDF (yazdır)</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}</div>
-        <div class="cok-soluk kucuk" id="aBilgi">Tahtalar 1 dakika içinde uygular. "Aç" yalnız bugün için; kapatma kalıcı.</div>`;
+        <div class="cok-soluk kucuk" id="aBilgi"></div>`;
       $('#filtre').onclick = ev => { const f = ev.target.closest('[data-f]'); if (f) { filtre = f.dataset.f; ayrinti(a); } };
       $('#aExcel').onclick = () => anketExcel(a, ss);
       $('#aPdf').onclick = () => yazdir(`<h2 style="color:#000">${esc(a.tanim.ad)}</h2><div>${c} / ${b} cevapladı</div>` + $('#anketAyrinti').innerHTML.replace(/<div class="dugmeler">[\s\S]*$/, ''));
@@ -760,7 +760,7 @@
       if ($('#aKopya')) $('#aKopya').onclick = () => anketHazirla(a, true);
       if ($('#aAc')) { $('#aAc').onclick = () => durumYaz(true); $('#aKapat').onclick = () => durumYaz(false); }
     };
-    $('#icerik').innerHTML = `<div class="ust"><h1>Anketler</h1><div class="dugmeler" style="margin:0"><button class="birincil" id="yeniAnket">+ Yeni anket</button></div></div><div class="cipler" id="anketFiltre"></div><div class="satirlar" id="anketIc" style="margin-top:6px"></div>`;
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Anketler</h1><div class="dugmeler" style="margin:0;align-items:center"><span class="t-neon">${D.anketler.filter(a => a.durum !== 'taslak' && acikMi(a)).length} açık anket</span><button class="birincil" id="yeniAnket">+ Yeni anket</button></div></div><div class="cipler" id="anketFiltre"></div><div class="satirlar" id="anketIc" style="margin-top:6px"></div>`;
     $('#yeniAnket').onclick = () => anketHazirla(null, false);
     $('#anketFiltre').onclick = ev => { const b = ev.target.closest('[data-lf]'); if (b) { listeFiltre = b.dataset.lf; acikId = null; ciz(); } };
     $('#anketIc').onclick = ev => {
@@ -1109,7 +1109,7 @@
           return `<button class="satir" data-no="${esc(x.no)}" ${c ? '' : 'disabled'}><div class="ana"><b>${esc(baslik(x.ad))} · ${esc(x.no)}</b><small>${c ? (im.length ? esc(im.slice(0, 2).map(i => form.tanim.sorular[i].metin).join(' · ')) + (im.length > 2 ? ` · +${im.length - 2}` : '') : 'işaret yok') : '<span class="turuncu">henüz doldurmadı</span>'}</small></div>${c ? `<span class="durum-etiketi ${im.length >= 3 ? 'kirmizi' : im.length ? 'neon' : 'yeşil'}">${im.length}</span>` : ''}</button>`;
         }).join('')}</div>
         <div class="dugmeler"><button class="birincil" id="rExcel">${esc(sinif)} Excel (MEB şablonu)</button><button class="ikincil" id="rPdf">${esc(sinif)} PDF (yazdır)</button></div>
-        <div class="cok-soluk kucuk">Öğrenciye tıklayınca bütün maddeler açılır.</div></div>`;
+        </div>`;
       $('#rehSinif').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); } };
       $('#rehAyrinti').querySelectorAll('[data-no]').forEach(b => b.onclick = () => {
         const x = k.find(y => String(y.no) === b.dataset.no), c = cevap(form, sinif, String(x.no));
@@ -1131,7 +1131,7 @@
           <tr><th colspan="4">TOPLAM</th>${top.map(t => `<th>${t}</th>`).join('')}</tr></table>`);
       };
     };
-    $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="soluk kucuk">Öğrenci bilgi formu (risk haritası) ve proje ödevi tercihi. Açmak için karta dokunun.</div><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
+    $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
     liste();
   }
@@ -1151,7 +1151,7 @@
     $('#projeIc').innerHTML = `<div><div class="dugmeler"><button class="ikincil" data-p="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-p="*" data-d="kapali">Hepsini kapat</button></div>
       <div class="satirlar">${siniflar.map(s => { const v = (son[s] || {}).veri || {}, [t, bek] = durum(s); const ad = { acik: 'açık', dagitildi: 'dağıtıldı' }[t] || 'kapalı';
         return `<div class="satir"><div class="ana"><b>${esc(s)}</b><small>${v.tercihler ? Object.keys(v.tercihler).length + ' tercih' : 'tahtadan bilgi yok'}${v.son_gun ? ' · son gün ' + esc(gunAdi(v.son_gun)) : ''}</small></div><span class="durum-etiketi ${t === 'acik' ? 'yeşil' : t === 'dagitildi' ? 'neon' : 'soluk'}">${ad}${bek ? ' · bekliyor' : ''}</span>${t !== 'dagitildi' ? `<button class="ikincil" data-p="${esc(s)}" data-d="${t === 'acik' ? 'kapali' : 'acik'}">${t === 'acik' ? 'Kapat' : 'Aç'}</button>` : ''}</div>`; }).join('')}</div>
-      <div class="cok-soluk kucuk" id="projeBilgi">Tahtalar 1 dakika içinde uygular. Kurası çekilmiş sınıf buradan açılmaz.</div></div>`;
+      <div class="cok-soluk kucuk" id="projeBilgi"></div></div>`;
     $('#projeIc').onclick = async ev => {
       const b = ev.target.closest('[data-p]'); if (!b) return;
       const { error } = await sb.from('umal_proje_durum').upsert({ sinif: b.dataset.p, durum: b.dataset.d, zaman: Date.now() / 1000 });
@@ -1165,7 +1165,7 @@
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').eq('anahtar', 'siniflar').maybeSingle();
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
-    $('#icerik').innerHTML = `<h1>Gönder</h1><div class="soluk kucuk">Tahtalarda duyuru olarak görünür.</div>
+    $('#icerik').innerHTML = `<h1>Gönder</h1>
       <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
