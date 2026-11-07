@@ -535,8 +535,33 @@
             <div class="s-gozcu">${esc(baslik((secili.gozcu || {})[x] || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}${yeni.length ? `<span class="gordum" data-gordum="${esc(x)}">✓ Gördüm</span>` : ''}
             <div class="s-durum">${esc(d.yazi)}</div>${seviyeSeridi(L)}</button>`;
         }).join('')}</div>`;
+      gunOzeti();
       if (sesCal && ilkCizimBitti) uyariSesi();
       ilkCizimBitti = true;
+    };
+    // Günün özeti: o tarihteki her ders saatinde kaç kişi gelmedi, kümülatif toplam
+    const gunOzeti = async () => {
+      await ogrencileriYukle();
+      const gunPlan = D.planlar.filter(p => p.tarih === secili.tarih).sort((a, b) => parseInt(a.ders, 10) - parseInt(b.ders, 10));
+      const { data: gs } = await sb.from('umal_sinav_salon').select('ders,salon,veri').eq('tarih', secili.tarih);
+      const yk = {}; (gs || []).forEach(r => { (yk[r.ders] = yk[r.ders] || {})[r.salon] = r.veri || {}; });
+      let kum = 0, kumTop = 0;
+      const satir = gunPlan.map(p => {
+        const sal = Object.keys(p.salonlar || {}), top = sal.reduce((t, x) => t + (p.salonlar[x] || []).length, 0);
+        const v = yk[p.ders] || {}, gelen = sal.filter(x => (v[x] || {}).zaman).length;
+        const liste = []; sal.forEach(x => ((v[x] || {}).gelmedi || []).forEach(g => { const r = (p.salonlar[x] || []).map(siraKaydi).find(k => k.no === String(g.no)); const o = D.ogrenciler.find(k => k.no === String(g.no)); liste.push({ salon: x, no: String(g.no), ad: r ? r.ad : (o ? o.ad : ''), sinif: r ? r.sinif : (o ? o.sinif : '') }); }));
+        kum += liste.length; kumTop += top;
+        const st = sinavSaati(p);
+        return { p, top, n: liste.length, kum, kumTop, liste, gelen, sal: sal.length, st };
+      });
+      const farkli = new Set(satir.flatMap(r => r.liste.map(g => g.no))).size;
+      const el = $('#gunOzet'); if (!el) return;
+      el.innerHTML = `<h2>${esc(gunAdi(secili.tarih))} · günün özeti</h2><div class="ozet-tablo">
+        <div class="oz-bas"><span>Ders</span><span>Sınav</span><span>Öğrenci</span><span>Yoklama</span><span>Gelmeyen</span><span>Kümülatif</span></div>
+        ${satir.map((r, i) => `<details class="oz-satir ${r.p === secili ? 'secili' : ''}"><summary><span><b>${esc(r.p.ders)}</b><small>${r.st.aralik || ''}</small></span><span class="oz-sinav">${esc(r.p.sinav || '')}</span><span>${r.top}</span><span>${r.gelen}/${r.sal}</span><span class="${r.n ? 'kirmizi' : ''}"><b>${r.n}</b></span><span class="turuncu"><b>${r.kum}</b> <small>/ ${r.kumTop}</small></span></summary>
+          ${r.liste.length ? `<div class="oz-liste">${r.liste.map(g => `<button class="oz-ogr" data-oz="${esc(g.no)}"><span class="sv-nokta" style="background:${seviyeRenk(g.sinif)};color:${seviyeRenk(g.sinif)}"></span>${esc(baslik(g.ad) || g.no)} <small>${esc(g.sinif)} · ${esc(g.no)} · ${esc(g.salon)} salonu</small></button>`).join('')}</div>` : `<div class="soluk kucuk" style="padding:6px 12px 10px">${r.gelen ? 'Gelmeyen yok.' : 'Yoklama henüz gelmedi.'}</div>`}</details>`).join('')}
+        <div class="oz-top"><span>Toplam</span><span></span><span>${kumTop}</span><span></span><span class="kirmizi"><b>${kum}</b></span><span class="t-neon">${farkli} öğrenci · ${kum} sınav kaçırıldı</span></div></div>`;
+      el.onclick = ev => { const b = ev.target.closest('[data-oz]'); if (b) ogrencileriYukle().then(() => ogrenciKarti(D.ogrenciler.find(o => o.no === b.dataset.oz))); };
     };
     const salonCiz = () => {
       const x = acikSalon, v = yok[x] || {}, L = (secili.salonlar[x] || []).map(siraKaydi).sort((a, b) => a.sira - b.sira);
@@ -560,7 +585,7 @@
     $('#icerik').innerHTML = `<div class="ust"><h1>Sınav merkezi</h1><div class="sag-ust"><div class="ara" style="margin:0"><input id="sinavAra" placeholder="Öğrenci adı ya da numarası: nerede sınava giriyor?"></div><div class="turuncu-neonlar" id="ustNeon"></div></div></div>
       <div class="cipler" id="planlar">${D.planlar.map((p, i) => `<button class="cip ${i === 0 ? 'secili' : ''}" data-i="${i}">${esc(gunAdi(p.tarih))} · ${esc(p.ders)}</button>`).join('')}</div>
       <div class="soluk kucuk" id="planAd">${esc((secili && secili.sinav) || '')}</div><div id="sinavBul"></div>
-      <div class="sinav-ust" id="sinavUst"></div><div id="sinavIc"></div>`;
+      <div class="sinav-ust" id="sinavUst"></div><div id="sinavIc"></div><div id="gunOzet"></div>`;
     $('#planlar').onclick = ev => {
       const b = ev.target.closest('[data-i]'); if (!b) return;
       secili = D.planlar[+b.dataset.i]; acikSalon = null;

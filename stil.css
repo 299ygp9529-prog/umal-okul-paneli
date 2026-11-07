@@ -461,3 +461,22 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .bilet-kapat { position: absolute; right: 0; top: 0; z-index: 5; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #ff9a3a; background: rgba(40,20,4,.9); color: #ffd2a1; font-size: 17px; font-weight: 900; box-shadow: 0 0 10px rgba(255,154,58,.55); }
 .bilet-cerceve .bilet { margin-right: 48px; } .bilet-cerceve .satirlar { margin-right: 48px !important; }
 .bilet-kapat:hover { background: #ff9a3a; color: #1a1206; }
+
+/* Günün özeti */
+#icerik.salon-acik #gunOzet { display: none; }
+#gunOzet { margin-top: 22px; }
+.ozet-tablo { display: flex; flex-direction: column; gap: 6px; }
+.oz-bas, .oz-satir > summary, .oz-top { display: grid; grid-template-columns: 120px 1fr 90px 90px 100px 190px; gap: 10px; align-items: center; padding: 10px 14px; }
+.oz-bas { color: #8fa6c4; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding-bottom: 2px; }
+.oz-satir { background: #16243a; border: 1px solid #24364f; border-radius: 12px; }
+.oz-satir > summary { cursor: pointer; list-style: none; } .oz-satir > summary::-webkit-details-marker { display: none; }
+.oz-satir > summary small { display: block; color: #8fa6c4; font-size: 12px; }
+.oz-satir.secili { border-color: #22e8ff; box-shadow: 0 0 10px rgba(34,232,255,.3); }
+.oz-satir b { font-size: 17px; } .oz-sinav { color: #c9d6e8; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oz-liste { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px; }
+.oz-ogr { display: inline-flex; align-items: center; gap: 6px; background: var(--koyu); border: 1px solid rgba(255,77,94,.5); color: #fff; border-radius: 10px; padding: 5px 10px; font-weight: 600; cursor: pointer; }
+.oz-ogr small { color: #8fa6c4; font-weight: 500; }
+.oz-top { background: rgba(40,20,4,.5); border: 1.5px solid #ff9a3a; border-radius: 12px; font-weight: 800; box-shadow: 0 0 10px rgba(255,154,58,.35); }
+.oz-top b { font-size: 20px; } .oz-top .t-neon { justify-self: start; }
+@media (max-width: 900px) { .oz-bas { display: none; } .oz-satir > summary, .oz-top { grid-template-columns: 1fr auto auto; } .oz-sinav, .oz-satir > summary > span:nth-child(3), .oz-satir > summary > span:nth-child(4), .oz-top > span:nth-child(2), .oz-top > span:nth-child(3), .oz-top > span:nth-child(4) { display: none; } }
+.oz-top .t-neon { white-space: normal; font-size: 13.5px; padding: 5px 10px; line-height: 1.25; }
