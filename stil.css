@@ -205,3 +205,4 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
   .logo3d { width: 42px; height: 42px; margin: 0 10px 0 0; flex: none; filter: drop-shadow(0 0 8px rgba(34,232,255,.45)); }
   .para i { inset: 1px; }
 }
+.kurlink { display: block; margin-top: 16px; color: var(--neon); font-weight: 700; font-size: 14px; text-decoration: none; animation: belir .7s ease-out both 1.9s; }

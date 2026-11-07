@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Panel kurulumu</title>
+<meta name="theme-color" content="#0d1726">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="simge-192.png">
+<link rel="apple-touch-icon" href="simge-192.png">
+<style>
+:root { --zemin:#0d1726; --kart:#13233a; --koyu:#0f1c2e; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --cok:#6f819c; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--zemin); color: #fff; font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.sayfa { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+.bas { display: flex; align-items: center; gap: 16px; }
+.bas img { width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 0 20px rgba(34,232,255,.4); }
+h1 { margin: 0; font-size: 24px; } .alt { color: var(--neonacik); font-size: 14px; }
+.sekmeler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 24px 0 14px; }
+.sekmeler button { font: inherit; font-weight: 700; color: #fff; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 12px 6px; cursor: pointer; }
+.sekmeler button small { display: block; font-weight: 500; color: var(--soluk); font-size: 11.5px; }
+.sekmeler button.s { background: var(--neon); color: var(--zemin); border-color: var(--neon); box-shadow: 0 0 16px rgba(34,232,255,.45); }
+.sekmeler button.s small { color: #0d3a44; }
+.kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 18px; padding: 20px; }
+.gizli { display: none; }
+ol { margin: 0; padding: 0; list-style: none; counter-reset: a; }
+ol li { counter-increment: a; position: relative; padding: 0 0 16px 46px; }
+ol li::before { content: counter(a); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%; background: rgba(34,232,255,.12); border: 1px solid var(--neon); color: var(--neon); font-weight: 800; display: flex; align-items: center; justify-content: center; }
+ol li b { color: #fff; }
+.indir { display: block; text-align: center; text-decoration: none; background: var(--neon); color: var(--zemin); font-weight: 800; border-radius: 14px; padding: 14px; margin: 4px 0 18px; box-shadow: 0 0 18px rgba(34,232,255,.45); border: 0; width: 100%; font-size: 16px; cursor: pointer; }
+.ikinci { background: transparent; color: var(--neon); border: 1px solid rgba(34,232,255,.7); box-shadow: none; }
+.not { color: var(--cok); font-size: 13px; margin-top: 6px; }
+.uyari { background: var(--koyu); border-left: 3px solid #f59e0b; border-radius: 10px; padding: 10px 12px; color: var(--soluk); font-size: 13.5px; margin: 6px 0 16px; }
+.k { display: inline-block; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 7px; padding: 0 7px; font-size: 13px; color: var(--neonacik); }
+.sonra { margin-top: 18px; color: var(--soluk); }
+a.geri { color: var(--neon); font-weight: 700; text-decoration: none; display: inline-block; margin-top: 22px; }
+@media (max-width: 520px) { .sekmeler { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="sayfa">
+  <div class="bas"><img src="simge-192.png" alt=""><div><h1>Atlas Panel simgesi</h1><div class="alt">Ümraniye Merkez Anadolu Lisesi · Okul Yönetim Paneli</div></div></div>
+  <p class="not" style="font-size:14px">Cihazınıza bir kere okul logolu simge eklenir; sonra simgeye dokununca panel doğrudan açılır. İlk açılışta e-postanıza gelen kodla bir kere girersiniz.</p>
+
+  <div class="sekmeler" id="sekmeler">
+    <button data-c="ios">iPhone · iPad<small>iOS</small></button>
+    <button data-c="android">Android<small>telefon · tablet</small></button>
+    <button data-c="windows">Windows<small>bilgisayar</small></button>
+    <button data-c="mac">Mac<small>macOS</small></button>
+  </div>
+
+  <div class="kart gizli" id="ios">
+    <a class="indir" href="kurulum/Atlas-Panel.mobileconfig">Simgeyi indir (iPhone · iPad)</a>
+    <ol>
+      <li>Bu sayfayı <b>Safari</b>'de açın ve yukarıdaki düğmeye dokunun. "Bu web sitesi bir yapılandırma profili indirmeye çalışıyor" sorusuna <b>İzin Ver</b> deyin.</li>
+      <li><b>Ayarlar</b> uygulamasını açın. En üstte <b>Profil İndirildi</b> yazar; ona dokunun. (Görünmezse: Ayarlar → Genel → VPN ve Aygıt Yönetimi.)</li>
+      <li>Sağ üstte <b>Yükle</b>'ye dokunun, telefon şifrenizi girin, yine <b>Yükle</b> deyin. "İmzalanmamış" yazısı normaldir; profil yalnız simge ekler.</li>
+      <li>Ana ekranda okul logolu <b>Atlas Panel</b> simgesi çıkar.</li>
+    </ol>
+    <div class="uyari">Profil kurmak istemezseniz: Safari'de panel adresini açın → alttaki paylaş düğmesi <span class="k">⬆︎</span> → <b>Ana Ekrana Ekle</b> → <b>Ekle</b>. Aynı simge gelir.</div>
+    <div class="not">Simgeyi silmek için uzun basıp "Simgeyi Sil" deyin ya da Ayarlar → Genel → VPN ve Aygıt Yönetimi → Atlas Panel → Profili Sil.</div>
+  </div>
+
+  <div class="kart gizli" id="android">
+    <button class="indir" id="yukleAndroid">Uygulama olarak yükle</button>
+    <ol>
+      <li>Bu sayfayı <b>Chrome</b>'da açın ve yukarıdaki düğmeye dokunun; çıkan pencerede <b>Yükle</b> deyin.</li>
+      <li>Düğme çalışmazsa: sağ üstteki <span class="k">⋮</span> menüsü → <b>Uygulamayı yükle</b> (bazı telefonlarda <b>Ana ekrana ekle</b>) → <b>Yükle</b>.</li>
+      <li>Ana ekranda ve uygulama listesinde okul logolu <b>Atlas Panel</b> çıkar; ayrı bir uygulama gibi tam ekran açılır.</li>
+    </ol>
+    <div class="not">Samsung İnternet'te: alttaki menü <span class="k">≡</span> → Sayfayı ekle → Ana ekran.</div>
+  </div>
+
+  <div class="kart gizli" id="windows">
+    <a class="indir" href="kurulum/Atlas-Panel-Windows.zip" download>Windows kurulumunu indir</a>
+    <ol>
+      <li>İnen <b>Atlas-Panel-Windows.zip</b> dosyasına sağ tıklayın → <b>Tümünü ayıkla</b>.</li>
+      <li>Açılan klasörde <b>Atlas Panel kur</b> dosyasına çift tıklayın.</li>
+      <li>Mavi "Windows bilgisayarınızı korudu" penceresi çıkarsa <b>Ek bilgi</b> → <b>Yine de çalıştır</b>. Yönetici şifresi istemez.</li>
+      <li>Masaüstünde ve Başlat menüsünde okul logolu <b>Atlas Panel</b> simgesi çıkar.</li>
+    </ol>
+    <div class="uyari">Dosya indirmeden: panel adresini <b>Edge</b> ya da <b>Chrome</b>'da açın → adres çubuğunun sağındaki <span class="k">⊕</span> / bilgisayar simgesi → <b>Yükle</b>. Ya da aşağıdaki düğme:</div>
+    <button class="indir ikinci" id="yukleWin">Bu tarayıcıdan uygulama olarak yükle</button>
+  </div>
+
+  <div class="kart gizli" id="mac">
+    <button class="indir" id="yukleMac">Chrome / Edge: uygulama olarak yükle</button>
+    <ol>
+      <li><b>Safari</b> (macOS Sonoma ve sonrası): panel adresini açın → üst menüden <b>Dosya</b> → <b>Dock'a Ekle</b> → <b>Ekle</b>.</li>
+      <li><b>Chrome</b> ya da <b>Edge</b>: yukarıdaki düğmeye basın ya da adres çubuğunun sağındaki yükle simgesine tıklayın → <b>Yükle</b>.</li>
+      <li>Dock'ta ve Launchpad'de okul logolu <b>Atlas Panel</b> çıkar; ayrı bir pencerede açılır.</li>
+    </ol>
+  </div>
+
+  <div class="sonra">Simge eklendikten sonra: simgeye dokunun → e-postanızı yazın → gelen kodu girin. Bu cihazda bir daha kod sorulmaz (Çıkış'a basmadıkça).</div>
+  <a class="geri" href="./">← Panele git</a>
+</div>
+<script>
+(function () {
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const ilk = ios ? 'ios' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : 'windows';
+  const sec = c => { document.querySelectorAll('#sekmeler button').forEach(b => b.classList.toggle('s', b.dataset.c === c)); ['ios', 'android', 'windows', 'mac'].forEach(x => document.getElementById(x).classList.toggle('gizli', x !== c)); };
+  document.getElementById('sekmeler').onclick = e => { const b = e.target.closest('[data-c]'); if (b) sec(b.dataset.c); };
+  sec(ilk);
+  let kur = null;
+  const dugmeler = ['yukleAndroid', 'yukleWin', 'yukleMac'].map(id => document.getElementById(id));
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); kur = e; });
+  dugmeler.forEach(b => b.onclick = async () => {
+    if (kur) { kur.prompt(); await kur.userChoice.catch(() => {}); kur = null; return; }
+    b.textContent = 'Bu tarayıcı düğmeyle yüklemiyor; aşağıdaki adımları izleyin';
+  });
+  window.addEventListener('appinstalled', () => dugmeler.forEach(b => b.textContent = 'Yüklendi ✓'));
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
