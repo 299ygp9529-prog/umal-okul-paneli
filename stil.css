@@ -21,7 +21,7 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 .giris label { display: block; color: var(--soluk); font-size: 12px; margin: 18px 0 6px; }
 .giris input { width: 100%; }
 .giris .birincil, .giris .ikincil { width: 100%; margin-top: 12px; }
-#kod { letter-spacing: 10px; font-size: 22px; font-weight: 800; text-align: center; }
+#kod { letter-spacing: 6px; font-size: 22px; font-weight: 800; text-align: center; }
 .marka { color: var(--neonacik); font-weight: 800; font-size: 18px; }
 .alt, .not { color: var(--soluk); font-size: 12px; margin-top: 4px; }
 .not { margin-top: 14px; text-align: center; }

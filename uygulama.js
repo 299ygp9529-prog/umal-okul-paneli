@@ -1,6 +1,6 @@
 // UMAL Okul Paneli (K-334): DersMap'teki Okul Yönetim Paneli'nin bilgisayar sürümü.
 // Aynı Supabase veritabanı ve aynı yetki kuralları; yetki sunucuda denetlenir. Yazıcılar, Bilgisayarlar,
-// Kullanım ve Liste yok. Giriş: e-postaya gelen 6 haneli kod (şifre yok).
+// Kullanım ve Liste yok. Giriş: e-postaya gelen kod (şifre yok).
 (function () {
   'use strict';
   const URL_ = 'https://ceqdghykweubeaokwadt.supabase.co';
@@ -70,7 +70,7 @@
   };
   $('#girisYap').onclick = async () => {
     const e = $('#eposta').value.trim().toLowerCase(), k = $('#kod').value.replace(/\D/g, '');
-    if (k.length !== 6) { $('#girisBilgi').textContent = '6 haneli kodu yazın.'; return; }
+    if (k.length < 6 || k.length > 10) { $('#girisBilgi').textContent = 'E-postadaki kodun tamamını yazın.'; return; }
     $('#girisYap').disabled = true;
     const { error } = await sb.auth.verifyOtp({ email: e, token: k, type: 'email' });
     $('#girisYap').disabled = false;
