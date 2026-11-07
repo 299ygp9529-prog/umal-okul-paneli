@@ -348,9 +348,9 @@
     const { data, error } = await sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders');
     if (error) throw error;
     D.planlar = data || [];
-    if (!D.planlar.length) { $('#icerik').innerHTML = '<h1>Sınav merkezi</h1><div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok.</div>'; return; }
-    let secili = D.planlar[0], acikSalon = null, yok = {};
+    let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null;
     const ciz = async () => {
+      if (!secili) { $('#sinavIc').innerHTML = '<div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok. Öğrenci aranınca sınıfı görünür.</div>'; return; }
       const { data: sal } = await sb.from('umal_sinav_salon').select('salon,veri,guncel').eq('tarih', secili.tarih).eq('ders', secili.ders);
       yok = {}; (sal || []).forEach(x => { yok[x.salon] = x.veri || {}; });
       if (acikSalon) return salonCiz();
@@ -359,7 +359,7 @@
       const top = salonlar.reduce((t, x) => t + (secili.salonlar[x] || []).length, 0);
       const gelmeyen = salonlar.reduce((t, x) => t + ((yok[x] || {}).gelmedi || []).length, 0);
       const bekleyen = st.basladi ? salonlar.filter(x => !(yok[x] || {}).zaman).length : null;
-      $('#sinavUst').innerHTML = `${st.aralik ? `<span class="soluk">${st.aralik}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
+      $('#sinavUst').innerHTML = `<span class="turuncu-neonlar"><span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}</span>`;
       $('#sinavIc').innerHTML = `<div class="ist">
           <div><span>Salon</span><b>${salonlar.length}</b></div><div><span>Öğrenci</span><b>${top}</b></div>
           <div><span>Gelmeyen</span><b class="kirmizi">${gelmeyen}</b></div>
@@ -379,16 +379,17 @@
       const gel = new Set((v.gelmedi || []).map(g => String(g.no))), st = sinavSaati(secili);
       const dersler = [...new Set(L.map(r => baslik(r.ders || '')).filter(Boolean))];
       const msj = (v.mesajlar || []).filter(m => m.tur !== 'geldi' && m.metin);
-      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="soluk">${esc(secili.ders)} · ${esc(gunAdi(secili.tarih))} · ${L.length} öğrenci${v.zaman ? ` · gelmeyen ${gel.size}` : ''}</span>${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
+      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar"><span class="t-neon">${esc(secili.ders)}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span>${st.aralik ? `<span class="t-neon">${st.aralik}</span>` : ''}<span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}</span>`;
       $('#sinavIc').innerHTML = `${seviyeAciklama()}<div class="soluk kucuk" style="margin:-4px 0 10px">Gözcü: ${esc(baslik((secili.gozcu || {})[x] || '—'))}${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</div>
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
-      $('#salonGeri').onclick = () => { acikSalon = null; ciz(); };
+      $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; ciz(); };
+      if (vurgu) { const k = document.querySelector(`.koltuk[data-ogr="${CSS.escape(vurgu)}"]`); if (k) { k.classList.add('vurgu'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
       fotolariYukle(L.map(r => r.no));
     };
     $('#icerik').innerHTML = `<div class="ust"><h1>Sınav merkezi</h1><div class="ara" style="margin:0;flex:1;max-width:520px"><input id="sinavAra" placeholder="Öğrenci adı ya da numarası: nerede sınava giriyor?"></div></div>
       <div class="cipler" id="planlar">${D.planlar.map((p, i) => `<button class="cip ${i === 0 ? 'secili' : ''}" data-i="${i}">${esc(gunAdi(p.tarih))} · ${esc(p.ders)}</button>`).join('')}</div>
-      <div class="soluk kucuk" id="planAd">${esc(secili.sinav || '')}</div><div id="sinavBul"></div>
+      <div class="soluk kucuk" id="planAd">${esc((secili && secili.sinav) || '')}</div><div id="sinavBul"></div>
       <div class="sinav-ust" id="sinavUst"></div><div id="sinavIc"></div>`;
     $('#planlar').onclick = ev => {
       const b = ev.target.closest('[data-i]'); if (!b) return;
@@ -401,20 +402,52 @@
       const o = ev.target.closest('[data-ogr]'); if (o) { ogrencileriYukle().then(() => ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.ogr))); return; }
       const b = ev.target.closest('[data-salon]'); if (b) { acikSalon = b.dataset.salon; salonCiz(); window.scrollTo(0, 0); }
     };
-    $('#sinavAra').oninput = () => {
+    // Öğrenci ara → uçak bileti (sınavı yoksa da sınıfı görünür; "Planda gör" sırasını neonla gösterir)
+    const sinavlari = no => {
+      const out = [];
+      for (const p of D.planlar) for (const [x, L] of Object.entries(p.salonlar || {})) for (const r0 of L) { const r = siraKaydi(r0); if (r.no === no) out.push({ p, s: x, r }); }
+      return out.sort((u, v) => (u.p.tarih + u.p.ders).localeCompare(v.p.tarih + v.p.ders, tr, { numeric: true }));
+    };
+    const hh = d => d == null ? '—' : `${String(Math.floor(d / 60)).padStart(2, '0')}.${String(d % 60).padStart(2, '0')}`;
+    const bilet = (o, x, digerleri) => {
+      const sv = seviyeRenk(o.sinif), st = x ? sinavSaati(x.p) : null, pr = !x ? simdikiDers(o.sinif) : null;
+      const ust = `<div class="b-ust"><div class="b-marka"><img src="okul-logo.png" alt="">ATLAS · SINAV KARTI</div><div class="b-tur">${esc(x ? (x.p.sinav || 'Sınav') : 'Öğrenci bilgisi')}</div></div>
+        <div class="b-yolcu">${foto(o.no, o.ad)}<div><div class="b-etk">Öğrenci</div><div class="b-ad">${esc(baslik(o.ad))}</div>
+          <div class="b-cift"><div><div class="b-etk">Okul no</div><b>${esc(o.no)}</b></div><div><div class="b-etk">Sınıf</div><b><span class="b-sv" style="background:${sv};color:${sv}"></span>${esc(o.sinif)}</b></div>
+          ${x ? `<div><div class="b-etk">Sınav</div><b class="b-sari">${esc(kisaDers(baslik(x.r.ders || '')) || '—')}</b></div>` : ''}</div></div></div>`;
+      if (!x) return `<div class="bilet yok"><div class="b-ana"><img class="b-filigran" src="okul-logo.png" alt="">${ust}
+          <div class="b-rota"><div class="b-nokta"><small>KENDİ SINIFI</small><b>${esc(o.sinif)}</b></div><div class="b-cizgi kesik"><span>✕</span></div><div class="b-nokta" style="text-align:right"><small>SINAV SALONU</small><b class="soluk">—</b></div></div>
+          <div class="b-alt"><div><div class="b-etk">Şu an</div><b>${pr ? `${pr.no}. ders · ${esc(pr.ders)}` : 'Ders yok'}</b></div><div><div class="b-etk">Öğretmen</div><b>${pr && pr.ogretmen.length ? esc(pr.ogretmen.map(baslik).join(', ')) : '—'}</b></div></div></div>
+        <div class="b-kocan kirmizi-kocan"><div class="b-etk">Durum</div><div class="b-yokyazi">Bu öğrenci sınava girmeyecek</div><div class="b-kucuk">Yaklaşan sınav planlarında adı yok.</div><div class="b-barkod"></div><div class="b-kno">UMAL · ${esc(o.no)}</div></div></div>`;
+      return `<div class="bilet"><div class="b-ana"><img class="b-filigran" src="okul-logo.png" alt="">${ust}
+          <div class="b-rota"><div class="b-nokta"><small>KENDİ SINIFI</small><b>${esc(o.sinif)}</b></div><div class="b-cizgi"><span>✈</span></div><div class="b-nokta var" style="text-align:right"><small>SINAV SALONU</small><b>${esc(x.s)}</b></div></div>
+          <div class="b-alt"><div><div class="b-etk">Tarih</div><b>${esc(gunAdi(x.p.tarih))}</b></div><div><div class="b-etk">Ders</div><b>${esc(x.p.ders)}</b></div><div><div class="b-etk">Saat</div><b>${st.aralik || '—'}</b></div><div><div class="b-etk">Gözcü</div><b>${esc(baslik((x.p.gozcu || {})[x.s] || '—'))}</b></div></div></div>
+        <div class="b-kocan"><div class="b-etk">Salon</div><div class="b-salon">${esc(x.s)}</div><div class="b-etk" style="margin-top:8px">Sıra</div><div class="b-sira">${x.r.sira}</div>
+          <div class="b-etk" style="margin-top:6px">Yoklama</div><b>${hh(st.a != null ? st.a + YOKLAMA_BASLA : null)}</b><div class="b-barkod"></div><div class="b-kno">UMAL · ${esc(o.no)} · ${esc(x.p.tarih.slice(5).replace('-', ''))}</div></div></div>
+        <div class="b-dugmeler"><button class="birincil" data-plan="${D.planlar.indexOf(x.p)}" data-ps="${esc(x.s)}" data-pn="${esc(o.no)}">Planda gör ›</button></div>
+        ${digerleri.length ? `<div class="b-etk" style="margin:14px 0 6px">Diğer sınavları</div><div class="mini-biletler">${digerleri.map(y => `<button class="mini-bilet" data-mb="${D.planlar.indexOf(y.p)}|${esc(y.s)}"><b>${esc(gunAdi(y.p.tarih))} · ${esc(y.p.ders)}</b><span>${esc(kisaDers(baslik(y.r.ders || '')))} → ${esc(y.s)} · Sıra ${y.r.sira}</span></button>`).join('')}</div>` : ''}`;
+    };
+    const biletGoster = (o, sec) => {
+      const tum = sinavlari(o.no), x = (sec && tum.find(y => D.planlar.indexOf(y.p) === sec[0] && y.s === sec[1])) || tum[0] || null;
+      $('#sinavBul').innerHTML = bilet(o, x, tum.filter(y => y !== x));
+      $('#sinavBul').dataset.no = o.no;
+      fotolariYukle([o.no]);
+    };
+    $('#sinavAra').oninput = async () => {
       const q = $('#sinavAra').value.trim().toLocaleLowerCase(tr);
-      if (q.length < 2) { $('#sinavBul').innerHTML = ''; return; }
-      const bul = [];
-      for (const p of D.planlar) for (const [x, L] of Object.entries(p.salonlar || {})) for (const r0 of L) {
-        const r = siraKaydi(r0);
-        if (r.no === q || r.ad.toLocaleLowerCase(tr).includes(q)) bul.push({ p, s: x, r });
-      }
-      $('#sinavBul').innerHTML = `<div class="satirlar" style="margin:8px 0">${bul.slice(0, 30).map(z => `<button class="satir" data-bul="${esc(z.s)}" data-pi="${D.planlar.indexOf(z.p)}"><span class="sv-nokta" style="background:${seviyeRenk(z.r.sinif)}"></span><div class="ana"><b>${esc(baslik(z.r.ad))} · ${esc(z.r.sinif)} · ${esc(z.r.no)}</b><small>${esc(gunAdi(z.p.tarih))} · ${esc(z.p.ders)} · ${esc(z.r.ders)} → <span class="neon">${esc(z.s)} salonu, ${z.r.sira}. sıra</span> · Gözcü: ${esc(baslik((z.p.gozcu || {})[z.s] || '—'))}</small></div><span class="neon">Planda gör ›</span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
+      if (q.length < 2 && !/^\d+$/.test(q)) { $('#sinavBul').innerHTML = ''; return; }
+      await ogrencileriYukle();
+      const tam = D.ogrenciler.find(o => o.no === q);
+      const L = tam ? [tam] : (/^\d+$/.test(q) ? D.ogrenciler.filter(o => o.no.startsWith(q)) : D.ogrenciler.filter(o => o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 20);
+      if (L.length === 1) return biletGoster(L[0]);
+      $('#sinavBul').innerHTML = L.length ? `<div class="satirlar" style="margin:8px 0">${L.map(o => { const n = sinavlari(o.no).length; return `<button class="satir" data-ob="${esc(o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)};color:${seviyeRenk(o.sinif)}"></span><div class="ana"><b>${esc(baslik(o.ad))} · ${esc(o.sinif)} · ${esc(o.no)}</b><small>${n ? `${n} sınavı var` : 'Sınava girmeyecek'}</small></div><span class="neon">Bilet ›</span></button>`; }).join('')}</div>` : '<div class="soluk" style="margin:8px 0">Bulunamadı.</div>';
     };
     $('#sinavBul').onclick = ev => {
-      const b = ev.target.closest('[data-bul]'); if (!b) return;
-      secili = D.planlar[+b.dataset.pi]; acikSalon = b.dataset.bul;
-      document.querySelectorAll('#planlar .cip').forEach((c, i) => c.classList.toggle('secili', i === +b.dataset.pi));
+      const ob = ev.target.closest('[data-ob]'); if (ob) return biletGoster(D.ogrenciler.find(o => o.no === ob.dataset.ob));
+      const mb = ev.target.closest('[data-mb]'); if (mb) { const [pi, sl] = mb.dataset.mb.split('|'); return biletGoster(D.ogrenciler.find(o => o.no === $('#sinavBul').dataset.no), [+pi, sl]); }
+      const b = ev.target.closest('[data-plan]'); if (!b) return;
+      secili = D.planlar[+b.dataset.plan]; acikSalon = b.dataset.ps; vurgu = b.dataset.pn;
+      document.querySelectorAll('#planlar .cip').forEach((c, i) => c.classList.toggle('secili', i === +b.dataset.plan));
       $('#planAd').textContent = secili.sinav || ''; $('#sinavBul').innerHTML = ''; $('#sinavAra').value = '';
       ciz();
     };
