@@ -576,3 +576,7 @@ button.og-kutu { cursor: pointer; }
 .b-gozcu b { display: block; color: #ffd2a1; font-size: 15px; font-weight: 800; line-height: 1.2; text-shadow: 0 0 8px rgba(255,154,58,.8); overflow-wrap: anywhere; }
 @media (max-width: 760px) { .b-gozcu { max-width: 40%; padding: 5px 8px; } .b-gozcu b { font-size: 13px; } }
 .s-gozcu { color: #ffd2a1 !important; font-weight: 700; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2; text-shadow: 0 0 7px rgba(255,154,58,.75); }
+
+/* Rapor önizlemesi */
+.rp-cerceve { margin-top: 12px; height: min(74vh, 900px); border-radius: 12px; overflow: hidden; border: 1px solid var(--cizgi); background: #5a6477; }
+.rp-cerceve iframe { width: 100%; height: 100%; border: 0; display: block; background: #5a6477; }

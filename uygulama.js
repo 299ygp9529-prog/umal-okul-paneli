@@ -819,15 +819,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslikAdi)}</title><style>${RAPOR_CSS}${yatay ? '@page { size: A4 landscape; margin: 0; }' : ''}</style></head><body class="${yatay ? 'yatay' : ''}">
       <table class="duzen"><thead><tr><td><div class="ust-bosluk"></div></td></tr></thead><tbody><tr><td>${govde.replace(/__LOGO__/g, logo)}</td></tr></tbody><tfoot><tr><td><div class="alt-bosluk"></div></td></tr></tfoot></table>
       <div class="ayak"><span><img src="${logo}" alt="">Ümraniye Merkez Anadolu Lisesi · Okul Yönetim Paneli</span><span>Hazırlanma: ${esc(tarih)}</span></div></body></html>`;
-    let fr = document.getElementById('raporCerceve'); if (fr) fr.remove();
-    fr = document.createElement('iframe'); fr.id = 'raporCerceve';
-    fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
-    document.body.appendChild(fr);
-    const d = fr.contentDocument; d.open(); d.write(belge); d.close();
-    const yaz = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} };
-    const resimler = [...d.images]; let kalan = resimler.length;
-    if (!kalan) setTimeout(yaz, 150);
-    else { const bit = () => { if (--kalan === 0) setTimeout(yaz, 150); }; resimler.forEach(im => im.complete ? bit() : (im.onload = im.onerror = bit)); setTimeout(() => { if (kalan > 0) { kalan = -1; yaz(); } }, 3000); }
+    // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
+      <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
+    $('#pencere .pencere-ic').classList.add('genis');
+    const fr = document.getElementById('raporCerceve');
+    const d = fr.contentDocument; d.open(); d.write(belge.replace('</style>', 'html{background:#5a6477}body{background:#fff;margin:14px auto!important;box-shadow:0 4px 18px rgba(0,0,0,.35);width:210mm}body.yatay{width:297mm}@media screen{.ayak{display:none!important}}@media print{html{background:none}body{margin:0!important;box-shadow:none;width:auto}}</style>')); d.close();
+    $('#rpYazdir').onclick = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} };
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
   const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;
