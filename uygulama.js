@@ -216,17 +216,17 @@
       const q = arama.toLocaleLowerCase(tr);
       const kart = s => {
         const t = sinifHaritasi[s], d = t.durum || {}, on = simdi - new Date(t.gorulme) < 6 * 60000;
-        const ds = d.ders_simdi || {};
+        const ds = on ? (d.ders_simdi || {}) : {};   // tahta kapalıysa son bildirdiği ders eskidir, kullanılmaz
         const sinavda = ds.durum === 'sinav';
         const pr = simdikiDers(s);
         const ders = sinavda ? 'SINAV' + (ds.ders ? ' · ' + ds.ders : '') : (ds.ders || (pr && pr.ders) || '');
         const ogr = (ds.ogretmen && ds.ogretmen.length ? ds.ogretmen : (pr ? pr.ogretmen : [])).map(baslik).join(', ');
         return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
-          <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}</div>`;
+          <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${on && d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}</div>`;
       };
       let liste = siniflar;
       if (q) liste = siniflar.filter(s => {
-        const t = sinifHaritasi[s], ds = (t.durum || {}).ders_simdi || {}, pr = simdikiDers(s);
+        const t = sinifHaritasi[s], ds = (simdi - new Date(t.gorulme) < 6 * 60000 ? (t.durum || {}).ders_simdi : null) || {}, pr = simdikiDers(s);
         const o = [...(ds.ogretmen || []), ...(pr ? pr.ogretmen : [])].join(' ').toLocaleLowerCase(tr);
         return s.toLocaleLowerCase(tr).includes(q) || o.includes(q);
       });
