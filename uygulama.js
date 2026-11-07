@@ -747,6 +747,151 @@
     setTimeout(() => URL.revokeObjectURL(u), 5000);
   }
 
+  // ------------------------------------------------------------------ PDF raporları (K-337)
+  // Yazdırma penceresinde açılır (Kaydet: PDF). Kenar boşluğu 0: tarayıcının saat/adres satırları çıkmaz.
+  const RAPOR_CSS = `@page { size: A4; margin: 0; }
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; background: #fff; }
+body { font: 10.5pt/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; color: #14213d; }
+table.duzen { width: 100%; border-collapse: collapse; } table.duzen > thead td, table.duzen > tfoot td, table.duzen > tbody > tr > td { padding: 0; }
+.ust-bosluk { height: 10mm; } .alt-bosluk { height: 16mm; }
+.ayak { position: fixed; left: 16mm; right: 16mm; bottom: 6mm; display: flex; justify-content: space-between; align-items: center; font-size: 8pt; color: #5b6b82; border-top: .3mm solid #dbe4ef; padding-top: 2mm; background: #fff; }
+.ayak img { width: 5mm; height: 5mm; vertical-align: middle; margin-right: 2mm; }
+.bant { margin-top: -10mm; background: linear-gradient(120deg,#0d1726 0%,#13305a 60%,#0e5a7a 100%); color: #fff; padding: 13mm 16mm 12mm; position: relative; overflow: hidden; }
+.bant::after { content:""; position:absolute; right:-30mm; top:-20mm; width:110mm; height:110mm; border-radius:50%; background: radial-gradient(circle, rgba(34,232,255,.25), transparent 65%); }
+.bant .ust { display:flex; align-items:center; gap:12px; position:relative; z-index:1 }
+.bant img { width: 24mm; height: 24mm; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 16px rgba(34,232,255,.7); flex: none; }
+.okul { font-size: 10pt; letter-spacing: 2px; color: #7ff6ff; font-weight: 700; }
+.bant h1 { margin: 2mm 0 1mm; font-size: 21pt; line-height: 1.15; }
+.bant .alt { color: #c9d6e8; font-size: 10pt; }
+.icerik { padding: 6mm 16mm 0; }
+.kutular { display: grid; grid-template-columns: repeat(4,1fr); gap: 4mm; margin-top: -8mm; position: relative; z-index: 2; padding: 0 16mm; }
+.kutu { background: #fff; border-radius: 4mm; padding: 4mm 5mm; box-shadow: 0 2mm 6mm rgba(13,23,38,.15); border-top: 1.2mm solid #22b8d6; }
+.kutu span { display:block; font-size: 8pt; letter-spacing: 1px; color: #5b6b82; font-weight: 700; text-transform: uppercase; }
+.kutu b { font-size: 20pt; color: #0d1726; } .kutu.t { border-top-color: #ff9a3a } .kutu.k { border-top-color: #e5323f }
+h2 { font-size: 12.5pt; color: #13305a; margin: 7mm 0 3mm; display:flex; align-items:center; gap:3mm; page-break-after: avoid; }
+h2::before { content:""; width: 1.4mm; height: 5mm; background:#22b8d6; border-radius: 1mm; }
+.duzey { display: grid; grid-template-columns: repeat(4,1fr); gap: 3mm; }
+.dz { background:#f3f7fb; border-radius:3mm; padding:2.6mm 4mm; page-break-inside: avoid; }
+.dz .ad { font-weight:700; font-size:9.5pt; display:flex; justify-content:space-between }
+.dz .yol { height: 2.4mm; background:#dbe4ef; border-radius: 2mm; margin-top: 2mm; overflow:hidden } .dz .yol i { display:block; height:100%; border-radius:2mm; background:#ff9a3a }
+.soru { border: 0.3mm solid #dbe4ef; border-radius: 4mm; padding: 4mm 5mm; margin-bottom: 4mm; page-break-inside: avoid; }
+.soru .m { font-weight: 700; font-size: 11pt; margin-bottom: 1mm } .soru .n { color:#5b6b82; font-size: 8.5pt; margin-bottom: 3mm }
+.bar { display: grid; grid-template-columns: 46mm 1fr 24mm; gap: 3mm; align-items: center; margin: 1.6mm 0; font-size: 9.5pt }
+.bar .yol { height: 5mm; background: #eef3f8; border-radius: 1.4mm; overflow: hidden } .bar .yol i { display:block; height:100%; border-radius:1.4mm; background: linear-gradient(90deg,#22b8d6,#2563eb) }
+.bar.ilk .yol i { background: linear-gradient(90deg,#ff9a3a,#f2542d) } .bar.ilk b, .bar.ilk .e { color:#d9480f; font-weight: 700; }
+.bar .y { text-align: right; font-variant-numeric: tabular-nums } .bar .y small { color:#5b6b82 }
+.sayilar { display:flex; gap: 4mm } .sayilar div { flex:1; background:#f3f7fb; border-radius:3mm; padding:3mm 4mm } .sayilar b { display:block; font-size:16pt; color:#13305a } .sayilar span { font-size:8pt; color:#5b6b82 }
+.yazilar { columns: 2; column-gap: 6mm; font-size: 9pt } .yazilar div { break-inside: avoid; padding: 1.2mm 0; border-bottom: .2mm solid #eef3f8 } .yazilar small { color:#5b6b82 }
+.tablo { width: 100%; border-collapse: collapse; font-size: 8.8pt; } .tablo th { background:#13305a; color:#fff; padding: 1.8mm 2mm; text-align:left; font-size: 8.2pt } .tablo td { padding: 1.5mm 2mm; border-bottom: .2mm solid #e3e9f1 } .tablo tr:nth-child(even) td { background:#f7f9fc }
+.tablo tr.top td { font-weight: 800; background: #fff4e6 !important; border-top: .4mm solid #ff9a3a }
+.tablo tr { page-break-inside: avoid; }
+.halka { width: 30mm; height: 30mm; border-radius:50%; background: conic-gradient(#22b8d6 0 var(--p), #e3e9f1 0); display:flex; align-items:center; justify-content:center; flex: none; }
+.halka span { width: 21mm; height: 21mm; border-radius: 50%; background:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14pt; color:#13305a }
+.ozet { display:flex; gap:6mm; align-items:center } .ozet p { margin:0; color:#334155; font-size:10pt }
+.yatay { } .yatay .bant { padding: 12mm 14mm 8mm; } .yatay .bant img { width: 18mm; height: 18mm; } .yatay .bant h1 { font-size: 17pt; }
+.kvkk { display:flex; gap:3mm; align-items:center; background:#fff4e6; border:.3mm solid #ff9a3a; color:#8a4b0f; border-radius:3mm; padding:2mm 4mm; font-size:8.5pt; margin: 5mm 14mm 4mm; }
+table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collapse; font-size: 8.8pt; }
+.liste th { background:#13305a; color:#fff; text-align:left; padding:1.8mm 2mm; font-size:8pt; }
+.liste td { padding:1.5mm 2mm; border-bottom:.2mm solid #e3e9f1; vertical-align: top; } .liste tr { page-break-inside: avoid; }
+.liste tbody tr:nth-child(even) td { background:#f7f9fc }
+.liste tr.sube td { background:#e6f7fb !important; color:#0e5a7a; font-weight:800; font-size:10pt; padding-top:3mm; border-bottom:.5mm solid #22b8d6 }
+.liste tr.sube span { color:#5b6b82; font-weight:600; font-size:8.5pt }
+.liste td.s { color:#5b6b82; width:7mm } .liste td.ad { font-weight:700; white-space: nowrap; } .liste .mono { font-variant-numeric: tabular-nums; }
+.imza { display:flex; justify-content:flex-end; gap:30mm; margin: 12mm 24mm 0; font-size:9pt; color:#334155; page-break-inside: avoid; } .imza div { text-align:center; border-top:.3mm solid #94a3b8; padding-top:1.5mm; width:50mm }`;
+  function raporYazdir(govde, baslikAdi, yatay) {
+    const logo = new URL('okul-logo.png', location.href).href;
+    const tarih = new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' });
+    const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslikAdi)}</title><style>${RAPOR_CSS}${yatay ? '@page { size: A4 landscape; margin: 0; }' : ''}</style></head><body class="${yatay ? 'yatay' : ''}">
+      <table class="duzen"><thead><tr><td><div class="ust-bosluk"></div></td></tr></thead><tbody><tr><td>${govde.replace(/__LOGO__/g, logo)}</td></tr></tbody><tfoot><tr><td><div class="alt-bosluk"></div></td></tr></tfoot></table>
+      <div class="ayak"><span><img src="${logo}" alt="">Ümraniye Merkez Anadolu Lisesi · Okul Yönetim Paneli</span><span>Hazırlanma: ${esc(tarih)}</span></div></body></html>`;
+    let fr = document.getElementById('raporCerceve'); if (fr) fr.remove();
+    fr = document.createElement('iframe'); fr.id = 'raporCerceve';
+    fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(fr);
+    const d = fr.contentDocument; d.open(); d.write(belge); d.close();
+    const yaz = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} };
+    const resimler = [...d.images]; let kalan = resimler.length;
+    if (!kalan) setTimeout(yaz, 150);
+    else { const bit = () => { if (--kalan === 0) setTimeout(yaz, 150); }; resimler.forEach(im => im.complete ? bit() : (im.onload = im.onerror = bit)); setTimeout(() => { if (kalan > 0) { kalan = -1; yaz(); } }, 3000); }
+  }
+  const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
+  const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;
+  function sonucRaporu(a, ss, filtreAdi) {
+    const qs = a.tanim.sorular || [];
+    const b = ss.reduce((t, s) => t + katilanlar(a, s).length, 0);
+    const c = ss.reduce((t, s) => t + katilanlar(a, s).filter(k => cevap(a, s, String(k.no))).length, 0);
+    const sOran = ss.map(s => { const k = katilanlar(a, s); return [s, k.filter(x => cevap(a, s, String(x.no))).length, k.length]; });
+    const ilkI = qs.findIndex(q => ['secim', 'begeni', 'puan'].includes(q.tur));
+    let dorduncu = '<div class="kutu k"><span>Soru</span><b>' + qs.length + '</b></div>';
+    if (ilkI >= 0) {
+      const d = cevaplar(a, ss, ilkI), L = secenekleri(qs[ilkI]).map(o => [o, d.filter(x => x.sec.some(v => secenekAdi(v) === o)).length]).sort((x, y) => y[1] - x[1]);
+      if (L.length && L[0][1]) dorduncu = `<div class="kutu k"><span>"${esc(L[0][0])}" diyen</span><b>${L[0][1]}</b></div>`;
+    }
+    const sirali = sOran.filter(x => x[2]).sort((x, y) => x[1] / x[2] - y[1] / y[2]);
+    const yorum = sirali.length > 1 ? ` En yüksek katılım <b>${esc(sirali[sirali.length - 1][0])}</b> (%${yuzde(sirali[sirali.length - 1][1], sirali[sirali.length - 1][2])}), en düşük <b>${esc(sirali[0][0])}</b> (%${yuzde(sirali[0][1], sirali[0][2])}).` : '';
+    const sorular = qs.map((q, i) => {
+      const d = cevaplar(a, ss, i), dolu = d.filter(x => x.sec.length), n = dolu.length;
+      const kosul = q.kosul && q.kosul.soru ? ` · yalnız ${q.kosul.soru}. soruya "${esc(q.kosul.deger)}" diyenlere soruldu` : '';
+      const bas = `<div class="soru"><div class="m">${i + 1}. ${esc(q.metin)}</div><div class="n">${n} kişi cevapladı${kosul}</div>`;
+      if (q.tur === 'yazi') {
+        if (gizliMi(q) || /doğum|adres|veli|anne|baba|e-?posta|mail/i.test(q.metin)) return `${bas.replace(/<div class="n">.*?<\/div>/, `<div class="n">${n} kişi yazdı · kişisel veri: bu raporda gösterilmez, katılımcı listesinde var</div>`)}</div>`;
+        return `${bas}<div class="yazilar">${dolu.slice(0, 40).map(x => `<div>${esc(x.metin)} <small>· ${esc(x.sinif)}</small></div>`).join('') || '<div>—</div>'}</div>${dolu.length > 40 ? `<div class="n" style="margin-top:2mm">+${dolu.length - 40} cevap daha (Excel'de)</div>` : ''}</div>`;
+      }
+      if (q.tur === 'sayi') {
+        const v = dolu.map(x => parseFloat(x.sec[0])).filter(x => !isNaN(x));
+        if (!v.length) return bas + '</div>';
+        return `${bas}<div class="sayilar"><div><b>${virgul(v.reduce((t, x) => t + x, 0) / v.length)}</b><span>ortalama ${esc(q.birim || '')}</span></div><div><b>${Math.min(...v)}</b><span>en az</span></div><div><b>${Math.max(...v)}</b><span>en çok</span></div></div></div>`;
+      }
+      if (q.tur === 'sira') {
+        const top = {}, say = {};
+        dolu.forEach(x => x.sec.forEach((o, r) => { top[o] = (top[o] || 0) + r + 1; say[o] = (say[o] || 0) + 1; }));
+        const m = Math.max(1, (q.secenekler || []).length), L = Object.keys(say).map(o => [o, top[o] / say[o]]).sort((x, y) => x[1] - y[1]);
+        return `${bas}${L.map(([o, ort], j) => `<div class="bar ${j === 0 ? 'ilk' : ''}"><span class="e">${j + 1}. ${esc(o)}</span><div class="yol"><i style="width:${Math.round((m - ort + 1) / m * 100)}%"></i></div><span class="y">ort. sıra <b>${virgul(ort)}</b></span></div>`).join('')}</div>`;
+      }
+      const L = secenekleri(q).map(o => [o, d.filter(x => x.sec.some(v => secenekAdi(v) === o)).length]);
+      const enCok = Math.max(0, ...L.map(x => x[1]));
+      let h = bas + L.map(([o, k]) => `<div class="bar ${k && k === enCok ? 'ilk' : ''}"><span class="e">${esc(o)}</span><div class="yol"><i style="width:${yuzde(k, Math.max(1, n))}%"></i></div><span class="y"><b>${k}</b> <small>%${yuzde(k, Math.max(1, n))}</small></span></div>`).join('');
+      if (q.tur === 'puan' && n) { const v = dolu.map(x => parseFloat(x.sec[0])).filter(x => !isNaN(x)); h += `<div class="n" style="margin-top:2mm">Ortalama puan: <b>${virgul(v.reduce((t, x) => t + x, 0) / v.length)} / 5</b></div>`; }
+      if (q.diger) { const yz = dolu.flatMap(x => x.sec.filter(v => v.startsWith('Diğer:')).map(v => `${esc(v.slice(6).trim())} <small>· ${esc(x.sinif)}</small>`)); if (yz.length) h += `<div class="yazilar" style="margin-top:2mm">${yz.slice(0, 30).map(y => `<div>Diğer: ${y}</div>`).join('')}</div>`; }
+      return h + '</div>';
+    }).join('');
+    let tablo = '';
+    if (ilkI >= 0 && ss.length > 1) {
+      const q = qs[ilkI], sec = secenekleri(q);
+      const satir = ss.map(s => { const d = cevaplar(a, [s], ilkI); return [s, katilanlar(a, s).length, d.filter(x => x.sec.length).length, ...sec.map(o => d.filter(x => x.sec.some(v => secenekAdi(v) === o)).length)]; });
+      const top = satir.reduce((t, r) => t.map((v, j) => j ? v + r[j] : v), ['Toplam', ...Array(sec.length + 2).fill(0)]);
+      tablo = `<h2>Şube şube · ${esc(q.metin)}</h2><table class="tablo"><thead><tr><th>Şube</th><th>Hedef</th><th>Cevapladı</th>${sec.map(o => `<th>${esc(o)}</th>`).join('')}</tr></thead><tbody>${satir.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}<tr class="top">${top.map(v => `<td>${esc(v)}</td>`).join('')}</tr></tbody></table>`;
+    }
+    const govde = raporBant(esc(a.tanim.ad), `Anket sonuç raporu · ${esc(tarihAraligi(a))} · ${filtreAdi ? esc(filtreAdi) + ' · ' : ''}${ss.length} şube`)
+      + `<div class="kutular"><div class="kutu"><span>Hedef</span><b>${b}</b></div><div class="kutu"><span>Cevapladı</span><b>${c}</b></div><div class="kutu t"><span>Bekleyen</span><b>${b - c}</b></div>${dorduncu}</div>
+      <div class="icerik"><h2>Katılım</h2><div class="ozet"><div class="halka" style="--p:${yuzde(c, b)}%"><span>%${yuzde(c, b)}</span></div><p>Anketin gönderildiği <b>${b}</b> kişinin <b>${c}</b>'si cevapladı.${yorum}</p></div>
+      ${ss.length > 1 ? `<h2>Şube şube katılım</h2><div class="duzey">${sOran.map(([s, n, k]) => `<div class="dz"><div class="ad">${esc(s)} <span>${n}/${k}</span></div><div class="yol"><i style="width:${yuzde(n, k)}%"></i></div></div>`).join('')}</div>` : ''}
+      <h2>Sonuçlar</h2>${sorular}${tablo}</div>`;
+    raporYazdir(govde, `${a.tanim.ad} - sonuç raporu`);
+  }
+  const sutunAdi = m => { let t = String(m).replace(/\s*\([^)]*\)\s*/g, ' ').replace(/[?:]\s*$/, '').trim(); t = t.replace(/\bnumaran\b/i, 'numarası').replace(/\btarihin\b/i, 'tarihi').replace(/\badın\b/i, 'adı'); return t.charAt(0).toLocaleUpperCase(tr) + t.slice(1); };
+  function katilimciListesi(a, ss) {
+    const qs = a.tanim.sorular || [];
+    const kaynak = new Set(qs.filter(q => q.kosul && q.kosul.soru).map(q => q.kosul.soru - 1));   // koşul sorusu (ör. "Katılacak mısın?") sütun olmaz
+    const sut = qs.map((q, i) => [q, i]).filter(([, i]) => !kaynak.has(i));
+    const kosullar = qs.filter(q => q.kosul && q.kosul.soru);
+    const uygun = c => !kosullar.length || kosullar.some(q => secimler(((c.c || [])[q.kosul.soru - 1])).some(v => secenekAdi(v) === q.kosul.deger));
+    let toplam = 0;
+    const govdeSatir = ss.map(s => {
+      const L = katilanlar(a, s).slice().sort((x, y) => (+x.no) - (+y.no)).map(k => [k, cevap(a, s, String(k.no))]).filter(([, c]) => c && uygun(c));
+      toplam += L.length;
+      if (!L.length) return '';
+      return `<tr class="sube"><td colspan="${sut.length + 3}">${esc(s)} <span>· ${L.length} kişi</span></td></tr>` + L.map(([k, c], j) => `<tr><td class="s">${j + 1}</td><td>${esc(k.no)}</td><td class="ad">${esc(baslik(k.ad))}</td>${sut.map(([q, i]) => `<td class="${q.tur === 'yazi' ? 'mono' : ''}">${esc(secimler((c.c || [])[i]).join(', ')) || '—'}</td>`).join('')}</tr>`).join('');
+    }).join('');
+    const kim = kosullar.length ? `${esc(kosullar[0].kosul.soru)}. soruya "${esc(kosullar[0].kosul.deger)}" diyenler` : 'Cevaplayanlar';
+    const govde = raporBant(`${esc(a.tanim.ad)} · Katılımcı Bilgi Listesi`, `${kim} · şube ve okul numarası sırasıyla · ${toplam} kişi · ${esc(tarihAraligi(a))}`)
+      + `<div class="kvkk">⚠ <b>Kişisel veri içerir (KVKK).</b> Yalnız bu iş için kullanılır; işi bitince imha edilmelidir.</div>
+      <table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th>${sut.map(([q]) => `<th>${esc(sutunAdi(q.metin))}</th>`).join('')}</tr></thead><tbody>${govdeSatir || `<tr><td colspan="${sut.length + 3}">Listeye girecek kimse yok.</td></tr>`}</tbody></table>
+      <div class="imza"><div>Rehberlik Servisi</div><div>Okul Müdürü</div></div>`;
+    raporYazdir(govde, `${a.tanim.ad} - katılımcı listesi`, true);
+  }
+
   // ------------------------------------------------------------------ Anketler
   async function anketler() {
     await anketVerisi();
@@ -785,11 +930,13 @@
         ${(a.tanim.sorular || []).map((q, i) => soruSonucu(a, ss, i, q)).join('')}
         <h2>Sınıf sınıf katılım · en düşük üstte</h2>
         ${Object.keys(gruplar).sort(sinifSira).map(d => gruplar[d].sort((x, y) => oran(x) - oran(y)).map(s => { const k = katilanlar(a, s), n = k.filter(x => cevap(a, s, String(x.no))).length; return `<div class="cubuk"><span class="ad">${esc(s)}</span><span class="yol"><i style="width:${yuzde(n, k.length)}%;background:${oran(s) >= .5 ? 'var(--neon)' : 'var(--turuncu)'}"></i></span><span class="sayi">${n}/${k.length}</span></div>`; }).join('')).join('')}
-        <div class="dugmeler"><button class="ikincil" id="aExcel">Excel</button><button class="ikincil" id="aPdf">PDF (yazdır)</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}</div>
+        <div class="dugmeler"><button class="birincil" id="aPdf">Sonuç Raporu (PDF)</button><button class="birincil" id="aListe">Katılımcı Listesi (PDF)</button><button class="ikincil" id="aExcel">Excel</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}</div>
         <div class="cok-soluk kucuk" id="aBilgi"></div>`;
       $('#filtre').onclick = ev => { const f = ev.target.closest('[data-f]'); if (f) { filtre = f.dataset.f; ayrinti(a); } };
       $('#aExcel').onclick = () => anketExcel(a, ss);
-      $('#aPdf').onclick = () => yazdir(`<h2 style="color:#000">${esc(a.tanim.ad)}</h2><div>${c} / ${b} cevapladı</div>` + $('#anketAyrinti').innerHTML.replace(/<div class="dugmeler">[\s\S]*$/, ''));
+      const filtreAdi = filtre === 'okul' ? '' : ['9', '10', '11', '12'].includes(filtre) ? `Bütün ${filtre}. sınıflar` : filtre;
+      $('#aPdf').onclick = () => sonucRaporu(a, ss, filtreAdi);
+      $('#aListe').onclick = () => katilimciListesi(a, ss);
       const durumYaz = async acik => {
         const { error } = await sb.from('umal_anket_durum').upsert({ anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 });
         $('#aBilgi').textContent = error ? 'Olmadı: ' + hataYaz(error) : (acik ? 'Bugün için açıldı.' : 'Kapatıldı.');
