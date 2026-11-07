@@ -206,7 +206,7 @@
   function sinifDersPenceresi(sinif, t) {
     if (/öğretmen/i.test(String(sinif).toLocaleLowerCase(tr))) {
       const on = t && Date.now() - new Date(t.gorulme) < 6 * 60000;
-      pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${on ? '<span class="yeşil">● tahta açık</span>' : 'tahta kapalı'}</span></div>${CAY_KAHVE}<div class="yazi-cay">${on ? 'Tahta açık' : 'Şu an tahta kapalı'} · <b>afiyet olsun</b></div></div>`);
+      pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${on ? '<span class="yeşil">● tahta açık</span>' : 'tahta kapalı'}</span></div>${CAY_KAHVE}</div>`);
       return;
     }
     const p = D.program || {}, simdi = new Date(), gun0 = (simdi.getDay() + 6) % 7, okulGunu = gun0 < 5;
