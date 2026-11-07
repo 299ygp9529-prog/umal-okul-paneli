@@ -1481,12 +1481,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
     $('#icerik').innerHTML = `<h1>Gönder</h1>
-      <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+      <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Nasıl görünsün</h2><div class="cipler" id="gorunum"><button class="cip secili" data-g="serit">Üstte şerit</button><button class="cip" data-g="kapla">Tahtayı kapla</button></div>
+      <div class="kucuk soluk" id="gorunumBilgi">Tahtanın üstünde şerit; yazıyı kapatmaz.</div>
+      <h2>Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
       <h2>Ne kadar görünsün</h2><div class="cipler" id="sure"><button class="cip" data-s="ders">Bu ders</button><button class="cip secili" data-s="gun">Gün sonuna kadar</button><button class="cip" data-s="kalici">Kaldırılana kadar</button></div>
       <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>`;
-    let sure = 'gun';
+    let sure = 'gun', kapla = false;
+    $('#gorunum').onclick = ev => {
+      const b = ev.target.closest('[data-g]'); if (!b) return; kapla = b.dataset.g === 'kapla';
+      document.querySelectorAll('#gorunum .cip').forEach(c => c.classList.toggle('secili', c === b));
+      $('#gorunumBilgi').innerHTML = kapla ? '<span class="turuncu">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince kalkar. Sınavdaki salonlarda da çıkar.</span>' : 'Tahtanın üstünde şerit; yazıyı kapatmaz.';
+      $('#gGonder').textContent = kapla ? 'Tahtalara gönder (ekranı kaplar)' : 'Gönder';
+    };
     $('#hedef').onclick = ev => {
       const b = ev.target.closest('[data-h]'); if (!b) return;
       const h = b.dataset.h;
@@ -1502,10 +1510,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const bitis = sure === 'ders' ? simdi + 40 * 60 : sure === 'gun' ? Math.floor(gs.getTime() / 1000) : 0;
       const id = new Date().toISOString().replace(/\D/g, '').slice(2, 14) + '-' + Math.random().toString(16).slice(2, 6);
       const veri = { id, tur: 'bilgi', baslik: bas, metin, hedef: [...hedef], zaman: simdi, bitis };
+      if (kapla) {
+        veri.kapla = true;   // K-341: Atlas Pro 40+ tahtayı kaplar; eskiler şerit gösterir
+        if (!confirm(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'} ekranı kaplayacak. Gönderilsin mi?`)) return;
+      }
       $('#gGonder').disabled = true;
       const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'bilgi', veri, bitis: bitis ? new Date(bitis * 1000).toISOString() : null });
       $('#gGonder').disabled = false;
-      $('#gBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : '<span class="yeşil">Gönderildi. Tahtalar dakikada bir alır.</span>';
+      $('#gBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : (kapla ? '<span class="yeşil">Gönderildi. Açık tahtalar en geç 20 saniyede ekranı kaplar.</span>' : '<span class="yeşil">Gönderildi. Tahtalar dakikada bir alır.</span>');
       if (!error) { $('#gMetin').value = ''; $('#gBaslik').value = ''; }
     };
   }
