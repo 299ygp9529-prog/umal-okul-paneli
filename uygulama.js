@@ -400,12 +400,13 @@
       const msj = (v.mesajlar || []).filter(m => m.tur !== 'geldi' && m.metin);
       const hap = `<span class="t-neon">${esc(secili.ders)}${st.aralik ? ' · ' + st.aralik : ''}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span><span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
       $('#ustNeon').innerHTML = '';
-      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span><button class="ikincil" id="tamEkran" title="Tam ekran">⛶</button>`;
+      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span><button class="ikincil" id="tamEkran" title="Planı tam ekranda göster (Esc ile çıkılır)">⛶ Tam ekran</button>`;
       $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik((secili.gozcu || {})[x] || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span></div>
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
       $('#icerik').classList.add('salon-acik');
       $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; $('#icerik').classList.remove('salon-acik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); ciz(); };
+      document.onfullscreenchange = () => { const t = $('#tamEkran'); if (t) t.textContent = document.fullscreenElement ? '✕ Tam ekrandan çık' : '⛶ Tam ekran'; };
       $('#tamEkran').onclick = () => { const m = $('#icerik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (m.requestFullscreen) m.requestFullscreen().catch(() => {}); else if (m.webkitRequestFullscreen) m.webkitRequestFullscreen(); };
       planiSigdir();
       if (vurgu) { const k = document.querySelector(`.koltuk[data-ogr="${CSS.escape(vurgu)}"]`); if (k) { k.classList.add('vurgu'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
