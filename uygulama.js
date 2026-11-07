@@ -1126,7 +1126,14 @@
   }
 
   // ------------------------------------------------------------------ Pencere ve yazdırma
-  function pencereAc(html) { $('#pencereIcerik').innerHTML = html; $('#pencere').classList.remove('gizli'); }
+  // Tam ekrandayken pencere tam ekran öğesinin içinde açılır (yoksa görünmez)
+  function pencereAc(html) {
+    const p = $('#pencere'), hedef = document.fullscreenElement || document.webkitFullscreenElement || document.body;
+    if (p.parentElement !== hedef) hedef.appendChild(p);
+    $('#pencereIcerik').innerHTML = html; p.classList.remove('gizli');
+  }
+  const pencereGeri = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && $('#pencere').parentElement !== document.body) document.body.appendChild($('#pencere')); };
+  document.addEventListener('fullscreenchange', pencereGeri); document.addEventListener('webkitfullscreenchange', pencereGeri);
   $('#pencereKapat').onclick = () => $('#pencere').classList.add('gizli');
   $('#pencere').onclick = ev => { if (ev.target.id === 'pencere') $('#pencere').classList.add('gizli'); };
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('#pencere').classList.add('gizli'); });
