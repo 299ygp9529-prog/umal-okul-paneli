@@ -99,6 +99,24 @@
   window.addEventListener('appinstalled', () => { kurulum = null; yukleDugmeleri().forEach(b => b.classList.add('gizli')); });
   yukleDugmeleri().forEach(b => b.onclick = async () => { if (!kurulum) return; kurulum.prompt(); await kurulum.userChoice.catch(() => {}); kurulum = null; yukleDugmeleri().forEach(x => x.classList.add('gizli')); });
 
+  // Yan menüdeki saat: saniye ibresi her saniye tık diye atlar
+  (function saat() {
+    const AY = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'], GUN = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    const p2 = n => String(n).padStart(2, '0');
+    const ciz = () => {
+      const d = new Date(), h = d.getHours(), m = d.getMinutes(), sn = d.getSeconds();
+      const a = document.getElementById('akrep'); if (!a) return;
+      a.setAttribute('transform', `rotate(${(h % 12) * 30 + m * .5} 50 50)`);
+      document.getElementById('yelkovan').setAttribute('transform', `rotate(${m * 6 + sn * .1} 50 50)`);
+      const g = document.getElementById('saniye'); g.setAttribute('transform', `rotate(${sn * 6} 50 50)`);
+      g.classList.remove('tik'); void g.getBBox(); g.classList.add('tik');
+      document.getElementById('saatSD').textContent = `${p2(h)}.${p2(m)}`;
+      const s_ = document.getElementById('saatSn'); s_.textContent = p2(sn); s_.classList.remove('at'); void s_.offsetWidth; s_.classList.add('at');
+      document.getElementById('saatTarih').innerHTML = `${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()}<br><b>${GUN[d.getDay()]}</b>`;
+    };
+    ciz(); setTimeout(() => { ciz(); setInterval(ciz, 1000); }, 1000 - new Date().getMilliseconds());
+  })();
+
   // ------------------------------------------------------------------ Menü
   const BOLUMLER = [
     { id: 'harita', ad: 'Harita', roller: ['bas', 'yonetici'], ciz: harita },
