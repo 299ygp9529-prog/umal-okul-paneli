@@ -362,3 +362,4 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 @media (max-width: 760px) { .sag-ust { max-width: none; } .sag-ust .turuncu-neonlar { justify-content: flex-start; } }
 .seviye-satir { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 10px; } .seviye-satir .seviye-aciklama { margin: 0; }
 .kyazi small .kno2 { font-style: normal; color: #fff; font-weight: 800; }
+.b-tur { white-space: normal; overflow: visible; text-overflow: clip; max-width: 62%; line-height: 1.35; } .b-ust { align-items: flex-start; }
