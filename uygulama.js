@@ -305,7 +305,7 @@
     const c = seviyeRenk(r.sinif);
     return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">
       ${r.etiket === '' ? '' : `<span class="kno">${esc(r.etiket ?? no)}</span>`}${foto(r.no, r.ad)}
-      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}</small></span>
+      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}</small></span>
       ${gelmedi ? '<span class="gelmedi-etiket">GELMEDİ</span>' : ''}</button>`;
   }
   // satır yüksekliği: kart eni (sayfa enine göre) × fotoğraf oranı + yazı payı; foto büyük, ad sığar
