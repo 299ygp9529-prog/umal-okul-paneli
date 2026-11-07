@@ -892,6 +892,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     raporYazdir(govde, `${a.tanim.ad} - katılımcı listesi`, true);
   }
 
+  // Anket / form ortak düzeni: seviye seviye sınıf kutuları; sınıfa dokununca oturma düzeni, dolduranda tik
+  function sinifSatirlari(siniflar, say, veri = 'ss') {
+    return `<div class="kart">${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const [n, k] = say(x); return `<button class="pj-kutu ${n && n === k ? 'acik' : ''}" data-${veri}="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${k}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, k)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}${siniflar.filter(x => !/^(9|10|11|12)-/.test(x)).map(x => { const [n, k] = say(x); return `<div class="pj-satir" style="--sv:#5cc8ff"><div class="pj-duzey">Diğer</div><div class="pj-kutular"><button class="pj-kutu" data-${veri}="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${k}</span></div></button></div></div>`; }).join('')}</div>`;
+  }
+  async function sinifKatilimPlani(a, sinif) {
+    await ogrencileriYukle();
+    const k = katilanlar(a, sinif).slice().sort((x, y) => (+x.no) - (+y.no)), dolu = k.filter(x => cevap(a, sinif, String(x.no)));
+    pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(a.tanim.ad)}</span><span class="turuncu-neonlar"><span class="t-neon">${dolu.length} cevapladı</span><span class="t-neon">${k.length - dolu.length} bekleyen</span></span></div>
+      ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}`);
+    $('#pencere .pencere-ic').classList.add('genis');
+    planiSigdir(); fotolariYukle(k.map(x => String(x.no)));
+  }
+
   // ------------------------------------------------------------------ Anketler
   async function anketler() {
     await anketVerisi();
@@ -928,11 +941,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#anketAyrinti').innerHTML = `<div class="kutular"><div><b class="neon">${c}</b><span>cevapladı</span></div><div><b>${b}</b><span>kişi</span></div><div><b class="turuncu">${b - c}</b><span>bekleyen</span></div></div>
         <div class="cipler" id="filtre"><button class="cip ${filtre === 'okul' ? 'secili' : ''}" data-f="okul">Bütün Okul</button>${duzeyler.map(d => `<button class="cip ${filtre === d ? 'secili' : ''}" data-f="${d}">Bütün ${d}. sınıflar</button>`).join('')}${tum.length > 1 ? tum.map(s => `<button class="cip ${filtre === s ? 'secili' : ''}" data-f="${esc(s)}">${esc(s)}</button>`).join('') : ''}</div>
         ${(a.tanim.sorular || []).map((q, i) => soruSonucu(a, ss, i, q)).join('')}
-        <h2>Sınıf sınıf katılım · en düşük üstte</h2>
-        ${Object.keys(gruplar).sort(sinifSira).map(d => gruplar[d].sort((x, y) => oran(x) - oran(y)).map(s => { const k = katilanlar(a, s), n = k.filter(x => cevap(a, s, String(x.no))).length; return `<div class="cubuk"><span class="ad">${esc(s)}</span><span class="yol"><i style="width:${yuzde(n, k.length)}%;background:${oran(s) >= .5 ? 'var(--neon)' : 'var(--turuncu)'}"></i></span><span class="sayi">${n}/${k.length}</span></div>`; }).join('')).join('')}
+        <h2>Sınıf sınıf katılım</h2>${sinifSatirlari(tum, x => { const kk = katilanlar(a, x); return [kk.filter(y => cevap(a, x, String(y.no))).length, kk.length]; })}
         <div class="dugmeler"><button class="birincil" id="aPdf">Sonuç Raporu (PDF)</button><button class="birincil" id="aListe">Katılımcı Listesi (PDF)</button><button class="ikincil" id="aExcel">Excel</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}</div>
         <div class="cok-soluk kucuk" id="aBilgi"></div>`;
       $('#filtre').onclick = ev => { const f = ev.target.closest('[data-f]'); if (f) { filtre = f.dataset.f; ayrinti(a); } };
+      $('#anketAyrinti').querySelectorAll('[data-ss]').forEach(b => b.onclick = () => sinifKatilimPlani(a, b.dataset.ss));
       $('#aExcel').onclick = () => anketExcel(a, ss);
       const filtreAdi = filtre === 'okul' ? '' : ['9', '10', '11', '12'].includes(filtre) ? `Bütün ${filtre}. sınıflar` : filtre;
       $('#aPdf').onclick = () => sonucRaporu(a, ss, filtreAdi);
