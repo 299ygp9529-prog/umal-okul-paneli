@@ -536,3 +536,15 @@ button.og-kutu { cursor: pointer; }
 .menu-oge.acil-oge.secili { outline-color: #ff9a3a; border-color: #ff9a3a; box-shadow: 0 0 10px rgba(255,154,58,.45); color: #ffb867; }
 .acil-kart { border-color: #ff9a3a; box-shadow: 0 0 14px rgba(255,154,58,.35); }
 .acil-kart #gGonder { background: #ff9a3a; color: #1a0d00; border-color: #ff9a3a; }
+
+/* Öğretmenler odası: çay ve kahve */
+.sahne{margin-top:18px;height:300px;border-radius:16px;background:radial-gradient(ellipse at 50% 85%,rgba(34,232,255,.10),transparent 60%),linear-gradient(#0f1c30,#0b1526);border:1px solid #1f3352;position:relative;overflow:hidden}
+.sahne .cay-masa{position:absolute;left:8%;right:8%;bottom:46px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#2a4468,transparent)}
+.sahne svg{position:absolute;bottom:48px}
+.sahne .cay-bardak{left:calc(50% - 150px)}.sahne .kahve-fincan{left:calc(50% + 20px)}
+.sahne .buhar path{fill:none;stroke:#cfe9ff;stroke-width:5;stroke-linecap:round;opacity:0;filter:blur(1.6px);animation:yuksel 3.6s ease-in infinite}
+.sahne .buhar path:nth-child(2){animation-delay:1.2s}.sahne .buhar path:nth-child(3){animation-delay:2.4s}
+@keyframes yuksel{0%{opacity:0;transform:translateY(14px) scaleY(.8)}20%{opacity:.55}70%{opacity:.25}100%{opacity:0;transform:translateY(-46px) scaleY(1.15)}}
+.sahne .yazi-cay{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:var(--soluk);font-size:13px}
+.sahne .yazi-cay b{color:var(--neon)}
+@media (prefers-reduced-motion: reduce){.sahne .buhar path{animation-duration:7s}}
