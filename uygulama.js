@@ -124,11 +124,12 @@
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
-    { id: 'gonder', ad: 'Gönder', roller: ['bas', 'yonetici', 'rehberlik'], ciz: gonder }
+    { id: 'gonder', ad: 'Gönder', roller: ['bas', 'yonetici', 'rehberlik'], ciz: () => gonder(false) },
+    { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
   function menuKur() {
     const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
-    $('#menu').innerHTML = izinli.map(b => `<button class="menu-oge" data-b="${b.id}">${b.ad}</button>`).join('');
+    $('#menu').innerHTML = izinli.map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${b.ad}</button>`).join('');
     $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
     const ilk = (location.hash.slice(1) && izinli.find(b => b.id === location.hash.slice(1))) || izinli[0];
     ac(ilk.id);
@@ -1476,25 +1477,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
 
   // ------------------------------------------------------------------ Gönder (tahtalara duyuru)
-  async function gonder() {
+  async function gonder(kapla) {
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').eq('anahtar', 'siniflar').maybeSingle();
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
-    $('#icerik').innerHTML = `<h1>Gönder</h1>
-      <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Nasıl görünsün</h2><div class="cipler" id="gorunum"><button class="cip secili" data-g="serit">Üstte şerit</button><button class="cip" data-g="kapla">Tahtayı kapla</button></div>
-      <div class="kucuk soluk" id="gorunumBilgi">Tahtanın üstünde şerit; yazıyı kapatmaz.</div>
-      <h2>Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+    $('#icerik').innerHTML = `<h1>${kapla ? 'Acil Mesaj' : 'Gönder'}</h1>${kapla ? '<div class="turuncu" style="margin-top:4px">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince kalkar. Sınavdaki salonlarda da çıkar.</div>' : '<div class="soluk kucuk">Tahtanın üstünde şerit olarak görünür; yazıyı kapatmaz.</div>'}
+      <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
       <h2>Ne kadar görünsün</h2><div class="cipler" id="sure"><button class="cip" data-s="ders">Bu ders</button><button class="cip secili" data-s="gun">Gün sonuna kadar</button><button class="cip" data-s="kalici">Kaldırılana kadar</button></div>
       <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>`;
-    let sure = 'gun', kapla = false;
-    $('#gorunum').onclick = ev => {
-      const b = ev.target.closest('[data-g]'); if (!b) return; kapla = b.dataset.g === 'kapla';
-      document.querySelectorAll('#gorunum .cip').forEach(c => c.classList.toggle('secili', c === b));
-      $('#gorunumBilgi').innerHTML = kapla ? '<span class="turuncu">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince kalkar. Sınavdaki salonlarda da çıkar.</span>' : 'Tahtanın üstünde şerit; yazıyı kapatmaz.';
-      $('#gGonder').textContent = kapla ? 'Tahtalara gönder (ekranı kaplar)' : 'Gönder';
-    };
+    let sure = 'gun';
+    if (kapla) $('#gGonder').textContent = 'Tahtalara gönder (ekranı kaplar)';
     $('#hedef').onclick = ev => {
       const b = ev.target.closest('[data-h]'); if (!b) return;
       const h = b.dataset.h;
