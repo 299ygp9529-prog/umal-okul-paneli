@@ -83,6 +83,13 @@
   $('#geri').onclick = () => { $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#girisBilgi').textContent = ''; };
   $('#cikis').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
+  // Masaüstü simgesi: Edge / Chrome "uygulama olarak yükle" (tek tıkla açılır, adres çubuğu yok).
+  let kurulum = null;
+  const yukleDugmeleri = () => ['#yukle', '#yukleGiris'].map(x => $(x)).filter(Boolean);
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); kurulum = e; yukleDugmeleri().forEach(b => b.classList.remove('gizli')); });
+  window.addEventListener('appinstalled', () => { kurulum = null; yukleDugmeleri().forEach(b => b.classList.add('gizli')); });
+  yukleDugmeleri().forEach(b => b.onclick = async () => { if (!kurulum) return; kurulum.prompt(); await kurulum.userChoice.catch(() => {}); kurulum = null; yukleDugmeleri().forEach(x => x.classList.add('gizli')); });
+
   // ------------------------------------------------------------------ Menü
   const BOLUMLER = [
     { id: 'harita', ad: 'Harita', roller: ['bas', 'yonetici'], ciz: harita },
