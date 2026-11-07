@@ -480,3 +480,15 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .oz-top b { font-size: 20px; } .oz-top .t-neon { justify-self: start; }
 @media (max-width: 900px) { .oz-bas { display: none; } .oz-satir > summary, .oz-top { grid-template-columns: 1fr auto auto; } .oz-sinav, .oz-satir > summary > span:nth-child(3), .oz-satir > summary > span:nth-child(4), .oz-top > span:nth-child(2), .oz-top > span:nth-child(3), .oz-top > span:nth-child(4) { display: none; } }
 .oz-top .t-neon { white-space: normal; font-size: 13.5px; padding: 5px 10px; line-height: 1.25; }
+
+/* Formu dolduranın fotoğrafında neon tik */
+.koltuk.tamam .foto { position: relative; }
+.tik-isaret { position: absolute; z-index: 2; left: calc(50% + 2px); top: 38%; transform: translate(-50%, -50%); width: 38%; max-width: 64px; aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(47,191,113,.88); color: #fff; font-weight: 900; font-size: clamp(14px, 22cqi, 30px); box-shadow: 0 0 0 2px #fff, 0 0 14px rgba(47,191,113,.9); }
+.pencere-ic.genis { max-width: min(1200px, 96vw); }
+.rs-cerceve { width: 100%; overflow: hidden; border-radius: 10px; margin-top: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.4); background: #fff; }
+.rs-olcek { transform-origin: 0 0; width: 841.89pt; }
+.rs-sayfa { position: relative; width: 841.89pt; height: 595.3pt; background: #fff; overflow: hidden; font-family: Arial, Helvetica, sans-serif; color: #000; }
+.rs-sayfa > img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rs-sayfa > span { position: absolute; font-size: 6.4pt; line-height: 1; white-space: nowrap; }
+.rs-baslik { position: absolute; left: 150pt; width: 450pt; top: 21pt; text-align: center; font: 700 15pt Arial, sans-serif; color: #e46c0a; }

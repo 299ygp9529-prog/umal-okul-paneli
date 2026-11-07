@@ -385,7 +385,7 @@
   function siraKarti(r, no, gelmedi) {
     if (!r) return `<div class="koltuk bos"><span class="kno">${no}</span><span class="bosyazi">boş</span></div>`;
     const c = seviyeRenk(r.sinif);
-    return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">
+    return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''} ${r.tamam ? 'tamam' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">${r.tamam ? '<span class="tik-isaret">✓</span>' : ''}
       ${r.etiket === '' ? '' : `<span class="kno">${esc(r.etiket ?? no)}</span>`}${foto(r.no, r.ad)}
       <span class="kyazi"><b>${esc(baslik(r.ad))}</b><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}</small></span>
       ${gelmedi ? '<span class="gelmedi-etiket">GELMEDİ</span>' : ''}</button>`;
@@ -433,12 +433,12 @@
   }
   // Öğrenciler: sınıfın kendi oturma düzeni (Atlas home_seat_plan): okul numarasına göre sütun sütun önden arkaya
   const OZEL_SIRA = { '12-I': Array.from({ length: 36 }, (_, i) => i + 1), '11-H': [1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 17, 18, 19, 20, 9, 10, 11, 12] };
-  function sinifOturmaPlani(sinif, ogr) {
+  function sinifOturmaPlani(sinif, ogr, tamamlar) {
     const L = ogr.slice().sort((a, b) => (+a.no || 1e9) - (+b.no || 1e9));
     const lay = salonDuzeni(sinif, L.map((_, i) => ({ sira: i + 1 })));
     let sira = lay.desks.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]).flatMap(d => d[3]);
     if (OZEL_SIRA[sinif]) sira = OZEL_SIRA[sinif].filter(n => lay.seats.has(n)).concat(sira.filter(n => !OZEL_SIRA[sinif].includes(n)));
-    const kayit = L.slice(0, sira.length).map((o, i) => ({ sira: sira[i], no: o.no, ad: o.ad, sinif: o.sinif, etiket: '' }));
+    const kayit = L.slice(0, sira.length).map((o, i) => ({ sira: sira[i], no: o.no, ad: o.ad, sinif: o.sinif, etiket: '', tamam: !!(tamamlar && tamamlar.has(String(o.no))) }));
     return oturmaPlani(sinif, kayit, new Set()) + (L.length > sira.length ? `<div class="turuncu kucuk" style="margin-top:8px">Sırada yeri olmayan: ${L.slice(sira.length).map(o => esc(baslik(o.ad))).join(', ')}</div>` : '');
   }
 
@@ -1263,8 +1263,55 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }
   }
 
-  // ------------------------------------------------------------------ Rehberlik
+  // MEB Sınıf Risk Haritası: şablonun LibreOffice çıktısı (risk-sablon.svg) üstüne hücre hücre yazılır — Excel'in PDF'i gibi
+  const RISK_Y = {6: 180.0, 7: 189.4, 8: 198.8, 9: 208.1, 10: 217.5, 11: 226.9, 12: 236.2, 13: 245.6, 14: 255.0, 15: 264.3, 16: 273.7, 17: 283.1, 18: 292.5, 19: 301.8, 20: 311.2, 21: 320.6, 22: 329.9, 23: 339.3, 24: 348.7, 25: 358.0, 26: 367.4, 27: 376.8, 28: 386.1, 29: 395.5, 30: 404.9, 31: 414.2, 32: 423.6, 33: 433.0, 34: 442.3, 35: 451.7, 36: 461.1, 37: 470.5, 38: 479.8, 39: 489.2, 40: 498.6, 41: 507.9, 42: 517.3, 43: 524.8, 44: 532.3, 45: 539.8, 46: 547.3, 47: 554.8, 48: 564.2, 49: 572.9 };
+  const RISK_SUTUN = Array.from({ length: 35 }, (_, k) => { const n = 7 + k; return n <= 26 ? String.fromCharCode(64 + n) : 'A' + String.fromCharCode(64 + n - 26); });   // G … AO
+  function riskSayfasi(sinif, L) {
+    const yaz = (x, y, t, st) => `<span style="left:${x}pt;top:${y}pt;${st || ''}">${t}</span>`;
+    let h = `<div class="rs-baslik">${esc(sinif)} SINIFI RİSK HARİTASI</div>`;
+    const top = RISK_SUTUN.map(() => 0);
+    for (let i = 0; i < 43; i++) {
+      const y = RISK_Y[6 + i], r = L[i];
+      if (r) {
+        h += yaz(76, y, esc(sinif), 'transform:translate(-50%,-50%)') + yaz(91.8, y, esc(r.no), 'transform:translate(-50%,-50%)');
+        const ad = baslik(r.ad), fs = ad.length > 22 ? Math.max(4.6, 6.4 * 22 / ad.length) : 6.4;
+        h += yaz(99.6, y, esc(ad), `transform:translateY(-50%);font-size:${fs}pt;font-weight:700`);
+      }
+      RISK_SUTUN.forEach((c, k) => {
+        const var_ = !!(r && r.sutunlar && r.sutunlar.has(c)); if (var_) top[k]++;
+        h += yaz(188.1 + 15.857 * k, y, var_ ? '1' : '0', `transform:translate(-50%,-50%);${var_ ? 'color:#c00000;font-weight:800' : 'color:#7f7f7f'}`);
+      });
+    }
+    RISK_SUTUN.forEach((c, k) => { h += yaz(188.1 + 15.857 * k, RISK_Y[49], String(top[k]), 'transform:translate(-50%,-50%);font-weight:800'); });
+    return `<div class="rs-sayfa"><img src="${new URL('risk-sablon.svg', location.href).href}" alt="">${h}</div>`;
+  }
+  const RISK_CSS = `.rs-sayfa { position: relative; width: 841.89pt; height: 595.3pt; background: #fff; overflow: hidden; font-family: Arial, Helvetica, sans-serif; color: #000; }
+.rs-sayfa > img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rs-sayfa > span { position: absolute; font-size: 6.4pt; line-height: 1; white-space: nowrap; }
+.rs-baslik { position: absolute; left: 150pt; width: 450pt; top: 21pt; text-align: center; font: 700 15pt Arial, sans-serif; color: #e46c0a; letter-spacing: .3pt; }`;
   let riskSablonu = null;
+  async function riskOnizleme(sinif, L, pdfMi) {
+    const sayfa = riskSayfasi(sinif, L);
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(sinif)} Sınıf Risk Haritası</h1><div class="dugmeler" style="margin:0"><button class="birincil" id="rsExcel">Excel İndir</button><button class="birincil" id="rsPdf">PDF / Yazdır</button></div></div>
+      <div class="rs-cerceve"><div class="rs-olcek">${sayfa}</div></div><div class="cok-soluk kucuk" style="margin-top:8px">MEB şablonunun kendisi; Excel dosyası da aynı görünür.</div>`);
+    $('#pencere .pencere-ic').classList.add('genis');
+    const olc = () => { const c = document.querySelector('.rs-cerceve'), o = document.querySelector('.rs-olcek'); if (!c || !o) return; const k = c.clientWidth / (841.89 * 96 / 72); o.style.transform = `scale(${k})`; c.style.height = (595.3 * 96 / 72 * k) + 'px'; };
+    olc(); setTimeout(olc, 50);
+    $('#rsExcel').onclick = async () => { if (!riskSablonu) riskSablonu = await (await fetch('UmalRiskHaritasiSablon.json')).json(); indir(UmalZip.riskHaritasi(riskSablonu, sinif, L), `${sinif} Sınıf Risk Haritası.xlsx`); };
+    $('#rsPdf').onclick = () => riskYazdir(sinif, sayfa);
+    if (pdfMi) riskYazdir(sinif, sayfa);
+  }
+  function riskYazdir(sinif, sayfa) {
+    let fr = document.getElementById('raporCerceve'); if (fr) fr.remove();
+    fr = document.createElement('iframe'); fr.id = 'raporCerceve'; fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(fr);
+    const d = fr.contentDocument; d.open();
+    d.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(sinif)} Sınıf Risk Haritası</title><style>@page { size: A4 landscape; margin: 0; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } html, body { margin: 0; } ${RISK_CSS}</style></head><body>${sayfa}</body></html>`);
+    d.close();
+    const im = d.images[0], go = () => setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} }, 200);
+    if (im && !im.complete) { im.onload = im.onerror = go; } else go();
+  }
+  // ------------------------------------------------------------------ Rehberlik
   async function rehberlik() {
     await anketVerisi();
     const formlar = D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak');
@@ -1290,32 +1337,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#rehAyrinti').innerHTML = `<div class="kart">
         <div class="cipler" id="rehSinif">${ss.map(s => { const kk = katilanlar(form, s), n = kk.filter(x => cevap(form, s, String(x.no))).length; return `<button class="cip ${s === sinif ? 'secili' : ''}" data-s="${esc(s)}">${esc(s)} ${n}/${kk.length}</button>`; }).join('')}</div>
         <div class="kutular"><div><b class="neon">${dolu.length}</b><span>doldurdu</span></div><div><b class="turuncu">${k.length - dolu.length}</b><span>bekleyen</span></div><div><b class="kirmizi">${cok.length}</b><span>3+ işaret</span></div></div>
-        <div class="satirlar">${k.map(x => {
-          const c = cevap(form, sinif, String(x.no)), im = c ? isaretler(form, c) : [];
-          return `<button class="satir" data-no="${esc(x.no)}" ${c ? '' : 'disabled'}><div class="ana"><b>${esc(baslik(x.ad))} · ${esc(x.no)}</b><small>${c ? (im.length ? esc(im.slice(0, 2).map(i => form.tanim.sorular[i].metin).join(' · ')) + (im.length > 2 ? ` · +${im.length - 2}` : '') : 'işaret yok') : '<span class="turuncu">henüz doldurmadı</span>'}</small></div>${c ? `<span class="durum-etiketi ${im.length >= 3 ? 'kirmizi' : im.length ? 'neon' : 'yeşil'}">${im.length}</span>` : ''}</button>`;
-        }).join('')}</div>
-        <div class="dugmeler"><button class="birincil" id="rExcel">${esc(sinif)} Excel (MEB şablonu)</button><button class="ikincil" id="rPdf">${esc(sinif)} PDF (yazdır)</button></div>
+        ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}
+        <div class="dugmeler"><button class="birincil" id="rExcel">${esc(sinif)} Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">${esc(sinif)} PDF</button></div>
         </div>`;
       $('#rehSinif').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); } };
-      $('#rehAyrinti').querySelectorAll('[data-no]').forEach(b => b.onclick = () => {
-        const x = k.find(y => String(y.no) === b.dataset.no), c = cevap(form, sinif, String(x.no));
+      fotolariYukle(k.map(x => String(x.no)));
+      $('#rehAyrinti').querySelectorAll('[data-ogr]').forEach(b => b.onclick = () => {
+        const x = k.find(y => String(y.no) === b.dataset.ogr), c = cevap(form, sinif, String(x.no));
+        if (!c) { pencereAc(`<h1>${esc(baslik(x.ad))}</h1><div class="neon">${esc(sinif)} · ${esc(x.no)}</div><div class="soluk" style="margin-top:10px">Formu henüz doldurmadı.</div>`); return; }
         pencereAc(`<h1>${esc(baslik(x.ad))}</h1><div class="neon">${esc(sinif)} · ${esc(x.no)}</div><div class="satirlar" style="margin-top:12px">${(form.tanim.sorular || []).map((q, i) => { const v = secimler((c.c || [])[i]).join(', '); const isaret = q.tur === 'yazi' ? !!v : v === 'Evet'; return `<div class="satir"><div class="ana"><b style="white-space:normal">${i + 1}. ${esc(q.metin)}</b></div><span class="${isaret ? 'kirmizi' : 'soluk'}">${esc(v || '—')}</span></div>`; }).join('')}</div>`);
       });
       const satirlar = () => k.map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(isaretler(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
-      $('#rExcel').onclick = async () => {
-        if (!riskSablonu) riskSablonu = await (await fetch('UmalRiskHaritasiSablon.json')).json();
-        indir(UmalZip.riskHaritasi(riskSablonu, sinif, satirlar()), `${sinif} Sınıf Risk Haritası.xlsx`);
-      };
-      $('#rPdf').onclick = async () => {
-        if (!riskSablonu) riskSablonu = await (await fetch('UmalRiskHaritasiSablon.json')).json();
-        const bas = riskSablonu.basliklar || {}, sut = [];
-        for (let i = 6; i <= 40; i++) sut.push(i < 26 ? String.fromCharCode(65 + i) : 'A' + String.fromCharCode(65 + i - 26));
-        const L = satirlar(), top = sut.map(c => L.filter(r => r.sutunlar && r.sutunlar.has(c)).length);
-        yazdir(`<h2 style="color:#8b4513;margin:0 0 4px">${esc(sinif)} SINIFI RİSK HARİTASI</h2><div style="font-size:9px;margin-bottom:4px">${new Date().toLocaleDateString(tr)}</div>
-          <table><tr><th>Sıra</th><th>Şube</th><th>No</th><th>Öğrencinin Adı Soyadı</th>${sut.map(c => `<th class="dik">${esc(bas[c] || c)}</th>`).join('')}</tr>
-          ${L.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(sinif)}</td><td>${esc(r.no)}</td><td style="text-align:left">${esc(baslik(r.ad))}</td>${sut.map(c => r.sutunlar ? `<td class="${r.sutunlar.has(c) ? 'isaret' : ''}">${r.sutunlar.has(c) ? 1 : 0}</td>` : '<td></td>').join('')}</tr>`).join('')}
-          <tr><th colspan="4">TOPLAM</th>${top.map(t => `<th>${t}</th>`).join('')}</tr></table>`);
-      };
+      $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar());
+      $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true);
     };
     $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
@@ -1386,6 +1420,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function pencereAc(html) {
     const p = $('#pencere'), hedef = document.fullscreenElement || document.webkitFullscreenElement || document.body;
     if (p.parentElement !== hedef) hedef.appendChild(p);
+    p.querySelector('.pencere-ic').classList.remove('genis');
     $('#pencereIcerik').innerHTML = html; p.classList.remove('gizli');
   }
   const pencereGeri = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && $('#pencere').parentElement !== document.body) document.body.appendChild($('#pencere')); };
