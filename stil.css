@@ -450,3 +450,9 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .tahta.acik .nokta { width: 10px; height: 10px; box-shadow: 0 0 8px var(--yesil), 0 0 16px var(--yesil); animation: nefes 2s ease-in-out infinite; }
 @keyframes nefes { 50% { opacity: .55; } }
 .tahta.sinav { border-color: #ff4d5e; box-shadow: 0 0 10px rgba(255,77,94,.55); }
+
+/* Barkod koçanın altını kaplar */
+.b-kocan { display: flex; flex-direction: column; }
+.b-barkod { flex: 1 1 auto; min-height: 64px; margin: 14px -4px 0; border-radius: 4px; opacity: .9;
+  background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 5px, currentColor 5px 6px, transparent 6px 9px, currentColor 9px 13px, transparent 13px 15px, currentColor 15px 16px, transparent 16px 20px, currentColor 20px 22px, transparent 22px 24px); }
+@media (max-width: 760px) { .b-kocan { display: grid; } .b-barkod { min-height: 52px; margin: 12px 0 0; } }
