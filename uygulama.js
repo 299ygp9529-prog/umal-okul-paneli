@@ -1286,7 +1286,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     for (let i = 0; i < 43; i++) {
       const y = RISK_Y[6 + i], r = L[i];
       if (r) {
-        h += yaz(76, y, esc(sinif), 'transform:translate(-50%,-50%)') + yaz(91.8, y, esc(r.no), 'transform:translate(-50%,-50%)');
+        h += yaz(76, y, esc(sinif), 'transform:translate(-50%,-50%)') + yaz(91.8, y, esc(r.no), `transform:translate(-50%,-50%);${String(r.no).length > 4 ? `font-size:${Math.max(3.4, 6.4 * 4 / String(r.no).length).toFixed(1)}pt` : ''}`);
         const ad = baslik(r.ad), fs = ad.length > 22 ? Math.max(4.6, 6.4 * 22 / ad.length) : 6.4;
         h += yaz(99.6, y, esc(ad), `transform:translateY(-50%);font-size:${fs}pt;font-weight:700`);
       }

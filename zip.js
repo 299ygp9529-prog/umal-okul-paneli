@@ -60,6 +60,18 @@
     const b64 = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
     const dec = new TextDecoder();
     const dosyalar = [];
+    // uzun okul numarası (yabancı uyruklu, 5+ hane) dar sütuna sığsın: aynı stilin "küçülterek sığdır" kopyası
+    let stil = dec.decode(b64(sablon.dosyalar['xl/styles.xml'])); const ekStil = {};
+    const xfs = stil.match(/<cellXfs count="(\d+)">([\s\S]*?)<\/cellXfs>/);
+    const xfListe = xfs ? xfs[2].match(/<xf\b[^>]*\/>|<xf\b[^>]*>[\s\S]*?<\/xf>/g) : [];
+    const sigdir = s0 => {
+      if (ekStil[s0] != null) return ekStil[s0];
+      const xf = xfListe[+s0]; if (!xf) return s0;
+      let y = xf.includes('<alignment') ? xf.replace(/<alignment\b([^>]*?)\/?>/, (m, a) => `<alignment${a.replace(/\s*shrinkToFit="\d"/, '')} shrinkToFit="1"${m.endsWith('/>') ? '/>' : '>'}`)
+        : xf.endsWith('/>') ? xf.replace(/\/>$/, '><alignment horizontal="center" vertical="center" shrinkToFit="1"/></xf>') : xf.replace('</xf>', '<alignment horizontal="center" vertical="center" shrinkToFit="1"/></xf>');
+      if (!/applyAlignment=/.test(y)) y = y.replace('<xf ', '<xf applyAlignment="1" ');
+      xfListe.push(y); ekStil[s0] = xfListe.length - 1; return ekStil[s0];
+    };
     for (const yol of sablon.sira) {
       let d = b64(sablon.dosyalar[yol]);
       if (yol === 'xl/worksheets/sheet1.xml') {
@@ -67,7 +79,7 @@
         satirlar.slice(0, 43).forEach((r, i) => {
           const row = 6 + i;
           x = x.replace(new RegExp(`<c r="D${row}" s="(\\d+)"/>`), (m, s) => `<c r="D${row}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xml(sinif)}</t></is></c>`);
-          x = x.replace(new RegExp(`<c r="E${row}" s="(\\d+)"/>`), (m, s) => `<c r="E${row}" s="${s}"><v>${parseInt(r.no, 10) || 0}</v></c>`);
+          x = x.replace(new RegExp(`<c r="E${row}" s="(\\d+)"/>`), (m, s) => `<c r="E${row}" s="${String(r.no).length > 4 ? sigdir(s) : s}"><v>${parseInt(r.no, 10) || 0}</v></c>`);
           x = x.replace(new RegExp(`<c r="F${row}" s="(\\d+)"/>`), (m, s) => `<c r="F${row}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xml(baslik(r.ad))}</t></is></c>`);
           for (const c of (r.sutunlar || [])) x = x.replace(new RegExp(`(<c r="${c}${row}" s="\\d+">)<v>0</v></c>`), '$1<v>1</v></c>');
         });
@@ -75,6 +87,10 @@
       }
       if (yol === 'xl/drawings/drawing1.xml') d = enc.encode(dec.decode(d).replace('<a:t>9    </a:t>', `<a:t>${xml(sinif)} </a:t>`));
       dosyalar.push([yol, d]);
+    }
+    if (Object.keys(ekStil).length) {
+      stil = stil.replace(/<cellXfs count="\d+">[\s\S]*?<\/cellXfs>/, `<cellXfs count="${xfListe.length}">${xfListe.join('')}</cellXfs>`);
+      const i = dosyalar.findIndex(d => d[0] === 'xl/styles.xml'); if (i >= 0) dosyalar[i][1] = enc.encode(stil);
     }
     return zip(dosyalar);
   }
