@@ -232,9 +232,9 @@
       });
       const pr0 = simdikiDers(siniflar[0] || '9-A');
       $('#haritaIzgara').innerHTML = liste.map(kart).join('') || '<div class="soluk">Eşleşen tahta yok.</div>';
-      $('#haritaAlt').textContent = `${new Date().toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' })}${pr0 ? ` · ${pr0.no}. ders ${pr0.saat}` : ''} · ${acik.length} / ${siniflar.length} tahta açık`;
+      $('#haritaAlt').innerHTML = `${pr0 ? `<span class="t-neon">${pr0.no}. ders · ${pr0.saat}</span>` : ''}<span class="t-neon buyuk-neon">${acik.length} / ${siniflar.length} tahta açık</span>`;
     };
-    $('#icerik').innerHTML = `<div class="ust"><div><h1>Harita</h1><div class="soluk kucuk" id="haritaAlt"></div></div></div>
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Harita</h1><div class="turuncu-neonlar" id="haritaAlt"></div></div>
       <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div class="izgara" id="haritaIzgara"></div>
       <div class="cok-soluk kucuk" style="margin-top:12px">Yeşil çerçeve: tahta açık. Turuncu: sınav. Ders ve öğretmen tahtanın bildirdiğinden, yoksa ders programından.</div>`;
     $('#haritaAra').oninput = () => ciz();

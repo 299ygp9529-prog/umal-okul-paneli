@@ -421,3 +421,4 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .salon.uyari .s-kagit { color: #ffd78a; font-size: 14px; }
 .gordum { align-self: flex-start; margin-top: 6px; background: #ffb020; color: #1a1206; font-weight: 800; font-size: 12.5px; border-radius: 9px; padding: 4px 10px; box-shadow: 0 0 10px rgba(255,176,32,.7); cursor: pointer; z-index: 2; }
 .gordum:hover { background: #ffd78a; }
+.t-neon.buyuk-neon { font-size: 20px; padding: 8px 18px; border-radius: 14px; }
