@@ -129,14 +129,22 @@ textarea { width: 100%; min-height: 110px; resize: vertical; }
 table.risk { border-collapse: collapse; width: 100%; font-size: 12px; }
 table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px; }
 .yazdir { display: none; }
+.ust-ad { display: none; }
 @media (max-width: 760px) {
   .uygulama { flex-direction: column; }
-  .yan { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px; }
-  .yan .marka { width: 100%; padding-bottom: 6px; }
-  #menu { display: flex; flex-wrap: wrap; gap: 4px; }
-  .menu-oge { width: auto; margin: 0; }
+  .yan { width: 100%; height: auto; position: sticky; top: 0; z-index: 5; flex-direction: row; flex-wrap: wrap; align-items: center;
+    padding: 10px 14px 0; gap: 0; border-right: 0; border-bottom: 1px solid #1d3150; background: rgba(11,20,34,.96); backdrop-filter: blur(8px); }
+  .ust-ad { display: block; font-weight: 800; font-size: 17px; color: #fff; letter-spacing: .5px; line-height: 1.1; }
+  .ust-ad small { display: block; font-size: 11px; font-weight: 600; color: var(--neonacik); letter-spacing: 0; }
+  .kullanici { margin-left: auto; flex-direction: row; align-items: center; gap: 10px; padding: 0; }
+  #kim, #yukle, #rolEtiket { display: none; }
+  #menu { order: 5; flex: 0 0 calc(100% + 28px); width: calc(100% + 28px); margin: 8px -14px 0; padding: 0 14px 10px; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  #menu::-webkit-scrollbar { display: none; }
+  .menu-oge { flex: none; width: auto; margin: 0; white-space: nowrap; padding: 8px 14px; font-size: 14px; border-radius: 20px; background: var(--kart); border: 1px solid var(--cizgi); }
+  .menu-oge.secili { background: var(--neon); color: var(--zemin); outline: 0; box-shadow: 0 0 12px rgba(34,232,255,.45); }
   main { padding: 16px; }
   .cubuk .ad { width: 120px; }
+}
 }
 @media print {
   body { background: #fff; color: #000; }
@@ -193,4 +201,7 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 .para .arka { transform: rotateY(180deg) translateZ(4.5px); }
 @keyframes para { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 @media (prefers-reduced-motion: reduce) { .para { animation: none; } }
-@media (max-width: 760px) { .logo3d { width: 56px; height: 56px; margin: 0 8px 0 0; } }
+@media (max-width: 760px) {
+  .logo3d { width: 42px; height: 42px; margin: 0 10px 0 0; flex: none; filter: drop-shadow(0 0 8px rgba(34,232,255,.45)); }
+  .para i { inset: 1px; }
+}
