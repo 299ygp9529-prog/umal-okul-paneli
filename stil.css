@@ -384,3 +384,6 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 #salonGeri, .neon-tabela { white-space: nowrap; flex: none; }
 #icerik.salon-acik .neon-tabela { font-size: 24px; padding: 2px 14px; }
 .ders-uzun { white-space: normal; text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 15.5px; line-height: 1.2; }
+/* Arama kutuları belli olsun: büyüteç ve okunur ipucu yazısı */
+.ara input { padding-left: 40px; background: var(--koyu) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2322e8ff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E") no-repeat 13px 50%; }
+input::placeholder { color: #8fa6c4; opacity: 1; }
