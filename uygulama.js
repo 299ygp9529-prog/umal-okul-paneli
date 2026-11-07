@@ -296,7 +296,10 @@
     Lay.seats = new Set(Lay.desks.flatMap(x => x[3]));
     return Lay;
   }
-  const kisaDers = c => ({ 'Din Kültürü ve Ahlak Bilgisi': 'Din Kültürü', 'Sağlık Bilgisi ve Trafik': 'Sağlık Bilgisi', 'Türk Dili ve Edebiyatı': 'Edebiyat', 'T.C. İnkılap Tarihi ve Atatürkçülük': 'İnkılap Tarihi' }[c] || c);
+  const KART_DERS = { 'Din Kültürü ve Ahlak Bilgisi': 'Din Kültürü', 'Sağlık Bilgisi ve Trafik': 'Sağlık Bilgisi', 'S. Klasik Ahlak Metinleri': 'S. Klasik Ahlak',
+    'S. Türk Dili ve Edebiyatı': 'S. Edebiyat', 'Türk Dili ve Edebiyatı': 'Edebiyat', 'S. Metin Tahlilleri': 'S. Metin Tahlili', 'S. Temel Matematik': 'S. Temel Mat.',
+    'S. Peygamberimizin Hayatı': 'S. Peygamber Hayatı', 'S. Türk Kültür ve Medeniyet Tarihi': 'S. Medeniyet Tarihi', 'T.C. İnkılap Tarihi ve Atatürkçülük': 'İnkılap Tarihi', 'S. Temel Dini Bilgiler': 'S. Temel Dini Bilgiler' };
+  const kisaDers = c => { if (!c) return c; c = KART_DERS[c] || c; if (c.length > 18 && c.includes(' ve ')) c = c.split(' ve ')[0]; return c.replace('S. ', 'S.\u00a0'); };
   function siraKarti(r, no, gelmedi) {
     if (!r) return `<div class="koltuk bos"><span class="kno">${no}</span><span class="bosyazi">boş</span></div>`;
     const c = seviyeRenk(r.sinif);
@@ -305,12 +308,20 @@
       <span class="kyazi"><b>${esc(baslik(r.ad))}</b><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}</small></span>
       ${gelmedi ? '<span class="gelmedi-etiket">GELMEDİ</span>' : ''}</button>`;
   }
+  // satır yüksekliği: kart eni (sayfa enine göre) × fotoğraf oranı + yazı payı; foto büyük, ad sığar
+  function sinifSatir(lay, ext) {
+    const gen = window.innerWidth > 760;
+    const mW = Math.max(640, window.innerWidth - (gen ? 220 + 48 : 32) - 20 - 64);   // masaların toplam eni (px)
+    const masa = mW * (2 + ext) / (lay.W + ext) - 6;                             // iki kişilik masa eni
+    const kisi = (masa - 14 - 7) / 2 - 16;                                        // fotoğraf eni
+    return Math.round(Math.max(190, kisi / .77 + 66 + 12 + 14 + 12));
+  }
   function oturmaPlani(salon, L, gel) {
     const lay = salonDuzeni(salon, L), bySira = Object.fromEntries(L.map(r => [r.sira, r]));
     // masalar koridora doğru genişler (Atlas desk_extend: koridorun %30'u kalır)
     const xs = [...new Set(lay.desks.map(d => d[0]))].sort((a, b) => a - b);
     let bos = 1e9; lay.desks.forEach(([x, y, w]) => lay.desks.forEach(([x2, y2]) => { if (y2 === y && x2 > x) bos = Math.min(bos, x2 - x - w); }));
-    const ext = bos < 1e9 && bos > 0 ? bos * 0.7 : 0, ux = 100 / (lay.W + ext), SATIR = 150;
+    const ext = bos < 1e9 && bos > 0 ? bos * 0.7 : 0, ux = 100 / (lay.W + ext), SATIR = sinifSatir(lay, ext);
     const desks = lay.desks.map(([x, y, w, ns]) => `<div class="masa" style="left:calc(${x * ux}% + 3px);width:calc(${(w > 1 ? w + ext : w) * ux}% - 6px);top:${y * SATIR}px;height:${SATIR - 12}px;grid-template-columns:repeat(${ns.length},1fr)">${ns.map(n => siraKarti(bySira[n], n, bySira[n] && gel.has(bySira[n].no))).join('')}</div>`).join('');
     const on = lay.on.map(([ad, yer]) => `<span class="on-${yer} ${ad === 'Öğretmen masası' ? 'ogretmen' : /KAPI/.test(ad) ? 'kapi' : ad === 'BEYAZ TAHTA' ? 'beyaz' : 'tahta-on'}">${esc(ad)}</span>`).join('');
     const disarida = L.filter(r => !lay.seats.has(r.sira));

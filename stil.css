@@ -277,3 +277,14 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
   .geri-sayim { margin-left: 0; font-size: 18px; } .neon-tabela { font-size: 22px; }
 }
 .on-serit.dort .on-orta { left: 44%; min-width: 22%; } .on-serit.dort .on-sagic { right: 22%; min-width: 16%; }
+
+/* Sıra kartı v2: fotoğraf üstte, kartın enini doldurur; ad altta, ortalı, sığana kadar küçülür */
+.koltuk { flex-direction: column; align-items: stretch; gap: 4px; padding: 6px 6px 6px 10px; container-type: inline-size; }
+.koltuk .foto { width: 100%; max-width: none; aspect-ratio: .77; border-radius: 7px; font-size: 18px; }
+.kyazi { align-items: center; text-align: center; gap: 1px; }
+.kyazi b { font-size: clamp(11px, 11.5cqi, 15.5px); font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; -webkit-line-clamp: 2; }
+.kyazi em { font-size: clamp(10px, 9.5cqi, 13px); }
+.kyazi small { font-size: clamp(10px, 9cqi, 12px); }
+.koltuk .kno { left: 13px; top: 9px; font-size: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.gelmedi-etiket { left: 50%; transform: translateX(-50%); bottom: auto; top: 45%; font-size: 12.5px; padding: 2px 8px; box-shadow: 0 0 10px rgba(229,50,63,.7); }
+.koltuk.bos { min-height: 100%; }
