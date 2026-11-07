@@ -474,7 +474,7 @@
     const ust = `<div class="b-ust"><div class="b-marka"><img src="okul-logo.png" alt="">ATLAS · SINAV KARTI</div><div class="b-tur">${esc(x ? (x.p.sinav || 'Sınav') : 'Öğrenci bilgisi')}</div></div>
       <div class="b-yolcu">${foto(o.no, o.ad)}<div><div class="b-etk">Öğrenci</div><div class="b-ad">${esc(baslik(o.ad))}</div>
         <div class="b-cift"><div><div class="b-etk">Okul no</div><b>${esc(o.no)}</b></div><div><div class="b-etk">Sınıf</div><b><span class="b-sv" style="background:${sv};color:${sv}"></span>${esc(o.sinif)}</b></div>
-        ${x ? `<div><div class="b-etk">Sınav</div><b class="b-sari">${esc(kisaDers(baslik(x.r.ders || '')) || '—')}</b></div>` : ''}</div></div>${x && (x.p.gozcu || {})[x.s] ? `<div class="b-gozcu"><div class="b-etk">Gözcü</div><b>${esc(baslik(x.p.gozcu[x.s]))}</b></div>` : ''}</div>`;
+        ${x ? `<div><div class="b-etk">Sınav</div><b class="b-sari">${esc(kisaDers(baslik(x.r.ders || '')) || '—')}</b></div>` : ''}</div></div>${x && gozcuAdi(x.p, x.s) ? `<div class="b-gozcu"><div class="b-etk">Gözcü</div><b>${esc(baslik(gozcuAdi(x.p, x.s)))}</b></div>` : ''}</div>`;
     if (!x) return `<div class="bilet yok"><div class="b-ana"><img class="b-filigran" src="okul-logo.png" alt="">${ust}
         <div class="b-rota"><div class="b-nokta"><small>KENDİ SINIFI</small><b>${esc(o.sinif)}</b></div><div class="b-cizgi kesik"><span>✕</span></div><div class="b-nokta" style="text-align:right"><small>SINAV SALONU</small><b class="soluk">—</b></div></div>
         <div class="b-alt"><div><div class="b-etk">Şu an</div><b>${pr ? `${pr.no}. ders · ${esc(pr.ders)}` : 'Ders yok'}</b></div><div><div class="b-etk">Öğretmen</div><b>${pr && pr.ogretmen.length ? esc(pr.ogretmen.map(baslik).join(', ')) : '—'}</b></div></div></div>
@@ -546,7 +546,7 @@
           const yeni = acikBildirimler(v).filter(m => !gordum.has(bildirimKimlik(x, m)));
           yeni.forEach(m => { const k = bildirimKimlik(x, m); if (!duyulan.has(k)) { duyulan.add(k); sesCal = true; } });
           return `<button class="salon ${d.sinif} ${yeni.length ? 'uyari' : ''}" data-salon="${esc(x)}"><div class="s-ust"><b>${esc(x)}</b>${msj ? `<span class="zarf">✉ ${msj}</span>` : `<span class="soluk">${L.length} öğr.</span>`}</div>
-            <div class="s-gozcu">${esc(baslik((secili.gozcu || {})[x] || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}${yeni.length ? `<span class="gordum" data-gordum="${esc(x)}">✓ Gördüm</span>` : ''}
+            <div class="s-gozcu">${esc(baslik(gozcuAdi(secili, x) || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}${yeni.length ? `<span class="gordum" data-gordum="${esc(x)}">✓ Gördüm</span>` : ''}
             <div class="s-durum">${esc(d.yazi)}</div>${seviyeSeridi(L)}</button>`;
         }).join('')}</div>`;
       gunOzeti();
@@ -585,7 +585,7 @@
       const hap = `<span class="t-neon">${esc(secili.ders)}${st.aralik ? ' · ' + st.aralik : ''}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span><span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
       $('#ustNeon').innerHTML = '';
       $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span><button class="ikincil" id="tamEkran" title="Planı tam ekranda göster (Esc ile çıkılır)">⛶ Tam ekran</button>`;
-      $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik((secili.gozcu || {})[x] || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span></div>
+      $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik(gozcuAdi(secili, x) || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span></div>
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
       $('#icerik').classList.add('salon-acik');
@@ -664,7 +664,7 @@
     pencereAc(`<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div style="width:150px">${foto(o.no, o.ad)}</div>
       <div><h1>${esc(baslik(o.ad))}</h1><div class="neon">${esc(o.sinif)} · No ${esc(o.no)}</div>
       <div class="soluk" style="margin-top:8px">${pr ? `Şu an ${pr.no}. ders (${esc(pr.saat)}): ${esc(pr.ders)}${pr.ogretmen.length ? ' · ' + esc(pr.ogretmen.map(baslik).join(', ')) : ''}` : 'Şu an ders yok'}</div></div></div>
-      <h2>Yaklaşan sınavlar</h2>${sv.length ? `<div class="satirlar">${sv.map(x => `<div class="satir"><div class="ana"><b>${esc(gunAdi(x.p.tarih))} · ${esc(x.p.ders)} · ${esc(x.r.ders)}</b><small><span class="neon">${esc(x.s)} salonu, ${x.r.sira}. sıra</span> · Gözcü: ${esc(baslik((x.p.gozcu || {})[x.s] || '—'))}</small></div></div>`).join('')}</div>` : '<div class="soluk">Yaklaşan sınavı yok.</div>'}`);
+      <h2>Yaklaşan sınavlar</h2>${sv.length ? `<div class="satirlar">${sv.map(x => `<div class="satir"><div class="ana"><b>${esc(gunAdi(x.p.tarih))} · ${esc(x.p.ders)} · ${esc(x.r.ders)}</b><small><span class="neon">${esc(x.s)} salonu, ${x.r.sira}. sıra</span> · Gözcü: ${esc(baslik(gozcuAdi(x.p, x.s) || '—'))}</small></div></div>`).join('')}</div>` : '<div class="soluk">Yaklaşan sınavı yok.</div>'}`);
     fotolariYukle([o.no]);
   }
 
@@ -1101,6 +1101,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       return `<div class="og-grup" style="--sv:${BRANS_RENK[b]}"><div class="og-bas"><b>${esc(b)}</b><span class="og-sayi">${n}/${L.length}</span>${secilebilir ? `<button class="og-hepsi" data-og="${esc(b)}">${n === L.length ? 'Kaldır' : 'Hepsi'}</button>` : ''}</div><div class="og-kutular">${L.map(kutu).join('')}</div></div>`;
     }).join('');
     return html ? `<div class="og-gruplar">${html}</div>` : '<span class="cok-soluk kucuk">Bulunamadı.</span>';
+  }
+  // Planda gözcü yalnız ilk adla yazılmışsa ("Büşra"): o saatte o salonda dersi olan öğretmenden ya da tek eşleşen öğretmenden tam ad
+  function gozcuAdi(p, salon) {
+    const g = String(((p || {}).gozcu || {})[salon] || '').trim();
+    if (!g || g.split(/\s+/).length >= 2) return g;
+    const k = t => String(t).toLocaleLowerCase(tr), q = k(g);
+    const gun = (new Date(p.tarih + 'T12:00').getDay() + 6) % 7, no = parseInt(p.ders, 10);
+    const o = ((((D.program || {}).siniflar || {})[salon] || {})[`${gun}-${no}`] || {}).ogretmen || [];
+    const burada = o.find(a => k(a).startsWith(q + ' '));
+    if (burada) return burada;
+    const L = ogretmenListesi().filter(a => k(a).split(/\s+/)[0] === q);
+    return L.length === 1 ? L[0] : g;
   }
   function ogretmenListesi() {
     const ad = new Set();
