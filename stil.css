@@ -505,3 +505,4 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .pj-dugme { border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; border: 1px solid; background: transparent; }
 .pj-dugme.pj-ac { color: #4fd18b; border-color: #4fd18b; } .pj-dugme.pj-kapa { color: #ff5d6c; border-color: #ff5d6c; }
 @media (max-width: 1100px) { .pj-kutular { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } .pj-satir { grid-template-columns: 1fr; } }
+.pj-ust b { white-space: nowrap; } .pj-dugme { flex: none; white-space: nowrap; padding: 2px 6px; }
