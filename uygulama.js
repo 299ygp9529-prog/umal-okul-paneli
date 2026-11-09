@@ -122,6 +122,7 @@
     { id: 'harita', ad: 'Harita', roller: ['bas', 'yonetici'], ciz: harita },
     { id: 'kontrol', ad: 'Tahta Kontrol', roller: ['bas', 'yonetici', 'rehberlik'], ciz: kontrol },   // K-377
     { id: 'sinav', ad: 'Sınav merkezi', roller: ['bas', 'yonetici'], ciz: sinav },
+    { id: 'takvim', ad: 'Sınav takvimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: takvim },   // K-379
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
@@ -648,7 +649,11 @@
     let secili = null;
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenciler</h1><div class="turuncu-neonlar"><span class="t-neon">${siniflar.length} şube</span><span class="t-neon buyuk-neon">${D.ogrenciler.length} öğrenci</span></div></div>
       <div class="ara"><input id="ogrAra" placeholder="Öğrenci adı ya da numarası"></div><div id="ogrBul"></div>
-      <div class="cipler" id="sinifCip">${siniflar.map(s => `<button class="cip" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+      <div class="sk-izgara" id="sinifCip">${(() => {   // seviye paketleri: renkli şerit + sınıf kutuları (Harita gibi)
+        const G = {}; siniflar.forEach(s => { const sv = seviye(s) || '·'; (G[sv] = G[sv] || []).push(s); });
+        return Object.keys(G).sort((a, b) => (a === '·') - (b === '·') || (+a) - (+b)).map(sv => { const L = G[sv], n = L.reduce((t, s) => t + D.ogrenciler.filter(o => o.sinif === s).length, 0);
+          return `<div class="h-sev" style="--sv:${SEVIYE_RENK[sv] || '#9fb3cc'}"><b>${sv === '·' ? 'Diğer' : sv + '. sınıflar'}</b><span>${L.length} şube · ${n} öğrenci</span></div>${L.map(s => { const pr = simdikiDers(s), k = D.ogrenciler.filter(o => o.sinif === s).length;
+            return `<button class="cip sk-kutu" style="--sv:${seviyeRenk(s)}" data-s="${esc(s)}"><b>${esc(s)}</b><small>${k} öğrenci</small><small class="sk-ders">${pr ? `${pr.no}. ders · ${esc(pr.ders)}` : '&nbsp;'}</small></button>`; }).join('')}`; }).join(''); })()}</div>
       <div id="ogrIc"></div>`;
     const goster = L => {
       $('#ogrIc').innerHTML = `<div class="ogrenciler">${L.map(o => `<button class="ogr" data-no="${esc(o.no)}">${foto(o.no, o.ad)}<b>${esc(baslik(o.ad))}</b><small>${esc(o.sinif)} · ${esc(o.no)}</small></button>`).join('')}</div>`;
@@ -1522,6 +1527,87 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (error) { $('#projeBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
       projeBolumu();
     };
+  }
+
+  // ------------------------------------------------------------------ Sınav takvimi (K-379): olacaklar · olanlar (gelmeyen = mazeret adayı) · mazeret sınavları
+  // Takvim: umal_ayarlar 'sinav_takvimi' (varsa) yoksa sinav-takvimi.json (Atlas ile aynı dosya). Gelmeyenler: umal_sinav_salon yoklamaları.
+  // Mazeret sınavları: umal_ayarlar 'mazeret_sinavlari' (JSON) — idare ekler/siler; her biri bir asıl sınava bağlı, katılacaklar o sınavın gelmeyenleri.
+  async function takvim() {
+    await Promise.all([programYukle(), ogrencileriYukle()]);
+    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['sinav_takvimi', 'mazeret_sinavlari']);
+    const ayar = k => { const r = (ay || []).find(x => x.anahtar === k); try { return r && r.deger ? JSON.parse(r.deger) : null; } catch (e) { return null; } };
+    let tk = ayar('sinav_takvimi');
+    if (!tk) { try { tk = await (await fetch('sinav-takvimi.json?v=' + Date.now())).json(); } catch (e) { tk = { sinavlar: [] }; } }
+    let mazeret = ayar('mazeret_sinavlari') || [];
+    const sinavlar = (tk.sinavlar || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
+    const anahtar = s => `${s.tarih}|${parseInt(s.ders, 10)}`;
+    // yoklamalar → gelmeyenler (sınav başına)
+    const tarihler = [...new Set(sinavlar.map(s => s.tarih))];
+    const { data: yk } = tarihler.length ? await sb.from('umal_sinav_salon').select('tarih,ders,salon,veri').in('tarih', tarihler) : { data: [] };
+    const gelmeyen = {}, yoklamaVar = {};
+    for (const r of yk || []) {
+      const k = `${r.tarih}|${parseInt(r.ders, 10)}`, v = r.veri || {};
+      if (v.zaman) yoklamaVar[k] = (yoklamaVar[k] || 0) + 1;
+      for (const g of v.gelmedi || []) { const o = D.ogrenciler.find(x => x.no === String(g.no)) || {}; (gelmeyen[k] = gelmeyen[k] || []).push({ no: String(g.no), ad: o.ad || g.ad || '', sinif: o.sinif || g.sinif || '', salon: r.salon, ders: g.ders || '' }); }
+    }
+    const zil = gun => ((D.program || {}).zil || {})[gun === 4 ? 'cuma' : 'normal'] || [];
+    const saat = s => { const g = (new Date(s.tarih + 'T12:00:00').getDay() + 6) % 7, z = zil(g).find(x => parseInt(x.ders, 10) === parseInt(s.ders, 10)); return z ? `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}` : ''; };
+    const bitti = s => { const z = saat(s).split('–')[1]; return new Date(`${s.tarih}T${(z || '23.59').replace('.', ':')}:00`) < new Date(); };
+    const dersYaz = s => /ders/i.test(String(s.ders)) ? s.ders : `${s.ders}. Ders`;
+    const cipler = s => Object.entries(s.siniflar || {}).map(([sv, d]) => `<span class="tk-cip" style="--sv:${SEVIYE_RENK[sv] || '#5cc8ff'}"><b>${esc(sv)}</b>${esc(d)}</span>`).join('');
+    const yonetir = D.rol === 'bas' || D.rol === 'yonetici';
+    let acik = null;
+    const kaydetMazeret = async () => {
+      const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'mazeret_sinavlari', deger: JSON.stringify(mazeret) }, { onConflict: 'anahtar' });
+      if (error) alert('Kaydedilemedi: ' + hataYaz(error));
+    };
+    const liste = k => { const G = (gelmeyen[k] || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
+      return `<div class="tk-liste">${G.length ? G.map(g => `<button class="oz-ogr" data-oz="${esc(g.no)}"><span class="sv-nokta" style="background:${seviyeRenk(g.sinif)};color:${seviyeRenk(g.sinif)}"></span>${esc(baslik(g.ad) || g.no)} <small>${esc(g.sinif)} · ${esc(g.no)}${g.ders ? ' · ' + esc(g.ders) : ''} · ${esc(g.salon)} salonu</small></button>`).join('') : '<span class="soluk kucuk">Gelmeyen yok.</span>'}</div>`; };
+    const ciz = () => {
+      if (D.bolum !== 'takvim' || !$('#tkIc')) return;
+      const olacak = sinavlar.filter(s => !bitti(s)), olan = sinavlar.filter(bitti).reverse();
+      const siradaki = olacak[0];
+      let kalan = '';
+      if (siradaki) { const a = new Date(`${siradaki.tarih}T${(saat(siradaki).split('–')[0] || '08.00').replace('.', ':')}:00`) - new Date(); const g = Math.floor(a / 864e5), h = Math.floor(a % 864e5 / 36e5), m = Math.floor(a % 36e5 / 6e4); kalan = a <= 0 ? 'Sürüyor' : g ? `${g} gün ${h} saat` : h ? `${h} saat ${m} dk` : `${m} dk`; }
+      const gun = (L, cls) => { const G = {}; L.forEach(s => (G[s.tarih] = G[s.tarih] || []).push(s)); return Object.entries(G).map(([t, S]) => `<div class="tk-gun ${cls}"><div class="tk-tarih"><b>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))}</span></div><div class="tk-sinavlar">${S.map(sat).join('')}</div></div>`).join(''); };
+      const sat = s => { const k = anahtar(s), G = gelmeyen[k] || [], yv = yoklamaVar[k], b = bitti(s);
+        return `<div class="tk-sinav"><div class="tk-saat"><b>${esc(dersYaz(s))}</b><small>${saat(s)}</small></div><div class="tk-dersler">${cipler(s)}</div>
+          ${b ? (yv || G.length ? `<span class="tk-sag"><button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(k)}">${G.length ? `Gelmeyen ${G.length}` : 'Gelmeyen yok'}</button>${G.length && yonetir && !mazeret.some(m => m.asil === k) ? `<button class="tk-mz-ekle" data-mzek="${esc(k)}" title="Bu sınav için mazeret sınavı planla">+ Mazeret</button>` : ''}</span>` : '<span class="tk-gel tk-yok">yoklama yok</span>') : (s === siradaki ? `<span class="tk-gel neon">${esc(kalan)}</span>` : '')}</div>
+          ${acik === k ? liste(k) : ''}`; };
+      const topGel = Object.values(gelmeyen).reduce((t, L) => t + L.length, 0), farkli = new Set(Object.values(gelmeyen).flat().map(g => g.no)).size;
+      const mz = mazeret.slice().sort((a, b) => (a.tarih + a.saat).localeCompare(b.tarih + b.saat));
+      $('#tkIc').innerHTML = `<div class="tk-ozet">
+          <div><span class="soluk">Sıradaki sınav</span><b>${siradaki ? esc(new Date(siradaki.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' })) + ' · ' + esc(dersYaz(siradaki)) : '—'}</b><span class="neon">${esc(kalan)}</span></div>
+          <div><span class="soluk">Kalan sınav</span><b>${olacak.length}</b><span class="soluk">${olan.length} sınav yapıldı</span></div>
+          <div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınav kaçırıldı</span></div>
+          <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div></div>
+        <div class="tk-iki">
+          <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : '<div class="soluk">Takvimde kalan sınav yok.</div>'}</div>
+          <div class="kart"><h2 style="margin-top:0">Tamamlananlar</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
+        <div class="kart"><h2 style="margin-top:0">Mazeret sınavları</h2>
+          ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
+            return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
+              <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
+              <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${yonetir ? `<button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
+          ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`;
+    };
+    $('#icerik').innerHTML = `<div class="ust"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span></div><div id="tkIc"></div>`;
+    $('#tkIc').onclick = async ev => {
+      const g = ev.target.closest('[data-gel]'); if (g) { acik = acik === g.dataset.gel ? null : g.dataset.gel; ciz(); return; }
+      const o = ev.target.closest('[data-oz]'); if (o) { ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.oz)); return; }
+      const e = ev.target.closest('[data-mzek]');
+      if (e) { const k = e.dataset.mzek, as = sinavlar.find(x => anahtar(x) === k);
+        pencereAc(`<h2 style="margin-top:0">Mazeret sınavı planla</h2><div class="soluk">Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))} · ${esc([...new Set(Object.values(as.siniflar || {}))].join(' / '))} · ${(gelmeyen[k] || []).length} öğrenci</div>
+          <div class="k-form" style="margin-top:12px"><label>Tarih <input type="date" id="mzTarih" min="${bugunISO()}"></label><input id="mzSaat" placeholder="Saat (ör. 8. ders)"><input id="mzYer" placeholder="Yer (ör. Kütüphane)"></div>
+          <div class="dugmeler" style="justify-content:flex-start"><button class="birincil" id="mzKaydet">Kaydet</button></div>`);
+        $('#mzKaydet').onclick = async () => { const t = $('#mzTarih').value; if (!t) { $('#mzTarih').focus(); return; }
+          mazeret.push({ id: Date.now().toString(36), asil: k, tarih: t, saat: $('#mzSaat').value.trim(), yer: $('#mzYer').value.trim(), kim: D.eposta, zaman: Math.floor(Date.now() / 1000) });
+          $('#pencere').classList.add('gizli'); await kaydetMazeret(); ciz(); };
+        return; }
+      const s = ev.target.closest('[data-mzsil]'); if (s && confirm('Bu mazeret sınavı silinsin mi?')) { mazeret = mazeret.filter(m => m.id !== s.dataset.mzsil); await kaydetMazeret(); ciz(); }
+    };
+    ciz();
+    yenile(async () => ciz(), 60);
   }
 
   // ------------------------------------------------------------------ Tahta Kontrol (K-377)

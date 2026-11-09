@@ -685,3 +685,51 @@ button.og-kutu { cursor: pointer; }
 .ders-gozcu { margin-left: auto; font-size: 16px; text-align: right; }
 @media (min-width: 761px) { #icerik.salon-acik #sinavUst .ders-uzun { display: none; } }
 @media (max-width: 760px) { .ders-gozcu { display: none; } }
+/* K-379 Sınav takvimi */
+.tk-ozet { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.tk-ozet > div { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.tk-ozet b { font-size: 20px; } .tk-ozet span { font-size: 12.5px; }
+.tk-iki { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tk-gun { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 0; border-top: 1px dashed var(--cizgi); }
+.tk-gun:first-of-type { border-top: 0; }
+.tk-tarih b { display: block; font-size: 16px; } .tk-tarih span { font-size: 12px; color: var(--soluk); text-transform: capitalize; }
+.tk-gun.olan .tk-tarih b { color: var(--soluk); }
+.tk-sinavlar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tk-sinav { display: grid; grid-template-columns: 82px 1fr auto; gap: 10px; align-items: center; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 8px 10px; }
+.tk-gun.olacak .tk-sinav { border-color: rgba(34,232,255,.45); }
+.tk-saat b { display: block; font-size: 14px; } .tk-saat small { color: var(--soluk); font-size: 11.5px; }
+.tk-dersler { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.tk-cip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 2px 9px 2px 3px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid color-mix(in srgb, var(--sv) 55%, transparent); }
+.tk-cip b { background: var(--sv); color: #04202a; border-radius: 6px; padding: 0 5px; font-size: 11.5px; }
+.tk-gel { white-space: nowrap; font-size: 12.5px; font-weight: 800; border-radius: 9px; padding: 4px 10px; background: transparent; color: var(--yesil); border: 1px solid rgba(47,191,113,.6); }
+.tk-gel.var { color: #ffd2a1; border-color: #ff9a3a; background: rgba(40,20,4,.6); box-shadow: 0 0 8px rgba(255,154,58,.4); }
+span.tk-gel { border: 0; padding: 0; }
+.tk-liste { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 4px; }
+.tk-mz { display: flex; flex-direction: column; gap: 8px; }
+.tk-mz-sat { display: grid; grid-template-columns: 150px 1fr auto auto; gap: 12px; align-items: center; background: var(--koyu); border: 1px solid #ff9a3a; border-radius: 12px; padding: 8px 12px; }
+.tk-mz-ic b { display: block; } .tk-mz-ic small { color: var(--soluk); font-size: 12px; }
+@media (max-width: 900px) { .tk-iki { grid-template-columns: 1fr; } .tk-ozet { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) {
+  .tk-gun { grid-template-columns: 1fr; gap: 6px; } .tk-tarih { display: flex; gap: 8px; align-items: baseline; }
+  .tk-sinav { grid-template-columns: 1fr auto; } .tk-dersler { grid-column: 1 / -1; grid-row: 2; }
+  .tk-mz-sat { grid-template-columns: 1fr auto auto; } .tk-mz-sat .tk-tarih { grid-column: 1 / -1; }
+  .tk-ozet b { font-size: 17px; }
+}
+.tk-yok { color: var(--cok-soluk) !important; font-weight: 600 !important; }
+.tk-sag { display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+.tk-mz-ekle { font-size: 12px; font-weight: 800; border-radius: 9px; padding: 3px 8px; background: transparent; color: var(--neon); border: 1px dashed rgba(34,232,255,.7); white-space: nowrap; }
+span.tk-gel.neon { color: var(--neon); }
+
+/* Saat · Patek tarzı: serif rakamlar, ince iç halka, feuille akrep/yelkovan (logo aynı) */
+.analog .rakam { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; font-size: 6.6px; font-weight: 600; fill: #d9fbff; text-anchor: middle; dominant-baseline: central; letter-spacing: -.2px; paint-order: stroke; stroke: rgba(13,23,38,.85); stroke-width: .9px; }
+.analog .ic-halka { fill: none; stroke: rgba(127,246,255,.28); stroke-width: .5; }
+.analog .akrep { fill: #ffffff; stroke: #0d1726; stroke-width: .5; stroke-linejoin: round; filter: drop-shadow(0 0 1.5px rgba(34,232,255,.8)); }
+.analog .yelkovan { fill: #c9f8ff; stroke: #0d1726; stroke-width: .45; stroke-linejoin: round; filter: drop-shadow(0 0 1.5px rgba(34,232,255,.8)); }
+.analog .buyuk { stroke-width: 1.4; }
+/* Öğrenciler: sınıf kutuları seviye paketlerinde */
+.sk-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 14px; }
+.sk-kutu.cip { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border-radius: 12px; padding: 9px 11px; background: var(--kart); border: 1px solid var(--cizgi); border-left: 4px solid var(--sv); color: var(--yazi); min-height: 72px; }
+.sk-kutu b { font-size: 16px; } .sk-kutu small { color: var(--soluk); font-size: 11.5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sk-kutu:hover { border-color: var(--sv); box-shadow: 0 0 10px color-mix(in srgb, var(--sv) 40%, transparent); }
+.sk-kutu.cip.secili { background: color-mix(in srgb, var(--sv) 22%, var(--kart)); border-color: var(--sv); color: var(--yazi); }
+@media (max-width: 760px) { .sk-izgara { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .sk-izgara .h-sev { margin-top: 6px; padding: 3px 10px; font-size: 13px; } .sk-izgara .h-sev:first-child { margin-top: 0; } .sk-kutu.cip { min-height: 0; padding: 6px 8px; } .sk-kutu b { font-size: 14px; } .sk-kutu small { font-size: 10.5px; } }

@@ -1,0 +1,461 @@
+{
+ "ad": "2026-2027 1. dönem 1. ortak yazılı sınavları (güncel takvim, 4 Kasım 2026)",
+ "not": "Yalnız bütün şubelerin girdiği sınavlar. Saatler okulun zil çizelgesinden gelir.",
+ "sinavlar": [
+  {
+   "tarih": "2026-11-03",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Biyoloji",
+    "10": "Biyoloji"
+   }
+  },
+  {
+   "tarih": "2026-11-04",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Kimya",
+    "10": "Kimya"
+   }
+  },
+  {
+   "tarih": "2026-11-04",
+   "ders": "7. Ders",
+   "siniflar": {
+    "9": "Tarih",
+    "10": "Tarih",
+    "11": "Tarih",
+    "12": "T.C. İnkılap Tarihi"
+   }
+  },
+  {
+   "tarih": "2026-11-05",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Matematik",
+    "10": "Matematik",
+    "11": "Matematik",
+    "12": "Matematik"
+   }
+  },
+  {
+   "tarih": "2026-11-06",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Fizik",
+    "10": "Fizik"
+   }
+  },
+  {
+   "tarih": "2026-11-06",
+   "ders": "7. Ders",
+   "siniflar": {
+    "9": "Sağlık Bilgisi ve Trafik Kültürü",
+    "10": "Felsefe",
+    "11": "Felsefe",
+    "12": "Klasik Ahlak Metinleri"
+   }
+  },
+  {
+   "tarih": "2026-11-09",
+   "ders": "7. Ders",
+   "siniflar": {
+    "9": "Seçmeli Din Dersleri",
+    "10": "S. Peygamberimizin Hayatı",
+    "11": "S. Peygamberimizin Hayatı"
+   }
+  },
+  {
+   "tarih": "2026-11-10",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Coğrafya",
+    "10": "Coğrafya"
+   }
+  },
+  {
+   "tarih": "2026-11-11",
+   "ders": "4. Ders",
+   "siniflar": {
+    "9": "Türk Dili ve Edebiyatı",
+    "11": "Türk Dili ve Edebiyatı",
+    "12": "Türk Dili ve Edebiyatı"
+   }
+  },
+  {
+   "tarih": "2026-11-11",
+   "ders": "7. Ders",
+   "siniflar": {
+    "9": "Din Kültürü ve Ahlak Bilgisi",
+    "10": "Din Kültürü ve Ahlak Bilgisi",
+    "11": "Din Kültürü ve Ahlak Bilgisi",
+    "12": "Din Kültürü ve Ahlak Bilgisi"
+   }
+  },
+  {
+   "tarih": "2026-11-13",
+   "ders": "7. Ders",
+   "siniflar": {
+    "9": "Yabancı Dil",
+    "10": "Yabancı Dil",
+    "11": "Yabancı Dil",
+    "12": "Yabancı Dil"
+   }
+  }
+ ],
+ "subeler": [
+  {
+   "tarih": "2026-11-03",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Biyoloji",
+    "9-B": "Biyoloji",
+    "9-C": "Biyoloji",
+    "9-D": "Biyoloji",
+    "10-A": "Biyoloji",
+    "10-B": "Biyoloji",
+    "10-C": "Biyoloji",
+    "10-D": "Biyoloji",
+    "10-E": "Biyoloji",
+    "10-F": "Biyoloji",
+    "10-G": "Biyoloji",
+    "10-H": "Biyoloji",
+    "11-A": "S. Biyoloji",
+    "11-B": "S. Biyoloji",
+    "11-C": "S. Biyoloji",
+    "12-A": "S. Biyoloji",
+    "12-B": "S. Biyoloji",
+    "12-C": "S. Biyoloji"
+   }
+  },
+  {
+   "tarih": "2026-11-04",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Kimya",
+    "9-B": "Kimya",
+    "9-C": "Kimya",
+    "9-D": "Kimya",
+    "10-A": "Kimya",
+    "10-B": "Kimya",
+    "10-C": "Kimya",
+    "10-D": "Kimya",
+    "10-E": "Kimya",
+    "10-F": "Kimya",
+    "10-G": "Kimya",
+    "10-H": "Kimya",
+    "11-A": "S. Kimya",
+    "11-B": "S. Kimya",
+    "11-C": "S. Kimya",
+    "11-D": "S. Türk Kültür ve Medeniyet Tarihi",
+    "11-E": "S. Türk Kültür ve Medeniyet Tarihi",
+    "11-F": "S. Türk Kültür ve Medeniyet Tarihi",
+    "11-G": "S. Türk Kültür ve Medeniyet Tarihi",
+    "11-H": "S. Türk Kültür ve Medeniyet Tarihi",
+    "12-A": "S. Kimya",
+    "12-B": "S. Kimya",
+    "12-C": "S. Kimya",
+    "12-D": "S. Çağdaş Türk ve Dünya Tarihi",
+    "12-E": "S. Çağdaş Türk ve Dünya Tarihi",
+    "12-F": "S. Çağdaş Türk ve Dünya Tarihi",
+    "12-G": "S. Çağdaş Türk ve Dünya Tarihi",
+    "12-H": "S. Çağdaş Türk ve Dünya Tarihi"
+   }
+  },
+  {
+   "tarih": "2026-11-04",
+   "ders": "7. Ders",
+   "subeler": {
+    "9-A": "Tarih",
+    "9-B": "Tarih",
+    "9-C": "Tarih",
+    "9-D": "Tarih",
+    "10-A": "Tarih",
+    "10-B": "Tarih",
+    "10-C": "Tarih",
+    "10-D": "Tarih",
+    "10-E": "Tarih",
+    "10-F": "Tarih",
+    "10-G": "Tarih",
+    "10-H": "Tarih",
+    "11-A": "Tarih",
+    "11-B": "Tarih",
+    "11-C": "Tarih",
+    "11-D": "Tarih",
+    "11-E": "Tarih",
+    "11-F": "Tarih",
+    "11-G": "Tarih",
+    "11-H": "Tarih",
+    "11-I": "Tarih",
+    "12-A": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-B": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-C": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-D": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-E": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-F": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-G": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-H": "T.C. İnkılap Tarihi ve Atatürkçülük",
+    "12-I": "T.C. İnkılap Tarihi ve Atatürkçülük"
+   }
+  },
+  {
+   "tarih": "2026-11-05",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Matematik",
+    "9-B": "Matematik",
+    "9-C": "Matematik",
+    "9-D": "Matematik",
+    "10-A": "Matematik",
+    "10-B": "Matematik",
+    "10-C": "Matematik",
+    "10-D": "Matematik",
+    "10-E": "Matematik",
+    "10-F": "Matematik",
+    "10-G": "Matematik",
+    "10-H": "Matematik",
+    "11-A": "S. Matematik",
+    "11-B": "S. Matematik",
+    "11-C": "S. Matematik",
+    "11-D": "S. Matematik",
+    "11-E": "S. Matematik",
+    "11-F": "S. Matematik",
+    "11-G": "S. Matematik",
+    "11-H": "S. Matematik",
+    "11-I": "S. Temel Matematik",
+    "12-A": "S. Matematik",
+    "12-B": "S. Matematik",
+    "12-C": "S. Matematik",
+    "12-D": "S. Matematik",
+    "12-E": "S. Matematik",
+    "12-F": "S. Matematik",
+    "12-G": "S. Matematik",
+    "12-H": "S. Matematik",
+    "12-I": "S. Temel Matematik"
+   }
+  },
+  {
+   "tarih": "2026-11-06",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Fizik",
+    "9-B": "Fizik",
+    "9-C": "Fizik",
+    "9-D": "Fizik",
+    "10-A": "Fizik",
+    "10-B": "Fizik",
+    "10-C": "Fizik",
+    "10-D": "Fizik",
+    "10-E": "Fizik",
+    "10-F": "Fizik",
+    "10-G": "Fizik",
+    "10-H": "Fizik",
+    "11-A": "S. Fizik",
+    "11-B": "S. Fizik",
+    "11-C": "S. Fizik",
+    "11-D": "S. Türk Dili ve Edebiyatı",
+    "11-E": "S. Türk Dili ve Edebiyatı",
+    "11-F": "S. Türk Dili ve Edebiyatı",
+    "11-G": "S. Türk Dili ve Edebiyatı",
+    "11-H": "S. Türk Dili ve Edebiyatı",
+    "11-I": "Metin Tahlilleri",
+    "12-A": "S. Fizik",
+    "12-B": "S. Fizik",
+    "12-C": "S. Fizik",
+    "12-D": "S. Türk Dili ve Edebiyatı",
+    "12-E": "S. Türk Dili ve Edebiyatı",
+    "12-F": "S. Türk Dili ve Edebiyatı",
+    "12-G": "S. Türk Dili ve Edebiyatı",
+    "12-H": "S. Türk Dili ve Edebiyatı",
+    "12-I": "S. Türk Dili ve Edebiyatı"
+   }
+  },
+  {
+   "tarih": "2026-11-06",
+   "ders": "7. Ders",
+   "subeler": {
+    "9-A": "Sağlık Bilgisi ve Trafik Kültürü",
+    "9-B": "Sağlık Bilgisi ve Trafik Kültürü",
+    "9-C": "Sağlık Bilgisi ve Trafik Kültürü",
+    "9-D": "Sağlık Bilgisi ve Trafik Kültürü",
+    "10-A": "Felsefe",
+    "10-B": "Felsefe",
+    "10-C": "Felsefe",
+    "10-D": "Felsefe",
+    "10-E": "Felsefe",
+    "10-F": "Felsefe",
+    "10-G": "Felsefe",
+    "10-H": "Felsefe",
+    "11-A": "Felsefe",
+    "11-B": "Felsefe",
+    "11-C": "Felsefe",
+    "11-D": "Felsefe",
+    "11-E": "Felsefe",
+    "11-F": "Felsefe",
+    "11-G": "Felsefe",
+    "11-H": "Felsefe",
+    "11-I": "Felsefe",
+    "12-A": "S. Klasik Ahlak Metinleri",
+    "12-B": "S. Klasik Ahlak Metinleri",
+    "12-C": "S. Klasik Ahlak Metinleri",
+    "12-D": "S. Klasik Ahlak Metinleri",
+    "12-E": "S. Klasik Ahlak Metinleri",
+    "12-F": "S. Klasik Ahlak Metinleri",
+    "12-G": "S. Klasik Ahlak Metinleri",
+    "12-H": "S. Klasik Ahlak Metinleri",
+    "12-I": "S. Klasik Ahlak Metinleri"
+   }
+  },
+  {
+   "tarih": "2026-11-09",
+   "ders": "7. Ders",
+   "subeler": {
+    "9-A": "S. Temel Dini Bilgiler",
+    "9-B": "S. Temel Dini Bilgiler",
+    "9-C": "Kur'an-ı Kerim",
+    "9-D": "S. Peygamberimizin Hayatı",
+    "10-B": "S. Peygamberimizin Hayatı",
+    "10-C": "S. Peygamberimizin Hayatı",
+    "10-D": "S. Peygamberimizin Hayatı",
+    "10-E": "S. Peygamberimizin Hayatı",
+    "10-F": "S. Peygamberimizin Hayatı",
+    "10-G": "S. Peygamberimizin Hayatı",
+    "10-H": "S. Peygamberimizin Hayatı",
+    "11-A": "S. Peygamberimizin Hayatı",
+    "11-B": "S. Peygamberimizin Hayatı",
+    "11-C": "S. Peygamberimizin Hayatı"
+   }
+  },
+  {
+   "tarih": "2026-11-10",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Coğrafya",
+    "9-B": "Coğrafya",
+    "9-C": "Coğrafya",
+    "9-D": "Coğrafya",
+    "10-A": "Coğrafya",
+    "10-B": "Coğrafya",
+    "10-C": "Coğrafya",
+    "10-D": "Coğrafya",
+    "10-E": "Coğrafya",
+    "10-F": "Coğrafya",
+    "10-G": "Coğrafya",
+    "10-H": "Coğrafya",
+    "11-D": "S. Coğrafya",
+    "11-E": "S. Coğrafya",
+    "11-F": "S. Coğrafya",
+    "11-G": "S. Coğrafya",
+    "11-H": "S. Coğrafya",
+    "11-I": "S. Coğrafya",
+    "12-D": "S. Coğrafya",
+    "12-E": "S. Coğrafya",
+    "12-F": "S. Coğrafya",
+    "12-G": "S. Coğrafya",
+    "12-H": "S. Coğrafya",
+    "12-I": "S. Coğrafya"
+   }
+  },
+  {
+   "tarih": "2026-11-11",
+   "ders": "4. Ders",
+   "subeler": {
+    "9-A": "Türk Dili ve Edebiyatı",
+    "9-B": "Türk Dili ve Edebiyatı",
+    "9-C": "Türk Dili ve Edebiyatı",
+    "9-D": "Türk Dili ve Edebiyatı",
+    "11-A": "Türk Dili ve Edebiyatı",
+    "11-B": "Türk Dili ve Edebiyatı",
+    "11-C": "Türk Dili ve Edebiyatı",
+    "11-D": "Türk Dili ve Edebiyatı",
+    "11-E": "Türk Dili ve Edebiyatı",
+    "11-F": "Türk Dili ve Edebiyatı",
+    "11-G": "Türk Dili ve Edebiyatı",
+    "11-H": "Türk Dili ve Edebiyatı",
+    "11-I": "Türk Dili ve Edebiyatı",
+    "12-A": "Türk Dili ve Edebiyatı",
+    "12-B": "Türk Dili ve Edebiyatı",
+    "12-C": "Türk Dili ve Edebiyatı",
+    "12-D": "Türk Dili ve Edebiyatı",
+    "12-E": "Türk Dili ve Edebiyatı",
+    "12-F": "Türk Dili ve Edebiyatı",
+    "12-G": "Türk Dili ve Edebiyatı",
+    "12-H": "Türk Dili ve Edebiyatı",
+    "12-I": "Türk Dili ve Edebiyatı"
+   }
+  },
+  {
+   "tarih": "2026-11-11",
+   "ders": "7. Ders",
+   "subeler": {
+    "9-A": "Din Kültürü ve Ahlak Bilgisi",
+    "9-B": "Din Kültürü ve Ahlak Bilgisi",
+    "9-C": "Din Kültürü ve Ahlak Bilgisi",
+    "9-D": "Din Kültürü ve Ahlak Bilgisi",
+    "10-A": "Din Kültürü ve Ahlak Bilgisi",
+    "10-B": "Din Kültürü ve Ahlak Bilgisi",
+    "10-C": "Din Kültürü ve Ahlak Bilgisi",
+    "10-D": "Din Kültürü ve Ahlak Bilgisi",
+    "10-E": "Din Kültürü ve Ahlak Bilgisi",
+    "10-F": "Din Kültürü ve Ahlak Bilgisi",
+    "10-G": "Din Kültürü ve Ahlak Bilgisi",
+    "10-H": "Din Kültürü ve Ahlak Bilgisi",
+    "11-A": "Din Kültürü ve Ahlak Bilgisi",
+    "11-B": "Din Kültürü ve Ahlak Bilgisi",
+    "11-C": "Din Kültürü ve Ahlak Bilgisi",
+    "11-D": "Din Kültürü ve Ahlak Bilgisi",
+    "11-E": "Din Kültürü ve Ahlak Bilgisi",
+    "11-F": "Din Kültürü ve Ahlak Bilgisi",
+    "11-G": "Din Kültürü ve Ahlak Bilgisi",
+    "11-H": "Din Kültürü ve Ahlak Bilgisi",
+    "11-I": "Din Kültürü ve Ahlak Bilgisi",
+    "12-A": "Din Kültürü ve Ahlak Bilgisi",
+    "12-B": "Din Kültürü ve Ahlak Bilgisi",
+    "12-C": "Din Kültürü ve Ahlak Bilgisi",
+    "12-D": "Din Kültürü ve Ahlak Bilgisi",
+    "12-E": "Din Kültürü ve Ahlak Bilgisi",
+    "12-F": "Din Kültürü ve Ahlak Bilgisi",
+    "12-G": "Din Kültürü ve Ahlak Bilgisi",
+    "12-H": "Din Kültürü ve Ahlak Bilgisi",
+    "12-I": "Din Kültürü ve Ahlak Bilgisi"
+   }
+  },
+  {
+   "tarih": "2026-11-13",
+   "ders": "7. Ders",
+   "subeler": {
+    "9-A": "Yabancı Dil",
+    "9-B": "Yabancı Dil",
+    "9-C": "Yabancı Dil",
+    "9-D": "Yabancı Dil",
+    "10-A": "Yabancı Dil",
+    "10-B": "Yabancı Dil",
+    "10-C": "Yabancı Dil",
+    "10-D": "Yabancı Dil",
+    "10-E": "Yabancı Dil",
+    "10-F": "Yabancı Dil",
+    "10-G": "Yabancı Dil",
+    "10-H": "Yabancı Dil",
+    "11-A": "Yabancı Dil",
+    "11-B": "Yabancı Dil",
+    "11-C": "Yabancı Dil",
+    "11-D": "Yabancı Dil",
+    "11-E": "Yabancı Dil",
+    "11-F": "Yabancı Dil",
+    "11-G": "Yabancı Dil",
+    "11-H": "Yabancı Dil",
+    "11-I": "Yabancı Dil",
+    "12-A": "Yabancı Dil",
+    "12-B": "Yabancı Dil",
+    "12-C": "Yabancı Dil",
+    "12-D": "Yabancı Dil",
+    "12-E": "Yabancı Dil",
+    "12-F": "Yabancı Dil",
+    "12-G": "Yabancı Dil",
+    "12-H": "Yabancı Dil",
+    "12-I": "Yabancı Dil"
+   }
+  }
+ ],
+ "subeler_not": "Kelebek sınavlarında her şubenin girdiği ders (yoklama ve mazeret listesi için). Kaynak: 2026-2027 1. dönem 1. ortak yazılı sınav takvimi."
+}
