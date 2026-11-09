@@ -863,7 +863,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#pencere .pencere-ic').classList.add('genis');
     const fr = document.getElementById('raporCerceve');
     const d = fr.contentDocument; d.open(); d.write(belge.replace('</style>', 'html{background:#5a6477}body{background:#fff;margin:14px auto!important;box-shadow:0 4px 18px rgba(0,0,0,.35);width:210mm}body.yatay{width:297mm}@media screen{.ayak{display:none!important}}@media print{html{background:none}body{margin:0!important;box-shadow:none;width:auto}}</style>')); d.close();
-    $('#rpYazdir').onclick = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} };
+    $('#rpYazdir').onclick = () => {
+      // Telefon/tablette (iOS Safari) çerçevenin içi yazdırılamıyor: belge yeni sekmede açılıp orada yazdırılır. Masaüstü eskisi gibi.
+      const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
+      if (mobil) {
+        const w = window.open('', '_blank');
+        if (w) { w.document.open(); w.document.write(belge.replace('</body>', '<script>addEventListener("load",function(){setTimeout(function(){window.print()},300)})<\/script></body>')); w.document.close(); return; }
+      }
+      try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
+    };
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
   const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;
