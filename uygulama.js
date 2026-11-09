@@ -1580,7 +1580,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           return `<button class="k-tahta k-${d.sinif}" data-k="${esc(s)}"><b>${esc(s)}</b><small>${d.sinif === 'kl' || d.sinif === 'bs' ? '🔒 ' : d.sinif === 'ac' ? '🔓 ' : ''}${esc(d.yazi)}</small></button>`; }).join('')}</div>`;
       }).join('');
       const odalar = siniflar.filter(odaMi);
-      $('#kSiniflar').innerHTML = satirlar + (odalar.length ? `<div class="k-sat"><div class="k-sev" style="background:#9fb3cc">·</div>${odalar.map(s => `<div class="k-tahta k-oda"><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></div>`).join('')}</div>` : '');
+      $('#kSiniflar').innerHTML = satirlar + (odalar.length ? `<div class="k-sat"><div class="k-sev" style="background:#9fb3cc">·</div>${odalar.map(s => `<button class="k-tahta k-oda" data-k="${esc(s)}"><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></button>`).join('')}</div>` : '');
       const tk = takvim || {};
       $('#kTakvim').innerHTML = `<div class="k-iki"><div class="kart"><h2 style="margin-top:0">Açılış · kapanış</h2>
           <div class="soluk kucuk">Tahtalar kapanış saatinde 2 dk uyarıyla kapanır ("30 dk ertele"). Sabah açılış BIOS saatiyle; şimdilik deneme tahtalarında.</div>
@@ -1606,19 +1606,24 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#icerik').innerHTML = `<h1>Tahta Kontrol</h1><div class="soluk">Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık (oyunlar, Günün soruları, Atlas). Ders saatinde açık; dersi boş sınıf buradan kilitlenir. Öğretmenler odası kilitlenmez.</div>
       <div class="kart" style="margin-top:12px"><div id="kUst"></div><div class="dugmeler" style="justify-content:flex-start">
         <button class="birincil" id="kAcTen">Tüm tahtaları aç · bu teneffüs</button><button class="ikincil" id="kAcGun">Tüm tahtaları aç · bugün</button>
-        <button class="tehlike" id="kKilit">Tümünü kilitle · bugün</button><button class="ikincil" id="kNormal">Hepsini normale döndür</button></div><div class="kucuk" id="kBilgi"></div></div>
+        <button class="tehlike" id="kKilit">Tümünü kilitle · bugün</button><button class="ikincil" id="kNormal">Hepsini normale döndür</button><button class="tehlike" id="kKapatHepsi">⏻ Açık tüm tahtaları kapat</button></div><div class="kucuk" id="kBilgi"></div></div>
       <div class="kart"><h2 style="margin-top:0">Sınıflar <span class="soluk kucuk">· tahtaya dokunun: Aç / Kilitle / Boş ders</span></h2><div id="kSiniflar"></div></div><div id="kTakvim"></div>`;
     $('#kAcTen').onclick = () => { const zd = zilDurumu(); gonderKarar('ac', ['*'], zd.tur === 'teneffus' ? zd.bitis : Math.floor(Date.now() / 1000) + 15 * 60); };
     $('#kAcGun').onclick = () => gonderKarar('ac', ['*'], gunSonu());
     $('#kKilit').onclick = () => { if (confirm('Bütün sınıf tahtaları bugün ders saatinde de kilitlenecek (yalnız Atlas). Emin misiniz?')) gonderKarar('kilitle', ['*'], gunSonu()); };
     $('#kNormal').onclick = () => gonderKarar('normal', ['*'], gunSonu());
+    const kapatGonder = hedef => gonderKarar('kapat', hedef, Math.floor(Date.now() / 1000) + 600);   // K-378: tahta 2 dk uyarıyla kapanır ("30 dk ertele" var)
+    $('#kKapatHepsi').onclick = () => { if (confirm('Açık bütün tahtalar (Öğretmenler odası dahil) 2 dakika uyarıyla kapanacak. Emin misiniz?')) kapatGonder(['*']); };
     $('#kSiniflar').onclick = ev => {
       const b = ev.target.closest('[data-k]'); if (!b) return; const s = b.dataset.k, zd = zilDurumu();
-      pencereAc(`<h2 style="margin-top:0">${esc(s)} tahtası</h2><div class="soluk">Şu an: ${esc(zd.ad)} ${esc(zd.saat || zd.sonraki || '')}</div>
+      if (odaMi(s)) pencereAc(`<h2 style="margin-top:0">${esc(s)}</h2><div class="soluk">Bu tahta kilitlenmez. İsterseniz kapatabilirsiniz (2 dk uyarı, "30 dk ertele" var).</div>
+        <div class="dugmeler" style="justify-content:flex-start;margin-top:14px"><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button></div>`);
+      else pencereAc(`<h2 style="margin-top:0">${esc(s)} tahtası</h2><div class="soluk">Şu an: ${esc(zd.ad)} ${esc(zd.saat || zd.sonraki || '')}</div>
         <div class="dugmeler" style="flex-wrap:wrap;justify-content:flex-start;margin-top:14px">
         <button class="birincil" data-i="ac-ten">Aç · bu teneffüs</button><button class="ikincil" data-i="ac-gun">Aç · bugün</button>
         ${zd.tur === 'ders' ? '<button class="tehlike" data-i="bos">Boş ders: kilitle (ders bitene kadar)</button>' : ''}<button class="tehlike" data-i="kil">Kilitle · bugün</button>
-        <button class="ikincil" data-i="normal">Normale döndür</button></div>`);
+        <button class="ikincil" data-i="normal">Normale döndür</button><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button></div>
+        <div class="soluk kucuk" style="margin-top:10px">Kapat: tahta 2 dakika uyarı verir, sınıftaki "30 dk ertele" diyebilir. 16.30–07.00 arası açık kalan sınıf tahtası zaten kendiliğinden kapanır.</div>`);
       $('#pencereIcerik').onclick = ev2 => {
         const x = ev2.target.closest('[data-i]'); if (!x) return; $('#pencere').classList.add('gizli');
         const i = x.dataset.i, zd2 = zilDurumu();
@@ -1626,6 +1631,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         else if (i === 'ac-gun') gonderKarar('ac', [s], gunSonu());
         else if (i === 'bos') gonderKarar('bosders', [s], zd2.bitis || Math.floor(Date.now() / 1000) + 40 * 60);
         else if (i === 'kil') gonderKarar('kilitle', [s], gunSonu());
+        else if (i === 'kapat') kapatGonder([s]);
         else gonderKarar('normal', [s], gunSonu());
       };
     };

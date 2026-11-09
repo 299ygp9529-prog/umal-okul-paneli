@@ -603,7 +603,7 @@ button.og-kutu { cursor: pointer; }
   .k-durum > div:first-child { grid-column: 1 / -1; }
   .k-durum b { font-size: 18px; } .k-durum span { font-size: 11px; }
   .k-durum > div:nth-child(n+2) span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #kAcTen, #kAcGun, #kKilit, #kNormal { flex: 1 1 calc(50% - 8px); padding: 9px 6px; font-size: 13px; }
+  #kAcTen, #kAcGun, #kKilit, #kNormal, #kKapatHepsi { flex: 1 1 calc(50% - 8px); padding: 9px 6px; font-size: 13px; }
   .k-sat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .k-sev { grid-column: 1 / -1; width: auto; height: 22px; justify-content: flex-start; padding-left: 10px; font-size: 13px; }
   .k-tahta { width: auto; min-width: 0; padding: 7px; }
