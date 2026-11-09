@@ -868,7 +868,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
       if (mobil) {
         const w = window.open('', '_blank');
-        if (w) { w.document.open(); w.document.write(belge.replace('</body>', '<script>addEventListener("load",function(){setTimeout(function(){window.print()},300)})<\/script></body>')); w.document.close(); return; }
+        if (w) {
+          // iOS kendiliğinden yazdırma penceresi açmıyor: üstte dokunulacak bir "Yazdır / PDF" çubuğu (yazdırılan sayfada görünmez)
+          const cubuk = '<style>@media screen{#yzCubuk{position:sticky;top:0;z-index:9;display:flex;gap:10px;padding:12px;background:#0b182b;justify-content:center}#yzCubuk button{font:700 17px system-ui;padding:12px 22px;border-radius:12px;border:0;background:#22e8ff;color:#04202a}#yzCubuk button.k{background:#18304f;color:#eef6ff}.ayak{display:none!important}}@media print{#yzCubuk{display:none!important}}</style><div id="yzCubuk"><button onclick="window.print()">🖨 Yazdır / PDF kaydet</button><button class="k" onclick="window.close()">Kapat</button></div>';
+          w.document.open(); w.document.write(belge.replace(/<body([^>]*)>/, '<body$1>' + cubuk)); w.document.close(); return;
+        }
       }
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
