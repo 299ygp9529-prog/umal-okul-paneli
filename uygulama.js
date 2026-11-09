@@ -866,22 +866,47 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#rpYazdir').onclick = () => {
       // Telefon/tablette (iOS) çerçeve yazdırılamıyor: PDF dosyası hazırlanır, sonra telefonun paylaş menüsüyle kaydedilir/gönderilir. Masaüstü eskisi gibi.
       const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
-      if (mobil) {   // K-391: iPhone'da çerçeve ve yeni sekme yazdırılamıyor → rapor ana sayfaya konur, yalnız o yazdırılır
-        const eski = document.getElementById('yzKatman'); if (eski) eski.remove();
-        const kat = document.createElement('div'); kat.id = 'yzKatman'; document.body.appendChild(kat);
-        const d = new DOMParser().parseFromString(belge, 'text/html');
-        const kok = kat.attachShadow({ mode: 'open' });
-        kok.innerHTML = '<style>:host{all:initial;display:block;background:#fff;color:#000}' + [...d.querySelectorAll('style')].map(x => x.textContent.replace(/@page[^}]*}/g, '').replace(/(^|[\s,}])html,\s*body\b/g, '$1:host, .yzgovde').replace(/(^|[\s,}])body\b/g, '$1.yzgovde')).join('\n') + '</style><div class="yzgovde ' + (d.body.className || '') + '">' + d.body.innerHTML + '</div>';
-        let st = document.getElementById('yzStil');
-        if (!st) { st = document.createElement('style'); st.id = 'yzStil'; document.head.appendChild(st); }
-        st.textContent = '#yzKatman{display:none}@media print{@page{size:A4 ' + (yatay ? 'landscape' : 'portrait') + ';margin:0}html,body{background:#fff!important;height:auto!important;overflow:visible!important}body>*:not(#yzKatman){display:none!important}#yzKatman{display:block!important}}';
-        const bitti = () => { kat.remove(); removeEventListener('afterprint', bitti); };
-        addEventListener('afterprint', bitti);
-        window.print();
-        return;
-      }
+      if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'));   // K-391: telefonda PDF dosyası + paylaş
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
+  }
+  // K-391: telefonda rapor → gerçek PDF dosyası → telefonun paylaş menüsü (Dosyalar'a kaydet, WhatsApp, AirDrop, Yazdır)
+  function betikYukle(src) { return new Promise((ok, red) => { if (window.html2pdf) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('PDF aracı yüklenemedi')); document.head.appendChild(sc); }); }
+  function cssKapsa(css, on) {   // rapor CSS'ini yalnız katmana uygula (panelin görünümü bozulmasın)
+    const sh = new CSSStyleSheet(); try { sh.replaceSync(css); } catch (e) { return ''; }
+    const yaz = kurallar => [...kurallar].map(r => {
+      if (r instanceof CSSStyleRule) return r.selectorText.split(',').map(x => { x = x.trim(); if (/^(html|body|:root)$/.test(x)) return on; if (/^(html|body)[.\s:]/.test(x)) return on + x.replace(/^(html|body)/, ''); if (x === '*') return on + ' *, ' + on; return on + ' ' + x; }).join(', ') + '{' + r.style.cssText + '}';
+      if (r instanceof CSSMediaRule) return /print/.test(r.conditionText) ? '' : '@media ' + r.conditionText + '{' + yaz(r.cssRules) + '}';
+      return '';
+    }).join('\n');
+    return yaz(sh.cssRules);
+  }
+  async function pdfPaylas(belge, baslikAdi, yatay, dugme) {
+    const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
+    if (dugme._dosya) {   // ikinci dokunuş: paylaş menüsü (dokunuşun hemen ardından açılmalı)
+      const f = dugme._dosya;
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) {} return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = ad; document.body.appendChild(a); a.click(); a.remove(); return;
+    }
+    const eski = dugme.textContent; dugme.disabled = true; dugme.textContent = 'PDF hazırlanıyor…';
+    const G = yatay ? 1123 : 794;   // A4 genişliği (px)
+    const kat = document.createElement('div');   // dış kap: ekranda görünmez; PDF'e içteki #pdfKatman çekilir
+    kat.style.cssText = `position:absolute;left:0;top:0;width:${G}px;height:0;overflow:hidden;pointer-events:none`;
+    try {
+      await betikYukle('html2pdf.bundle.min.js?v=0101');
+      const d = new DOMParser().parseFromString(belge, 'text/html');
+      const css = [...d.querySelectorAll('style')].map(x => x.textContent).join('\n');
+      kat.innerHTML = '<div id="pdfKatman" style="width:' + G + 'px;background:#fff"><style>' + cssKapsa(css, '#pdfKatman') + ' #pdfKatman .ayak{display:none!important} #pdfKatman .ust-bosluk,#pdfKatman .alt-bosluk{height:0!important} #pdfKatman .bant{margin-top:0!important}</style><div class="' + esc(d.body.className || '') + '">' + d.body.innerHTML + '</div></div>';
+      document.body.appendChild(kat); const ic = kat.firstChild;
+      await Promise.all([...kat.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+      const H = ic.scrollHeight, olcek = Math.max(1, Math.min(2, Math.sqrt(15e6 / (G * H))));   // iPhone tuval sınırı (~16 milyon piksel)
+      const blob = await window.html2pdf().set({ margin: [8, 0, 10, 0], image: { type: 'jpeg', quality: 0.92 },
+        html2canvas: { scale: olcek, useCORS: true, backgroundColor: '#ffffff', width: G, windowWidth: G, scrollX: 0, scrollY: 0, x: 0, y: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza', '.kart'] } }).from(ic).outputPdf('blob');
+      dugme._dosya = new File([blob], ad, { type: 'application/pdf' });
+      dugme.textContent = '📤 Paylaş / Kaydet';
+    } catch (e) { dugme.textContent = eski; alert('PDF hazırlanamadı: ' + (e && e.message || e)); }
+    finally { kat.remove(); dugme.disabled = false; }
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
   const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;
