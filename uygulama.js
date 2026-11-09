@@ -403,7 +403,7 @@
   function sinifSatir(lay, ext) {
     const gen = window.innerWidth > 760;
     if (!gen) {   // telefon: plan ekran enine sığar; kartta fotoğraf, numara ve ilk ad
-      const mW = window.innerWidth - 32 - 16 - 28;
+      const mW = window.innerWidth - 32 - 8;   // telefonda yan duvar yazısı yok
       const masa = mW * (2 + ext) / (lay.W + ext) - 6;
       const kisi = (masa - 6 - 4) / 2 - 6;
       return Math.round(Math.max(64, kisi / .77 + 26));
@@ -444,7 +444,15 @@
       <div class="masalar" data-h="${lay.H}" data-arka="${lay.arka ? 1 : 0}" data-en="${SATIR}" style="--satir:${SATIR}px;height:calc(var(--satir) * ${lay.H})">${desks}</div>
       ${lay.sag ? `<div class="duvar">${lay.sag.split('').join('<br>')}</div>` : '<div class="duvar"></div>'}</div>
       ${lay.arka ? `<div class="arka-duvar">${lay.arka}</div>` : ''}
-      ${disarida.length ? `<div class="turuncu kucuk" style="margin-top:8px">Düzen dışı: ${disarida.map(r => `${r.sira} ${esc(baslik(r.ad))} (${esc(r.sinif)})`).join(', ')}</div>` : ''}</div>`;
+      ${disarida.length ? `<div class="turuncu kucuk" style="margin-top:8px">Düzen dışı: ${disarida.map(r => `${r.sira} ${esc(baslik(r.ad))} (${esc(r.sinif)})`).join(', ')}</div>` : ''}</div>${planListesi(L, gel)}`;
+  }
+  // Telefon: planın altında büyük fotoğraflı, tam adlı liste (plan kartları dar; ekranın alt yarısı boş kalmasın). Masaüstünde gizli (CSS).
+  function planListesi(L, gel) {
+    if (window.innerWidth > 760 || !L.length) return '';
+    const S = L.slice().sort((a, b) => a.sira - b.sira);
+    return `<div class="plan-liste">${S.map(r => { const c = seviyeRenk(r.sinif), g = gel && gel.has(r.no);
+      return `<button class="pl-ogr ${g ? 'gelmedi' : ''} ${r.tamam ? 'tamam' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">${foto(r.no, r.ad)}<span class="pl-yazi">
+        <b>${esc(baslik(r.ad))}</b><small><i class="pl-no">${r.etiket === '' ? esc(r.no) : esc(r.etiket ?? r.sira)}</i> ${esc(r.sinif)}</small>${r.ek ?? r.ders ? `<em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em>` : ''}${g ? '<em class="kirmizi">GELMEDİ</em>' : ''}${r.tamam ? '<em class="yeşil">✓ tamam</em>' : ''}</span></button>`; }).join('')}</div>`;
   }
   // Öğrenciler: sınıfın kendi oturma düzeni (Atlas home_seat_plan): okul numarasına göre sütun sütun önden arkaya
   const OZEL_SIRA = { '12-I': Array.from({ length: 36 }, (_, i) => i + 1), '11-H': [1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 17, 18, 19, 20, 9, 10, 11, 12] };

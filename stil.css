@@ -644,3 +644,27 @@ button.og-kutu { cursor: pointer; }
   .sag-ust .t-neon { font-size: 13px; padding: 4px 10px; border-radius: 10px; }
   .sag-ust .geri-sayim { flex-basis: 100%; margin-left: 0; font-size: 17px; }
 }
+/* Oturma planı · yalnız telefon (masaüstü değişmez): yan duvar yazısı yok → kartlar geniş; altta tam adlı liste; başlık sığar */
+.plan-liste { display: none; }
+@media (max-width: 760px) {
+  .plan-govde > .duvar { display: none; }
+  .sinif-plan { padding: 8px 3px !important; }
+  .kyazi .ilkad { font-size: 10.5px; }
+  .koltuk .kno { font-size: 9.5px; }
+  .plan-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .pl-ogr { position: relative; display: flex; gap: 9px; align-items: center; min-width: 0; text-align: left; color: inherit; background: #13233a; border: 1px solid #22385a; border-left: 4px solid var(--sv); border-radius: 12px; padding: 7px 8px; }
+  .pl-ogr .foto { width: 52px; height: 68px; aspect-ratio: auto; flex: none; border-radius: 8px; font-size: 15px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.8); }
+  .pl-yazi { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pl-yazi b { font-size: 13.5px; line-height: 1.2; overflow-wrap: anywhere; }
+  .pl-yazi small { font-size: 11.5px; color: var(--sv); font-weight: 700; }
+  .pl-yazi .pl-no { font-style: normal; color: #0b1422; background: var(--sv); border-radius: 5px; padding: 0 5px; margin-right: 3px; font-weight: 800; }
+  .pl-yazi em { font-style: normal; font-size: 11px; font-weight: 800; color: #ffe14d; line-height: 1.2; }
+  .pl-ogr.gelmedi { border-color: #ff4d5e; } .pl-ogr.gelmedi .foto { opacity: .5; }
+  /* sınav salonu başlığı */
+  #sinavUst { flex-wrap: wrap; gap: 8px; }
+  #icerik.salon-acik #sinavUst .ders-uzun { flex: 1 1 100%; font-size: 14px; }
+  #icerik.salon-acik #sinavUst .turuncu-neonlar { flex: 1 1 100%; flex-wrap: wrap; margin-left: 0; justify-content: flex-start; gap: 6px; }
+  #sinavUst .t-neon { font-size: 12.5px; padding: 3px 9px; }
+  #sinavUst .geri-sayim { flex-basis: 100%; margin-left: 0; font-size: 16px; }
+  #tamEkran { display: none; }   /* iPhone'da sayfa tam ekranı yok; yan çevirince plan büyük görünür */
+}
