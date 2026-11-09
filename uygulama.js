@@ -1518,13 +1518,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const p = D.program || {}, gun = (an.getDay() + 6) % 7;
     if (gun > 4) return { tur: 'tatil', ad: 'Hafta sonu' };
     const zil = (p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || [];
+    const dad = z => /ders/i.test(String(z.ders)) ? String(z.ders) : `${z.ders}. ders`;   // veri '1. Ders' de olabilir
     const dk = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + m; };
     const t = an.getHours() * 60 + an.getMinutes(), gunBas = new Date(an); gunBas.setHours(0, 0, 0, 0);
     const an_ = m => Math.floor(gunBas.getTime() / 1000) + m * 60;
     for (let i = 0; i < zil.length; i++) {
       const z = zil[i], a = dk(z.bas), b = dk(z.bit);
-      if (a <= t && t < b) return { tur: 'ders', ad: `${z.ders}. ders`, saat: `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}`, bitis: an_(b) };
-      if (t < a) return { tur: 'teneffus', ad: i === 0 ? 'Ders öncesi' : 'Teneffüs', sonraki: `${z.ders}. ders ${z.bas.replace(':', '.')}`, bitis: an_(a) };
+      if (a <= t && t < b) return { tur: 'ders', ad: dad(z), saat: `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}`, bitis: an_(b) };
+      if (t < a) return { tur: 'teneffus', ad: i === 0 ? 'Ders öncesi' : 'Teneffüs', sonraki: `${dad(z)} ${z.bas.replace(':', '.')}`, bitis: an_(a) };
     }
     return { tur: 'okul_disi', ad: 'Okul saati dışında' };
   }
