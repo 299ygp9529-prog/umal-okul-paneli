@@ -781,3 +781,6 @@ span.tk-gel.neon { color: var(--neon); }
 .nb-c.k { color: #ff9fca; border-color: #ff7eb6; } .nb-c.e { color: #8fd8ff; border-color: #5cc8ff; } .nb-m.acik { color: var(--turuncu); border-color: var(--turuncu); }
 .nb-g.acik { background: var(--neon); color: var(--zemin); border-color: var(--neon); } .nb-g.yok { opacity: .35; }
 @media (max-width: 760px) { .nb-tablo { grid-template-columns: 58px repeat(5, minmax(0, 1fr)); gap: 3px; } .nb-hucre { font-size: 10.5px; padding: 4px 5px; white-space: normal; } .nb-bas { font-size: 11px; padding: 2px; } .nb-yer { font-size: 11px; padding: 2px; } }
+/* K-395: Anketi sil onayı */
+.tehlike-dolu { background: var(--kirmizi) !important; border-color: var(--kirmizi) !important; color: #fff !important; }
+.tehlike-dolu:disabled { opacity: .45; cursor: not-allowed; }

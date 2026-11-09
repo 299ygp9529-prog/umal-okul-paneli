@@ -1042,7 +1042,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="cipler" id="filtre"><button class="cip ${filtre === 'okul' ? 'secili' : ''}" data-f="okul">Bütün Okul</button>${duzeyler.map(d => `<button class="cip ${filtre === d ? 'secili' : ''}" data-f="${d}">Bütün ${d}. sınıflar</button>`).join('')}${tum.length > 1 ? tum.map(s => `<button class="cip ${filtre === s ? 'secili' : ''}" data-f="${esc(s)}">${esc(s)}</button>`).join('') : ''}</div>
         ${(a.tanim.sorular || []).map((q, i) => soruSonucu(a, ss, i, q)).join('')}
         <h2>Sınıf sınıf katılım</h2>${sinifSatirlari(tum, x => { const kk = katilanlar(a, x); return [kk.filter(y => cevap(a, x, String(y.no))).length, kk.length]; })}
-        <div class="dugmeler"><button class="birincil" id="aPdf">Sonuç Raporu (PDF)</button><button class="birincil" id="aListe">Katılımcı Listesi (PDF)</button><button class="ikincil" id="aExcel">Excel</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}</div>
+        <div class="dugmeler"><button class="birincil" id="aPdf">Sonuç Raporu (PDF)</button><button class="birincil" id="aListe">Katılımcı Listesi (PDF)</button><button class="ikincil" id="aExcel">Excel</button>${duzenleyebilir(a) ? '<button class="ikincil" id="aDuzenle">Düzenle</button>' : ''}${(a.kaynak || 'dersmap') === 'dersmap' ? '<button class="ikincil" id="aKopya">Kopyala</button>' : ''}${D.rol !== 'rehberlik' || a.bolum === 'rehberlik' ? '<button class="ikincil" id="aAc">Bugün aç</button><button class="ikincil" id="aKapat">Kapat</button>' : ''}${silebilir(a) ? '<button class="tehlike" id="aSil" style="margin-left:auto">🗑 Anketi sil</button>' : ''}</div>
         <div class="cok-soluk kucuk" id="aBilgi"></div>`;
       $('#filtre').onclick = ev => { const f = ev.target.closest('[data-f]'); if (f) { filtre = f.dataset.f; ayrinti(a); } };
       $('#anketAyrinti').querySelectorAll('[data-ss]').forEach(b => b.onclick = () => sinifKatilimPlani(a, b.dataset.ss));
@@ -1055,6 +1055,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         $('#aBilgi').textContent = error ? 'Olmadı: ' + hataYaz(error) : (acik ? 'Bugün için açıldı.' : 'Kapatıldı.');
         if (!error) D.durumlar[a.id] = { durum: acik ? 'acik' : 'kapali', gun: bugunISO() };
       };
+      if ($('#aSil')) $('#aSil').onclick = () => anketSil(a, () => { acikId = null; ciz(); });
       if ($('#aDuzenle')) $('#aDuzenle').onclick = () => anketHazirla(a, false);
       if ($('#aKopya')) $('#aKopya').onclick = () => anketHazirla(a, true);
       if ($('#aAc')) { $('#aAc').onclick = () => durumYaz(true); $('#aKapat').onclick = () => durumYaz(false); }
@@ -1097,6 +1098,31 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       { tur: 'secim', metin: 'Tercih ettiğin nöbet yeri', secenekler: ['Bahçe', 'Koridor', 'Kantin', 'Giriş'], diger: true, zorunlu: true },
       { tur: 'yazi', metin: 'Eklemek istediğin', zorunlu: false }] }
   ];
+  // K-395: Anketi sil — anket ve bütün cevaplar (panel, DersMap, Drive, tahtalar). Yalnız hazırlayan ya da baş yönetici.
+  const silebilir = a => a && a.durum !== 'taslak' && (D.rol === 'bas' || (a.tanim.hazirlayan && a.tanim.hazirlayan === D.eposta));
+  function anketSil(a, sonra) {
+    const tum = anketSiniflari(a);
+    const n = tum.reduce((t, s) => t + katilanlar(a, s).filter(k => cevap(a, s, String(k.no))).length, 0);
+    const kisisel = (a.tanim.sorular || []).some(q => gizliMi(q) || /doğum|adres|veli|telefon|e-?posta|mail|kimlik|t\.?\s?c/i.test(q.metin || ''));
+    const acik = acikMi(a);
+    pencereAc(`<h1 style="margin-top:0">Anket silinsin mi?</h1>
+      <p><b>${esc(a.tanim.ad)}</b><br><span class="soluk">${n} öğrencinin cevabı${kisisel ? ' · kişisel veri içerir' : ''}</span></p>
+      <div class="kart" style="margin:12px 0"><b>Şuralardan silinir:</b><ul style="margin:8px 0 0 18px;line-height:1.8"><li>Okul Paneli ve DersMap (anket ve bütün cevaplar)</li><li>Drive'daki cevap kopyaları</li><li>${tum.length} sınıfın tahtasındaki kopyalar (tahta açılınca)</li></ul></div>
+      ${acik ? `<p class="turuncu"><b>Bu anket şu an açık.</b> Önce "Kapat"a basın, sonra silebilirsiniz.</p>` : `<p class="turuncu"><b>Geri alınamaz.</b> Raporu ya da Excel'i almadıysanız önce onları alın.</p>
+      <label style="display:flex;gap:10px;align-items:center;margin:14px 0;cursor:pointer"><input type="checkbox" id="silOnay" style="width:22px;height:22px"> Raporu aldım, cevaplar silinsin</label>`}
+      <div class="dugmeler"><button class="ikincil" id="silVazgec">Vazgeç</button>${acik ? '' : '<button class="birincil tehlike-dolu" id="silEvet" disabled>Kalıcı olarak sil</button>'}</div>
+      <div class="kucuk" id="silBilgi" style="margin-top:8px"></div>`);
+    $('#silVazgec').onclick = () => $('#pencereKapat').click();
+    if (acik) return;
+    $('#silOnay').onchange = () => { $('#silEvet').disabled = !$('#silOnay').checked; };
+    $('#silEvet').onclick = async () => {
+      $('#silEvet').disabled = true; $('#silBilgi').textContent = 'Siliniyor…';
+      const { error } = await sb.rpc('umal_anket_sil', { p_id: a.id });
+      if (error) { $('#silBilgi').textContent = 'Silinemedi: ' + hataYaz(error); $('#silEvet').disabled = false; return; }
+      D.anketler = D.anketler.filter(x => x.id !== a.id);
+      $('#pencereKapat').click(); sonra && sonra();
+    };
+  }
   const duzenleyebilir = a => a && (a.kaynak || 'dersmap') === 'dersmap' && (D.rol === 'bas' || (a.tanim.hazirlayan && a.tanim.hazirlayan === D.eposta));
   const rehberlikYazar = () => D.rol === 'bas' || D.rol === 'rehberlik';
   const gunEkle = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
