@@ -120,6 +120,7 @@
   // ------------------------------------------------------------------ Menü
   const BOLUMLER = [
     { id: 'harita', ad: 'Harita', roller: ['bas', 'yonetici'], ciz: harita },
+    { id: 'kontrol', ad: 'Tahta Kontrol', roller: ['bas', 'yonetici', 'rehberlik'], ciz: kontrol },   // K-377
     { id: 'sinav', ad: 'Sınav merkezi', roller: ['bas', 'yonetici'], ciz: sinav },
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
@@ -259,7 +260,7 @@
         const ders = sinavda ? 'SINAV' + (ds.ders ? ' · ' + ds.ders : '') : (ds.ders || (pr && pr.ders) || '');
         const ogr = (ds.ogretmen && ds.ogretmen.length ? ds.ogretmen : (pr ? pr.ogretmen : [])).map(baslik).join(', ');
         return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}" data-sinif="${esc(s)}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
-          <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${on && d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}</div>`;
+          <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${on && d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}${on && (d.erisim || {}).durum === 'kilitli' ? '<small class="kirmizi">🔒 kilitli</small>' : ''}</div>`;
       };
       // Arama: liste süzülmez; eşleşen sınıfa kayılır, kartı büyüyüp çerçevesi yanıp söner
       const eslesen = !q ? [] : siniflar.filter(s => {
@@ -614,6 +615,7 @@
       const b = ev.target.closest('[data-salon]'); if (b) { acikSalon = b.dataset.salon; salonCiz(); window.scrollTo(0, 0); }
     };
     // Öğrenci ara → uçak bileti (sınavı yoksa da sınıfı görünür; "Planda gör" sırasını neonla gösterir)
+    if (matchMedia('(max-width: 760px)').matches) $('#sinavAra').placeholder = 'Öğrenci adı ya da numarası';   // telefonda sığsın
     biletArama($('#sinavAra'), $('#sinavBul'), (pi, salon, no) => {
       secili = D.planlar[pi]; acikSalon = salon; vurgu = no;
       document.querySelectorAll('#planlar .cip').forEach((c, i) => c.classList.toggle('secili', i === pi));
@@ -1506,6 +1508,129 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (error) { $('#projeBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
       projeBolumu();
     };
+  }
+
+  // ------------------------------------------------------------------ Tahta Kontrol (K-377)
+  // Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık. Buradan: aç (bu teneffüs / bugün), kilitle, boş ders, normale döndür;
+  // açılış · kapanış saatleri, tatil günleri, sabah uyanma denemesi. Tahtalar 'erisim' ve 'takvim' mesajlarını 20 sn'de bir alır.
+  const ROL_AD = { bas: 'İdare', yonetici: 'İdare', rehberlik: 'Rehberlik' };
+  function zilDurumu(an = new Date()) {
+    const p = D.program || {}, gun = (an.getDay() + 6) % 7;
+    if (gun > 4) return { tur: 'tatil', ad: 'Hafta sonu' };
+    const zil = (p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || [];
+    const dk = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + m; };
+    const t = an.getHours() * 60 + an.getMinutes(), gunBas = new Date(an); gunBas.setHours(0, 0, 0, 0);
+    const an_ = m => Math.floor(gunBas.getTime() / 1000) + m * 60;
+    for (let i = 0; i < zil.length; i++) {
+      const z = zil[i], a = dk(z.bas), b = dk(z.bit);
+      if (a <= t && t < b) return { tur: 'ders', ad: `${z.ders}. ders`, saat: `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}`, bitis: an_(b) };
+      if (t < a) return { tur: 'teneffus', ad: i === 0 ? 'Ders öncesi' : 'Teneffüs', sonraki: `${z.ders}. ders ${z.bas.replace(':', '.')}`, bitis: an_(a) };
+    }
+    return { tur: 'okul_disi', ad: 'Okul saati dışında' };
+  }
+  async function kontrol() {
+    await programYukle();
+    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').eq('anahtar', 'siniflar').maybeSingle();
+    const listeSinif = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
+    let tahtalar = {}, kararlar = [], takvim = null;
+    const yukle = async () => {
+      const [t, m] = await Promise.all([sb.from('umal_tahtalar').select('cihaz,durum,gorulme'), sb.from('umal_mesajlar').select('id,tur,veri,bitis').in('tur', ['erisim', 'takvim'])]);
+      if (t.error) throw t.error; if (m.error) throw m.error;
+      tahtalar = {};
+      for (const x of (t.data || []).filter(x => (x.durum || {}).cihaz_turu !== 'bilgisayar')) {
+        const s = (x.durum || {}).sinif || x.cihaz; if (!tahtalar[s] || new Date(x.gorulme) > new Date(tahtalar[s].gorulme)) tahtalar[s] = x;
+      }
+      const simdi = Date.now() / 1000;
+      kararlar = (m.data || []).filter(x => x.tur === 'erisim' && (!x.veri.bitis || x.veri.bitis > simdi)).map(x => x.veri).sort((a, b) => (b.zaman || 0) - (a.zaman || 0));
+      const tk = (m.data || []).filter(x => x.tur === 'takvim').map(x => x.veri).sort((a, b) => (b.zaman || 0) - (a.zaman || 0));
+      takvim = Object.assign({ acilis: '08:00', kapanis: '16:30', tatiller: [], uyanma: ['9-D', 'Öğretmenler odası'] }, tk[0] || {});
+      D._takvimEski = (m.data || []).filter(x => x.tur === 'takvim').map(x => x.id);
+    };
+    const karar = s => kararlar.find(k => (k.hedef || []).includes('*') || (k.hedef || []).includes(s));
+    const odaMi = s => !/^\d/.test(String(s));
+    const etkili = (s, zd) => {   // tahtanın kendi bildirdiği yoksa panelden tahmin
+      const t = tahtalar[s], on = t && Date.now() - new Date(t.gorulme) < 6 * 60000, e = on ? ((t.durum || {}).erisim || {}) : null;
+      if (odaMi(s)) return { sinif: 'oda', yazi: on ? 'açık · kilitlenmez' : 'kapalı' };
+      if (!on) return { sinif: 'kp', yazi: 'tahta kapalı' };
+      const k = karar(s);
+      if (e && e.kod) {
+        const ad = { ders: 'ders · açık', teneffus: 'kilitli (teneffüs)', bosders: 'kilitli · boş ders', yonetim: 'kilitli · ' + (e.kim || 'idare'), izin: 'açık · ' + (e.kim || 'izin'), ertele: 'açık · kapanış ertelendi', okul_disi: 'kilitli (okul saati dışı)', tatil: 'kilitli (tatil)' }[e.kod] || e.kod;
+        return { sinif: e.durum === 'kilitli' ? (e.kod === 'bosders' ? 'bs' : 'kl') : (e.kod === 'ders' ? 'ok' : 'ac'), yazi: ad, k };
+      }
+      return { sinif: 'ok', yazi: 'açık (eski sürüm)', k };
+    };
+    const gonderKarar = async (islem, hedef, bitis) => {
+      const simdi = Math.floor(Date.now() / 1000), id = new Date().toISOString().replace(/\D/g, '').slice(2, 14) + '-' + Math.random().toString(16).slice(2, 6);
+      const veri = { id, tur: 'erisim', islem, hedef, zaman: simdi, bitis, kim: ROL_AD[D.rol] || 'İdare', eposta: D.eposta || '' };
+      const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'erisim', veri, bitis: new Date(bitis * 1000).toISOString() });
+      $('#kBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : '<span class="yeşil">Gönderildi. Tahtalar en geç 20 saniyede uygular.</span>';
+      await yukle(); ciz();
+    };
+    const gunSonu = () => { const d = new Date(); d.setHours(23, 59, 0, 0); return Math.floor(d.getTime() / 1000); };
+    const ciz = () => {
+      const zd = zilDurumu(), siniflar = [...new Set([...listeSinif, ...Object.keys(tahtalar)])].sort(sinifSira);
+      const durumlar = Object.fromEntries(siniflar.map(s => [s, etkili(s, zd)]));
+      const say = c => siniflar.filter(s => durumlar[s].sinif === c).length;
+      $('#kUst').innerHTML = `<div class="k-durum"><div><span class="soluk">Şu an</span><b>${esc(zd.ad)}</b><span class="soluk">${esc(zd.saat || zd.sonraki || '')}</span></div>
+        <div><span class="soluk">Kilitli</span><b class="kirmizi">${say('kl') + say('bs')}</b></div><div><span class="soluk">Açık (izinli)</span><b class="neon">${say('ac')}</b></div>
+        <div><span class="soluk">Derste açık</span><b class="yeşil">${say('ok')}</b></div><div><span class="soluk">Kapalı tahta</span><b class="soluk">${say('kp')}</b></div></div>`;
+      const satirlar = ['9', '10', '11', '12'].map(sv => {
+        const ss = siniflar.filter(s => String(s).split('-')[0] === sv); if (!ss.length) return '';
+        return `<div class="k-sat"><div class="k-sev" style="background:${SEVIYE_RENK[sv]}">${sv}</div>${ss.map(s => { const d = durumlar[s];
+          return `<button class="k-tahta k-${d.sinif}" data-k="${esc(s)}"><b>${esc(s)}</b><small>${d.sinif === 'kl' || d.sinif === 'bs' ? '🔒 ' : d.sinif === 'ac' ? '🔓 ' : ''}${esc(d.yazi)}</small></button>`; }).join('')}</div>`;
+      }).join('');
+      const odalar = siniflar.filter(odaMi);
+      $('#kSiniflar').innerHTML = satirlar + (odalar.length ? `<div class="k-sat"><div class="k-sev" style="background:#9fb3cc">·</div>${odalar.map(s => `<div class="k-tahta k-oda"><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></div>`).join('')}</div>` : '');
+      const tk = takvim || {};
+      $('#kTakvim').innerHTML = `<div class="k-iki"><div class="kart"><h2 style="margin-top:0">Açılış · kapanış</h2>
+          <div class="soluk kucuk">Tahtalar kapanış saatinde 2 dk uyarıyla kapanır ("30 dk ertele"). Sabah açılış BIOS saatiyle; şimdilik deneme tahtalarında.</div>
+          <div class="k-form"><label>Sabah açılış <input type="time" id="kAcilis" value="${esc(tk.acilis)}"></label><label>Akşam kapanış <input type="time" id="kKapanis" value="${esc(tk.kapanis)}"></label></div>
+          <div class="soluk kucuk">Sabah kendiliğinden açılacak tahtalar (deneme):</div><div class="cipler" id="kUyanma">${siniflar.map(s => `<button class="cip ${(tk.uyanma || []).includes(s) ? 'secili' : ''}" data-u="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+        <div class="kart"><h2 style="margin-top:0">Tatil günleri</h2><div class="soluk kucuk">Cumartesi ve pazar her zaman tatil. Tatilde tahtalar sabah açılmaz.</div>
+          <div class="cipler" id="kTatiller">${(tk.tatiller || []).map((t, i) => `<span class="cip">${esc(t.ad || 'Tatil')} · ${esc(t.bas)}${t.bit && t.bit !== t.bas ? ' – ' + esc(t.bit) : ''} <button class="bag" data-sil="${i}">✕</button></span>`).join('') || '<span class="soluk kucuk">Eklenmiş tatil yok</span>'}</div>
+          <div class="k-form"><input id="kTAd" placeholder="Ad (ör. Ara tatil)"><input type="date" id="kTBas"><input type="date" id="kTBit"><button class="ikincil" id="kTEkle">+ Ekle</button></div></div></div>
+        <div class="dugmeler"><button class="birincil" id="kKaydet">Saatleri ve tatilleri kaydet</button></div>`;
+      const u = new Set(tk.uyanma || []);
+      $('#kUyanma').onclick = ev => { const b = ev.target.closest('[data-u]'); if (!b) return; u.has(b.dataset.u) ? u.delete(b.dataset.u) : u.add(b.dataset.u); b.classList.toggle('secili'); tk.uyanma = [...u]; };
+      $('#kTatiller').onclick = ev => { const b = ev.target.closest('[data-sil]'); if (!b) return; tk.tatiller.splice(+b.dataset.sil, 1); ciz(); };
+      $('#kTEkle').onclick = () => { const a = $('#kTBas').value, b = $('#kTBit').value || a; if (!a) return; tk.tatiller = [...(tk.tatiller || []), { ad: $('#kTAd').value.trim() || 'Tatil', bas: a, bit: b < a ? a : b }]; ciz(); };
+      $('#kKaydet').onclick = async () => {
+        const simdi = Math.floor(Date.now() / 1000), id = 'takvim-' + simdi;
+        const veri = { id, tur: 'takvim', hedef: ['*'], zaman: simdi, acilis: $('#kAcilis').value || '08:00', kapanis: $('#kKapanis').value || '16:30', tatiller: tk.tatiller || [], uyanma: tk.uyanma || [] };
+        const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'takvim', veri, bitis: null });
+        if (!error && D._takvimEski.length) await sb.from('umal_mesajlar').delete().in('id', D._takvimEski);
+        $('#kBilgi').innerHTML = error ? `<span class="kirmizi">Kaydedilemedi: ${esc(hataYaz(error))}</span>` : '<span class="yeşil">Kaydedildi. Tahtalar en geç 20 saniyede alır.</span>';
+        await yukle(); ciz();
+      };
+    };
+    $('#icerik').innerHTML = `<h1>Tahta Kontrol</h1><div class="soluk">Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık (oyunlar, Günün soruları, Atlas). Ders saatinde açık; dersi boş sınıf buradan kilitlenir. Öğretmenler odası kilitlenmez.</div>
+      <div class="kart" style="margin-top:12px"><div id="kUst"></div><div class="dugmeler" style="justify-content:flex-start">
+        <button class="birincil" id="kAcTen">Tüm tahtaları aç · bu teneffüs</button><button class="ikincil" id="kAcGun">Tüm tahtaları aç · bugün</button>
+        <button class="tehlike" id="kKilit">Tümünü kilitle · bugün</button><button class="ikincil" id="kNormal">Hepsini normale döndür</button></div><div class="kucuk" id="kBilgi"></div></div>
+      <div class="kart"><h2 style="margin-top:0">Sınıflar <span class="soluk kucuk">· tahtaya dokunun: Aç / Kilitle / Boş ders</span></h2><div id="kSiniflar"></div></div><div id="kTakvim"></div>`;
+    $('#kAcTen').onclick = () => { const zd = zilDurumu(); gonderKarar('ac', ['*'], zd.tur === 'teneffus' ? zd.bitis : Math.floor(Date.now() / 1000) + 15 * 60); };
+    $('#kAcGun').onclick = () => gonderKarar('ac', ['*'], gunSonu());
+    $('#kKilit').onclick = () => { if (confirm('Bütün sınıf tahtaları bugün ders saatinde de kilitlenecek (yalnız Atlas). Emin misiniz?')) gonderKarar('kilitle', ['*'], gunSonu()); };
+    $('#kNormal').onclick = () => gonderKarar('normal', ['*'], gunSonu());
+    $('#kSiniflar').onclick = ev => {
+      const b = ev.target.closest('[data-k]'); if (!b) return; const s = b.dataset.k, zd = zilDurumu();
+      pencereAc(`<h2 style="margin-top:0">${esc(s)} tahtası</h2><div class="soluk">Şu an: ${esc(zd.ad)} ${esc(zd.saat || zd.sonraki || '')}</div>
+        <div class="dugmeler" style="flex-wrap:wrap;justify-content:flex-start;margin-top:14px">
+        <button class="birincil" data-i="ac-ten">Aç · bu teneffüs</button><button class="ikincil" data-i="ac-gun">Aç · bugün</button>
+        ${zd.tur === 'ders' ? '<button class="tehlike" data-i="bos">Boş ders: kilitle (ders bitene kadar)</button>' : ''}<button class="tehlike" data-i="kil">Kilitle · bugün</button>
+        <button class="ikincil" data-i="normal">Normale döndür</button></div>`);
+      $('#pencereIcerik').onclick = ev2 => {
+        const x = ev2.target.closest('[data-i]'); if (!x) return; $('#pencere').classList.add('gizli');
+        const i = x.dataset.i, zd2 = zilDurumu();
+        if (i === 'ac-ten') gonderKarar('ac', [s], zd2.tur === 'teneffus' ? zd2.bitis : Math.floor(Date.now() / 1000) + 15 * 60);
+        else if (i === 'ac-gun') gonderKarar('ac', [s], gunSonu());
+        else if (i === 'bos') gonderKarar('bosders', [s], zd2.bitis || Math.floor(Date.now() / 1000) + 40 * 60);
+        else if (i === 'kil') gonderKarar('kilitle', [s], gunSonu());
+        else gonderKarar('normal', [s], gunSonu());
+      };
+    };
+    await yukle(); ciz();
+    yenile(async () => { await yukle(); ciz(); }, 20);
   }
 
   // ------------------------------------------------------------------ Gönder (tahtalara duyuru)
