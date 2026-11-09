@@ -123,6 +123,8 @@
     { id: 'kontrol', ad: 'Tahta Kontrol', roller: ['bas', 'yonetici', 'rehberlik'], ciz: kontrol },   // K-377
     { id: 'sinav', ad: 'Sınav merkezi', roller: ['bas', 'yonetici'], ciz: sinav },
     { id: 'takvim', ad: 'Sınav takvimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: takvim },   // K-379
+    { id: 'kelebek', ad: 'Kelebek Sistemi', roller: ['bas', 'yonetici'], ciz: kelebek },   // K-380
+    { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
@@ -1542,6 +1544,319 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (error) { $('#projeBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
       projeBolumu();
     };
+  }
+
+  // ------------------------------------------------------------------ Nöbet (K-381)
+  // Her öğretmen haftada 1 gün (yetmezse bazıları yedek), yalnız dersi olan gün. Yerler: Bahçe 3 (serbest), Giriş / 1. / 2. / 3. kat: 1 kadın + 1 erkek.
+  // Gün sabit; her ay yer döner. Ayarlar: umal_ayarlar 'nobet' = { cinsiyet:{ad:'K'|'E'}, muaf:[ad], sabit:{ad:gün}, gunler:{ad:gün}, kayit }.
+  const NOBET_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+  const NOBET_KAT = ['Giriş', '1. kat', '2. kat', '3. kat'];
+  const nobetAyNo = (t = new Date()) => (t.getFullYear() - 2026) * 12 + t.getMonth() - 8;   // Eylül 2026 = 0
+  function nobetDersGunleri() {   // öğretmen → dersi olan günler
+    const G = {};
+    for (const h of Object.values((D.program || {}).siniflar || {})) for (const [k, c] of Object.entries(h)) {
+      const g = +k.split('-')[0]; if (g > 4) continue; for (const o of c.ogretmen || []) { const a = o.trim(); (G[a] = G[a] || new Set()).add(g); } }
+    return G;
+  }
+  function nobetGunAta(N, dg) {
+    const ogr = Object.keys(dg).filter(a => !(N.muaf || []).includes(a)), cin = N.cinsiyet || {};
+    const karma = t => [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 9973;
+    const ihtiyac = () => Array.from({ length: 5 }, () => ({ K: 4, E: 4, S: 3 }));
+    const I = ihtiyac(), gun = {}, yedek = [];
+    const koy = (a, g) => { const c = cin[a] === 'E' ? 'E' : 'K'; if (I[g][c] > 0) { I[g][c]--; gun[a] = g; return true; } if (I[g].S > 0) { I[g].S--; gun[a] = g; return true; } return false; };
+    for (const [a, g] of Object.entries(N.sabit || {})) if (ogr.includes(a)) koy(a, +g) || yedek.push(a);
+    const kalan = ogr.filter(a => !(a in gun) && !yedek.includes(a)).sort((a, b) => dg[a].size - dg[b].size || karma(a) - karma(b));   // eşitlikte ada göre değil, karışık (alfabe sonu hep yedek kalmasın)
+    for (const a of kalan) {
+      const c = cin[a] === 'E' ? 'E' : 'K';
+      const adaylar = [...dg[a]].sort((x, y) => (I[y][c] * 2 + I[y].S) - (I[x][c] * 2 + I[x].S));
+      if (!adaylar.some(g => koy(a, g))) yedek.push(a);
+    }
+    return { gun, yedek, eksik: I };
+  }
+  function nobetYerler(N, ay) {   // gün → [{yer, ad}] ; ay ilerledikçe yerler döner
+    const cin = N.cinsiyet || {}, out = [];
+    for (let g = 0; g < 5; g++) {
+      const L = Object.entries(N.gunler || {}).filter(([, x]) => x === g).map(([a]) => a).sort((a, b) => a.localeCompare(b, tr));
+      const don = (A, k) => A.length ? A.map((_, i) => A[(i + k) % A.length]) : A;
+      const K = don(L.filter(a => cin[a] !== 'E'), ay), E = don(L.filter(a => cin[a] === 'E'), ay);
+      const katlar = don(NOBET_KAT.slice(), ay);   // kat sırası da döner
+      const Y = [];
+      katlar.forEach((k, i) => { Y.push({ yer: k, ad: K[i] || '', c: 'K' }); Y.push({ yer: k, ad: E[i] || '', c: 'E' }); });
+      const bahce = [...K.slice(4), ...E.slice(4)];
+      for (let i = 0; i < Math.max(3, bahce.length); i++) Y.push({ yer: 'Bahçe', ad: bahce[i] || '', c: '' });
+      out.push(Y);
+    }
+    return out;
+  }
+  async function nobet() {
+    await programYukle();
+    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['nobet', 'nobet_cinsiyet']);
+    const ayar = k => { const r = (ay || []).find(x => x.anahtar === k); try { return r && r.deger ? JSON.parse(r.deger) : null; } catch (e) { return null; } };
+    let N = ayar('nobet') || {}; N.cinsiyet = { ...(ayar('nobet_cinsiyet') || {}), ...(N.cinsiyet || {}) }; N.muaf = N.muaf || []; N.sabit = N.sabit || {};
+    const dg = nobetDersGunleri(), ogretmenler = Object.keys(dg).sort((a, b) => a.localeCompare(b, tr));
+    let sekme = 'cizelge', ayNo = nobetAyNo(), degisti = false, sonuc = null;
+    const yonetir = D.rol === 'bas' || D.rol === 'yonetici';
+    const ayAd = n => { const d = new Date(2026, 8 + n, 1); return d.toLocaleDateString(tr, { month: 'long', year: 'numeric' }); };
+    const kisaAd = a => baslik(a);
+    const ciz = () => {
+      if (D.bolum !== 'nobet' || !$('#nbIc')) return;
+      const Y = N.gunler ? nobetYerler(N, ayNo) : null, atanan = Object.keys(N.gunler || {}).length;
+      const kural = Y ? Y.flatMap((L, g) => NOBET_KAT.filter(k => { const z = L.filter(x => x.yer === k); return !(z.some(x => x.ad && N.cinsiyet[x.ad] !== 'E') && z.some(x => x.ad && N.cinsiyet[x.ad] === 'E')); }).map(k => `${NOBET_GUN[g]} ${k}`)) : [];
+      $('#nbIc').innerHTML = `<div class="cipler" style="margin-bottom:12px"><button class="cip ${sekme === 'cizelge' ? 'secili' : ''}" data-sk="cizelge">Çizelge</button><button class="cip ${sekme === 'ogretmen' ? 'secili' : ''}" data-sk="ogretmen">Öğretmenler ve kurallar</button></div>
+      ${sekme === 'cizelge' ? `<div class="kart">
+          <div class="nb-ust"><div class="cipler">${[ayNo - 1, ayNo, ayNo + 1].map(n => `<button class="cip ${n === ayNo ? 'secili' : ''}" data-ay="${n}">${esc(ayAd(n))}</button>`).join('')}</div>
+          <div class="dugmeler" style="margin:0">${yonetir ? `<button class="birincil" id="nbOlustur">${N.gunler ? 'Günleri yeniden dağıt' : 'Çizelgeyi oluştur'}</button>${degisti ? '<button class="ikincil" id="nbKaydet">Kaydet</button>' : ''}` : ''}${Y ? '<button class="ikincil" id="nbYazdir">Yazdır</button>' : ''}</div></div>
+          <div class="kucuk" style="margin:8px 0">${Y ? `${atanan} öğretmen nöbetçi${sonuc && sonuc.yedek.length ? ` · <span class="turuncu">yedek: ${sonuc.yedek.map(kisaAd).map(esc).join(', ')}</span>` : ''}${kural.length ? ` · <span class="kirmizi">kadın-erkek kuralı tutmayan: ${esc(kural.join(', '))}</span>` : ' · <span class="yeşil">her katta 1 kadın 1 erkek</span>'}${degisti ? ' · <span class="turuncu">kaydedilmedi</span>' : ''}` : '<span class="soluk">Henüz çizelge yok. "Çizelgeyi oluştur" ile başlayın.</span>'}</div>
+          ${Y ? `<div class="nb-tablo"><div class="nb-bas"></div>${NOBET_GUN.map(g => `<div class="nb-bas">${g}</div>`).join('')}
+            ${['Bahçe', ...NOBET_KAT].map(k => { const n = k === 'Bahçe' ? Math.max(3, ...Y.map(L => L.filter(x => x.yer === 'Bahçe').length)) : 2;
+              return Array.from({ length: n }, (_, i) => `<div class="nb-yer">${i ? '' : esc(k)}</div>${Y.map(L => { const x = L.filter(z => z.yer === k)[i] || {}; const c = x.ad ? N.cinsiyet[x.ad] : '';
+                return `<div class="nb-hucre ${c === 'E' ? 'e' : c === 'K' ? 'k' : ''} ${x.ad ? '' : 'bos'}">${x.ad ? esc(kisaAd(x.ad)) : '—'}</div>`; }).join('')}`).join(''); }).join('')}</div>
+            <div class="soluk kucuk" style="margin-top:8px"><span class="nb-nokta k"></span> kadın · <span class="nb-nokta e"></span> erkek · Gün sabit kalır; her ay kat ve bahçe yerleri döner.</div>` : ''}</div>` :
+      `<div class="kart"><div class="soluk kucuk" style="margin-bottom:10px">Kadın / erkek (adlardan tahmin; dokunarak değiştirin) · Muaf: nöbet tutmaz · Gün: sabit nöbet günü (boşsa sistem seçer, yalnız dersi olan günler)</div>
+        <div class="nb-ogr">${ogretmenler.map(a => { const c = N.cinsiyet[a] || '?', m = N.muaf.includes(a), sb_ = N.sabit[a];
+          return `<div class="nb-o ${m ? 'muaf' : ''}"><b>${esc(kisaAd(a))}</b><span class="soluk kucuk">${N.gunler && a in N.gunler ? NOBET_GUN[N.gunler[a]] : ''}</span>
+            <div class="nb-dg">${yonetir ? `<button class="nb-c ${c === 'K' ? 'k' : c === 'E' ? 'e' : ''}" data-cin="${esc(a)}">${c === 'K' ? 'Kadın' : c === 'E' ? 'Erkek' : '?'}</button>
+              <button class="nb-m ${m ? 'acik' : ''}" data-muaf="${esc(a)}">${m ? 'Muaf' : 'Nöbetçi'}</button>
+              ${[0, 1, 2, 3, 4].map(g => `<button class="nb-g ${sb_ === g ? 'acik' : ''} ${dg[a].has(g) ? '' : 'yok'}" data-sabit="${esc(a)}|${g}" title="${NOBET_GUN[g]}${dg[a].has(g) ? '' : ' · dersi yok'}">${NOBET_GUN[g].slice(0, 3)}</button>`).join('')}` : ''}</div></div>`; }).join('')}</div>
+        ${yonetir && degisti ? '<div class="dugmeler" style="justify-content:flex-start"><button class="birincil" id="nbKaydet">Kaydet</button></div>' : ''}</div>`}`;
+    };
+    const kaydet = async () => {
+      const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'nobet', deger: JSON.stringify({ ...N, kayit: Math.floor(Date.now() / 1000), kim: D.eposta }) }, { onConflict: 'anahtar' });
+      if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } degisti = false; ciz();
+    };
+    $('#icerik').innerHTML = `<div class="ust"><h1>Nöbet</h1><span class="soluk kucuk" style="align-self:center">Bahçe 3 kişi · Giriş, 1., 2., 3. kat: 1 kadın + 1 erkek · hafta içi 5 gün</span></div><div id="nbIc"></div>`;
+    $('#nbIc').onclick = async ev => {
+      const t = ev.target, d = x => t.closest(`[data-${x}]`);
+      if (d('sk')) { sekme = d('sk').dataset.sk; ciz(); return; }
+      if (d('ay')) { ayNo = +d('ay').dataset.ay; ciz(); return; }
+      if (d('cin')) { const a = d('cin').dataset.cin; N.cinsiyet[a] = N.cinsiyet[a] === 'K' ? 'E' : 'K'; degisti = true; ciz(); return; }
+      if (d('muaf')) { const a = d('muaf').dataset.muaf; N.muaf = N.muaf.includes(a) ? N.muaf.filter(x => x !== a) : [...N.muaf, a]; degisti = true; ciz(); return; }
+      if (d('sabit')) { const [a, g] = d('sabit').dataset.sabit.split('|'); if (N.sabit[a] === +g) delete N.sabit[a]; else N.sabit[a] = +g; degisti = true; ciz(); return; }
+      if (t.id === 'nbOlustur') { if (N.gunler && !confirm('Öğretmenlerin nöbet günleri yeniden dağıtılacak. Emin misiniz?')) return; sonuc = nobetGunAta(N, dg); N.gunler = sonuc.gun; degisti = true; ciz(); return; }
+      if (t.id === 'nbKaydet') { await kaydet(); return; }
+      if (t.id === 'nbYazdir') { nobetYazdir(N, ayNo, ayAd(ayNo)); }
+    };
+    ciz();
+  }
+  function nobetYazdir(N, ayNo, ayAdi) {
+    const Y = nobetYerler(N, ayNo), logo = new URL('okul-logo.png', location.href).href;
+    const satir = ['Bahçe', ...NOBET_KAT].map(k => { const n = k === 'Bahçe' ? Math.max(3, ...Y.map(L => L.filter(x => x.yer === 'Bahçe').length)) : 2;
+      return Array.from({ length: n }, (_, i) => `<tr>${i ? '' : `<th rowspan="${n}">${esc(k)}</th>`}${Y.map(L => `<td>${esc(baslik((L.filter(z => z.yer === k)[i] || {}).ad || ''))}</td>`).join('')}</tr>`).join(''); }).join('');
+    const w = window.open('', '_blank'); if (!w) { alert('Açılır pencereye izin verin.'); return; }
+    w.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Nöbet çizelgesi · ${esc(ayAdi)}</title><style>
+      @page { size: A4 landscape; margin: 10mm; } body { font: 11pt/1.3 -apple-system, "Segoe UI", Arial, sans-serif; margin: 0; }
+      .ust { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; } .ust img { width: 40px; } .ust b { display: block; font-size: 13pt; } .ust span { margin-left: auto; font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 2.4mm 2mm; text-align: center; } thead th { background: #eee; } tbody th { background: #f6f6f6; width: 22mm; }
+    </style></head><body><div class="ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b>Öğretmen nöbet çizelgesi</div><span>${esc(ayAdi)}</span></div>
+      <table><thead><tr><th>Yer</th>${NOBET_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>${satir}</tbody></table>
+      <script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`);
+    w.document.close();
+  }
+
+  // ------------------------------------------------------------------ Kelebek Sistemi (K-380)
+  // Sınav seç → salonlar → Yerleştir (aynı ders yan yana YOK; ön-arka aynı ders en aza) → salon salon önizleme → Kaydet (taslak) → Yazdır.
+  // Taslak: umal_ayarlar 'kelebek_<tarih>_<ders no>'. BEP: umal_ayarlar 'bep' (yalnız no + ihtiyaç); yalnız bu ekranda küçük işaretle görünür,
+  // basılı kâğıtlara ve tahtalara ASLA girmez. "Tahtalara yayınla" sonra (Atlas planı veritabanından okuyunca).
+  const KELEBEK_KAP = { '11-H': 20, '12-I': 30 };
+  function kelebekRastgele(tohum) { let s = tohum >>> 0 || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 1e9) / 1e9; }; }
+  // Aynı ders = aynı seviye + aynı ders adı (9. ve 11. sınıfın Edebiyat kâğıtları ayrı; yan yana oturabilirler).
+  function kelebekYerlestir(katilan, salonlar, bep, tohum) {
+    const R = kelebekRastgele(tohum), karis = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    // 1) salonlara dağıt: her öğrenci, kendi dersinin oranı en düşük salona (şubesi az olana); her dersten salonun yarısından fazlası olmaz
+    const S = salonlar.map(s => ({ ad: s, kap: KELEBEK_KAP[s] || 40, L: [], ders: {}, sube: {} }));
+    const top = S.reduce((t, s) => t + s.kap, 0), oran = Math.min(1, katilan.length / top);
+    S.forEach(s => { s.hedef = Math.round(s.kap * oran); });
+    let fark = katilan.length - S.reduce((t, s) => t + s.hedef, 0);
+    for (const s of S.slice().sort((a, b) => b.kap - a.kap)) { if (!fark) break; const d = Math.sign(fark); if (s.hedef + d >= 0 && s.hedef + d <= s.kap) { s.hedef += d; fark -= d; } }
+    const G = {}; karis(katilan.slice()).forEach(o => (G[o.grup] = G[o.grup] || []).push(o));
+    const sira = []; Object.values(G).sort((a, b) => b.length - a.length).forEach(g => sira.push(...g));
+    for (const o of sira) {
+      let en = null, ep = 1e9;
+      for (const s of S) {
+        if (s.L.length >= s.hedef) continue;
+        const dn = s.ders[o.grup] || 0; if (dn + 1 > Math.ceil(s.hedef / 2)) continue;
+        const p = dn / Math.max(1, s.hedef) * 10 + (s.sube[o.sinif] || 0) / Math.max(1, s.hedef) * 3 + (s.ad === o.sinif ? .5 : 0) + R() * .01;
+        if (p < ep) { ep = p; en = s; }
+      }
+      if (!en) en = S.filter(s => s.L.length < s.kap).sort((a, b) => (a.ders[o.grup] || 0) - (b.ders[o.grup] || 0))[0];
+      if (!en) return { hata: 'Salonların toplam yeri yetmiyor.' };
+      en.L.push(o); en.ders[o.grup] = (en.ders[o.grup] || 0) + 1; en.sube[o.sinif] = (en.sube[o.sinif] || 0) + 1;
+    }
+    // 2) salon içinde oturt: yerel arama (yer değiştirme) ile maliyeti en aza indir
+    const sonuc = {}; let yan = 0, arka = 0;
+    for (const s of S) {
+      const lay = salonDuzeni(s.ad, Array.from({ length: s.kap }, (_, i) => ({ sira: i + 1 })));
+      let koltuk = [...lay.seats].sort((a, b) => a - b).slice(0, Math.max(s.L.length, 0));
+      if (s.ad === '12-I' || s.ad === '11-H') koltuk = [...lay.seats].sort((a, b) => a - b).slice(0, s.L.length);
+      const bilgi = {}; lay.desks.forEach(([x, y, w, ns]) => ns.forEach((n, k) => { bilgi[n] = { x, y, k, ns }; }));
+      const yanK = {}, arkaK = {};
+      for (const n of koltuk) { const b = bilgi[n]; yanK[n] = b.ns.filter(m => m !== n && koltuk.includes(m));
+        arkaK[n] = lay.desks.filter(([x, y]) => x === b.x && Math.abs(y - b.y) === 1).map(d => d[3][b.k]).filter(m => m != null && koltuk.includes(m)); }
+      const yer = karis(s.L.slice()), idx = Object.fromEntries(koltuk.map((n, i) => [n, i]));
+      const ogr = i => yer[i];
+      const tek = i => { const n = koltuk[i], o = ogr(i), b = bilgi[n]; let c = 0;
+        for (const m of yanK[n]) { const p = ogr(idx[m]); if (p.grup === o.grup) c += 1000; if (p.sinif === o.sinif) c += 4; }
+        for (const m of arkaK[n]) { const p = ogr(idx[m]); if (p.grup === o.grup) c += 12; if (p.sinif === o.sinif) c += 1; }
+        const bb = bep[o.no]; if (bb) { if ((bb.on || bb.kapi) && b.y > 0) c += 40 * b.y; }
+        return c; };
+      const top = () => koltuk.reduce((t, _, i) => t + tek(i), 0);
+      let maliyet = top();
+      for (let it = 0; it < 6000 && maliyet > 0; it++) {
+        const i = Math.floor(R() * yer.length), j = Math.floor(R() * yer.length); if (i === j) continue;
+        const once = tek(i) + tek(j); [yer[i], yer[j]] = [yer[j], yer[i]]; const sonra = tek(i) + tek(j);
+        if (sonra > once && R() > .02) [yer[i], yer[j]] = [yer[j], yer[i]];
+      }
+      // onarım: yan yana çakışan her öğrenci için en iyi yer değiştirmeyi bul (kesin kural sıfıra iner)
+      for (let tur = 0; tur < 40; tur++) {
+        let degisti = false;
+        for (let i = 0; i < yer.length; i++) {
+          if (tek(i) < 1000) continue;
+          let enj = -1, enf = 0;
+          for (let j = 0; j < yer.length; j++) { if (j === i) continue;
+            const once = tek(i) + tek(j); [yer[i], yer[j]] = [yer[j], yer[i]]; const f = tek(i) + tek(j) - once; [yer[i], yer[j]] = [yer[j], yer[i]];
+            if (f < enf) { enf = f; enj = j; } }
+          if (enj >= 0) { [yer[i], yer[enj]] = [yer[enj], yer[i]]; degisti = true; }
+        }
+        if (!degisti) break;
+      }
+      // sonra ön-arka: aynı yöntemle (yan yana kuralını bozmadan)
+      for (let tur = 0; tur < 8; tur++) {
+        let degisti = false;
+        for (let i = 0; i < yer.length; i++) {
+          const ti = tek(i); if (ti < 12) continue;
+          let enj = -1, enf = 0;
+          for (let j = 0; j < yer.length; j++) { if (j === i) continue;
+            const once = ti + tek(j); [yer[i], yer[j]] = [yer[j], yer[i]]; const f = tek(i) + tek(j) - once; [yer[i], yer[j]] = [yer[j], yer[i]];
+            if (f < enf) { enf = f; enj = j; } }
+          if (enj >= 0) { [yer[i], yer[enj]] = [yer[enj], yer[i]]; degisti = true; }
+        }
+        if (!degisti) break;
+      }
+      sonuc[s.ad] = koltuk.map((n, i) => ({ sira: n, no: ogr(i).no, ad: ogr(i).ad, sinif: ogr(i).sinif, ders: ogr(i).ders }));
+      for (let i = 0; i < koltuk.length; i++) { const n = koltuk[i], o = ogr(i);
+        yan += yanK[n].filter(m => ogr(idx[m]).grup === o.grup).length; arka += arkaK[n].filter(m => ogr(idx[m]).grup === o.grup).length; }
+    }
+    return { salonlar: sonuc, yan: yan / 2, arka: arka / 2 };
+  }
+  async function kelebek() {
+    await Promise.all([programYukle(), ogrencileriYukle()]);
+    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').or('anahtar.eq.sinav_takvimi,anahtar.eq.bep,anahtar.eq.nobet,anahtar.like.kelebek_*');
+    const ayar = k => { const r = (ay || []).find(x => x.anahtar === k); try { return r && r.deger ? JSON.parse(r.deger) : null; } catch (e) { return null; } };
+    let tk = ayar('sinav_takvimi'); if (!tk) { try { tk = await (await fetch('sinav-takvimi.json?v=' + Date.now())).json(); } catch (e) { tk = { sinavlar: [], subeler: [] }; } }
+    const bep = Object.fromEntries((ayar('bep') || []).map(b => [String(b.no), b]));
+    const sinavlar = (tk.subeler || []).filter(s => s.tarih >= bugunISO()).sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
+    const tumSalon = Object.keys((D.program || {}).siniflar || {}).filter(s => /^\d+-[A-ZÇĞİÖŞÜ]$/.test(s)).sort(sinifSira);
+    let sec = sinavlar[0] || null, plan = null, acikSalon = null, kapali = new Set(['12-I']), tohum = 1;
+    const anahtar = s => `kelebek_${s.tarih}_${parseInt(s.ders, 10)}`;
+    const yukleTaslak = () => { plan = sec ? ayar(anahtar(sec)) : null; if (plan && plan.kapali) kapali = new Set(plan.kapali); };
+    const katilanlar = () => { const L = [];
+      for (const [s, ders] of Object.entries(sec.subeler || {})) for (const o of D.ogrenciler.filter(x => x.sinif === s))
+        if (String(o.no) !== '944' && !(bep[o.no] && bep[o.no].evde)) L.push({ no: String(o.no), ad: o.ad, sinif: o.sinif, ders, grup: seviye(o.sinif) + '|' + ders });
+      return L; };
+    const gunNo = () => [(new Date(sec.tarih + 'T12:00:00').getDay() + 6) % 7, parseInt(sec.ders, 10)];
+    const gozcuOner = s => { const [g, n] = gunNo(); const h = (((D.program || {}).siniflar || {})[s] || {})[`${g}-${n}`]; return h && h.ogretmen && h.ogretmen.length ? h.ogretmen.map(baslik).join(', ') : ''; };
+    const dersKisa = d => kisaDers(baslik(d || ''));
+    const nobetN = ayar('nobet') || {};
+    const nobetciler = () => { if (!sec || !nobetN.gunler) return []; const g = gunNo()[0]; return Object.entries(nobetN.gunler).filter(([, x]) => x === g).map(([a]) => baslik(a)).sort((a, b) => a.localeCompare(b, tr)); };
+    const ciz = () => {
+      if (D.bolum !== 'kelebek' || !$('#kbIc')) return;
+      const kat = sec ? katilanlar() : [], salonlar = tumSalon.filter(s => !kapali.has(s)), yerSay = salonlar.reduce((t, s) => t + (KELEBEK_KAP[s] || 40), 0);
+      const dersler = {}; kat.forEach(o => { const k = `${o.ders} (${seviye(o.sinif)})`; dersler[k] = (dersler[k] || 0) + 1; });
+      const sal = plan ? plan.salonlar : {};
+      const bepSay = plan ? Object.values(sal).flat().filter(r => bep[r.no]).length : 0;
+      $('#kbIc').innerHTML = `
+        <div class="kart"><div class="kb-adim"><b>1</b> Sınav</div><div class="cipler">${sinavlar.length ? sinavlar.map((s, i) => `<button class="cip ${s === sec ? 'secili' : ''}" data-sn="${i}">${esc(new Date(s.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' }))} · ${esc(/ders/i.test(s.ders) ? s.ders : s.ders + '. Ders')}</button>`).join('') : '<span class="soluk">Takvimde yaklaşan sınav yok.</span>'}</div>
+          ${sec ? `<div class="kb-dersler">${Object.entries(dersler).sort((a, b) => b[1] - a[1]).map(([d, n]) => `<span class="tk-cip" style="--sv:#5cc8ff"><b>${n}</b>${esc(d)}</span>`).join('')}</div>` : ''}</div>
+        ${sec ? `<div class="kart"><div class="kb-adim"><b>2</b> Salonlar <span class="soluk kucuk">· dokunarak çıkarın / ekleyin · ${kat.length} öğrenci, ${yerSay} yer${yerSay < kat.length ? ' · <span class="kirmizi">yer yetmiyor</span>' : ''}</span></div>
+          <div class="cipler">${tumSalon.map(s => `<button class="cip ${kapali.has(s) ? '' : 'secili'}" data-sal="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+          <div class="dugmeler" style="justify-content:flex-start;margin-top:12px"><button class="birincil" id="kbYerlestir">${plan ? 'Yeniden yerleştir' : 'Yerleştir'}</button>${plan ? '<button class="ikincil" id="kbKaydet">Kaydet</button><button class="ikincil" id="kbYazdir">Kâğıtları yazdır</button><button class="ikincil" disabled title="Atlas planı veritabanından okuyunca açılacak">Tahtalara yayınla · yakında</button>' : ''}</div>
+          <div class="kucuk" id="kbBilgi" style="margin-top:8px">${plan ? `<span class="${plan.yan ? 'kirmizi' : 'yeşil'}">Yan yana aynı ders: ${plan.yan}</span> · <span class="${plan.arka ? 'turuncu' : 'yeşil'}">Arka arkaya aynı ders: ${plan.arka}</span> · ${Object.keys(sal).length} salon${bepSay ? ` · <span class="soluk">◆ BEP ${bepSay} (yalnız bu ekranda)</span>` : ''}${plan.kayit ? ` · <span class="soluk">kaydedildi ${esc(new Date(plan.kayit * 1000).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</span>` : ' · <span class="turuncu">kaydedilmedi</span>'}` : ''}</div></div>` : ''}
+        ${plan ? `<div class="kart"><div class="kb-adim"><b>3</b> Salonlar ve gözcüler <span class="soluk kucuk">· salona dokunun: oturma planı</span></div>
+          <div class="kb-salonlar">${Object.keys(sal).sort(sinifSira).map(s => { const L = sal[s], g = (plan.gozcu || {})[s] || '', dd = {}; L.forEach(r => { const k = `${dersKisa(r.ders)} ${seviye(r.sinif)}`; dd[k] = (dd[k] || 0) + 1; });
+            return `<div class="kb-salon ${acikSalon === s ? 'acik' : ''}" style="--sv:${seviyeRenk(s)}"><button class="kb-ust" data-ac="${esc(s)}"><b>${esc(s)}</b><span>${L.length} öğr.</span></button>
+              <div class="kb-dd">${Object.entries(dd).sort().map(([d, n]) => `${esc(d)}: ${n}`).join(' · ')}</div>
+              <input class="kb-goz ${g ? '' : 'bos'}" data-goz="${esc(s)}" value="${esc(g)}" list="kbNobet" placeholder="Gözcü seçin (nöbetçi)"></div>`; }).join('')}</div>
+          <datalist id="kbNobet">${nobetciler().map(a => `<option value="${esc(a)}">`).join('')}</datalist>
+          ${acikSalon && sal[acikSalon] ? `<div class="kb-plan"><h2 style="margin:12px 0 8px">${esc(acikSalon)} salonu · ${esc((plan.gozcu || {})[acikSalon] || 'gözcü yok')}</h2>${oturmaPlani(acikSalon, sal[acikSalon].map(r => ({ ...r, ek: dersKisa(r.ders) + (bep[r.no] ? ' ◆' : '') })), new Set())}</div>` : ''}</div>` : ''}`;
+      if (acikSalon) { planiSigdir(); fotolariYukle((sal[acikSalon] || []).map(r => r.no)); }
+    };
+    $('#icerik').innerHTML = `<div class="ust"><h1>Kelebek Sistemi</h1><span class="soluk kucuk" style="align-self:center">Aynı dersten sınava girenler yan yana oturmaz · ön-arka da en aza indirilir</span></div><div id="kbIc"></div>`;
+    $('#kbIc').onclick = async ev => {
+      const t = ev.target;
+      const sn = t.closest('[data-sn]'); if (sn) { sec = sinavlar[+sn.dataset.sn]; acikSalon = null; yukleTaslak(); ciz(); return; }
+      const sl = t.closest('[data-sal]'); if (sl) { const s = sl.dataset.sal; kapali.has(s) ? kapali.delete(s) : kapali.add(s); ciz(); return; }
+      const ac = t.closest('[data-ac]'); if (ac) { acikSalon = acikSalon === ac.dataset.ac ? null : ac.dataset.ac; ciz(); return; }
+      if (t.id === 'kbYerlestir') {
+        $('#kbBilgi') && ($('#kbBilgi').textContent = 'Yerleştiriliyor…'); await new Promise(r => setTimeout(r, 30));
+        const salonlar = tumSalon.filter(s => !kapali.has(s));
+        let en = null; for (let d = 0; d < 4; d++) { const r = kelebekYerlestir(katilanlar(), salonlar, bep, tohum++); if (r.hata) { alert(r.hata); return; } if (!en || r.yan * 1000 + r.arka < en.yan * 1000 + en.arka) en = r; if (!en.yan && !en.arka) break; }
+        const gozcu = {}; Object.keys(en.salonlar).forEach(s => { gozcu[s] = (plan && plan.gozcu && plan.gozcu[s]) || gozcuOner(s); });
+        plan = { tarih: sec.tarih, ders: sec.ders, salonlar: en.salonlar, yan: en.yan, arka: en.arka, gozcu, kapali: [...kapali] }; ciz(); return;
+      }
+      if (t.id === 'kbKaydet') {
+        document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); });
+        plan.kayit = Math.floor(Date.now() / 1000); plan.kim = D.eposta;
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: anahtar(sec), deger: JSON.stringify(plan) }, { onConflict: 'anahtar' });
+        if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; }
+        const r = (ay || []).find(x => x.anahtar === anahtar(sec)); if (r) r.deger = JSON.stringify(plan); else (ay || []).push({ anahtar: anahtar(sec), deger: JSON.stringify(plan) });
+        ciz(); return;
+      }
+      if (t.id === 'kbYazdir') { document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); }); kelebekYazdir(sec, plan); }
+    };
+    $('#kbIc').oninput = ev => { const i = ev.target.closest('[data-goz]'); if (i && plan) { plan.gozcu[i.dataset.goz] = i.value.trim(); i.classList.toggle('bos', !i.value.trim()); } };
+    yukleTaslak(); ciz();
+  }
+  // Basılacak kâğıtlar (A4): salon başına imza listesi + kroki; sonda kâğıt dağıtım çizelgesi ve sınıf kapısı listeleri. BEP bilgisi YOK.
+  function kelebekYazdir(sec, plan) {
+    const sal = plan.salonlar, adlar = Object.keys(sal).sort(sinifSira);
+    const tarih = new Date(sec.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+    const dersNo = /ders/i.test(sec.ders) ? sec.ders : sec.ders + '. Ders';
+    const g = (new Date(sec.tarih + 'T12:00:00').getDay() + 6) % 7, z = (((D.program || {}).zil || {})[g === 4 ? 'cuma' : 'normal'] || []).find(x => parseInt(x.ders, 10) === parseInt(sec.ders, 10));
+    const saat = z ? `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}` : '';
+    const logo = new URL('okul-logo.png', location.href).href;
+    const ust = (baslik_, alt) => `<div class="b-ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><span>${esc(baslik_)}</span></div><div class="b-sag">${esc(tarih)}<br>${esc(dersNo)} ${esc(saat)}${alt ? '<br>' + alt : ''}</div></div>`;
+    const sayfalar = [];
+    for (const s of adlar) {
+      const L = sal[s].slice().sort((a, b) => a.sira - b.sira), goz = (plan.gozcu || {})[s] || '';
+      sayfalar.push(`<section>${ust(`${s} SALONU · SINAV YERLEŞİM VE İMZA LİSTESİ`, `Gözcü: <b>${esc(goz || '—')}</b>`)}
+        <table class="imza"><thead><tr><th>Sıra</th><th>No</th><th>Adı Soyadı</th><th>Sınıf</th><th>Ders</th><th>İmza</th></tr></thead><tbody>
+        ${L.map(r => `<tr><td>${r.sira}</td><td>${esc(r.no)}</td><td>${esc(baslik(r.ad))}</td><td>${esc(r.sinif)}</td><td>${esc(baslik(r.ders))}</td><td></td></tr>`).join('')}</tbody></table>
+        <div class="alt">Salondaki öğrenci: <b>${L.length}</b> · Sınava giren: ______ · Girmeyen: ______<span>Gözcü öğretmen: ${esc(goz || '______________________')} &nbsp; İmza: ____________</span></div></section>`);
+      const lay = salonDuzeni(s, L), by = Object.fromEntries(L.map(r => [r.sira, r]));
+      const ux = 100 / lay.W, uy = 100 / lay.H;
+      sayfalar.push(`<section>${ust(`${s} SALONU · OTURMA KROKİSİ`, `Gözcü: <b>${esc(goz || '—')}</b>`)}
+        <div class="kr-on">${lay.on.map(([a]) => `<span>${esc(a)}</span>`).join('')}</div>
+        <div class="kroki">${lay.desks.map(([x, y, w, ns]) => `<div class="kr-masa" style="left:${x * ux}%;top:${y * uy}%;width:${w * ux - 1.5}%;height:${uy - 2}%">${ns.map(n => { const r = by[n]; return `<div class="kr-k">${r ? `<i>${n}</i><b>${esc(baslik(r.ad))}</b><small>${esc(r.sinif)} · ${esc(kisaDers(baslik(r.ders)))}</small>` : `<i>${n}</i><small>boş</small>`}</div>`; }).join('')}</div>`).join('')}</div>
+        <div class="kr-yan"><span>${esc(lay.sol || '')}</span><span>${esc(lay.sag || '')}</span>${lay.arka ? `<span>Arka: ${esc(lay.arka)}</span>` : ''}</div></section>`);
+    }
+    const kg = r => `${r.ders}|${seviye(r.sinif)}`;   // kâğıt: ders + seviye (9. ve 10. sınıfın kâğıdı ayrı)
+    const dersAd = [...new Set(Object.values(sal).flat().map(kg))].sort((a, b) => a.localeCompare(b, tr, { numeric: true }));
+    const kgAd = k => { const [d, sv] = k.split('|'); return `${kisaDers(baslik(d))} ${sv}`; };
+    sayfalar.push(`<section>${ust('SINAV KÂĞIDI DAĞITIM ÇİZELGESİ')}<table class="imza dag"><thead><tr><th>Salon</th>${dersAd.map(d => `<th>${esc(kgAd(d))}</th>`).join('')}<th>Toplam</th><th>Gözcü</th></tr></thead><tbody>
+      ${adlar.map(s => { const c = {}; sal[s].forEach(r => { c[kg(r)] = (c[kg(r)] || 0) + 1; }); return `<tr><td><b>${esc(s)}</b></td>${dersAd.map(d => `<td>${c[d] || ''}</td>`).join('')}<td><b>${sal[s].length}</b></td><td>${esc((plan.gozcu || {})[s] || '')}</td></tr>`; }).join('')}
+      <tr class="top"><td>Toplam</td>${dersAd.map(d => `<td>${Object.values(sal).flat().filter(r => kg(r) === d).length}</td>`).join('')}<td>${Object.values(sal).flat().length}</td><td></td></tr></tbody></table></section>`);
+    const sinifL = {}; for (const [s, L] of Object.entries(sal)) for (const r of L) (sinifL[r.sinif] = sinifL[r.sinif] || []).push({ ...r, salon: s });
+    for (const s of Object.keys(sinifL).sort(sinifSira)) {
+      const L = sinifL[s].sort((a, b) => (+a.no) - (+b.no));
+      sayfalar.push(`<section>${ust(`${s} SINIFI · ÖĞRENCİLER NEREDE SINAVA GİRİYOR`)}<table class="imza kapi"><thead><tr><th>No</th><th>Adı Soyadı</th><th>Ders</th><th>Salon</th><th>Sıra</th></tr></thead><tbody>
+        ${L.map(r => `<tr><td>${esc(r.no)}</td><td>${esc(baslik(r.ad))}</td><td>${esc(baslik(r.ders))}</td><td><b>${esc(r.salon)}</b></td><td><b>${r.sira}</b></td></tr>`).join('')}</tbody></table></section>`);
+    }
+    const w = window.open('', '_blank'); if (!w) { alert('Açılır pencereye izin verin.'); return; }
+    w.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Kelebek · ${esc(sec.tarih)} ${esc(dersNo)}</title><base href="${location.href.replace(/[^/]*$/, '')}"><style>
+      @page { size: A4; margin: 10mm; } * { box-sizing: border-box; } body { font: 10pt/1.25 -apple-system, "Segoe UI", Arial, sans-serif; color: #000; margin: 0; }
+      section { page-break-after: always; width: 190mm; overflow: hidden; } section:last-child { page-break-after: auto; }
+      .b-ust { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 6px; width: 100%; } .b-ust img { width: 34px; }
+      .b-ust div b { display: block; font-size: 11pt; } .b-ust div span { font-size: 10pt; font-weight: 700; } .b-sag { margin-left: auto; text-align: right; font-size: 9pt; flex: none; max-width: 60mm; }
+      table.imza { width: 100%; border-collapse: collapse; } .imza th, .imza td { border: 1px solid #000; padding: 1.25mm 1.6mm; text-align: left; font-size: 9.5pt; } .imza th { background: #eee; font-size: 9pt; }
+      .imza td:first-child { width: 12mm; text-align: center; font-weight: 700; } .imza td:last-child { width: 42mm; } .dag td, .dag th { text-align: center !important; width: auto !important; } .kapi td:last-child { width: 14mm; text-align: center; }
+      .imza tr.top td { font-weight: 700; background: #f4f4f4; }
+      .alt { margin-top: 6mm; display: flex; justify-content: space-between; font-size: 10pt; }
+      .kr-on { display: flex; justify-content: space-between; gap: 6px; margin: 4mm 0; } .kr-on span { border: 1px solid #000; padding: 1.5mm 4mm; font-weight: 700; font-size: 9pt; }
+      .kroki { position: relative; height: 220mm; } .kr-masa { position: absolute; display: flex; gap: 1mm; border: 1.2px solid #000; border-radius: 2mm; padding: 1mm; }
+      .kr-k { flex: 1; border: 1px dashed #999; border-radius: 1.5mm; padding: 1mm 1.5mm; overflow: hidden; } .kr-k i { font-style: normal; font-weight: 800; font-size: 11pt; } .kr-k b { display: block; font-size: 8.5pt; line-height: 1.15; } .kr-k small { font-size: 7.5pt; }
+      .kr-yan { display: flex; justify-content: space-between; font-size: 9pt; font-weight: 700; margin-top: 2mm; }
+    </style></head><body>${sayfalar.join('')}<script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`);
+    w.document.close();
   }
 
   // ------------------------------------------------------------------ Sınav takvimi (K-379): olacaklar · olanlar (gelmeyen = mazeret adayı) · mazeret sınavları

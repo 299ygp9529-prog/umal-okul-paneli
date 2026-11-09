@@ -756,3 +756,28 @@ span.tk-gel.neon { color: var(--neon); }
   .sigar.sikisik .tahta b, .sigar.sikisik .sk-kutu b { font-size: 14px; line-height: 1.15; }
   .sigar.sikisik .tahta small, .sigar.sikisik .sk-kutu small { font-size: 11px; line-height: 1.25; }
 }
+/* K-380 Kelebek Sistemi */
+.kb-adim { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin-bottom: 10px; }
+.kb-adim > b { width: 24px; height: 24px; border-radius: 50%; background: var(--neon); color: var(--zemin); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+.kb-dersler { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.kb-salonlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.kb-salon { background: var(--kart); border: 1px solid var(--cizgi); border-left: 4px solid var(--sv); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.kb-salon.acik { border-color: var(--sv); box-shadow: 0 0 10px color-mix(in srgb, var(--sv) 40%, transparent); }
+.kb-ust { display: flex; justify-content: space-between; align-items: baseline; background: none; border: 0; color: inherit; padding: 0; text-align: left; }
+.kb-ust b { font-size: 16px; } .kb-ust span { color: var(--soluk); font-size: 12px; }
+.kb-dd { font-size: 11px; color: var(--soluk); line-height: 1.3; min-height: 28px; }
+.kb-goz { font-size: 12.5px; padding: 5px 8px; border-radius: 8px; } .kb-goz.bos { border-color: #ffcc33; background: rgba(60,45,0,.4); }
+/* K-381 Nöbet */
+.nb-ust { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nb-tablo { display: grid; grid-template-columns: 90px repeat(5, minmax(0, 1fr)); gap: 4px; }
+.nb-bas { font-weight: 800; color: var(--neon); padding: 4px 6px; } .nb-yer { font-weight: 800; padding: 6px; align-self: center; }
+.nb-hucre { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 8px; padding: 6px 8px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 4px solid var(--cizgi); }
+.nb-hucre.k { border-left-color: #ff7eb6; } .nb-hucre.e { border-left-color: #5cc8ff; } .nb-hucre.bos { color: var(--cok-soluk); }
+.nb-nokta { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: middle; } .nb-nokta.k { background: #ff7eb6; } .nb-nokta.e { background: #5cc8ff; }
+.nb-ogr { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+.nb-o { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 7px 9px; display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; }
+.nb-o.muaf { opacity: .55; } .nb-dg { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; }
+.nb-dg button { font-size: 11.5px; font-weight: 700; border-radius: 7px; padding: 3px 7px; background: transparent; color: var(--soluk); border: 1px solid var(--cizgi); }
+.nb-c.k { color: #ff9fca; border-color: #ff7eb6; } .nb-c.e { color: #8fd8ff; border-color: #5cc8ff; } .nb-m.acik { color: var(--turuncu); border-color: var(--turuncu); }
+.nb-g.acik { background: var(--neon); color: var(--zemin); border-color: var(--neon); } .nb-g.yok { opacity: .35; }
+@media (max-width: 760px) { .nb-tablo { grid-template-columns: 58px repeat(5, minmax(0, 1fr)); gap: 3px; } .nb-hucre { font-size: 10.5px; padding: 4px 5px; white-space: normal; } .nb-bas { font-size: 11px; padding: 2px; } .nb-yer { font-size: 11px; padding: 2px; } }
