@@ -149,6 +149,19 @@
     b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
       $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
   }
+  // Kutu ızgaraları bilgisayarda ekrana tam otursun (yukarı-aşağı kaydırma olmasın): önce sütunlar daralır, sonra kutu boyu kısalır.
+  // Standart en büyük boy 150×88; sığmazsa en az 104×58. Telefonda dokunulmaz.
+  function kutulariSigdir(el) {
+    if (!el || !el.isConnected) return;
+    const sigmiyor = () => document.documentElement.scrollHeight > window.innerHeight + 1;
+    el.style.removeProperty('--kolon'); el.style.removeProperty('--kh'); el.classList.remove('sikisik');
+    if (window.innerWidth <= 760 || !sigmiyor()) return;
+    el.classList.add('sikisik');
+    let n = 0, en = 0; [...el.children].forEach(c => { if (c.classList.contains('h-sev')) n = 0; else en = Math.max(en, ++n); });   // en kalabalık seviye
+    if (en && el.clientWidth / en >= 100) el.style.setProperty('--kolon', `repeat(${en}, minmax(0, 1fr))`);   // her seviye tek satır
+    for (let h = 82; h >= 52 && sigmiyor(); h -= 3) el.style.setProperty('--kh', h + 'px');
+  }
+  window.addEventListener('resize', () => { clearTimeout(kutulariSigdir.z); kutulariSigdir.z = setTimeout(() => document.querySelectorAll('.sigar').forEach(kutulariSigdir), 150); });
   function yenile(fn, sn) { const b = D.bolum; clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== b) return; if (!document.hidden) fn().catch(() => {}); }, sn * 1000); }
 
   // ------------------------------------------------------------------ Ortak veri
@@ -287,9 +300,10 @@
       $('#haritaBilgi').innerHTML = bilgi;
       if (eslesen.length) haritaOdak(eslesen);
       $('#haritaAlt').innerHTML = `${pr0 ? `<span class="t-neon">${pr0.no}. ders · ${pr0.saat}</span>` : ''}<span class="t-neon buyuk-neon">${acik.length} / ${siniflar.length} tahta açık</span>`;
+      kutulariSigdir($('#haritaIzgara'));
     };
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Harita</h1><div class="turuncu-neonlar" id="haritaAlt"></div></div>
-      <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div id="haritaBilgi"></div><div class="izgara" id="haritaIzgara"></div>
+      <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div id="haritaBilgi"></div><div class="izgara sigar" id="haritaIzgara"></div>
 `;
     let araZ; $('#haritaAra').oninput = () => { clearTimeout(araZ); araZ = setTimeout(ciz, 250); };
     $('#haritaIzgara').onclick = ev => { const k = ev.target.closest('[data-sinif]'); if (k) sinifDersPenceresi(k.dataset.sinif, sinifHaritasiSon[k.dataset.sinif]); };
@@ -649,12 +663,13 @@
     let secili = null;
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenciler</h1><div class="turuncu-neonlar"><span class="t-neon">${siniflar.length} şube</span><span class="t-neon buyuk-neon">${D.ogrenciler.length} öğrenci</span></div></div>
       <div class="ara"><input id="ogrAra" placeholder="Öğrenci adı ya da numarası"></div><div id="ogrBul"></div>
-      <div class="sk-izgara" id="sinifCip">${(() => {   // seviye paketleri: renkli şerit + sınıf kutuları (Harita gibi)
+      <div class="sk-izgara sigar" id="sinifCip">${(() => {   // seviye paketleri: renkli şerit + sınıf kutuları (Harita gibi)
         const G = {}; siniflar.forEach(s => { const sv = seviye(s) || '·'; (G[sv] = G[sv] || []).push(s); });
         return Object.keys(G).sort((a, b) => (a === '·') - (b === '·') || (+a) - (+b)).map(sv => { const L = G[sv], n = L.reduce((t, s) => t + D.ogrenciler.filter(o => o.sinif === s).length, 0);
           return `<div class="h-sev" style="--sv:${SEVIYE_RENK[sv] || '#9fb3cc'}"><b>${sv === '·' ? 'Diğer' : sv + '. sınıflar'}</b><span>${L.length} şube · ${n} öğrenci</span></div>${L.map(s => { const pr = simdikiDers(s), k = D.ogrenciler.filter(o => o.sinif === s).length;
             return `<button class="cip sk-kutu" style="--sv:${seviyeRenk(s)}" data-s="${esc(s)}"><b>${esc(s)}</b><small>${k} öğrenci</small><small class="sk-ders">${pr ? `${pr.no}. ders · ${esc(pr.ders)}` : '&nbsp;'}</small></button>`; }).join('')}`; }).join(''); })()}</div>
       <div id="ogrIc"></div>`;
+    kutulariSigdir($('#sinifCip'));
     const goster = L => {
       $('#ogrIc').innerHTML = `<div class="ogrenciler">${L.map(o => `<button class="ogr" data-no="${esc(o.no)}">${foto(o.no, o.ad)}<b>${esc(baslik(o.ad))}</b><small>${esc(o.sinif)} · ${esc(o.no)}</small></button>`).join('')}</div>`;
       fotolariYukle(L.map(o => o.no));
@@ -668,7 +683,7 @@
       $('#icerik').classList.add('sinif-acik'); window.scrollTo(0, 0);
       $('#ogrIc').innerHTML = `<div class="sinav-ust"><button class="ikincil" id="sinifGeri">← Sınıflar</button><span class="neon-tabela">${esc(secili)}</span><span class="soluk">${L.length} öğrenci${pr ? ` · şu an ${pr.no}. ders: <span class="sari-yazi" style="font-size:15px">${esc(pr.ders)}</span>${pr.ogretmen.length ? ' · ' + esc(pr.ogretmen.map(baslik).join(', ')) : ''}` : ''}</span></div>
         ${sinifOturmaPlani(secili, L)}`;
-      $('#sinifGeri').onclick = () => { $('#icerik').classList.remove('sinif-acik'); secili = null; document.querySelectorAll('#sinifCip .cip').forEach(c => c.classList.remove('secili')); $('#ogrIc').innerHTML = ''; };
+      $('#sinifGeri').onclick = () => { $('#icerik').classList.remove('sinif-acik'); secili = null; document.querySelectorAll('#sinifCip .cip').forEach(c => c.classList.remove('secili')); $('#ogrIc').innerHTML = ''; kutulariSigdir($('#sinifCip')); };
       planiSigdir();
       fotolariYukle(L.map(o => o.no));
     };

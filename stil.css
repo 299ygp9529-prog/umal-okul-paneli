@@ -737,3 +737,22 @@ span.tk-gel.neon { color: var(--neon); }
 #haritaIzgara .tahta, #haritaIzgara .tahta.acik { border-left: 4px solid var(--sv); }
 #haritaIzgara .tahta { padding: 9px 11px; min-height: 88px; }
 @media (max-width: 760px) { #haritaIzgara .tahta, .sk-kutu.cip { min-height: 68px; padding: 6px 8px; } }
+/* Ekrana sığdırma (bilgisayar): --kmin sütun eni, --kh kutu boyu; sıkışınca şerit ve aralıklar incelir */
+@media (min-width: 761px) {
+  #haritaIzgara, #sinifCip { grid-template-columns: var(--kolon, repeat(auto-fill, minmax(150px, 1fr))); }
+  body:has(.sigar.sikisik) main { padding-bottom: 10px; }
+  #haritaIzgara .tahta, #sinifCip .sk-kutu.cip { min-height: var(--kh, 88px); }
+  .sigar.sikisik { gap: 7px; }
+  .sigar.sikisik .h-sev { margin-top: 4px; padding: 3px 12px; font-size: 13.5px; }
+  .sigar.sikisik .h-sev:first-child { margin-top: 0; }
+  .sigar.sikisik .tahta, .sigar.sikisik .sk-kutu.cip { padding: 6px 9px; }
+  .sigar.sikisik .tahta small, .sigar.sikisik .sk-kutu small { margin-top: 1px; }
+}
+@media (min-width: 761px) {
+  body:has(.sigar.sikisik) main { padding-top: 12px; }
+  body:has(.sigar.sikisik) #icerik > .ust h1 { margin: 0; font-size: 22px; }
+  body:has(.sigar.sikisik) #icerik > .ara { margin: 8px 0; }
+  body:has(.sigar.sikisik) #icerik > .ara input { padding-top: 7px; padding-bottom: 7px; }
+  .sigar.sikisik .tahta b, .sigar.sikisik .sk-kutu b { font-size: 14px; line-height: 1.15; }
+  .sigar.sikisik .tahta small, .sigar.sikisik .sk-kutu small { font-size: 11px; line-height: 1.25; }
+}
