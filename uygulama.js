@@ -866,10 +866,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#rpYazdir').onclick = () => {
       // Telefon/tablette (iOS) çerçeve yazdırılamıyor: PDF dosyası hazırlanır, sonra telefonun paylaş menüsüyle kaydedilir/gönderilir. Masaüstü eskisi gibi.
       const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
-      if (mobil) {   // K-391: gerçek sayfa (rapor.html) yeni sekmede: Safari orada yazdırır, paylaş menüsünden PDF olarak kaydeder/gönderir
-        const cubuk = '<style>@media screen{#yzCubuk{position:sticky;top:0;z-index:9;display:flex;flex-wrap:wrap;gap:10px;padding:12px;background:#0b182b;justify-content:center;align-items:center}#yzCubuk button{font:700 17px system-ui;padding:12px 20px;border-radius:12px;border:0;background:#22e8ff;color:#04202a}#yzCubuk button.k{background:#18304f;color:#eef6ff}#yzCubuk small{flex-basis:100%;text-align:center;color:#9fb3cc;font:13px system-ui}.ayak{display:none!important}}@media print{#yzCubuk{display:none!important}}</style><div id="yzCubuk"><button onclick="window.print()">🖨 Yazdır / PDF</button><button class="k" onclick="window.close()">Kapat</button><small>Yazdır penceresinde sağ üstteki paylaş simgesi → Dosyalar’a kaydet, WhatsApp, AirDrop</small></div>';
-        try { localStorage.setItem('umal-rapor', belge.replace(/<body([^>]*)>/, '<body$1>' + cubuk)); } catch (e) {}
-        const w = window.open('rapor.html', '_blank'); if (!w) location.href = 'rapor.html';
+      if (mobil) {   // K-391: iPhone'da çerçeve ve yeni sekme yazdırılamıyor → rapor ana sayfaya konur, yalnız o yazdırılır
+        const eski = document.getElementById('yzKatman'); if (eski) eski.remove();
+        const kat = document.createElement('div'); kat.id = 'yzKatman'; document.body.appendChild(kat);
+        const d = new DOMParser().parseFromString(belge, 'text/html');
+        const kok = kat.attachShadow({ mode: 'open' });
+        kok.innerHTML = '<style>:host{all:initial;display:block;background:#fff;color:#000}' + [...d.querySelectorAll('style')].map(x => x.textContent.replace(/@page[^}]*}/g, '').replace(/(^|[\s,}])html,\s*body\b/g, '$1:host, .yzgovde').replace(/(^|[\s,}])body\b/g, '$1.yzgovde')).join('\n') + '</style><div class="yzgovde ' + (d.body.className || '') + '">' + d.body.innerHTML + '</div>';
+        let st = document.getElementById('yzStil');
+        if (!st) { st = document.createElement('style'); st.id = 'yzStil'; document.head.appendChild(st); }
+        st.textContent = '#yzKatman{display:none}@media print{@page{size:A4 ' + (yatay ? 'landscape' : 'portrait') + ';margin:0}html,body{background:#fff!important;height:auto!important;overflow:visible!important}body>*:not(#yzKatman){display:none!important}#yzKatman{display:block!important}}';
+        const bitti = () => { kat.remove(); removeEventListener('afterprint', bitti); };
+        addEventListener('afterprint', bitti);
+        window.print();
         return;
       }
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
