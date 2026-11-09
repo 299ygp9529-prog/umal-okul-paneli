@@ -866,30 +866,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#rpYazdir').onclick = () => {
       // Telefon/tablette (iOS) çerçeve yazdırılamıyor: PDF dosyası hazırlanır, sonra telefonun paylaş menüsüyle kaydedilir/gönderilir. Masaüstü eskisi gibi.
       const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
-      if (mobil) return pdfPaylas(fr, baslikAdi, yatay, $('#rpYazdir'));
+      if (mobil) {   // K-391: gerçek sayfa (rapor.html) yeni sekmede: Safari orada yazdırır, paylaş menüsünden PDF olarak kaydeder/gönderir
+        const cubuk = '<style>@media screen{#yzCubuk{position:sticky;top:0;z-index:9;display:flex;flex-wrap:wrap;gap:10px;padding:12px;background:#0b182b;justify-content:center;align-items:center}#yzCubuk button{font:700 17px system-ui;padding:12px 20px;border-radius:12px;border:0;background:#22e8ff;color:#04202a}#yzCubuk button.k{background:#18304f;color:#eef6ff}#yzCubuk small{flex-basis:100%;text-align:center;color:#9fb3cc;font:13px system-ui}.ayak{display:none!important}}@media print{#yzCubuk{display:none!important}}</style><div id="yzCubuk"><button onclick="window.print()">🖨 Yazdır / PDF</button><button class="k" onclick="window.close()">Kapat</button><small>Yazdır penceresinde sağ üstteki paylaş simgesi → Dosyalar’a kaydet, WhatsApp, AirDrop</small></div>';
+        try { localStorage.setItem('umal-rapor', belge.replace(/<body([^>]*)>/, '<body$1>' + cubuk)); } catch (e) {}
+        const w = window.open('rapor.html', '_blank'); if (!w) location.href = 'rapor.html';
+        return;
+      }
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
-  }
-  // K-391: telefonda rapor → PDF dosyası → paylaş (Dosyalar'a kaydet, WhatsApp, AirDrop, e-posta…)
-  function betikYukle(src) { return new Promise((ok, red) => { if (document.querySelector(`script[src="${src}"]`) && window.html2pdf) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); }
-  async function pdfPaylas(fr, baslikAdi, yatay, dugme) {
-    const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
-    if (dugme._dosya) {   // ikinci dokunuş: paylaş (dokunuşun hemen ardından çağrılmalı)
-      const f = dugme._dosya;
-      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: baslikAdi }); } catch (e) {} return; }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = ad; document.body.appendChild(a); a.click(); a.remove(); return;
-    }
-    const eski = dugme.textContent; dugme.disabled = true; dugme.textContent = 'PDF hazırlanıyor…';
-    try {
-      await betikYukle('html2pdf.bundle.min.js');
-      const kok = fr.contentDocument.body;
-      const blob = await window.html2pdf().set({ margin: [8, 0, 8, 0], filename: ad, image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: yatay ? 1123 : 794 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza'] } }).from(kok).outputPdf('blob');
-      dugme._dosya = new File([blob], ad, { type: 'application/pdf' });
-      dugme.textContent = '📤 Paylaş / Kaydet';
-    } catch (e) { dugme.textContent = eski; alert('PDF hazırlanamadı: ' + (e && e.message || e)); }
-    finally { dugme.disabled = false; }
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
   const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;

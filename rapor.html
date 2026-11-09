@@ -1,0 +1,13 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Rapor</title></head>
+<body style="font:16px system-ui;padding:24px;color:#334155">Rapor yükleniyor…
+<script>
+// Okul Paneli raporu (telefon): panelin bıraktığı belgeyi açar ve hemen siler (kişisel veri cihazda kalmasın)
+(function () {
+  var b = null; try { b = localStorage.getItem('umal-rapor'); localStorage.removeItem('umal-rapor'); } catch (e) {}
+  if (!b) { document.body.textContent = 'Rapor bulunamadı. Okul Paneli’nde raporu açıp yeniden “Yazdır / PDF”e dokunun.'; return; }
+  var d = new DOMParser().parseFromString(b, 'text/html');
+  document.title = d.title || 'Rapor'; document.documentElement.lang = 'tr';
+  document.head.innerHTML = '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">' + d.head.innerHTML;
+  document.body.className = d.body.className; document.body.removeAttribute('style'); document.body.innerHTML = d.body.innerHTML;
+})();
+</script></body></html>
