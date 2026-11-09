@@ -145,9 +145,10 @@
     clearInterval(yenileZamanlayici);
     $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
-    b.ciz().catch(e => { $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
+    b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
+      $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
   }
-  function yenile(fn, sn) { clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (!document.hidden) fn().catch(() => {}); }, sn * 1000); }
+  function yenile(fn, sn) { const b = D.bolum; clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== b) return; if (!document.hidden) fn().catch(() => {}); }, sn * 1000); }
 
   // ------------------------------------------------------------------ Ortak veri
   async function ogrencileriYukle() {
@@ -1579,6 +1580,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const gunSonu = () => { const d = new Date(); d.setHours(23, 59, 0, 0); return Math.floor(d.getTime() / 1000); };
     const ciz = () => {
+      if (D.bolum !== 'kontrol' || !$('#kUst')) return;   // sayfadan çıkıldı
       const zd = zilDurumu(), siniflar = [...new Set([...listeSinif, ...Object.keys(tahtalar)])].sort(sinifSira);
       const durumlar = Object.fromEntries(siniflar.map(s => [s, etkili(s, zd)]));
       const say = c => siniflar.filter(s => durumlar[s].sinif === c).length;
@@ -1614,6 +1616,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         await yukle(); ciz();
       };
     };
+    if (D.bolum !== 'kontrol') return;
     $('#icerik').innerHTML = `<h1>Tahta Kontrol</h1><div class="soluk">Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık (oyunlar, Günün soruları, Atlas). Ders saatinde açık; dersi boş sınıf buradan kilitlenir. Öğretmenler odası kilitlenmez.</div>
       <div class="kart" style="margin-top:12px"><div id="kUst"></div><div class="dugmeler" style="justify-content:flex-start">
         <button class="birincil" id="kAcTen">Tüm tahtaları aç · bu teneffüs</button><button class="ikincil" id="kAcGun">Tüm tahtaları aç · bugün</button>
@@ -1646,7 +1649,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         else gonderKarar('normal', [s], gunSonu());
       };
     };
-    await yukle(); ciz();
+    await yukle(); if (D.bolum !== 'kontrol') return; ciz();
     yenile(async () => { await yukle(); ciz(); }, 20);
   }
 
