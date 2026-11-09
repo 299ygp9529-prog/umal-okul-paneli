@@ -668,3 +668,15 @@ button.og-kutu { cursor: pointer; }
   #sinavUst .geri-sayim { flex-basis: 100%; margin-left: 0; font-size: 16px; }
   #tamEkran { display: none; }   /* iPhone'da sayfa tam ekranı yok; yan çevirince plan büyük görünür */
 }
+/* Harita · yalnız telefon: seviye paketleri, üçlü küçük kartlar (masaüstü değişmez) */
+.h-sev { display: none; }
+@media (max-width: 760px) {
+  #haritaIzgara { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  #haritaIzgara .h-sev { display: flex; grid-column: 1 / -1; justify-content: space-between; align-items: center; background: var(--sv); color: #04202a; border-radius: 9px; padding: 3px 10px; margin-top: 6px; font-size: 13px; }
+  #haritaIzgara .h-sev:first-child { margin-top: 0; }
+  #haritaIzgara .h-sev span { font-size: 12px; font-weight: 700; opacity: .8; }
+  #haritaIzgara .tahta { min-height: 0; padding: 6px 7px; border-radius: 10px; }
+  #haritaIzgara .tahta b { font-size: 14px; }
+  #haritaIzgara .tahta small { font-size: 10.5px; margin-top: 1px; }
+  #haritaAlt .buyuk-neon { font-size: 15px; padding: 5px 12px; }
+}
