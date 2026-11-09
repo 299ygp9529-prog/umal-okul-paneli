@@ -681,3 +681,7 @@ button.og-kutu { cursor: pointer; }
   #haritaIzgara .tahta small { font-size: 10.5px; margin-top: 1px; }
   #haritaAlt .buyuk-neon { font-size: 15px; padding: 5px 12px; }
 }
+/* Salon: ders adı bilgisayarda Gözcü satırında (üst satır sıkışmasın); telefonda üstte kalır */
+.ders-gozcu { margin-left: auto; font-size: 16px; text-align: right; }
+@media (min-width: 761px) { #icerik.salon-acik #sinavUst .ders-uzun { display: none; } }
+@media (max-width: 760px) { .ders-gozcu { display: none; } }
