@@ -728,8 +728,12 @@ span.tk-gel.neon { color: var(--neon); }
 .analog .buyuk { stroke-width: 1.4; }
 /* Öğrenciler: sınıf kutuları seviye paketlerinde */
 .sk-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 14px; }
-.sk-kutu.cip { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border-radius: 12px; padding: 9px 11px; background: var(--kart); border: 1px solid var(--cizgi); border-left: 4px solid var(--sv); color: var(--yazi); min-height: 72px; }
+.sk-kutu.cip { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border-radius: 12px; padding: 9px 11px; background: var(--kart); border: 1px solid var(--cizgi); border-left: 4px solid var(--sv); color: var(--yazi); min-height: 88px; }
 .sk-kutu b { font-size: 16px; } .sk-kutu small { color: var(--soluk); font-size: 11.5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sk-kutu:hover { border-color: var(--sv); box-shadow: 0 0 10px color-mix(in srgb, var(--sv) 40%, transparent); }
 .sk-kutu.cip.secili { background: color-mix(in srgb, var(--sv) 22%, var(--kart)); border-color: var(--sv); color: var(--yazi); }
 @media (max-width: 760px) { .sk-izgara { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .sk-izgara .h-sev { margin-top: 6px; padding: 3px 10px; font-size: 13px; } .sk-izgara .h-sev:first-child { margin-top: 0; } .sk-kutu.cip { min-height: 0; padding: 6px 8px; } .sk-kutu b { font-size: 14px; } .sk-kutu small { font-size: 10.5px; } }
+/* Standart sınıf kutusu (Harita = Öğrenciler): aynı boy, solda seviye rengi şeridi */
+#haritaIzgara .tahta, #haritaIzgara .tahta.acik { border-left: 4px solid var(--sv); }
+#haritaIzgara .tahta { padding: 9px 11px; min-height: 88px; }
+@media (max-width: 760px) { #haritaIzgara .tahta, .sk-kutu.cip { min-height: 68px; padding: 6px 8px; } }

@@ -261,7 +261,7 @@
         const pr = simdikiDers(s);
         const ders = sinavda ? 'SINAV' + (ds.ders ? ' · ' + ds.ders : '') : (ds.ders || (pr && pr.ders) || '');
         const ogr = (ds.ogretmen && ds.ogretmen.length ? ds.ogretmen : (pr ? pr.ogretmen : [])).map(baslik).join(', ');
-        return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}" data-sinif="${esc(s)}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
+        return `<div class="tahta ${on ? 'acik' : ''} ${sinavda ? 'sinav' : ''}" style="--sv:${seviyeRenk(s)}" data-sinif="${esc(s)}"><b>${esc(s)}${on ? '<span class="nokta"></span>' : ''}</b>
           <small>${esc(ders || (on ? 'açık' : 'kapalı'))}</small><small>${esc(ogr)}</small>${on && d.kullaniyor ? '<small class="neon">yazıyor</small>' : ''}${on && (d.erisim || {}).durum === 'kilitli' ? '<small class="kirmizi">🔒 kilitli</small>' : ''}</div>`;
       };
       // Arama: liste süzülmez; eşleşen sınıfa kayılır, kartı büyüyüp çerçevesi yanıp söner
