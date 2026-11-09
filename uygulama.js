@@ -1562,7 +1562,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const gonderKarar = async (islem, hedef, bitis) => {
       const simdi = Math.floor(Date.now() / 1000), id = new Date().toISOString().replace(/\D/g, '').slice(2, 14) + '-' + Math.random().toString(16).slice(2, 6);
-      const veri = { id, tur: 'erisim', islem, hedef, zaman: simdi, bitis, kim: ROL_AD[D.rol] || 'İdare', eposta: D.eposta || '' };
+      const ISLEM_AD = { ac: 'Tahta açıldı', kilitle: 'Tahta kilitlendi', bosders: 'Boş ders: tahta kilitli', normal: 'Tahta normale döndü', kapat: 'Tahta kapatılıyor' };
+      const veri = { id, tur: 'erisim', islem, hedef, zaman: simdi, bitis, kim: ROL_AD[D.rol] || 'İdare', eposta: D.eposta || '',
+        baslik: 'Tahta Kontrol', metin: `${ISLEM_AD[islem] || islem} · ${hedef.includes('*') ? 'tüm tahtalar' : hedef.join(', ')}` };   // DersMap UmalMesaj baslik/metin/bitis bekler
       const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'erisim', veri, bitis: new Date(bitis * 1000).toISOString() });
       $('#kBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : '<span class="yeşil">Gönderildi. Tahtalar en geç 20 saniyede uygular.</span>';
       await yukle(); ciz();
@@ -1597,7 +1599,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#kTEkle').onclick = () => { const a = $('#kTBas').value, b = $('#kTBit').value || a; if (!a) return; tk.tatiller = [...(tk.tatiller || []), { ad: $('#kTAd').value.trim() || 'Tatil', bas: a, bit: b < a ? a : b }]; ciz(); };
       $('#kKaydet').onclick = async () => {
         const simdi = Math.floor(Date.now() / 1000), id = 'takvim-' + simdi;
-        const veri = { id, tur: 'takvim', hedef: ['*'], zaman: simdi, acilis: $('#kAcilis').value || '08:00', kapanis: $('#kKapanis').value || '16:30', tatiller: tk.tatiller || [], uyanma: tk.uyanma || [] };
+        const veri = { id, tur: 'takvim', hedef: ['*'], zaman: simdi, bitis: 0, baslik: 'Tahta Kontrol', metin: 'Açılış · kapanış ve tatil günleri', acilis: $('#kAcilis').value || '08:00', kapanis: $('#kKapanis').value || '16:30', tatiller: tk.tatiller || [], uyanma: tk.uyanma || [] };
         const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'takvim', veri, bitis: null });
         if (!error && D._takvimEski.length) await sb.from('umal_mesajlar').delete().in('id', D._takvimEski);
         $('#kBilgi').innerHTML = error ? `<span class="kirmizi">Kaydedilemedi: ${esc(hataYaz(error))}</span>` : '<span class="yeşil">Kaydedildi. Tahtalar en geç 20 saniyede alır.</span>';
