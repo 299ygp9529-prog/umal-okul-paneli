@@ -270,12 +270,12 @@
         return s.toLocaleLowerCase(tr) === q || (q.length >= 3 && o.includes(q));
       });
       const pr0 = simdikiDers(siniflar[0] || '9-A');
-      if (window.innerWidth <= 760) {   // telefon: seviye paketleri (renkli şerit + üçlü kartlar); masaüstü aynı
+      {   // seviye paketleri: renkli şerit + kartlar (telefonda satırda üç kart)
         const gruplar = {}; siniflar.forEach(s => { const sv = seviye(s) || '·'; (gruplar[sv] = gruplar[sv] || []).push(s); });
         const sira = Object.keys(gruplar).sort((a, b) => (a === '·') - (b === '·') || (+a) - (+b));
         $('#haritaIzgara').innerHTML = sira.map(sv => { const L = gruplar[sv], n = L.filter(s => simdi - new Date(sinifHaritasi[s].gorulme) < 6 * 60000).length;
           return `<div class="h-sev" style="--sv:${sv === '·' ? '#9fb3cc' : (SEVIYE_RENK[sv] || '#5cc8ff')}"><b>${sv === '·' ? 'Diğer' : sv + '. sınıflar'}</b><span>${n} / ${L.length} açık</span></div>${L.map(kart).join('')}`; }).join('');
-      } else $('#haritaIzgara').innerHTML = siniflar.map(kart).join('');
+      }
       let bilgi = '';
       if (q.length >= 3 && !eslesen.length) {   // derste değilse bugünkü dersleri
         const p = D.program || {}, gun = (new Date().getDay() + 6) % 7, bugun = [];
