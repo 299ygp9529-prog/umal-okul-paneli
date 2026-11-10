@@ -2310,7 +2310,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         $('#gBilgi').textContent = 'Fotoğraf yükleniyor…';
         const yol = 'acil/' + id + '.jpg', buf = await resim.arrayBuffer();
         const sha = [...new Uint8Array(await crypto.subtle.digest('SHA-256', buf))].map(b => b.toString(16).padStart(2, '0')).join('');
-        const { error: ye } = await sb.storage.from('umal-resim').upload(yol, resim, { contentType: 'image/jpeg', upsert: true });
+        const { error: ye } = await sb.storage.from('umal-resim').upload(yol, resim, { contentType: 'image/jpeg', upsert: false });
         if (ye) { $('#gGonder').disabled = false; $('#gBilgi').innerHTML = `<span class="kirmizi">Fotoğraf yüklenemedi: ${esc(hataYaz(ye))}</span>`; return; }
         veri.resim = { yol, sha256: sha, boyut: buf.byteLength };
       }
