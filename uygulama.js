@@ -683,7 +683,7 @@
       for (let h = 120; h >= 64 && fazla(); h -= 6) sl.style.setProperty('--sh', h + 'px');
     };
     if (D._smGozcu) D._smGozcu.disconnect();
-    D._smGozcu = new MutationObserver(() => { clearTimeout(salonSigdir.z); salonSigdir.z = setTimeout(salonSigdir, 60); });
+    D._smGozcu = new MutationObserver(() => salonSigdir());   // K-414: hemen (boyamadan önce) — yenilemede kutular bir an büyüyüp küçülmesin
     D._smGozcu.observe($('#icerik'), { childList: true, subtree: true });
     window.addEventListener('resize', () => { clearTimeout(salonSigdir.z); salonSigdir.z = setTimeout(salonSigdir, 150); });
     $('#planlar').onclick = ev => {
