@@ -1270,10 +1270,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   // Planda gözcü yalnız ilk adla yazılmışsa ("Büşra"): o saatte o salonda dersi olan öğretmenden ya da tek eşleşen öğretmenden tam ad
   function gozcuAdi(p, salon) {
     const g = String(((p || {}).gozcu || {})[salon] || '').trim();
-    if (!g || g.split(/\s+/).length >= 2) return g;
+    if (g && g.split(/\s+/).length >= 2) return g;
     const k = t => String(t).toLocaleLowerCase(tr), q = k(g);
     const gun = (new Date(p.tarih + 'T12:00').getDay() + 6) % 7, no = parseInt(p.ders, 10);
     const o = ((((D.program || {}).siniflar || {})[salon] || {})[`${gun}-${no}`] || {}).ogretmen || [];
+    if (!g) return o.filter(Boolean).join(', ');   // K-426: planda gözcü yoksa tahtalardaki gibi ders programından: o saatte o salonda dersi olan öğretmen
     const burada = o.find(a => k(a).startsWith(q + ' '));
     if (burada) return burada;
     const L = ogretmenListesi().filter(a => k(a).split(/\s+/)[0] === q);
