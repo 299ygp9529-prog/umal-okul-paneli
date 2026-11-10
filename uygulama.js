@@ -146,7 +146,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici);
-    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik');
+    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
       $('#icerik').innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(hataYaz(e))}</div>`; });
@@ -357,6 +357,8 @@
     const G = {}; adlar.forEach(x => { const m = /^(\d+)-/.exec(x), k = m ? m[1] : 'diger'; (G[k] = G[k] || []).push(x); });
     return ['9', '10', '11', '12', 'diger'].filter(k => G[k]).map(k => `<div class="pj-satir sv-grup" style="--sv:${SEVIYE_RENK[k] || '#9fb3cc'}"><div class="pj-duzey">${k === 'diger' ? 'Diğer' : k + '. Sınıflar'}</div><div style="min-width:0">${ic(G[k])}</div></div>`).join('');
   }
+  // K-413: Öğretmenler Odası simgesi (masa + yazı tahtası)
+  const ODA_SIMGE = '<svg viewBox="0 0 48 48" width="26" height="26" aria-hidden="true"><rect x="7" y="6" width="34" height="19" rx="2.5" fill="#0f2a3f" stroke="#7ff6ff" stroke-width="2.4"/><path d="M12 13h12M12 18h8" stroke="#7ff6ff" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="15" r="3.2" fill="none" stroke="#7ff6ff" stroke-width="2"/><rect x="5" y="29" width="38" height="4" rx="1.5" fill="#7ff6ff"/><path d="M10 33v9M38 33v9" stroke="#7ff6ff" stroke-width="2.6" stroke-linecap="round"/></svg>';
   const SEVIYE_RENK = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
   const seviye = s => { const m = /^(\d+)/.exec(String(s || '')); return m ? m[1] : ''; };
   const seviyeRenk = s => SEVIYE_RENK[seviye(s)] || '#5cc8ff';
@@ -2154,13 +2156,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#kUst').innerHTML = `<div class="k-durum"><div><span class="soluk">Şu an</span><b>${esc(zd.ad)}</b><span class="soluk">${esc(zd.saat || zd.sonraki || '')}</span></div>
         <div><span class="soluk">Kilitli</span><b class="kirmizi">${say('kl') + say('bs')}</b></div><div><span class="soluk">Açık (izinli)</span><b class="neon">${say('ac')}</b></div>
         <div><span class="soluk">Derste açık</span><b class="yeşil">${say('ok')}</b></div><div><span class="soluk">Kapalı tahta</span><b class="soluk">${say('kp')}</b></div></div>`;
-      const satirlar = ['9', '10', '11', '12'].map(sv => {
-        const ss = siniflar.filter(s => String(s).split('-')[0] === sv); if (!ss.length) return '';
-        return `<div class="k-sat"><div class="k-sev" style="background:${SEVIYE_RENK[sv]}">${sv}</div>${ss.map(s => { const d = durumlar[s];
-          return `<button class="k-tahta k-${d.sinif}" data-k="${esc(s)}"><b>${esc(s)}</b><small>${d.sinif === 'kl' || d.sinif === 'bs' ? '🔒 ' : d.sinif === 'ac' ? '🔓 ' : ''}${esc(d.yazi)}</small></button>`; }).join('')}</div>`;
-      }).join('');
       const odalar = siniflar.filter(odaMi);
-      $('#kSiniflar').innerHTML = satirlar + (odalar.length ? `<div class="k-sat"><div class="k-sev" style="background:#9fb3cc">·</div>${odalar.map(s => `<button class="k-tahta k-oda" data-k="${esc(s)}"><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></button>`).join('')}</div>` : '');
+      const odaKutu = odalar.map(s => `<button class="k-tahta k-oda" data-k="${esc(s)}"><span class="k-oda-ic">${ODA_SIMGE}</span><span><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></span></button>`).join('');
+      const sv4 = ['9', '10', '11', '12'].map(sv => [sv, siniflar.filter(s => String(s).split('-')[0] === sv)]).filter(x => x[1].length);
+      // K-412: masaüstünde Öğretmenler Odası en kısa seviye satırının sonuna (ayrı satır yer kaplamasın); telefonda ayrı satır
+      const kisa = window.innerWidth > 760 && odalar.length ? sv4.slice().sort((a, b) => a[1].length - b[1].length)[0] : null;
+      const yan = kisa && kisa[1].length + 3 <= 9 ? kisa[0] : null;
+      const satirlar = sv4.map(([sv, ss]) => `<div class="k-sat"><div class="k-sev" style="background:${SEVIYE_RENK[sv]}">${sv}</div>${ss.map(s => { const d = durumlar[s];
+          return `<button class="k-tahta k-${d.sinif}" data-k="${esc(s)}"><b>${esc(s)}</b><small>${d.sinif === 'kl' || d.sinif === 'bs' ? '🔒 ' : d.sinif === 'ac' ? '🔓 ' : ''}${esc(d.yazi)}</small></button>`; }).join('')}${sv === yan ? `<span class="k-oda-yer" style="grid-column:${2 + 9 - 2} / span 2">${odaKutu}</span>` : ''}</div>`).join('');
+      $('#kSiniflar').innerHTML = satirlar + (odalar.length && !yan ? `<div class="k-sat"><div class="k-sev k-oda-sev" title="Öğretmenler Odası">${ODA_SIMGE}</div>${odaKutu}</div>` : '');
       const tk = takvim || {};
       $('#kTakvim').innerHTML = `<div class="k-iki"><div class="kart"><h2 style="margin-top:0">Açılış · kapanış</h2>
           <div class="soluk kucuk">Tahtalar kapanış saatinde 2 dk uyarıyla kapanır ("30 dk ertele"). Sabah açılış BIOS saatiyle; şimdilik deneme tahtalarında.</div>
@@ -2184,7 +2188,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       };
     };
     if (D.bolum !== 'kontrol') return;
-    $('#icerik').innerHTML = `<h1>Tahta Kontrol</h1><div class="soluk">Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık (oyunlar, Günün soruları, Atlas). Ders saatinde açık; dersi boş sınıf buradan kilitlenir. Öğretmenler odası kilitlenmez.</div>
+    $('#icerik').classList.add('k-ekran'); $('#icerik').innerHTML = `<h1>Tahta Kontrol</h1><div class="soluk">Teneffüste ve öğle arasında sınıf tahtalarında yalnız Atlas açık (oyunlar, Günün soruları, Atlas). Ders saatinde açık; dersi boş sınıf buradan kilitlenir. Öğretmenler Odası kilitlenmez.</div>
       <div class="kart" style="margin-top:12px"><div id="kUst"></div><div class="dugmeler" style="justify-content:flex-start">
         <button class="birincil" id="kAcTen">Tüm tahtaları aç · bu teneffüs</button><button class="ikincil" id="kAcGun">Tüm tahtaları aç · bugün</button>
         <button class="tehlike" id="kKilit">Tümünü kilitle · bugün</button><button class="ikincil" id="kNormal">Hepsini normale döndür</button><button class="tehlike" id="kKapatHepsi">⏻ Açık tüm tahtaları kapat</button></div><div class="kucuk" id="kBilgi"></div></div>

@@ -828,3 +828,33 @@ span.tk-gel.neon { color: var(--neon); }
 .sv-grup { margin: 4px 0; }
 .kb-svcip .cip { border-color: color-mix(in srgb, var(--sv) 55%, transparent); color: var(--sv); background: transparent; }
 .kb-svcip .cip.secili { background: var(--sv); color: #04202a; border-color: var(--sv); box-shadow: 0 0 8px color-mix(in srgb, var(--sv) 45%, transparent); }
+/* K-412: Tahta Kontrol tek ekranda (masaüstü): her seviye tek satır, üst kutular küçük */
+@media (min-width: 761px) {
+  .k-sat { display: grid; grid-template-columns: 34px repeat(9, minmax(0, 1fr)); gap: 6px; margin: 5px 0; flex-wrap: nowrap; }
+  .k-sev { width: auto; border-radius: 8px; }
+  .k-tahta { width: auto; min-width: 0; padding: 5px 8px; border-radius: 10px; }
+  .k-tahta b { font-size: 14px; } .k-tahta small { font-size: 11px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .k-durum { gap: 8px; } .k-durum > div { padding: 6px 10px; border-radius: 11px; }
+  .k-durum b { font-size: 17px; margin: 0; } .k-durum span { font-size: 11px; }
+}
+@media (min-width: 761px) {
+  #kTakvim .kart { padding: 10px 14px; } #kTakvim h2 { font-size: 15px; margin-bottom: 2px; } #kTakvim p, #kTakvim .soluk { font-size: 12px; }
+  #kTakvim .k-form { margin: 6px 0; } #kTakvim input { padding: 5px 8px; }
+  #kTakvim .cip { padding: 3px 9px; font-size: 12px; } #kTakvim .cipler { gap: 4px; }
+  #kTakvim .k-iki { gap: 10px; } .k-sat + .k-sat { margin-top: 0; }
+}
+@media (min-width: 761px) {
+  .k-ekran .dugmeler { margin-top: 8px; gap: 6px; } .k-ekran .dugmeler button { padding: 6px 12px; font-size: 13px; }
+  .k-ekran > .kart { margin-top: 8px !important; padding-top: 10px; padding-bottom: 10px; }
+  .k-ekran h1 { margin-bottom: 0; } .k-ekran .ust + p, .k-ekran > p { margin: 2px 0 0; font-size: 12.5px; }
+  .k-ekran #kSiniflar .k-tahta { padding: 4px 8px; }
+}
+/* K-413: Öğretmenler Odası simgesi; kutu başlıklarında her kelime büyük harfle (Öğretmenler Odası) */
+.k-oda-sev { background: linear-gradient(160deg, #1b3a5c, #12263f) !important; border: 1.5px solid #5cc8ff; box-shadow: 0 0 10px rgba(92,200,255,.35); }
+.k-tahta b, .tahta > b, .salon .s-ust b, .pj-ust b, .kb-ust b, .sk-kutu b { text-transform: capitalize; }
+.k-oda-yer { display: flex; } .k-oda-yer .k-tahta { flex: 1; }
+.k-tahta.k-oda { display: flex; align-items: center; gap: 8px; border-color: rgba(92,200,255,.55); }
+.k-oda-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #1b3a5c, #12263f); border: 1px solid #5cc8ff; }
+.k-oda-ic svg { width: 22px; height: 22px; } .k-tahta.k-oda > span:last-child { min-width: 0; }
+.k-tahta.k-oda b { white-space: nowrap; }
+@media (min-width: 761px) { .k-ekran > .soluk:first-of-type { font-size: 12.5px; } .k-ekran #kKaydet { padding: 6px 14px; } }
