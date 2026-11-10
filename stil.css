@@ -862,3 +862,4 @@ span.tk-gel.neon { color: var(--neon); }
 .elle-serit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 6px 0 8px; padding: 10px 14px; border: 1.5px solid #ff9a3a; border-radius: 14px; background: rgba(255,154,58,.08); box-shadow: 0 0 14px rgba(255,154,58,.25); }
 .elle-serit > b { color: #ffb366; } .elle-serit > span { color: #c9d6ea; font-size: 13.5px; }
 .elle-serit .elle-say { margin-left: auto; font-size: 15px; } .elle-serit .elle-say b { color: #ff5d6c; font-size: 18px; }
+.elle-dugme { white-space: nowrap; padding: 6px 14px; font-size: 13.5px; margin-left: 10px; flex: none; }
