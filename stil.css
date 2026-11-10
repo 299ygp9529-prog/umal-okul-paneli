@@ -805,3 +805,12 @@ span.tk-gel.neon { color: var(--neon); }
   .sm-sikisik .oz-satir summary, .sm-sikisik .oz-top { padding-top: 6px !important; padding-bottom: 6px !important; }
   .sm-sikisik .salonlar { margin-top: 6px; }
 }
+/* K-408: Sınav takvimi kaydırmasız (masaüstü) */
+@media (min-width: 761px) {
+  .tk-s1 .tk-ozet { margin-bottom: 8px; gap: 8px; } .tk-s1 .tk-ozet > div { padding: 6px 12px; }
+  .tk-s1 .tk-gun { padding: 5px 0; } .tk-s1 .tk-sinav { padding: 5px 8px; } .tk-s1 .tk-sinavlar { gap: 5px; } .tk-s1 .kart { padding-top: 10px; padding-bottom: 10px; }
+  .tk-s2 .tk-cip { font-size: 11.5px; padding: 1px 8px 1px 3px; } .tk-s2 .tk-dersler { gap: 3px; } .tk-s2 .tk-tarih b { font-size: 14.5px; } .tk-s2 .tk-saat b { font-size: 13px; }
+  .tk-s2 .tk-iki { gap: 10px; } .tk-s2 h1 { margin-bottom: 4px; }
+  .tk-s3 .tk-cip { font-size: 10.5px; } .tk-s3 .tk-cip b { font-size: 10px; } .tk-s3 .tk-gun { padding: 3px 0; gap: 6px; } .tk-s3 .tk-ozet b { font-size: 17px; }
+}
+@media (min-width: 761px) { .tk-iki + .kart { margin-top: 8px; } }

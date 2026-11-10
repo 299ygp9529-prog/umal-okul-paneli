@@ -1990,6 +1990,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   // ------------------------------------------------------------------ Sınav takvimi (K-379): olacaklar · olanlar (gelmeyen = mazeret adayı) · mazeret sınavları
   // Takvim: umal_ayarlar 'sinav_takvimi' (varsa) yoksa sinav-takvimi.json (Atlas ile aynı dosya). Gelmeyenler: umal_sinav_salon yoklamaları.
   // Mazeret sınavları: umal_ayarlar 'mazeret_sinavlari' (JSON) — idare ekler/siler; her biri bir asıl sınava bağlı, katılacaklar o sınavın gelmeyenleri.
+  // K-408: Sınav takvimi masaüstünde kaydırmadan sığsın: önce sıklaşır, sonra yazılar küçülür (en çok 3 kademe)
+  function tkSigdir() {
+    const ic = $('#icerik'); if (!ic || D.bolum !== 'takvim') return;
+    ic.classList.remove('tk-s1', 'tk-s2', 'tk-s3');
+    if (window.innerWidth <= 760) return;
+    for (const k of ['tk-s1', 'tk-s2', 'tk-s3']) { if (document.documentElement.scrollHeight <= window.innerHeight + 1) return; ic.classList.add(k); }
+  }
+  window.addEventListener('resize', () => { clearTimeout(tkSigdir.z); tkSigdir.z = setTimeout(tkSigdir, 150); });
   async function takvim() {
     await Promise.all([programYukle(), ogrencileriYukle()]);
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['sinav_takvimi', 'mazeret_sinavlari']);
@@ -2046,8 +2054,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
               <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
-              <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${yonetir ? `<button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
+              <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${yonetir ? `<button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`;; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
           ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`;
+      tkSigdir();
     };
     $('#icerik').innerHTML = `<div class="ust"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span></div><div id="tkIc"></div>`;
     $('#tkIc').onclick = async ev => {
