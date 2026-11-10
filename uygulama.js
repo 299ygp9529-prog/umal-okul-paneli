@@ -1596,8 +1596,17 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const cok = dolu.filter(x => isaretler(form, cevap(form, sinif, String(x.no))).length >= 3);
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
-        $('#rehAyrinti').innerHTML = `<div class="kart">${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length; return `<button class="pj-kutu ${n && n === kk.length ? 'acik' : ''}" data-s="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${kk.length}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, kk.length)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}</div>`;
+        const acikF = acikMi(form);   // K-406: rehberlik formunu bütün tahtalarda aç / kapat
+        $('#rehAyrinti').innerHTML = `<div class="dugmeler" style="align-items:center;margin:4px 0 10px"><span class="durum-etiketi ${acikF ? 'yeşil' : 'soluk'}">${acikF ? 'açık' : 'kapalı'}</span>${acikF ? '<button class="ikincil" id="rKapat">Kapat</button>' : '<button class="birincil" id="rAc">Aç</button>'}<span class="kucuk soluk" id="rBilgi">Bütün sınıf tahtalarında; tahtalar 1–2 dk içinde alır.</span></div><div class="kart">${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length; return `<button class="pj-kutu ${n && n === kk.length ? 'acik' : ''}" data-s="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${kk.length}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, kk.length)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}</div>`;
         $('#rehAyrinti').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); window.scrollTo(0, 0); } };
+        const durumYaz = async ac => {
+          $('#rBilgi').textContent = 'Kaydediliyor…';
+          const { error } = await sb.from('umal_anket_durum').upsert({ anket: form.id, durum: ac ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 });
+          if (error) { $('#rBilgi').textContent = 'Olmadı: ' + hataYaz(error); return; }
+          D.durumlar[form.id] = { durum: ac ? 'acik' : 'kapali', gun: bugunISO() }; liste();
+        };
+        if ($('#rAc')) $('#rAc').onclick = () => durumYaz(true);
+        if ($('#rKapat')) $('#rKapat').onclick = () => durumYaz(false);
         return;
       }
       $('#icerik').classList.add('reh-acik');
