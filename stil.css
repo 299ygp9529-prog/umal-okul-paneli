@@ -784,3 +784,11 @@ span.tk-gel.neon { color: var(--neon); }
 /* K-395: Anketi sil onayı */
 .tehlike-dolu { background: var(--kirmizi) !important; border-color: var(--kirmizi) !important; color: #fff !important; }
 .tehlike-dolu:disabled { opacity: .45; cursor: not-allowed; }
+/* K-404: analog saat menü uzayınca kaybolmasın (yalnız masaüstü) */
+@media (min-width: 761px) {
+  .yan #menu { flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1d3150 transparent; }
+  .yan .menu-oge { padding: 7px 12px; margin-bottom: 2px; }
+  .saat-kutu { flex: 1 0 auto; min-height: 190px; padding: 10px 0; gap: 6px; }
+}
+@media (min-width: 761px) and (max-height: 820px) { .analog { width: 112px; height: 112px; } .saat-kutu { min-height: 160px; } .dijital { font-size: 22px; } }
+@media (min-width: 761px) and (max-height: 820px) { .yan .logo3d { transform: scale(.8); margin: -8px auto -10px; } .yan .menu-oge { padding: 6px 12px; } .analog { width: 100px; height: 100px; } .saat-kutu { min-height: 140px; } }
