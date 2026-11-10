@@ -591,7 +591,7 @@
     const { data, error } = await planlariGetir();
     if (error) throw error;
     D.planlar = data || [];
-    let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null, ilkCizimBitti = false;
+    let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null, ilkCizimBitti = false, elle = null;   // elle: K-428 panelden yoklama (salon, gelmeyen numaraları)
     const ciz = async () => {
       if (!secili) { $('#ustNeon').innerHTML = ''; $('#sinavIc').innerHTML = '<div class="kart soluk" style="margin-top:12px">Yaklaşan sınav planı yok. Öğrenci aranınca sınıfı görünür.</div>'; return; }
       const { data: sal } = await sb.from('umal_sinav_salon').select('salon,veri,guncel').eq('tarih', secili.tarih).eq('ders', secili.ders);
@@ -651,19 +651,35 @@
     };
     const salonCiz = () => {
       const x = acikSalon, v = yok[x] || {}, L = (secili.salonlar[x] || []).map(siraKaydi).sort((a, b) => a.sira - b.sira);
-      const gel = new Set((v.gelmedi || []).map(g => String(g.no))), st = sinavSaati(secili);
+      if (elle && (elle.salon !== x || elle.plan !== secili)) elle = null;
+      const gel = elle ? elle.set : new Set((v.gelmedi || []).map(g => String(g.no))), st = sinavSaati(secili);
       const dersler = [...new Set(L.map(r => baslik(r.ders || '')).filter(Boolean))];
       const msj = (v.mesajlar || []).filter(m => m.tur !== 'geldi' && m.metin);
       const hap = `<span class="t-neon">${esc(secili.ders)}${st.aralik ? ' · ' + st.aralik : ''}</span><span class="t-neon">${esc(gunAdi(secili.tarih))}</span><span class="t-neon">${L.length} öğrenci</span>${v.zaman ? `<span class="t-neon kirmizi-neon">Gelmeyen ${gel.size}</span>` : ''}${st.sag ? `<span class="geri-sayim ${st.suruyor ? 'nabiz' : ''}">${esc(st.sag)}</span>` : ''}`;
       $('#ustNeon').innerHTML = '';
-      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span><button class="ikincil" id="tamEkran" title="Planı tam ekranda göster (Esc ile çıkılır)">⛶ Tam ekran</button>`;
+      $('#sinavUst').innerHTML = `<button class="ikincil" id="salonGeri">← Bütün salonlar</button><span class="neon-tabela">${esc(x)}</span><span class="sari-yazi ders-uzun">${esc(dersler.slice(0, 3).join(' / '))}</span><span class="turuncu-neonlar">${hap}</span>${st.basladi ? `<button class="${elle ? 'ikincil' : 'birincil'}" id="elleYok" title="Tahtası bozuk ya da yoklama gelmeyen salon: gelmeyenleri işaretleyip sisteme kaydedin">${elle ? 'Vazgeç' : '✎ Yoklama gir'}</button>` : ''}<button class="ikincil" id="tamEkran" title="Planı tam ekranda göster (Esc ile çıkılır)">⛶ Tam ekran</button>`;
       $('#sinavIc').innerHTML = `<div class="seviye-satir">${seviyeAciklama()}<span class="soluk kucuk">Gözcü: <b style="color:#fff">${esc(baslik(gozcuAdi(secili, x) || '—'))}</b>${kagitDurumu(v) ? ` · <span class="turuncu">${esc(kagitDurumu(v))}</span>` : ''}</span><span class="sari-yazi ders-gozcu">${esc(dersler.slice(0, 3).join(' / '))}</span></div>
+        ${elle ? `<div class="elle-serit"><b>Panelden yoklama · ${esc(x)}</b><span>Gelmeyen öğrencilerin üstüne dokunun (kırmızı olur). Herkes geldiyse doğrudan onaylayın.</span><span class="elle-say">Gelmeyen: <b>${gel.size}</b></span><button class="birincil" id="elleGonder">Yoklamayı onayla ve kaydet</button></div>` : (v.kaynak === 'panel' ? `<div class="soluk kucuk" style="margin:4px 0">Bu salonun yoklaması panelden girildi${v.giren ? ' · ' + esc(v.giren) : ''}${v.zaman ? ' · ' + esc(new Date(v.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) : ''}.</div>` : '')}
         ${oturmaPlani(x, L, gel)}
         ${msj.length ? `<div class="salon-mesaj">✉ ${msj.slice(-3).map(m => `${m.zaman ? esc(new Date(m.zaman * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) + ' ' : ''}${esc(m.metin)}`).join(' · ')}</div>` : ''}`;
       $('#icerik').classList.add('salon-acik');
       $('#salonGeri').onclick = () => { acikSalon = null; vurgu = null; $('#icerik').classList.remove('salon-acik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); ciz(); };
       document.onfullscreenchange = () => { const t = $('#tamEkran'); if (t) t.textContent = document.fullscreenElement ? '✕ Tam ekrandan çık' : '⛶ Tam ekran'; };
       $('#tamEkran').onclick = () => { const m = $('#icerik'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (m.requestFullscreen) m.requestFullscreen().catch(() => {}); else if (m.webkitRequestFullscreen) m.webkitRequestFullscreen(); };
+      const ey = $('#elleYok');
+      if (ey) ey.onclick = () => { elle = elle ? null : { salon: x, plan: secili, set: new Set((v.gelmedi || []).map(g => String(g.no))) }; salonCiz(); };
+      const eg = $('#elleGonder');
+      if (eg) eg.onclick = async () => {
+        if (!confirm(`${x} salonu: ${elle.set.size ? elle.set.size + ' öğrenci gelmedi' : 'herkes geldi'}. Yoklama onaylanıp kaydedilsin mi?`)) return;
+        eg.disabled = true;
+        const { data: ss } = await sb.auth.getSession(); const kim = ((ss || {}).session || {}).user ? ss.session.user.email : '';
+        const veri = Object.assign({}, v, { tarih: secili.tarih, ders: secili.ders, ders_no: String(parseInt(secili.ders, 10) || ''), salon: x, sinav: secili.sinav || '', ogrenci: L.length,
+          gozetmen: v.gozetmen || (gozcuAdi(secili, x) ? [gozcuAdi(secili, x)] : []), onay: true, kapandi: true, zaman: Date.now() / 1000, mesajlar: v.mesajlar || [], kaynak: 'panel', giren: kim,
+          gelmedi: L.filter(r => elle.set.has(String(r.no))).map(r => ({ sira: r.sira, no: String(r.no), ad: r.ad, sinif: r.sinif, ders: r.ders || '', ders_adi: kisaDers(baslik(r.ders || '')) })) });
+        const { error } = await sb.from('umal_sinav_salon').upsert({ tarih: secili.tarih, ders: secili.ders, salon: x, veri, guncel: new Date().toISOString() });
+        if (error) { eg.disabled = false; alert('Kaydedilemedi: ' + hataYaz(error)); return; }
+        elle = null; await ciz();
+      };
       planiSigdir();
       if (vurgu) { const k = document.querySelector(`.koltuk[data-ogr="${CSS.escape(vurgu)}"]`); if (k) { k.classList.add('vurgu'); k.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
       fotolariYukle(L.map(r => r.no));
@@ -696,7 +712,9 @@
     $('#sinavIc').onclick = ev => {
       const gd = ev.target.closest('[data-gordum]');
       if (gd) { ev.stopPropagation(); const x = gd.dataset.gordum; acikBildirimler(yok[x]).forEach(m => gordum.add(bildirimKimlik(x, m))); gordumKaydet(); ciz(); return; }
-      const o = ev.target.closest('[data-ogr]'); if (o) { ogrencileriYukle().then(() => ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.ogr))); return; }
+      const o = ev.target.closest('[data-ogr]');
+      if (o && elle) { const n = String(o.dataset.ogr); elle.set.has(n) ? elle.set.delete(n) : elle.set.add(n); salonCiz(); return; }   // K-428: yoklama girerken dokunuş gelmedi işaretler
+      if (o) { ogrencileriYukle().then(() => ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.ogr))); return; }
       const b = ev.target.closest('[data-salon]'); if (b) { acikSalon = b.dataset.salon; salonCiz(); window.scrollTo(0, 0); }
     };
     // Öğrenci ara → uçak bileti (sınavı yoksa da sınıfı görünür; "Planda gör" sırasını neonla gösterir)
