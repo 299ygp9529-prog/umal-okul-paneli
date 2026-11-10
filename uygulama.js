@@ -2229,14 +2229,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').eq('anahtar', 'siniflar').maybeSingle();
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
-    $('#icerik').innerHTML = `<h1>${kapla ? 'Acil Mesaj' : 'Gönder'}</h1>${kapla ? '<div class="turuncu" style="margin-top:4px">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince kalkar. Sınavdaki salonlarda da çıkar.</div>' : '<div class="soluk kucuk">Tahtanın üstünde şerit olarak görünür; yazıyı kapatmaz.</div>'}
+    $('#icerik').innerHTML = `<h1>${kapla ? 'Acil Mesaj' : 'Gönder'}</h1>${kapla ? '<div class="turuncu" style="margin-top:4px">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince ya da siz aşağıdan "Kaldır" deyince kalkar. Sınavdaki salonlarda da çıkar.</div>' : '<div class="soluk kucuk">Tahtanın üstünde şerit olarak görünür; yazıyı kapatmaz.</div>'}
       <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
       ${kapla ? `<h2>Fotoğraf (isteğe bağlı)</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><label class="ikincil" style="cursor:pointer">📷 Fotoğraf seç<input type="file" id="gResim" accept="image/*" hidden></label><span class="kucuk soluk" id="gResimAd">Seçilmedi</span><button class="bag gizli" id="gResimSil">Kaldır</button></div><img id="gResimOn" class="gizli" style="max-height:140px;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--cizgi)">
       <h2>Ne zaman</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><div class="cipler" id="ne" style="margin:0"><button class="cip secili" data-n="simdi">Hemen</button><button class="cip" data-n="saat">Saatinde</button></div><input type="time" id="gSaat" value="09:05" class="gizli" style="width:auto"><span class="kucuk turuncu" id="gSaatBilgi">Saatinde gösterim ve fotoğraf Pro 63 tahtalarda; eski sürümdeki tahta mesajı hemen gösterir.</span></div>` : ''}
       <h2>Ne kadar görünsün</h2><div class="cipler" id="sure"><button class="cip" data-s="ders">Bu ders</button><button class="cip secili" data-s="gun">Gün sonuna kadar</button><button class="cip" data-s="kalici">Kaldırılana kadar</button></div>
-      <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>`;
+      <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>
+      <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Yayındaki mesajlar</h2><div class="soluk kucuk">"Kaldır" deyince tahtalardan en geç 20 saniyede kalkar; kimsenin "Okudum"a basması gerekmez.</div><div id="gListe" style="margin-top:8px"></div></div>`;
     let sure = 'gun', ne = 'simdi', resim = null;   // K-415: fotoğraf ve zamanlı gösterim
     if (kapla) {
       $('#ne').onclick = ev => { const b = ev.target.closest('[data-n]'); if (!b) return; ne = b.dataset.n; document.querySelectorAll('#ne .cip').forEach(c => c.classList.toggle('secili', c === b)); $('#gSaat').classList.toggle('gizli', ne !== 'saat'); };
@@ -2253,6 +2254,30 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       };
       $('#gResimSil').onclick = () => { resim = null; $('#gResim').value = ''; $('#gResimOn').classList.add('gizli'); $('#gResimSil').classList.add('gizli'); $('#gResimAd').textContent = 'Seçilmedi'; };
     }
+    // K-416: gönderilen mesajı panelden kaldırma (tahta silinen mesajı kendiliğinden kapatır; her sürümde çalışır)
+    const listeCiz = async () => {
+      const { data, error } = await sb.from('umal_mesajlar').select('id,veri,bitis').eq('tur', 'bilgi');
+      const el = $('#gListe'); if (!el) return;
+      if (error) { el.innerHTML = `<span class="kirmizi kucuk">Liste alınamadı: ${esc(hataYaz(error))}</span>`; return; }
+      const simdi = Date.now();
+      const L = (data || []).filter(r => !r.bitis || new Date(r.bitis).getTime() > simdi).filter(r => !!(r.veri && r.veri.kapla) === !!kapla)
+        .sort((a, b) => ((b.veri && b.veri.zaman) || 0) - ((a.veri && a.veri.zaman) || 0));
+      if (!L.length) { el.innerHTML = '<div class="soluk kucuk">Şu an yayında mesaj yok.</div>'; return; }
+      const saat = t => new Date(t * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+      el.innerHTML = L.map(r => { const v = r.veri || {}, hd = (v.hedef || []).includes('*') ? 'Bütün tahtalar' : (v.hedef || []).join(', ');
+        const bek = v.baslangic && v.baslangic * 1000 > simdi;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--cizgi)"><div style="flex:1;min-width:0"><b>${esc(v.baslik || (v.metin || '').slice(0, 60) || (v.resim ? 'Fotoğraf' : 'Mesaj'))}</b>${v.resim ? ' 📷' : ''}<div class="kucuk soluk">${esc(hd)} · ${bek ? '<span class="turuncu">' + 'saat ' + saat(v.baslangic) + ' olunca çıkacak</span>' : saat(v.zaman || 0) + ' gönderildi'}${r.bitis ? ' · bitiş ' + saat(new Date(r.bitis).getTime() / 1000) : ' · kaldırılana kadar'}</div></div><button class="tehlike" data-sil="${esc(r.id)}">Kaldır</button></div>`; }).join('');
+      el.onclick = async ev => {
+        const b = ev.target.closest('[data-sil]'); if (!b) return; const r = L.find(x => x.id === b.dataset.sil); if (!r) return;
+        if (!confirm('Bu mesaj bütün tahtalardan kaldırılsın mı?')) return;
+        b.disabled = true;
+        const { error: se } = await sb.from('umal_mesajlar').delete().eq('id', r.id);
+        if (se) { b.disabled = false; alert('Kaldırılamadı: ' + hataYaz(se)); return; }
+        if (r.veri && r.veri.resim && r.veri.resim.yol) { try { await sb.storage.from('umal-resim').remove([r.veri.resim.yol]); } catch (e) {} }
+        listeCiz();
+      };
+    };
+    listeCiz();
     if (kapla) $('#gGonder').textContent = 'Tahtalara gönder (ekranı kaplar)';
     $('#hedef').onclick = ev => {
       const b = ev.target.closest('[data-h]'); if (!b) return;
@@ -2292,7 +2317,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'bilgi', veri, bitis: bitis ? new Date(bitis * 1000).toISOString() : null });
       $('#gGonder').disabled = false;
       $('#gBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : (kapla ? `<span class="yeşil">Gönderildi. ${veri.baslangic ? 'Açık tahtalar' + ne_ + ' ekranı kaplar.' : 'Açık tahtalar en geç 20 saniyede ekranı kaplar.'}${veri.resim ? ' Fotoğraf yalnız Pro 63 ve sonrası tahtalarda görünür.' : ''}</span>` : '<span class="yeşil">Gönderildi. Tahtalar dakikada bir alır.</span>');
-      if (!error) { $('#gMetin').value = ''; $('#gBaslik').value = ''; if (kapla) $('#gResimSil').click(); }
+      if (!error) { $('#gMetin').value = ''; $('#gBaslik').value = ''; if (kapla) $('#gResimSil').click();  listeCiz(); }
     };
   }
 
