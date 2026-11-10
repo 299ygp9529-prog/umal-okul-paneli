@@ -471,7 +471,7 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .oz-satir { background: #16243a; border: 1px solid #24364f; border-radius: 12px; }
 .oz-satir > summary { cursor: pointer; list-style: none; } .oz-satir > summary::-webkit-details-marker { display: none; }
 .oz-satir > summary small { display: block; color: #8fa6c4; font-size: 12px; }
-.oz-satir.secili { border-color: #22e8ff; box-shadow: 0 0 10px rgba(34,232,255,.3); }
+.oz-satir.secili { border: 1.5px solid #ff9a3a; background: rgba(40,20,4,.5); box-shadow: 0 0 10px rgba(255,154,58,.35); }
 .oz-satir b { font-size: 17px; } .oz-sinav { color: #c9d6e8; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oz-liste { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px; }
 .oz-ogr { display: inline-flex; align-items: center; gap: 6px; background: var(--koyu); border: 1px solid rgba(255,77,94,.5); color: #fff; border-radius: 10px; padding: 5px 10px; font-weight: 600; cursor: pointer; }
