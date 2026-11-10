@@ -786,7 +786,7 @@ span.tk-gel.neon { color: var(--neon); }
 .tehlike-dolu:disabled { opacity: .45; cursor: not-allowed; }
 /* K-404: analog saat menü uzayınca kaybolmasın (yalnız masaüstü) */
 @media (min-width: 761px) {
-  .yan #menu { flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1d3150 transparent; }
+  .yan #menu { flex: 0 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 6px 8px; margin: -6px -8px; scrollbar-width: thin; scrollbar-color: #1d3150 transparent; }   /* kenar boşluğu: seçili öğenin neon çerçevesi kesilmesin */
   .yan .menu-oge { padding: 7px 12px; margin-bottom: 2px; }
   .saat-kutu { flex: 1 0 auto; min-height: 190px; padding: 10px 0; gap: 6px; }
 }
