@@ -910,6 +910,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslikAdi)}</title><style>${RAPOR_CSS}${yatay ? '@page { size: A4 landscape; margin: 0; }' : ''}</style></head><body class="${yatay ? 'yatay' : ''}">
       <table class="duzen"><thead><tr><td><div class="ust-bosluk"></div></td></tr></thead><tbody><tr><td>${govde.replace(/__LOGO__/g, logo)}</td></tr></tbody><tfoot><tr><td><div class="alt-bosluk"></div></td></tr></tfoot></table>
       <div class="ayak"><span><img src="${logo}" alt="">Ümraniye Merkez Anadolu Lisesi · Okul Yönetim Paneli</span><span>Hazırlanma: ${esc(tarih)}</span></div></body></html>`;
+    belgeOnizle(belge, baslikAdi, yatay);
+  }
+  // K-410: bütün çıktılar aynı yoldan: önizleme penceresi + 🖨 Yazdır / PDF (masaüstü çerçeveyi yazdırır, telefon PDF + Paylaş)
+  function belgeOnizle(belge, baslikAdi, yatay) {
+    if (yatay && !/<body[^>]*class=/.test(belge)) belge = belge.replace('<body', '<body class="yatay"');
     // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
     pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
       <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
@@ -1776,15 +1781,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const Y = nobetYerler(N, ayNo), logo = new URL('okul-logo.png', location.href).href;
     const satir = ['Bahçe', ...NOBET_KAT].map(k => { const n = k === 'Bahçe' ? Math.max(3, ...Y.map(L => L.filter(x => x.yer === 'Bahçe').length)) : 2;
       return Array.from({ length: n }, (_, i) => `<tr>${i ? '' : `<th rowspan="${n}">${esc(k)}</th>`}${Y.map(L => `<td>${esc(baslik((L.filter(z => z.yer === k)[i] || {}).ad || ''))}</td>`).join('')}</tr>`).join(''); }).join('');
-    const w = window.open('', '_blank'); if (!w) { alert('Açılır pencereye izin verin.'); return; }
-    w.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Nöbet çizelgesi · ${esc(ayAdi)}</title><style>
+    const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Nöbet çizelgesi · ${esc(ayAdi)}</title><style>
       @page { size: A4 landscape; margin: 10mm; } body { font: 11pt/1.3 -apple-system, "Segoe UI", Arial, sans-serif; margin: 0; }
       .ust { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; } .ust img { width: 40px; } .ust b { display: block; font-size: 13pt; } .ust span { margin-left: auto; font-weight: 700; }
       table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 2.4mm 2mm; text-align: center; } thead th { background: #eee; } tbody th { background: #f6f6f6; width: 22mm; }
     </style></head><body><div class="ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b>Öğretmen nöbet çizelgesi</div><span>${esc(ayAdi)}</span></div>
       <table><thead><tr><th>Yer</th>${NOBET_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>${satir}</tbody></table>
-      <script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`);
-    w.document.close();
+      <script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`;
+    belgeOnizle(belge.replace(/<script>window\.onload[^<]*<\/script>/, ''), 'Nöbet çizelgesi · ' + ayAdi, true);
   }
 
   // ------------------------------------------------------------------ Kelebek Sistemi (K-380)
@@ -1975,8 +1979,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       sayfalar.push(`<section>${ust(`${s} SINIFI · ÖĞRENCİLER NEREDE SINAVA GİRİYOR`)}<table class="imza kapi"><thead><tr><th>No</th><th>Adı Soyadı</th><th>Ders</th><th>Salon</th><th>Sıra</th></tr></thead><tbody>
         ${L.map(r => `<tr><td>${esc(r.no)}</td><td>${esc(baslik(r.ad))}</td><td>${esc(baslik(r.ders))}</td><td><b>${esc(r.salon)}</b></td><td><b>${r.sira}</b></td></tr>`).join('')}</tbody></table></section>`);
     }
-    const w = window.open('', '_blank'); if (!w) { alert('Açılır pencereye izin verin.'); return; }
-    w.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Kelebek · ${esc(sec.tarih)} ${esc(dersNo)}</title><base href="${location.href.replace(/[^/]*$/, '')}"><style>
+    const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Kelebek · ${esc(sec.tarih)} ${esc(dersNo)}</title><base href="${location.href.replace(/[^/]*$/, '')}"><style>
       @page { size: A4; margin: 10mm; } * { box-sizing: border-box; } body { font: 10pt/1.25 -apple-system, "Segoe UI", Arial, sans-serif; color: #000; margin: 0; }
       section { page-break-after: always; width: 190mm; overflow: hidden; } section:last-child { page-break-after: auto; }
       .b-ust { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 6px; width: 100%; } .b-ust img { width: 34px; }
@@ -1989,8 +1992,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       .kroki { position: relative; height: 220mm; } .kr-masa { position: absolute; display: flex; gap: 1mm; border: 1.2px solid #000; border-radius: 2mm; padding: 1mm; }
       .kr-k { flex: 1; border: 1px dashed #999; border-radius: 1.5mm; padding: 1mm 1.5mm; overflow: hidden; } .kr-k i { font-style: normal; font-weight: 800; font-size: 11pt; } .kr-k b { display: block; font-size: 8.5pt; line-height: 1.15; } .kr-k small { font-size: 7.5pt; }
       .kr-yan { display: flex; justify-content: space-between; font-size: 9pt; font-weight: 700; margin-top: 2mm; }
-    </style></head><body>${sayfalar.join('')}<script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`);
-    w.document.close();
+    </style></head><body>${sayfalar.join('')}<script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`;
+    belgeOnizle(belge.replace(/<script>window\.onload[^<]*<\/script>/, ''), 'Kelebek · ' + sec.tarih + ' ' + dersNo, false);
   }
 
   // ------------------------------------------------------------------ Sınav takvimi (K-379): olacaklar · olanlar (gelmeyen = mazeret adayı) · mazeret sınavları
