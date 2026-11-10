@@ -1706,110 +1706,160 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
   }
 
-  // ------------------------------------------------------------------ Nöbet (K-381)
-  // Her öğretmen haftada 1 gün (yetmezse bazıları yedek), yalnız dersi olan gün. Yerler: Bahçe 3 (serbest), Giriş / 1. / 2. / 3. kat: 1 kadın + 1 erkek.
-  // Gün sabit; her ay yer döner. Ayarlar: umal_ayarlar 'nobet' = { cinsiyet:{ad:'K'|'E'}, muaf:[ad], sabit:{ad:gün}, gunler:{ad:gün}, kayit }.
+  // ------------------------------------------------------------------ Nöbet (K-430)
+  // Okulun resmî haftalık nöbet çizelgesi esas (10.11.2026'dan geçerli). Öğretmenin GÜNÜ hiç değişmez; her ayın ilk iş günü
+  // her öğretmen bir üst yere geçer: Giriş-Kantin → 1. Kat → 2. Kat → 3. Kat → Bahçe → Giriş-Kantin. Nöbetçi müdür yardımcısı dönmez
+  // (okulun tamamından sorumlu). Listede olmayan öğretmen nöbetten muaf. Ayar: umal_ayarlar 'nobet' = { resmi, baslangic, kayit }.
   const NOBET_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-  const NOBET_KAT = ['Giriş', '1. kat', '2. kat', '3. kat'];
-  const nobetAyNo = (t = new Date()) => (t.getFullYear() - 2026) * 12 + t.getMonth() - 8;   // Eylül 2026 = 0
-  function nobetDersGunleri() {   // öğretmen → dersi olan günler
-    const G = {};
-    for (const h of Object.values((D.program || {}).siniflar || {})) for (const [k, c] of Object.entries(h)) {
-      const g = +k.split('-')[0]; if (g > 4) continue; for (const o of c.ogretmen || []) { const a = o.trim(); (G[a] = G[a] || new Set()).add(g); } }
-    return G;
+  const NOBET_DONGU = ['Giriş-Kantin', '1. Kat', '2. Kat', '3. Kat', 'Bahçe'];
+  const NOBET_GORUNUM = ['Bahçe', 'Giriş-Kantin', '1. Kat', '2. Kat', '3. Kat'];
+  const NOBET_RESMI = {
+    baslangic: '2026-11-10',
+    gunler: [
+      { 'Bahçe': ['Serkan YILDIRIM', 'Halil SARSAR'], 'Giriş-Kantin': ['Şenol SÖĞÜT', 'Hünkarer ULUSOY'], '1. Kat': ['Emine GÜLEÇ', 'Nuray YILMAZ'], '2. Kat': ['Faruk CEBBA', 'Mustafa Murat YAMAN'], '3. Kat': ['Yavuz OKUYUCU', 'Hasan UZUN'], my: 'Mürüvvet ACAR' },
+      { 'Bahçe': ['Yeşim Deniz KAYA', 'Fatma KAYA'], 'Giriş-Kantin': ['Bikem Avan ÇELİK', 'Sinem Perihan DEMİRCİ'], '1. Kat': ['Yakut Ertok ALEMDAR', 'Nurhayat ŞAMLIOĞLU'], '2. Kat': ['Zeynep ERKEN', 'Esra EREN'], '3. Kat': ['Büşra ÖZ', 'Mesut DİNDAR'], my: 'Mehmet TATAR' },
+      { 'Bahçe': ['Gamze AVCI', 'Nurullah OCAK'], 'Giriş-Kantin': ['Abdullah AKTOPRAK', 'Murat US'], '1. Kat': ['Yasemin ÇELİK', 'Ahmet Fehmi ÇAM'], '2. Kat': ['Büşra İBRAHİMAĞAOĞLU', 'Doğan KESKİN'], '3. Kat': ['Şirin GÜNDÜZ', 'Ayşe GÖV'], my: 'Mürüvvet ACAR' },
+      { 'Bahçe': ['Cengiz YILDIRIM', 'Ertan ÖZARSLAN'], 'Giriş-Kantin': ['Muhammet BAYSAL', 'Abdullah DÜNDAR'], '1. Kat': ['Gülten ÇAKICI', 'Adnan KARA'], '2. Kat': ['Suat TOSUN', 'Ayfer ÖZEL'], '3. Kat': ['Fatma BİÇER', 'Erdoğan YALÇIN'], my: 'Mehmet TATAR' },
+      { 'Bahçe': ['Medine Fırat EFE', 'Asuman Ezgi ACINAN'], 'Giriş-Kantin': ['Tamer ŞAHİN', 'Gülşen ÇOPUR'], '1. Kat': ['Gülizar KULAKLI', 'Muzaffer ÇELİK'], '2. Kat': ['Betül LÜLECİ', 'Zehra DİKTAŞ'], '3. Kat': ['Sultan KIL', 'Cenk BİBİNOĞLU'], my: 'Özgür CAN' },
+    ],
+  };
+  // Dönemler: her dönem kendi başlangıç çizelgesinden ay ay döner (yeni dönemde nöbet arkadaşları karışabilir; gün yine değişmez).
+  const NOBET_DONEMLER = [NOBET_RESMI, {
+    baslangic: '2026-12-01',
+    gunler: [
+      { 'Bahçe': ['Yavuz OKUYUCU', 'Hasan UZUN'], 'Giriş-Kantin': ['Serkan YILDIRIM', 'Halil SARSAR'], '1. Kat': ['Şenol SÖĞÜT', 'Hünkarer ULUSOY'], '2. Kat': ['Emine GÜLEÇ', 'Nuray YILMAZ'], '3. Kat': ['Faruk CEBBA', 'Mustafa Murat YAMAN'], my: 'Mürüvvet ACAR' },
+      { 'Bahçe': ['Büşra ÖZ', 'Mesut DİNDAR'], 'Giriş-Kantin': ['Yeşim Deniz KAYA', 'Fatma KAYA'], '1. Kat': ['Bikem Avan ÇELİK', 'Sinem Perihan DEMİRCİ'], '2. Kat': ['Yakut Ertok ALEMDAR', 'Nurhayat ŞAMLIOĞLU'], '3. Kat': ['Zeynep ERKEN', 'Esra EREN'], my: 'Mehmet TATAR' },
+      { 'Bahçe': ['Şirin GÜNDÜZ', 'Ayşe GÖV'], 'Giriş-Kantin': ['Gamze AVCI', 'Nurullah OCAK'], '1. Kat': ['Abdullah AKTOPRAK', 'Murat US'], '2. Kat': ['Yasemin ÇELİK', 'Doğan KESKİN'], '3. Kat': ['Büşra İBRAHİMAĞAOĞLU', 'Ahmet Fehmi ÇAM'], my: 'Mürüvvet ACAR' },
+      { 'Bahçe': ['Fatma BİÇER', 'Erdoğan YALÇIN'], 'Giriş-Kantin': ['Cengiz YILDIRIM', 'Ertan ÖZARSLAN'], '1. Kat': ['Muhammet BAYSAL', 'Abdullah DÜNDAR'], '2. Kat': ['Gülten ÇAKICI', 'Adnan KARA'], '3. Kat': ['Suat TOSUN', 'Ayfer ÖZEL'], my: 'Mehmet TATAR' },
+      { 'Bahçe': ['Sultan KIL', 'Cenk BİBİNOĞLU'], 'Giriş-Kantin': ['Medine Fırat EFE', 'Asuman Ezgi ACINAN'], '1. Kat': ['Tamer ŞAHİN', 'Gülşen ÇOPUR'], '2. Kat': ['Gülizar KULAKLI', 'Muzaffer ÇELİK'], '3. Kat': ['Betül LÜLECİ', 'Zehra DİKTAŞ'], my: 'Özgür CAN' },
+    ],
+  }];
+  const RESMI_TATIL = ['01-01', '04-23', '05-01', '05-19', '07-15', '08-30', '10-29'];   // sabit resmî tatiller (ayın ilk iş günü hesabında atlanır)
+  const isGunuMu = d => d.getDay() !== 0 && d.getDay() !== 6 && !RESMI_TATIL.includes(String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+  const nobetResmi = N => (N && N.resmi && Array.isArray(N.resmi.gunler) && N.resmi.gunler.length === 5) ? N.resmi : NOBET_RESMI;
+  const ayKod = t => t.getFullYear()*12 + t.getMonth();
+  function nobetDonemGunler(n) {   // n: Kasım 2026'dan itibaren kaçıncı ay → o ayın gün gün yerleri
+    const ilk = ayKod(new Date(NOBET_RESMI.baslangic + 'T12:00:00')), hedef = ilk + n;
+    let dn = NOBET_DONEMLER[0];
+    for (const d of NOBET_DONEMLER) if (ayKod(new Date(d.baslangic + 'T12:00:00')) <= hedef) dn = d;
+    return nobetAy(dn, hedef - ayKod(new Date(dn.baslangic + 'T12:00:00')));
   }
-  function nobetGunAta(N, dg) {
-    const ogr = Object.keys(dg).filter(a => !(N.muaf || []).includes(a)), cin = N.cinsiyet || {};
-    const karma = t => [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 9973;
-    const ihtiyac = () => Array.from({ length: 5 }, () => ({ K: 4, E: 4, S: 3 }));
-    const I = ihtiyac(), gun = {}, yedek = [];
-    const koy = (a, g) => { const c = cin[a] === 'E' ? 'E' : 'K'; if (I[g][c] > 0) { I[g][c]--; gun[a] = g; return true; } if (I[g].S > 0) { I[g].S--; gun[a] = g; return true; } return false; };
-    for (const [a, g] of Object.entries(N.sabit || {})) if (ogr.includes(a)) koy(a, +g) || yedek.push(a);
-    const kalan = ogr.filter(a => !(a in gun) && !yedek.includes(a)).sort((a, b) => dg[a].size - dg[b].size || karma(a) - karma(b));   // eşitlikte ada göre değil, karışık (alfabe sonu hep yedek kalmasın)
-    for (const a of kalan) {
-      const c = cin[a] === 'E' ? 'E' : 'K';
-      const adaylar = [...dg[a]].sort((x, y) => (I[y][c] * 2 + I[y].S) - (I[x][c] * 2 + I[x].S));
-      if (!adaylar.some(g => koy(a, g))) yedek.push(a);
-    }
-    return { gun, yedek, eksik: I };
+  function nobetAyFark(R, yil, ay) {   // çizelgenin başladığı aydan bu yana kaç ay geçti (değişim: her ayın ilk iş günü)
+    const b = new Date(R.baslangic + 'T12:00:00'); return (yil - b.getFullYear())*12 + ay - b.getMonth();
   }
-  function nobetYerler(N, ay) {   // gün → [{yer, ad}] ; ay ilerledikçe yerler döner
-    const cin = N.cinsiyet || {}, out = [];
-    for (let g = 0; g < 5; g++) {
-      const L = Object.entries(N.gunler || {}).filter(([, x]) => x === g).map(([a]) => a).sort((a, b) => a.localeCompare(b, tr));
-      const don = (A, k) => A.length ? A.map((_, i) => A[(i + k) % A.length]) : A;
-      const K = don(L.filter(a => cin[a] !== 'E'), ay), E = don(L.filter(a => cin[a] === 'E'), ay);
-      const katlar = don(NOBET_KAT.slice(), ay);   // kat sırası da döner
-      const Y = [];
-      katlar.forEach((k, i) => { Y.push({ yer: k, ad: K[i] || '', c: 'K' }); Y.push({ yer: k, ad: E[i] || '', c: 'E' }); });
-      const bahce = [...K.slice(4), ...E.slice(4)];
-      for (let i = 0; i < Math.max(3, bahce.length); i++) Y.push({ yer: 'Bahçe', ad: bahce[i] || '', c: '' });
-      out.push(Y);
-    }
-    return out;
+  function nobetAy(R, n) {   // n: başlangıç ayından itibaren kaçıncı ay → gün gün yerler
+    return R.gunler.map(G => {
+      const Y = Object.fromEntries(NOBET_DONGU.map(y => [y, []]));
+      for (const [yer, adlar] of Object.entries(G)) {
+        const i = NOBET_DONGU.indexOf(yer); if (i < 0) continue;
+        const yeni = NOBET_DONGU[((i + n) % 5 + 5) % 5]; Y[yeni].push(...adlar);
+      }
+      Y.my = G.my || ''; return Y;
+    });
+  }
+  function nobetBugun(N, t = new Date()) {   // bugünün nöbetçileri: [{yer, ad}] (hafta sonu boş)
+    const g = (t.getDay() + 6) % 7; if (g > 4) return [];
+    const R = nobetResmi(N), Y = nobetDonemGunler(nobetAyFark(R, t.getFullYear(), t.getMonth()))[g];
+    return [...NOBET_GORUNUM.flatMap(y => Y[y].map(ad => ({ yer: y, ad }))), ...(Y.my ? [{ yer: 'Nöbetçi Müdür Yardımcısı', ad: Y.my }] : [])];
   }
   async function nobet() {
-    await programYukle();
-    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['nobet', 'nobet_cinsiyet']);
+    const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['nobet']);
     const ayar = k => { const r = (ay || []).find(x => x.anahtar === k); try { return r && r.deger ? JSON.parse(r.deger) : null; } catch (e) { return null; } };
-    let N = ayar('nobet') || {}; N.cinsiyet = { ...(ayar('nobet_cinsiyet') || {}), ...(N.cinsiyet || {}) }; N.muaf = N.muaf || []; N.sabit = N.sabit || {};
-    const dg = nobetDersGunleri(), ogretmenler = Object.keys(dg).sort((a, b) => a.localeCompare(b, tr));
-    let sekme = 'cizelge', ayNo = nobetAyNo(), degisti = false, sonuc = null;
-    const yonetir = D.rol === 'bas' || D.rol === 'yonetici';
-    const ayAd = n => { const d = new Date(2026, 8 + n, 1); return d.toLocaleDateString(tr, { month: 'long', year: 'numeric' }); };
-    const kisaAd = a => baslik(a);
+    const N = ayar('nobet') || {}, R = nobetResmi(N), simdi = new Date();
+    let sekme = 'cizelge', ayIdx = nobetAyFark(R, simdi.getFullYear(), simdi.getMonth());
+    const bas = new Date(R.baslangic + 'T12:00:00');
+    const ayAd = n => new Date(bas.getFullYear(), bas.getMonth() + n, 1).toLocaleDateString(tr, { month: 'long', year: 'numeric' });
+    const ilkIsGunu = n => { const d = new Date(bas.getFullYear(), bas.getMonth() + n, 1); while (!isGunuMu(d)) d.setDate(d.getDate() + 1); return d; };
+    const bugunG = (simdi.getDay() + 6) % 7, buAy = nobetAyFark(R, simdi.getFullYear(), simdi.getMonth());
+    const kisa = a => baslik(a);
     const ciz = () => {
       if (D.bolum !== 'nobet' || !$('#nbIc')) return;
-      const Y = N.gunler ? nobetYerler(N, ayNo) : null, atanan = Object.keys(N.gunler || {}).length;
-      const kural = Y ? Y.flatMap((L, g) => NOBET_KAT.filter(k => { const z = L.filter(x => x.yer === k); return !(z.some(x => x.ad && N.cinsiyet[x.ad] !== 'E') && z.some(x => x.ad && N.cinsiyet[x.ad] === 'E')); }).map(k => `${NOBET_GUN[g]} ${k}`)) : [];
-      $('#nbIc').innerHTML = `<div class="cipler" style="margin-bottom:12px"><button class="cip ${sekme === 'cizelge' ? 'secili' : ''}" data-sk="cizelge">Çizelge</button><button class="cip ${sekme === 'ogretmen' ? 'secili' : ''}" data-sk="ogretmen">Öğretmenler ve kurallar</button></div>
-      ${sekme === 'cizelge' ? `<div class="kart">
-          <div class="nb-ust"><div class="cipler">${[ayNo - 1, ayNo, ayNo + 1].map(n => `<button class="cip ${n === ayNo ? 'secili' : ''}" data-ay="${n}">${esc(ayAd(n))}</button>`).join('')}</div>
-          <div class="dugmeler" style="margin:0">${yonetir ? `<button class="birincil" id="nbOlustur">${N.gunler ? 'Günleri yeniden dağıt' : 'Çizelgeyi oluştur'}</button>${degisti ? '<button class="ikincil" id="nbKaydet">Kaydet</button>' : ''}` : ''}${Y ? '<button class="ikincil" id="nbYazdir">Yazdır</button>' : ''}</div></div>
-          <div class="kucuk" style="margin:8px 0">${Y ? `${atanan} öğretmen nöbetçi${sonuc && sonuc.yedek.length ? ` · <span class="turuncu">yedek: ${sonuc.yedek.map(kisaAd).map(esc).join(', ')}</span>` : ''}${kural.length ? ` · <span class="kirmizi">kadın-erkek kuralı tutmayan: ${esc(kural.join(', '))}</span>` : ' · <span class="yeşil">her katta 1 kadın 1 erkek</span>'}${degisti ? ' · <span class="turuncu">kaydedilmedi</span>' : ''}` : '<span class="soluk">Henüz çizelge yok. "Çizelgeyi oluştur" ile başlayın.</span>'}</div>
-          ${Y ? `<div class="nb-tablo"><div class="nb-bas"></div>${NOBET_GUN.map(g => `<div class="nb-bas">${g}</div>`).join('')}
-            ${['Bahçe', ...NOBET_KAT].map(k => { const n = k === 'Bahçe' ? Math.max(3, ...Y.map(L => L.filter(x => x.yer === 'Bahçe').length)) : 2;
-              return Array.from({ length: n }, (_, i) => `<div class="nb-yer">${i ? '' : esc(k)}</div>${Y.map(L => { const x = L.filter(z => z.yer === k)[i] || {}; const c = x.ad ? N.cinsiyet[x.ad] : '';
-                return `<div class="nb-hucre ${c === 'E' ? 'e' : c === 'K' ? 'k' : ''} ${x.ad ? '' : 'bos'}">${x.ad ? esc(kisaAd(x.ad)) : '—'}</div>`; }).join('')}`).join(''); }).join('')}</div>
-            <div class="soluk kucuk" style="margin-top:8px"><span class="nb-nokta k"></span> kadın · <span class="nb-nokta e"></span> erkek · Gün sabit kalır; her ay kat ve bahçe yerleri döner.</div>` : ''}</div>` :
-      `<div class="kart"><div class="soluk kucuk" style="margin-bottom:10px">Kadın / erkek (adlardan tahmin; dokunarak değiştirin) · Muaf: nöbet tutmaz · Gün: sabit nöbet günü (boşsa sistem seçer, yalnız dersi olan günler)</div>
-        <div class="nb-ogr">${ogretmenler.map(a => { const c = N.cinsiyet[a] || '?', m = N.muaf.includes(a), sb_ = N.sabit[a];
-          return `<div class="nb-o ${m ? 'muaf' : ''}"><b>${esc(kisaAd(a))}</b><span class="soluk kucuk">${N.gunler && a in N.gunler ? NOBET_GUN[N.gunler[a]] : ''}</span>
-            <div class="nb-dg">${yonetir ? `<button class="nb-c ${c === 'K' ? 'k' : c === 'E' ? 'e' : ''}" data-cin="${esc(a)}">${c === 'K' ? 'Kadın' : c === 'E' ? 'Erkek' : '?'}</button>
-              <button class="nb-m ${m ? 'acik' : ''}" data-muaf="${esc(a)}">${m ? 'Muaf' : 'Nöbetçi'}</button>
-              ${[0, 1, 2, 3, 4].map(g => `<button class="nb-g ${sb_ === g ? 'acik' : ''} ${dg[a].has(g) ? '' : 'yok'}" data-sabit="${esc(a)}|${g}" title="${NOBET_GUN[g]}${dg[a].has(g) ? '' : ' · dersi yok'}">${NOBET_GUN[g].slice(0, 3)}</button>`).join('')}` : ''}</div></div>`; }).join('')}</div>
-        ${yonetir && degisti ? '<div class="dugmeler" style="justify-content:flex-start"><button class="birincil" id="nbKaydet">Kaydet</button></div>' : ''}</div>`}`;
+      const Y = nobetDonemGunler(ayIdx);
+      const cipler = [ayIdx - 1, ayIdx, ayIdx + 1, ayIdx + 2].filter(n => n >= 0).map(n => `<button class="cip ${n === ayIdx ? 'secili' : ''}" data-ay="${n}">${esc(ayAd(n))}</button>`).join('');
+      const degisim = ayIdx > 0 ? `${ilkIsGunu(ayIdx).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' })} itibarıyla` : `${bas.toLocaleDateString(tr, { day: 'numeric', month: 'long' })} itibarıyla (resmî çizelge)`;
+      let ic;
+      if (sekme === 'cizelge') {
+        ic = `<div class="nb-tablo2"><div class="nb-bas"></div>${NOBET_GUN.map((g, i) => `<div class="nb-bas ${ayIdx === buAy && i === bugunG ? 'bugun' : ''}">${g}</div>`).join('')}
+          ${NOBET_GORUNUM.map(yer => `<div class="nb-yer">${esc(yer)}</div>${Y.map((L, i) => `<div class="nb-hucre2 ${ayIdx === buAy && i === bugunG ? 'bugun' : ''}">${L[yer].map(a => `<span>${esc(kisa(a))}</span>`).join('') || '<span class="soluk">—</span>'}</div>`).join('')}`).join('')}
+          <div class="nb-yer my">Nöbetçi Müdür Yrd.</div>${Y.map((L, i) => `<div class="nb-hucre2 my ${ayIdx === buAy && i === bugunG ? 'bugun' : ''}"><span>${esc(kisa(L.my))}</span></div>`).join('')}</div>
+          <div class="soluk kucuk" style="margin-top:10px">Gün hiç değişmez. Her ayın ilk iş günü herkes bir üst yere geçer: <b>Giriş-Kantin → 1. Kat → 2. Kat → 3. Kat → Bahçe → Giriş-Kantin</b>. Nöbetçi müdür yardımcısı okulun tamamından sorumludur, dönmez. Listede olmayan öğretmenler muaftır.</div>`;
+      } else {
+        const T = []; R.gunler.forEach((G, g) => { for (const [yer, adlar] of Object.entries(G)) if (yer !== 'my') adlar.forEach(a => T.push({ a, g })); });
+        T.sort((x, y) => x.a.localeCompare(y.a, tr));
+        const aylar = [0, 1, 2, 3, 4].map(k => nobetDonemGunler(ayIdx + k));
+        const yerOf = (t, n) => { const L = aylar[n - ayIdx][t.g]; return NOBET_DONGU.find(y => L[y].includes(t.a)) || '—'; };
+        ic = `<div class="nb-liste"><div class="nb-lb"><span>Öğretmen</span><span>Gün</span>${[0, 1, 2, 3, 4].map(k => `<span>${esc(ayAd(ayIdx + k).split(' ')[0])}</span>`).join('')}</div>
+          ${T.map(t => `<div class="nb-ls"><b>${esc(kisa(t.a))}</b><span>${NOBET_GUN[t.g]}</span>${[0, 1, 2, 3, 4].map(k => `<span class="${k ? '' : 'nb-simdi'}">${esc(yerOf(t, ayIdx + k))}</span>`).join('')}</div>`).join('')}</div>`;
+      }
+      $('#nbIc').innerHTML = `<div class="kart"><div class="nb-ust"><div class="cipler"><button class="cip ${sekme === 'cizelge' ? 'secili' : ''}" data-sk="cizelge">Çizelge</button><button class="cip ${sekme === 'ogretmen' ? 'secili' : ''}" data-sk="ogretmen">Öğretmenler</button></div>
+          <div class="cipler">${cipler}</div><div class="dugmeler" style="margin:0"><button class="ikincil" id="nbYazdir">Yazdır</button></div></div>
+        <div class="kucuk" style="margin:6px 0 10px"><b class="turuncu">${esc(ayAd(ayIdx))}</b> · ${esc(degisim)}</div>${ic}</div>`;
     };
-    const kaydet = async () => {
-      const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'nobet', deger: JSON.stringify({ ...N, kayit: Math.floor(Date.now() / 1000), kim: D.eposta }) }, { onConflict: 'anahtar' });
-      if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } degisti = false; ciz();
-    };
-    $('#icerik').innerHTML = `<div class="ust"><h1>Nöbet</h1><span class="soluk kucuk" style="align-self:center">Bahçe 3 kişi · Giriş, 1., 2., 3. kat: 1 kadın + 1 erkek · hafta içi 5 gün</span></div><div id="nbIc"></div>`;
-    $('#nbIc').onclick = async ev => {
+    $('#icerik').innerHTML = `<div class="ust"><h1>Nöbet</h1><span class="soluk kucuk" style="align-self:center">Resmî çizelge · gün sabit · yer her ay bir üst kata</span></div><div id="nbIc"></div>`;
+    $('#nbIc').onclick = ev => {
       const t = ev.target, d = x => t.closest(`[data-${x}]`);
       if (d('sk')) { sekme = d('sk').dataset.sk; ciz(); return; }
-      if (d('ay')) { ayNo = +d('ay').dataset.ay; ciz(); return; }
-      if (d('cin')) { const a = d('cin').dataset.cin; N.cinsiyet[a] = N.cinsiyet[a] === 'K' ? 'E' : 'K'; degisti = true; ciz(); return; }
-      if (d('muaf')) { const a = d('muaf').dataset.muaf; N.muaf = N.muaf.includes(a) ? N.muaf.filter(x => x !== a) : [...N.muaf, a]; degisti = true; ciz(); return; }
-      if (d('sabit')) { const [a, g] = d('sabit').dataset.sabit.split('|'); if (N.sabit[a] === +g) delete N.sabit[a]; else N.sabit[a] = +g; degisti = true; ciz(); return; }
-      if (t.id === 'nbOlustur') { if (N.gunler && !confirm('Öğretmenlerin nöbet günleri yeniden dağıtılacak. Emin misiniz?')) return; sonuc = nobetGunAta(N, dg); N.gunler = sonuc.gun; degisti = true; ciz(); return; }
-      if (t.id === 'nbKaydet') { await kaydet(); return; }
-      if (t.id === 'nbYazdir') { nobetYazdir(N, ayNo, ayAd(ayNo)); }
+      if (d('ay')) { ayIdx = +d('ay').dataset.ay; ciz(); return; }
+      if (t.id === 'nbYazdir') nobetYazdir(ayIdx, ayAd(ayIdx));
     };
     ciz();
   }
-  function nobetYazdir(N, ayNo, ayAdi) {
-    const Y = nobetYerler(N, ayNo), logo = new URL('okul-logo.png', location.href).href;
-    const satir = ['Bahçe', ...NOBET_KAT].map(k => { const n = k === 'Bahçe' ? Math.max(3, ...Y.map(L => L.filter(x => x.yer === 'Bahçe').length)) : 2;
-      return Array.from({ length: n }, (_, i) => `<tr>${i ? '' : `<th rowspan="${n}">${esc(k)}</th>`}${Y.map(L => `<td>${esc(baslik((L.filter(z => z.yer === k)[i] || {}).ad || ''))}</td>`).join('')}</tr>`).join(''); }).join('');
-    const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Nöbet çizelgesi · ${esc(ayAdi)}</title><style>
-      @page { size: A4 landscape; margin: 10mm; } body { font: 11pt/1.3 -apple-system, "Segoe UI", Arial, sans-serif; margin: 0; }
-      .ust { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; } .ust img { width: 40px; } .ust b { display: block; font-size: 13pt; } .ust span { margin-left: auto; font-weight: 700; }
-      table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 2.4mm 2mm; text-align: center; } thead th { background: #eee; } tbody th { background: #f6f6f6; width: 22mm; }
-    </style></head><body><div class="ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b>Öğretmen nöbet çizelgesi</div><span>${esc(ayAdi)}</span></div>
-      <table><thead><tr><th>Yer</th>${NOBET_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>${satir}</tbody></table>
-      <script>window.onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`;
-    belgeOnizle(belge.replace(/<script>window\.onload[^<]*<\/script>/, ''), 'Nöbet çizelgesi · ' + ayAdi, true);
+  function nobetYazdir(n, ayAdi, sadeceBelge) {
+    const Y = nobetDonemGunler(n), logo = new URL('okul-logo.png', location.href).href;
+    const bas = new Date(NOBET_RESMI.baslangic + 'T12:00:00'), ay0 = new Date(bas.getFullYear(), bas.getMonth() + n, 1);
+    const ilk = new Date(ay0); while (!isGunuMu(ilk)) ilk.setDate(ilk.getDate() + 1);
+    const gecer = n === 0 ? bas : ilk, gecerYazi = gecer.toLocaleDateString(tr, { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const sonraki = new Date(bas.getFullYear(), bas.getMonth() + n + 1, 1); while (!isGunuMu(sonraki)) sonraki.setDate(sonraki.getDate() + 1);
+    const ad = a => esc(baslik(a || ''));
+    const satir = NOBET_GORUNUM.map(yer => `<tr><th><span>${esc(yer)}</span></th>${Y.map(L => `<td>${L[yer].map(a => `<div>${ad(a)}</div>`).join('')}</td>`).join('')}</tr>`).join('')
+      + `<tr class="my"><th><span>Nöbetçi Müdür<br>Yardımcısı</span></th>${Y.map(L => `<td><div>${ad(L.my)}</div></td>`).join('')}</tr>`;
+    const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Nöbet Çizelgesi · ${esc(ayAdi)}</title><style>
+      @page { size: A4 landscape; margin: 8mm 9mm; }
+      * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { margin: 0; background: #fff; }
+      body { font: 9.6pt/1.28 "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif; color: #0b1a33; }
+      .sayfa { width: 100%; height: 186mm; display: flex; flex-direction: column; gap: 2.6mm; page-break-after: avoid; break-after: avoid; }
+      .sayfa > .dip { margin-top: auto; }
+      .bas { position: relative; display: flex; align-items: center; gap: 5mm; padding: 3.2mm 5mm; border-radius: 4mm; color: #fff;
+             background: linear-gradient(115deg, #0b1f45 0%, #13306a 58%, #0f6f8f 100%); overflow: hidden; }
+      .bas::after { content: ""; position: absolute; right: -14mm; top: -20mm; width: 70mm; height: 70mm; border-radius: 50%; border: 1.2mm solid rgba(34,232,255,.25); }
+      .bas img { width: 19mm; height: 19mm; border-radius: 50%; background: #fff; padding: .6mm; position: relative; z-index: 1; }
+      .bas .k { line-height: 1.25; z-index: 1; } .bas .k small { display: block; font-size: 8.3pt; letter-spacing: .6pt; opacity: .85; }
+      .bas .k b { display: block; font-size: 13.5pt; letter-spacing: .5pt; } .bas .k i { display: block; font-style: normal; font-size: 17pt; font-weight: 800; color: #7ff6ff; letter-spacing: 1.2pt; margin-top: .6mm; }
+      .bas .ay { margin-left: auto; text-align: right; z-index: 1; } .bas .ay b { display: block; font-size: 17pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1pt; }
+      .bas .ay span { display: inline-block; margin-top: 1mm; padding: .7mm 3mm; border-radius: 10mm; background: #22e8ff; color: #06202b; font-weight: 700; font-size: 8.6pt; }
+      table { width: 100%; border-collapse: separate; border-spacing: 1mm; table-layout: fixed; }
+      thead th { background: #13306a; color: #fff; font-size: 10.5pt; letter-spacing: .6pt; padding: 1.8mm 0; border-radius: 2mm; }
+      thead th:first-child { background: none; }
+      tbody th { width: 31mm; background: #e9f7fb; border-left: 1.4mm solid #22a9c9; border-radius: 2mm; text-align: left; padding: 0 2.6mm; font-size: 10pt; color: #0b1f45; }
+      tbody td { background: #f5f8fc; border: .3mm solid #d4deea; border-radius: 2mm; text-align: center; font-size: 11pt !important; padding: 1.2mm 1mm; height: 18.5mm; vertical-align: middle; font-size: 10pt; font-weight: 600; }
+      tbody td div + div { margin-top: .8mm; }
+      tbody tr.my th { background: #fff1e4; border-left-color: #ff9a3a; color: #7a3b00; font-size: 9pt; line-height: 1.15; }
+      tbody tr.my td { background: #fff7ef; border-color: #ffd3a8; height: 11mm; color: #7a3b00; }
+      .alt { display: grid; grid-template-columns: 1fr 82mm; gap: 4mm; }
+      .kutu { border: .35mm solid #c9d6e6; border-radius: 3mm; padding: 2.4mm 3.6mm; position: relative; }
+      .kutu h3 { margin: 0 0 1.2mm; font-size: 9.6pt; letter-spacing: 1pt; color: #13306a; text-transform: uppercase; }
+            .don { display: flex; flex-direction: column; gap: 1.6mm; }
+      .zincir { display: flex; flex-wrap: wrap; align-items: center; gap: 1mm; font-size: 8pt; font-weight: 700; }
+      .zincir span { padding: .6mm 1.8mm; border-radius: 8mm; background: #e9f7fb; border: .3mm solid #9fdcec; color: #0b1f45; } .zincir em { font-style: normal; color: #22a9c9; }
+      .don p { margin: 0; font-size: 8.6pt; line-height: 1.35; color: #33435c; }
+      .imza { display: flex; justify-content: space-around; align-items: flex-end; font-size: 8.8pt; }
+      .imza div { text-align: center; } .imza div i { display: block; width: 30mm; border-top: .3mm solid #0b1a33; margin-top: 7mm; font-style: normal; padding-top: .8mm; }
+      .dip { display: flex; justify-content: space-between; font-size: 7.4pt; color: #6b7c94; }
+    </style></head><body><div class="sayfa">
+      <div class="bas"><img src="${logo}" alt=""><div class="k"><small>T.C. İSTANBUL VALİLİĞİ · İL MİLLÎ EĞİTİM MÜDÜRLÜĞÜ</small><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><i>HAFTALIK NÖBET ÇİZELGESİ</i></div>
+        <div class="ay"><b>${esc(ayAdi)}</b><span>${esc(gecerYazi)} tarihinden itibaren geçerlidir</span></div></div>
+      <table><thead><tr><th></th>${NOBET_GUN.map(g => `<th>${g.toLocaleUpperCase(tr)}</th>`).join('')}</tr></thead><tbody>${satir}</tbody></table>
+      <div class="alt">
+        <div class="kutu don"><h3>Nöbet düzeni</h3>
+          <div class="zincir"><span>Giriş-Kantin</span><em>›</em><span>1. Kat</span><em>›</em><span>2. Kat</span><em>›</em><span>3. Kat</span><em>›</em><span>Bahçe</span><em>›</em><span>Giriş-Kantin</span></div>
+          <p>Nöbet günü değişmez. Her ayın ilk iş günü nöbet yeri bir üst kata geçer; Bahçe'den sonra Giriş-Kantin'e dönülür. Sonraki değişim: <b>${esc(sonraki.toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }))}</b>. Nöbetçi müdür yardımcısı okulun tamamından sorumludur.</p></div>
+        <div class="kutu imza"><div>Nöbetçi Müdür Yrd.<i>İmza</i></div><div>Okul Müdürü<i>İmza</i></div></div>
+      </div>
+      <div class="dip"><span>Ümraniye Merkez Anadolu Lisesi · Nöbet Çizelgesi</span><span>Hazırlanma: ${esc(new Date().toLocaleDateString(tr, { day: '2-digit', month: '2-digit', year: 'numeric' }))}</span></div>
+    </div></body></html>`;
+    if (sadeceBelge) return belge;
+    belgeOnizle(belge, 'Nöbet çizelgesi · ' + ayAdi, true);
   }
 
   // ------------------------------------------------------------------ Kelebek Sistemi (K-380)
@@ -1916,7 +1966,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const gozcuOner = s => { const [g, n] = gunNo(); const h = (((D.program || {}).siniflar || {})[s] || {})[`${g}-${n}`]; return h && h.ogretmen && h.ogretmen.length ? h.ogretmen.map(baslik).join(', ') : ''; };
     const dersKisa = d => kisaDers(baslik(d || ''));
     const nobetN = ayar('nobet') || {};
-    const nobetciler = () => { if (!sec || !nobetN.gunler) return []; const g = gunNo()[0]; return Object.entries(nobetN.gunler).filter(([, x]) => x === g).map(([a]) => baslik(a)).sort((a, b) => a.localeCompare(b, tr)); };
+    const nobetciler = () => { if (!sec) return []; return nobetBugun(nobetN, new Date(sec.tarih + 'T12:00:00')).filter(x => !x.yer.startsWith('Nöbetçi Müdür')).map(x => baslik(x.ad)).sort((a, b) => a.localeCompare(b, tr)); };
     const ciz = () => {
       if (D.bolum !== 'kelebek' || !$('#kbIc')) return;
       const kat = sec ? katilanlar() : [], salonlar = tumSalon.filter(s => !kapali.has(s)), yerSay = salonlar.reduce((t, s) => t + (KELEBEK_KAP[s] || 40), 0);
