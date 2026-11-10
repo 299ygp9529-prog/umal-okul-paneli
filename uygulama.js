@@ -1884,7 +1884,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const bep = Object.fromEntries((ayar('bep') || []).map(b => [String(b.no), b]));
     const sinavlar = (tk.subeler || []).filter(s => s.tarih >= bugunISO()).sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
     const tumSalon = Object.keys((D.program || {}).siniflar || {}).filter(s => /^\d+-[A-ZÇĞİÖŞÜ]$/.test(s)).sort(sinifSira);
-    let sec = sinavlar[0] || null, plan = null, acikSalon = null, kapali = new Set(['12-I']), tohum = 1;
+    let sec = sinavlar[0] || null, plan = null, acikSalon = null, kapali = new Set(), tohum = 1;
     const anahtar = s => `kelebek_${s.tarih}_${parseInt(s.ders, 10)}`;
     const yukleTaslak = () => { plan = sec ? ayar(anahtar(sec)) : null; if (plan && plan.kapali) kapali = new Set(plan.kapali); };
     const katilanlar = () => { const L = [];
