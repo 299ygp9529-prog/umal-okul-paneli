@@ -814,3 +814,17 @@ span.tk-gel.neon { color: var(--neon); }
   .tk-s3 .tk-cip { font-size: 10.5px; } .tk-s3 .tk-cip b { font-size: 10px; } .tk-s3 .tk-gun { padding: 3px 0; gap: 6px; } .tk-s3 .tk-ozet b { font-size: 17px; }
 }
 @media (min-width: 761px) { .tk-iki + .kart { margin-top: 8px; } }
+/* K-409: Sınav merkezi salonları seviye seviye (Rehberlik/Proje düzeniyle aynı) */
+.salonlar.sm-gruplu { display: flex; flex-direction: column; gap: 8px; }
+.sm-satir { align-items: center; margin: 0; }
+.sm-ic { display: flex; flex-direction: column; gap: 8px; }
+.sm-satir { grid-template-columns: 84px 1fr; }
+.sm-kutular { min-width: 0; display: grid; grid-template-columns: repeat(var(--kol, 8), minmax(0, 1fr)); gap: 8px; }
+.sm-kutular .salon { min-width: 0; } .sm-kutular .salon .s-durum { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; }
+@media (max-width: 760px) { .sm-satir { grid-template-columns: 1fr; } .sm-kutular { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 761px) { .sm-kutular .salon { padding: 7px 10px 9px; } .sm-kutular .salon .s-durum { padding-top: 4px; } .sm-kutular .salon .s-ust b { font-size: 19px; } }
+@media (min-width: 761px) { .sm-sikisik .sm-ic, .sm-sikisik .sm-kutular { gap: 6px; } .sm-sikisik #gunOzet { margin-top: 0; } }
+/* K-409: Kelebek salon seçimi seviye renkli */
+.sv-grup { margin: 4px 0; }
+.kb-svcip .cip { border-color: color-mix(in srgb, var(--sv) 55%, transparent); color: var(--sv); background: transparent; }
+.kb-svcip .cip.secili { background: var(--sv); color: #04202a; border-color: var(--sv); box-shadow: 0 0 8px color-mix(in srgb, var(--sv) 45%, transparent); }

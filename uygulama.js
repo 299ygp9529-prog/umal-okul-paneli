@@ -352,6 +352,11 @@
     return { sira: parseInt(r.sira, 10) || 0, no: String(r.no ?? ''), ad: r.ad || '', sinif: r.sinif || '', ders: r.ders || '' };
   }
   // ---- Sınav merkezi: Atlas öğretmenler odası "karargâh" görünümü (K-336)
+  // K-409: sınıf düzeyine göre satırlar (Rehberlik / Proje / Sınav merkezi ile aynı düzen)
+  function seviyeGrupla(adlar, ic) {
+    const G = {}; adlar.forEach(x => { const m = /^(\d+)-/.exec(x), k = m ? m[1] : 'diger'; (G[k] = G[k] || []).push(x); });
+    return ['9', '10', '11', '12', 'diger'].filter(k => G[k]).map(k => `<div class="pj-satir sv-grup" style="--sv:${SEVIYE_RENK[k] || '#9fb3cc'}"><div class="pj-duzey">${k === 'diger' ? 'Diğer' : k + '. Sınıflar'}</div><div style="min-width:0">${ic(G[k])}</div></div>`).join('');
+  }
   const SEVIYE_RENK = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
   const seviye = s => { const m = /^(\d+)/.exec(String(s || '')); return m ? m[1] : ''; };
   const seviyeRenk = s => SEVIYE_RENK[seviye(s)] || '#5cc8ff';
@@ -603,8 +608,9 @@
           <div><span>Gelmeyen</span><b class="kirmizi">${gelmeyen}</b></div>
           <div><span>Yoklama gelmeyen</span><b class="turuncu">${bekleyen == null ? '—' : bekleyen}</b></div>
           <div><span>Yoklama</span><b class="turuncu">${st.acik ? 'açık' : st.basladi ? 'kapandı' : '—'}</b></div></div>
-        ${seviyeAciklama()}
-        <div class="salonlar">${salonlar.map(x => {
+        <div class="salonlar sm-gruplu">${(() => { const G = {}; salonlar.forEach(x => { const m = /^(\d+)-/.exec(x), k = m ? m[1] : 'diger'; (G[k] = G[k] || []).push(x); });   // K-409: salonlar seviye seviye
+          const kol = Math.min(10, Math.max(4, ...Object.values(G).map(g => g.length)));
+          return `<div class="sm-ic" style="--kol:${kol}">` + ['9', '10', '11', '12', 'diger'].filter(k => G[k]).map(k => `<div class="pj-satir sm-satir" style="--sv:${SEVIYE_RENK[k] || '#9fb3cc'}"><div class="pj-duzey">${k === 'diger' ? 'Diğer' : k + '. Sınıflar'}</div><div class="sm-kutular">${G[k].map(x => {
           const v = yok[x], L = (secili.salonlar[x] || []).map(siraKaydi), d = salonDurumu(v, st, L.length), kg = kagitDurumu(v);
           const msj = ((v || {}).mesajlar || []).filter(m => m.tur !== 'geldi').length;
           const yeni = acikBildirimler(v).filter(m => !gordum.has(bildirimKimlik(x, m)));
@@ -612,7 +618,7 @@
           return `<button class="salon ${d.sinif} ${yeni.length ? 'uyari' : ''}" data-salon="${esc(x)}"><div class="s-ust"><b>${esc(x)}</b>${msj ? `<span class="zarf">✉ ${msj}</span>` : `<span class="soluk">${L.length} öğr.</span>`}</div>
             <div class="s-gozcu">${esc(baslik(gozcuAdi(secili, x) || '—'))}</div>${kg ? `<div class="s-kagit">${esc(kg)}</div>` : ''}${yeni.length ? `<span class="gordum" data-gordum="${esc(x)}">✓ Gördüm</span>` : ''}
             <div class="s-durum">${esc(d.yazi)}</div>${seviyeSeridi(L)}</button>`;
-        }).join('')}</div>`;
+        }).join('')}</div></div>`).join('') + '</div>'; })()}</div>`;
       gunOzeti();
       if (sesCal && ilkCizimBitti) uyariSesi();
       ilkCizimBitti = true;
@@ -671,7 +677,7 @@
       sl.style.removeProperty('--sh'); sl.style.removeProperty('--sw'); sl.classList.remove('sikisik'); $('#icerik').classList.remove('sm-sikisik');
       if (window.innerWidth <= 760 || !fazla()) return;
       sl.classList.add('sikisik'); $('#icerik').classList.add('sm-sikisik');
-      for (const w of [160, 148, 136, 124]) { sl.style.setProperty('--sw', w + 'px'); if (!fazla()) return; }   // önce sütun sayısını artır
+         // önce sütun sayısını artır
       for (let h = 120; h >= 64 && fazla(); h -= 6) sl.style.setProperty('--sh', h + 'px');
     };
     if (D._smGozcu) D._smGozcu.disconnect();
@@ -1896,14 +1902,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="kart"><div class="kb-adim"><b>1</b> Sınav</div><div class="cipler">${sinavlar.length ? sinavlar.map((s, i) => `<button class="cip ${s === sec ? 'secili' : ''}" data-sn="${i}">${esc(new Date(s.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' }))} · ${esc(/ders/i.test(s.ders) ? s.ders : s.ders + '. Ders')}</button>`).join('') : '<span class="soluk">Takvimde yaklaşan sınav yok.</span>'}</div>
           ${sec ? `<div class="kb-dersler">${Object.entries(dersler).sort((a, b) => b[1] - a[1]).map(([d, n]) => `<span class="tk-cip" style="--sv:#5cc8ff"><b>${n}</b>${esc(d)}</span>`).join('')}</div>` : ''}</div>
         ${sec ? `<div class="kart"><div class="kb-adim"><b>2</b> Salonlar <span class="soluk kucuk">· dokunarak çıkarın / ekleyin · ${kat.length} öğrenci, ${yerSay} yer${yerSay < kat.length ? ' · <span class="kirmizi">yer yetmiyor</span>' : ''}</span></div>
-          <div class="cipler">${tumSalon.map(s => `<button class="cip ${kapali.has(s) ? '' : 'secili'}" data-sal="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+          ${seviyeGrupla(tumSalon, L => `<div class="cipler kb-svcip">${L.map(s => `<button class="cip ${kapali.has(s) ? '' : 'secili'}" data-sal="${esc(s)}">${esc(s)}</button>`).join('')}</div>`)}
           <div class="dugmeler" style="justify-content:flex-start;margin-top:12px"><button class="birincil" id="kbYerlestir">${plan ? 'Yeniden yerleştir' : 'Yerleştir'}</button>${plan ? '<button class="ikincil" id="kbKaydet">Kaydet</button><button class="ikincil" id="kbYazdir">Kâğıtları yazdır</button><button class="ikincil" disabled title="Atlas planı veritabanından okuyunca açılacak">Tahtalara yayınla · yakında</button>' : ''}</div>
           <div class="kucuk" id="kbBilgi" style="margin-top:8px">${plan ? `<span class="${plan.yan ? 'kirmizi' : 'yeşil'}">Yan yana aynı ders: ${plan.yan}</span> · <span class="${plan.arka ? 'turuncu' : 'yeşil'}">Arka arkaya aynı ders: ${plan.arka}</span> · ${Object.keys(sal).length} salon${bepSay ? ` · <span class="soluk">◆ BEP ${bepSay} (yalnız bu ekranda)</span>` : ''}${plan.kayit ? ` · <span class="soluk">kaydedildi ${esc(new Date(plan.kayit * 1000).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</span>` : ' · <span class="turuncu">kaydedilmedi</span>'}` : ''}</div></div>` : ''}
         ${plan ? `<div class="kart"><div class="kb-adim"><b>3</b> Salonlar ve gözcüler <span class="soluk kucuk">· salona dokunun: oturma planı</span></div>
-          <div class="kb-salonlar">${Object.keys(sal).sort(sinifSira).map(s => { const L = sal[s], g = (plan.gozcu || {})[s] || '', dd = {}; L.forEach(r => { const k = `${dersKisa(r.ders)} ${seviye(r.sinif)}`; dd[k] = (dd[k] || 0) + 1; });
+          ${seviyeGrupla(Object.keys(sal).sort(sinifSira), G => `<div class="kb-salonlar">${G.map(s => { const L = sal[s], g = (plan.gozcu || {})[s] || '', dd = {}; L.forEach(r => { const k = `${dersKisa(r.ders)} ${seviye(r.sinif)}`; dd[k] = (dd[k] || 0) + 1; });
             return `<div class="kb-salon ${acikSalon === s ? 'acik' : ''}" style="--sv:${seviyeRenk(s)}"><button class="kb-ust" data-ac="${esc(s)}"><b>${esc(s)}</b><span>${L.length} öğr.</span></button>
               <div class="kb-dd">${Object.entries(dd).sort().map(([d, n]) => `${esc(d)}: ${n}`).join(' · ')}</div>
-              <input class="kb-goz ${g ? '' : 'bos'}" data-goz="${esc(s)}" value="${esc(g)}" list="kbNobet" placeholder="Gözcü seçin (nöbetçi)"></div>`; }).join('')}</div>
+              <input class="kb-goz ${g ? '' : 'bos'}" data-goz="${esc(s)}" value="${esc(g)}" list="kbNobet" placeholder="Gözcü seçin (nöbetçi)"></div>`; }).join('')}</div>`)}
           <datalist id="kbNobet">${nobetciler().map(a => `<option value="${esc(a)}">`).join('')}</datalist>
           ${acikSalon && sal[acikSalon] ? `<div class="kb-plan"><h2 style="margin:12px 0 8px">${esc(acikSalon)} salonu · ${esc((plan.gozcu || {})[acikSalon] || 'gözcü yok')}</h2>${oturmaPlani(acikSalon, sal[acikSalon].map(r => ({ ...r, ek: dersKisa(r.ders) + (bep[r.no] ? ' ◆' : '') })), new Set())}</div>` : ''}</div>` : ''}`;
       if (acikSalon) { planiSigdir(); fotolariYukle((sal[acikSalon] || []).map(r => r.no)); }
