@@ -2233,9 +2233,26 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
+      ${kapla ? `<h2>Fotoğraf (isteğe bağlı)</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><label class="ikincil" style="cursor:pointer">📷 Fotoğraf seç<input type="file" id="gResim" accept="image/*" hidden></label><span class="kucuk soluk" id="gResimAd">Seçilmedi</span><button class="bag gizli" id="gResimSil">Kaldır</button></div><img id="gResimOn" class="gizli" style="max-height:140px;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--cizgi)">
+      <h2>Ne zaman</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><div class="cipler" id="ne" style="margin:0"><button class="cip secili" data-n="simdi">Hemen</button><button class="cip" data-n="saat">Saatinde</button></div><input type="time" id="gSaat" value="09:05" class="gizli" style="width:auto"><span class="kucuk turuncu" id="gSaatBilgi">Saatinde gösterim ve fotoğraf Pro 63 tahtalarda; eski sürümdeki tahta mesajı hemen gösterir.</span></div>` : ''}
       <h2>Ne kadar görünsün</h2><div class="cipler" id="sure"><button class="cip" data-s="ders">Bu ders</button><button class="cip secili" data-s="gun">Gün sonuna kadar</button><button class="cip" data-s="kalici">Kaldırılana kadar</button></div>
       <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>`;
-    let sure = 'gun';
+    let sure = 'gun', ne = 'simdi', resim = null;   // K-415: fotoğraf ve zamanlı gösterim
+    if (kapla) {
+      $('#ne').onclick = ev => { const b = ev.target.closest('[data-n]'); if (!b) return; ne = b.dataset.n; document.querySelectorAll('#ne .cip').forEach(c => c.classList.toggle('secili', c === b)); $('#gSaat').classList.toggle('gizli', ne !== 'saat'); };
+      $('#gResim').onchange = async () => {
+        const f = $('#gResim').files[0]; if (!f) return;
+        $('#gResimAd').textContent = 'Hazırlanıyor…';
+        try {
+          const bmp = await createImageBitmap(f), s_ = Math.min(1, 1920 / Math.max(bmp.width, bmp.height));
+          const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s_); c.height = Math.round(bmp.height * s_); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+          resim = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.88));
+          $('#gResimOn').src = URL.createObjectURL(resim); $('#gResimOn').classList.remove('gizli'); $('#gResimSil').classList.remove('gizli');
+          $('#gResimAd').textContent = `${f.name} · ${Math.round(resim.size / 1024)} KB`;
+        } catch (e) { resim = null; $('#gResimAd').textContent = 'Fotoğraf okunamadı'; }
+      };
+      $('#gResimSil').onclick = () => { resim = null; $('#gResim').value = ''; $('#gResimOn').classList.add('gizli'); $('#gResimSil').classList.add('gizli'); $('#gResimAd').textContent = 'Seçilmedi'; };
+    }
     if (kapla) $('#gGonder').textContent = 'Tahtalara gönder (ekranı kaplar)';
     $('#hedef').onclick = ev => {
       const b = ev.target.closest('[data-h]'); if (!b) return;
@@ -2246,21 +2263,36 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#sure').onclick = ev => { const b = ev.target.closest('[data-s]'); if (!b) return; sure = b.dataset.s; document.querySelectorAll('#sure .cip').forEach(c => c.classList.toggle('secili', c === b)); };
     $('#gGonder').onclick = async () => {
       const metin = $('#gMetin').value.trim().slice(0, 2000), bas = $('#gBaslik').value.trim().slice(0, 120);
-      if (!metin) { $('#gBilgi').textContent = 'Mesajı yazın.'; return; }
+      if (!metin && !resim && !bas) { $('#gBilgi').textContent = 'Mesajı yazın ya da fotoğraf seçin.'; return; }
       const simdi = Math.floor(Date.now() / 1000);
       const gs = new Date(); gs.setHours(23, 59, 59, 0);
       const bitis = sure === 'ders' ? simdi + 40 * 60 : sure === 'gun' ? Math.floor(gs.getTime() / 1000) : 0;
       const id = new Date().toISOString().replace(/\D/g, '').slice(2, 14) + '-' + Math.random().toString(16).slice(2, 6);
       const veri = { id, tur: 'bilgi', baslik: bas, metin, hedef: [...hedef], zaman: simdi, bitis };
+      let ne_ = '';
       if (kapla) {
         veri.kapla = true;   // K-341: Atlas Pro 40+ tahtayı kaplar; eskiler şerit gösterir
-        if (!confirm(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'} ekranı kaplayacak. Gönderilsin mi?`)) return;
+        if (ne === 'saat') {
+          const [hh, mm] = ($('#gSaat').value || '').split(':').map(Number); if (isNaN(hh)) { $('#gBilgi').textContent = 'Saati seçin.'; return; }
+          const t = new Date(); t.setHours(hh, mm, 0, 0); if (t.getTime() < Date.now() - 60000) t.setDate(t.getDate() + 1);
+          veri.baslangic = Math.floor(t.getTime() / 1000); ne_ = ` ${t.toLocaleDateString(tr, { day: 'numeric', month: 'long' })} saat ${$('#gSaat').value.replace(':', '.')} olunca`;
+          if (veri.bitis && veri.bitis < veri.baslangic + 600) veri.bitis = veri.baslangic + (sure === 'ders' ? 40 * 60 : 12 * 3600);
+        }
+        if (!confirm(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'}${ne_} ekranı kaplayacak${resim ? ' (fotoğraflı)' : ''}. Gönderilsin mi?`)) return;
       }
       $('#gGonder').disabled = true;
+      if (resim) {
+        $('#gBilgi').textContent = 'Fotoğraf yükleniyor…';
+        const yol = 'acil/' + id + '.jpg', buf = await resim.arrayBuffer();
+        const sha = [...new Uint8Array(await crypto.subtle.digest('SHA-256', buf))].map(b => b.toString(16).padStart(2, '0')).join('');
+        const { error: ye } = await sb.storage.from('umal-resim').upload(yol, resim, { contentType: 'image/jpeg', upsert: true });
+        if (ye) { $('#gGonder').disabled = false; $('#gBilgi').innerHTML = `<span class="kirmizi">Fotoğraf yüklenemedi: ${esc(hataYaz(ye))}</span>`; return; }
+        veri.resim = { yol, sha256: sha, boyut: buf.byteLength };
+      }
       const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'bilgi', veri, bitis: bitis ? new Date(bitis * 1000).toISOString() : null });
       $('#gGonder').disabled = false;
-      $('#gBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : (kapla ? '<span class="yeşil">Gönderildi. Açık tahtalar en geç 20 saniyede ekranı kaplar.</span>' : '<span class="yeşil">Gönderildi. Tahtalar dakikada bir alır.</span>');
-      if (!error) { $('#gMetin').value = ''; $('#gBaslik').value = ''; }
+      $('#gBilgi').innerHTML = error ? `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>` : (kapla ? `<span class="yeşil">Gönderildi. ${veri.baslangic ? 'Açık tahtalar' + ne_ + ' ekranı kaplar.' : 'Açık tahtalar en geç 20 saniyede ekranı kaplar.'}${veri.resim ? ' Fotoğraf yalnız Pro 63 ve sonrası tahtalarda görünür.' : ''}</span>` : '<span class="yeşil">Gönderildi. Tahtalar dakikada bir alır.</span>');
+      if (!error) { $('#gMetin').value = ''; $('#gBaslik').value = ''; if (kapla) $('#gResimSil').click(); }
     };
   }
 
