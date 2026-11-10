@@ -761,9 +761,10 @@
     if (q.tur === 'begeni') return ['Beğendim', 'Beğenmedim'];
     return [...(q.secenekler || []), ...(q.diger && !(q.secenekler || []).includes('Diğer') ? ['Diğer'] : [])];
   }
-  function acikMi(a) {
+  function acikMi(a, sinif) {   // K-406: sinif verilirse o sınıfın kaydı (anket@sınıf) da hesaba katılır; yenisi geçerli
     if (a.durum === 'taslak') return false;
-    const b = bugunISO(), d = D.durumlar[a.id];
+    const b = bugunISO(), g = D.durumlar[a.id], ss = sinif ? D.durumlar[a.id + '@' + sinif] : null;
+    const d = ss && (!g || (+ss.zaman || 0) >= (+g.zaman || 0)) ? ss : g;
     if (d && d.durum === 'kapali') return false;
     if (d && d.durum === 'acik' && d.gun === b) return true;
     return (a.tanim.baslangic || '0000') <= b && b <= (a.tanim.bitis || '9999');
@@ -1085,7 +1086,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const durumYaz = async acik => {
         const { error } = await sb.from('umal_anket_durum').upsert({ anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 });
         $('#aBilgi').textContent = error ? 'Olmadı: ' + hataYaz(error) : (acik ? 'Bugün için açıldı.' : 'Kapatıldı.');
-        if (!error) D.durumlar[a.id] = { durum: acik ? 'acik' : 'kapali', gun: bugunISO() };
+        if (!error) D.durumlar[a.id] = { durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 };
       };
       if ($('#aSil')) $('#aSil').onclick = () => anketSil(a, () => { acikId = null; ciz(); });
       if ($('#aDuzenle')) $('#aDuzenle').onclick = () => anketHazirla(a, false);
@@ -1596,17 +1597,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const cok = dolu.filter(x => isaretler(form, cevap(form, sinif, String(x.no))).length >= 3);
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
-        const acikF = acikMi(form);   // K-406: rehberlik formunu bütün tahtalarda aç / kapat
-        $('#rehAyrinti').innerHTML = `<div class="dugmeler" style="align-items:center;margin:4px 0 10px"><span class="durum-etiketi ${acikF ? 'yeşil' : 'soluk'}">${acikF ? 'açık' : 'kapalı'}</span>${acikF ? '<button class="ikincil" id="rKapat">Kapat</button>' : '<button class="birincil" id="rAc">Aç</button>'}<span class="kucuk soluk" id="rBilgi">Bütün sınıf tahtalarında; tahtalar 1–2 dk içinde alır.</span></div><div class="kart">${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length; return `<button class="pj-kutu ${n && n === kk.length ? 'acik' : ''}" data-s="${esc(x)}" style="text-align:left;color:inherit;cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><span class="pj-sayi">${n}/${kk.length}</span></div><div class="pj-cubuk"><i style="width:${yuzde(n, kk.length)}%"></i></div></button>`; }).join('')}</div></div>`; }).join('')}</div>`;
-        $('#rehAyrinti').onclick = ev => { const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); window.scrollTo(0, 0); } };
-        const durumYaz = async ac => {
-          $('#rBilgi').textContent = 'Kaydediliyor…';
-          const { error } = await sb.from('umal_anket_durum').upsert({ anket: form.id, durum: ac ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 });
-          if (error) { $('#rBilgi').textContent = 'Olmadı: ' + hataYaz(error); return; }
-          D.durumlar[form.id] = { durum: ac ? 'acik' : 'kapali', gun: bugunISO() }; liste();
+        // K-406: Proje ödevi tercihi ile aynı düzen: Hepsini aç / kapat + sınıf kutusunda Aç / Kapat; kutuya basınca sınıfın ayrıntısı
+        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
+          return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Tahtalar 1–2 dk içinde alır.</div></div>`;
+        $('#rehAyrinti').onclick = async ev => {
+          const d = ev.target.closest('[data-r]');
+          if (d) {
+            ev.stopPropagation(); $('#rBilgi').textContent = 'Kaydediliyor…';
+            const z = Date.now() / 1000, key = d.dataset.r === '*' ? form.id : form.id + '@' + d.dataset.r;
+            const { error } = await sb.from('umal_anket_durum').upsert({ anket: key, durum: d.dataset.d, gun: bugunISO(), zaman: z });
+            if (error) { $('#rBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
+            D.durumlar[key] = { anket: key, durum: d.dataset.d, gun: bugunISO(), zaman: z }; ciz(); liste(); return;
+          }
+          const b = ev.target.closest('[data-s]'); if (b) { sinif = b.dataset.s; ciz(); window.scrollTo(0, 0); }
         };
-        if ($('#rAc')) $('#rAc').onclick = () => durumYaz(true);
-        if ($('#rKapat')) $('#rKapat').onclick = () => durumYaz(false);
         return;
       }
       $('#icerik').classList.add('reh-acik');
