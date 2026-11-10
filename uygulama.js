@@ -314,6 +314,38 @@
     yenile(ciz, 60);
   }
 
+  // K-405: kelebek planını panel kendisi indirir (Öğretmenler odası tahtası kapalıyken de görünsün). Tahtaların indirdiği şifreli paket; anahtar tahta yazılımında da var.
+  const KB_URL = 'https://raw.githubusercontent.com/299ygp9529-prog/umal-tahta/kelebek/plan.bin', KB_ANAHTAR = '9a10b9b4d6dd4182bf883f56e9cb8f6515b67773f31505189f7832f8556af494';
+  async function kelebekPlanlari() {
+    if (D._kb && Date.now() - D._kb.t < 300000) return D._kb.p;
+    let sonuc = [];
+    try {
+      const r = await fetch(KB_URL + '?t=' + Math.floor(Date.now() / 120000), { cache: 'no-store' });
+      if (!r.ok) throw new Error('indirilemedi');
+      const blob = new Uint8Array(await r.arrayBuffer());
+      if (String.fromCharCode(blob[0], blob[1], blob[2]) !== 'UK1') throw new Error('biçim');
+      const key = new Uint8Array(KB_ANAHTAR.match(/../g).map(h => parseInt(h, 16)));
+      const nonce = blob.slice(3, 19), tag = blob.slice(19, 51), ct = blob.slice(51);
+      const hk = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      const msg = new Uint8Array(16 + ct.length); msg.set(nonce); msg.set(ct, 16);
+      if (!await crypto.subtle.verify('HMAC', hk, tag, msg)) throw new Error('imza');
+      const n = Math.ceil(ct.length / 32), girdi = new Uint8Array(32 + 16 + 8); girdi.set(key); girdi.set(nonce, 32);
+      const isler = [];
+      for (let i = 0; i < n; i++) { const g = girdi.slice(); new DataView(g.buffer).setBigUint64(48, BigInt(i)); isler.push(crypto.subtle.digest('SHA-256', g)); }
+      const akis = await Promise.all(isler), acik = new Uint8Array(ct.length);
+      for (let i = 0; i < n; i++) { const b = new Uint8Array(akis[i]); for (let j = 0; j < 32 && i * 32 + j < ct.length; j++) acik[i * 32 + j] = ct[i * 32 + j] ^ b[j]; }
+      const d = JSON.parse(new TextDecoder().decode(acik)), bugun = bugunISO();
+      sonuc = (d.planlar || []).filter(p => p && p.tarih >= bugun && p.salonlar).map(p => ({ tarih: p.tarih, ders: p.ders, sinav: p.sinav || '', gozcu: p.gozcu || {}, salonlar: p.salonlar }));
+    } catch (e) { console.warn('kelebek planı:', e); }
+    D._kb = { t: Date.now(), p: sonuc }; return sonuc;
+  }
+  async function planlariGetir() {   // veritabanı (tahta gönderdiyse) + kelebek paketi; aynı sınav iki yerdeyse veritabanındaki
+    const [{ data, error }, kb] = await Promise.all([sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders'), kelebekPlanlari()]);
+    const L = (data || []).slice(), var_ = new Set(L.map(p => p.tarih + '|' + p.ders));
+    kb.forEach(p => { if (!var_.has(p.tarih + '|' + p.ders)) L.push(p); });
+    L.sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, 'tr'));
+    return { data: L, error: L.length ? null : error };
+  }
   // ------------------------------------------------------------------ Sınav merkezi
   function siraKaydi(r) {
     if (Array.isArray(r)) return { sira: parseInt(r[0], 10) || 0, no: String(r[1] ?? ''), ad: r[2] || '', sinif: r[3] || '', ders: r[4] || '' };
@@ -491,7 +523,7 @@
   // Öğrenci arama → uçak bileti (Sınav Merkezi ve Öğrenciler sayfasında aynı)
   async function planlariYukle() {
     if (D.planlar && D.planlar.length) return D.planlar;
-    const { data } = await sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders');
+    const { data } = await planlariGetir();
     D.planlar = data || []; return D.planlar;
   }
   function biletArama(giris, kutu, planGor) {
@@ -549,7 +581,7 @@
 
   async function sinav() {
     await programYukle();
-    const { data, error } = await sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders');
+    const { data, error } = await planlariGetir();
     if (error) throw error;
     D.planlar = data || [];
     let secili = D.planlar[0], acikSalon = null, yok = {}, vurgu = null, ilkCizimBitti = false;
@@ -696,7 +728,7 @@
   async function ogrenciKarti(o) {
     if (!o) return;
     const pr = simdikiDers(o.sinif);
-    if (!D.planlar.length) { const { data } = await sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih'); D.planlar = data || []; }
+    if (!D.planlar.length) { const { data } = await planlariGetir(); D.planlar = data || []; }
     const sv = [];
     for (const p of D.planlar) for (const [s, L] of Object.entries(p.salonlar || {})) for (const r0 of L) { const r = siraKaydi(r0); if (r.no === o.no) sv.push({ p, s, r }); }
     pencereAc(`<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div style="width:150px">${foto(o.no, o.ad)}</div>
