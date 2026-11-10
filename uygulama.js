@@ -664,6 +664,20 @@
       <div class="cipler" id="planlar">${D.planlar.map((p, i) => `<button class="cip ${i === 0 ? 'secili' : ''}" data-i="${i}">${esc(gunAdi(p.tarih))} · ${esc(p.ders)}</button>`).join('')}</div>
       <div class="soluk kucuk" id="planAd">${esc((secili && secili.sinav) || '')}</div><div id="sinavBul"></div>
       <div class="sinav-ust" id="sinavUst"></div><div id="sinavIc"></div><div id="gunOzet"></div>`;
+    // K-407: Sınav merkezi masaüstünde kaydırmadan sığsın: salon kutuları gerektiği kadar alçalır (en az 72 px)
+    const salonSigdir = () => {
+      const sl = document.querySelector('#sinavIc .salonlar'); if (!sl || D.bolum !== 'sinav') return;
+      const fazla = () => document.documentElement.scrollHeight > window.innerHeight + 1;
+      sl.style.removeProperty('--sh'); sl.style.removeProperty('--sw'); sl.classList.remove('sikisik'); $('#icerik').classList.remove('sm-sikisik');
+      if (window.innerWidth <= 760 || !fazla()) return;
+      sl.classList.add('sikisik'); $('#icerik').classList.add('sm-sikisik');
+      for (const w of [160, 148, 136, 124]) { sl.style.setProperty('--sw', w + 'px'); if (!fazla()) return; }   // önce sütun sayısını artır
+      for (let h = 120; h >= 64 && fazla(); h -= 6) sl.style.setProperty('--sh', h + 'px');
+    };
+    if (D._smGozcu) D._smGozcu.disconnect();
+    D._smGozcu = new MutationObserver(() => { clearTimeout(salonSigdir.z); salonSigdir.z = setTimeout(salonSigdir, 60); });
+    D._smGozcu.observe($('#icerik'), { childList: true, subtree: true });
+    window.addEventListener('resize', () => { clearTimeout(salonSigdir.z); salonSigdir.z = setTimeout(salonSigdir, 150); });
     $('#planlar').onclick = ev => {
       const b = ev.target.closest('[data-i]'); if (!b) return;
       secili = D.planlar[+b.dataset.i]; acikSalon = null;

@@ -792,3 +792,16 @@ span.tk-gel.neon { color: var(--neon); }
 }
 @media (min-width: 761px) and (max-height: 820px) { .analog { width: 112px; height: 112px; } .saat-kutu { min-height: 160px; } .dijital { font-size: 22px; } }
 @media (min-width: 761px) and (max-height: 820px) { .yan .logo3d { transform: scale(.8); margin: -8px auto -10px; } .yan .menu-oge { padding: 6px 12px; } .analog { width: 100px; height: 100px; } .saat-kutu { min-height: 140px; } }
+/* K-407: Sınav merkezi kaydırmasız (masaüstü) */
+@media (min-width: 761px) {
+  .salonlar.sikisik { gap: 8px; grid-template-columns: repeat(auto-fill, minmax(var(--sw, 160px), 1fr)); }
+  .salonlar.sikisik .salon { min-height: var(--sh, 0px); padding: 7px 10px 10px; }
+  .salonlar.sikisik .salon .s-ust b { font-size: 20px; } .salonlar.sikisik .salon .s-durum { font-size: 14px; }
+  .salonlar.sikisik .salon .s-gozcu { margin-top: 2px; }
+}
+@media (min-width: 761px) {
+  .sm-sikisik .ist { gap: 8px; } .sm-sikisik .ist > div { padding: 6px 12px; } .sm-sikisik .ist b { font-size: 21px; }
+  .sm-sikisik #gunOzet h2 { margin: 8px 0 4px; font-size: 15px; }
+  .sm-sikisik .oz-satir summary, .sm-sikisik .oz-top { padding-top: 6px !important; padding-bottom: 6px !important; }
+  .sm-sikisik .salonlar { margin-top: 6px; }
+}
