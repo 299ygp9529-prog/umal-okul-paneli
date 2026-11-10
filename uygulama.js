@@ -260,7 +260,7 @@
       const simdi = Date.now();
       const sinifHaritasi = {};
       for (const t of D.tahtalar) {
-        const s = (t.durum || {}).sinif || t.cihaz;
+        const s = String((t.durum || {}).sinif || '').trim(); if (!s) continue;   // sınıfı ayarlanmamış eski cihaz kaydı ayrı tahta gibi görünmesin
         const eski = sinifHaritasi[s];
         if (!eski || new Date(t.gorulme) > new Date(eski.gorulme)) sinifHaritasi[s] = t;
       }
@@ -2185,8 +2185,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const [t, m] = await Promise.all([sb.from('umal_tahtalar').select('cihaz,durum,gorulme'), sb.from('umal_mesajlar').select('id,tur,veri,bitis').in('tur', ['erisim', 'takvim'])]);
       if (t.error) throw t.error; if (m.error) throw m.error;
       tahtalar = {};
-      for (const x of (t.data || []).filter(x => (x.durum || {}).cihaz_turu !== 'bilgisayar')) {
-        const s = (x.durum || {}).sinif || x.cihaz; if (!tahtalar[s] || new Date(x.gorulme) > new Date(tahtalar[s].gorulme)) tahtalar[s] = x;
+      for (const x of (t.data || []).filter(x => (x.durum || {}).cihaz_turu !== 'bilgisayar' && String((x.durum || {}).sinif || '').trim())) {   // sınıfı ayarlanmamış (eski / yeniden kurulmuş) cihaz kaydı ayrı tahta sayılmaz
+        const s = x.durum.sinif; if (!tahtalar[s] || new Date(x.gorulme) > new Date(tahtalar[s].gorulme)) tahtalar[s] = x;
       }
       const simdi = Date.now() / 1000;
       kararlar = (m.data || []).filter(x => x.tur === 'erisim' && (!x.veri.bitis || x.veri.bitis > simdi)).map(x => x.veri).sort((a, b) => (b.zaman || 0) - (a.zaman || 0));
