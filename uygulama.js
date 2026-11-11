@@ -678,6 +678,12 @@
           gelmedi: L.filter(r => elle.set.has(String(r.no))).map(r => ({ sira: r.sira, no: String(r.no), ad: r.ad, sinif: r.sinif, ders: r.ders || '', ders_adi: kisaDers(baslik(r.ders || '')) })) });
         const { error } = await sb.from('umal_sinav_salon').upsert({ tarih: secili.tarih, ders: secili.ders, salon: x, veri, guncel: new Date().toISOString() });
         if (error) { eg.disabled = false; alert('Kaydedilemedi: ' + hataYaz(error)); return; }
+        // K-457: Öğretmenler odası tahtası (Karargah) ve Gelmeyenler raporu Drive'dan okur: kayıt komutla oradaki tahtaya da gider, o Drive'a yazar
+        try {
+          const gunSonu = new Date(); gunSonu.setHours(23, 59, 0, 0); const kid = 'yk-' + Date.now();
+          await sb.from('umal_mesajlar').insert({ id: kid, tur: 'komut', bitis: gunSonu.toISOString(),
+            veri: { id: kid, komut: 'yoklama', hedef: ['Öğretmenler odası'], zaman: Date.now() / 1000, bitis: gunSonu.getTime() / 1000, baslik: 'Panelden yoklama', metin: x + ' salonu yoklaması', yoklama: veri } });
+        } catch (e) { console.warn('karargah komutu', e); }
         elle = null; await ciz();
       };
       planiSigdir();
