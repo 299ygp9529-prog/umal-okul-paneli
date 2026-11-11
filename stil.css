@@ -877,3 +877,22 @@ span.tk-gel.neon { color: var(--neon); }
 .nb-lb { color: #8fa6c4; font-size: 12.5px; font-weight: 700; letter-spacing: 1px; position: sticky; top: 0; background: var(--kart, #0f1c2e); }
 .nb-ls { background: #132440; border-radius: 10px; font-size: 13.5px; } .nb-ls .nb-simdi { color: #ffb366; font-weight: 700; }
 @media (max-width: 760px) { .nb-tablo2 { grid-template-columns: 92px repeat(5, minmax(120px, 1fr)); overflow-x: auto; } .nb-lb, .nb-ls { grid-template-columns: 1.4fr .8fr repeat(5, 1fr); font-size: 12px; } }
+/* K-443: Sınav Merkezi telefon — küçük kutular (yalnız ≤760px; masaüstü aynen) */
+@media (max-width: 760px) {
+  .sm-kutular { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .sm-ic { gap: 6px; } .salonlar.sm-gruplu { gap: 4px; }
+  .sm-satir .pj-duzey { font-size: 13px; margin: 2px 0 0; }
+  .sm-kutular .salon { min-height: 0; padding: 5px 7px 11px; border-width: 1.5px; border-radius: 10px; }
+  .sm-kutular .salon .s-ust b { font-size: 16px; }
+  .sm-kutular .salon .s-ust .soluk, .sm-kutular .salon .zarf { font-size: 11px; }
+  .sm-kutular .salon .zarf { padding: 1px 6px; }
+  .sm-kutular .salon .s-gozcu { font-size: 12.5px; margin-top: 2px; white-space: normal; line-height: 1.2; color: #e3ecf8; }
+  .sm-kutular .salon .s-kagit { font-size: 11.5px; margin-top: 1px; white-space: normal; line-height: 1.2; }
+  .sm-kutular .salon .s-durum { font-size: 12px; padding-top: 3px; white-space: normal; overflow: visible; line-height: 1.2; }
+  .sm-kutular .salon .gordum { font-size: 11px; }
+  .sm-kutular .salon .seviye-cubuk { left: 7px; right: 7px; bottom: 4px; height: 3px; }
+  #sinavIc > .ist { gap: 6px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #sinavIc > .ist > div { grid-column: span 2; } #sinavIc > .ist > div:nth-child(n+4) { grid-column: span 3 !important; }
+  #sinavIc > .ist > div { padding: 5px 9px; border-radius: 10px; }
+  #sinavIc > .ist span { font-size: 11px; } #sinavIc > .ist b { font-size: 18px; }
+}
