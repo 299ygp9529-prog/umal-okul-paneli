@@ -412,7 +412,7 @@
     const g = ((v || {}).gelmedi || []).length;
     if (!st.basladi) return { yazi: st.a != null && st.suruyor ? `Yoklama ${String(Math.floor((st.a + YOKLAMA_BASLA) / 60)).padStart(2, '0')}.${String((st.a + YOKLAMA_BASLA) % 60).padStart(2, '0')}` : 'Sınav başlamadı', sinif: '' };
     if (!v || !v.zaman) return { yazi: st.acik ? 'Yoklama bekleniyor' : 'Yoklama gelmedi', sinif: 'bekliyor' };
-    if (g) return { yazi: `Gelmeyen: ${g}`, sinif: 'eksik' };
+    if (g) return { yazi: `Gelmeyen: ${g}${v.onay ? ' ✓' : ''}`, sinif: 'eksik' };   // K-463: ✓ = gözcü onayladı
     if (v.onay) return { yazi: 'Tam', sinif: 'tam' };
     return { yazi: st.acik ? 'İşaretleniyor' : 'Gelmeyen yok · onaysız', sinif: '' };
   }
