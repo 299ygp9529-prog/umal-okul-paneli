@@ -60,6 +60,14 @@
     $('#kim').textContent = D.eposta;
     $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik' }[rol] || rol;
     menuKur();
+    komutOnar();
+  }
+  // K-464: DersMap mesaj kaydında veri.tur ister; K-457 komutu yazmıyordu → DersMap paneli "Yüklenemedi". Eski kayıtlar burada tamamlanır.
+  async function komutOnar() {
+    try {
+      const { data } = await sb.from('umal_mesajlar').select('id,veri').eq('tur', 'komut').like('id', 'yk-%');
+      for (const r of data || []) if (r.veri && !r.veri.tur) await sb.from('umal_mesajlar').update({ veri: Object.assign({}, r.veri, { tur: 'komut' }) }).eq('id', r.id);
+    } catch (e) { console.warn('komut onar', e); }
   }
   function girisGoster() {
     $('#uygulama').classList.add('gizli');
@@ -682,7 +690,7 @@
         try {
           const gunSonu = new Date(); gunSonu.setHours(23, 59, 0, 0); const kid = 'yk-' + Date.now();
           await sb.from('umal_mesajlar').insert({ id: kid, tur: 'komut', bitis: gunSonu.toISOString(),
-            veri: { id: kid, komut: 'yoklama', hedef: ['Öğretmenler odası'], zaman: Date.now() / 1000, bitis: gunSonu.getTime() / 1000, baslik: 'Panelden yoklama', metin: x + ' salonu yoklaması', yoklama: veri } });
+            veri: { id: kid, tur: 'komut', komut: 'yoklama', hedef: ['Öğretmenler odası'], zaman: Date.now() / 1000, bitis: gunSonu.getTime() / 1000, baslik: 'Panelden yoklama', metin: x + ' salonu yoklaması', yoklama: veri } });
         } catch (e) { console.warn('karargah komutu', e); }
         elle = null; await ciz();
       };
