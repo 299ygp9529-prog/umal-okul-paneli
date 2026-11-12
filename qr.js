@@ -9,7 +9,7 @@
   function bolen(d) { const r = new Array(d).fill(0); r[d - 1] = 1; let kok = 1; for (let i = 0; i < d; i++) { for (let j = 0; j < d; j++) { r[j] = carp(r[j], kok); if (j + 1 < d) r[j] ^= r[j + 1]; } kok = carp(kok, 2); } return r; }
   function kalan(veri, b) { const r = new Array(b.length).fill(0); for (const x of veri) { const f = x ^ r.shift(); r.push(0); b.forEach((c, i) => { r[i] ^= carp(c, f); }); } return r; }
   function hizalama(v, n) { if (v === 1) return []; const k = Math.floor(v / 7) + 2, adim = Math.ceil((v * 4 + 4) / (k * 2 - 2)) * 2, r = [6]; for (let p = n - 7; r.length < k; p -= adim) r.splice(1, 0, p); return r; }
-  function svg(metin, olcu) {
+  function matris(metin) {
     const bayt = Array.from(new TextEncoder().encode(metin));
     let v = 1; while (v <= 6 && 4 + 8 + bayt.length * 8 > veriKelime(v) * 8) v++;
     if (v > 6) throw new Error('QR metni çok uzun');
@@ -62,9 +62,18 @@
     let en = 0, enC = Infinity;
     for (let m = 0; m < 8; m++) { uygula(m); bicim(m); const c = ceza(); if (c < enC) { enC = c; en = m; } uygula(m); }
     uygula(en); bicim(en);
-    const s = n + 8; let yol = '';
+    return M;
+  }
+  function svg(metin, olcu) {
+    const M = matris(metin), n = M.length, s = n + 8; let yol = '';
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (M[y][x]) yol += `M${x + 4},${y + 4}h1v1h-1z`;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" ${olcu ? `width="${olcu}" height="${olcu}"` : ''} shape-rendering="crispEdges"><rect width="${s}" height="${s}" fill="#fff"/><path d="${yol}" fill="#000"/></svg>`;
   }
-  window.UmalQR = { svg };
+  function png(metin, modul) {   // K-508: resim olarak (PDF'e çevirirken SVG bozuluyordu); her modül tam piksel
+    const M = matris(metin), n = M.length, k = modul || 10, s = (n + 8) * k, cv = document.createElement('canvas'); cv.width = cv.height = s;
+    const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, s, s); c.fillStyle = '#000';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (M[y][x]) c.fillRect((x + 4) * k, (y + 4) * k, k, k);
+    return cv.toDataURL('image/png');
+  }
+  window.UmalQR = { svg, png };
 })();

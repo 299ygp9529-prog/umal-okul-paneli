@@ -953,3 +953,12 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .sd-harita .tahta { cursor: pointer; }
 .sd-harita .tahta small { white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2; overflow-wrap: anywhere; }
 .sd-harita .tahta { height: auto; min-height: var(--kh, 88px); }
+/* K-510: Testler */
+.ts-suz { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; } .ts-suz input { width: 300px; }
+.ts-liste { display: flex; flex-direction: column; gap: 9px; }
+.ts-s { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 10px 14px; }
+.ts-k { width: 84px; height: 112px; background: #fff; border-radius: 6px; overflow: hidden; display: grid; place-items: center; color: #9fb3cc; font-weight: 800; } .ts-k img { width: 100%; display: block; }
+.ts-b b { font-size: 16px; display: block; } .ts-b small { color: var(--soluk); display: block; margin: 3px 0 6px; }
+.ts-e { display: flex; gap: 6px; flex-wrap: wrap; } .ts-e span { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 7px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.ts-d { display: flex; gap: 6px; }
+@media (max-width: 760px) { .ts-s { grid-template-columns: 64px minmax(0, 1fr); } .ts-k { width: 64px; height: 86px; } .ts-d { grid-column: 1 / -1; } .ts-suz input { width: 100%; } }

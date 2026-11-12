@@ -26,7 +26,7 @@
   const kaydet = () => { try { localStorage.setItem(ayarAnahtar, JSON.stringify(ayar)); } catch (e) {} };
 
   // ------------------------------------------------------------------ Kütüphaneler
-  let pdfjs = null, taban = '', logoUrl = '';
+  let pdfjs = null, taban = '', logoUrl = '', sbc = null, eposta = '';
   async function yukle() {
     if (!pdfjs) { pdfjs = await import(taban + 'pdf.min.mjs'); pdfjs.GlobalWorkerOptions.workerSrc = taban + 'pdf.worker.min.mjs'; }
     if (!window.PDFLib) await new Promise((ok, red) => { const s = document.createElement('script'); s.src = taban + 'pdf-lib.min.js'; s.onload = ok; s.onerror = () => red(new Error('pdf-lib yüklenemedi')); document.head.appendChild(s); });
@@ -41,7 +41,7 @@
   let kok = null;
 
   async function ac(el, o) {
-    kok = el; taban = o.taban; logoUrl = o.logo;
+    kok = el; taban = o.taban; logoUrl = o.logo; sbc = o.sb || null; eposta = o.eposta || '';
     el.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     await yukle();
     el.innerHTML = `<div class="sh-ana">
@@ -62,7 +62,7 @@
         <div class="kart"><div class="sh-et">BAŞLIK</div><div class="sh-ayar">
           <label class="tam">Okul<input data-a="okul"></label><label class="tam">Yıl satırı<input data-a="yil"></label>
           <label>Başlık<input data-a="baslik" placeholder="9. Sınıf Matematik"></label><label>Alt başlık<input data-a="alt" placeholder="Test / Ders Başarı Sınavı"></label>
-          <label>Sınıf<input data-a="sinif" placeholder="9-A"></label><label class="sh-proje">Bölüm (proje)<input data-a="bolum" placeholder="1"></label><label>Not / tarih<input data-a="not" placeholder="Teslim: 9 Nisan 2027"></label></div>
+          <label>Sınıf<input data-a="sinif" placeholder="9-A"></label><label class="sh-proje">Bölüm (proje)<input data-a="bolum" placeholder="1"></label><label>Not / tarih<input data-a="not" placeholder="Teslim: 9 Nisan 2027"></label><label class="tam">Hazırlayan (Testler'de görünür)<input data-a="hazirlayan" placeholder="Adınız Soyadınız"></label></div>
           <div class="sh-cip coklu" style="margin-top:10px"><span data-t="bilgi">Ad-Sınıf-No kutusu</span><span data-t="sikler">A–E şıkları</span><span data-t="numara">Soru numarası</span><span data-t="anahtar">Cevap anahtarı</span><span data-t="kitapcik">A/B kitapçık</span></div></div>
       </div></div>`;
     stilEkle();
@@ -441,12 +441,13 @@ body.rol-ogretmen .saat-kutu { display: none; }
     if (p.parentElement !== document.body) document.body.appendChild(p);
     p.querySelector('.pencere-ic').classList.add('genis');
     const paylasVar = !!(navigator.canShare && navigator.canShare({ files: [sonuc[0].dosya] }));
-    const dugmeler = r => `<span class="sh-pd">${r.kt ? `<b class="neon">${r.kt} kitapçığı</b>` : ''}${paylasVar ? `<button class="birincil" data-pd="paylas" data-k="${r.kt}">📤 Paylaş</button>` : ''}<button class="${paylasVar ? 'ikincil' : 'birincil'}" data-pd="kaydet" data-k="${r.kt}">💾 Kaydet</button><button class="ikincil" data-pd="yazdir" data-k="${r.kt}">🖨 Yazdır</button></span>`;
+    const dugmeler = r => `<span class="sh-pd">${r.kt ? `<b class="neon">${r.kt} kitapçığı</b>` : ''}${sbc ? `<button class="birincil" data-pd="havuz" data-k="${r.kt}">☁️ Havuza gönder</button>` : ''}${paylasVar ? `<button class="birincil" data-pd="paylas" data-k="${r.kt}">📤 Paylaş</button>` : ''}<button class="${paylasVar ? 'ikincil' : 'birincil'}" data-pd="kaydet" data-k="${r.kt}">💾 Kaydet</button><button class="ikincil" data-pd="yazdir" data-k="${r.kt}">🖨 Yazdır</button></span>`;
     ic.innerHTML = `<div class="sh-pust"><h1 style="margin:0">Önizleme</h1><div class="sh-pdler">${sonuc.map(dugmeler).join('')}</div></div><div class="kucuk soluk" id="shPdBilgi" style="margin:4px 0 8px">${esc(sonuc.map(r => r.ad).join(' · '))}</div><div class="sh-onizle" id="shOnizleIc"></div>`;
     p.classList.remove('gizli');
     ic.querySelector('.sh-pdler').onclick = async ev => {
       const b = ev.target.closest('[data-pd]'); if (!b) return;
       const r = sonuc.find(x => x.kt === b.dataset.k) || sonuc[0], is = b.dataset.pd, pb = document.getElementById('shPdBilgi');
+      if (is === 'havuz') { await havuzaGonder(r, b, pb); return; }
       if (is === 'paylas') { try { await navigator.share({ files: [r.dosya], title: r.ad }); } catch (e) { if (e && e.name !== 'AbortError') pb.textContent = 'Paylaşılamadı: ' + (e.message || e); } return; }
       const u = URL.createObjectURL(r.dosya); setTimeout(() => URL.revokeObjectURL(u), 10 * 60000);
       if (is === 'kaydet') { const a = document.createElement('a'); a.href = u; a.download = r.ad; document.body.appendChild(a); a.click(); a.remove(); pb.textContent = r.ad + ' kaydedildi (İndirilenler klasörü).'; return; }
@@ -455,7 +456,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
     };
     const kap = document.getElementById('shOnizleIc');
     for (const r of sonuc) {
-      const d = await pdfjs.getDocument({ data: r.bayt.slice() }).promise;
+      const d = await pdfjs.getDocument({ data: r.bayt.slice() }).promise; r.sayfa = d.numPages;
       if (r.kt) kap.insertAdjacentHTML('beforeend', `<b class="neon">${r.kt} kitapçığı</b>`);
       for (let i = 1; i <= d.numPages; i++) {
         const pg = await d.getPage(i), v = pg.getViewport({ scale: 1.4 }), cv = document.createElement('canvas');
@@ -463,6 +464,29 @@ body.rol-ogretmen .saat-kutu { display: none; }
         await pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise;
       }
     }
+  }
+
+  // K-510: testi okulun sunucusuna yükle; Öğretmenler odası tahtası PDF Havuzu'na koyar
+  const BRANSLAR = [['Matematik', /matematik|geometri/], ['Fizik', /fizik/], ['Kimya', /kimya/], ['Biyoloji', /biyoloji/], ['Edebiyat', /edebiyat|türk dili|türkçe/], ['Tarih', /tarih|inkılap/], ['Coğrafya', /coğrafya/], ['Felsefe', /felsefe|mantık|psikoloji|sosyoloji/], ['Din Kültürü', /din kültürü/], ['İngilizce', /ingilizce/], ['Almanca', /almanca/]];
+  async function havuzaGonder(r, b, pb) {
+    if (r.havuzda) { pb.textContent = 'Bu test zaten havuza gönderildi.'; return; }
+    if (!ayar.hazirlayan) { const a = (prompt('Testler listesinde hazırlayan olarak görünecek adınız:', '') || '').trim(); if (!a) return; ayar.hazirlayan = a; kaydet(); const i = kok.querySelector('[data-a="hazirlayan"]'); if (i) i.value = a; }
+    b.disabled = true; const eski = b.textContent; b.textContent = 'Gönderiliyor…';
+    try {
+      const id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), yol = id + '.pdf';
+      const { error: e1 } = await sbc.storage.from('umal-testler').upload(yol, r.dosya, { contentType: 'application/pdf', upsert: false });
+      if (e1) throw e1;
+      const ad = [ayar.baslik, ayar.alt].filter(Boolean).join(' · ') + (r.kt ? ` · ${r.kt} kitapçığı` : '');
+      const kucuk = ad.toLocaleLowerCase(tr), brans = (BRANSLAR.find(([, re]) => re.test(kucuk)) || [''])[0];
+      const sv = (/(^|\D)(9|10|11|12)\s*\./.exec(ad) || /^(9|10|11|12)\s*-/.exec(ayar.sinif || '') || [])[2] || (/^(9|10|11|12)/.exec(ayar.sinif || '') || [])[1] || null;
+      const { error: e2 } = await sbc.from('umal_testler').insert({ ad: ad || 'Test', sinif: ayar.sinif || (sv ? sv + '. sınıf' : null), brans: brans || null, hazirlayan: ayar.hazirlayan, eposta, soru_sayisi: S.secim.length, sayfa: r.sayfa || null, boyut: r.dosya.size, yol });
+      if (e2) { await sbc.storage.from('umal-testler').remove([yol]); throw e2; }
+      r.havuzda = true; b.textContent = '✓ Havuzda'; pb.textContent = 'Test gönderildi. Panelde "Testler"de görünür; birkaç dakika içinde bütün tahtalarda PDF Havuzu\'nda olur.';
+    } catch (e) { b.disabled = false; b.textContent = eski; pb.textContent = 'Gönderilemedi: ' + ((e && (e.message || e.error)) || e) + (/bucket|not found|relation/i.test(String(e && e.message)) ? ' (sunucu kurulumu yapıldı mı?)' : ''); }
+  }
+  async function kucukResim(url, gen) {   // Testler listesi için ilk sayfanın küçük resmi
+    await yukle(); const d = await pdfjs.getDocument({ url }).promise, pg = await d.getPage(1), v1 = pg.getViewport({ scale: 1 }), v = pg.getViewport({ scale: (gen || 90) * 2 / v1.width });
+    const cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height; await pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise; const u = cv.toDataURL('image/jpeg', .8); try { (d.loadingTask || d).destroy && (d.loadingTask || d).destroy(); } catch (e) {} return u;
   }
 
   // yazı → yüksek çözünürlüklü görüntü (Türkçe harfler için; pdf-lib standart yazı tipleri ş/ğ/İ basamaz)
@@ -707,5 +731,5 @@ body.rol-ogretmen .saat-kutu { display: none; }
     return await pdf.save();
   }
 
-  window.UmalSoru = { ac, _test: { S, ayar, belge, TEMALAR, dosyaEkle, secimEkle, sayfaCiz } };
+  window.UmalSoru = { ac, kucukResim, ayarla: o => { taban = o.taban || taban; }, _test: { S, ayar, belge, TEMALAR, dosyaEkle, secimEkle, sayfaCiz } };
 })();

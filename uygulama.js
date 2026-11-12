@@ -141,6 +141,7 @@
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
+    { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
     { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas'], ciz: ogretmenlerBolumu },   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
     { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
@@ -159,7 +160,7 @@
     D.bolum = id; location.hash = id;
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
-    clearInterval(yenileZamanlayici);
+    clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
     $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
@@ -1824,7 +1825,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function girisFisleri(L, sinif) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
     D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
     const logo = new URL('okul-logo.png', location.href).href;
-    const qr = r => { try { return window.UmalQR ? window.UmalQR.svg(`https://umalatlas.com.tr/ogrenci/#n=${encodeURIComponent(r.no)}&k=${String(r.kod).replace(/[^A-Z0-9]/gi, '')}`) : ''; } catch (e) { return ''; } };   // K-508: okutunca doğrudan girer
+    const qr = r => { try { return window.UmalQR ? `<img alt="QR" src="${window.UmalQR.png(`https://umalatlas.com.tr/ogrenci/#n=${encodeURIComponent(r.no)}&k=${String(r.kod).replace(/[^A-Z0-9]/gi, '')}`, 10)}">` : ''; } catch (e) { return ''; } };   // K-508: okutunca doğrudan girer
     const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi</small></div></div>
       <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · Okul no ${esc(r.no)}</div>
       <div class="kk"><small>KODUN</small><span>${esc(r.kod)}</span></div>
@@ -1843,7 +1844,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       .bant .lg { width: 9.5mm; height: 9.5mm; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; } .bant img { width: 8.6mm; height: 8.6mm; }
       .bant b { display: block; font-size: 8.6pt; letter-spacing: .6pt; } .bant small { display: block; font-size: 6.4pt; color: #bfe9f2; }
       .ic { padding: 2mm 3mm 0 3.5mm; display: flex; gap: 2.5mm; flex: 1; min-height: 0; } .sol { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-      .qr { width: 23mm; flex: none; text-align: center; } .qr svg { width: 23mm; height: 23mm; display: block; } .qr small { display: block; font-size: 6pt; font-weight: 800; color: #0f7f90; margin-top: .3mm; }
+      .qr { width: 23mm; flex: none; text-align: center; } .qr img { width: 23mm; height: 23mm; display: block; image-rendering: pixelated; } .qr small { display: block; font-size: 6pt; font-weight: 800; color: #0f7f90; margin-top: .3mm; }
       .ad { font-weight: 800; font-size: 11pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .s { font-size: 7.6pt; color: #5d6f88; line-height: 1.25; }
       .kk { margin: 1.3mm 0 1.1mm; border: .45mm solid #0fa3b8; background: #e6f7fa; border-radius: 2mm; display: flex; align-items: center; justify-content: space-between; padding: .8mm 2.4mm; }
       .kk small { font-size: 6pt; font-weight: 800; letter-spacing: .4pt; color: #0f7f90; } .kk span { font: 800 14pt/1.15 Consolas, "Courier New", monospace; letter-spacing: 1pt; color: #0d2a4a; }
@@ -1884,9 +1885,54 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
 
   // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
+  async function soruYukle() {
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122305'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    window.UmalSoru.ayarla({ taban: new URL('soru/', location.href).href });
+  }
+  // ------------------------------------------------------------------ K-510: Testler (havuzdaki testler)
+  async function testlerBolumu() {
+    const yukle = async () => { const { data, error } = await sb.from('umal_testler').select('id,ad,sinif,brans,hazirlayan,eposta,soru_sayisi,sayfa,boyut,yol,olusturma,havuzda').order('olusturma', { ascending: false }); if (error) throw error; return data || []; };
+    let L = await yukle(), suz = 'hepsi', ara = '';
+    const url = r => `${URL_}/storage/v1/object/public/umal-testler/${encodeURIComponent(r.yol)}`;
+    const sv = r => (/(^|\D)(9|10|11|12)\s*[.\-]/.exec(String(r.sinif || '') + ' ' + String(r.ad || '')) || [])[2] || '';
+    const branslar = [...new Set(L.map(r => r.brans).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr));
+    const resim = {};
+    const ciz = () => {
+      const q = ara.toLocaleLowerCase(tr);
+      const G = L.filter(r => (suz === 'hepsi' || (suz === 'ben' && r.eposta === D.eposta) || r.brans === suz || sv(r) === suz) && (!q || [r.ad, r.hazirlayan, r.sinif, r.brans].join(' ').toLocaleLowerCase(tr).includes(q)));
+      const cip = (v, ad) => `<button class="cip ${suz === v ? 'secili' : ''}" data-suz="${esc(v)}">${esc(ad)}</button>`;
+      $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Testler</h1><span class="soluk">Öğretmenlerin hazırladığı testler · tahtalarda <b class="neon">PDF Havuzu</b>'nda da var</span></div>
+        <div class="ts-suz"><input id="tsAra" placeholder="Ara: konu, sınıf, öğretmen" value="${esc(ara)}">${cip('hepsi', 'Hepsi')}${cip('ben', 'Benimkiler')}${branslar.map(b => cip(b, b)).join('')}${['9', '10', '11', '12'].map(x => cip(x, x)).join('')}</div>
+        <div class="ts-liste">${G.length ? G.map(r => { const sil = r.eposta === D.eposta || D.rol === 'bas', s_ = sv(r);
+          return `<div class="ts-s"><div class="ts-k" data-kr="${esc(r.id)}">${resim[r.id] ? `<img src="${resim[r.id]}" alt="">` : '<span>PDF</span>'}</div>
+            <div class="ts-b"><b>${esc(r.ad)}</b><small>${esc(r.hazirlayan || r.eposta)} · ${esc(new Date(r.olusturma).toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }))}${r.soru_sayisi ? ' · ' + r.soru_sayisi + ' soru' : ''}${r.sayfa ? ' · ' + r.sayfa + ' sayfa' : ''}</small>
+            <div class="ts-e">${s_ ? `<span style="--c:${SEVIYE_RENK[s_]}">${s_}. sınıf</span>` : ''}${r.brans ? `<span style="--c:#7ff6ff">${esc(r.brans)}</span>` : ''}${r.havuzda ? '<span style="--c:#3ef08a">✓ Tahtalarda</span>' : '<span style="--c:#ffe14d">⏳ Tahtalara gidiyor</span>'}</div></div>
+            <div class="ts-d"><button class="ikincil" data-indir="${esc(r.id)}">İndir</button><button class="ikincil" data-tac="${esc(r.id)}">Önizle</button>${sil ? `<button class="tehlike" data-tsil="${esc(r.id)}">Sil</button>` : ''}</div></div>`; }).join('') : '<div class="kart soluk">Henüz test yok. Soru Hazırla\'da testi hazırlayıp önizlemede "☁️ Havuza gönder"e basın.</div>'}</div>`;
+      $('#tsAra').oninput = ev => { ara = ev.target.value; const c = ev.target.selectionStart; ciz(); const i = $('#tsAra'); i.focus(); i.setSelectionRange(c, c); };
+      resimler(G);
+    };
+    const resimler = async G => {   // ilk sayfaların küçük resimleri, sırayla (tarayıcı yorulmasın)
+      try { await soruYukle(); } catch (e) { return; }
+      for (const r of G.slice(0, 40)) {
+        if (resim[r.id] || D.bolum !== 'testler') continue;
+        try { resim[r.id] = await window.UmalSoru.kucukResim(url(r), 90); const k = document.querySelector(`[data-kr="${CSS.escape(r.id)}"]`); if (k) k.innerHTML = `<img src="${resim[r.id]}" alt="">`; } catch (e) { resim[r.id] = ''; }
+      }
+    };
+    $('#icerik').onclick = async ev => {
+      if (D.bolum !== 'testler') { $('#icerik').onclick = null; return; }
+      const t = ev.target.closest('[data-suz]'); if (t) { suz = t.dataset.suz; ciz(); return; }
+      const ac_ = ev.target.closest('[data-tac]'); if (ac_) { const r = L.find(x => x.id === ac_.dataset.tac); window.open(url(r), '_blank'); return; }
+      const ind = ev.target.closest('[data-indir]');
+      if (ind) { const r = L.find(x => x.id === ind.dataset.indir); ind.disabled = true; try { const bl = await (await fetch(url(r))).blob(); indir(bl, 'UMAL-' + String(r.ad).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-') + '.pdf'); } catch (e) { window.open(url(r), '_blank'); } ind.disabled = false; return; }
+      const sl = ev.target.closest('[data-tsil]');
+      if (sl) { const r = L.find(x => x.id === sl.dataset.tsil); if (!confirm(`“${r.ad}” silinsin mi? (Tahtalardaki PDF Havuzu kopyası kalır.)`)) return;
+        await sb.storage.from('umal-testler').remove([r.yol]); const { error } = await sb.from('umal_testler').delete().eq('id', r.id); if (error) { alert('Silinemedi: ' + hataYaz(error)); return; } L = L.filter(x => x.id !== r.id); ciz(); }
+    };
+    ciz(); yenile(async () => { if (document.activeElement && document.activeElement.id === 'tsAra') return; L = await yukle(); ciz(); }, 60);
+  }
   async function soruHazirla() {
-    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122250'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
-    window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href });
+    await soruYukle();
+    window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href, sb, eposta: D.eposta });
   }
   async function projeBolumu() {
     const [p, d] = await Promise.all([hepsi('umal_proje', 'sinif,donem,veri').catch(() => []), hepsi('umal_proje_durum', 'sinif,durum,zaman').catch(() => [])]);
