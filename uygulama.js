@@ -138,6 +138,7 @@
     { id: 'ogrenci', ad: 'Öğrenciler', roller: ['bas', 'yonetici'], ciz: ogrenciler },
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
+    { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
     { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas'], ciz: ogretmenlerBolumu },   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
@@ -1001,10 +1002,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     belgeOnizle(belge, baslikAdi, yatay);
   }
   // K-410: bütün çıktılar aynı yoldan: önizleme penceresi + 🖨 Yazdır / PDF (masaüstü çerçeveyi yazdırır, telefon PDF + Paylaş)
-  function belgeOnizle(belge, baslikAdi, yatay) {
+  function belgeOnizle(belge, baslikAdi, yatay, sec) {
     if (yatay && !/<body[^>]*class=/.test(belge)) belge = belge.replace('<body', '<body class="yatay"');
     // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
-    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0">${sec && sec.gonder ? '<button class="ikincil" id="rpGonder">📤 Gönder</button>' : ''}<button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
       <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
     $('#pencere .pencere-ic').classList.add('genis');
     const fr = document.getElementById('raporCerceve');
@@ -1015,6 +1016,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'));   // K-391: telefonda PDF dosyası + paylaş
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
+    if (sec && sec.gonder) $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec.kenar);   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
   }
   // K-391: telefonda rapor → gerçek PDF dosyası → telefonun paylaş menüsü (Dosyalar'a kaydet, WhatsApp, AirDrop, Yazdır)
   function betikYukle(src) { return new Promise((ok, red) => { if (window.html2pdf) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('PDF aracı yüklenemedi')); document.head.appendChild(sc); }); }
@@ -1027,7 +1029,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }).join('\n');
     return yaz(sh.cssRules);
   }
-  async function pdfPaylas(belge, baslikAdi, yatay, dugme) {
+  async function pdfPaylas(belge, baslikAdi, yatay, dugme, kenar) {
     const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
     if (dugme._dosya) {   // ikinci dokunuş: paylaş menüsü (dokunuşun hemen ardından açılmalı)
       const f = dugme._dosya;
@@ -1046,7 +1048,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       document.body.appendChild(kat); const ic = kat.firstChild;
       await Promise.all([...kat.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
       const H = ic.scrollHeight, olcek = Math.max(1, Math.min(2, Math.sqrt(15e6 / (G * H))));   // iPhone tuval sınırı (~16 milyon piksel)
-      const blob = await window.html2pdf().set({ margin: [8, 0, 10, 0], image: { type: 'jpeg', quality: 0.92 },
+      const blob = await window.html2pdf().set({ margin: kenar || [8, 0, 10, 0], image: { type: 'jpeg', quality: 0.92 },
         html2canvas: { scale: olcek, useCORS: true, backgroundColor: '#ffffff', width: G, windowWidth: G, scrollX: 0, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza', '.kart'] } }).from(ic).outputPdf('blob');
       dugme._dosya = new File([blob], ad, { type: 'application/pdf' });
@@ -1699,10 +1701,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#rehIc').innerHTML = formlar.map(f => {
         const ss = anketSiniflari(f), n = ss.reduce((t, x) => t + katilanlar(f, x).length, 0), d = ss.reduce((t, x) => t + katilanlar(f, x).filter(k => cevap(f, x, String(k.no))).length, 0);
         return baslikSatiri(f.id, esc(f.tanim.ad), `${esc(gunAdi(f.tanim.baslangic || bugunISO()))}${f.tanim.bitis ? ' – ' + esc(gunAdi(f.tanim.bitis)) : ''} · ${ss.length} sınıf · ${d}/${n} doldurdu`, acikMi(f) ? '<span class="durum-etiketi yeşil">açık</span>' : '<span class="durum-etiketi soluk">kapalı</span>') + (acik === f.id ? '<div id="rehAyrinti"></div>' : '');
-      }).join('') + baslikSatiri('giris', 'Öğrenci girişi · giriş kodları', 'Mahrem formlar öğrenci panelinden doldurulur: umalatlas.com.tr/ogrenci') + (acik === 'giris' ? '<div class="kart" id="girisIc"></div>' : '')
-        + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
+      }).join('') + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
       if (acik === 'proje') projeBolumu();
-      else if (acik === 'giris') girisKodlari();
       else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : null; ciz(); }
       else $('#icerik').classList.remove('reh-acik');
     };
@@ -1752,6 +1752,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     liste();
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
+  async function ogrenciGirisi() {
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk">Giriş kodları · öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
+    await girisKodlari();
+  }
   async function girisKodlari() {
     const kutu = $('#girisIc'); if (!kutu) return;
     kutu.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1765,7 +1769,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!sec) {
         kutu.innerHTML = `<div class="kucuk soluk" style="margin-bottom:10px">Her öğrencinin kendi giriş kodu olur (fişte yazar). Öğrenci <b class="neon">umalatlas.com.tr/ogrenci</b> adresine okul numarası ve koduyla girer, yalnız kendisine açık rehberlik formlarını görür ve doldurur. Kodların kendisi sunucuda saklanmaz; fişi kaybeden öğrenciye yeni kod üretilir, eskisi geçersiz olur.</div>
           ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const o = D.ogrenciler.filter(y => y.sinif === x), k = o.filter(y => K[String(y.no)]).length, g = o.filter(y => (K[String(y.no)] || {}).son_giris).length;
-            return `<div class="pj-kutu ${k === o.length && o.length ? 'acik' : 'kapali'}" data-gs="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b></div><small>${k}/${o.length} kodlu · ${g} girdi</small></div>`; }).join('')}</div></div>`; }).join('')}`;
+            return `<div class="pj-kutu ${k === o.length && o.length ? 'acik' : 'kapali'}" data-gs="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b></div><small style="white-space:normal;line-height:1.3">${k}/${o.length} kodlu<br>${g} girdi</small></div>`; }).join('')}</div></div>`; }).join('')}`;
         kutu.onclick = ev => { const b = ev.target.closest('[data-gs]'); if (b) { sec = b.dataset.gs; ciz(); } };
         return;
       }
@@ -1805,7 +1809,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const sayfalar = []; for (let i = 0; i < L.length; i += 10) sayfalar.push(`<div class="sayfa">${L.slice(i, i + 10).map(kart).join('')}</div>`);
     const css = `@page { size: A4; margin: 0; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       html, body { margin: 0; } body { font-family: "Segoe UI", -apple-system, Arial, sans-serif; color: #0d2a4a; }
-      .sayfa { width: 210mm; height: 297mm; padding: 11mm 10mm; display: grid; grid-template-columns: 95mm 95mm; grid-auto-rows: 55mm; align-content: start; page-break-after: always; break-after: page; overflow: hidden; }
+      .sayfa { width: 210mm; height: 295mm; padding: 10mm 10mm; display: grid; grid-template-columns: 95mm 95mm; grid-auto-rows: 55mm; align-content: start; page-break-after: always; break-after: page; overflow: hidden; }
       .sayfa:last-child { page-break-after: auto; break-after: auto; }
       .f { border: .3mm dashed #9fb3cc; margin: -.15mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
       .bant { display: flex; align-items: center; gap: 2.6mm; background: #0d2a4a; color: #fff; padding: 2mm 3.5mm; flex: none; }
@@ -1820,7 +1824,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     raporBelge(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları${sinif ? ' · ' + esc(sinif) : ''}</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`, `Öğrenci giriş kartları${sinif ? ' · ' + sinif : ''}`);
   }
   function raporBelge(belge, ad) {   // hazır (kendi CSS'li) belgeyi panelin önizleme penceresinde aç
-    belgeOnizle(belge.replace('</style>', '.sayfa{box-shadow:0 0 0 1px #d0d8e4}@media print{.sayfa{box-shadow:none}}</style>'), ad);
+    belgeOnizle(belge.replace('</style>', '.sayfa{box-shadow:0 0 0 1px #d0d8e4}@media print{.sayfa{box-shadow:none}}</style>'), ad, false, { gonder: true, kenar: [0, 0, 0, 0] });
   }
 
   // ------------------------------------------------------------------ K-498: Öğretmenler (yalnız Soru Hazırla)

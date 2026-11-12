@@ -943,5 +943,5 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .og-izgara textarea { color: var(--yazi); background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px; }
 @media (max-width: 760px) { .og-izgara { grid-template-columns: 1fr; } }
 /* K-504: giriş ekranında öğrenci girişi bağlantısı */
-.giris .ogrlink { display: block; margin: 14px auto 0; padding: 11px 14px; border: 1.5px solid rgba(34,232,255,.7); border-radius: 12px; color: var(--neonacik); font-weight: 800; text-decoration: none; background: rgba(34,232,255,.08); }
+.giris .ogrlink { position: relative; z-index: 5; cursor: pointer; display: block; margin: 14px auto 0; padding: 11px 14px; border: 1.5px solid rgba(34,232,255,.7); border-radius: 12px; color: var(--neonacik); font-weight: 800; text-decoration: none; background: rgba(34,232,255,.08); }
 .giris .ogrlink:hover { background: rgba(34,232,255,.16); }
