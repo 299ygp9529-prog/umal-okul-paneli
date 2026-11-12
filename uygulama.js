@@ -369,7 +369,7 @@
   const KB_URL = 'https://raw.githubusercontent.com/299ygp9529-prog/umal-tahta/kelebek/plan.bin', KB_ANAHTAR = '9a10b9b4d6dd4182bf883f56e9cb8f6515b67773f31505189f7832f8556af494';
   async function kelebekPlanlari() {
     if (D._kb && Date.now() - D._kb.t < 300000) return D._kb.p;
-    let sonuc = [];
+    let sonuc = [], ok = false;
     try {
       const r = await fetch(KB_URL + '?t=' + Math.floor(Date.now() / 120000), { cache: 'no-store' });
       if (!r.ok) throw new Error('indirilemedi');
@@ -386,13 +386,21 @@
       const akis = await Promise.all(isler), acik = new Uint8Array(ct.length);
       for (let i = 0; i < n; i++) { const b = new Uint8Array(akis[i]); for (let j = 0; j < 32 && i * 32 + j < ct.length; j++) acik[i * 32 + j] = ct[i * 32 + j] ^ b[j]; }
       const d = JSON.parse(new TextDecoder().decode(acik)), bugun = bugunISO();
-      sonuc = (d.planlar || []).filter(p => p && p.tarih >= bugun && p.salonlar).map(p => ({ tarih: p.tarih, ders: p.ders, sinav: p.sinav || '', gozcu: p.gozcu || {}, salonlar: p.salonlar }));
+      sonuc = (d.planlar || []).filter(p => p && p.tarih >= bugun && p.salonlar).map(p => ({ tarih: p.tarih, ders: p.ders, sinav: p.sinav || '', gozcu: p.gozcu || {}, salonlar: p.salonlar })); ok = true;
     } catch (e) { console.warn('kelebek planı:', e); }
-    D._kb = { t: Date.now(), p: sonuc }; return sonuc;
+    D._kb = { t: Date.now(), p: sonuc, ok }; return sonuc;
   }
   async function planlariGetir() {   // veritabanı (tahta gönderdiyse) + kelebek paketi; aynı sınav iki yerdeyse veritabanındaki
     const [{ data, error }, kb] = await Promise.all([sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders'), kelebekPlanlari()]);
-    const L = (data || []).slice(), var_ = new Set(L.map(p => p.tarih + '|' + p.ders));
+    // K-496: kelebekte artık olmayan (saati değişen / kaldırılan) sınav veritabanında kalsa da gösterilmez — aynı sınav iki kez görünmesin
+    const kbVar = new Set(kb.map(p => p.tarih + '|' + p.ders)), kbOk = D._kb && D._kb.ok;
+    const L = (data || []).filter(p => !kbOk || kbVar.has(p.tarih + '|' + p.ders)), var_ = new Set(L.map(p => p.tarih + '|' + p.ders));
+    if (kbOk && D.rol === 'bas' && !D._eskiPlanSil) {   // baş yönetici: veritabanındaki eski kopyayı da kaldırmayı dener (DersMap de iki kez göstermesin); izin yoksa sessizce geçer
+      D._eskiPlanSil = true;
+      (data || []).filter(p => !kbVar.has(p.tarih + '|' + p.ders)).forEach(p => {
+        sb.from('umal_sinav_plan').delete().eq('tarih', p.tarih).eq('ders', p.ders).then(r => { if (r && r.error) console.warn('eski plan silinemedi:', r.error.message); }, () => {});
+      });
+    }
     kb.forEach(p => { if (!var_.has(p.tarih + '|' + p.ders)) L.push(p); });
     L.sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, 'tr'));
     return { data: L, error: L.length ? null : error };
