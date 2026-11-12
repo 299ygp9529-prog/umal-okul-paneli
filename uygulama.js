@@ -1852,7 +1852,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 
   // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
   async function soruHazirla() {
-    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122105'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122110'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
     window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href });
   }
   async function projeBolumu() {

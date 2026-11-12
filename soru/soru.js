@@ -14,11 +14,12 @@
     sb:       { ad: 'Siyah-beyaz', aciklama: 'Fotokopiye uygun, dolgu yok', renk: '#000000', koyu: '#000000', duzen: 'yan', bosluk: 'kareli', olcek: 100, boy: 48, ust: 'klasik', rozet: 'cerceve', sikler: true, sb: true },
     tasarruf: { ad: 'Tasarruflu test', aciklama: 'İki sütun, az kâğıt', renk: '#000000', koyu: '#000000', duzen: 'alt2', bosluk: 'yok', olcek: 90, boy: 10, ust: 'sade', rozet: 'yazi', sikler: false, sb: true },
     dbs:      { ad: 'Ders Başarı Sınavı', aciklama: 'Sınav başlığı, puan kutusu, iki sütun', renk: '#0d2a4a', koyu: '#0d2a4a', duzen: 'alt2', bosluk: 'duz', olcek: 100, boy: 40, ust: 'sinav', rozet: 'daire', sikler: false },
+    proje:    { ad: 'Proje ödevi', aciklama: 'Proje formatı: bölüm kutusu, teslim bandı, sayfayı dolduran çözüm alanı', renk: '#0fa3b8', koyu: '#0d2a4a', duzen: 'yan', bosluk: 'kareli', olcek: 100, boy: 56, ust: 'proje', rozet: 'kare', sikler: true, dagit: true },
     renkli:   { ad: 'Renkli test', aciklama: 'Renkli başlık bandı ve numaralar', renk: '#ff7a2f', koyu: '#1d2b53', duzen: 'yan', bosluk: 'kareli', olcek: 100, boy: 52, ust: 'renkli', rozet: 'renkli', sikler: true }
   };
   const RENKLER = ['#0fa3b8', '#0d2a4a', '#000000', '#2f6fd6', '#2fbf71', '#b06bff', '#ff7a2f', '#e0245e'];
   const PALET = ['#ff7a2f', '#2f9bff', '#2fbf71', '#b06bff', '#e0245e', '#f2b705'];
-  const VARSAYILAN = { tema: 'klasik', okul: 'ÜMRANİYE MERKEZ ANADOLU LİSESİ', yil: '2026–2027 Eğitim Öğretim Yılı', baslik: 'Matematik', alt: 'Test', sinif: '', not: '', bilgi: true, numara: true, anahtar: false, kitapcik: false };
+  const VARSAYILAN = { bolum: '1', tema: 'klasik', okul: 'ÜMRANİYE MERKEZ ANADOLU LİSESİ', yil: '2026–2027 Eğitim Öğretim Yılı', baslik: 'Matematik', alt: 'Test', sinif: '', not: '', bilgi: true, numara: true, anahtar: false, kitapcik: false };
 
   let A = {}; try { A = JSON.parse(localStorage.getItem(ayarAnahtar) || '{}'); } catch (e) { A = {}; }
   const ayar = Object.assign({}, VARSAYILAN, TEMALAR[A.tema || 'klasik'], A);
@@ -62,7 +63,7 @@
         <div class="kart"><div class="sh-et">BAŞLIK</div><div class="sh-ayar">
           <label class="tam">Okul<input data-a="okul"></label><label class="tam">Yıl satırı<input data-a="yil"></label>
           <label>Başlık<input data-a="baslik" placeholder="9. Sınıf Matematik"></label><label>Alt başlık<input data-a="alt" placeholder="Test / Ders Başarı Sınavı"></label>
-          <label>Sınıf<input data-a="sinif" placeholder="9-A"></label><label>Not / tarih<input data-a="not" placeholder="Teslim: 9 Nisan 2027"></label></div>
+          <label>Sınıf<input data-a="sinif" placeholder="9-A"></label><label class="sh-proje">Bölüm (proje)<input data-a="bolum" placeholder="1"></label><label>Not / tarih<input data-a="not" placeholder="Teslim: 9 Nisan 2027"></label></div>
           <div class="sh-cip coklu" style="margin-top:10px"><span data-t="bilgi">Ad-Sınıf-No kutusu</span><span data-t="sikler">A–E şıkları</span><span data-t="numara">Soru numarası</span><span data-t="anahtar">Cevap anahtarı</span><span data-t="kitapcik">A/B kitapçık</span></div></div>
       </div></div>`;
     stilEkle();
@@ -141,8 +142,11 @@ body.rol-ogretmen .saat-kutu { display: none; }
   // ------------------------------------------------------------------ Sayfa ve öneriler
   let cizGorev = null, vp = null;
   const vpRect = r => { const a = vp.convertToViewportPoint(r[0], r[1]), b = vp.convertToViewportPoint(r[2], r[3]); return [a[0], a[1], b[0], b[1]]; };
+  let hazir = false;   // sayfa çizilip yazıları okunana kadar seçim yapılmaz (eski sayfanın kutuları yeni sayfaya karışmasın)
   async function sayfaCiz() {
     const D_ = S.dosyalar[S.aktif]; if (!D_) return;
+    hazir = false; const kat0 = kok.querySelector('#shKat'); if (kat0) kat0.innerHTML = '';
+    const istek = sayfaCiz.n = (sayfaCiz.n || 0) + 1;
     kok.querySelector('#shBos').classList.add('gizli'); kok.querySelector('#shSahne').classList.remove('gizli');
     S.sayfa = Math.max(1, Math.min(D_.doc.numPages, S.sayfa));
     kok.querySelector('#shSayfaYazi').textContent = `Sayfa ${S.sayfa} / ${D_.doc.numPages}`;
@@ -159,7 +163,8 @@ body.rol-ogretmen .saat-kutu { display: none; }
     try { await cizGorev.promise; } catch (e) { return; }
     cizGorev = null;
     if (!D_.metin[S.sayfa]) D_.metin[S.sayfa] = await sayfaMetni(pg);
-    katCiz();
+    if (istek !== sayfaCiz.n) return;   // bu arada başka sayfaya geçildi
+    hazir = true; katCiz();
   }
   async function sayfaMetni(pg) {
     const tc = await pg.getTextContent(), L = [];
@@ -242,7 +247,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
     S.secim.push(yeni); return true;
   }
   function katCiz() {
-    const kat = kok.querySelector('#shKat'); if (!vp) return;
+    const kat = kok.querySelector('#shKat'); if (!vp || !hazir) return;
     const M = S.dosyalar[S.aktif].metin[S.sayfa] || { oner: [] };
     const bu = S.secim.map((k, i) => [k, i]).filter(([k]) => k.d === S.aktif && k.s === S.sayfa);
     const rect = k => { const [a, b, c, d] = vpRect([k.x0, k.y0, k.x1, k.y1]); return `left:${Math.min(a, c)}px;top:${Math.min(b, d)}px;width:${Math.abs(c - a)}px;height:${Math.abs(d - b)}px`; };
@@ -264,19 +269,20 @@ body.rol-ogretmen .saat-kutu { display: none; }
     q('#shSonra').onclick = () => { S.sayfa++; sayfaCiz(); };
     q('#shUzak').onclick = () => { S.olcek = Math.max(.5, S.olcek - .15); sayfaCiz(); };
     q('#shYakin').onclick = () => { S.olcek = Math.min(3, S.olcek + .15); sayfaCiz(); };
-    document.addEventListener('keydown', function tus(ev) {
+    if (ac.tus) document.removeEventListener('keydown', ac.tus);
+    document.addEventListener('keydown', ac.tus = function tus(ev) {
       if (!kok.isConnected) { document.removeEventListener('keydown', tus); return; }
       if (/INPUT|TEXTAREA|SELECT/.test((ev.target || {}).tagName || '')) return;
       if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { S.sayfa++; sayfaCiz(); } else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { S.sayfa--; sayfaCiz(); }
     });
-    q('#shHepsi').onclick = () => { const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); listeCiz(); katCiz(); bilgi(n ? n + ' soru eklendi.' : 'Bu sayfada önerilen soru yok; kutuyu elle çizin.'); };
+    q('#shHepsi').onclick = () => { if (!hazir) return; const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); listeCiz(); katCiz(); bilgi(n ? n + ' soru eklendi.' : 'Bu sayfada önerilen soru yok; kutuyu elle çizin.'); };
     let window_ = window;
     window_.addEventListener('resize', () => { clearTimeout(baglan.z); baglan.z = setTimeout(() => { if (kok.isConnected && S.aktif >= 0) sayfaCiz(); }, 200); });
     // çizim / taşıma / boyutlandırma
     const sahne = q('#shSahne'); let surus = null;
     const nokta = ev => { const r = sahne.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
     sahne.addEventListener('pointerdown', ev => {
-      if (ev.button !== 0) return;
+      if (ev.button !== 0 || !hazir) return;
       const sil = ev.target.closest('[data-sil]'); if (sil) { S.secim.splice(+sil.dataset.sil, 1); listeCiz(); katCiz(); return; }
       const on = ev.target.closest('[data-o]'); if (on) { const o = S.dosyalar[S.aktif].metin[S.sayfa].oner[+on.dataset.o]; secimEkle(o, o.n); listeCiz(); katCiz(); return; }
       const tut = ev.target.closest('[data-tut]');
@@ -481,7 +487,12 @@ body.rol-ogretmen .saat-kutu { display: none; }
         await ciz.yaz(p, T.okul, M + 30 * PT, y0 - 8.5 * PT, 16, 700, KOYU);
         await ciz.yaz(p, T.yil, M + 30 * PT, y0 - 14.5 * PT, 10.5, 500, GRI);
         await ciz.yaz(p, bas, M + 30 * PT, y0 - 22 * PT, 13, 700, KOYU);
-        if (kitapcik || T.sinif) {
+        if (TM.ust === 'proje') {
+          const bw = 34 * PT, sag = A4W - M;
+          p.drawRectangle({ x: sag - bw, y: y0 - 23 * PT, width: bw, height: 21 * PT, color: hex(KOYU) });
+          await ciz.yaz(p, kitapcik ? 'KİTAPÇIK' : 'BÖLÜM', sag - bw / 2, y0 - 7.6 * PT, 8.6, 500, '#ffffff', 'orta');
+          await ciz.yaz(p, kitapcik || T.bolum || '1', sag - bw / 2, y0 - 18.5 * PT, 24, 700, '#ffffff', 'orta');
+        } else if (kitapcik || T.sinif) {
           const bw = 30 * PT, sag = A4W - M;
           if (sb) ciz.kutu(p, sag - bw, y0 - 23 * PT, bw, 21 * PT, { cizgi: KOYU, k: 1.2 }); else p.drawRectangle({ x: sag - bw, y: y0 - 23 * PT, width: bw, height: 21 * PT, color: hex(KOYU) });
           const yr = sb ? KOYU : '#ffffff';
@@ -501,10 +512,13 @@ body.rol-ogretmen .saat-kutu { display: none; }
       }
       if (T.not) {
         const th = 9 * PT; ciz.kutu(p, M, y0 - th, CW, th, sb ? { cizgi: KOYU, k: .7 } : { cizgi: VURGU, k: .9, dolgu: ACIK });
-        await ciz.yaz(p, T.not, M + 4 * PT, y0 - 6 * PT, 10, 500, KOYU);
+        const tes = /^\s*teslim\s*:\s*/i.exec(T.not);
+        if (tes || TM.ust === 'proje') { const w = await ciz.yaz(p, 'Teslim:', M + 4 * PT, y0 - 6 * PT, 10.5, 700, KOYU); await ciz.yaz(p, tes ? T.not.slice(tes[0].length) : T.not, M + 6 * PT + w, y0 - 6 * PT, 10.5, 500, KOYU); }
+        else await ciz.yaz(p, T.not, M + 4 * PT, y0 - 6 * PT, 10, 500, KOYU);
         await ciz.yaz(p, `Sorular 1–${ogeler.length}`, A4W - M - 4 * PT, y0 - 6 * PT, 9.5, 700, KOYU, 'sag');
         y0 -= th + 4 * PT;
       }
+      if (TM.ust === 'proje') { await ciz.yaz(p, 'Her sorunun çözümünü yanındaki kareli alana yazınız; cevabınızı kutunun altındaki şıklardan işaretleyiniz.', M + 1 * PT, y0 - 1.5 * PT, 8.6, 400, GRI); y0 -= 6 * PT; }
       return y0 - 2 * PT;
     }
     async function kitapcikRozet(p, cx, cy, r, beyaz) {
@@ -551,10 +565,19 @@ body.rol-ogretmen .saat-kutu { display: none; }
     const olc = T.olcek / 100, boyPt = T.boy * PT, ARA = 4 * PT;
     if (T.duzen === 'yan') {
       const SORU_W = CW * .56 - ROZ, COZ_X = M + CW * .56 + ARA, COZ_W = CW - CW * .56 - ARA, SIK = T.sikler ? 8.5 * PT : 0;
+      const UST2 = A4H - M - 13 * PT, ARA_ = 5 * PT;
+      const satir = ogeler.map(o => { const s = Math.min(olc, SORU_W / o.w), qh = o.h * s; return { s, qh, yuk: Math.max(qh + 4 * PT, T.bosluk === 'yok' ? 0 : boyPt, SIK ? 20 * PT : 0) }; });
+      const ek = new Array(ogeler.length).fill(0);
+      if (TM.dagit && T.bosluk !== 'yok') {   // proje: her sayfanın boş kalan yeri o sayfanın çözüm alanlarına paylaştırılır (son sayfa çok boşsa olduğu gibi)
+        let bas = 0, yy = y; const sayfa = [];
+        satir.forEach((r, n) => { if (yy - r.yuk < ALT && n > bas) { sayfa.push([bas, n, yy]); bas = n; yy = UST2; } yy -= r.yuk + ARA_; });
+        sayfa.push([bas, satir.length, yy]);
+        sayfa.forEach(([a, b, yy], i) => { const artan = yy + ARA_ - ALT, son = i === sayfa.length - 1; if (artan > 0 && (!son || artan < 60 * PT)) for (let n = a; n < b; n++) ek[n] = Math.min(artan / (b - a), 22 * PT); });
+      }
       for (let n = 0; n < ogeler.length; n++) {
-        const o = ogeler[n], s = Math.min(olc, SORU_W / o.w), qh = o.h * s;
-        const yuk = Math.max(qh + 4 * PT, T.bosluk === 'yok' ? 0 : boyPt, SIK ? 20 * PT : 0);
-        if (y - yuk < ALT) { yeniSayfa(); y = await akanBaslik(sy); }
+        const o = ogeler[n], s = satir[n].s, qh = satir[n].qh;
+        const yuk = satir[n].yuk + ek[n];
+        if (y - yuk < ALT - 1) { yeniSayfa(); y = await akanBaslik(sy); }
         const rw = await rozet(sy, n + 1, M, y);
         soruCiz(sy, o, M + (T.numara ? ROZ + 2 * PT : 0), y - 1 * PT - qh, s); maskele(sy, o, M + (T.numara ? ROZ + 2 * PT : 0), y - 1 * PT - qh, s);
         if (T.bosluk !== 'yok') {
@@ -608,7 +631,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
     const N = sayfalar.length;
     for (let i = 0; i < N; i++) {
       const p = sayfalar[i]; ciz.cizgi(p, M, M + 5.5 * PT, A4W - M, M + 5.5 * PT, IZGARA, .6);
-      await ciz.yaz(p, [T.okul && 'Ümraniye Merkez Anadolu Lisesi', T.not].filter(Boolean).join(' · '), M, M + 1.4 * PT, 7.4, 400, GRI);
+      await ciz.yaz(p, TM.ust === 'proje' && T.not ? 'Teslim: ' + T.not.replace(/^\s*teslim\s*:\s*/i, '') : [T.okul && 'Ümraniye Merkez Anadolu Lisesi', T.not].filter(Boolean).join(' · '), M, M + 1.4 * PT, 7.4, 400, GRI);
       await ciz.yaz(p, `Sayfa ${i + 1} / ${N}`, A4W - M, M + 1.4 * PT, 8.2, 500, KOYU, 'sag');
     }
     return await pdf.save();
