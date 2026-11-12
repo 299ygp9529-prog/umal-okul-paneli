@@ -2293,7 +2293,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <div class="soluk kucuk" style="margin-top:12px">Dosya inmiyorsa: Başlat'a sağ tıklayın → <b>Windows PowerShell (Yönetici)</b> → aşağıdaki satırı yapıştırıp Enter.</div>
           <div class="pr-komut"><code id="prKomut">${esc(komut)}</code><button class="ikincil" id="prKopya">Kopyala</button></div>
           <div class="soluk kucuk" style="margin-top:12px">Kurulunca: bilgisayar açıldığında kendiliğinden başlar, kapanırsa bir dakika içinde yeniden başlar, yeni sürümü kendisi alır. Eski "UMAL Ajan" durdurulur.</div></div>
-        <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Kurulu bilgisayarlar<button class="ikincil" id="prYenile" style="margin-left:auto">↻ Yenile</button></h2><div id="prListe" class="soluk">Yükleniyor…</div></div></div>`;
+        <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Kurulu bilgisayarlar<button class="ikincil" id="prEski" style="margin-left:auto;display:none">Eski Ajan kayıtlarını kaldır</button><button class="ikincil" id="prYenile">↻ Yenile</button></h2><div id="prListe" class="soluk">Yükleniyor…</div></div></div>`;
     $('#prKopya').onclick = async () => { try { await navigator.clipboard.writeText(komut); $('#prKopya').textContent = 'Kopyalandı ✓'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#prKomut')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); } };
     const yukle = async () => {
       if (D.bolum !== 'print' || !$('#prListe')) return;
@@ -2301,6 +2301,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (error) { $('#prListe').textContent = 'Yüklenemedi: ' + hataYaz(error); return; }
       const L = (data || []).filter(t => ((t.durum || {}).cihaz_turu || '').toLowerCase() === 'bilgisayar').sort((a, b) => String(a.durum.sinif || '').localeCompare(String(b.durum.sinif || ''), tr));
       const once = g => { const s = Math.max(0, (Date.now() - new Date(g).getTime()) / 1000); return s < 90 ? 'şimdi' : s < 3600 ? Math.round(s / 60) + ' dk önce' : s < 86400 ? Math.round(s / 3600) + ' saat önce' : Math.round(s / 86400) + ' gün önce'; };
+      const eskiler = L.filter(t => !/^Print/i.test((t.durum || {}).surum || ''));
+      $('#prEski').style.display = eskiler.length ? '' : 'none';
+      $('#prEski').onclick = async () => {
+        if (!confirm(`${eskiler.length} eski Ajan kaydı listeden kaldırılacak:\n${eskiler.map(t => '• ' + ((t.durum || {}).sinif || t.cihaz)).join('\n')}\n\nEski Ajan hâlâ çalışan bilgisayar birkaç dakikada yeniden görünür; o bilgisayara önce Print kurun.`)) return;
+        const { data: silinen, error: se } = await sb.from('umal_tahtalar').delete().in('cihaz', eskiler.map(t => t.cihaz)).select('cihaz');
+        if (se || !(silinen || []).length) alert('Kaldırılamadı' + (se ? ': ' + hataYaz(se) : ' (yetki yok).'));
+        await yukle();
+      };
       $('#prListe').classList.toggle('soluk', !L.length);
       $('#prListe').innerHTML = L.length ? L.map(t => { const d = t.durum || {}, acik = Date.now() - new Date(t.gorulme).getTime() < 5 * 60000, yz = d.kurulu_yazicilar || [], yeni = /^Print/i.test(d.surum || '');
         return `<div class="pr-pc ${acik ? 'acik' : ''}"><div class="pr-pc-ust"><span class="pr-nokta"></span><b>${esc(d.sinif || t.cihaz)}</b><span class="pr-surum ${yeni ? 'yeni' : ''}">${esc(yeni ? d.surum : 'Eski Ajan' + (d.surum ? ' ' + d.surum : ''))}</span><span class="soluk kucuk" style="margin-left:auto">${acik ? 'açık' : 'kapalı'} · ${esc(once(t.gorulme))}</span></div>
