@@ -37,7 +37,7 @@
   }
 
   // ------------------------------------------------------------------ Durum
-  const S = { dosyalar: [], aktif: -1, sayfa: 1, secim: [], olcek: 1, kutu: null };   // secim: {d, s, x0, y0, x1, y1, maske:[[...]], cevap}
+  const S = { dosyalar: [], aktif: -1, sayfa: 1, secim: [], taslak: [], olcek: 1, kutu: null };   // taslak: sayfada işaretlenen, "Soru ekle" bekleyen kutular   // secim: {d, s, x0, y0, x1, y1, maske:[[...]], cevap}
   let kok = null;
 
   async function ac(el, o) {
@@ -48,8 +48,8 @@
       <div class="kart sh-pdf"><div class="sh-arac"><label class="ikincil sh-dosya">📄 PDF aç<input type="file" id="shDosya" accept="application/pdf" multiple hidden></label><select id="shDosyaSec"></select>
           <span class="sh-sayfa"><button class="bag" id="shOnce">‹</button><span id="shSayfaYazi">—</span><button class="bag" id="shSonra">›</button></span>
           <span class="sh-sayfa"><button class="bag" id="shUzak">−</button><span id="shOlcekYazi">%100</span><button class="bag" id="shYakin">+</button></span>
-          <button class="ikincil" id="shHepsi" title="Bu sayfada bulunan bütün soruları ekle">Sayfadakileri ekle</button></div>
-        <div class="sh-gorunum" id="shGorunum"><div class="sh-bos" id="shBos"><b>Kitap ya da deneme PDF'ini buraya sürükleyin</b><span>ya da "PDF aç". Dosya bilgisayarınızdan çıkmaz.</span><span class="kucuk">Sayfada fareyle soru çevresine kutu çizin ya da kesik çizgili önerilere tıklayın.</span></div><div class="sh-sahne gizli" id="shSahne"><canvas id="shTuval"></canvas><div class="sh-kat" id="shKat"></div></div></div></div>
+          <button class="ikincil" id="shHepsi" title="Bu sayfada bulunan bütün soruları işaretle">Sayfadakileri işaretle</button><button class="birincil" id="shEkle" disabled>➕ Soru ekle</button></div>
+        <div class="sh-gorunum" id="shGorunum"><div class="sh-bos" id="shBos"><b>Kitap ya da deneme PDF'ini buraya sürükleyin</b><span>ya da "PDF aç". Dosya bilgisayarınızdan çıkmaz.</span><span class="kucuk">Soruya tıklayın (Atlas soruyu kendisi bulur) ya da fareyle kutu çizin; sonra "➕ Soru ekle". Sayfa boşalır, sonraki sayfaya geçebilirsiniz.</span></div><div class="sh-sahne gizli" id="shSahne"><canvas id="shTuval"></canvas><div class="sh-kat" id="shKat"></div></div></div></div>
       <div class="sh-yan">
         <div class="sh-eylem"><div class="sh-dugmeler"><button class="ikincil" id="shOnizle">👁 Önizle</button><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
           <div class="kucuk soluk" id="shBilgi" style="text-align:center">Soru seçin, sonra "Seçilenleri PDF yap". PDF bilgisayarınızda hazırlanır.</div></div>
@@ -145,6 +145,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   let hazir = false;   // sayfa çizilip yazıları okunana kadar seçim yapılmaz (eski sayfanın kutuları yeni sayfaya karışmasın)
   async function sayfaCiz() {
     const D_ = S.dosyalar[S.aktif]; if (!D_) return;
+    if (S.taslak.length && S.taslak.some(k => k.d !== S.aktif || k.s !== S.sayfa)) { const n = taslakEkle(true); if (n) bilgi(n + ' işaretli soru listeye eklendi.'); }
     hazir = false; const kat0 = kok.querySelector('#shKat'); if (kat0) kat0.innerHTML = '';
     const istek = sayfaCiz.n = (sayfaCiz.n || 0) + 1;
     kok.querySelector('#shBos').classList.add('gizli'); kok.querySelector('#shSahne').classList.remove('gizli');
@@ -241,18 +242,58 @@ body.rol-ogretmen .saat-kutu { display: none; }
     return [[r.x - 1.5, r.y - r.fs * .3, r.x + w + 2, r.y + r.fs * .95]];
   }
   const ayni = (a, b) => a.d === b.d && a.s === b.s && Math.abs(a.x0 - b.x0) < 3 && Math.abs(a.y1 - b.y1) < 3;
-  function secimEkle(k, n) {
+  function secimEkle(k, n) {   // sayfada işaretle (taslak); "Soru ekle" ile listeye geçer
     const yeni = kirp(Object.assign({ d: S.aktif, s: S.sayfa, kno: n || null, cevap: '' }, k));
-    if (S.secim.some(x => ayni(x, yeni))) return false;
-    S.secim.push(yeni); return true;
+    if (S.secim.some(x => ayni(x, yeni)) || S.taslak.some(x => ayni(x, yeni))) return false;
+    S.taslak.push(yeni); return true;
+  }
+  function taslakEkle(sessiz) {   // işaretlenenler listeye; sayfa boşalır
+    const n = S.taslak.length; if (!n) return 0;
+    S.secim.push(...S.taslak); S.taslak = [];
+    listeCiz(); katCiz(); if (!sessiz) bilgi(n + ' soru eklendi. Başka sayfaya geçip devam edebilirsiniz.');
+    return n;
+  }
+  // tıklanan yerdeki soruyu kendisi bul: yazı bloğunu boş bantlara (≥ 16 pt) ve sütun ayraçlarına göre ayır
+  function otoBul(px, py) {
+    const cv = kok.querySelector('#shTuval'), dpr = cv.width / vp.width, W = cv.width, H = cv.height;
+    const im = cv.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data;
+    const dolu = (x, y) => { const i = (y * W + x) * 4; return !(im[i] > 238 && im[i + 1] > 238 && im[i + 2] > 238); };
+    const X = Math.round(px * dpr), Y = Math.round(py * dpr), olc = vp.scale * dpr, G = Math.round(16 * olc), GX = Math.round(14 * olc);
+    // sütun ayraçları: sayfa boyunun yarısından uzun dikey çizgiler
+    let L = Math.round(W * .03), R = Math.round(W * .97);
+    for (let x = 0; x < W; x += 1) {
+      let n = 0; for (let y = 0; y < H; y += 3) if (dolu(x, y)) n++;
+      if (n * 3 > H * .5) { if (x < X - 2) L = Math.max(L, x + 3); else if (x > X + 2) { R = Math.min(R, x - 3); break; } }
+    }
+    const satirDolu = y => { let n = 0; for (let x = L; x <= R; x += 2) if (dolu(x, y)) n++; return n; };
+    const uzunCizgi = y => satirDolu(y) * 2 > (R - L) * .8;
+    let y0 = Y, y1 = Y;
+    let k = 0; while (k < 50 * olc && !satirDolu(Y - k) && !satirDolu(Y + k)) k++;   // boş yere tıklandıysa en yakın yazı
+    if (k >= 50 * olc) return null;
+    const bas = satirDolu(Y - k) ? Y - k : Y + k;
+    for (let y = bas, bos = 0; y > 0; y--) { if (uzunCizgi(y)) break; if (satirDolu(y)) { y0 = y; bos = 0; } else if (++bos >= G) break; }
+    for (let y = bas, bos = 0; y < H - 1; y++) { if (uzunCizgi(y)) break; if (satirDolu(y)) { y1 = y; bos = 0; } else if (++bos >= G) break; }
+    if (y0 > bas) y0 = bas; if (y1 < bas) y1 = bas;
+    // yatay: bu satırlarda sağa-sola, ≥ 14 pt boş sütun bandına kadar
+    const sutunDolu = x => { for (let y = y0; y <= y1; y += 2) if (dolu(x, y)) return true; return false; };
+    let x0 = Math.max(L, Math.min(X, R)), x1 = x0;
+    for (let x = x0, bos = 0; x >= L; x--) { if (sutunDolu(x)) { x0 = x; bos = 0; } else if (++bos >= GX * 3) break; }
+    for (let x = x1, bos = 0; x <= R; x++) { if (sutunDolu(x)) { x1 = x; bos = 0; } else if (++bos >= GX * 3) break; }
+    if (y1 - y0 < 8 * olc || x1 - x0 < 20 * olc) return null;
+    const pad = 4 * olc, a = vp.convertToPdfPoint((x0 - pad) / dpr, (y0 - pad) / dpr), b = vp.convertToPdfPoint((x1 + pad) / dpr, (y1 + pad) / dpr);
+    const kk = { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y0: Math.min(a[1], b[1]), y1: Math.max(a[1], b[1]) }; kk.maske = maskeBul(kk);
+    return kk;
   }
   function katCiz() {
     const kat = kok.querySelector('#shKat'); if (!vp || !hazir) return;
     const M = S.dosyalar[S.aktif].metin[S.sayfa] || { oner: [] };
-    const bu = S.secim.map((k, i) => [k, i]).filter(([k]) => k.d === S.aktif && k.s === S.sayfa);
+    const bu = S.taslak.map((k, i) => [k, i]).filter(([k]) => k.d === S.aktif && k.s === S.sayfa);
+    const eklenen = S.secim.filter(k => k.d === S.aktif && k.s === S.sayfa);   // listeye eklenmişler sayfada gösterilmez (sayfa boşalır)
+    const eb = kok.querySelector('#shEkle'); if (eb) { eb.disabled = !S.taslak.length; eb.textContent = S.taslak.length ? `➕ Soru ekle (${S.taslak.length})` : '➕ Soru ekle'; }
     const rect = k => { const [a, b, c, d] = vpRect([k.x0, k.y0, k.x1, k.y1]); return `left:${Math.min(a, c)}px;top:${Math.min(b, d)}px;width:${Math.abs(c - a)}px;height:${Math.abs(d - b)}px`; };
-    kat.innerHTML = M.oner.filter(o => !bu.some(([k]) => k.kno === o.n || ayni(k, Object.assign({ d: S.aktif, s: S.sayfa }, kirpSiz(o))))).map((o, j) => `<div class="sh-k oneri" data-o="${M.oner.indexOf(o)}" style="${rect(o)}"><i>${o.n}. soru · ekle</i></div>`).join('')
-      + bu.map(([k, i]) => `<div class="sh-k secili" data-i="${i}" style="${rect(k)}"><i>✓ ${i + 1}</i><button class="x" data-sil="${i}">✕</button><span class="tut so" data-tut="so"></span><span class="tut ss" data-tut="ss"></span><span class="tut sl" data-tut="sl"></span><span class="tut sa" data-tut="sa"></span></div>`).join('');
+    const ortusur = (k, o) => k.kno === o.n || ayni(k, Object.assign({ d: S.aktif, s: S.sayfa }, o)) || (Math.min(k.x1, o.x1) - Math.max(k.x0, o.x0) > 20 && Math.min(k.y1, o.y1) - Math.max(k.y0, o.y0) > 15);
+    kat.innerHTML = M.oner.filter(o => !bu.some(([k]) => ortusur(k, o)) && !eklenen.some(k => ortusur(k, o))).map((o, j) => `<div class="sh-k oneri" data-o="${M.oner.indexOf(o)}" style="${rect(o)}"><i>${o.n}. soru · ekle</i></div>`).join('')
+      + bu.map(([k, i]) => `<div class="sh-k secili" data-i="${i}" style="${rect(k)}"><i>✓ ${S.secim.length + i + 1}</i><button class="x" data-sil="${i}">✕</button><span class="tut so" data-tut="so"></span><span class="tut ss" data-tut="ss"></span><span class="tut sl" data-tut="sl"></span><span class="tut sa" data-tut="sa"></span></div>`).join('');
   }
   const kirpSiz = o => o;
 
@@ -275,7 +316,8 @@ body.rol-ogretmen .saat-kutu { display: none; }
       if (/INPUT|TEXTAREA|SELECT/.test((ev.target || {}).tagName || '')) return;
       if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { S.sayfa++; sayfaCiz(); } else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { S.sayfa--; sayfaCiz(); }
     });
-    q('#shHepsi').onclick = () => { if (!hazir) return; const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); listeCiz(); katCiz(); bilgi(n ? n + ' soru eklendi.' : 'Bu sayfada önerilen soru yok; kutuyu elle çizin.'); };
+    q('#shHepsi').onclick = () => { if (!hazir) return; const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); katCiz(); bilgi(n ? n + ' soru işaretlendi; "➕ Soru ekle" ile listeye alın.' : 'Bu sayfada önerilen soru yok; soruya tıklayın ya da kutu çizin.'); };
+    q('#shEkle').onclick = () => taslakEkle();
     let window_ = window;
     window_.addEventListener('resize', () => { clearTimeout(baglan.z); baglan.z = setTimeout(() => { if (kok.isConnected && S.aktif >= 0) sayfaCiz(); }, 200); });
     // çizim / taşıma / boyutlandırma
@@ -283,10 +325,10 @@ body.rol-ogretmen .saat-kutu { display: none; }
     const nokta = ev => { const r = sahne.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
     sahne.addEventListener('pointerdown', ev => {
       if (ev.button !== 0 || !hazir) return;
-      const sil = ev.target.closest('[data-sil]'); if (sil) { S.secim.splice(+sil.dataset.sil, 1); listeCiz(); katCiz(); return; }
-      const on = ev.target.closest('[data-o]'); if (on) { const o = S.dosyalar[S.aktif].metin[S.sayfa].oner[+on.dataset.o]; secimEkle(o, o.n); listeCiz(); katCiz(); return; }
+      const sil = ev.target.closest('[data-sil]'); if (sil) { S.taslak.splice(+sil.dataset.sil, 1); katCiz(); return; }
+      const on = ev.target.closest('[data-o]'); if (on) { const o = S.dosyalar[S.aktif].metin[S.sayfa].oner[+on.dataset.o]; secimEkle(o, o.n); katCiz(); return; }
       const tut = ev.target.closest('[data-tut]');
-      if (tut) { const i = +tut.closest('[data-i]').dataset.i; surus = { tur: 'boy', i, kose: tut.dataset.tut, k0: Object.assign({}, S.secim[i]) }; }
+      if (tut) { const i = +tut.closest('[data-i]').dataset.i; surus = { tur: 'boy', i, kose: tut.dataset.tut }; }
       else if (ev.target.closest('[data-i]')) return;
       else { const p = nokta(ev); surus = { tur: 'ciz', p0: p, el: document.createElement('div') }; surus.el.className = 'sh-cizim'; q('#shKat').appendChild(surus.el); }
       sahne.setPointerCapture(ev.pointerId); ev.preventDefault();
@@ -294,7 +336,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
     sahne.addEventListener('pointermove', ev => {
       if (!surus) return; const p = nokta(ev);
       if (surus.tur === 'ciz') { const [a, b] = surus.p0; Object.assign(surus.el.style, { left: Math.min(a, p[0]) + 'px', top: Math.min(b, p[1]) + 'px', width: Math.abs(p[0] - a) + 'px', height: Math.abs(p[1] - b) + 'px' }); return; }
-      const [x, y] = vp.convertToPdfPoint(p[0], p[1]), k = S.secim[surus.i], c = surus.kose;
+      const [x, y] = vp.convertToPdfPoint(p[0], p[1]), k = S.taslak[surus.i], c = surus.kose;
       if (c === 'so' || c === 'sl') k.x0 = Math.min(x, k.x1 - 10); else k.x1 = Math.max(x, k.x0 + 10);
       if (c === 'so' || c === 'ss') k.y1 = Math.max(y, k.y0 + 10); else k.y0 = Math.min(y, k.y1 - 10);
       katCiz();
@@ -306,7 +348,10 @@ body.rol-ogretmen .saat-kutu { display: none; }
         if (Math.abs(p[0] - s.p0[0]) > 12 && Math.abs(p[1] - s.p0[1]) > 12) {
           const a = vp.convertToPdfPoint(s.p0[0], s.p0[1]), b = vp.convertToPdfPoint(p[0], p[1]);
           const k = { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y0: Math.min(a[1], b[1]), y1: Math.max(a[1], b[1]) }; k.maske = maskeBul(k);
-          secimEkle(k); listeCiz();
+          secimEkle(k);
+        } else if (Math.abs(p[0] - s.p0[0]) < 6 && Math.abs(p[1] - s.p0[1]) < 6) {   // tıklama: Atlas soruyu kendisi bulur
+          const k = otoBul(p[0], p[1]);
+          if (k) { secimEkle(k); bilgi('Soru işaretlendi. Kutuyu köşelerinden düzeltebilirsiniz; bitince "➕ Soru ekle".'); } else bilgi('Burada soru bulunamadı; fareyle kutu çizin.');
         }
       }
       katCiz();
@@ -362,6 +407,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   const hex = h => { const n = parseInt(String(h).replace('#', ''), 16); return window.PDFLib.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255); };
   const acik = (h, t) => { const n = parseInt(String(h).replace('#', ''), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; return '#' + [r, g, b].map(c => Math.round(c + (255 - c) * t).toString(16).padStart(2, '0')).join(''); };
   async function uret(onizle) {
+    taslakEkle(true);
     if (!S.secim.length) { bilgi('Önce soru seçin.'); return; }
     const b1 = kok.querySelector('#shIndir'), b2 = kok.querySelector('#shOnizle'); b1.disabled = b2.disabled = true; bilgi('PDF hazırlanıyor…');
     try {
