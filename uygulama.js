@@ -137,6 +137,7 @@
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
+    { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
   function menuKur() {
@@ -2275,6 +2276,39 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz();
     yenile(async () => ciz(), 60);
+  }
+
+  // ------------------------------------------------------------------ Print (K-469)
+  // UMAL Print: okul bilgisayarına kurulur, o bilgisayardaki yazıcıları DersMap ve tahtalara açar. Yalnız baş yönetici görür.
+  async function printSayfa() {
+    const komut = `[Net.ServicePointManager]::SecurityProtocol='Tls12';[Net.ServicePointManager]::ServerCertificateValidationCallback={$true};iex (New-Object Net.WebClient).DownloadString('https://umalatlas.com.tr/print/kur.ps1')`;
+    $('#icerik').innerHTML = `<div class="ust"><h1>Print</h1><span class="soluk kucuk" style="align-self:center">Okul bilgisayarlarındaki yazıcı ve fotokopi makinelerinden çıktı</span></div>
+      <div class="pr-iki">
+        <div class="kart"><h2 style="margin-top:0">Bilgisayara kur</h2>
+          <ol class="pr-adim"><li>Yazıcının bağlı olduğu bilgisayarda bu sayfayı açın ve dosyayı indirin.</li>
+            <li>İnen <b>UMAL-Print-Kur</b> dosyasına çift tıklayın. "Windows kişisel bilgisayarınızı korudu" çıkarsa <b>Ek bilgi → Yine de çalıştır</b>; sonra <b>Evet</b>.</li>
+            <li>Sorulan yere bilgisayarın adını yazın (ör. Kütüphane) ve Enter'a basın.</li>
+            <li>"KURULDU" yazısını görünce pencereyi kapatın. Bilgisayar 1–2 dakikada aşağıdaki listede görünür.</li></ol>
+          <div class="dugmeler" style="justify-content:flex-start"><a class="dugme birincil" href="print/UMAL-Print-Kur.cmd" download>⬇ UMAL Print'i indir</a><a class="dugme ikincil" href="print/UMAL-Print-Kaldir.cmd" download>Kaldırma dosyası</a></div>
+          <div class="soluk kucuk" style="margin-top:12px">Dosya inmiyorsa: Başlat'a sağ tıklayın → <b>Windows PowerShell (Yönetici)</b> → aşağıdaki satırı yapıştırıp Enter.</div>
+          <div class="pr-komut"><code id="prKomut">${esc(komut)}</code><button class="ikincil" id="prKopya">Kopyala</button></div>
+          <div class="soluk kucuk" style="margin-top:12px">Kurulunca: bilgisayar açıldığında kendiliğinden başlar, kapanırsa bir dakika içinde yeniden başlar, yeni sürümü kendisi alır. Eski "UMAL Ajan" durdurulur.</div></div>
+        <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Kurulu bilgisayarlar<button class="ikincil" id="prYenile" style="margin-left:auto">↻ Yenile</button></h2><div id="prListe" class="soluk">Yükleniyor…</div></div></div>`;
+    $('#prKopya').onclick = async () => { try { await navigator.clipboard.writeText(komut); $('#prKopya').textContent = 'Kopyalandı ✓'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#prKomut')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); } };
+    const yukle = async () => {
+      if (D.bolum !== 'print' || !$('#prListe')) return;
+      const { data, error } = await sb.from('umal_tahtalar').select('cihaz,durum,gorulme');
+      if (error) { $('#prListe').textContent = 'Yüklenemedi: ' + hataYaz(error); return; }
+      const L = (data || []).filter(t => ((t.durum || {}).cihaz_turu || '').toLowerCase() === 'bilgisayar').sort((a, b) => String(a.durum.sinif || '').localeCompare(String(b.durum.sinif || ''), tr));
+      const once = g => { const s = Math.max(0, (Date.now() - new Date(g).getTime()) / 1000); return s < 90 ? 'şimdi' : s < 3600 ? Math.round(s / 60) + ' dk önce' : s < 86400 ? Math.round(s / 3600) + ' saat önce' : Math.round(s / 86400) + ' gün önce'; };
+      $('#prListe').classList.toggle('soluk', !L.length);
+      $('#prListe').innerHTML = L.length ? L.map(t => { const d = t.durum || {}, acik = Date.now() - new Date(t.gorulme).getTime() < 5 * 60000, yz = d.kurulu_yazicilar || [], yeni = /^Print/i.test(d.surum || '');
+        return `<div class="pr-pc ${acik ? 'acik' : ''}"><div class="pr-pc-ust"><span class="pr-nokta"></span><b>${esc(d.sinif || t.cihaz)}</b><span class="pr-surum ${yeni ? 'yeni' : ''}">${esc(yeni ? d.surum : 'Eski Ajan' + (d.surum ? ' ' + d.surum : ''))}</span><span class="soluk kucuk" style="margin-left:auto">${acik ? 'açık' : 'kapalı'} · ${esc(once(t.gorulme))}</span></div>
+          <div class="pr-yz">${yz.length ? yz.map(y => `<span>${esc(y.ad)}</span>`).join('') : '<span class="soluk">yazıcı bildirmedi</span>'}</div>${d.yazdirma_hazir === false ? '<div class="turuncu kucuk">Yazdırma programı eksik; kurulumu yeniden çalıştırın.</div>' : ''}${d.hata && d.hata.ozet ? `<div class="soluk kucuk">Son hata (${esc(d.hata.zaman || '')}): ${esc(d.hata.ozet)}</div>` : ''}</div>`; }).join('') : 'Henüz kurulu bilgisayar yok.';
+    };
+    $('#prYenile').onclick = yukle;
+    await yukle();
+    yenile(yukle, 20);
   }
 
   // ------------------------------------------------------------------ Tahta Kontrol (K-377)

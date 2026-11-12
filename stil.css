@@ -905,3 +905,15 @@ span.tk-gel.neon { color: var(--neon); }
 .nb-hucre2.duzen { border-style: dashed; border-color: rgba(34,232,255,.45); cursor: pointer; }
 .nb-ad { text-align: left; font: inherit; color: #e8f1ff; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.35); border-radius: 8px; padding: 3px 8px; cursor: pointer; }
 .nb-ad.secili { background: rgba(255,154,58,.25); border-color: #ff9a3a; color: #ffd2a1; box-shadow: 0 0 8px rgba(255,154,58,.5); }
+/* K-469: Print sayfası */
+.pr-iki { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.pr-adim { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 6px; line-height: 1.45; }
+a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; border-radius: 10px; font-weight: 800; }
+.pr-komut { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.pr-komut code { flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.4; word-break: break-all; background: #0a1424; border: 1px solid rgba(34,232,255,.3); border-radius: 8px; padding: 8px 10px; color: #bfefff; user-select: all; }
+.pr-pc { background: #132440; border: 1px solid rgba(127,246,255,.12); border-radius: 12px; padding: 9px 12px; margin-bottom: 8px; }
+.pr-pc-ust { display: flex; align-items: center; gap: 8px; }
+.pr-nokta { width: 9px; height: 9px; border-radius: 50%; background: #6b7a90; flex: none; } .pr-pc.acik .pr-nokta { background: #2fbf71; box-shadow: 0 0 8px #2fbf71; }
+.pr-surum { font-size: 11.5px; font-weight: 800; border-radius: 7px; padding: 1px 7px; color: #ffd2a1; border: 1px solid #ff9a3a; } .pr-surum.yeni { color: #7ff6ff; border-color: rgba(34,232,255,.7); }
+.pr-yz { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; } .pr-yz span { font-size: 12.5px; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.25); border-radius: 7px; padding: 2px 8px; }
+@media (max-width: 760px) { .pr-iki { grid-template-columns: 1fr; } }
