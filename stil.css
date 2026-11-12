@@ -901,3 +901,7 @@ span.tk-gel.neon { color: var(--neon); }
 .ara input { border: 1px solid rgba(34,232,255,.85); box-shadow: 0 0 10px rgba(34,232,255,.35), inset 0 0 6px rgba(34,232,255,.12); }
 .ara input:focus { outline: none; border-color: #22e8ff; box-shadow: 0 0 14px rgba(34,232,255,.6), inset 0 0 6px rgba(34,232,255,.18); }
 .ust:has(.sag-ust) + .cipler:empty { margin-top: 0; }
+/* K-468: nöbet çizelgesini düzenleme */
+.nb-hucre2.duzen { border-style: dashed; border-color: rgba(34,232,255,.45); cursor: pointer; }
+.nb-ad { text-align: left; font: inherit; color: #e8f1ff; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.35); border-radius: 8px; padding: 3px 8px; cursor: pointer; }
+.nb-ad.secili { background: rgba(255,154,58,.25); border-color: #ff9a3a; color: #ffd2a1; box-shadow: 0 0 8px rgba(255,154,58,.5); }
