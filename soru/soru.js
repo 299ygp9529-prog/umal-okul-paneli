@@ -161,11 +161,14 @@ body.rol-ogretmen .saat-kutu { display: none; }
     cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = vp.width + 'px'; cv.style.height = vp.height + 'px';
     if (cizGorev) { try { cizGorev.cancel(); } catch (e) {} }
     cizGorev = pg.render({ canvasContext: cv.getContext('2d', { willReadFrequently: true }), viewport: vp, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null });
-    try { await cizGorev.promise; } catch (e) { return; }
+    bilgi('Sayfa yükleniyor…');
+    try { await cizGorev.promise; } catch (e) { if (istek === sayfaCiz.n && !(e && /cancel/i.test(e.name + e.message))) { console.error(e); bilgi('Sayfa çizilemedi: ' + (e.message || e)); hazir = true; } return; }
     cizGorev = null;
-    if (!D_.metin[S.sayfa]) D_.metin[S.sayfa] = await sayfaMetni(pg);
+    if (!D_.metin[S.sayfa]) { try { D_.metin[S.sayfa] = await sayfaMetni(pg); } catch (e) { console.error('metin', e); D_.metin[S.sayfa] = { L: [], oner: [] }; } }
     if (istek !== sayfaCiz.n) return;   // bu arada başka sayfaya geçildi
-    hazir = true; katCiz();
+    hazir = true;
+    try { katCiz(); } catch (e) { console.error('kat', e); }
+    const M_ = D_.metin[S.sayfa]; bilgi(M_.oner.length ? `Bu sayfada ${M_.oner.length} soru bulundu: tıklayın ya da "Sayfadakileri işaretle".` : 'Soruya tıklayın ya da fareyle kutu çizin.');
   }
   async function sayfaMetni(pg) {
     const tc = await pg.getTextContent(), L = [];
@@ -316,7 +319,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
       if (/INPUT|TEXTAREA|SELECT/.test((ev.target || {}).tagName || '')) return;
       if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { S.sayfa++; sayfaCiz(); } else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { S.sayfa--; sayfaCiz(); }
     });
-    q('#shHepsi').onclick = () => { if (!hazir) return; const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); katCiz(); bilgi(n ? n + ' soru işaretlendi; "➕ Soru ekle" ile listeye alın.' : 'Bu sayfada önerilen soru yok; soruya tıklayın ya da kutu çizin.'); };
+    q('#shHepsi').onclick = () => { if (!hazir) { bilgi('Sayfa yükleniyor, bir saniye…'); return; } const M = (S.dosyalar[S.aktif] || { metin: {} }).metin[S.sayfa]; if (!M) return; let n = 0; M.oner.forEach(o => { if (secimEkle(o, o.n)) n++; }); katCiz(); bilgi(n ? n + ' soru işaretlendi; "➕ Soru ekle" ile listeye alın.' : 'Bu sayfada önerilen soru yok; soruya tıklayın ya da kutu çizin.'); };
     q('#shEkle').onclick = () => taslakEkle();
     let window_ = window;
     window_.addEventListener('resize', () => { clearTimeout(baglan.z); baglan.z = setTimeout(() => { if (kok.isConnected && S.aktif >= 0) sayfaCiz(); }, 200); });
@@ -324,7 +327,8 @@ body.rol-ogretmen .saat-kutu { display: none; }
     const sahne = q('#shSahne'); let surus = null;
     const nokta = ev => { const r = sahne.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
     sahne.addEventListener('pointerdown', ev => {
-      if (ev.button !== 0 || !hazir) return;
+      if (ev.button !== 0) return;
+      if (!hazir) { bilgi('Sayfa yükleniyor, bir saniye…'); return; }
       const sil = ev.target.closest('[data-sil]'); if (sil) { S.taslak.splice(+sil.dataset.sil, 1); katCiz(); return; }
       const on = ev.target.closest('[data-o]'); if (on) { const o = S.dosyalar[S.aktif].metin[S.sayfa].oner[+on.dataset.o]; secimEkle(o, o.n); katCiz(); return; }
       const tut = ev.target.closest('[data-tut]');
@@ -350,7 +354,10 @@ body.rol-ogretmen .saat-kutu { display: none; }
           const k = { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y0: Math.min(a[1], b[1]), y1: Math.max(a[1], b[1]) }; k.maske = maskeBul(k);
           secimEkle(k);
         } else if (Math.abs(p[0] - s.p0[0]) < 6 && Math.abs(p[1] - s.p0[1]) < 6) {   // tıklama: Atlas soruyu kendisi bulur
-          const k = otoBul(p[0], p[1]);
+          const M_ = S.dosyalar[S.aktif].metin[S.sayfa] || { oner: [] }, [qx, qy] = vp.convertToPdfPoint(p[0], p[1]);
+          const o = M_.oner.find(o => qx >= o.x0 && qx <= o.x1 && qy >= o.y0 && qy <= o.y1);
+          let k = null; try { k = o ? null : otoBul(p[0], p[1]); } catch (e) { console.error('otoBul', e); }
+          if (o) { bilgi(secimEkle(o, o.n) ? o.n + '. soru işaretlendi.' : o.n + '. soru zaten işaretli ya da eklenmiş.'); katCiz(); return; }
           if (k) { secimEkle(k); bilgi('Soru işaretlendi. Kutuyu köşelerinden düzeltebilirsiniz; bitince "➕ Soru ekle".'); } else bilgi('Burada soru bulunamadı; fareyle kutu çizin.');
         }
       }
