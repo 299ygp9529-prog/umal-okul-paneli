@@ -1773,10 +1773,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const kodsuz = o.filter(y => !K[String(y.no)]);
       const tarih = t => t ? new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
       kutu.innerHTML = `<div class="sinav-ust"><button class="ikincil" id="gGeri">← Sınıflar</button><span class="neon-tabela">${esc(sec)}</span>
-          <span class="turuncu-neonlar"><button class="birincil" id="gKodsuz" ${kodsuz.length ? '' : 'disabled'}>Kodu olmayanlara üret · fiş yazdır (${kodsuz.length})</button><button class="ikincil" id="gHepsi">Bütün sınıfa yeni kod</button></span></div>
-        <div class="cok-soluk kucuk" id="gBilgi" style="margin:6px 0 10px">Fişler A4'e 24'lü basılır; sınıf öğretmeni kesip dağıtır.</div>
+          <span class="turuncu-neonlar"><button class="birincil" id="gKodsuz" ${kodsuz.length ? '' : 'disabled'}>Kodu olmayanlara üret · fiş yazdır (${kodsuz.length})</button><button class="ikincil" id="gHepsi">Bütün sınıfa yeni kod</button>${(D.sonFisler || {})[sec] ? '<button class="ikincil" id="gSon">Son kartları göster</button>' : ''}</span></div>
+        <div class="cok-soluk kucuk" id="gBilgi" style="margin:6px 0 10px">Kartlar A4'e 10'lu (kartvizit boyu) basılır; sınıf öğretmeni kesik çizgilerden kesip dağıtır.</div>
         <div class="satirlar">${o.map(y => { const r = K[String(y.no)]; return `<div class="satir"><div class="ana"><b>${esc(baslik(y.ad))}</b><small>${esc(y.no)} · ${r ? 'kod ' + esc(tarih(r.uretildi)) + (r.son_giris ? ' · son giriş ' + esc(tarih(r.son_giris)) : ' · henüz girmedi') : 'kodu yok'}</small></div><button class="ikincil" data-yk="${esc(y.no)}">${r ? 'Yeni kod' : 'Kod üret'}</button></div>`; }).join('')}</div>`;
       $('#gGeri').onclick = () => { sec = null; ciz(); };
+      if ($('#gSon')) $('#gSon').onclick = () => girisFisleri(D.sonFisler[sec], sec);
       const uret = async (nolar, onay) => {
         if (!nolar.length) return;
         if (onay && !confirm(onay)) return;
@@ -1784,8 +1785,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
         if (error) { $('#gBilgi').textContent = 'Üretilemedi: ' + hataYaz(error); return; }
         (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
-        ciz(); girisFisleri(data || []);
-        $('#gBilgi').textContent = `${(data || []).length} kod üretildi. Fişler yazdırma penceresinde; kodlar bir daha gösterilemez (gerekirse yenisi üretilir).`;
+        ciz(); girisFisleri(data || [], sec);
+        $('#gBilgi').textContent = `${(data || []).length} kod üretildi. Kartlar önizlemede; "Yazdır / PDF" ile basın ya da PDF olarak kaydedin. Bu sayfa kapanınca kodlar bir daha gösterilemez (gerekirse yenisi üretilir).`;
       };
       $('#gKodsuz').onclick = () => uret(kodsuz.map(y => String(y.no)));
       $('#gHepsi').onclick = () => uret(o.map(y => String(y.no)), `${sec} sınıfındaki ${o.length} öğrencinin hepsine yeni kod üretilecek. Eski fişler geçersiz olur. Devam edilsin mi?`);
@@ -1793,25 +1794,33 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz();
   }
-  function girisFisleri(L) {   // A4: 3 × 8 = 24 fiş; kesim çizgili
+  function girisFisleri(L, sinif) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
+    D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
     const logo = new URL('okul-logo.png', location.href).href;
-    const fis = r => `<div class="f"><div class="u"><img src="${logo}"><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik</small></div></div>
-      <div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · No ${esc(r.no)}</div><div class="k">${esc(r.kod)}</div>
-      <div class="a">umalatlas.com.tr/ogrenci</div><div class="n">Kodunu kimseyle paylaşma.</div></div>`;
-    const sayfalar = []; for (let i = 0; i < L.length; i += 24) sayfalar.push(`<div class="sayfa">${L.slice(i, i + 24).map(fis).join('')}</div>`);
-    const css = `@page { size: A4; margin: 8mm 6mm; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #0d2a4a; }
-      .sayfa { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 35mm; page-break-after: always; }
-      .f { border: 1px dashed #9fb3cc; padding: 2mm 3mm; display: flex; flex-direction: column; overflow: hidden; } .f > * { flex: none; line-height: 1.2; }
-      .u { display: flex; gap: 2mm; align-items: center; } .u img { width: 8mm; height: 8mm; } .u b { display: block; font-size: 7.4pt; letter-spacing: .4pt; } .u small { font-size: 5.8pt; color: #5d6f88; }
-      .ad { font-weight: 800; font-size: 9pt; margin-top: 1.4mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .s { font-size: 7pt; color: #5d6f88; }
-      .k { font: 800 14pt/1.25 Consolas, "Courier New", monospace; letter-spacing: 1.2pt; color: #0d2a4a; background: #e6f7fa; border: 1px solid #0fa3b8; border-radius: 1.6mm; text-align: center; margin: 1.2mm 0 1mm; padding: .6mm 0; }
-      .a { font-size: 7pt; font-weight: 700; color: #0fa3b8; } .n { font-size: 6pt; color: #5d6f88; }`;
-    let fr = document.getElementById('fisCerceve'); if (fr) fr.remove();
-    fr = document.createElement('iframe'); fr.id = 'fisCerceve'; fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
-    document.body.appendChild(fr);
-    const d = fr.contentDocument; d.open(); d.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`); d.close();
-    const im = d.images[0], go = () => setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} }, 250);
-    if (im && !im.complete) { im.onload = im.onerror = go; } else go();
+    const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi</small></div></div>
+      <div class="ic"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · Okul no ${esc(r.no)}</div>
+      <div class="kk"><small>GİRİŞ KODUN</small><span>${esc(r.kod)}</span></div>
+      <ol><li><b>umalatlas.com.tr/ogrenci</b> adresine gir</li><li>Okul numaranı ve bu kodu yaz</li></ol>
+      <div class="n">Kodun sana özeldir, kimseyle paylaşma. Kaybedersen rehberlikten yenisini iste.</div></div></div>`;
+    const sayfalar = []; for (let i = 0; i < L.length; i += 10) sayfalar.push(`<div class="sayfa">${L.slice(i, i + 10).map(kart).join('')}</div>`);
+    const css = `@page { size: A4; margin: 0; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { margin: 0; } body { font-family: "Segoe UI", -apple-system, Arial, sans-serif; color: #0d2a4a; }
+      .sayfa { width: 210mm; height: 297mm; padding: 11mm 10mm; display: grid; grid-template-columns: 95mm 95mm; grid-auto-rows: 55mm; align-content: start; page-break-after: always; break-after: page; overflow: hidden; }
+      .sayfa:last-child { page-break-after: auto; break-after: auto; }
+      .f { border: .3mm dashed #9fb3cc; margin: -.15mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
+      .bant { display: flex; align-items: center; gap: 2.6mm; background: #0d2a4a; color: #fff; padding: 2mm 3.5mm; flex: none; }
+      .bant .lg { width: 9.5mm; height: 9.5mm; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; } .bant img { width: 8.6mm; height: 8.6mm; }
+      .bant b { display: block; font-size: 8.6pt; letter-spacing: .6pt; } .bant small { display: block; font-size: 6.4pt; color: #bfe9f2; }
+      .ic { padding: 2.2mm 3.5mm 2mm; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+      .ad { font-weight: 800; font-size: 11pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .s { font-size: 7.6pt; color: #5d6f88; line-height: 1.25; }
+      .kk { margin: 1.6mm 0 1.3mm; border: .45mm solid #0fa3b8; background: #e6f7fa; border-radius: 2mm; display: flex; align-items: center; justify-content: space-between; padding: 1mm 3mm; }
+      .kk small { font-size: 6.2pt; font-weight: 800; letter-spacing: .5pt; color: #0f7f90; } .kk span { font: 800 17pt/1.15 Consolas, "Courier New", monospace; letter-spacing: 1.6pt; color: #0d2a4a; }
+      ol { margin: 0; padding-left: 4mm; font-size: 7pt; line-height: 1.35; } ol b { color: #0f7f90; }
+      .n { margin-top: auto; font-size: 6.1pt; color: #5d6f88; }`;
+    raporBelge(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları${sinif ? ' · ' + esc(sinif) : ''}</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`, `Öğrenci giriş kartları${sinif ? ' · ' + sinif : ''}`);
+  }
+  function raporBelge(belge, ad) {   // hazır (kendi CSS'li) belgeyi panelin önizleme penceresinde aç
+    belgeOnizle(belge.replace('</style>', '.sayfa{box-shadow:0 0 0 1px #d0d8e4}@media print{.sayfa{box-shadow:none}}</style>'), ad);
   }
 
   // ------------------------------------------------------------------ K-498: Öğretmenler (yalnız Soru Hazırla)
@@ -1843,7 +1852,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 
   // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
   async function soruHazirla() {
-    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122100'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122105'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
     window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href });
   }
   async function projeBolumu() {

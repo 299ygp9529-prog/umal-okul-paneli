@@ -50,6 +50,8 @@
           <button class="ikincil" id="shHepsi" title="Bu sayfada bulunan bütün soruları ekle">Sayfadakileri ekle</button></div>
         <div class="sh-gorunum" id="shGorunum"><div class="sh-bos" id="shBos"><b>Kitap ya da deneme PDF'ini buraya sürükleyin</b><span>ya da "PDF aç". Dosya bilgisayarınızdan çıkmaz.</span><span class="kucuk">Sayfada fareyle soru çevresine kutu çizin ya da kesik çizgili önerilere tıklayın.</span></div><div class="sh-sahne gizli" id="shSahne"><canvas id="shTuval"></canvas><div class="sh-kat" id="shKat"></div></div></div></div>
       <div class="sh-yan">
+        <div class="sh-eylem"><div class="sh-dugmeler"><button class="ikincil" id="shOnizle">👁 Önizle</button><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
+          <div class="kucuk soluk" id="shBilgi" style="text-align:center">Soru seçin, sonra "Seçilenleri PDF yap". PDF bilgisayarınızda hazırlanır.</div></div>
         <div class="kart"><div class="sh-et">SEÇİLEN SORULAR · <span id="shSay">0</span></div><div id="shListe" class="sh-liste"></div><div class="kucuk soluk" style="margin-top:6px">Sürükleyerek ya da ▲▼ ile sırayı değiştirin. Cevabı seçerseniz cevap anahtarı çıkar.</div></div>
         <div class="kart"><div class="sh-et">TEMA</div><div class="sh-temalar" id="shTemalar"></div>
           <div class="sh-et" style="margin-top:12px">RENK</div><div class="sh-renkler" id="shRenkler"></div>
@@ -62,8 +64,6 @@
           <label>Başlık<input data-a="baslik" placeholder="9. Sınıf Matematik"></label><label>Alt başlık<input data-a="alt" placeholder="Test / Ders Başarı Sınavı"></label>
           <label>Sınıf<input data-a="sinif" placeholder="9-A"></label><label>Not / tarih<input data-a="not" placeholder="Teslim: 9 Nisan 2027"></label></div>
           <div class="sh-cip coklu" style="margin-top:10px"><span data-t="bilgi">Ad-Sınıf-No kutusu</span><span data-t="sikler">A–E şıkları</span><span data-t="numara">Soru numarası</span><span data-t="anahtar">Cevap anahtarı</span><span data-t="kitapcik">A/B kitapçık</span></div></div>
-        <div class="sh-dugmeler"><button class="ikincil" id="shOnizle">Önizle</button><button class="birincil" id="shIndir">PDF oluştur ve indir</button></div>
-        <div class="kucuk soluk" id="shBilgi" style="text-align:center">PDF bilgisayarınızda hazırlanır; dosyanız sunucuya gönderilmez.</div>
       </div></div>`;
     stilEkle();
     baglan();
@@ -111,6 +111,7 @@
 .sh-kaydir { display: block; margin-top: 12px; font-size: 13px; color: var(--soluk); } .sh-kaydir b { color: var(--neonacik); float: right; } .sh-kaydir input { width: 100%; padding: 0; accent-color: var(--neon); }
 .sh-ayar { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; } .sh-ayar label { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--soluk); } .sh-ayar label.tam { grid-column: 1 / -1; } .sh-ayar input { width: 100%; }
 .sh-yan button, .sh-arac button, .sh-arac label { text-transform: none; }
+.sh-eylem { position: sticky; top: 0; z-index: 3; background: var(--zemin); padding-bottom: 6px; display: flex; flex-direction: column; gap: 6px; }
 .sh-dugmeler { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; } .sh-dugmeler button { padding: 13px; font-size: 15px; }
 .sh-onizle { display: flex; flex-direction: column; gap: 14px; align-items: center; max-height: 78vh; overflow: auto; background: #0a1220; padding: 14px; border-radius: 12px; } .sh-onizle canvas { max-width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,.5); background: #fff; }
 body.rol-ogretmen .saat-kutu { display: none; }
@@ -172,6 +173,10 @@ body.rol-ogretmen .saat-kutu { display: none; }
     L.forEach((m, i) => {
       let r = NO.exec(m.s), w = m.w;
       if (!r && /^\s*\d{1,3}\s*$/.test(m.s) && L[i + 1] && /^\s*[.)]/.test(L[i + 1].s) && Math.abs(L[i + 1].y - m.y) < 2) { r = [0, m.s.trim()]; w = L[i + 1].x + (L[i + 1].w || 3) - m.x; }
+      if (!r) {   // "10. Bir ABC üçgeninde" gibi numara ile metin aynı parçadaysa: numaranın genişliği harf oranından
+        const b = /^\s*(\d{1,3})\s*[.)]\s+\S/.exec(m.s);
+        if (b && m.s.length > 0) { r = b; w = m.w * (b[0].length - 1) / m.s.length; }
+      }
       if (r && +r[1] > 0) nolar.push({ n: +r[1], x: m.x, y: m.y, w, fs: m.fs });
     });
     const v = pg.getViewport({ scale: 1 }), [vx0, vy0, vx1, vy1] = v.viewBox;
@@ -225,8 +230,10 @@ body.rol-ogretmen .saat-kutu { display: none; }
   }
   function maskeBul(k) {   // elle çizilen kutuda sol üstteki soru numarası
     const m = (S.dosyalar[S.aktif].metin[S.sayfa] || { L: [] }).L;
-    const r = m.filter(t => /^\s*\d{1,3}\s*[.)]?\s*$/.test(t.s) && t.x >= k.x0 - 2 && t.x <= k.x0 + 45 && t.y <= k.y1 + 2 && t.y >= k.y1 - 40).sort((a, b) => b.y - a.y)[0];
-    return r ? [[r.x - 1.5, r.y - r.fs * .3, r.x + r.w + 4, r.y + r.fs * .95]] : [];
+    const r = m.filter(t => /^\s*\d{1,3}\s*([.)]\s*$|[.)]?\s*$|[.)]\s+\S)/.test(t.s) && t.x >= k.x0 - 2 && t.x <= k.x0 + 45 && t.y <= k.y1 + 2 && t.y >= k.y1 - 40).sort((a, b) => b.y - a.y)[0];
+    if (!r) return [];
+    const b = /^\s*\d{1,3}\s*[.)]/.exec(r.s), w = b && b[0].length < r.s.trim().length ? r.w * b[0].length / r.s.length : r.w;
+    return [[r.x - 1.5, r.y - r.fs * .3, r.x + w + 2, r.y + r.fs * .95]];
   }
   const ayni = (a, b) => a.d === b.d && a.s === b.s && Math.abs(a.x0 - b.x0) < 3 && Math.abs(a.y1 - b.y1) < 3;
   function secimEkle(k, n) {
