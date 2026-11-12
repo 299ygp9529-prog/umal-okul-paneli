@@ -46,12 +46,11 @@
     await yukle();
     el.innerHTML = `<div class="sh-ana">
       <div class="kart sh-pdf"><div class="sh-arac"><label class="ikincil sh-dosya">📄 PDF aç<input type="file" id="shDosya" accept="application/pdf" multiple hidden></label><select id="shDosyaSec"></select>
-          <span class="sh-sayfa"><button class="bag" id="shOnce">‹</button><span id="shSayfaYazi">—</span><button class="bag" id="shSonra">›</button></span>
-          <span class="sh-sayfa"><button class="bag" id="shUzak">−</button><span id="shOlcekYazi">%100</span><button class="bag" id="shYakin">+</button></span>
+          <span class="sh-sayfa"><button class="bag" id="shOnce" title="Önceki sayfa">‹</button>Sayfa <input id="shGit" type="number" min="1" value="1" title="Sayfa numarası yazıp Enter"><span id="shSayfaYazi">/ —</span><button class="bag" id="shSonra" title="Sonraki sayfa">›</button><button class="ikincil" id="shGitBtn">Sayfaya git</button></span>
           <button class="ikincil" id="shHepsi" title="Bu sayfada bulunan bütün soruları işaretle">Sayfadakileri işaretle</button><button class="birincil" id="shEkle" disabled>➕ Soru ekle</button></div>
         <div class="sh-gorunum" id="shGorunum"><div class="sh-bos" id="shBos"><b>Kitap ya da deneme PDF'ini buraya sürükleyin</b><span>ya da "PDF aç". Dosya bilgisayarınızdan çıkmaz.</span><span class="kucuk">Soruya tıklayın (Atlas soruyu kendisi bulur) ya da fareyle kutu çizin; sonra "➕ Soru ekle". Sayfa boşalır, sonraki sayfaya geçebilirsiniz.</span></div><div class="sh-sahne gizli" id="shSahne"><canvas id="shTuval"></canvas><div class="sh-kat" id="shKat"></div></div></div></div>
       <div class="sh-yan">
-        <div class="sh-eylem"><div class="sh-dugmeler"><button class="ikincil" id="shOnizle">👁 Önizle</button><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
+        <div class="sh-eylem"><div class="sh-dugmeler"><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
           <div class="kucuk soluk" id="shBilgi" style="text-align:center">Soru seçin, sonra "Seçilenleri PDF yap". PDF bilgisayarınızda hazırlanır.</div></div>
         <div class="kart"><div class="sh-et">SEÇİLEN SORULAR · <span id="shSay">0</span></div><div id="shListe" class="sh-liste"></div><div class="kucuk soluk" style="margin-top:6px">Sürükleyerek ya da ▲▼ ile sırayı değiştirin. Cevabı seçerseniz cevap anahtarı çıkar.</div></div>
         <div class="kart"><div class="sh-et">TEMA</div><div class="sh-temalar" id="shTemalar"></div>
@@ -78,7 +77,7 @@
     st.textContent = `.sh-ana { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 16px; align-items: start; }
 .sh-pdf { padding: 0; overflow: hidden; display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
 .sh-arac { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--cizgi); }
-.sh-arac select { max-width: 240px; } .sh-sayfa { display: inline-flex; gap: 8px; align-items: center; color: var(--soluk); } .sh-sayfa .bag { font-size: 20px; padding: 0 4px; }
+.sh-arac select { max-width: 240px; } #shGit { width: 64px; padding: 5px 6px; text-align: center; } .sh-sayfa { display: inline-flex; gap: 8px; align-items: center; color: var(--soluk); } .sh-sayfa .bag { font-size: 20px; padding: 0 4px; }
 .sh-dosya { cursor: pointer; }
 .sh-gorunum { flex: 1; overflow: auto; background: #0a1220; padding: 16px; position: relative; }
 .sh-gorunum.surukle { outline: 2px dashed var(--neon); outline-offset: -10px; }
@@ -94,14 +93,14 @@
 .sh-k .tut { position: absolute; width: 12px; height: 12px; background: var(--neon); border: 2px solid #06202a; border-radius: 3px; }
 .sh-k .tut.sa { right: -7px; bottom: -7px; cursor: nwse-resize; } .sh-k .tut.so { left: -7px; top: -7px; cursor: nwse-resize; } .sh-k .tut.ss { right: -7px; top: -7px; cursor: nesw-resize; } .sh-k .tut.sl { left: -7px; bottom: -7px; cursor: nesw-resize; }
 .sh-cizim { position: absolute; border: 2px solid var(--neon); background: rgba(34,232,255,.12); border-radius: 4px; pointer-events: none; }
-.sh-yan { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.sh-yan { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding-right: 8px; scrollbar-gutter: stable; }
 .sh-yan .kart { padding: 14px; }
 .sh-et { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; color: var(--soluk); margin-bottom: 8px; }
-.sh-liste { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow: auto; }
+.sh-liste { display: flex; flex-direction: column; gap: 6px; }
 .sh-s { display: flex; align-items: center; gap: 8px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 6px 8px; cursor: grab; }
 .sh-s.ustte { border-color: var(--neon); } .sh-s b { background: var(--neon); color: #06202a; border-radius: 6px; padding: 0 7px; font-size: 12px; min-width: 26px; text-align: center; }
 .sh-s .ad { flex: 1; min-width: 0; font-size: 13px; color: var(--soluk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.sh-s select { padding: 2px 4px; border-radius: 7px; font-size: 12px; width: auto; } .sh-s .bag { font-size: 13px; padding: 0 2px; }
+.sh-s select { padding: 2px 4px; border-radius: 7px; font-size: 12px; width: auto; } .sh-s .bag { font-size: 14px; padding: 4px 7px; border-radius: 7px; } .sh-s .bag:hover { background: rgba(34,232,255,.12); } .sh-s .bag[data-is="sil"] { margin-left: 4px; }
 .sh-temalar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .sh-tema { text-align: left; background: var(--koyu); border: 1.5px solid var(--cizgi); border-radius: 10px; padding: 7px 9px; color: #fff; cursor: pointer; }
 .sh-tema b { display: block; font-size: 13px; } .sh-tema small { color: var(--soluk); font-size: 11px; line-height: 1.25; display: block; } .sh-tema.secili { border-color: var(--neon); background: rgba(34,232,255,.10); }
@@ -113,7 +112,9 @@
 .sh-ayar { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; } .sh-ayar label { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--soluk); } .sh-ayar label.tam { grid-column: 1 / -1; } .sh-ayar input { width: 100%; }
 .sh-yan button, .sh-arac button, .sh-arac label { text-transform: none; }
 .sh-eylem { position: sticky; top: 0; z-index: 3; background: var(--zemin); padding-bottom: 6px; display: flex; flex-direction: column; gap: 6px; }
-.sh-dugmeler { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; } .sh-dugmeler button { padding: 13px; font-size: 15px; }
+.sh-dugmeler { display: grid; grid-template-columns: 1fr; gap: 8px; } .sh-dugmeler button { padding: 13px; font-size: 15px; }
+.sh-pust { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-right: 44px; } .sh-pdler { margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.sh-pd { display: flex; gap: 8px; align-items: center; } .sh-pd button { text-transform: none; padding: 9px 14px; }
 .sh-onizle { display: flex; flex-direction: column; gap: 14px; align-items: center; max-height: 78vh; overflow: auto; background: #0a1220; padding: 14px; border-radius: 12px; } .sh-onizle canvas { max-width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,.5); background: #fff; }
 body.rol-ogretmen .saat-kutu { display: none; }
 @media (max-width: 1100px) { .sh-ana { grid-template-columns: 1fr; } .sh-yan { position: static; max-height: none; } .sh-pdf { min-height: 60vh; } }`;
@@ -150,22 +151,24 @@ body.rol-ogretmen .saat-kutu { display: none; }
     const istek = sayfaCiz.n = (sayfaCiz.n || 0) + 1;
     kok.querySelector('#shBos').classList.add('gizli'); kok.querySelector('#shSahne').classList.remove('gizli');
     S.sayfa = Math.max(1, Math.min(D_.doc.numPages, S.sayfa));
-    kok.querySelector('#shSayfaYazi').textContent = `Sayfa ${S.sayfa} / ${D_.doc.numPages}`;
-    const pg = await D_.doc.getPage(S.sayfa);
-    const gen = kok.querySelector('#shGorunum').clientWidth - 40;
-    const v1 = pg.getViewport({ scale: 1 });
-    const temel = Math.max(0.6, Math.min(2.2, gen / v1.width));
-    vp = pg.getViewport({ scale: temel * S.olcek });
-    kok.querySelector('#shOlcekYazi').textContent = '%' + Math.round(S.olcek * 100);
-    const cv = kok.querySelector('#shTuval'), dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = vp.width + 'px'; cv.style.height = vp.height + 'px';
-    if (cizGorev) { try { cizGorev.cancel(); } catch (e) {} }
-    cizGorev = pg.render({ canvasContext: cv.getContext('2d', { willReadFrequently: true }), viewport: vp, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null });
+    kok.querySelector('#shSayfaYazi').textContent = `/ ${D_.doc.numPages}`; const gi = kok.querySelector('#shGit'); if (gi && document.activeElement !== gi) gi.value = S.sayfa;
     bilgi('Sayfa yükleniyor…');
-    try { await cizGorev.promise; } catch (e) { if (istek === sayfaCiz.n && !(e && /cancel/i.test(e.name + e.message))) { console.error(e); bilgi('Sayfa çizilemedi: ' + (e.message || e)); hazir = true; } return; }
-    cizGorev = null;
-    if (!D_.metin[S.sayfa]) { try { D_.metin[S.sayfa] = await sayfaMetni(pg); } catch (e) { console.error('metin', e); D_.metin[S.sayfa] = { L: [], oner: [] }; } }
-    if (istek !== sayfaCiz.n) return;   // bu arada başka sayfaya geçildi
+    if (cizGorev) { try { cizGorev.cancel(); } catch (e) {} cizGorev = null; }
+    try {
+      const pg = await D_.doc.getPage(S.sayfa);
+      if (istek !== sayfaCiz.n) return;
+      const gen = kok.querySelector('#shGorunum').clientWidth - 40, v1 = pg.getViewport({ scale: 1 });
+      const v = pg.getViewport({ scale: Math.max(0.6, Math.min(2.2, gen / v1.width)) }), dpr = Math.min(2, window.devicePixelRatio || 1);
+      // her çizim yeni tuvale (aynı tuvale iki çizim pdf.js'de hata veriyordu); bitince eskisiyle yer değiştirir
+      const cv = document.createElement('canvas'); cv.id = 'shTuval';
+      cv.width = Math.floor(v.width * dpr); cv.height = Math.floor(v.height * dpr); cv.style.width = v.width + 'px'; cv.style.height = v.height + 'px';
+      const gorev = cizGorev = pg.render({ canvasContext: cv.getContext('2d', { willReadFrequently: true }), viewport: v, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null });
+      try { await gorev.promise; } catch (e) { if (istek === sayfaCiz.n && !(e && /cancel/i.test(e.name + ' ' + e.message))) { console.error(e); bilgi('Sayfa çizilemedi: ' + (e.message || e)); } return; }
+      if (istek !== sayfaCiz.n) return;
+      cizGorev = null; const eski = kok.querySelector('#shTuval'); if (eski) eski.replaceWith(cv); vp = v;
+      if (!D_.metin[S.sayfa]) { try { D_.metin[S.sayfa] = await sayfaMetni(pg); } catch (e) { console.error('metin', e); D_.metin[S.sayfa] = { L: [], oner: [] }; } }
+      if (istek !== sayfaCiz.n) return;   // bu arada başka sayfaya geçildi
+    } catch (e) { console.error(e); if (istek === sayfaCiz.n) bilgi('Sayfa açılamadı: ' + (e.message || e)); return; }
     hazir = true;
     try { katCiz(); } catch (e) { console.error('kat', e); }
     const M_ = D_.metin[S.sayfa]; bilgi(M_.oner.length ? `Bu sayfada ${M_.oner.length} soru bulundu: tıklayın ya da "Sayfadakileri işaretle".` : 'Soruya tıklayın ya da fareyle kutu çizin.');
@@ -311,8 +314,9 @@ body.rol-ogretmen .saat-kutu { display: none; }
     q('#shDosyaSec').onchange = ev => { S.aktif = +ev.target.value; S.sayfa = 1; sayfaCiz(); };
     q('#shOnce').onclick = () => { S.sayfa--; sayfaCiz(); };
     q('#shSonra').onclick = () => { S.sayfa++; sayfaCiz(); };
-    q('#shUzak').onclick = () => { S.olcek = Math.max(.5, S.olcek - .15); sayfaCiz(); };
-    q('#shYakin').onclick = () => { S.olcek = Math.min(3, S.olcek + .15); sayfaCiz(); };
+    const git = () => { const n = parseInt(q('#shGit').value, 10); if (n >= 1) { S.sayfa = n; q('#shGit').blur(); sayfaCiz(); } };
+    q('#shGitBtn').onclick = git;
+    q('#shGit').addEventListener('keydown', ev => { if (ev.key === 'Enter') git(); });
     if (ac.tus) document.removeEventListener('keydown', ac.tus);
     document.addEventListener('keydown', ac.tus = function tus(ev) {
       if (!kok.isConnected) { document.removeEventListener('keydown', tus); return; }
@@ -388,7 +392,6 @@ body.rol-ogretmen .saat-kutu { display: none; }
     q('#shOlcek').oninput = ev => { ayar.olcek = +ev.target.value; kaydet(); ayarCiz(); };
     q('#shBoy').oninput = ev => { ayar.boy = +ev.target.value; kaydet(); ayarCiz(); };
     kok.querySelectorAll('[data-a]').forEach(i => { i.value = ayar[i.dataset.a] || ''; i.oninput = () => { ayar[i.dataset.a] = i.value; kaydet(); }; });
-    q('#shOnizle').onclick = () => uret(true);
     q('#shIndir').onclick = () => uret(false);
   }
   function ayarCiz() {
@@ -416,7 +419,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   async function uret(onizle) {
     taslakEkle(true);
     if (!S.secim.length) { bilgi('Önce soru seçin.'); return; }
-    const b1 = kok.querySelector('#shIndir'), b2 = kok.querySelector('#shOnizle'); b1.disabled = b2.disabled = true; bilgi('PDF hazırlanıyor…');
+    const b1 = kok.querySelector('#shIndir'); b1.disabled = true; bilgi('PDF hazırlanıyor…');
     try {
       const kitaplar = ayar.kitapcik ? ['A', 'B'] : [''];
       const sonuc = [];
@@ -426,16 +429,29 @@ body.rol-ogretmen .saat-kutu { display: none; }
         sonuc.push({ kt, bayt: await belge(sira, kt) });
       }
       const ad = (`${ayar.baslik || 'Sorular'} ${ayar.alt || ''}`).trim().replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-');
-      if (onizle) await onizleGoster(sonuc);
-      else for (const r of sonuc) { const u = URL.createObjectURL(new Blob([r.bayt], { type: 'application/pdf' })); const a = document.createElement('a'); a.href = u; a.download = `UMAL-${ad}${r.kt ? '-' + r.kt + '-kitapcigi' : ''}.pdf`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); await new Promise(z => setTimeout(z, 400)); }
-      bilgi(onizle ? 'Önizleme hazır.' : (sonuc.length > 1 ? 'A ve B kitapçıkları indirildi.' : 'PDF indirildi.'));
+      sonuc.forEach(r => { r.ad = `UMAL-${ad}${r.kt ? '-' + r.kt + '-kitapcigi' : ''}.pdf`; r.dosya = new File([r.bayt], r.ad, { type: 'application/pdf' }); });
+      await onizleGoster(sonuc);   // her zaman önce önizleme; köşede Paylaş / Kaydet / Yazdır
+      bilgi('PDF hazır: önizlemenin köşesinden paylaşın ya da kaydedin.');
     } catch (e) { console.error(e); bilgi('PDF oluşturulamadı: ' + (e.message || e)); }
-    b1.disabled = b2.disabled = false;
+    b1.disabled = false;
   }
   async function onizleGoster(sonuc) {
     const p = document.getElementById('pencere'), ic = document.getElementById('pencereIcerik');
+    if (p.parentElement !== document.body) document.body.appendChild(p);
     p.querySelector('.pencere-ic').classList.add('genis');
-    ic.innerHTML = `<h1>Önizleme</h1><div class="sh-onizle" id="shOnizleIc"></div>`; p.classList.remove('gizli');
+    const paylasVar = !!(navigator.canShare && navigator.canShare({ files: [sonuc[0].dosya] }));
+    const dugmeler = r => `<span class="sh-pd">${r.kt ? `<b class="neon">${r.kt} kitapçığı</b>` : ''}${paylasVar ? `<button class="birincil" data-pd="paylas" data-k="${r.kt}">📤 Paylaş</button>` : ''}<button class="${paylasVar ? 'ikincil' : 'birincil'}" data-pd="kaydet" data-k="${r.kt}">💾 Kaydet</button><button class="ikincil" data-pd="yazdir" data-k="${r.kt}">🖨 Yazdır</button></span>`;
+    ic.innerHTML = `<div class="sh-pust"><h1 style="margin:0">Önizleme</h1><div class="sh-pdler">${sonuc.map(dugmeler).join('')}</div></div><div class="kucuk soluk" id="shPdBilgi" style="margin:4px 0 8px">${esc(sonuc.map(r => r.ad).join(' · '))}</div><div class="sh-onizle" id="shOnizleIc"></div>`;
+    p.classList.remove('gizli');
+    ic.querySelector('.sh-pdler').onclick = async ev => {
+      const b = ev.target.closest('[data-pd]'); if (!b) return;
+      const r = sonuc.find(x => x.kt === b.dataset.k) || sonuc[0], is = b.dataset.pd, pb = document.getElementById('shPdBilgi');
+      if (is === 'paylas') { try { await navigator.share({ files: [r.dosya], title: r.ad }); } catch (e) { if (e && e.name !== 'AbortError') pb.textContent = 'Paylaşılamadı: ' + (e.message || e); } return; }
+      const u = URL.createObjectURL(r.dosya); setTimeout(() => URL.revokeObjectURL(u), 10 * 60000);
+      if (is === 'kaydet') { const a = document.createElement('a'); a.href = u; a.download = r.ad; document.body.appendChild(a); a.click(); a.remove(); pb.textContent = r.ad + ' kaydedildi (İndirilenler klasörü).'; return; }
+      const w = window.open(u, '_blank');   // yazdır: PDF yeni sekmede açılır, oradan yazdırılır
+      if (!w) pb.textContent = 'Tarayıcı yeni sekmeyi engelledi; "Kaydet" ile indirip açın.';
+    };
     const kap = document.getElementById('shOnizleIc');
     for (const r of sonuc) {
       const d = await pdfjs.getDocument({ data: r.bayt.slice() }).promise;
