@@ -2139,7 +2139,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#tkIc').innerHTML = `<div class="tk-ozet">
           <div><span class="soluk">Sıradaki sınav</span><b>${siradaki ? esc(new Date(siradaki.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' })) + ' · ' + esc(dersYaz(siradaki)) : '—'}</b><span class="neon">${esc(kalan)}</span></div>
           <div><span class="soluk">Kalan sınav</span><b>${olacak.length}</b><span class="soluk">${olan.length} sınav yapıldı</span></div>
-          <div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınav kaçırıldı</span></div>
+          <div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınava girilmedi</span></div>
           <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div></div>
         <div class="tk-iki">
           <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : '<div class="soluk">Takvimde kalan sınav yok.</div>'}</div>
