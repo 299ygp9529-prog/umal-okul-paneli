@@ -135,4 +135,14 @@
     goster('bitti'); window.scrollTo(0, 0);
   };
   goster('giris');
+  // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
+  try {
+    const h = new URLSearchParams(location.hash.slice(1)), n = (h.get('n') || '').replace(/\D/g, ''), k = (h.get('k') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (n || k) {
+      history.replaceState(null, '', location.pathname + location.search);
+      if (n) $('#no').value = n.slice(0, 8);
+      if (k) $('#kod').value = k.length > 4 ? k.slice(0, 4) + '-' + k.slice(4, 8) : k;
+      if (n && k.length === 8) $('#girisBtn').click();
+    }
+  } catch (e) {}
 })();

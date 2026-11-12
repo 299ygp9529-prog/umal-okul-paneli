@@ -249,16 +249,20 @@
     const ogr = h => (h && h.ogretmen || []).map(baslik).join(', ');
     $('#icerik').innerHTML = `<div class="sd-sayfa"><div class="sd-ust"><h1>Şimdi ders</h1><span class="t-neon buyuk-neon" id="sdSaat"></span><span class="t-neon" id="sdGun"></span></div>
       <div class="sd-sec"><div class="ara" style="margin:0"><input id="sdAra" placeholder="Sınıf (9-D) ya da öğretmen adı" autocomplete="off"></div><div class="sd-sonuc gizli" id="sdSonuc"></div></div>
-      <div class="sd-iz" id="sdIz"></div></div>`;
+      <div class="izgara sigar sd-harita" id="sdIz"></div></div>`;
     const ciz = async () => {
       const d = durum(), no = d.no || d.bekle, q = duz($('#sdAra').value);
       $('#sdSaat').textContent = d.yazi; $('#sdGun').textContent = GUNLER[d.gun] || ['', '', '', '', '', 'Cumartesi', 'Pazar'][d.gun];
       const es = s => q && (duz(s) === q || (q.length > 1 && duz(s).startsWith(q)) || (q.length > 2 && duz(ogr(hucre(s, d, no))).includes(q)));
       const bulunan = siniflar.filter(es);
       $('#sdIz').classList.toggle('araniyor', !!q);
-      $('#sdIz').innerHTML = siniflar.length ? siniflar.map(s => { const h = hucre(s, d, no);
-        return `<div class="sd-k ${h ? '' : 'bos'} ${bulunan.includes(s) ? 'sec' : ''}" data-s="${esc(s)}" style="--sv:${seviyeRenk(s)}"><b>${esc(s)}</b><div class="d">${h ? esc(h.ders) : (no ? 'Boş ders' : '—')}</div><div class="o">${esc(ogr(h))}</div></div>`; }).join('')
+      // K-509: Harita ile aynı görünüm — seviye şeritleri + aynı kartlar
+      const kartS = s => { const h = hucre(s, d, no); return `<div class="tahta ${h ? 'acik' : ''} ${bulunan.includes(s) ? 'sec' : ''}" data-s="${esc(s)}" style="--sv:${seviyeRenk(s)}"><b>${esc(s)}</b><small>${h ? esc(h.ders) : (no ? 'Boş ders' : '—')}</small><small>${esc(ogr(h))}</small></div>`; };
+      const gruplar = {}; siniflar.forEach(s => { const sv = seviye(s) || '·'; (gruplar[sv] = gruplar[sv] || []).push(s); });
+      $('#sdIz').innerHTML = siniflar.length ? Object.keys(gruplar).sort((a, b) => (a === '·') - (b === '·') || (+a) - (+b)).map(sv => { const L = gruplar[sv], n = L.filter(s => hucre(s, d, no)).length;
+          return `<div class="h-sev" style="--sv:${sv === '·' ? '#9fb3cc' : (SEVIYE_RENK[sv] || '#5cc8ff')}"><b>${sv === '·' ? 'Diğer' : sv + '. sınıflar'}</b><span>${no ? `${n} / ${L.length} derste` : `${L.length} sınıf`}</span></div>${L.map(kartS).join('')}`; }).join('')
         : '<div class="soluk">Ders programı yok.</div>';
+      kutulariSigdir($('#sdIz'));
       const sn = $('#sdSonuc'); sn.classList.toggle('gizli', !q);
       if (q) sn.innerHTML = bulunan.length ? bulunan.slice(0, 3).map(s => { const h = hucre(s, d, no), y = d.no ? hucre(s, d, d.sonraki) : null;
         return `<div class="sd-b" style="--sv:${seviyeRenk(s)}"><div class="sn">${esc(s)}</div><div><div class="dr">${d.bekle ? `<small>Sıradaki ${d.bekle}. ders</small> ` : ''}${h ? esc(h.ders) : (no ? 'Boş ders' : 'Ders yok')}</div><div class="og">${esc(ogr(h))}</div>${d.no && d.sonraki ? `<div class="sn2">Sonraki ders (${d.sonraki}.): ${y ? esc(y.ders) + ' · ' + esc(ogr(y)) : 'Boş ders'}</div>` : ''}</div></div>`; }).join('') + (bulunan.length > 3 ? `<div class="soluk">+${bulunan.length - 3} sınıf daha (aşağıda işaretli)</div>` : '')
@@ -1005,7 +1009,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function belgeOnizle(belge, baslikAdi, yatay, sec) {
     if (yatay && !/<body[^>]*class=/.test(belge)) belge = belge.replace('<body', '<body class="yatay"');
     // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
-    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0">${sec && sec.gonder ? '<button class="ikincil" id="rpGonder">📤 Gönder</button>' : ''}<button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="ikincil" id="rpGonder">📤 Gönder</button><button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
       <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
     $('#pencere .pencere-ic').classList.add('genis');
     const fr = document.getElementById('raporCerceve');
@@ -1016,7 +1020,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'));   // K-391: telefonda PDF dosyası + paylaş
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
-    if (sec && sec.gonder) $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec.kenar);   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
+    $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec && sec.kenar);   // K-507: her yazdırmanın yanında Gönder   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
   }
   // K-391: telefonda rapor → gerçek PDF dosyası → telefonun paylaş menüsü (Dosyalar'a kaydet, WhatsApp, AirDrop, Yazdır)
   function betikYukle(src) { return new Promise((ok, red) => { if (window.html2pdf) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('PDF aracı yüklenemedi')); document.head.appendChild(sc); }); }
@@ -1677,17 +1681,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#rsPdf').onclick = () => riskYazdir(sinif, sayfa);
     if (pdfMi) riskYazdir(sinif, sayfa);
   }
-  function riskYazdir(sinif, sayfa) {
-    let fr = document.getElementById('raporCerceve'); if (fr) fr.remove();
-    fr = document.createElement('iframe'); fr.id = 'raporCerceve'; fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
-    document.body.appendChild(fr);
-    const d = fr.contentDocument; d.open();
-    d.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(sinif)} Sınıf Risk Haritası</title><style>@page { size: A4 landscape; margin: 0; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } html, body { margin: 0; } ${RISK_CSS}</style></head><body>${sayfa}</body></html>`);
-    d.close();
-    const im = d.images[0], go = () => setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} }, 200);
-    if (im && !im.complete) { im.onload = im.onerror = go; } else go();
+  function riskYazdir(baslikAdi, sayfalar) {   // K-507: önizleme penceresi (Yazdır + Gönder); bir ya da çok sınıf, her sınıf ayrı yatay A4
+    const ad = /Risk/.test(baslikAdi) ? baslikAdi : `${baslikAdi} Sınıf Risk Haritası`;
+    const govde = (Array.isArray(sayfalar) ? sayfalar : [sayfalar]).join('');
+    belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(ad)}</title><style>@page { size: A4 landscape; margin: 0; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } html, body { margin: 0; } ${RISK_CSS} .rs-sayfa { height: 593pt !important; } .rs-sayfa + .rs-sayfa { page-break-before: always; break-before: page; }</style></head><body class="yatay">${govde}</body></html>`, ad, true, { kenar: [0, 0, 0, 0] });
   }
   // ------------------------------------------------------------------ Rehberlik
+  function riskIsaretleri(a, c) {
+    return (a.tanim.sorular || []).map((q, i) => i).filter(i => { const q = a.tanim.sorular[i], v = secimler((c.c || [])[i]); return q.tur === 'yazi' ? v.length > 0 : v.includes('Evet'); });
+  }
+  function riskSatirlari(form, sinif) {
+    return katilanlar(form, sinif).slice().sort((x, y) => (+x.no) - (+y.no)).map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(riskIsaretleri(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
+  }
   async function rehberlik() {
     await anketVerisi();
     const formlar = D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak');
@@ -1714,9 +1719,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
         // K-406: Proje ödevi tercihi ile aynı düzen: Hepsini aç / kapat + sınıf kutusunda Aç / Kapat; kutuya basınca sınıfın ayrıntısı
-        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">Bu form tahtada açılmaz. Açık olduğu sınıfların öğrencileri <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden okul numarası ve giriş koduyla doldurur.</div><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
+        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">Bu form tahtada açılmaz. Açık olduğu sınıfların öğrencileri <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden okul numarası ve giriş koduyla doldurur.</div><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-toprisk="${dz}" title="${dz}. sınıfların hepsinin risk haritası, sınıf başına bir sayfa">📄 Toplu risk haritası</button></div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
           return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Aç / kapat öğrenci panelinde hemen geçerli olur.</div></div>`;
         $('#rehAyrinti').onclick = async ev => {
+          const tr_ = ev.target.closest('[data-toprisk]');
+          if (tr_) { ev.stopPropagation(); const dz = tr_.dataset.toprisk, L = ss.filter(x => x.startsWith(dz + '-')); riskYazdir(`${dz}. Sınıflar Risk Haritası (${L.length} sınıf)`, L.map(x => riskSayfasi(x, riskSatirlari(form, x)))); return; }
           const d = ev.target.closest('[data-r]');
           if (d) {
             ev.stopPropagation(); $('#rBilgi').textContent = 'Kaydediliyor…';
@@ -1743,7 +1750,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!c) { pencereAc(`<h1>${esc(baslik(x.ad))}</h1><div class="neon">${esc(sinif)} · ${esc(x.no)}</div><div class="soluk" style="margin-top:10px">Formu henüz doldurmadı.</div>`); return; }
         pencereAc(`<h1>${esc(baslik(x.ad))}</h1><div class="neon">${esc(sinif)} · ${esc(x.no)}</div><div class="satirlar" style="margin-top:12px">${(form.tanim.sorular || []).map((q, i) => { const v = secimler((c.c || [])[i]).join(', '); const isaret = q.tur === 'yazi' ? !!v : v === 'Evet'; return `<div class="satir"><div class="ana"><b style="white-space:normal">${i + 1}. ${esc(q.metin)}</b></div><span class="${isaret ? 'kirmizi' : 'soluk'}">${esc(v || '—')}</span></div>`; }).join('')}</div>`);
       });
-      const satirlar = () => k.map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(isaretler(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
+      const satirlar = () => riskSatirlari(form, sinif);
+      const _eski = () => k.map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(isaretler(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
       $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar());
       $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true);
     };
@@ -1768,9 +1776,24 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       if (!sec) {
         kutu.innerHTML = `<div class="kucuk soluk" style="margin-bottom:10px">Her öğrencinin kendi giriş kodu olur (fişte yazar). Öğrenci <b class="neon">umalatlas.com.tr/ogrenci</b> adresine okul numarası ve koduyla girer, yalnız kendisine açık rehberlik formlarını görür ve doldurur. Kodların kendisi sunucuda saklanmaz; fişi kaybeden öğrenciye yeni kod üretilir, eskisi geçersiz olur.</div>
-          ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const o = D.ogrenciler.filter(y => y.sinif === x), k = o.filter(y => K[String(y.no)]).length, g = o.filter(y => (K[String(y.no)] || {}).son_giris).length;
+          ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; const o_ = D.ogrenciler.filter(y => L.includes(y.sinif)), kz = o_.filter(y => !K[String(y.no)]).length;
+            return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-topkod="${dz}" ${kz ? '' : 'disabled'} title="Kodu olmayan bütün ${dz}. sınıf öğrencilerine kod üret, kartları sınıf sınıf bas">🔑 Toplu kod (${kz})</button>${(D.sonFisler || {})['*' + dz] ? `<button class="ikincil kucuk-d" data-topson="${dz}">Son kartlar</button>` : ''}</div><div class="pj-kutular">${L.map(x => { const o = D.ogrenciler.filter(y => y.sinif === x), k = o.filter(y => K[String(y.no)]).length, g = o.filter(y => (K[String(y.no)] || {}).son_giris).length;
             return `<div class="pj-kutu ${k === o.length && o.length ? 'acik' : 'kapali'}" data-gs="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b></div><small style="white-space:normal;line-height:1.3">${k}/${o.length} kodlu<br>${g} girdi</small></div>`; }).join('')}</div></div>`; }).join('')}`;
-        kutu.onclick = ev => { const b = ev.target.closest('[data-gs]'); if (b) { sec = b.dataset.gs; ciz(); } };
+        kutu.onclick = async ev => {
+          const ts = ev.target.closest('[data-topson]'); if (ts) { girisFisleri(D.sonFisler['*' + ts.dataset.topson], '*' + ts.dataset.topson); return; }
+          const tk = ev.target.closest('[data-topkod]');
+          if (tk) {
+            const dz = tk.dataset.topkod, nolar = D.ogrenciler.filter(y => y.sinif.startsWith(dz + '-') && !K[String(y.no)]).map(y => String(y.no));
+            if (!nolar.length || !confirm(`${dz}. sınıflarda kodu olmayan ${nolar.length} öğrenciye kod üretilecek ve kartlar sınıf sınıf basılacak. Devam edilsin mi?`)) return;
+            tk.disabled = true; tk.textContent = 'Üretiliyor…';
+            const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
+            if (error) { alert('Üretilemedi: ' + hataYaz(error)); ciz(); return; }
+            (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
+            ciz(); girisFisleri((data || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no)), '*' + dz);
+            return;
+          }
+          const b = ev.target.closest('[data-gs]'); if (b) { sec = b.dataset.gs; ciz(); }
+        };
         return;
       }
       const o = D.ogrenciler.filter(y => y.sinif === sec).slice().sort((a, b) => (+a.no) - (+b.no));
@@ -1801,27 +1824,33 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function girisFisleri(L, sinif) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
     D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
     const logo = new URL('okul-logo.png', location.href).href;
+    const qr = r => { try { return window.UmalQR ? window.UmalQR.svg(`https://umalatlas.com.tr/ogrenci/#n=${encodeURIComponent(r.no)}&k=${String(r.kod).replace(/[^A-Z0-9]/gi, '')}`) : ''; } catch (e) { return ''; } };   // K-508: okutunca doğrudan girer
     const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi</small></div></div>
-      <div class="ic"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · Okul no ${esc(r.no)}</div>
-      <div class="kk"><small>GİRİŞ KODUN</small><span>${esc(r.kod)}</span></div>
-      <ol><li><b>umalatlas.com.tr/ogrenci</b> adresine gir</li><li>Okul numaranı ve bu kodu yaz</li></ol>
-      <div class="n">Kodun sana özeldir, kimseyle paylaşma. Kaybedersen rehberlikten yenisini iste.</div></div></div>`;
-    const sayfalar = []; for (let i = 0; i < L.length; i += 10) sayfalar.push(`<div class="sayfa">${L.slice(i, i + 10).map(kart).join('')}</div>`);
+      <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · Okul no ${esc(r.no)}</div>
+      <div class="kk"><small>KODUN</small><span>${esc(r.kod)}</span></div>
+      <ol><li>QR'ı telefonla okut, ya da</li><li><b>umalatlas.com.tr/ogrenci</b> adresine gir; numaranı ve kodunu yaz</li></ol></div>
+      <div class="qr">${qr(r)}<small>Okut, gir</small></div></div>
+      <div class="n">Kodun ve QR'ın sana özeldir, kimseyle paylaşma. Kaybedersen rehberlikten yenisini iste.</div></div>`;
+    const sayfalar = [], gruplar = [];   // her sınıf yeni sayfadan başlar (sınıf öğretmenine ayrı verilsin)
+    L.forEach(r => { const g = gruplar[gruplar.length - 1]; if (g && g[0].sinif === r.sinif) g.push(r); else gruplar.push([r]); });
+    gruplar.forEach(g => { for (let i = 0; i < g.length; i += 10) sayfalar.push(`<div class="sayfa">${g.slice(i, i + 10).map(kart).join('')}</div>`); });
     const css = `@page { size: A4; margin: 0; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       html, body { margin: 0; } body { font-family: "Segoe UI", -apple-system, Arial, sans-serif; color: #0d2a4a; }
-      .sayfa { width: 210mm; height: 295mm; padding: 10mm 10mm; display: grid; grid-template-columns: 95mm 95mm; grid-auto-rows: 55mm; align-content: start; page-break-after: always; break-after: page; overflow: hidden; }
-      .sayfa:last-child { page-break-after: auto; break-after: auto; }
+      .sayfa { width: 210mm; height: 295mm; padding: 10mm 10mm; display: grid; grid-template-columns: 95mm 95mm; grid-auto-rows: 55mm; align-content: start; overflow: hidden; }
+      .sayfa + .sayfa { page-break-before: always; break-before: page; }
       .f { border: .3mm dashed #9fb3cc; margin: -.15mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
       .bant { display: flex; align-items: center; gap: 2.6mm; background: #0d2a4a; color: #fff; padding: 2mm 3.5mm; flex: none; }
       .bant .lg { width: 9.5mm; height: 9.5mm; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; } .bant img { width: 8.6mm; height: 8.6mm; }
       .bant b { display: block; font-size: 8.6pt; letter-spacing: .6pt; } .bant small { display: block; font-size: 6.4pt; color: #bfe9f2; }
-      .ic { padding: 2.2mm 3.5mm 2mm; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+      .ic { padding: 2mm 3mm 0 3.5mm; display: flex; gap: 2.5mm; flex: 1; min-height: 0; } .sol { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .qr { width: 23mm; flex: none; text-align: center; } .qr svg { width: 23mm; height: 23mm; display: block; } .qr small { display: block; font-size: 6pt; font-weight: 800; color: #0f7f90; margin-top: .3mm; }
       .ad { font-weight: 800; font-size: 11pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .s { font-size: 7.6pt; color: #5d6f88; line-height: 1.25; }
-      .kk { margin: 1.6mm 0 1.3mm; border: .45mm solid #0fa3b8; background: #e6f7fa; border-radius: 2mm; display: flex; align-items: center; justify-content: space-between; padding: 1mm 3mm; }
-      .kk small { font-size: 6.2pt; font-weight: 800; letter-spacing: .5pt; color: #0f7f90; } .kk span { font: 800 17pt/1.15 Consolas, "Courier New", monospace; letter-spacing: 1.6pt; color: #0d2a4a; }
-      ol { margin: 0; padding-left: 4mm; font-size: 7pt; line-height: 1.35; } ol b { color: #0f7f90; }
-      .n { margin-top: auto; font-size: 6.1pt; color: #5d6f88; }`;
-    raporBelge(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları${sinif ? ' · ' + esc(sinif) : ''}</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`, `Öğrenci giriş kartları${sinif ? ' · ' + sinif : ''}`);
+      .kk { margin: 1.3mm 0 1.1mm; border: .45mm solid #0fa3b8; background: #e6f7fa; border-radius: 2mm; display: flex; align-items: center; justify-content: space-between; padding: .8mm 2.4mm; }
+      .kk small { font-size: 6pt; font-weight: 800; letter-spacing: .4pt; color: #0f7f90; } .kk span { font: 800 14pt/1.15 Consolas, "Courier New", monospace; letter-spacing: 1pt; color: #0d2a4a; }
+      ol { margin: 0; padding-left: 3.6mm; font-size: 6.6pt; line-height: 1.3; } ol b { color: #0f7f90; }
+      .n { padding: 0 3.5mm 1.6mm; font-size: 6pt; color: #5d6f88; flex: none; }`;
+    const etiket = String(sinif || '').startsWith('*') ? sinif.slice(1) + '. sınıflar' : sinif;
+    raporBelge(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları${etiket ? ' · ' + esc(etiket) : ''}</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`, `Öğrenci giriş kartları${etiket ? ' · ' + etiket : ''}`);
   }
   function raporBelge(belge, ad) {   // hazır (kendi CSS'li) belgeyi panelin önizleme penceresinde aç
     belgeOnizle(belge.replace('</style>', '.sayfa{box-shadow:0 0 0 1px #d0d8e4}@media print{.sayfa{box-shadow:none}}</style>'), ad, false, { gonder: true, kenar: [0, 0, 0, 0] });
@@ -1856,7 +1885,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 
   // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
   async function soruHazirla() {
-    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122150'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122250'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
     window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href });
   }
   async function projeBolumu() {

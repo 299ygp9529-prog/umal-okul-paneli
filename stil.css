@@ -494,7 +494,7 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 .rs-baslik { position: absolute; left: 150pt; width: 450pt; top: 21pt; text-align: center; font: 700 15pt Arial, sans-serif; color: #e46c0a; }
 
 /* Proje tercihi: seviye satırları */
-.pj-satir { display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+.pj-satir { display: grid; grid-template-columns: 128px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
 .pj-duzey { font-weight: 800; color: var(--sv); text-shadow: 0 0 8px var(--sv); font-size: 14px; }
 .pj-kutular { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
 .pj-kutu { background: var(--koyu); border: 1.5px solid var(--sv); border-radius: 11px; padding: 7px 9px; box-shadow: 0 0 8px color-mix(in srgb, var(--sv) 45%, transparent), inset 0 0 6px color-mix(in srgb, var(--sv) 18%, transparent); min-width: 0; }
@@ -945,3 +945,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 /* K-504: giriş ekranında öğrenci girişi bağlantısı */
 .giris .ogrlink { position: relative; z-index: 5; cursor: pointer; display: block; margin: 14px auto 0; padding: 11px 14px; border: 1.5px solid rgba(34,232,255,.7); border-radius: 12px; color: var(--neonacik); font-weight: 800; text-decoration: none; background: rgba(34,232,255,.08); }
 .giris .ogrlink:hover { background: rgba(34,232,255,.16); }
+/* K-507: seviye satırında toplu düğmeler */
+.pj-duzey .kucuk-d { display: block; width: 100%; margin-top: 6px; font-size: 11px; padding: 5px 6px; line-height: 1.25; white-space: normal; text-transform: none; }
+.pj-duzey .kucuk-d:disabled { opacity: .45; }
+/* K-509: Şimdi ders, Harita ile aynı ızgara */
+.sd-harita.araniyor .tahta:not(.sec) { opacity: .38; } .sd-harita .tahta.sec { outline: 2px solid var(--sv); box-shadow: 0 0 14px var(--sv); }
+.sd-harita .tahta { cursor: pointer; }
+.sd-harita .tahta small { white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2; overflow-wrap: anywhere; }
+.sd-harita .tahta { height: auto; min-height: var(--kh, 88px); }

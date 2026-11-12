@@ -50,7 +50,7 @@
           <button class="ikincil" id="shHepsi" title="Bu sayfada bulunan bütün soruları işaretle">Sayfadakileri işaretle</button><button class="birincil" id="shEkle" disabled>➕ Soru ekle</button></div>
         <div class="sh-gorunum" id="shGorunum"><div class="sh-bos" id="shBos"><b>Kitap ya da deneme PDF'ini buraya sürükleyin</b><span>ya da "PDF aç". Dosya bilgisayarınızdan çıkmaz.</span><span class="kucuk">Soruya tıklayın (Atlas soruyu kendisi bulur) ya da fareyle kutu çizin; sonra "➕ Soru ekle". Sayfa boşalır, sonraki sayfaya geçebilirsiniz.</span></div><div class="sh-sahne gizli" id="shSahne"><canvas id="shTuval"></canvas><div class="sh-kat" id="shKat"></div></div></div></div>
       <div class="sh-yan">
-        <div class="sh-eylem"><div class="sh-dugmeler"><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
+        <div class="sh-eylem"><div class="sh-dugmeler"><button class="ikincil" id="shOnizle">👁 Önizle</button><button class="birincil" id="shIndir">📄 Seçilenleri PDF yap</button></div>
           <div class="kucuk soluk" id="shBilgi" style="text-align:center">Soru seçin, sonra "Seçilenleri PDF yap". PDF bilgisayarınızda hazırlanır.</div></div>
         <div class="kart"><div class="sh-et">SEÇİLEN SORULAR · <span id="shSay">0</span></div><div id="shListe" class="sh-liste"></div><div class="kucuk soluk" style="margin-top:6px">Sürükleyerek ya da ▲▼ ile sırayı değiştirin. Cevabı seçerseniz cevap anahtarı çıkar.</div></div>
         <div class="kart"><div class="sh-et">TEMA</div><div class="sh-temalar" id="shTemalar"></div>
@@ -112,7 +112,7 @@
 .sh-ayar { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; } .sh-ayar label { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--soluk); } .sh-ayar label.tam { grid-column: 1 / -1; } .sh-ayar input { width: 100%; }
 .sh-yan button, .sh-arac button, .sh-arac label { text-transform: none; }
 .sh-eylem { position: sticky; top: 0; z-index: 3; background: var(--zemin); padding-bottom: 6px; display: flex; flex-direction: column; gap: 6px; }
-.sh-dugmeler { display: grid; grid-template-columns: 1fr; gap: 8px; } .sh-dugmeler button { padding: 13px; font-size: 15px; }
+.sh-dugmeler { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; } .sh-dugmeler button { padding: 13px; font-size: 15px; }
 .sh-pust { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-right: 44px; } .sh-pdler { margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
 .sh-pd { display: flex; gap: 8px; align-items: center; } .sh-pd button { text-transform: none; padding: 9px 14px; }
 .sh-onizle { display: flex; flex-direction: column; gap: 14px; align-items: center; max-height: 78vh; overflow: auto; background: #0a1220; padding: 14px; border-radius: 12px; } .sh-onizle canvas { max-width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,.5); background: #fff; }
@@ -393,6 +393,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
     q('#shBoy').oninput = ev => { ayar.boy = +ev.target.value; kaydet(); ayarCiz(); };
     kok.querySelectorAll('[data-a]').forEach(i => { i.value = ayar[i.dataset.a] || ''; i.oninput = () => { ayar[i.dataset.a] = i.value; kaydet(); }; });
     q('#shIndir').onclick = () => uret(false);
+    q('#shOnizle').onclick = () => uret(true);
   }
   function ayarCiz() {
     const q = s => kok.querySelector(s);
@@ -419,7 +420,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   async function uret(onizle) {
     taslakEkle(true);
     if (!S.secim.length) { bilgi('Önce soru seçin.'); return; }
-    const b1 = kok.querySelector('#shIndir'); b1.disabled = true; bilgi('PDF hazırlanıyor…');
+    const b1 = kok.querySelector('#shIndir'), b2 = kok.querySelector('#shOnizle'); b1.disabled = b2.disabled = true; bilgi('PDF hazırlanıyor…');
     try {
       const kitaplar = ayar.kitapcik ? ['A', 'B'] : [''];
       const sonuc = [];
@@ -433,7 +434,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
       await onizleGoster(sonuc);   // her zaman önce önizleme; köşede Paylaş / Kaydet / Yazdır
       bilgi('PDF hazır: önizlemenin köşesinden paylaşın ya da kaydedin.');
     } catch (e) { console.error(e); bilgi('PDF oluşturulamadı: ' + (e.message || e)); }
-    b1.disabled = false;
+    b1.disabled = b2.disabled = false;
   }
   async function onizleGoster(sonuc) {
     const p = document.getElementById('pencere'), ic = document.getElementById('pencereIcerik');
