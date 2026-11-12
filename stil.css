@@ -938,3 +938,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .sd-sayfa { height: auto; min-height: 0; } .sd-sec { flex-direction: column; } .sd-sec .ara { width: 100%; } .sd-sec .ara input { height: 46px; }
   .sd-sonuc { flex-direction: column; } .sd-iz { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; } .sd-k { min-height: 64px; }
 }
+/* K-498: Öğretmenler */
+.og-izgara { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; margin-top: 12px; align-items: start; }
+.og-izgara textarea { color: var(--yazi); background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px; }
+@media (max-width: 760px) { .og-izgara { grid-template-columns: 1fr; } }

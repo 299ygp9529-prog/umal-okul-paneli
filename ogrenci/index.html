@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UMAL Öğrenci Girişi</title>
+<meta name="theme-color" content="#0d1726">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../simge-192.png">
+<script src="../supabase.min.js?v=2.45.4"></script>
+<style>
+:root { --zemin:#0d1726; --kart:#13233a; --koyu:#0f1c2e; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --cs:#6f819c; --kirmizi:#ff3b4e; --yesil:#2fbf71; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--zemin); color: #fff; font: 16px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
+button, input, textarea { font: inherit; }
+.gizli { display: none !important; }
+main { max-width: 640px; margin: 0 auto; padding: 22px 16px 60px; }
+.ust { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.ust img { width: 54px; height: 54px; border-radius: 50%; box-shadow: 0 0 16px rgba(34,232,255,.45); flex: none; }
+.ust b { display: block; font-size: 17px; } .ust small { color: var(--soluk); font-size: 13px; }
+.kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 17px; margin: 0 0 10px; }
+label { display: block; color: var(--soluk); font-size: 14px; margin: 12px 0 6px; font-weight: 600; }
+input[type=text], input[type=number], textarea { width: 100%; color: #fff; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 12px 14px; }
+input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1px; }
+#kod { letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+.birincil { width: 100%; margin-top: 16px; background: var(--neon); color: var(--zemin); border: 0; border-radius: 13px; padding: 14px; font-weight: 800; font-size: 17px; cursor: pointer; }
+.birincil:disabled { opacity: .55; }
+.ikincil { background: transparent; color: var(--neon); border: 1px solid rgba(34,232,255,.7); border-radius: 12px; padding: 9px 14px; font-weight: 700; cursor: pointer; }
+.bilgi { min-height: 22px; margin-top: 12px; color: var(--soluk); font-size: 14px; } .bilgi.hata { color: #ff8a95; }
+.not { color: var(--cs); font-size: 13px; margin-top: 14px; }
+.kvkk { font-size: 13px; color: var(--soluk); border-left: 3px solid var(--neon); padding: 6px 0 6px 12px; margin: 12px 0 0; }
+.form-satir { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 14px; color: #fff; margin-top: 10px; cursor: pointer; }
+.form-satir b { display: block; } .form-satir small { color: var(--soluk); } .form-satir .sag { margin-left: auto; font-weight: 800; color: var(--neon); white-space: nowrap; }
+.form-satir.doldu .sag { color: var(--yesil); }
+.soru { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+.soru.eksik { border-color: var(--kirmizi); }
+.soru .metin { font-weight: 700; margin-bottom: 10px; white-space: pre-wrap; } .soru .metin i { color: var(--neon); font-style: normal; margin-right: 6px; }
+.secenek { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--koyu); border: 1.5px solid var(--cizgi); border-radius: 12px; padding: 12px 14px; color: #fff; margin-top: 8px; cursor: pointer; }
+.secenek .t { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--soluk); flex: none; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+.secenek.kare .t { border-radius: 6px; }
+.secenek.secili { border-color: var(--neon); background: rgba(34,232,255,.10); } .secenek.secili .t { border-color: var(--neon); background: var(--neon); color: var(--zemin); }
+.puanlar { display: flex; gap: 8px; } .puanlar .secenek { justify-content: center; font-weight: 800; font-size: 18px; } .puanlar .secenek .t { display: none; }
+.soluk { color: var(--soluk); } .kucuk { font-size: 13px; }
+.alt-cubuk { position: sticky; bottom: 0; padding: 12px 0 4px; background: linear-gradient(transparent, var(--zemin) 30%); }
+.tesekkur { text-align: center; padding: 30px 18px; } .tesekkur .tik { width: 74px; height: 74px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; background: rgba(47,191,113,.15); border: 2px solid var(--yesil); color: var(--yesil); font-size: 38px; }
+.kim { display: flex; align-items: center; gap: 10px; } .kim .ad { font-weight: 800; } .kim .ikincil { margin-left: auto; }
+</style>
+</head>
+<body>
+<main>
+  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Rehberlik Servisi</small></div></div>
+
+  <section id="giris" class="kart">
+    <h1>Öğrenci girişi</h1>
+    <div class="soluk kucuk">Rehberlik servisinin formlarını buradan doldurursun. Giriş kodun sınıf öğretmeninin dağıttığı fişte yazıyor.</div>
+    <label for="no">Okul numaran</label>
+    <input id="no" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Örnek: 1234">
+    <label for="kod">Giriş kodun</label>
+    <input id="kod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX">
+    <button id="girisBtn" class="birincil">Giriş</button>
+    <div id="girisBilgi" class="bilgi"></div>
+    <div class="kvkk">Bu sayfada verdiğin bilgileri yalnız okulumuzun rehberlik servisi görür; sınıf arkadaşların, öğretmenlerin ya da başka biri göremez. Bilgiler yalnız sana daha iyi destek olmak için kullanılır.</div>
+    <div class="not">Kodunu kimseyle paylaşma. Kaybettiysen rehberlik servisinden yenisini iste. Ortak bir bilgisayardaysan işin bitince "Çıkış"a bas.</div>
+  </section>
+
+  <section id="liste" class="gizli">
+    <div class="kart kim"><div><div class="ad" id="kimAd"></div><div class="soluk kucuk" id="kimSinif"></div></div><button class="ikincil" id="cikis">Çıkış</button></div>
+    <div class="kart"><h2>Formların</h2><div id="formlar"></div></div>
+  </section>
+
+  <section id="form" class="gizli">
+    <div class="kart"><button class="ikincil" id="geri">← Formlar</button><h1 id="formAd" style="margin-top:12px"></h1><div class="soluk kucuk" id="formAciklama"></div></div>
+    <div id="sorular"></div>
+    <div class="alt-cubuk"><button class="birincil" id="gonder">Gönder</button><div id="formBilgi" class="bilgi"></div></div>
+  </section>
+
+  <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk">Formun rehberlik servisine ulaştı.</div><button class="birincil" id="bittiGeri">Formlarıma dön</button></div>
+</main>
+<script src="ogrenci.js?v=202611122100"></script>
+</body>
+</html>

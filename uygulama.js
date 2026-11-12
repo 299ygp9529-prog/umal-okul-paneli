@@ -58,9 +58,10 @@
     $('#giris').classList.add('gizli');
     $('#uygulama').classList.remove('gizli');
     $('#kim').textContent = D.eposta;
-    $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik' }[rol] || rol;
+    $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
+    document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
-    komutOnar();
+    if (rol !== 'ogretmen') komutOnar();
   }
   // K-464: DersMap mesaj kaydında veri.tur ister; K-457 komutu yazmıyordu → DersMap paneli "Yüklenemedi". Eski kayıtlar burada tamamlanır.
   async function komutOnar() {
@@ -138,6 +139,8 @@
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
+    { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
+    { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas'], ciz: ogretmenlerBolumu },   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
     { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
@@ -1492,7 +1495,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <span class="etk">Ne zaman açık</span>
             <div class="cipler"><button class="cip ${T.dersler.size ? '' : 'secili'}" data-d="hepsi">Bütün gün</button>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip kucukcip ${T.dersler.has(n) ? 'secili' : ''}" data-d="${n}">${n}. ders</button>`).join('')}</div>
             <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>
-            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik bölümünde (tahtada Rehberlik altında; cevapları yalnız rehberlik görür)') : ''}</div>
+            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik formu · mahrem (tahtada açılmaz; öğrenciler umalatlas.com.tr/ogrenci adresinden kendi giriş koduyla doldurur; cevapları yalnız rehberlik görür)') : ''}</div>
           </div>
           <h2>Sorular</h2><div id="hzSorular">${T.sorular.map(soruKarti).join('')}</div>
           <div class="dugmeler"><button class="ikincil" id="hzSoruEkle">+ Soru ekle</button><button class="ikincil" id="hzOnceki">Önceki anketlerden soru al</button></div>
@@ -1696,8 +1699,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#rehIc').innerHTML = formlar.map(f => {
         const ss = anketSiniflari(f), n = ss.reduce((t, x) => t + katilanlar(f, x).length, 0), d = ss.reduce((t, x) => t + katilanlar(f, x).filter(k => cevap(f, x, String(k.no))).length, 0);
         return baslikSatiri(f.id, esc(f.tanim.ad), `${esc(gunAdi(f.tanim.baslangic || bugunISO()))}${f.tanim.bitis ? ' – ' + esc(gunAdi(f.tanim.bitis)) : ''} · ${ss.length} sınıf · ${d}/${n} doldurdu`, acikMi(f) ? '<span class="durum-etiketi yeşil">açık</span>' : '<span class="durum-etiketi soluk">kapalı</span>') + (acik === f.id ? '<div id="rehAyrinti"></div>' : '');
-      }).join('') + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
+      }).join('') + baslikSatiri('giris', 'Öğrenci girişi · giriş kodları', 'Mahrem formlar öğrenci panelinden doldurulur: umalatlas.com.tr/ogrenci') + (acik === 'giris' ? '<div class="kart" id="girisIc"></div>' : '')
+        + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
       if (acik === 'proje') projeBolumu();
+      else if (acik === 'giris') girisKodlari();
       else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : null; ciz(); }
       else $('#icerik').classList.remove('reh-acik');
     };
@@ -1709,8 +1714,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
         // K-406: Proje ödevi tercihi ile aynı düzen: Hepsini aç / kapat + sınıf kutusunda Aç / Kapat; kutuya basınca sınıfın ayrıntısı
-        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
-          return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Tahtalar 1–2 dk içinde alır.</div></div>`;
+        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">Bu form tahtada açılmaz. Açık olduğu sınıfların öğrencileri <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden okul numarası ve giriş koduyla doldurur.</div><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
+          return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Aç / kapat öğrenci panelinde hemen geçerli olur.</div></div>`;
         $('#rehAyrinti').onclick = async ev => {
           const d = ev.target.closest('[data-r]');
           if (d) {
@@ -1745,6 +1750,101 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
     liste();
+  }
+  // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
+  async function girisKodlari() {
+    const kutu = $('#girisIc'); if (!kutu) return;
+    kutu.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    await ogrencileriYukle();
+    const { data: dr, error } = await sb.rpc('umal_ogrenci_kod_durum');
+    if (error) { kutu.innerHTML = `<div class="kirmizi">Kod bilgisi alınamadı: ${esc(hataYaz(error))}. (Sunucu kurulumu yapıldı mı?)</div>`; return; }
+    const K = {}; (dr || []).forEach(r => { K[String(r.no)] = r; });
+    const siniflar = [...new Set(D.ogrenciler.map(o => o.sinif))].sort(sinifSira);
+    let sec = null;
+    const ciz = () => {
+      if (!sec) {
+        kutu.innerHTML = `<div class="kucuk soluk" style="margin-bottom:10px">Her öğrencinin kendi giriş kodu olur (fişte yazar). Öğrenci <b class="neon">umalatlas.com.tr/ogrenci</b> adresine okul numarası ve koduyla girer, yalnız kendisine açık rehberlik formlarını görür ve doldurur. Kodların kendisi sunucuda saklanmaz; fişi kaybeden öğrenciye yeni kod üretilir, eskisi geçersiz olur.</div>
+          ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar</div><div class="pj-kutular">${L.map(x => { const o = D.ogrenciler.filter(y => y.sinif === x), k = o.filter(y => K[String(y.no)]).length, g = o.filter(y => (K[String(y.no)] || {}).son_giris).length;
+            return `<div class="pj-kutu ${k === o.length && o.length ? 'acik' : 'kapali'}" data-gs="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b></div><small>${k}/${o.length} kodlu · ${g} girdi</small></div>`; }).join('')}</div></div>`; }).join('')}`;
+        kutu.onclick = ev => { const b = ev.target.closest('[data-gs]'); if (b) { sec = b.dataset.gs; ciz(); } };
+        return;
+      }
+      const o = D.ogrenciler.filter(y => y.sinif === sec).slice().sort((a, b) => (+a.no) - (+b.no));
+      const kodsuz = o.filter(y => !K[String(y.no)]);
+      const tarih = t => t ? new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+      kutu.innerHTML = `<div class="sinav-ust"><button class="ikincil" id="gGeri">← Sınıflar</button><span class="neon-tabela">${esc(sec)}</span>
+          <span class="turuncu-neonlar"><button class="birincil" id="gKodsuz" ${kodsuz.length ? '' : 'disabled'}>Kodu olmayanlara üret · fiş yazdır (${kodsuz.length})</button><button class="ikincil" id="gHepsi">Bütün sınıfa yeni kod</button></span></div>
+        <div class="cok-soluk kucuk" id="gBilgi" style="margin:6px 0 10px">Fişler A4'e 24'lü basılır; sınıf öğretmeni kesip dağıtır.</div>
+        <div class="satirlar">${o.map(y => { const r = K[String(y.no)]; return `<div class="satir"><div class="ana"><b>${esc(baslik(y.ad))}</b><small>${esc(y.no)} · ${r ? 'kod ' + esc(tarih(r.uretildi)) + (r.son_giris ? ' · son giriş ' + esc(tarih(r.son_giris)) : ' · henüz girmedi') : 'kodu yok'}</small></div><button class="ikincil" data-yk="${esc(y.no)}">${r ? 'Yeni kod' : 'Kod üret'}</button></div>`; }).join('')}</div>`;
+      $('#gGeri').onclick = () => { sec = null; ciz(); };
+      const uret = async (nolar, onay) => {
+        if (!nolar.length) return;
+        if (onay && !confirm(onay)) return;
+        $('#gBilgi').textContent = 'Kodlar üretiliyor…';
+        const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
+        if (error) { $('#gBilgi').textContent = 'Üretilemedi: ' + hataYaz(error); return; }
+        (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
+        ciz(); girisFisleri(data || []);
+        $('#gBilgi').textContent = `${(data || []).length} kod üretildi. Fişler yazdırma penceresinde; kodlar bir daha gösterilemez (gerekirse yenisi üretilir).`;
+      };
+      $('#gKodsuz').onclick = () => uret(kodsuz.map(y => String(y.no)));
+      $('#gHepsi').onclick = () => uret(o.map(y => String(y.no)), `${sec} sınıfındaki ${o.length} öğrencinin hepsine yeni kod üretilecek. Eski fişler geçersiz olur. Devam edilsin mi?`);
+      kutu.onclick = ev => { const b = ev.target.closest('[data-yk]'); if (b) { const y = o.find(z => String(z.no) === b.dataset.yk); uret([b.dataset.yk], K[b.dataset.yk] ? `${baslik(y.ad)} için yeni kod üretilecek; eski kodu geçersiz olur. Devam edilsin mi?` : null); } };
+    };
+    ciz();
+  }
+  function girisFisleri(L) {   // A4: 3 × 8 = 24 fiş; kesim çizgili
+    const logo = new URL('okul-logo.png', location.href).href;
+    const fis = r => `<div class="f"><div class="u"><img src="${logo}"><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik</small></div></div>
+      <div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · No ${esc(r.no)}</div><div class="k">${esc(r.kod)}</div>
+      <div class="a">umalatlas.com.tr/ogrenci</div><div class="n">Kodunu kimseyle paylaşma.</div></div>`;
+    const sayfalar = []; for (let i = 0; i < L.length; i += 24) sayfalar.push(`<div class="sayfa">${L.slice(i, i + 24).map(fis).join('')}</div>`);
+    const css = `@page { size: A4; margin: 8mm 6mm; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #0d2a4a; }
+      .sayfa { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 35mm; page-break-after: always; }
+      .f { border: 1px dashed #9fb3cc; padding: 2mm 3mm; display: flex; flex-direction: column; overflow: hidden; } .f > * { flex: none; line-height: 1.2; }
+      .u { display: flex; gap: 2mm; align-items: center; } .u img { width: 8mm; height: 8mm; } .u b { display: block; font-size: 7.4pt; letter-spacing: .4pt; } .u small { font-size: 5.8pt; color: #5d6f88; }
+      .ad { font-weight: 800; font-size: 9pt; margin-top: 1.4mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .s { font-size: 7pt; color: #5d6f88; }
+      .k { font: 800 14pt/1.25 Consolas, "Courier New", monospace; letter-spacing: 1.2pt; color: #0d2a4a; background: #e6f7fa; border: 1px solid #0fa3b8; border-radius: 1.6mm; text-align: center; margin: 1.2mm 0 1mm; padding: .6mm 0; }
+      .a { font-size: 7pt; font-weight: 700; color: #0fa3b8; } .n { font-size: 6pt; color: #5d6f88; }`;
+    let fr = document.getElementById('fisCerceve'); if (fr) fr.remove();
+    fr = document.createElement('iframe'); fr.id = 'fisCerceve'; fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(fr);
+    const d = fr.contentDocument; d.open(); d.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci giriş kartları</title><style>${css}</style></head><body>${sayfalar.join('')}</body></html>`); d.close();
+    const im = d.images[0], go = () => setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} }, 250);
+    if (im && !im.complete) { im.onload = im.onerror = go; } else go();
+  }
+
+  // ------------------------------------------------------------------ K-498: Öğretmenler (yalnız Soru Hazırla)
+  async function ogretmenlerBolumu() {
+    const yukle = async () => { const { data, error } = await sb.from('umal_ogretmenler').select('eposta,ekleyen,eklendi').order('eposta'); if (error) throw error; return data || []; };
+    let L = await yukle();
+    const ciz = () => {
+      $('#icerik').innerHTML = `<h1>Öğretmenler</h1><div class="og-izgara">
+        <div class="kart"><b class="neon">Öğretmen ekle</b><p class="soluk kucuk">E-postaları alt alta yapıştırın. Bu öğretmenler panele e-postalarına gelen kodla girer ve <b class="neon">yalnız Soru Hazırla</b>'yı görür; öğrenci, sınav, anket ve tahta bilgilerine erişemez.</p>
+          <textarea id="ogEkle" rows="7" style="width:100%" placeholder="ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
+        <div class="kart"><b class="neon">Öğretmenler · ${L.length}</b><div class="satirlar" style="margin-top:10px">${L.length ? L.map(r => `<div class="satir"><div class="ana"><b>${esc(r.eposta)}</b><small>${esc(r.ekleyen || '')}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz öğretmen eklenmedi.</div>'}</div></div></div>`;
+      $('#ogEkleBtn').onclick = async () => {
+        const e = [...new Set($('#ogEkle').value.toLowerCase().split(/[\s,;]+/).map(x => x.trim()).filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))];
+        if (!e.length) { $('#ogBilgi').textContent = 'Geçerli e-posta yok.'; return; }
+        $('#ogBilgi').textContent = 'Ekleniyor…';
+        const { error } = await sb.from('umal_ogretmenler').upsert(e.map(x => ({ eposta: x, ekleyen: D.eposta })), { onConflict: 'eposta', ignoreDuplicates: true });
+        if (error) { $('#ogBilgi').textContent = 'Eklenemedi: ' + hataYaz(error); return; }
+        L = await yukle(); ciz(); $('#ogBilgi').textContent = e.length + ' e-posta eklendi.';
+      };
+      $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
+        if (!confirm(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
+        const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
+        if (error) { alert('Kaldırılamadı: ' + hataYaz(error)); return; }
+        L = await yukle(); ciz();
+      });
+    };
+    ciz();
+  }
+
+  // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
+  async function soruHazirla() {
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122100'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    window.UmalSoru.ac($('#icerik'), { logo: new URL('okul-logo.png', location.href).href, taban: new URL('soru/', location.href).href });
   }
   async function projeBolumu() {
     const [p, d] = await Promise.all([hepsi('umal_proje', 'sinif,donem,veri').catch(() => []), hepsi('umal_proje_durum', 'sinif,durum,zaman').catch(() => [])]);
