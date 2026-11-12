@@ -2122,7 +2122,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (error) alert('Kaydedilemedi: ' + hataYaz(error));
     };
     const liste = k => { const G = (gelmeyen[k] || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
-      return `<div class="tk-liste">${G.length ? G.map(g => `<button class="oz-ogr" data-oz="${esc(g.no)}"><span class="sv-nokta" style="background:${seviyeRenk(g.sinif)};color:${seviyeRenk(g.sinif)}"></span>${esc(baslik(g.ad) || g.no)} <small>${esc(g.sinif)} · ${esc(g.no)}${g.ders ? ' · ' + esc(g.ders) : ''} · ${esc(g.salon)} salonu</small></button>`).join('') : '<span class="soluk kucuk">Gelmeyen yok.</span>'}</div>`; };
+      return `<div class="tk-liste">${G.length ? `<div style="flex-basis:100%"><button class="tk-pdf" data-pdf="${esc(k)}">🖨 Bu listeyi yazdır / PDF</button></div>` : ''}${G.length ? G.map(g => `<button class="oz-ogr" data-oz="${esc(g.no)}"><span class="sv-nokta" style="background:${seviyeRenk(g.sinif)};color:${seviyeRenk(g.sinif)}"></span>${esc(baslik(g.ad) || g.no)} <small>${esc(g.sinif)} · ${esc(g.no)}${g.ders ? ' · ' + esc(g.ders) : ''} · ${esc(g.salon)} salonu</small></button>`).join('') : '<span class="soluk kucuk">Gelmeyen yok.</span>'}</div>`; };
+    // K-466: gelmeyenler çıktısı (tek sınav ya da yapılan bütün sınavlar), panelin rapor tasarımıyla
+    const gelmeyenRapor = k => {
+      const S = (k === 'hepsi' ? sinavlar.filter(bitti) : sinavlar.filter(x => anahtar(x) === k));
+      const gunYaz = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' });
+      let top = 0; const kisi = new Set();
+      const satir = S.map(x => { const kk = anahtar(x), G = (gelmeyen[kk] || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
+        top += G.length; G.forEach(g => kisi.add(g.no));
+        const bas = `<tr class="sube"><td colspan="6">${esc(gunYaz(x.tarih))} · ${esc(dersYaz(x))} <span>· ${esc(saat(x))} · ${esc([...new Set(Object.values(x.siniflar || {}))].join(' / '))} · ${yoklamaVar[kk] || G.length ? G.length + ' öğrenci' : 'yoklama alınmadı'}</span></td></tr>`;
+        return bas + (G.length ? G.map((g, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(g.no)}</td><td class="ad">${esc(baslik(g.ad) || '')}</td><td>${esc(g.sinif)}</td><td>${esc(g.ders ? baslik(g.ders) : '')}</td><td>${esc(g.salon)}</td></tr>`).join('') : (yoklamaVar[kk] ? '<tr><td colspan="6">Gelmeyen yok.</td></tr>' : '')); }).join('');
+      const tek = k !== 'hepsi' && S[0];
+      const govde = raporBant('Sınava Girmeyen Öğrenciler', tek ? `${esc(gunYaz(tek.tarih))} · ${esc(dersYaz(tek))} (${esc(saat(tek))}) · ${top} öğrenci` : `${esc(tk.ad || 'Ortak sınavlar')} · ${S.length} sınav · ${kisi.size} öğrenci · ${top} sınava girilmedi`)
+        + `<div class="kvkk">⚠ <b>Kişisel veri içerir (KVKK).</b> Yalnız bu iş için kullanılır; işi bitince imha edilmelidir.</div>
+        <table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Ders</th><th>Salon</th></tr></thead><tbody>${satir || '<tr><td colspan="6">Kayıt yok.</td></tr>'}</tbody></table>`;
+      raporYazdir(govde, tek ? `Gelmeyenler - ${tek.tarih} ${dersYaz(tek)}` : 'Gelmeyenler - tüm sınavlar');
+    };
     const ciz = () => {
       if (D.bolum !== 'takvim' || !$('#tkIc')) return;
       const olacak = sinavlar.filter(s => !bitti(s)), olan = sinavlar.filter(bitti).reverse();
@@ -2143,7 +2158,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div></div>
         <div class="tk-iki">
           <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : '<div class="soluk">Takvimde kalan sınav yok.</div>'}</div>
-          <div class="kart"><h2 style="margin-top:0">Tamamlananlar</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
+          <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Tamamlananlar${olan.length ? '<button class="tk-pdf" data-pdf="hepsi" style="margin-left:auto">🖨 Tüm gelmeyenler · PDF</button>' : ''}</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
         <div class="kart"><h2 style="margin-top:0">Mazeret sınavları</h2>
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
@@ -2154,6 +2169,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     $('#icerik').innerHTML = `<div class="ust"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span></div><div id="tkIc"></div>`;
     $('#tkIc').onclick = async ev => {
+      const pd = ev.target.closest('[data-pdf]'); if (pd) { gelmeyenRapor(pd.dataset.pdf); return; }
       const g = ev.target.closest('[data-gel]'); if (g) { acik = acik === g.dataset.gel ? null : g.dataset.gel; ciz(); return; }
       const o = ev.target.closest('[data-oz]'); if (o) { ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.oz)); return; }
       const e = ev.target.closest('[data-mzek]');

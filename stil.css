@@ -717,6 +717,7 @@ span.tk-gel { border: 0; padding: 0; }
 }
 .tk-yok { color: var(--cok-soluk) !important; font-weight: 600 !important; }
 .tk-sag { display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+.tk-pdf { font-size: 12px; font-weight: 800; border-radius: 9px; padding: 4px 10px; background: rgba(8,28,44,.7); color: var(--neon); border: 1px solid rgba(34,232,255,.7); white-space: nowrap; }
 .tk-mz-ekle { font-size: 12px; font-weight: 800; border-radius: 9px; padding: 3px 8px; background: transparent; color: var(--neon); border: 1px dashed rgba(34,232,255,.7); white-space: nowrap; }
 span.tk-gel.neon { color: var(--neon); }
 
@@ -896,3 +897,7 @@ span.tk-gel.neon { color: var(--neon); }
   #sinavIc > .ist > div { padding: 5px 9px; border-radius: 10px; }
   #sinavIc > .ist span { font-size: 11px; } #sinavIc > .ist b { font-size: 18px; }
 }
+/* K-467: arama kutuları neon mavi; plan yokken Sınav merkezinde alttaki kutu aramanın üstüne binmesin */
+.ara input { border: 1px solid rgba(34,232,255,.85); box-shadow: 0 0 10px rgba(34,232,255,.35), inset 0 0 6px rgba(34,232,255,.12); }
+.ara input:focus { outline: none; border-color: #22e8ff; box-shadow: 0 0 14px rgba(34,232,255,.6), inset 0 0 6px rgba(34,232,255,.18); }
+.ust:has(.sag-ust) + .cipler:empty { margin-top: 0; }
