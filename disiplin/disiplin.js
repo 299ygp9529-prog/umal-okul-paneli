@@ -4,7 +4,8 @@
 (function () {
   'use strict';
   let C = null, kok = null;   // C: panelden gelen yardımcılar
-  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027' };
+  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027', ekran: 'ana', ogrSec: null, tut: {} };
+  const DOS = () => S.L.filter(r => !r.veri.tur);   // kurul dosyaları (yazılı uyarı ve puan iadesi ayrı satırlar)
   const tr = 'tr';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const MADDE = () => window.UMAL_DISIPLIN_MADDE || [];
@@ -58,15 +59,22 @@
   }
   function puanDurumu(no) {   // bu yıl kesinleşen cezalara göre davranış puanı
     let p = 100;
-    for (const r of S.L) if (r.ogr_no === no && r.yil === S.yil && r.veri.adim && r.veri.adim.kesin && r.veri.adim.kesin.tarih && !(r.veri.adim.kesin.kaldirildi)) { const y = yap((r.veri.adim.kurul || {}).yaptirim); if (y) p -= y.puan; }
+    const L = S.L.filter(r => r.ogr_no === no && r.yil === S.yil).sort((a, b) => String(olayT(a)).localeCompare(String(olayT(b))));
+    for (const r of L) {
+      if (r.veri.tur === 'iade') { p = Math.min(100, p + (Number(r.veri.iade.puan) || 0)); continue; }
+      if (!r.veri.tur && r.veri.adim && r.veri.adim.kesin && r.veri.adim.kesin.tarih && !r.veri.adim.kesin.kaldirildi) { const y = yap((r.veri.adim.kurul || {}).yaptirim); if (y) p -= y.puan; }
+    }
     return Math.max(0, p);
   }
+  const olayT = r => r.veri.tur === 'iade' ? r.veri.iade.tarih : ((r.veri.adim || {}).kesin || {}).tarih || (r.veri.olay || {}).tarih || '';
   const oncekiCezalar = (no, haric) => S.L.filter(r => r.ogr_no === no && r.id !== haric && r.veri.adim && r.veri.adim.kurul && r.veri.adim.kurul.yaptirim);
   // ---------------------------------------------------------------- veri
   async function yukle() {
     const [d, a] = await Promise.all([C.sb.from('umal_disiplin').select('id,dosya_no,yil,ogr_no,veri,durum,olusturma,guncel').order('olusturma', { ascending: false }), C.sb.from('umal_disiplin_ayar').select('veri').eq('id', 'okul').maybeSingle()]);
     if (d.error) throw d.error;
     S.L = d.data || []; S.ayar = (a.data && a.data.veri) || {};
+    const t = await C.sb.from('umal_disiplin_ayar').select('id,veri').in('id', ['tutanak-' + (S.ayar.yil || S.yil) + '-bas', 'tutanak-' + (S.ayar.yil || S.yil) + '-son']);
+    S.tut = {}; (t.data || []).forEach(x => { S.tut[x.id.endsWith('-bas') ? 'bas' : 'son'] = x.veri; });
   }
   async function kaydet(r) {
     r.durum = durumKod(r.veri);
@@ -108,26 +116,37 @@
 .ds-secim button b{color:var(--neonacik);margin-right:6px}.ds-secim small{color:var(--soluk)}
 .ds-cipler{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .ds-bos{padding:30px;text-align:center;color:var(--soluk)}
-@media (max-width:760px){.ds-sayac{grid-template-columns:1fr 1fr}.ds-izgara{grid-template-columns:1fr}.ds-belge{grid-template-columns:1fr 1fr}.ds-iki,.ds-uc{grid-template-columns:1fr}}`;
+.ds-sayac button{background:var(--kart);border:1px solid var(--cizgi);border-radius:14px;padding:12px 14px;text-align:left;color:var(--yazi);font:inherit;cursor:pointer}.ds-sayac button:hover{border-color:var(--neon)}
+.ds-sayac button.uyari{border-color:#ff9a3a;box-shadow:0 0 12px rgba(255,154,58,.25)}.ds-sayac button.uyari b{color:#ffb867}
+.ds-katman{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--cizgi);border-radius:16px;overflow:hidden;background:var(--kart)}
+.ds-katman section{border-right:1px solid var(--cizgi)}.ds-katman section:last-child{border-right:0}
+.ds-katman h2{margin:0;padding:14px 18px;font-size:16px;letter-spacing:.08em;color:var(--neonacik);background:linear-gradient(180deg,rgba(34,232,255,.16),rgba(34,232,255,.04));border-bottom:2px solid var(--neon)}
+.ds-katman button{display:grid;grid-template-columns:40px 1fr 16px;gap:12px;align-items:center;width:100%;min-height:72px;padding:12px 18px;background:none;border:0;border-bottom:1px solid #1d3150;color:var(--yazi);text-align:left;font:inherit;cursor:pointer}
+.ds-katman button:hover{background:rgba(34,232,255,.08)}.ds-katman button i{font-style:normal;font-size:22px;width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:#16294a;border:1px solid #24406a}
+.ds-katman button b{display:block;font-size:15px}.ds-katman button small{color:var(--soluk);font-size:12px}.ds-katman button em{font-style:normal;color:var(--neon);font-size:20px}
+.ds-tablo{width:100%;border-collapse:collapse}.ds-tablo th{text-align:left;color:var(--soluk);font-size:12.5px;font-weight:600;padding:8px;border-bottom:1px solid var(--cizgi)}.ds-tablo td{padding:8px;border-bottom:1px solid #1d3150;vertical-align:middle;overflow-wrap:anywhere}
+.ds-tablo td:first-child{white-space:nowrap}.ds-tablo button{white-space:nowrap}
+.ds-tut{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.ds-ist{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+@media (max-width:760px){.ds-sayac{grid-template-columns:1fr 1fr}.ds-katman,.ds-tut,.ds-ist{grid-template-columns:1fr}.ds-katman section{border-right:0}.ds-tablo{font-size:13px}.ds-izgara{grid-template-columns:1fr}.ds-belge{grid-template-columns:1fr 1fr}.ds-iki,.ds-uc{grid-template-columns:1fr}}`;
     document.head.appendChild(st);
   }
-  function ciz() {
+  function cizDosyalar() {
     const b = bugun();
-    const acik = S.L.filter(r => durumKod(r.veri) !== 'kesin');
-    const kararYakin = S.L.filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.kurul && a.kurul.tarih) && isGunuArasi(b, isGunuEkle(a.sevk.tarih, 10)) <= 3; });
-    const tebligBek = S.L.filter(r => { const a = r.veri.adim || {}, y = yap((a.kurul || {}).yaptirim); return a.kurul && a.kurul.tarih && y && y.onay && !(a.teblig && a.teblig.tarih); });
-    const itiraz = S.L.filter(r => { const a = r.veri.adim || {}; return a.teblig && a.teblig.tarih && !(a.kesin && a.kesin.tarih) && isGunuArasi(b, isGunuEkle(a.teblig.tarih, 5)) > 0; });
+    const acik = DOS().filter(r => durumKod(r.veri) !== 'kesin');
+    const kararYakin = DOS().filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.kurul && a.kurul.tarih) && isGunuArasi(b, isGunuEkle(a.sevk.tarih, 10)) <= 3; });
+    const tebligBek = DOS().filter(r => { const a = r.veri.adim || {}, y = yap((a.kurul || {}).yaptirim); return a.kurul && a.kurul.tarih && y && y.onay && !(a.teblig && a.teblig.tarih); });
+    const itiraz = DOS().filter(r => { const a = r.veri.adim || {}; return a.teblig && a.teblig.tarih && !(a.kesin && a.kesin.tarih) && isGunuArasi(b, isGunuEkle(a.teblig.tarih, 5)) > 0; });
     const q = S.ara.toLocaleLowerCase(tr);
-    const G = S.L.filter(r => (S.suz === 'hepsi' || (S.suz === 'acik' ? durumKod(r.veri) !== 'kesin' : durumKod(r.veri) === S.suz)) && (!q || [r.veri.ogr.ad, r.ogr_no, r.dosya_no, r.veri.ogr.sinif, (r.veri.olay || {}).ozet].join(' ').toLocaleLowerCase(tr).includes(q)));
+    const G = DOS().filter(r => (S.suz === 'hepsi' || (S.suz === 'acik' ? durumKod(r.veri) !== 'kesin' : durumKod(r.veri) === S.suz)) && (!q || [r.veri.ogr.ad, r.ogr_no, r.dosya_no, r.veri.ogr.sinif, (r.veri.olay || {}).ozet].join(' ').toLocaleLowerCase(tr).includes(q)));
     if (S.secili && !S.L.find(r => r.id === S.secili)) S.secili = null;
     if (!S.secili && G.length) S.secili = G[0].id;
     const cip = (v, ad) => `<button class="cip ${S.suz === v ? 'secili' : ''}" data-suz="${v}">${ad}</button>`;
-    kok.innerHTML = `<div class="ds-ust"><h1>Disiplin</h1><div class="dugmeler" style="margin:0"><button class="ikincil" data-is="yonetmelik">§ Yönetmelik</button><button class="ikincil" data-is="ayar">Kurul bilgileri</button><button class="birincil" data-is="yeni">+ Yeni olay</button></div></div>
+    kok.innerHTML = `${geriBas('Disiplin dosyaları', '<button class="birincil" data-is="yeni">+ Olay girişi</button>')}
       <div class="ds-sayac"><div><b>${acik.length}</b><span>açık dosya</span></div><div class="${kararYakin.length ? 'uyari' : ''}"><b>${kararYakin.length}</b><span>karar süresi doluyor (10 iş günü)</span></div>
         <div class="${tebligBek.length ? 'uyari' : ''}"><b>${tebligBek.length}</b><span>tebliğ bekliyor</span></div><div><b>${itiraz.length}</b><span>itiraz süresi sürüyor (5 iş günü)</span></div></div>
       <div class="ds-izgara"><section>
         <div class="ds-ara"><input id="dsAra" placeholder="Öğrenci adı, no ya da dosya no ara" value="${esc(S.ara)}">${cip('acik', 'Açık')}${cip('karar', 'Karar')}${cip('itiraz', 'Tebliğ edildi')}${cip('kesin', 'Kesin')}${cip('hepsi', 'Tümü')}</div>
-        ${G.length ? G.map(kart).join('') : `<div class="kart ds-bos">${S.L.length ? 'Bu süzgeçte dosya yok.' : 'Henüz disiplin dosyası yok. “+ Yeni olay” ile başlayın.'}</div>`}
+        ${G.length ? G.map(kart).join('') : `<div class="kart ds-bos">${DOS().length ? 'Bu süzgeçte dosya yok.' : 'Henüz disiplin dosyası yok. “+ Olay girişi” ile başlayın.'}</div>`}
       </section><section class="kart" id="dsAyrinti">${S.secili ? ayrinti(S.L.find(r => r.id === S.secili)) : '<div class="ds-bos">Dosya seçin.</div>'}</section></div>`;
     C.fotolariYukle(G.map(r => r.ogr_no));
     const ar = kok.querySelector('#dsAra');
@@ -174,11 +193,11 @@
     ara.oninput = ciz_; ciz_();
     liste.onclick = ev => { const b = ev.target.closest('[data-m]'); if (!b) return; const x = MADDE().find(y => y[0] === b.dataset.m); document.getElementById(id).value = x[0]; document.getElementById(id + 'Sec').textContent = x[0] + ' · ' + x[2]; ara.value = ''; ciz_(); };
   }
-  async function yeniOlay(duzenlenen) {
+  async function yeniOlay(duzenlenen, kaynak) {
     const ogrL = await C.ogrencileriYukle().catch(() => []);
-    const v = duzenlenen ? duzenlenen.veri : { olay: { tarih: bugun() } };
+    const v = duzenlenen ? duzenlenen.veri : kaynak ? { olay: Object.assign({}, kaynak.veri.olay), madde: kaynak.veri.madde } : { olay: { tarih: bugun() } };
     let secilen = duzenlenen ? [{ no: duzenlenen.ogr_no, ad: v.ogr.ad, sinif: v.ogr.sinif }] : [];
-    C.pencereAc(`<h2 style="margin-top:0">${duzenlenen ? 'Olay bilgileri' : 'Yeni olay'}</h2><div class="ds-form">
+    C.pencereAc(`<h2 style="margin-top:0">${duzenlenen ? 'Olay bilgileri' : kaynak ? 'Olaya öğrenci ekle · ' + esc(kaynak.dosya_no) : 'Olay girişi'}</h2>${kaynak ? `<div class="kucuk soluk">Olaydaki öğrenciler: ${esc(olayOgr(kaynak).map(x => C.baslik(x.veri.ogr.ad)).join(', '))}</div>` : ''}<div class="ds-form">
       ${duzenlenen ? '' : `<label>Öğrenci(ler) · her öğrenci için ayrı dosya açılır</label><input id="dsOgrAra" placeholder="Ad ya da okul no"><div class="ds-secim" id="dsOgrListe" style="max-height:160px"></div><div class="ds-cipler" id="dsOgrSec"></div>`}
       <div class="ds-uc"><div><label>Olay tarihi</label><input type="date" id="dsT" value="${esc(v.olay.tarih || '')}"></div><div><label>Saat</label><input id="dsSaat" placeholder="ör. 3. teneffüs" value="${esc(v.olay.saat || '')}"></div><div><label>Yer</label><input id="dsYer" placeholder="ör. bahçe" value="${esc(v.olay.yer || '')}"></div></div>
       <label>Olayın oluş şekli</label><textarea id="dsOzet" rows="3">${esc(v.olay.ozet || '')}</textarea>
@@ -207,13 +226,14 @@
       if (duzenlenen) { duzenlenen.veri.olay = olay; duzenlenen.veri.madde = g('dsMadde'); if (await kaydet(duzenlenen)) { C.pencereKapat(); ciz(); } return; }
       let ilk = null;
       for (const o of secilen) {
-        const veri = { ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay, madde: g('dsMadde'), adim: {}, olusturan: C.eposta };
+        if (S.L.some(r => !r.veri.tur && r.ogr_no === o.no && kaynak && (r.veri.olay_id || r.id) === (kaynak.veri.olay_id || kaynak.id))) continue;
+        const veri = { ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay, madde: g('dsMadde'), adim: {}, olusturan: C.eposta, olay_id: kaynak ? (kaynak.veri.olay_id || kaynak.id) : (ilk || undefined) };
         const satir = { dosya_no: yeniDosyaNo(), yil: S.yil, ogr_no: o.no, veri, durum: 'acik' };
         const { data, error } = await C.israrla(() => C.sb.from('umal_disiplin').insert(satir).select('id,dosya_no,yil,ogr_no,veri,durum,olusturma,guncel').single());
         if (error) { bil.textContent = 'Kaydedilemedi: ' + C.hataYaz(error); return; }
         S.L.unshift(data); ilk = ilk || data.id;
       }
-      S.secili = ilk; S.suz = 'acik'; C.pencereKapat(); ciz();
+      S.secili = ilk; S.suz = 'acik'; S.ekran = 'dosyalar'; C.pencereKapat(); ciz();
     };
   }
   // ---------------------------------------------------------------- adım formları
@@ -305,6 +325,7 @@
   // ---------------------------------------------------------------- belgeler
   const BELGELER = [['tutanak', 'Olay tutanağı', 'olay tespit'], ['savunma', 'Savunma daveti', 'öğrenci / veli'], ['cagri', 'Çağrı pusulası', 'kurul üyeleri'],
     ['karar', 'Karar · EK-1', 'gerekçeli karar'], ['teblig', 'Tebligat', 'tebliğ / tebellüğ'], ['dizi', 'Dizi pusulası', 'dosya içeriği']];
+  const BELGE_AD = { savtut: 'Savunma tutanağı' };
   function belgeKabuk(baslik, govde) {
     const okul = 'ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ';
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>
@@ -342,10 +363,260 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       g = `${ogrT}<table>${sat('Kurul karar tarihi / no', esc((k.tarih ? tGoster(k.tarih) : '……') + ' / ' + (k.karar_no || '……')))}${sat('Tebliğ edilen karar', esc((k.yaptirim || '') + (k.gun ? ` (${k.gun} gün)` : '') + (m ? ' — Madde ' + m[0] : '')))}
       ${sat('Tebliğ edilen kişi', esc(t_.kime || 'Veli'))}${sat('Tebliğ tarihi', esc(t_.tarih ? tUzun(t_.tarih) : ''))}${sat('Tebliğ şekli', esc(t_.sekil))}</table>
       <p>${y && y.itiraz ? `Bu karara, tebliğ tarihinden itibaren 5 (beş) iş günü içinde okul müdürlüğü aracılığıyla ${esc(y.itiraz)}na itiraz edilebilir.` : ''}</p>${imzalar(['Tebellüğ eden', 'Tebliğ eden görevli', 'Okul müdürü'])}`; }
+    if (tur === 'savtut') { b = 'SAVUNMA TUTANAĞI'; const sv = a.savunma || {};
+      g = `${ogrT}<table>${sat('Savunma tarihi', esc(sv.tarih ? tUzun(sv.tarih) : '…… / …… / …………'))}${sat('Olay', esc(tUzun(v.olay.tarih) + ' · ' + (v.olay.ozet || '')))}</table>
+      <p><b>Soru:</b> Hakkınızdaki iddia size okundu. Bu konuda savunmanız nedir?</p><p><b>Cevap:</b> ${sv.vermedi ? 'Öğrenci savunma vermemiştir.' : esc(sv.ozet || '')}</p><div style="border-bottom:1px dotted #000;height:9mm"></div><div style="border-bottom:1px dotted #000;height:9mm"></div><div style="border-bottom:1px dotted #000;height:9mm"></div>
+      <p><b>Soru:</b> Eklemek istediğiniz başka bir şey var mı?</p><div style="border-bottom:1px dotted #000;height:9mm"></div><p>Okundu, söylediklerimin aynen yazıldığını beyan ederim.</p>${imzalar(['Savunması alınan öğrenci', 'Veli', 'Kurul başkanı'])}`; }
     if (tur === 'dizi') { b = 'DİZİ PUSULASI';
       const L = [['Olay tespit tutanağı', 1], ['Dilekçe / şikâyet yazısı', v.olay.sikayet ? 1 : 0], ['Kurula sevk yazısı', a.sevk ? 1 : 0], ['Savunma daveti ve tebellüğü', 1], ['Öğrenci savunması', a.savunma && !a.savunma.vermedi ? 1 : 0], ['Tanık ifadeleri', (a.savunma || {}).tanik ? 1 : 0], ['Kurul kararı (EK-1)', a.kurul ? 1 : 0], ['Onay yazısı', a.onay ? 1 : 0], ['Tebliğ ve tebellüğ belgesi', a.teblig ? 1 : 0]].filter(x => x[1]);
       g = `${ogrT}<table><tr><th style="width:10%">Sıra</th><th>Belgenin adı</th><th style="width:16%">Adet</th></tr>${L.map((x, i) => `<tr><td>${i + 1}</td><td>${x[0]}</td><td>1</td></tr>`).join('')}</table>${imzalar(['Düzenleyen', '', 'Okul müdürü'])}`; }
-    C.belgeOnizle(belgeKabuk(b, g), BELGELER.find(x => x[0] === tur)[1] + ' · ' + ad);
+    C.belgeOnizle(belgeKabuk(b, g), (BELGE_AD[tur] || BELGELER.find(x => x[0] === tur)[1]) + ' · ' + ad);
+  }
+  // ---------------------------------------------------------------- K-539: ana sayfa (katmanlar) ve ayrı ekranlar
+  const geriBas = (ad, sag) => `<div class="ds-ust"><div><button class="bag" data-ekran="ana">← Disiplin</button><h1 style="margin:2px 0 0">${ad}</h1></div><div class="dugmeler" style="margin:0">${sag || ''}</div></div>`;
+  const olayOgr = r => S.L.filter(x => !x.veri.tur && (x.veri.olay_id || x.id) === (r.veri.olay_id || r.id));
+  const KATMAN = [
+    ['GİRİŞLER', [['genel', '🏫', 'Genel Bilgiler', 'okul, müdür, kurul üyeleri'], ['ogrenciler', '👤', 'Öğrenciler', 'disiplin geçmişi ve puan'], ['olay', '📝', 'Olay Girişi', 'yeni olay, dosya açılır'],
+      ['olayaEkle', '➕', 'Olaya Öğrenci Ekle', 'var olan olaya'], ['uyari', '💬', 'Yazılı Uyarı', 'ilk kez kınama yerine'], ['dosyalar', '📂', 'Disiplin Dosyaları', 'adım adım takip']]],
+    ['KARAR', [['cagri', '📋', 'Çağrı Pusulaları', 'kurul üyelerine'], ['formlar', '📄', 'Tutanak ve Formlar', 'tutanak, savunma'], ['karar', '✅', 'KARAR', 'kurul kararı · EK-1'],
+      ['teblig', '✉️', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', '🗂️', 'Sene Başı / Sene Sonu Kurul Tutanakları', 'toplantı tutanakları']]],
+    ['DİĞER', [['iade', '♻️', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', '🖨️', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', '📊', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
+      ['cezaAlan', '🧑‍🎓', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', '📚', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', '🗃️', 'Dizi Pusulası', 'dosya içeriği']]],
+  ];
+  function ciz() {
+    const E = { ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
+      karar: () => cizBelgeListe('karar'), teblig: () => cizBelgeListe('teblig'), dizi: () => cizBelgeListe('dizi'), tutanaklar: cizTutanaklar, iade: cizIade, iadeCiz: cizIadeCiz, istatistik: cizIstatistik, cezaAlan: cizCezaAlan };
+    if (S.ekran === 'genel') { S.ekran = 'ana'; ayarFormu(); }
+    if (S.ekran === 'olay') { S.ekran = 'ana'; yeniOlay(null); }
+    if (S.ekran === 'yonetmelik') { S.ekran = 'ana'; yonetmelik(); }
+    (E[S.ekran] || cizAna)();
+  }
+  function cizAna() {
+    const b = bugun(), D_ = DOS();
+    const acik = D_.filter(r => durumKod(r.veri) !== 'kesin').length;
+    const kararYakin = D_.filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.kurul && a.kurul.tarih) && isGunuArasi(b, isGunuEkle(a.sevk.tarih, 10)) <= 3; }).length;
+    const tebligBek = D_.filter(r => { const a = r.veri.adim || {}, y = yap((a.kurul || {}).yaptirim); return a.kurul && a.kurul.tarih && y && y.onay && !(a.teblig && a.teblig.tarih); }).length;
+    const itiraz = D_.filter(r => { const a = r.veri.adim || {}; return a.teblig && a.teblig.tarih && !(a.kesin && a.kesin.tarih) && isGunuArasi(b, isGunuEkle(a.teblig.tarih, 5)) > 0; }).length;
+    kok.innerHTML = `<div class="ds-ust"><h1>Disiplin</h1><span class="soluk">Okul Öğrenci Ödül ve Disiplin Kurulu · ${esc(S.yil)}</span></div>
+      <div class="ds-sayac"><button data-ekran="dosyalar"><b>${acik}</b><span>açık dosya</span></button><button data-ekran="dosyalar" class="${kararYakin ? 'uyari' : ''}"><b>${kararYakin}</b><span>karar süresi doluyor (10 iş günü)</span></button>
+        <button data-ekran="teblig" class="${tebligBek ? 'uyari' : ''}"><b>${tebligBek}</b><span>tebliğ bekliyor</span></button><button data-ekran="dosyalar"><b>${itiraz}</b><span>itiraz süresi sürüyor (5 iş günü)</span></button></div>
+      <div class="ds-katman">${KATMAN.map(([bas, L]) => `<section><h2>${bas}</h2>${L.map(([k, ic, ad, alt]) => `<button data-ekran="${k}"><i>${ic}</i><span><b>${ad}</b><small>${alt}</small></span><em>›</em></button>`).join('')}</section>`).join('')}</div>`;
+  }
+  // ---- Öğrenciler: disiplin geçmişi
+  function cizOgrenciler() {
+    const nolar = [...new Set(S.L.map(r => r.ogr_no))];
+    const q = S.ara.toLocaleLowerCase(tr);
+    const kisi = no => (S.L.find(r => r.ogr_no === no) || {}).veri.ogr;
+    const G = nolar.map(no => ({ no, o: kisi(no), n: S.L.filter(r => r.ogr_no === no && !r.veri.tur).length, u: S.L.filter(r => r.ogr_no === no && r.veri.tur === 'uyari').length, p: puanDurumu(no) }))
+      .filter(x => !q || [x.o.ad, x.no, x.o.sinif].join(' ').toLocaleLowerCase(tr).includes(q)).sort((a, b) => a.p - b.p || a.o.ad.localeCompare(b.o.ad, tr));
+    if (!S.ogrSec && G.length) S.ogrSec = G[0].no;
+    const sec = S.ogrSec && kisi(S.ogrSec);
+    const H = sec ? S.L.filter(r => r.ogr_no === S.ogrSec).sort((a, b) => String(olayT(b)).localeCompare(String(olayT(a)))) : [];
+    kok.innerHTML = `${geriBas('Öğrenciler')}<div class="ds-izgara" style="margin-top:14px"><section><div class="ds-ara"><input id="dsAra" placeholder="Öğrenci adı ya da no" value="${esc(S.ara)}"></div>
+      ${G.length ? G.map(x => `<button class="ds-dosya ${S.ogrSec === x.no ? 'secili' : ''}" style="--sv:${C.seviyeRenk(x.o.sinif)}" data-ogrsec="${esc(x.no)}">${C.foto(x.no, x.o.ad)}<div><b>${esc(C.baslik(x.o.ad))}</b><small>${esc(x.o.sinif)} · No ${esc(x.no)} · ${x.n} dosya${x.u ? ' · ' + x.u + ' yazılı uyarı' : ''}</small></div><div class="ds-sure ${x.p < 100 ? 'uyari' : 'yesil'}"><b>${x.p}</b><small>davranış puanı</small></div></button>`).join('') : '<div class="kart ds-bos">Disiplin kaydı olan öğrenci yok.</div>'}
+      </section><section class="kart">${sec ? `<b style="font-size:18px">${esc(C.baslik(sec.ad))} · ${esc(sec.sinif)}</b><div class="soluk kucuk">No ${esc(S.ogrSec)} · Davranış puanı <b class="neon">${puanDurumu(S.ogrSec)}</b></div>
+        <table class="ds-tablo" style="margin-top:10px"><tr><th>Tarih</th><th>Kayıt</th><th>Sonuç</th><th></th></tr>${H.map(r => { const v = r.veri;
+          if (v.tur === 'iade') return `<tr><td>${tGoster(v.iade.tarih)}</td><td>Davranış puanı iadesi</td><td class="yeşil">+${esc(v.iade.puan)}</td><td></td></tr>`;
+          if (v.tur === 'uyari') return `<tr><td>${tGoster(v.uyari.tarih)}</td><td>${esc(v.olay.ozet)}</td><td>Yazılı uyarı</td><td><button class="bag" data-belge="uyari" data-id="${r.id}">Belge</button></td></tr>`;
+          const k = (v.adim || {}).kurul || {}, y = yap(k.yaptirim); return `<tr><td>${tGoster(v.olay.tarih)}</td><td>${esc(r.dosya_no)} · ${esc(v.olay.ozet)}</td><td>${y ? esc(y.ad) + (y.puan ? ` (−${y.puan})` : '') : 'Karar bekliyor'}</td><td><button class="bag" data-ekran="dosyalar" onclick="">Aç</button></td></tr>`; }).join('')}</table>` : '<div class="ds-bos">Öğrenci seçin.</div>'}</section></div>`;
+    C.fotolariYukle(G.map(x => x.no));
+    kok.querySelectorAll('[data-ekran="dosyalar"]').forEach((b_, i) => { const r = H.filter(x => !x.veri.tur)[i]; if (r) b_.addEventListener('click', () => { S.secili = r.id; S.suz = 'hepsi'; }, true); });
+    aramaBagla();
+  }
+  function aramaBagla() { const ar = kok.querySelector('#dsAra'); if (ar) ar.oninput = () => { S.ara = ar.value; const c = ar.selectionStart; ciz(); const i = kok.querySelector('#dsAra'); i.focus(); i.setSelectionRange(c, c); }; }
+  // ---- Olaya öğrenci ekle
+  function cizOlayaEkle() {
+    const ana = DOS().filter(r => !r.veri.olay_id || r.veri.olay_id === r.id);
+    kok.innerHTML = `${geriBas('Olaya öğrenci ekle')}<p class="soluk">Aynı olaya karışan başka öğrencileri ekleyin; her öğrenciye ayrı dosya açılır, olay bilgileri kopyalanır.</p>
+      ${ana.length ? `<table class="ds-tablo">${'<tr><th>Olay tarihi</th><th>Olay</th><th>Öğrenciler</th><th></th></tr>'}${ana.map(r => `<tr><td>${tGoster(r.veri.olay.tarih)}</td><td>${esc(r.veri.olay.ozet)}${r.veri.olay.yer ? ' · ' + esc(r.veri.olay.yer) : ''}</td><td>${esc(olayOgr(r).map(x => C.baslik(x.veri.ogr.ad) + ' (' + x.veri.ogr.sinif + ')').join(', '))}</td><td><button class="ikincil" data-ekle="${r.id}">+ Öğrenci ekle</button></td></tr>`).join('')}</table>` : '<div class="kart ds-bos">Henüz olay yok. Önce “Olay Girişi” yapın.</div>'}`;
+  }
+  // ---- Yazılı uyarı (kurula gitmeden; e-Okul'a işlenmez)
+  function cizUyari() {
+    const L = S.L.filter(r => r.veri.tur === 'uyari');
+    kok.innerHTML = `${geriBas('Yazılı uyarı', '<button class="birincil" data-is="uyari">+ Yazılı uyarı</button>')}
+      <div class="ds-madde" style="margin:12px 0">Daha önce disiplin cezası almamış öğrenci, kınama gerektiren davranışlardan birini ilk kez işlerse rehber öğretmenin değerlendirmesiyle okul müdürü yazılı uyarı yapar; veli okula çağrılarak görüşülür. Yazılı uyarı ve veli görüşmesi e-Okul'a işlenmez, davranış puanından düşülmez.</div>
+      ${L.length ? `<table class="ds-tablo"><tr><th>Tarih</th><th>Öğrenci</th><th>Davranış</th><th>Veli görüşmesi</th><th></th></tr>${L.map(r => `<tr><td>${tGoster(r.veri.uyari.tarih)}</td><td>${esc(C.baslik(r.veri.ogr.ad))} · ${esc(r.veri.ogr.sinif)}</td><td>${esc(r.veri.olay.ozet)}${r.veri.madde ? ' (' + esc(r.veri.madde) + ')' : ''}</td><td>${esc(r.veri.uyari.gorusme ? tGoster(r.veri.uyari.gorusme) : '—')}</td>
+        <td style="white-space:nowrap"><button class="bag" data-belge="uyari" data-id="${r.id}">Belge</button> <button class="bag" data-is="uyariDuz" data-uid="${r.id}">Düzenle</button> ${C.rol === 'bas' ? `<button class="bag" style="color:var(--kirmizi)" data-satsil="${r.id}">Sil</button>` : ''}</td></tr>`).join('')}</table>` : '<div class="kart ds-bos">Henüz yazılı uyarı yok.</div>'}`;
+    kok.querySelectorAll('[data-uid]').forEach(b_ => b_.onclick = ev => { ev.stopPropagation(); uyariFormu(S.L.find(x => x.id === b_.dataset.uid)); });
+  }
+  function ogrSecici() {
+    return `<label>Öğrenci</label><input id="osAra" placeholder="Ad ya da okul no"><div class="ds-secim" id="osListe" style="max-height:160px"></div><div class="ds-cipler" id="osSec"></div>`;
+  }
+  async function ogrSeciciBagla(coklu, ilk) {
+    const ogrL = await C.ogrencileriYukle().catch(() => []);
+    let secilen = ilk ? [ilk] : [];
+    const ara = document.getElementById('osAra'), liste = document.getElementById('osListe'), sec = document.getElementById('osSec');
+    const ciz_ = () => { const q = ara.value.trim().toLocaleLowerCase(tr); const L = !q ? [] : ogrL.filter(o => o.no === q || (/^\d+$/.test(q) ? o.no.startsWith(q) : o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 12);
+      liste.innerHTML = L.map(o => `<button type="button" data-o="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(C.baslik(o.ad))} <small>· ${esc(o.no)} · puan ${puanDurumu(o.no)}</small></button>`).join(''); };
+    const cizSec = () => { sec.innerHTML = secilen.map(o => `<button type="button" class="cip secili" data-ocik="${esc(o.no)}">${esc(C.baslik(o.ad))} · ${esc(o.sinif)} ✕</button>`).join(''); };
+    ara.oninput = ciz_;
+    liste.onclick = ev => { const b = ev.target.closest('[data-o]'); if (!b) return; const o = ogrL.find(x => x.no === b.dataset.o); if (o && !secilen.some(x => x.no === o.no)) secilen = coklu ? secilen.concat([o]) : [o]; ara.value = ''; ciz_(); cizSec(); };
+    sec.onclick = ev => { const b = ev.target.closest('[data-ocik]'); if (b) { secilen = secilen.filter(x => x.no !== b.dataset.ocik); cizSec(); } };
+    cizSec();
+    return () => secilen;
+  }
+  async function satirEkle(veri, durum) {
+    const satir = { dosya_no: yeniDosyaNo(), yil: S.yil, ogr_no: veri.ogr.no, veri, durum };
+    const { data, error } = await C.israrla(() => C.sb.from('umal_disiplin').insert(satir).select('id,dosya_no,yil,ogr_no,veri,durum,olusturma,guncel').single());
+    if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return null; }
+    S.L.unshift(data); return data;
+  }
+  async function satirSil(id) {
+    const r = S.L.find(x => x.id === id); if (!r || !confirm('Bu kayıt kalıcı olarak silinsin mi? Geri alınamaz.')) return;
+    const { error } = await C.sb.from('umal_disiplin').delete().eq('id', id);
+    if (error) { alert('Silinemedi: ' + C.hataYaz(error)); return; }
+    S.L = S.L.filter(x => x.id !== id); ciz();
+  }
+  async function uyariFormu(r) {
+    const v = r ? r.veri : { olay: { tarih: bugun() }, uyari: { tarih: bugun() } };
+    C.pencereAc(`<h2 style="margin-top:0">Yazılı uyarı</h2><div class="ds-form">${r ? `<b>${esc(C.baslik(v.ogr.ad))} · ${esc(v.ogr.sinif)}</b>` : ogrSecici()}
+      <div class="ds-iki"><div><label>Olay tarihi</label><input type="date" id="u_ot" value="${esc(v.olay.tarih || '')}"></div><div><label>Yer</label><input id="u_yer" value="${esc(v.olay.yer || '')}"></div></div>
+      <label>Davranış</label><textarea id="u_ozet" rows="2">${esc(v.olay.ozet || '')}</textarea>
+      <label>Yönetmelik maddesi (kınama gerektiren)</label>${maddeSecici('u_madde', v.madde)}
+      <div class="ds-iki"><div><label>Rehber öğretmen</label><input id="u_rehber" value="${esc(v.uyari.rehber || '')}"></div><div><label>Sınıf rehber öğretmeni</label><input id="u_sinifr" value="${esc(v.uyari.sinif_rehber || '')}"></div></div>
+      <label>Rehberlik değerlendirmesi ve öneri</label><textarea id="u_deger" rows="2">${esc(v.uyari.degerlendirme || '')}</textarea>
+      <div class="ds-iki"><div><label>Uyarı tarihi</label><input type="date" id="u_t" value="${esc(v.uyari.tarih || '')}"></div><div><label>Veli görüşme tarihi</label><input type="date" id="u_g" value="${esc(v.uyari.gorusme || '')}"></div></div>
+      <label>Sosyal sorumluluk çalışması (isteğe bağlı)</label><input id="u_sos" value="${esc(v.uyari.sosyal || '')}">
+      <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="u_kaydet">Kaydet</button></div><div class="kucuk" id="u_bilgi"></div></div>`);
+    maddeBagla('u_madde');
+    const sec = r ? null : await ogrSeciciBagla(false);
+    document.getElementById('u_kaydet').onclick = async () => {
+      const g = id => document.getElementById(id).value.trim(), bil = document.getElementById('u_bilgi');
+      const o = r ? v.ogr : (sec()[0] || null); if (!o) { bil.textContent = 'Öğrenci seçin.'; return; }
+      if (!g('u_ozet') || !g('u_t')) { bil.textContent = 'Davranış ve uyarı tarihi gerekli.'; return; }
+      if (!r && DOS().some(x => x.ogr_no === o.no && ((x.veri.adim || {}).kurul || {}).yaptirim && yap(x.veri.adim.kurul.yaptirim).puan) && !confirm('Bu öğrencinin önceden disiplin cezası var; yazılı uyarı yalnız ilk kez için uygulanır. Yine de kaydedilsin mi?')) return;
+      const veri = { tur: 'uyari', ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay: { tarih: g('u_ot'), yer: g('u_yer'), ozet: g('u_ozet') }, madde: g('u_madde'),
+        uyari: { tarih: g('u_t'), gorusme: g('u_g'), rehber: g('u_rehber'), sinif_rehber: g('u_sinifr'), degerlendirme: g('u_deger'), sosyal: g('u_sos') }, olusturan: C.eposta };
+      if (r) { r.veri = veri; const { error } = await C.israrla(() => C.sb.from('umal_disiplin').update({ veri, guncel: new Date().toISOString() }).eq('id', r.id)); if (error) { bil.textContent = 'Kaydedilemedi: ' + C.hataYaz(error); return; } }
+      else if (!(await satirEkle(veri, 'uyari'))) return;
+      C.pencereKapat(); S.ekran = 'uyari'; ciz();
+    };
+  }
+  function uyariBelge(r) {
+    const v = r.veri, u = v.uyari, ay = S.ayar, m = MADDE().find(x => x[0] === v.madde), ad = C.baslik(v.ogr.ad);
+    const sat = (b, d) => `<tr><th>${b}</th><td>${d || '&nbsp;'}</td></tr>`;
+    const g = `<table>${sat('Öğrencinin adı soyadı', esc(ad))}${sat('Sınıfı / okul no', esc(v.ogr.sinif + ' / ' + r.ogr_no))}${sat('Davranışın tarihi ve yeri', esc(tUzun(v.olay.tarih) + (v.olay.yer ? ' · ' + v.olay.yer : '')))}${sat('Davranış', esc(v.olay.ozet))}${sat('İlgili madde', esc(m ? m[0] + ' — ' + m[2] : ''))}
+      ${sat('Rehberlik değerlendirmesi', esc(u.degerlendirme))}${sat('Veli görüşme tarihi', esc(u.gorusme ? tUzun(u.gorusme) : ''))}${sat('Sosyal sorumluluk çalışması', esc(u.sosyal))}</table>
+      <p>Öğrenciniz ${esc(ad)}, yukarıda belirtilen davranışı ilk kez gerçekleştirdiğinden, sınıf rehber öğretmeni ve okul rehber öğretmeninin değerlendirme ve önerileri doğrultusunda <b>YAZILI OLARAK UYARILMIŞTIR</b>. Davranışın tekrarlanması hâlinde Okul Öğrenci Ödül ve Disiplin Kuruluna sevk edilecektir. Bu uyarı e-Okul'a işlenmez.</p>
+      <div class="imza"><div>${esc(u.sinif_rehber || 'Sınıf rehber öğretmeni')}</div><div>${esc(u.rehber || 'Okul rehber öğretmeni')}</div><div>${esc(ay.mudur || '')}<br>Okul Müdürü</div></div>
+      <div class="imza" style="grid-template-columns:1fr 1fr"><div>Tebellüğ eden öğrenci</div><div>Tebellüğ eden veli</div></div>`;
+    C.belgeOnizle(belgeKabuk('YAZILI UYARI BELGESİ', g), 'Yazılı uyarı · ' + ad);
+  }
+  // ---- Belge listeleri (her dosya için ilgili belge düğmeleri)
+  const LISTE_BELGE = { cagri: ['Çağrı pusulaları', [['cagri', 'Çağrı pusulası']]], formlar: ['Tutanak ve formlar', [['tutanak', 'Olay tutanağı'], ['savunma', 'Savunma daveti'], ['savtut', 'Savunma tutanağı']]],
+    karar: ['Karar', [['karar', 'Karar · EK-1']]], teblig: ['Ceza tebligatı', [['teblig', 'Tebligat']]], dizi: ['Dizi pusulası', [['dizi', 'Dizi pusulası']]] };
+  function cizBelgeListe(tur) {
+    const [ad, B] = LISTE_BELGE[tur], q = S.ara.toLocaleLowerCase(tr);
+    let L = DOS();
+    if (tur === 'teblig') L = L.filter(r => ((r.veri.adim || {}).kurul || {}).tarih && (yap(r.veri.adim.kurul.yaptirim) || {}).onay);
+    if (q) L = L.filter(r => [r.veri.ogr.ad, r.ogr_no, r.dosya_no, r.veri.ogr.sinif].join(' ').toLocaleLowerCase(tr).includes(q));
+    const durumYazi = r => { const a = r.veri.adim || {}, k = a.kurul || {};
+      if (tur === 'karar') return k.tarih ? `${tGoster(k.tarih)} · ${esc(k.yaptirim)}${k.gun ? ` (${k.gun} gün)` : ''}` : `<button class="ikincil" data-adimid="${r.id}" data-k="kurul">Karar gir</button>`;
+      if (tur === 'teblig') return a.teblig && a.teblig.tarih ? `${tGoster(a.teblig.tarih)} tebliğ edildi` : `<button class="ikincil" data-adimid="${r.id}" data-k="${a.onay && a.onay.tarih ? 'teblig' : 'onay'}">${a.onay && a.onay.tarih ? 'Tebliğ gir' : 'Onay gir'}</button>`;
+      if (tur === 'cagri') return k.tarih ? 'Toplantı ' + tGoster(k.tarih) : (a.sevk && a.sevk.tarih ? 'Karar son gün ' + tGoster(isGunuEkle(a.sevk.tarih, 10)) : 'Sevk edilmedi');
+      return esc(siradaki(r.veri) >= adimlar(r.veri).length ? 'Kesinleşti' : adimlar(r.veri)[siradaki(r.veri)][1]); };
+    kok.innerHTML = `${geriBas(ad, tur === 'karar' ? '' : '')}<div class="ds-ara" style="margin-top:12px"><input id="dsAra" placeholder="Öğrenci adı, no ya da dosya no" value="${esc(S.ara)}"></div>
+      ${L.length ? `<table class="ds-tablo"><tr><th>Dosya</th><th>Öğrenci</th><th>Olay</th><th>Durum</th><th>Belge</th></tr>${L.map(r => `<tr><td>${esc(r.dosya_no)}</td><td>${esc(C.baslik(r.veri.ogr.ad))} · ${esc(r.veri.ogr.sinif)}</td><td>${tGoster(r.veri.olay.tarih)} · ${esc(r.veri.olay.ozet)}</td><td>${durumYazi(r)}</td>
+        <td style="white-space:nowrap">${B.map(([k, a]) => `<button class="ikincil" data-belge="${k}" data-id="${r.id}">${a}</button>`).join(' ')}</td></tr>`).join('')}</table>` : `<div class="kart ds-bos">${tur === 'teblig' ? 'Tebliğ edilecek karar yok.' : 'Dosya yok.'}</div>`}`;
+    aramaBagla();
+  }
+  // ---- Sene başı / sene sonu kurul tutanakları (umal_disiplin_ayar: tutanak-<yıl>-bas / -son)
+  async function cizTutanaklar() {
+    kok.innerHTML = `${geriBas('Sene başı / sene sonu kurul tutanakları')}<div class="ds-tut">${[['bas', 'Sene başı toplantısı', 'Kurulun oluşturulması, görev dağılımı, öğrencilerin yönetmelik hakkında bilgilendirilmesi'], ['son', 'Sene sonu toplantısı', 'Yıl içinde görüşülen dosyalar, verilen cezalar, ödüller ve davranış puanı iadeleri']].map(([k, ad, alt]) => {
+      const x = S.tut[k]; return `<div class="kart"><b style="font-size:17px">${ad}</b><div class="soluk kucuk" style="margin:4px 0 10px">${alt}</div><div class="kucuk">${x && x.tarih ? 'Toplantı: ' + tGoster(x.tarih) : 'Henüz hazırlanmadı'}</div>
+        <div class="dugmeler" style="margin-top:10px"><button class="birincil" data-tut="${k}">${x && x.tarih ? 'Düzenle / yazdır' : 'Hazırla'}</button></div></div>`; }).join('')}</div>`;
+  }
+  function tutVarsayilan(k) {
+    const ay = S.ayar;
+    if (k === 'bas') return { tarih: bugun(), yer: ay.yer || 'Müdür odası', gundem: ['Açılış ve yoklama', 'Kurul başkan ve üyelerinin belirlenmesi, görev dağılımı', 'Ödül ve disiplin hükümlerinin okunması', 'Öğrenci ve velilerin disiplin kuralları hakkında bilgilendirilmesi', 'Önleyici çalışmaların planlanması', 'Dilek ve temenniler'].join('\n'), kararlar: '' };
+    const D_ = DOS().filter(r => r.yil === S.yil), say = ad => D_.filter(r => ((r.veri.adim || {}).kurul || {}).yaptirim === ad).length;
+    return { tarih: bugun(), yer: ay.yer || 'Müdür odası', gundem: ['Açılış ve yoklama', 'Yıl içinde kurula sevk edilen dosyaların değerlendirilmesi', 'Ödül alacak öğrencilerin belirlenmesi', 'Davranış puanı iadelerinin değerlendirilmesi', 'Gelecek yıl için öneriler', 'Dilek ve temenniler'].join('\n'),
+      kararlar: `${S.yil} eğitim öğretim yılında kurula ${D_.length} dosya sevk edilmiştir. Verilen kararlar: ${YAPTIRIM.map(y => `${y.ad} ${say(y.ad)}`).join(', ')}. Yazılı uyarı (kurul dışı): ${S.L.filter(r => r.veri.tur === 'uyari' && r.yil === S.yil).length}. Davranış puanı iadesi: ${S.L.filter(r => r.veri.tur === 'iade' && r.yil === S.yil).length}.` };
+  }
+  function kurulTutanakFormu(k) {
+    const x = Object.assign(tutVarsayilan(k), S.tut[k] || {}), ad = k === 'bas' ? 'Sene başı' : 'Sene sonu';
+    C.pencereAc(`<h2 style="margin-top:0">${ad} kurul toplantı tutanağı</h2><div class="ds-form"><div class="ds-iki"><div><label>Toplantı tarihi</label><input type="date" id="t_t" value="${esc(x.tarih)}"></div><div><label>Yer</label><input id="t_y" value="${esc(x.yer)}"></div></div>
+      <label>Gündem (her satır bir madde)</label><textarea id="t_g" rows="6">${esc(x.gundem)}</textarea><label>Görüşmeler ve kararlar</label><textarea id="t_k" rows="6">${esc(x.kararlar)}</textarea>
+      <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="t_kay">Kaydet ve yazdır</button></div></div>`);
+    document.getElementById('t_kay').onclick = async () => {
+      const g = id => document.getElementById(id).value.trim(), veri = { tarih: g('t_t'), yer: g('t_y'), gundem: g('t_g'), kararlar: g('t_k') };
+      const { error } = await C.israrla(() => C.sb.from('umal_disiplin_ayar').upsert({ id: `tutanak-${S.yil}-${k}`, veri, guncel: new Date().toISOString() }, { onConflict: 'id' }));
+      if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return; }
+      S.tut[k] = veri; ciz();
+      const ay = S.ayar, uye = [ay.baskan ? ay.baskan + ' (Başkan)' : '', ...(ay.uyeler || [])].filter(Boolean);
+      const gov = `<p>Okul Öğrenci Ödül ve Disiplin Kurulu ${esc(tUzun(veri.tarih))} tarihinde ${esc(veri.yer)}nda aşağıdaki gündemle toplanmıştır.</p><table><tr><th style="width:60%">Katılan üyeler</th><th>İmza</th></tr>${(uye.length ? uye : ['', '', '', '', '']).map(u => `<tr><td>${esc(u) || '&nbsp;'}</td><td></td></tr>`).join('')}</table>
+        <p><b>GÜNDEM</b></p><ol>${veri.gundem.split('\n').filter(Boolean).map(x => `<li>${esc(x)}</li>`).join('')}</ol><p><b>GÖRÜŞMELER VE KARARLAR</b></p>${veri.kararlar.split('\n').filter(Boolean).map(x => `<p>${esc(x)}</p>`).join('') || '<p>&nbsp;</p>'}
+        <div class="sag" style="margin-top:12mm">${esc(ay.mudur || '')}<br>Okul Müdürü</div>`;
+      C.belgeOnizle(belgeKabuk(`ÖĞRENCİ ÖDÜL VE DİSİPLİN KURULU ${ad.toLocaleUpperCase(tr)} TOPLANTI TUTANAĞI`, gov), ad + ' kurul tutanağı');
+    };
+  }
+  // ---- Davranış puanı iadesi
+  function cizIade() {
+    const L = S.L.filter(r => r.veri.tur === 'iade');
+    kok.innerHTML = `${geriBas('Davranış puanı iade girişi', '<button class="birincil" data-is="iade">+ İade girişi</button>')}
+      <div class="ds-madde" style="margin:12px 0">Davranış puanı düşen öğrenci, kurulun belirlediği olumlu davranış ve sosyal sorumluluk çalışmalarıyla puanını geri kazanabilir. İade kurul kararıyla girilir; puan 100'ü geçemez.</div>
+      ${L.length ? `<table class="ds-tablo"><tr><th>Tarih</th><th>Öğrenci</th><th>İade</th><th>Gerekçe</th><th>Karar no</th><th></th></tr>${L.map(r => `<tr><td>${tGoster(r.veri.iade.tarih)}</td><td>${esc(C.baslik(r.veri.ogr.ad))} · ${esc(r.veri.ogr.sinif)}</td><td class="yeşil">+${esc(r.veri.iade.puan)}</td><td>${esc(r.veri.iade.gerekce)}</td><td>${esc(r.veri.iade.karar_no || '—')}</td><td>${C.rol === 'bas' ? `<button class="bag" style="color:var(--kirmizi)" data-satsil="${r.id}">Sil</button>` : ''}</td></tr>`).join('')}</table>` : '<div class="kart ds-bos">Henüz iade yok.</div>'}`;
+  }
+  async function iadeFormu() {
+    C.pencereAc(`<h2 style="margin-top:0">Davranış puanı iadesi</h2><div class="ds-form">${ogrSecici()}<div class="ds-uc"><div><label>İade puanı</label><input type="number" min="1" max="100" id="i_p"></div><div><label>Tarih</label><input type="date" id="i_t" value="${bugun()}"></div><div><label>Kurul karar no</label><input id="i_no"></div></div>
+      <label>Gerekçe (olumlu davranış / sosyal sorumluluk çalışması)</label><textarea id="i_g" rows="3"></textarea><div class="dugmeler" style="margin-top:14px"><button class="birincil" id="i_kay">Kaydet</button></div><div class="kucuk" id="i_b"></div></div>`);
+    const sec = await ogrSeciciBagla(false);
+    document.getElementById('i_kay').onclick = async () => {
+      const g = id => document.getElementById(id).value.trim(), o = sec()[0], p = parseInt(g('i_p'), 10), bil = document.getElementById('i_b');
+      if (!o) { bil.textContent = 'Öğrenci seçin.'; return; }
+      const simdi = puanDurumu(o.no); if (simdi >= 100) { bil.textContent = 'Bu öğrencinin puanı zaten 100.'; return; }
+      if (!(p > 0)) { bil.textContent = 'İade puanını yazın.'; return; }
+      if (!g('i_g')) { bil.textContent = 'Gerekçeyi yazın.'; return; }
+      if (!(await satirEkle({ tur: 'iade', ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, iade: { puan: Math.min(p, 100 - simdi), tarih: g('i_t'), karar_no: g('i_no'), gerekce: g('i_g') }, olusturan: C.eposta }, 'iade'))) return;
+      C.pencereKapat(); S.ekran = 'iade'; ciz();
+    };
+  }
+  function iadeSatirlari() {
+    const nolar = [...new Set(S.L.filter(r => r.yil === S.yil).map(r => r.ogr_no))];
+    return nolar.map(no => { const R_ = S.L.filter(r => r.ogr_no === no && r.yil === S.yil), o = R_[0].veri.ogr;
+      const dus = R_.filter(r => !r.veri.tur && ((r.veri.adim || {}).kesin || {}).tarih && !r.veri.adim.kesin.kaldirildi).reduce((t, r) => t + ((yap(r.veri.adim.kurul.yaptirim) || {}).puan || 0), 0);
+      const iade = R_.filter(r => r.veri.tur === 'iade').reduce((t, r) => t + (Number(r.veri.iade.puan) || 0), 0);
+      return { no, o, dus, iade, son: puanDurumu(no) }; }).filter(x => x.dus || x.iade).sort((a, b) => a.o.sinif.localeCompare(b.o.sinif, tr, { numeric: true }) || a.o.ad.localeCompare(b.o.ad, tr));
+  }
+  function cizIadeCiz() {
+    const L = iadeSatirlari();
+    kok.innerHTML = `${geriBas('Davranış puanı iade çizelgesi', '<button class="birincil" data-rapor="iade">🖨 Yazdır / PDF</button>')}
+      ${L.length ? `<table class="ds-tablo" style="margin-top:12px"><tr><th>Sınıf</th><th>No</th><th>Öğrenci</th><th>Başlangıç</th><th>Düşülen</th><th>İade</th><th>Son puan</th></tr>${L.map(x => `<tr><td>${esc(x.o.sinif)}</td><td>${esc(x.no)}</td><td>${esc(C.baslik(x.o.ad))}</td><td>100</td><td class="kirmizi">${x.dus ? '−' + x.dus : '0'}</td><td class="yeşil">${x.iade ? '+' + x.iade : '0'}</td><td><b class="neon">${x.son}</b></td></tr>`).join('')}</table>` : '<div class="kart ds-bos" style="margin-top:12px">Bu yıl puanı düşen öğrenci yok.</div>'}`;
+  }
+  // ---- İstatistik ve ceza alanlar
+  function istatistik() {
+    const D_ = DOS().filter(r => r.yil === S.yil), say = (L, f) => { const m = {}; L.forEach(r => { const k = f(r); if (k) m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+    const kararli = D_.filter(r => ((r.veri.adim || {}).kurul || {}).yaptirim);
+    const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    return { toplam: D_.length, olay: new Set(D_.map(r => r.veri.olay_id || r.id)).size, uyari: S.L.filter(r => r.veri.tur === 'uyari' && r.yil === S.yil).length,
+      yaptirim: say(kararli, r => r.veri.adim.kurul.yaptirim), seviye: say(D_, r => (String(r.veri.ogr.sinif).match(/^\d+/) || [''])[0] + '. sınıf'),
+      sinif: say(D_, r => r.veri.ogr.sinif), madde: say(D_, r => { const m = MADDE().find(x => x[0] === r.veri.madde); return m ? m[0] + ' · ' + m[2] : ''; }).slice(0, 10),
+      ay: say(D_, r => r.veri.olay.tarih ? AY[tarih(r.veri.olay.tarih).getMonth()] : '') };
+  }
+  const tablo = (bas, L) => `<div class="kart"><b>${bas}</b>${L.length ? `<table class="ds-tablo" style="margin-top:8px">${L.map(([k, n]) => `<tr><td>${esc(k)}</td><td style="width:70px;text-align:right"><b class="neon">${n}</b></td></tr>`).join('')}</table>` : '<div class="soluk kucuk" style="margin-top:6px">Kayıt yok.</div>'}</div>`;
+  function cizIstatistik() {
+    const X = istatistik();
+    kok.innerHTML = `${geriBas('İstatistik (ceza / olay)', '<button class="birincil" data-rapor="istatistik">🖨 Yazdır / PDF</button>')}
+      <div class="ds-sayac"><div><b>${X.olay}</b><span>olay</span></div><div><b>${X.toplam}</b><span>öğrenci dosyası</span></div><div><b>${X.yaptirim.reduce((t, x) => t + x[1], 0)}</b><span>kurul kararı</span></div><div><b>${X.uyari}</b><span>yazılı uyarı</span></div></div>
+      <div class="ds-ist">${tablo('Yaptırıma göre', X.yaptirim)}${tablo('Seviyeye göre', X.seviye)}${tablo('Aylara göre', X.ay)}${tablo('Şubeye göre', X.sinif)}${tablo('En sık davranışlar', X.madde)}</div>`;
+  }
+  function cezaAlanlar() {
+    return DOS().filter(r => ((r.veri.adim || {}).kurul || {}).yaptirim && (yap(r.veri.adim.kurul.yaptirim) || {}).puan).map(r => ({ r, k: r.veri.adim.kurul, kesin: ((r.veri.adim || {}).kesin || {}).tarih }))
+      .filter(x => !S.suzY || x.k.yaptirim === S.suzY).sort((a, b) => a.r.veri.ogr.sinif.localeCompare(b.r.veri.ogr.sinif, tr, { numeric: true }) || a.r.veri.ogr.ad.localeCompare(b.r.veri.ogr.ad, tr));
+  }
+  function cizCezaAlan() {
+    const L = cezaAlanlar();
+    kok.innerHTML = `${geriBas('Ceza alan öğrenciler', '<button class="birincil" data-rapor="ceza">🖨 Yazdır / PDF</button>')}
+      <div class="ds-cipler" style="margin:12px 0">${[['', 'Tümü'], ...YAPTIRIM.filter(y => y.puan).map(y => [y.ad, y.ad])].map(([v, a]) => `<button class="cip ${(S.suzY || '') === v ? 'secili' : ''}" data-suzy="${esc(v)}">${esc(a)}</button>`).join('')}</div>
+      ${L.length ? `<table class="ds-tablo"><tr><th>Sınıf</th><th>No</th><th>Öğrenci</th><th>Karar tarihi / no</th><th>Ceza</th><th>Madde</th><th>Durum</th></tr>${L.map(x => `<tr><td>${esc(x.r.veri.ogr.sinif)}</td><td>${esc(x.r.ogr_no)}</td><td>${esc(C.baslik(x.r.veri.ogr.ad))}</td><td>${tGoster(x.k.tarih)} · ${esc(x.k.karar_no || '—')}</td><td>${esc(x.k.yaptirim)}${x.k.gun ? ` (${x.k.gun} gün)` : ''}</td><td>${esc(x.k.madde || x.r.veri.madde || '')}</td><td>${x.kesin ? (x.r.veri.adim.kesin.kaldirildi ? 'Kaldırıldı' : 'Kesin') : 'Süreçte'}</td></tr>`).join('')}</table>` : '<div class="kart ds-bos">Ceza alan öğrenci yok.</div>'}`;
+    kok.querySelectorAll('[data-suzy]').forEach(b_ => b_.onclick = ev => { ev.stopPropagation(); S.suzY = b_.dataset.suzy; ciz(); });
+  }
+  function rapor(tur) {
+    const sat = (L, H) => `<table><tr>${H.map(h => `<th style="width:auto">${h}</th>`).join('')}</tr>${L.join('')}</table>`;
+    if (tur === 'iade') return C.belgeOnizle(belgeKabuk('DAVRANIŞ PUANI İADE ÇİZELGESİ', `<p class="kucuk">${esc(S.yil)} eğitim öğretim yılı</p>` + sat(iadeSatirlari().map(x => `<tr><td>${esc(x.o.sinif)}</td><td>${esc(x.no)}</td><td>${esc(C.baslik(x.o.ad))}</td><td>100</td><td>${x.dus}</td><td>${x.iade}</td><td><b>${x.son}</b></td></tr>`), ['Sınıf', 'No', 'Adı soyadı', 'Başlangıç', 'Düşülen', 'İade', 'Son puan']) + `<div class="sag" style="margin-top:12mm">${esc(S.ayar.mudur || '')}<br>Okul Müdürü</div>`), 'Davranış puanı iade çizelgesi');
+    if (tur === 'ceza') return C.belgeOnizle(belgeKabuk('CEZA ALAN ÖĞRENCİLER LİSTESİ', `<p class="kucuk">${esc(S.yil)} eğitim öğretim yılı${S.suzY ? ' · ' + esc(S.suzY) : ''}</p>` + sat(cezaAlanlar().map(x => `<tr><td>${esc(x.r.veri.ogr.sinif)}</td><td>${esc(x.r.ogr_no)}</td><td>${esc(C.baslik(x.r.veri.ogr.ad))}</td><td>${tGoster(x.k.tarih)}</td><td>${esc(x.k.yaptirim)}${x.k.gun ? ` (${x.k.gun} gün)` : ''}</td><td>${esc(x.k.madde || x.r.veri.madde || '')}</td></tr>`), ['Sınıf', 'No', 'Adı soyadı', 'Karar tarihi', 'Ceza', 'Madde'])), 'Ceza alan öğrenciler');
+    const X = istatistik(), t = (b, L) => `<p><b>${b}</b></p>` + sat(L.map(([k, n]) => `<tr><td>${esc(k)}</td><td>${n}</td></tr>`), ['', 'Sayı']);
+    C.belgeOnizle(belgeKabuk('DİSİPLİN İSTATİSTİĞİ', `<p class="kucuk">${esc(S.yil)} eğitim öğretim yılı · ${X.olay} olay · ${X.toplam} öğrenci dosyası · ${X.uyari} yazılı uyarı</p>${t('Yaptırıma göre', X.yaptirim)}${t('Seviyeye göre', X.seviye)}${t('Aylara göre', X.ay)}${t('Şubeye göre', X.sinif)}${t('En sık davranışlar', X.madde)}`), 'Disiplin istatistiği');
   }
   // ---------------------------------------------------------------- olaylar
   function bagla() {
@@ -356,9 +627,18 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       const d = t.closest('[data-dosya]'); if (d) { S.secili = d.dataset.dosya; ciz(); if (matchMedia('(max-width:760px)').matches) document.getElementById('dsAyrinti').scrollIntoView({ behavior: 'smooth' }); return; }
       const r = S.L.find(x => x.id === S.secili);
       const ad = t.closest('[data-adim]'); if (ad && r) return adimFormu(r, ad.dataset.adim);
-      const bl = t.closest('[data-belge]'); if (bl && r) return belge(r, bl.dataset.belge);
+      const bl = t.closest('[data-belge]'); if (bl) { const rr = bl.dataset.id ? S.L.find(x => x.id === bl.dataset.id) : r; if (rr) return rr.veri.tur === 'uyari' ? uyariBelge(rr) : belge(rr, bl.dataset.belge); }
+      const ek = t.closest('[data-ekran]'); if (ek) { S.ekran = ek.dataset.ekran; S.ogrSec = null; ciz(); kok.scrollIntoView({ block: 'start' }); window.scrollTo(0, 0); return; }
+      const ra = t.closest('[data-rapor]'); if (ra) return rapor(ra.dataset.rapor);
+      const ad2 = t.closest('[data-adimid]'); if (ad2) { const rr = S.L.find(x => x.id === ad2.dataset.adimid); if (rr) { S.secili = rr.id; return adimFormu(rr, ad2.dataset.k); } }
+      const oe = t.closest('[data-ogrsec]'); if (oe) { S.ogrSec = oe.dataset.ogrsec; ciz(); return; }
+      const ekle = t.closest('[data-ekle]'); if (ekle) return yeniOlay(null, S.L.find(x => x.id === ekle.dataset.ekle));
+      const tu = t.closest('[data-tut]'); if (tu) return kurulTutanakFormu(tu.dataset.tut);
+      const sl = t.closest('[data-satsil]'); if (sl) return satirSil(sl.dataset.satsil);
       const is = t.closest('[data-is]'); if (!is) return;
       if (is.dataset.is === 'yeni') return yeniOlay(null);
+      if (is.dataset.is === 'uyari') return uyariFormu();
+      if (is.dataset.is === 'iade') return iadeFormu();
       if (is.dataset.is === 'ayar') return ayarFormu();
       if (is.dataset.is === 'yonetmelik') return yonetmelik();
       if (is.dataset.is === 'olayduz' && r) return yeniOlay(r);
