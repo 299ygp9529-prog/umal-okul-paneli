@@ -672,13 +672,13 @@ button.og-kutu { cursor: pointer; }
 .h-sev { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; background: var(--sv); color: #04202a; border-radius: 10px; padding: 5px 14px; margin-top: 10px; font-size: 15px; box-shadow: 0 0 12px color-mix(in srgb, var(--sv) 45%, transparent); }
 .h-sev:first-child { margin-top: 0; } .h-sev span { font-size: 13px; font-weight: 700; opacity: .8; }
 @media (max-width: 760px) {
-  #haritaIzgara { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  #haritaIzgara .h-sev { display: flex; grid-column: 1 / -1; justify-content: space-between; align-items: center; background: var(--sv); color: #04202a; border-radius: 9px; padding: 3px 10px; margin-top: 6px; font-size: 13px; }
-  #haritaIzgara .h-sev:first-child { margin-top: 0; }
-  #haritaIzgara .h-sev span { font-size: 12px; font-weight: 700; opacity: .8; }
-  #haritaIzgara .tahta { min-height: 0; padding: 6px 7px; border-radius: 10px; }
-  #haritaIzgara .tahta b { font-size: 14px; }
-  #haritaIzgara .tahta small { font-size: 10.5px; margin-top: 1px; }
+#haritaIzgara, #sdIz { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+#haritaIzgara .h-sev, #sdIz .h-sev { display: flex; grid-column: 1 / -1; justify-content: space-between; align-items: center; background: var(--sv); color: #04202a; border-radius: 9px; padding: 3px 10px; margin-top: 6px; font-size: 13px; }
+#haritaIzgara .h-sev:first-child, #sdIz .h-sev:first-child { margin-top: 0; }
+#haritaIzgara .h-sev span, #sdIz .h-sev span { font-size: 12px; font-weight: 700; opacity: .8; }
+#haritaIzgara .tahta, #sdIz .tahta { min-height: 0; padding: 6px 7px; border-radius: 10px; }
+#haritaIzgara .tahta b, #sdIz .tahta b { font-size: 14px; }
+#haritaIzgara .tahta small, #sdIz .tahta small { font-size: 10.5px; margin-top: 1px; }
   #haritaAlt .buyuk-neon { font-size: 15px; padding: 5px 12px; }
 }
 /* Salon: ders adı bilgisayarda Gözcü satırında (üst satır sıkışmasın); telefonda üstte kalır */
@@ -735,14 +735,14 @@ span.tk-gel.neon { color: var(--neon); }
 .sk-kutu.cip.secili { background: color-mix(in srgb, var(--sv) 22%, var(--kart)); border-color: var(--sv); color: var(--yazi); }
 @media (max-width: 760px) { .sk-izgara { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .sk-izgara .h-sev { margin-top: 6px; padding: 3px 10px; font-size: 13px; } .sk-izgara .h-sev:first-child { margin-top: 0; } .sk-kutu.cip { min-height: 0; padding: 6px 8px; } .sk-kutu b { font-size: 14px; } .sk-kutu small { font-size: 10.5px; } }
 /* Standart sınıf kutusu (Harita = Öğrenciler): aynı boy, solda seviye rengi şeridi */
-#haritaIzgara .tahta, #haritaIzgara .tahta.acik { border-left: 4px solid var(--sv); }
-#haritaIzgara .tahta { padding: 9px 11px; min-height: 88px; }
-@media (max-width: 760px) { #haritaIzgara .tahta, .sk-kutu.cip { min-height: 68px; padding: 6px 8px; } }
+#haritaIzgara .tahta, #haritaIzgara .tahta.acik, #sdIz .tahta, #sdIz .tahta.acik { border-left: 4px solid var(--sv); }
+#haritaIzgara .tahta, #sdIz .tahta { padding: 9px 11px; min-height: 88px; }
+@media (max-width: 760px) {#haritaIzgara .tahta, .sk-kutu.cip, #sdIz .tahta { min-height: 68px; padding: 6px 8px; } }
 /* Ekrana sığdırma (bilgisayar): --kmin sütun eni, --kh kutu boyu; sıkışınca şerit ve aralıklar incelir */
 @media (min-width: 761px) {
-  #haritaIzgara, #sinifCip { grid-template-columns: var(--kolon, repeat(auto-fill, minmax(150px, 1fr))); }
+#haritaIzgara, #sinifCip, #sdIz { grid-template-columns: var(--kolon, repeat(auto-fill, minmax(150px, 1fr))); }
   body:has(.sigar.sikisik) main { padding-bottom: 10px; }
-  #haritaIzgara .tahta, #sinifCip .sk-kutu.cip { min-height: var(--kh, 88px); }
+#haritaIzgara .tahta, #sinifCip .sk-kutu.cip, #sdIz .tahta { min-height: var(--kh, 88px); }
   .sigar.sikisik { gap: 7px; }
   .sigar.sikisik .h-sev { margin-top: 4px; padding: 3px 12px; font-size: 13.5px; }
   .sigar.sikisik .h-sev:first-child { margin-top: 0; }
@@ -951,8 +951,6 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 /* K-509: Şimdi ders, Harita ile aynı ızgara */
 .sd-harita.araniyor .tahta:not(.sec) { opacity: .38; } .sd-harita .tahta.sec { outline: 2px solid var(--sv); box-shadow: 0 0 14px var(--sv); }
 .sd-harita .tahta { cursor: pointer; }
-.sd-harita .tahta small { white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2; overflow-wrap: anywhere; }
-.sd-harita .tahta { height: auto; min-height: var(--kh, 88px); }
 /* K-510: Testler */
 .ts-suz { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; } .ts-suz input { width: 300px; }
 .ts-liste { display: flex; flex-direction: column; gap: 9px; }
@@ -962,3 +960,5 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ts-e { display: flex; gap: 6px; flex-wrap: wrap; } .ts-e span { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 7px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
 .ts-d { display: flex; gap: 6px; }
 @media (max-width: 760px) { .ts-s { grid-template-columns: 64px minmax(0, 1fr); } .ts-k { width: 64px; height: 86px; } .ts-d { grid-column: 1 / -1; } .ts-suz input { width: 100%; } }
+
+.sd-sayfa:has(.sd-harita) { height: auto; min-height: 0; }   /* K-511: Harita gibi akar, kutular aynı boy */
