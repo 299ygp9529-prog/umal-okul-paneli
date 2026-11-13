@@ -1921,21 +1921,47 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 
   // ------------------------------------------------------------------ K-498: Öğretmenler (yalnız Soru Hazırla)
   async function ogretmenlerBolumu() {
-    const yukle = async () => { const { data, error } = await sb.from('umal_ogretmenler').select('eposta,ekleyen,eklendi').order('eposta'); if (error) throw error; return data || []; };
+    let adVar = true;   // K-517: 'ad' sütunu (SQL çalıştırılmadıysa eski hâli)
+    const yukle = async () => {
+      let r = adVar ? await sb.from('umal_ogretmenler').select('eposta,ad,ekleyen,eklendi').order('eposta') : null;
+      if (!r || r.error) { adVar = false; r = await sb.from('umal_ogretmenler').select('eposta,ekleyen,eklendi').order('eposta'); }
+      if (r.error) throw r.error;
+      return (r.data || []).sort((a, b) => (a.ad || '\uffff').localeCompare(b.ad || '\uffff', tr) || a.eposta.localeCompare(b.eposta));
+    };
     let L = await yukle();
     const ciz = () => {
       $('#icerik').innerHTML = `<h1>Öğretmenler</h1><div class="og-izgara">
-        <div class="kart"><b class="neon">Öğretmen ekle</b><p class="soluk kucuk">E-postaları alt alta yapıştırın. Bu öğretmenler panele e-postalarına gelen kodla girer ve <b class="neon">yalnız Soru Hazırla</b>'yı görür; öğrenci, sınav, anket ve tahta bilgilerine erişemez.</p>
-          <textarea id="ogEkle" rows="7" style="width:100%" placeholder="ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
-        <div class="kart"><b class="neon">Öğretmenler · ${L.length}</b><div class="satirlar" style="margin-top:10px">${L.length ? L.map(r => `<div class="satir"><div class="ana"><b>${esc(r.eposta)}</b><small>${esc(r.ekleyen || '')}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz öğretmen eklenmedi.</div>'}</div></div></div>`;
+        <div class="kart"><b class="neon">Öğretmen ekle</b><p class="soluk kucuk">Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Bu öğretmenler panele e-postalarına gelen kodla girer ve <b class="neon">yalnız Soru Hazırla</b>'yı görür; öğrenci, sınav, anket ve tahta bilgilerine erişemez.</p>
+          <textarea id="ogEkle" rows="7" style="width:100%" placeholder="Ad Soyad ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
+        <div class="kart"><b class="neon">Öğretmenler · ${L.length}</b><div class="satirlar" style="margin-top:10px">${L.length ? L.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>Ekleyen: ${esc(r.ekleyen || '')}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz öğretmen eklenmedi.</div>'}</div></div></div>`;
       $('#ogEkleBtn').onclick = async () => {
-        const e = [...new Set($('#ogEkle').value.toLowerCase().split(/[\s,;]+/).map(x => x.trim()).filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))];
-        if (!e.length) { $('#ogBilgi').textContent = 'Geçerli e-posta yok.'; return; }
+        const M = new Map();   // satır satır: "Ad Soyad e-posta" ya da yalnız e-posta (virgül / noktalı virgülle de ayrılabilir)
+        $('#ogEkle').value.split(/[\n;]+/).forEach(sat => {
+          const ep = (sat.match(/[^@\s,<>()]+@[^@\s,<>()]+\.[^@\s,<>()]+/g) || []).map(x => x.toLowerCase());
+          const ad = baslik(sat.replace(/[^@\s,<>()]+@[^@\s,<>()]+\.[^@\s,<>()]+/g, ' ').replace(/[<>(),\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80));
+          ep.forEach(x => M.set(x, ep.length === 1 && ad ? ad : (M.get(x) || '')));
+        });
+        if (!M.size) { $('#ogBilgi').textContent = 'Geçerli e-posta yok.'; return; }
         $('#ogBilgi').textContent = 'Ekleniyor…';
-        const { error } = await sb.from('umal_ogretmenler').upsert(e.map(x => ({ eposta: x, ekleyen: D.eposta })), { onConflict: 'eposta', ignoreDuplicates: true });
+        const eski = new Map(L.map(r => [r.eposta, r]));
+        const satirlar = [...M].map(([x, ad]) => ({ eposta: x, ekleyen: (eski.get(x) || {}).ekleyen || D.eposta, ...(adVar ? { ad: ad || (eski.get(x) || {}).ad || null } : {}) }));
+        const { error } = await sb.from('umal_ogretmenler').upsert(satirlar, { onConflict: 'eposta' });
+        const e = satirlar;
         if (error) { $('#ogBilgi').textContent = 'Eklenemedi: ' + hataYaz(error); return; }
-        L = await yukle(); ciz(); $('#ogBilgi').textContent = e.length + ' e-posta eklendi.';
+        L = await yukle(); ciz(); $('#ogBilgi').textContent = e.length + ' öğretmen kaydedildi.';
       };
+      $('#icerik').querySelectorAll('[data-ad]').forEach(g => {   // ad kutusu: yazıp çıkınca / Enter kaydeder
+        const kaydet = async () => {
+          const ad = baslik(g.value.replace(/\s+/g, ' ').trim()), r = L.find(x => x.eposta === g.dataset.ad);
+          if (!r || (r.ad || '') === ad) return;
+          g.disabled = true;
+          const { error } = await sb.from('umal_ogretmenler').update({ ad: ad || null }).eq('eposta', r.eposta);
+          g.disabled = false;
+          if (error) { g.classList.add('hata'); g.title = 'Kaydedilemedi: ' + hataYaz(error); return; }
+          r.ad = ad; g.value = ad; g.classList.remove('hata'); g.classList.add('kaydedildi'); setTimeout(() => g.classList.remove('kaydedildi'), 1200);
+        };
+        g.onblur = kaydet; g.onkeydown = ev => { if (ev.key === 'Enter') g.blur(); };
+      });
       $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
         if (!confirm(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
         const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
