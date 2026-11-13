@@ -1950,12 +1950,25 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (r.error) throw r.error;
       return (r.data || []).sort((a, b) => (a.ad || '\uffff').localeCompare(b.ad || '\uffff', tr) || a.eposta.localeCompare(b.eposta));
     };
-    let L = await yukle();
+    // K-541: rol seçimi — Rehberlik / Yönetici (idare) umal_yoneticiler'e yazılır (DersMap'teki Yöneticiler ile aynı tablo)
+    const ROL_AD = { ogretmen: 'Öğretmen', rehberlik: 'Rehberlik', yonetici: 'İdare' };
+    let yRol = new Map(), yeniRol = 'ogretmen';
+    const yYukle = async () => { const r = await sb.from('umal_yoneticiler').select('eposta,rol'); yRol = new Map((r.data || []).map(x => [x.eposta, x.rol || 'yonetici'])); };
+    const rolu = ep => yRol.get(ep) || 'ogretmen';
+    let L = await yukle(); await yYukle();
+    const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
+    const rolYaz = async (ep, rol) => {
+      if (rol === 'ogretmen') { const { error } = await sb.from('umal_yoneticiler').delete().eq('eposta', ep); return error; }
+      const { error } = await sb.from('umal_yoneticiler').upsert({ eposta: ep, rol }, { onConflict: 'eposta' }); return error;
+    };
     const ciz = () => {
+      const T = L.concat(yalnizY());
       $('#icerik').innerHTML = `<h1>Öğretmenler</h1><div class="og-izgara">
-        <div class="kart"><b class="neon">Öğretmen ekle</b><p class="soluk kucuk">Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Bu öğretmenler panele e-postalarına gelen kodla girer ve <b class="neon">yalnız Soru Hazırla</b>'yı görür; öğrenci, sınav, anket ve tahta bilgilerine erişemez.</p>
+        <div class="kart"><b class="neon">Kullanıcı ekle</b><div class="og-rol" id="ogRol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip ${yeniRol === k ? 'secili' : ''}" data-yrol="${k}">${a}</button>`).join('')}</div>
+          <p class="soluk kucuk">${{ ogretmen: 'Öğretmen: yalnız <b class="neon">Soru Hazırla</b> ve <b class="neon">Testler</b>; öğrenci, sınav, anket ve tahta bilgilerine erişemez.', rehberlik: 'Rehberlik: Kim Nerede, Anketler, <b class="neon">Rehberlik</b> (mahrem form cevapları dahil) ve Öğrenci Girişi kodları.', yonetici: 'İdare: Kim Nerede, Tahta Kontrol, Sınav, Nöbet, Anketler, Disiplin; rehberlik cevaplarını görmez.' }[yeniRol]} Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Panele e-postalarına gelen kodla girerler.</p>
           <textarea id="ogEkle" rows="7" style="width:100%" placeholder="Ad Soyad ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
-        <div class="kart"><b class="neon">Öğretmenler · ${L.length}</b><div class="satirlar" style="margin-top:10px">${L.length ? L.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>Ekleyen: ${esc(r.ekleyen || '')}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz öğretmen eklenmedi.</div>'}</div></div></div>`;
+        <div class="kart"><b class="neon">Kullanıcılar · ${T.length}</b><div class="satirlar" style="margin-top:10px">${T.length ? T.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + esc(r.ekleyen) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
+          <div class="og-rol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz kullanıcı eklenmedi.</div>'}</div></div></div>`;
       $('#ogEkleBtn').onclick = async () => {
         const M = new Map();   // satır satır: "Ad Soyad e-posta" ya da yalnız e-posta (virgül / noktalı virgülle de ayrılabilir)
         $('#ogEkle').value.split(/[\n;]+/).forEach(sat => {
@@ -1970,12 +1983,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const { error } = await sb.from('umal_ogretmenler').upsert(satirlar, { onConflict: 'eposta' });
         const e = satirlar;
         if (error) { $('#ogBilgi').textContent = 'Eklenemedi: ' + hataYaz(error); return; }
-        L = await yukle(); ciz(); $('#ogBilgi').textContent = e.length + ' öğretmen kaydedildi.';
+        for (const x of satirlar) { const er = await rolYaz(x.eposta, yeniRol); if (er) { $('#ogBilgi').textContent = 'Rol kaydedilemedi: ' + hataYaz(er); return; } }
+        L = await yukle(); await yYukle(); ciz(); $('#ogBilgi').textContent = e.length + ' kişi ' + ROL_AD[yeniRol].toLocaleLowerCase(tr) + ' olarak kaydedildi.';
       };
       $('#icerik').querySelectorAll('[data-ad]').forEach(g => {   // ad kutusu: yazıp çıkınca / Enter kaydeder
         const kaydet = async () => {
           const ad = baslik(g.value.replace(/\s+/g, ' ').trim()), r = L.find(x => x.eposta === g.dataset.ad);
-          if (!r || (r.ad || '') === ad) return;
+          if (!r) { if (!ad) return; const { error } = await sb.from('umal_ogretmenler').upsert({ eposta: g.dataset.ad, ad, ekleyen: D.eposta }, { onConflict: 'eposta' }); if (!error) { L = await yukle(); ciz(); } return; }   // K-541: yalnız DersMap'ten eklenmiş yönetici
+          if ((r.ad || '') === ad) return;
           g.disabled = true;
           const { error } = await sb.from('umal_ogretmenler').update({ ad: ad || null }).eq('eposta', r.eposta);
           g.disabled = false;
@@ -1987,8 +2002,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
         if (!confirm(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
         const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
-        if (error) { alert('Kaldırılamadı: ' + hataYaz(error)); return; }
-        L = await yukle(); ciz();
+        const e2 = yRol.has(b.dataset.sil) ? (await sb.from('umal_yoneticiler').delete().eq('eposta', b.dataset.sil)).error : null;
+        if (error || e2) { alert('Kaldırılamadı: ' + hataYaz(error || e2)); return; }
+        L = await yukle(); await yYukle(); ciz();
+      });
+      $('#ogRol').onclick = ev => { const b = ev.target.closest('[data-yrol]'); if (!b) return; const v = $('#ogEkle').value; yeniRol = b.dataset.yrol; ciz(); $('#ogEkle').value = v; };
+      $('#icerik').querySelectorAll('[data-rolde]').forEach(b => b.onclick = async () => {
+        const ep = b.dataset.rolde, rol = b.dataset.r; if (rolu(ep) === rol) return;
+        if (!L.some(r => r.eposta === ep)) { const { error } = await sb.from('umal_ogretmenler').upsert({ eposta: ep, ekleyen: D.eposta }, { onConflict: 'eposta' }); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } }
+        const er = await rolYaz(ep, rol); if (er) { alert('Rol değişmedi: ' + hataYaz(er)); return; }
+        L = await yukle(); await yYukle(); ciz();
       });
     };
     ciz();

@@ -996,6 +996,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .kn-o-sv { margin-left: 10px; color: var(--neon, #22e8ff); font-weight: 700; white-space: nowrap; }
 .kn-o-sv:hover { text-decoration: underline; }
 /* K-517: öğretmen adı */
+.og-rol { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; } .og-rol .cip.kucuk { padding: 3px 10px; font-size: 12px; }
 .og-satir .ana { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .og-ad { font: inherit; font-weight: 800; font-size: 16px; color: #fff; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 3px 6px; margin-left: -7px; width: 100%; max-width: 360px; }
 .og-ad:hover { border-color: var(--cizgi); } .og-ad:focus { outline: none; border-color: var(--neon); background: var(--koyu, #0f1c2e); }
