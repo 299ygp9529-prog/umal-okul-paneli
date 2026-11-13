@@ -19,28 +19,31 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 .giris { position: relative; overflow: hidden; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--zemin); }
 .giris::before { content: ""; position: absolute; inset: -44px; pointer-events: none;
   background: linear-gradient(rgba(34,232,255,.05) 1px, transparent 1px) 0 0 / 44px 44px, linear-gradient(90deg, rgba(34,232,255,.05) 1px, transparent 1px) 0 0 / 44px 44px;
-  animation: izgara 9s linear infinite; mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 30%, transparent 80%); }
+  will-change: transform; animation: izgara 9s linear infinite; mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 30%, transparent 80%); }
 @keyframes izgara { to { transform: translate(44px, 44px); } }
-.isik { position: absolute; width: 520px; height: 520px; border-radius: 50%; filter: blur(70px); opacity: .32; pointer-events: none; }
+.isik { position: absolute; width: 520px; height: 520px; border-radius: 50%; opacity: .32; pointer-events: none; will-change: transform; }
+.isik.bir { background: radial-gradient(circle, #22e8ff 0, rgba(34,232,255,.55) 30%, transparent 68%) !important; } .isik.iki { background: radial-gradient(circle, #2563eb 0, rgba(37,99,235,.55) 30%, transparent 68%) !important; }   /* K-520: blur süzgeci yerine yumuşak geçiş (kasmasın) */
 .isik.bir { background: #22e8ff; top: -160px; left: -120px; animation: suzul 14s ease-in-out infinite alternate; }
 .isik.iki { background: #2563eb; bottom: -200px; right: -140px; animation: suzul 17s ease-in-out infinite alternate-reverse; }
 @keyframes suzul { to { transform: translate(180px, 120px) scale(1.15); } }
 
-.giris .kutu { position: relative; z-index: 1; width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(22,41,74,.92), rgba(17,32,56,.92)); backdrop-filter: blur(6px);
+.giris .kutu { position: relative; z-index: 1; width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(22,41,74,.92), rgba(17,32,56,.92)); 
   border-radius: 24px; padding: 40px 40px 30px; text-align: center; box-shadow: 0 0 36px rgba(34,232,255,.3), 0 24px 60px rgba(0,0,0,.5);
   animation: belir .9s cubic-bezier(.2,.8,.2,1) both .15s; }
 .giris .kutu::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
   background: conic-gradient(from var(--aci), rgba(34,232,255,.35) 0deg, #7ff6ff 40deg, rgba(34,232,255,.35) 90deg, rgba(34,232,255,.35) 360deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: don 6s linear infinite; }
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: don 6s linear 2; }   /* K-520: iki tur döner, sonra durur (her karede yeniden boyama yok) */
 @property --aci { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes don { to { --aci: 360deg; } }
 @keyframes belir { from { opacity: 0; transform: translateY(24px) scale(.97); } }
 
 .logo-cerceve { position: relative; width: 128px; height: 128px; margin: 0 auto 20px; animation: logoGel 1.1s cubic-bezier(.2,.8,.2,1) both .35s; }
-.logo-cerceve img { position: absolute; inset: 9px; width: 110px; height: 110px; border-radius: 50%; display: block; box-shadow: 0 0 22px rgba(34,232,255,.55); animation: nabiz 3.2s ease-in-out infinite 1.5s; }
+.logo-cerceve img { position: absolute; inset: 9px; width: 110px; height: 110px; border-radius: 50%; display: block; box-shadow: 0 0 22px rgba(34,232,255,.55); }
+.logo-cerceve::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 40px 6px rgba(34,232,255,.55); opacity: 0; pointer-events: none; will-change: opacity; animation: nabizIsik 3.2s ease-in-out infinite 1.5s; }
+@keyframes nabizIsik { 50% { opacity: 1; } }
 .halka { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 55%, #22e8ff 80%, #ffffff 86%, transparent 87%);
   -webkit-mask: radial-gradient(circle, transparent 60px, #000 61px, #000 64px, transparent 65px); mask: radial-gradient(circle, transparent 60px, #000 61px, #000 64px, transparent 65px);
-  animation: dondur 2.6s linear infinite; filter: drop-shadow(0 0 6px #22e8ff); }
+  will-change: transform; animation: dondur 2.6s linear infinite; filter: drop-shadow(0 0 6px #22e8ff); }
 .halka.iki { inset: -9px; animation-duration: 5s; animation-direction: reverse; opacity: .55;
   -webkit-mask: radial-gradient(circle, transparent 70px, #000 71px, #000 72.5px, transparent 73.5px); mask: radial-gradient(circle, transparent 70px, #000 71px, #000 72.5px, transparent 73.5px); }
 @keyframes dondur { to { transform: rotate(360deg); } }
@@ -60,8 +63,9 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 .giris input:focus { outline: none; border-color: var(--neon); box-shadow: 0 0 0 3px rgba(34,232,255,.18); }
 .giris .birincil, .giris .ikincil { width: 100%; margin-top: 14px; height: 52px; font-size: 16px; border-radius: 13px; }
 .giris .birincil { position: relative; overflow: hidden; box-shadow: 0 0 18px rgba(34,232,255,.5); transition: box-shadow .2s, transform .1s; }
-.giris .birincil::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); animation: parilti 3.8s ease-in-out infinite 2.6s; }
-@keyframes parilti { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+.giris .birincil::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: 0; transform: translateX(-150%); will-change: transform; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); animation: parilti 3.8s ease-in-out infinite 2.6s; }
+@keyframes parilti { 0%, 60% { transform: translateX(-150%); } 100% { transform: translateX(325%); } }
+@media (prefers-reduced-motion: reduce) { .giris *, .giris *::before, .giris *::after, .giris::before { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 .giris .birincil:hover { box-shadow: 0 0 28px rgba(34,232,255,.8); } .giris .birincil:active { transform: scale(.985); }
 #kod { letter-spacing: 6px; font-size: 24px; font-weight: 800; text-align: center; }
 @media (max-width: 480px) { .giris .kutu { padding: 30px 22px 24px; } .atlas { font-size: 34px; letter-spacing: 10px; margin-right: -10px; } }

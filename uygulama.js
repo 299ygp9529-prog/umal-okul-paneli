@@ -116,9 +116,12 @@
   // Masaüstü simgesi: Edge / Chrome "uygulama olarak yükle" (tek tıkla açılır, adres çubuğu yok).
   let kurulum = null;
   const yukleDugmeleri = () => ['#yukle', '#yukleGiris'].map(x => $(x)).filter(Boolean);
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); kurulum = e; yukleDugmeleri().forEach(b => b.classList.remove('gizli')); });
-  window.addEventListener('appinstalled', () => { kurulum = null; yukleDugmeleri().forEach(b => b.classList.add('gizli')); });
-  yukleDugmeleri().forEach(b => b.onclick = async () => { if (!kurulum) return; kurulum.prompt(); await kurulum.userChoice.catch(() => {}); kurulum = null; yukleDugmeleri().forEach(x => x.classList.add('gizli')); });
+  // K-520: girişte tek düğme — tarayıcı tek tıkla yüklemeyi teklif ediyorsa düğme, etmiyorsa anlatım bağlantısı (ikisi birden görünmez)
+  const kurBag = () => document.querySelector('.giris .kurlink');
+  const yukleGoster = var_ => { yukleDugmeleri().forEach(b => b.classList.toggle('gizli', !var_)); if (kurBag()) kurBag().classList.toggle('gizli', var_); };
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); kurulum = e; yukleGoster(true); });
+  window.addEventListener('appinstalled', () => { kurulum = null; yukleGoster(false); });
+  yukleDugmeleri().forEach(b => b.onclick = async () => { if (!kurulum) return; kurulum.prompt(); await kurulum.userChoice.catch(() => {}); kurulum = null; yukleGoster(false); });
 
   // Yan menüdeki saat: saniye ibresi her saniye tık diye atlar
   (function saat() {
