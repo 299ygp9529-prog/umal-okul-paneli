@@ -962,3 +962,9 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .ts-s { grid-template-columns: 64px minmax(0, 1fr); } .ts-k { width: 64px; height: 86px; } .ts-d { grid-column: 1 / -1; } .ts-suz input { width: 100%; } }
 
 .sd-sayfa:has(.sd-harita) { height: auto; min-height: 0; }   /* K-511: Harita gibi akar, kutular aynı boy */
+/* K-512: Kim Nerede? — gün / ders seçici */
+.kn-sec { display: flex; gap: 6px; align-items: center; margin: 6px 0 10px; flex-wrap: wrap; }
+.kn-sec .cip { padding: 6px 11px; font-size: 13px; }
+.kn-ayr { width: 1px; height: 22px; background: var(--cizgi); margin: 0 4px; }
+.kn-ust .kn-zaman { white-space: normal; text-align: center; }
+@media (max-width: 760px) { .kn-sec { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -14px; padding-right: 14px; } .kn-sec .cip { flex: none; } .kn-ust { flex-wrap: wrap; } .kn-ust .turuncu-neonlar { flex-wrap: wrap; } }
