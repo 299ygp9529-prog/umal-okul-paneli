@@ -968,3 +968,20 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .kn-ayr { width: 1px; height: 22px; background: var(--cizgi); margin: 0 4px; }
 .kn-ust .kn-zaman { white-space: normal; text-align: center; }
 @media (max-width: 760px) { .kn-sec { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -14px; padding-right: 14px; } .kn-sec .cip { flex: none; } .kn-ust { flex-wrap: wrap; } .kn-ust .turuncu-neonlar { flex-wrap: wrap; } }
+/* K-513: Kim Nerede? öğrenci kartları */
+.kn-ogrler { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.kn-ogr { display: flex; gap: 14px; align-items: stretch; text-align: left; background: var(--kart); border: 1px solid var(--cizgi); border-left: 5px solid var(--sv); border-radius: 16px; padding: 12px; color: inherit; cursor: pointer; font: inherit; min-width: 0; }
+.kn-ogr:hover { border-color: var(--sv); box-shadow: 0 0 14px color-mix(in srgb, var(--sv) 35%, transparent); }
+.kn-ogr .foto { width: 82px; flex: none; border-radius: 10px; box-shadow: 0 0 0 2px #fff; font-size: 20px; }
+.kn-o-bil { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.kn-o-ad { font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; }
+.kn-o-bil small { color: var(--soluk); }
+.kn-o-sinif { color: var(--sv); font-weight: 800; }
+.kn-o-yer { margin-top: auto; background: var(--koyu, #0f1c2e); border-radius: 10px; padding: 7px 10px; display: flex; flex-direction: column; gap: 1px; }
+.kn-o-yer b { font-size: 16px; color: var(--neonacik, #7ff6ff); overflow-wrap: anywhere; } .kn-o-yer span { color: var(--soluk); font-size: 13px; overflow-wrap: anywhere; }
+.kn-o-yer .kn-o-etk { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--cs, #6f819c); }
+.kn-o-yer.sinavda { background: rgba(255,154,58,.12); box-shadow: inset 0 0 0 1.5px #ff9a3a; } .kn-o-yer.sinavda b { color: #ffc27a; } .kn-o-yer.sinavda .kn-o-etk { color: #ff9a3a; }
+.kn-o-not { font-size: 12.5px; color: #ffc27a; overflow-wrap: anywhere; }
+.kn-sinif-ogr { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.kn-sinif-ogr .ogr b { font-size: 12.5px; display: block; overflow-wrap: anywhere; white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2; margin-top: 4px; } .kn-sinif-ogr .ogr small { color: var(--soluk); font-size: 11px; }
+@media (max-width: 760px) { .kn-ogrler { grid-template-columns: 1fr; } .kn-ogr .foto { width: 68px; } }

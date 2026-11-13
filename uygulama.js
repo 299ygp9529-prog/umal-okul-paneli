@@ -302,7 +302,13 @@
       ? `<div class="simdi-kart"><div class="b-etk">Şu an${pr ? ` · ${pr.no}. ders · ${pr.saat}` : ''}</div><div class="s-ogr">${esc(ogr.join(', '))}</div><div class="s-ders">${esc(ders)}</div></div>`
       : `<div class="simdi-kart bosta"><div class="b-etk">Şu an</div><div class="s-ders">${okulGunu ? (pr ? 'Bu saatte dersi yok' : 'Ders saati değil') : 'Bugün okul yok'}</div></div>`;
     pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${on ? '<span class="yeşil">● tahta açık</span>' : 'tahta kapalı'}</span></div>${ust}
-      <h2>${okulGunu ? `Bugünkü ders programı · ${GUNLER[gun]}` : 'Pazartesi ders programı'}</h2><div class="prog">${satirlar || '<div class="soluk">Ders programı yok.</div>'}</div>`);
+      <h2>${okulGunu ? `Bugünkü ders programı · ${GUNLER[gun]}` : 'Pazartesi ders programı'}</h2><div class="prog">${satirlar || '<div class="soluk">Ders programı yok.</div>'}</div><div id="sdOgr"></div>`);
+    if (D.bolum === 'harita') ogrencileriYukle().then(T => {   // K-513: Kim Nerede? → sınıfın öğrencileri; tıklanan öğrenci aranır
+      const L = T.filter(o => o.sinif === sinif), k = $('#sdOgr'); if (!k || !L.length) return;
+      k.innerHTML = `<h2>Öğrenciler · ${L.length}</h2><div class="ogrenciler kn-sinif-ogr">${L.map(o => `<button class="ogr" data-kno="${esc(o.no)}">${foto(o.no, o.ad)}<b>${esc(baslik(o.ad))}</b><small>${esc(o.no)}</small></button>`).join('')}</div>`;
+      fotolariYukle(L.map(o => o.no));
+      k.onclick = ev => { const b = ev.target.closest('[data-kno]'); if (!b || !$('#haritaAra')) return; $('#pencere').classList.add('gizli'); $('#haritaAra').value = b.dataset.kno; $('#haritaAra').oninput(); };
+    }).catch(() => {});
   }
   function haritaOdak(siniflar) {
     document.querySelectorAll('.tahta.odak').forEach(e => e.classList.remove('odak'));
@@ -363,15 +369,35 @@
         $('#haritaIzgara').innerHTML = sira.map(sv => { const L = gruplar[sv], n = L.filter(acikMi).length, nt = L.filter(s => sinifHaritasi[s]).length, nd = L.filter(s => hucre(s, d)).length;
           return `<div class="h-sev" style="--sv:${sv === '·' ? '#9fb3cc' : (SEVIYE_RENK[sv] || '#5cc8ff')}"><b>${sv === '·' ? 'Diğer' : sv + '. sınıflar'}</b><span>${canli && nt ? `${n} / ${nt} tahta açık` : (d.no && sv !== '·' ? `${nd} / ${L.length} derste` : `${L.length} ${sv === '·' ? 'tahta' : 'sınıf'}`)}</span></div>${L.map(kart).join('')}`; }).join('') || '<div class="soluk">Sınıf yok.</div>';
       }
-      let bilgi = '';
-      if (q.length >= 3 && !eslesen.length) {   // bu saatte derste değilse o günkü dersleri
+      let bilgi = '', ogrOdak = [];
+      const sq = q.trim();
+      if (sq.length >= 3 || /^\d{2,}$/.test(sq)) {   // K-513: öğrenci araması — ad ya da okul no
+        const T = await ogrencileriYukle().catch(() => []);
+        const tam = T.find(o => o.no === sq), OL = tam ? [tam] : /^\d+$/.test(sq) ? T.filter(o => o.no.startsWith(sq)) : T.filter(o => o.ad.toLocaleLowerCase(tr).includes(sq));
+        if (OL.length) {
+          let PL = []; if (!d.secili && d.gun < 5) PL = (await planlariYukle().catch(() => [])).filter(x => x.tarih === bugunISO());
+          const sinavi = no => { for (const x of PL) for (const [sl, L] of Object.entries(x.salonlar || {})) for (const r0 of L) { const r = siraKaydi(r0); if (r.no === no) return { x, sl, r, st: sinavSaati(x) }; } return null; };
+          const kartO = o => {
+            const h = hucre(o.sinif, d), sv = sinavi(o.no), simdiS = sv && sv.st.suruyor, etk = d.secili ? d.yazi : d.simdi ? 'Şu an' : d.no ? 'Sıradaki ders' : '';
+            ogrOdak.push(simdiS ? sv.sl : o.sinif);
+            const yer = simdiS ? `<div class="kn-o-yer sinavda"><span class="kn-o-etk">📝 Sınavda · ${esc(kisaDers(baslik(sv.r.ders || '')) || sv.x.ders + '. ders')}</span><b>Salon ${esc(sv.sl)}</b><b>Sıra ${sv.r.sira}</b></div>`
+              : `<div class="kn-o-yer">${etk ? `<span class="kn-o-etk">${esc(etk)}</span>` : ''}<b>${esc(h ? h.ders : (d.no ? 'Boş ders' : d.yazi))}</b>${h && (h.ogretmen || []).length ? `<span>${esc(h.ogretmen.map(baslik).join(', '))}</span>` : ''}</div>`;
+            const ek = sv && !simdiS && sv.st.a != null && !(sv.st.basladi) ? `<div class="kn-o-not">Bugün ${esc(sv.x.ders)}. ders sınavı · Salon ${esc(sv.sl)} · Sıra ${sv.r.sira}</div>` : '';
+            return `<button class="kn-ogr" style="--sv:${seviyeRenk(o.sinif)}" data-git="${esc(simdiS ? sv.sl : o.sinif)}">${foto(o.no, o.ad)}<div class="kn-o-bil"><b class="kn-o-ad">${esc(baslik(o.ad))}</b><small><span class="kn-o-sinif">${esc(o.sinif)}</span> · No ${esc(o.no)}</small>${yer}${ek}</div></button>`;
+          };
+          const G = OL.slice(0, 6);
+          bilgi = `<div class="kn-ogrler">${G.map(kartO).join('')}</div>${OL.length > 6 ? `<div class="soluk kucuk" style="margin:-4px 0 10px">+${OL.length - 6} öğrenci daha — adı biraz daha yaz.</div>` : ''}`;
+          fotolariYukle(G.map(o => o.no));
+        }
+      }
+      if (q.length >= 3 && !eslesen.length && !ogrOdak.length) {   // bu saatte derste değilse o günkü dersleri
         const gun = d.gun, bugun = [];
         if (gun < 5) for (const [sn, h] of Object.entries(p.siniflar || {})) for (const [k, c] of Object.entries(h)) if (k.startsWith(gun + '-') && (c.ogretmen || []).join(' ').toLocaleLowerCase(tr).includes(q)) bugun.push([+k.split('-')[1], sn, c.ders]);
         bugun.sort((a, b) => a[0] - b[0]);
         bilgi = `<div class="kart" style="margin-bottom:10px"><b class="turuncu">${d.secili ? 'Bu saatte derste değil.' : 'Şu an derste değil.'}</b>${bugun.length ? ` <span class="soluk">${d.secili ? GUNLER[gun] : 'Bugün'}:</span> ${bugun.map(([n, sn, ders]) => `<button class="cip kucukcip" data-git="${esc(sn)}">${n}. ders · ${esc(sn)} · ${esc(ders)}</button>`).join(' ')}` : ''}</div>`;
       }
       $('#haritaBilgi').innerHTML = bilgi;
-      if (eslesen.length) haritaOdak(eslesen);
+      if (eslesen.length || ogrOdak.length) haritaOdak([...new Set([...ogrOdak, ...eslesen])]);
       $('#haritaAlt').innerHTML = `<span class="t-neon kn-zaman">${esc(d.yazi)}</span>${canli && tahtali.length ? `<span class="t-neon buyuk-neon">${acik.length} / ${tahtali.length} tahta açık</span>` : ''}`;
       const g0 = d.gun < 5 ? d.gun : 0;
       $('#kimSec').innerHTML = `<button class="cip ${canli ? 'secili' : ''}" data-ks="simdi">● Şimdi</button><span class="kn-ayr"></span>${GUNLER.map((g, i) => `<button class="cip ${d.secili && d.gun === i ? 'secili' : ''}" data-kg="${i}">${g.slice(0, 3)}</button>`).join('')}<span class="kn-ayr"></span>${zilGun(g0).map(z => parseInt(z.ders, 10)).map(n => `<button class="cip ${d.secili && d.no === n ? 'secili' : ''}" data-kd="${n}">${n}.</button>`).join('')}`;
@@ -379,7 +405,7 @@
     };
     $('#icerik').innerHTML = `<div class="ust kn-ust" style="align-items:center"><h1>Kim Nerede?</h1><div class="turuncu-neonlar" id="haritaAlt"></div></div>
       <div class="kn-sec" id="kimSec"></div>
-      <div class="ara"><input id="haritaAra" placeholder="Sınıf ya da öğretmen ara (kim nerede?)"></div><div id="haritaBilgi"></div><div class="izgara sigar" id="haritaIzgara"></div>
+      <div class="ara"><input id="haritaAra" placeholder="Öğrenci (ad / no), öğretmen ya da sınıf ara"></div><div id="haritaBilgi"></div><div class="izgara sigar" id="haritaIzgara"></div>
 `;
     let araZ; $('#haritaAra').oninput = () => { clearTimeout(araZ); araZ = setTimeout(ciz, 250); };
     $('#kimSec').onclick = ev => {
@@ -390,7 +416,7 @@
       else kimSecim = { gun: kimSecim ? kimSecim.gun : (d.gun < 5 ? d.gun : 0), no: +b.dataset.kd };
       ciz();
     };
-    $('#haritaIzgara').onclick = ev => { const k = ev.target.closest('[data-sinif]'); if (k && sinifHaritasiSon[k.dataset.sinif]) sinifDersPenceresi(k.dataset.sinif, sinifHaritasiSon[k.dataset.sinif]); else if (k) { $('#haritaAra').value = k.dataset.sinif; ciz(); } };
+    $('#haritaIzgara').onclick = ev => { const k = ev.target.closest('[data-sinif]'); if (k) sinifDersPenceresi(k.dataset.sinif, sinifHaritasiSon[k.dataset.sinif] || null); };
     $('#haritaBilgi').onclick = ev => { const b = ev.target.closest('[data-git]'); if (b) haritaOdak([b.dataset.git]); };
     await ciz();
     yenile(ciz, 60);
