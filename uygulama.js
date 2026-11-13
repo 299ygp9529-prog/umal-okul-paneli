@@ -1570,16 +1570,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <div style="grid-column:1/3"><label>Anket adı</label><input data-g="ad" value="${esc(T.ad)}" placeholder="ör. Bilim Fuarı katılım"></div>
             <div style="grid-column:1/3"><label>Açıklama (isteğe bağlı)</label><input data-g="aciklama" value="${esc(T.aciklama)}" placeholder="Tahtada başlığın altında görünür"></div>
             <div><label>Başlangıç</label><input type="date" data-g="baslangic" value="${T.baslangic}"></div><div><label>Bitiş</label><input type="date" data-g="bitis" value="${T.bitis}"></div></div>
+            ${ogretmen() ? '' : `<span class="etk">Anket türü</span><div class="tur-sec">
+              <button class="tur-kart genel ${T.rehberlik ? '' : 'secili'}" data-tur="genel"><b>🌐 Genel anket</b><small>Tahtadan ve telefondan (öğrenci girişi) doldurulur · son cevap geçerli</small></button>
+              ${rehberlikYazar() || T.rehberlik ? `<button class="tur-kart ozel ${T.rehberlik ? 'secili' : ''}" data-tur="ozel" ${rehberlikYazar() ? '' : 'disabled'}><b>🔒 Özel anket</b><small>Yalnız telefondan, kendi giriş koduyla · tahtada açılmaz · cevapları yalnız rehberlik görür</small></button>` : ''}
+            </div>${T.rehberlik ? '' : '<div class="cok-soluk kucuk">Kontenjanlı sorusu olan anketler (ders seçimi) yalnız tahtadan doldurulur.</div>'}`}
             <span class="etk">Kimler cevaplar</span>
             <div class="cipler"><button class="cip ${ogretmen() ? '' : 'secili'}" data-k="ogrenci">Öğrenciler</button><button class="cip ${ogretmen() ? 'secili' : ''}" data-k="ogretmen">Öğretmenler (öğretmenler odası tahtası)</button></div>
             <div id="hzSiniflar">${hedefCiz()}</div>
             <div class="soluk kucuk" id="hzOzet"></div>
-            ${ogretmen() ? '' : `<span class="etk">Tahtayı kaplasın mı</span><div class="cipler" id="hzKilit"><button class="cip ${!T.kilit ? 'secili' : ''}" data-kl="">Hayır</button><button class="cip ${T.kilit === 'ders' ? 'secili' : ''}" data-kl="ders">Ders saatinde kilitle</button><button class="cip acil-cip ${T.kilit === 'acil' ? 'secili' : ''}" data-kl="acil">ACİL · hemen kaplasın</button></div>
+            ${ogretmen() || T.rehberlik ? '' : `<span class="etk">Tahtayı kaplasın mı</span><div class="cipler" id="hzKilit"><button class="cip ${!T.kilit ? 'secili' : ''}" data-kl="">Hayır</button><button class="cip ${T.kilit === 'ders' ? 'secili' : ''}" data-kl="ders">Ders saatinde kilitle</button><button class="cip acil-cip ${T.kilit === 'acil' ? 'secili' : ''}" data-kl="acil">ACİL · hemen kaplasın</button></div>
             <div class="kucuk ${T.kilit === 'acil' ? 'turuncu' : 'cok-soluk'}" id="hzKilitBilgi">${kilitBilgi()}</div>`}
-            <span class="etk">Ne zaman açık</span>
+            ${T.rehberlik ? '' : `<span class="etk">Ne zaman açık</span>
             <div class="cipler"><button class="cip ${T.dersler.size ? '' : 'secili'}" data-d="hepsi">Bütün gün</button>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip kucukcip ${T.dersler.has(n) ? 'secili' : ''}" data-d="${n}">${n}. ders</button>`).join('')}</div>
-            <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>
-            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik formu · mahrem (tahtada açılmaz; öğrenciler umalatlas.com.tr/ogrenci adresinden kendi giriş koduyla doldurur; cevapları yalnız rehberlik görür)') : ''}</div><div class="kucuk soluk" style="margin-top:6px">📱 Mahrem olmayan öğrenci anketleri hem tahtadan hem öğrenci girişinden (umalatlas.com.tr/ogrenci) doldurulur; son cevap geçerli. Kontenjanlı anketler (ders seçimi) yalnız tahtada.</div>
+            <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>`}
+            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${T.rehberlik ? '' : tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}</div>
           </div>
           <h2>Sorular</h2><div id="hzSorular">${T.sorular.map(soruKarti).join('')}</div>
           <div class="dugmeler"><button class="ikincil" id="hzSoruEkle">+ Soru ekle</button><button class="ikincil" id="hzOnceki">Önceki anketlerden soru al</button></div>
@@ -1638,7 +1642,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (error) { bilgi = 'Silinemedi: ' + hataYaz(error); durumCiz(); return; }
         return ac('anket');
       }
-      if (b.dataset.k) { T.kimler = b.dataset.k; ciz(); return; }
+      if (b.dataset.tur) { if (b.dataset.tur === 'ozel' && !rehberlikYazar()) return; T.rehberlik = b.dataset.tur === 'ozel'; ciz(); return; }
+      if (b.dataset.k) { T.kimler = b.dataset.k; if (b.dataset.k === 'ogretmen') T.rehberlik = false; ciz(); return; }
       if (b.dataset.kl != null) {
         T.kilit = b.dataset.kl;
         document.querySelectorAll('#hzKilit [data-kl]').forEach(x => x.classList.toggle('secili', x.dataset.kl === T.kilit));

@@ -1013,3 +1013,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .giris-sekme .gs:not(.secili):hover { color: #fff; }
 .giris-sekme.ogr .gs.secili { color: var(--soluk); } .giris-sekme.ogr .gs:not(.secili) { color: #fff; }
 .giris .giris-sekme + #adim1 label { margin-top: 22px; }
+/* K-522: anket türü — Genel (camgöbeği) / Özel (mor) */
+.tur-sec { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.tur-kart { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 14px; background: var(--koyu, #0f1c2e); border: 1.5px solid var(--cizgi); color: var(--soluk); cursor: pointer; font: inherit; }
+.tur-kart b { font-size: 15.5px; color: #fff; } .tur-kart small { font-size: 12.5px; line-height: 1.35; }
+.tur-kart.genel.secili { border-color: var(--neon); background: rgba(34,232,255,.10); box-shadow: 0 0 14px rgba(34,232,255,.3); } .tur-kart.genel.secili b { color: var(--neonacik, #7ff6ff); }
+.tur-kart.ozel.secili { border-color: #b06bff; background: rgba(176,107,255,.13); box-shadow: 0 0 14px rgba(176,107,255,.35); } .tur-kart.ozel.secili b { color: #d4b0ff; }
+.tur-kart:disabled { opacity: .6; cursor: default; }
+@media (max-width: 760px) { .tur-sec { grid-template-columns: 1fr; } }
