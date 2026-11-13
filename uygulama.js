@@ -102,7 +102,8 @@
     if (k.length < 6 || k.length > 10) { $('#girisBilgi').textContent = 'E-postadaki kodun tamamını yazın.'; return; }
     $('#girisYap').disabled = true;
     try { localStorage.setItem('atlas-hatirla', $('#hatirla').checked ? '1' : '0'); } catch (e) {}
-    const { error } = await sb.auth.verifyOtp({ email: e, token: k, type: 'email' });
+    let { error } = await israrla(() => sb.auth.verifyOtp({ email: e, token: k, type: 'email' }));
+    if (error && !agHatasi(error)) { const r2 = await sb.auth.verifyOtp({ email: e, token: k, type: 'signup' }).catch(er => ({ error: er })); if (!r2.error) error = null; }   // K-526: ilk girişte "Confirm signup" kodu
     $('#girisYap').disabled = false;
     if (error) { $('#girisBilgi').textContent = 'Kod doğru değil ya da süresi doldu.'; return; }
     $('#girisBilgi').textContent = '';
@@ -1994,7 +1995,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 
   // ------------------------------------------------------------------ K-498: Soru Hazırla (ayrı dosya; ilk açılışta yüklenir)
   async function soruYukle() {
-    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611122305'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalSoru) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'soru/soru.js?v=202611130812'; sc.onload = ok; sc.onerror = () => red(new Error('Soru Hazırla yüklenemedi')); document.head.appendChild(sc); });
     window.UmalSoru.ayarla({ taban: new URL('soru/', location.href).href });
   }
   // ------------------------------------------------------------------ K-510: Testler (havuzdaki testler)

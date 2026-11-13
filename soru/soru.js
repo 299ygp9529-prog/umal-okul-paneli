@@ -19,7 +19,7 @@
   };
   const RENKLER = ['#0fa3b8', '#0d2a4a', '#000000', '#2f6fd6', '#2fbf71', '#b06bff', '#ff7a2f', '#e0245e'];
   const PALET = ['#ff7a2f', '#2f9bff', '#2fbf71', '#b06bff', '#e0245e', '#f2b705'];
-  const VARSAYILAN = { bolum: '1', tema: 'klasik', okul: 'ÜMRANİYE MERKEZ ANADOLU LİSESİ', yil: '2026–2027 Eğitim Öğretim Yılı', baslik: 'Matematik', alt: 'Test', sinif: '', not: '', bilgi: true, numara: true, anahtar: false, kitapcik: false };
+  const VARSAYILAN = { bolum: '1', tema: 'klasik', okul: 'ÜMRANİYE MERKEZ ANADOLU LİSESİ', yil: '2026–2027 Eğitim Öğretim Yılı', baslik: 'Matematik', alt: 'Test', sinif: '', not: '', bilgi: true, numara: true, anahtar: false, kitapcik: false, sayfaSoru: '0' };
 
   let A = {}; try { A = JSON.parse(localStorage.getItem(ayarAnahtar) || '{}'); } catch (e) { A = {}; }
   const ayar = Object.assign({}, VARSAYILAN, TEMALAR[A.tema || 'klasik'], A);
@@ -57,6 +57,8 @@
           <div class="sh-et" style="margin-top:12px">RENK</div><div class="sh-renkler" id="shRenkler"></div>
           <div class="sh-et" style="margin-top:12px">DÜZEN</div><div class="sh-cip" data-g="duzen"><span data-v="yan">Yanında çözüm</span><span data-v="alt1">Tek sütun</span><span data-v="alt2">İki sütun</span></div>
           <div class="sh-et" style="margin-top:12px">ÇÖZÜM ALANI</div><div class="sh-cip" data-g="bosluk"><span data-v="kareli">Kareli</span><span data-v="cizgili">Çizgili</span><span data-v="duz">Düz</span><span data-v="yok">Boşluk yok</span></div>
+          <div class="sh-et" style="margin-top:12px">SAYFA BAŞINA SORU</div><div class="sh-cip" data-g="sayfaSoru"><span data-v="0">Otomatik</span><span data-v="2">2</span><span data-v="3">3</span><span data-v="4">4</span><span data-v="5">5</span><span data-v="6">6</span><span data-v="8">8</span></div>
+          <div class="sh-not" style="font-size:11.5px;opacity:.7;margin-top:4px">Sayı seçilirse her sayfaya en çok o kadar soru konur; sorular ve çözüm alanları sayfayı dolduracak şekilde büyütülür.</div>
           <label class="sh-kaydir">Soru büyüklüğü <b id="shOlcekD"></b><input type="range" id="shOlcek" min="60" max="140" step="5"></label>
           <label class="sh-kaydir">Boşluk büyüklüğü <b id="shBoyD"></b><input type="range" id="shBoy" min="0" max="120" step="2"></label></div>
         <div class="kart"><div class="sh-et">BAŞLIK</div><div class="sh-ayar">
@@ -660,18 +662,25 @@ body.rol-ogretmen .saat-kutu { display: none; }
     if (T.duzen === 'yan') {
       const SORU_W = CW * .56 - ROZ, COZ_X = M + CW * .56 + ARA, COZ_W = CW - CW * .56 - ARA, SIK = T.sikler ? 8.5 * PT : 0;
       const UST2 = A4H - M - 13 * PT, ARA_ = 5 * PT;
-      const satir = ogeler.map(o => { const s = Math.min(olc, SORU_W / o.w), qh = o.h * s; return { s, qh, yuk: Math.max(qh + 4 * PT, T.bosluk === 'yok' ? 0 : boyPt, SIK ? 20 * PT : 0) }; });
+      const NS = +T.sayfaSoru || 0;   // K-527: sayfa başına soru sayısı (0 = otomatik)
+      const ARAe = 5 * PT + (T.bosluk === 'yok' && SIK ? 10 * PT : 0);
+      let slotH = 0;   // o sayfadaki her soruya düşen yükseklik (sayfa başında gerçek y'den hesaplanır)
+      const satir = ogeler.map(o => {
+        const s = Math.min(olc, SORU_W / o.w), qh = o.h * s; return { s, qh, yuk: Math.max(qh + 4 * PT, T.bosluk === 'yok' ? 0 : boyPt, SIK ? 20 * PT : 0) }; });
       const ek = new Array(ogeler.length).fill(0);
-      if (TM.dagit && T.bosluk !== 'yok') {   // proje: her sayfanın boş kalan yeri o sayfanın çözüm alanlarına paylaştırılır (son sayfa çok boşsa olduğu gibi)
+      if (TM.dagit && T.bosluk !== 'yok' && !NS) {   // proje: her sayfanın boş kalan yeri o sayfanın çözüm alanlarına paylaştırılır (son sayfa çok boşsa olduğu gibi)
         let bas = 0, yy = y; const sayfa = [];
         satir.forEach((r, n) => { if (yy - r.yuk < ALT && n > bas) { sayfa.push([bas, n, yy]); bas = n; yy = UST2; } yy -= r.yuk + ARA_; });
         sayfa.push([bas, satir.length, yy]);
         sayfa.forEach(([a, b, yy], i) => { const artan = yy + ARA_ - ALT, son = i === sayfa.length - 1; if (artan > 0 && (!son || artan < 60 * PT)) for (let n = a; n < b; n++) ek[n] = Math.min(artan / (b - a), 22 * PT); });
       }
       for (let n = 0; n < ogeler.length; n++) {
-        const o = ogeler[n], s = satir[n].s, qh = satir[n].qh;
-        const yuk = satir[n].yuk + ek[n];
-        if (y - yuk < ALT - 1) { yeniSayfa(); y = await akanBaslik(sy); }
+        const o = ogeler[n]; let s = satir[n].s, qh = satir[n].qh, yuk = satir[n].yuk + ek[n];
+        if (NS) {
+          if (n > 0 && n % NS === 0) { yeniSayfa(); y = await akanBaslik(sy); }
+          if (n % NS === 0) slotH = (y - ALT - (NS - 1) * ARAe - 1) / NS;
+          s = Math.max(.2, Math.min(SORU_W / o.w, (slotH - 4 * PT) / o.h, olc * 2.2)); qh = o.h * s; yuk = Math.max(slotH, qh + 4 * PT, SIK ? 20 * PT : 0);
+        } else if (y - yuk < ALT - 1) { yeniSayfa(); y = await akanBaslik(sy); }
         const rw = await rozet(sy, n + 1, M, y);
         soruCiz(sy, o, M + (T.numara ? ROZ + 2 * PT : 0), y - 1 * PT - qh, s); maskele(sy, o, M + (T.numara ? ROZ + 2 * PT : 0), y - 1 * PT - qh, s);
         if (T.bosluk !== 'yok') {
@@ -685,18 +694,30 @@ body.rol-ogretmen .saat-kutu { display: none; }
           await ciz.yaz(sy, 'ÇÖZÜM', COZ_X + 5 * PT, y - 2.4 * PT + (4.8 * PT - 5.4) / 2, 7.5, 700, '#ffffff');
         } else if (SIK) await sikler(sy, M + ROZ + 2 * PT, y - qh - 6 * PT);
         y -= yuk + (T.bosluk === 'yok' && SIK ? 10 * PT : 0) + 5 * PT;
-        if (n < ogeler.length - 1 && y - 20 * PT > ALT) ciz.cizgi(sy, M, y + 2.5 * PT, M + CW * .56, y + 2.5 * PT, IZGARA, .5, [1, 2.5]);
+        if (n < ogeler.length - 1 && y - 20 * PT > ALT && !(NS && (n + 1) % NS === 0)) ciz.cizgi(sy, M, y + 2.5 * PT, M + CW * .56, y + 2.5 * PT, IZGARA, .5, [1, 2.5]);
       }
     } else {
       const ns = T.duzen === 'alt2' ? 2 : 1, GAP = 7 * PT, CWs = (CW - GAP * (ns - 1)) / ns, SIK = T.sikler ? 8 * PT : 0;
-      let col = 0, ust = y, sayfaUst = y;
+      let col = 0, ust = y, sayfaUst = y, kolonda = 0;
       const ayrac = () => { if (ns === 2) ciz.cizgi(sy, M + CWs + GAP / 2, sayfaUst, M + CWs + GAP / 2, ALT, sb ? '#000000' : IZGARA, .6); };
+      const NS = +T.sayfaSoru || 0, KS = NS ? Math.ceil(NS / ns) : 0;   // K-527: sayfa başına soru → sütun başına soru
       for (let n = 0; n < ogeler.length; n++) {
-        const o = ogeler[n], rw = T.numara ? (TM.rozet === 'yazi' ? 7 * PT : ROZ + 2 * PT) : 0, s = Math.min(olc, (CWs - rw) / o.w), qh = o.h * s;
-        const alan = T.bosluk === 'yok' ? 0 : boyPt, yuk = qh + 2 * PT + SIK + alan + (T.bosluk === 'yok' ? boyPt : 3 * PT);
+        const o = ogeler[n], rw = T.numara ? (TM.rozet === 'yazi' ? 7 * PT : ROZ + 2 * PT) : 0;
+        if (KS && kolonda >= KS) { if (col < ns - 1) { col++; ust = sayfaUst; } else { ayrac(); yeniSayfa(); sayfaUst = ust = await akanBaslik(sy); col = 0; } kolonda = 0; }
+        let s = Math.min(olc, (CWs - rw) / o.w), alan = T.bosluk === 'yok' ? 0 : boyPt;
+        const arak = T.bosluk === 'yok' ? boyPt : 3 * PT;
+        if (KS) {   // sütundaki her soruya eşit yer: soru büyür, çözüm alanı kalan yeri doldurur
+          const h = (sayfaUst - ALT - 1) / KS, sabit = 2 * PT + SIK + arak;
+          if (alan) { const enaz = Math.min(alan, h * .35); s = Math.min((CWs - rw) / o.w, (h - sabit - enaz) / o.h, olc * 2.2); alan = Math.max(enaz, h - sabit - o.h * s); }
+          else s = Math.min((CWs - rw) / o.w, (h - sabit) / o.h, olc * 2.2);
+          s = Math.max(s, .2);
+        }
+        const qh = o.h * s, yuk = qh + 2 * PT + SIK + alan + arak;
         if (ust - yuk < ALT && ust < sayfaUst - 1) {
           if (col < ns - 1) { col++; ust = sayfaUst; } else { ayrac(); yeniSayfa(); sayfaUst = ust = await akanBaslik(sy); col = 0; }
+          kolonda = 0;
         }
+        kolonda++;
         const x = M + col * (CWs + GAP);
         await rozet(sy, n + 1, x, ust);
         soruCiz(sy, o, x + rw, ust - 1 * PT - qh, s); maskele(sy, o, x + rw, ust - 1 * PT - qh, s);
