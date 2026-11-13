@@ -33,6 +33,8 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .form-satir { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 14px; color: #fff; margin-top: 10px; cursor: pointer; }
 .form-satir b { display: block; } .form-satir small { color: var(--soluk); } .form-satir .sag { margin-left: auto; font-weight: 800; color: var(--neon); white-space: nowrap; }
 .form-satir.doldu .sag { color: var(--yesil); }
+.etiket { display: inline-block; font-size: 11.5px; font-weight: 800; border-radius: 6px; padding: 1px 7px; margin-right: 6px; vertical-align: 1px; }
+.etiket.mahrem { background: rgba(176,107,255,.18); color: #d4b0ff; } .etiket.anket { background: rgba(34,232,255,.14); color: var(--neonacik); }
 .soru { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .soru.eksik { border-color: var(--kirmizi); }
 .soru .metin { font-weight: 700; margin-bottom: 10px; white-space: pre-wrap; } .soru .metin i { color: var(--neon); font-style: normal; margin-right: 6px; }
@@ -49,34 +51,34 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 </head>
 <body>
 <main>
-  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Rehberlik Servisi</small></div></div>
+  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Anketler ve Formlar</small></div></div>
 
   <section id="giris" class="kart">
     <h1>Öğrenci girişi</h1>
-    <div class="soluk kucuk">Rehberlik servisinin formlarını buradan doldurursun. Giriş kodun sınıf öğretmeninin dağıttığı fişte yazıyor.</div>
+    <div class="soluk kucuk">Okulun anketlerini ve rehberlik formlarını buradan doldurursun. Giriş kodun sınıf öğretmeninin dağıttığı fişte yazıyor.</div>
     <label for="no">Okul numaran</label>
     <input id="no" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Örnek: 1234">
     <label for="kod">Giriş kodun</label>
     <input id="kod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX">
     <button id="girisBtn" class="birincil">Giriş</button>
     <div id="girisBilgi" class="bilgi"></div>
-    <div class="kvkk">Bu sayfada verdiğin bilgileri yalnız okulumuzun rehberlik servisi görür; sınıf arkadaşların, öğretmenlerin ya da başka biri göremez. Bilgiler yalnız sana daha iyi destek olmak için kullanılır.</div>
+    <div class="kvkk">🔒 işaretli <b>mahrem formlardaki</b> bilgileri yalnız okulumuzun rehberlik servisi görür; sınıf arkadaşların, öğretmenlerin ya da başka biri göremez. Diğer anketlerin sonuçlarını okul idaresi görür. Tahtada da açık olan bir anketi iki yerden doldurursan son cevabın geçerli olur.</div>
     <div class="not">Kodunu kimseyle paylaşma. Kaybettiysen rehberlik servisinden yenisini iste. Ortak bir bilgisayardaysan işin bitince "Çıkış"a bas.</div>
   </section>
 
   <section id="liste" class="gizli">
     <div class="kart kim"><div><div class="ad" id="kimAd"></div><div class="soluk kucuk" id="kimSinif"></div></div><button class="ikincil" id="cikis">Çıkış</button></div>
-    <div class="kart"><h2>Formların</h2><div id="formlar"></div></div>
+    <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
   </section>
 
   <section id="form" class="gizli">
-    <div class="kart"><button class="ikincil" id="geri">← Formlar</button><h1 id="formAd" style="margin-top:12px"></h1><div class="soluk kucuk" id="formAciklama"></div></div>
+    <div class="kart"><button class="ikincil" id="geri">← Liste</button><h1 id="formAd" style="margin-top:12px"></h1><div class="soluk kucuk" id="formAciklama"></div></div>
     <div id="sorular"></div>
     <div class="alt-cubuk"><button class="birincil" id="gonder">Gönder</button><div id="formBilgi" class="bilgi"></div></div>
   </section>
 
-  <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk">Formun rehberlik servisine ulaştı.</div><button class="birincil" id="bittiGeri">Formlarıma dön</button></div>
+  <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611122240"></script>
+<script src="ogrenci.js?v=202611130450"></script>
 </body>
 </html>

@@ -41,8 +41,8 @@
   // ---- form listesi
   function listeCiz() {
     $('#kimAd').textContent = baslik(S.ad); $('#kimSinif').textContent = S.sinif + ' · ' + S.no;
-    $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><span class="sag">${f.doldu ? '✓ Doldurdun · düzelt' : 'Doldur ›'}</span></button>`).join('')
-      : '<div class="soluk">Şu an sana açık bir form yok. Rehberlik servisi bir form açınca burada görünür.</div>';
+    $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small><span class="etiket ${f.mahrem !== false ? 'mahrem' : 'anket'}">${f.mahrem !== false ? '🔒 Mahrem' : 'Anket'}</span>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><span class="sag">${f.doldu ? '✓ Doldurdun · düzelt' : 'Doldur ›'}</span></button>`).join('')
+      : '<div class="soluk">Şu an sana açık bir anket ya da form yok. Açılınca burada görünür.</div>';
     $('#formlar').onclick = ev => { const b = ev.target.closest('[data-i]'); if (b) formAc(S.formlar[+b.dataset.i]); };
     goster('liste'); window.scrollTo(0, 0);
   }
@@ -132,6 +132,7 @@
     if (error || !data) { $('#formBilgi').textContent = 'Gönderilemedi, internet bağlantını kontrol edip yeniden dene. Cevapların bu sayfada duruyor.'; $('#formBilgi').classList.add('hata'); return; }
     if (!data.ok) { $('#formBilgi').textContent = data.hata || 'Gönderilemedi.'; $('#formBilgi').classList.add('hata'); return; }
     S.formlar = data.formlar || S.formlar; S.form = null; S.c = []; $('#sorular').innerHTML = '';
+    $('#bittiYazi').textContent = f.mahrem !== false ? 'Formun rehberlik servisine ulaştı.' : 'Cevabın kaydedildi.';
     goster('bitti'); window.scrollTo(0, 0);
   };
   goster('giris');

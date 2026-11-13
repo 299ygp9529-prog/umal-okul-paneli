@@ -381,7 +381,7 @@
       }
       let bilgi = '', ogrOdak = [];
       const sq = q.trim();
-      if (sq.length >= 3 || /^\d{2,}$/.test(sq)) {   // K-513: öğrenci araması — ad ya da okul no
+      if (sq.length >= 3 || /^\d+$/.test(sq)) {   // K-513: öğrenci araması — ad ya da okul no
         const T = await ogrencileriYukle().catch(() => []);
         const tam = T.find(o => o.no === sq), OL = tam ? [tam] : /^\d+$/.test(sq) ? T.filter(o => o.no.startsWith(sq)) : T.filter(o => o.ad.toLocaleLowerCase(tr).includes(sq));
         if (OL.length) {
@@ -1561,7 +1561,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <span class="etk">Ne zaman açık</span>
             <div class="cipler"><button class="cip ${T.dersler.size ? '' : 'secili'}" data-d="hepsi">Bütün gün</button>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip kucukcip ${T.dersler.has(n) ? 'secili' : ''}" data-d="${n}">${n}. ders</button>`).join('')}</div>
             <div class="cok-soluk kucuk">Ders seçilirse yalnız o derslerde ve ardından gelen teneffüste açılır; sınav sırasında açılmaz.</div>
-            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik formu · mahrem (tahtada açılmaz; öğrenciler umalatlas.com.tr/ogrenci adresinden kendi giriş koduyla doldurur; cevapları yalnız rehberlik görür)') : ''}</div>
+            <div class="ayarlar dikey">${tik('g:otokapat', T.otokapat, 'Herkes cevaplayınca kendiliğinden kapansın')}${tik('g:sonucGoster', T.sonucGoster, 'Sonuçları tahtada göster')}${tik('g:isimli', T.isimli, 'İsimli (kimin ne cevapladığı görünür)')}${rehberlikYazar() ? tik('g:rehberlik', T.rehberlik, 'Rehberlik formu · mahrem (tahtada açılmaz; öğrenciler umalatlas.com.tr/ogrenci adresinden kendi giriş koduyla doldurur; cevapları yalnız rehberlik görür)') : ''}</div><div class="kucuk soluk" style="margin-top:6px">📱 Mahrem olmayan öğrenci anketleri hem tahtadan hem öğrenci girişinden (umalatlas.com.tr/ogrenci) doldurulur; son cevap geçerli. Kontenjanlı anketler (ders seçimi) yalnız tahtada.</div>
           </div>
           <h2>Sorular</h2><div id="hzSorular">${T.sorular.map(soruKarti).join('')}</div>
           <div class="dugmeler"><button class="ikincil" id="hzSoruEkle">+ Soru ekle</button><button class="ikincil" id="hzOnceki">Önceki anketlerden soru al</button></div>
