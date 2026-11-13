@@ -1021,3 +1021,8 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .tur-kart.ozel.secili { border-color: #b06bff; background: rgba(176,107,255,.13); box-shadow: 0 0 14px rgba(176,107,255,.35); } .tur-kart.ozel.secili b { color: #d4b0ff; }
 .tur-kart:disabled { opacity: .6; cursor: default; }
 @media (max-width: 760px) { .tur-sec { grid-template-columns: 1fr; } }
+/* K-523: nöbet cinsiyet */
+.nb-cins { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 8px; border-radius: 6px; border: 0; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; vertical-align: 1px; }
+.nb-cins.k { background: rgba(255,120,190,.18); color: #ff9fd0; box-shadow: inset 0 0 0 1.5px rgba(255,120,190,.6); }
+.nb-cins.e { background: rgba(34,232,255,.14); color: var(--neonacik); box-shadow: inset 0 0 0 1.5px rgba(34,232,255,.55); }
+.nb-ayni { float: right; font-style: normal; color: #ff9a3a; font-weight: 800; }
