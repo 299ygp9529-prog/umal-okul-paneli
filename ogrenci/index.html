@@ -46,12 +46,24 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .soluk { color: var(--soluk); } .kucuk { font-size: 13px; }
 .alt-cubuk { position: sticky; bottom: 0; padding: 12px 0 4px; background: linear-gradient(transparent, var(--zemin) 30%); }
 .tesekkur { text-align: center; padding: 30px 18px; } .tesekkur .tik { width: 74px; height: 74px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; background: rgba(47,191,113,.15); border: 2px solid var(--yesil); color: var(--yesil); font-size: 38px; }
+.giris-sekme { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 0 0 14px; padding: 5px; border-radius: 16px; background: rgba(8,16,30,.55); border: 1px solid rgba(34,232,255,.22); }
+.giris-sekme .gs-kayan { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 5px); border-radius: 12px; background: linear-gradient(180deg, rgba(34,232,255,.22), rgba(34,232,255,.10)); box-shadow: 0 0 0 1.5px rgba(34,232,255,.75), 0 0 18px rgba(34,232,255,.35); transition: transform .23s cubic-bezier(.3,.7,.3,1); pointer-events: none; }
+.giris-sekme.ogr .gs-kayan { transform: translateX(100%); }
+.giris-sekme .gs { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 9px 6px; border-radius: 12px; text-decoration: none; color: var(--soluk); }
+.giris-sekme .gs b { font-size: 14.5px; font-weight: 800; } .giris-sekme .gs small { font-size: 11px; opacity: .75; }
+.giris-sekme .gs.secili { color: #fff; } .giris-sekme .gs.secili small { color: var(--neonacik); opacity: 1; }
+.giris-sekme:not(.ogr) .gs.secili { color: var(--soluk); } .giris-sekme:not(.ogr) .gs:not(.secili) { color: #fff; }
 .kim { display: flex; align-items: center; gap: 10px; } .kim .ad { font-weight: 800; } .kim .ikincil { margin-left: auto; }
 </style>
 </head>
 <body>
 <main>
   <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Anketler ve Formlar</small></div></div>
+
+  <nav class="giris-sekme ogr" id="sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
+    <a class="gs" href="/" onclick="this.parentNode.classList.remove('ogr');setTimeout(()=>location.href='/',230);return false"><b>Yönetim</b><small>E-posta koduyla</small></a>
+    <a class="gs secili" href="/ogrenci/" aria-current="page"><b>Öğrenci</b><small>Okul no ve giriş kodu</small></a>
+  </nav>
 
   <section id="giris" class="kart">
     <h1>Öğrenci girişi</h1>
@@ -79,6 +91,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611130450"></script>
+<script src="ogrenci.js?v=202611130505"></script>
 </body>
 </html>

@@ -41,6 +41,18 @@
     return out;
   }
   function hataYaz(e) { return (e && (e.message || e.error_description)) || String(e); }
+  // K-518: ağ kopması ("Load failed", "Failed to fetch") olursa iki kez daha dener (Mac uykudan uyanınca ilk istek düşebiliyor)
+  const agHatasi = e => !!e && /load failed|failed to fetch|networkerror|network request failed/i.test(hataYaz(e));
+  async function israrla(fn) {
+    let r;
+    for (let i = 0; i < 3; i++) {
+      try { r = await fn(); } catch (e) { r = { error: e }; }
+      if (!agHatasi(r && r.error)) return r;
+      await new Promise(ok => setTimeout(ok, 800 * (i + 1)));
+    }
+    if (r && r.error) r.error = { message: 'İnternet bağlantısı kurulamadı. Bağlantını kontrol edip yeniden dene.' };
+    return r;
+  }
 
   // ------------------------------------------------------------------ Giriş
   async function basla() {
@@ -1263,7 +1275,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#aPdf').onclick = () => sonucRaporu(a, ss, filtreAdi);
       $('#aListe').onclick = () => katilimciListesi(a, ss);
       const durumYaz = async acik => {
-        const { error } = await sb.from('umal_anket_durum').upsert({ anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 });
+        const { error } = await israrla(() => sb.from('umal_anket_durum').upsert({ anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 }));
         if (!error) {   // K-516: etiket ve "açık anket" sayısı hemen yenilensin
           D.durumlar[a.id] = { anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 };
           ciz(); if ($('#acikSay')) $('#acikSay').textContent = `${D.anketler.filter(x => x.durum !== 'taslak' && acikMi(x)).length} açık anket`;
@@ -1791,7 +1803,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           if (d) {
             ev.stopPropagation(); $('#rBilgi').textContent = 'Kaydediliyor…';
             const z = Date.now() / 1000, key = d.dataset.r === '*' ? form.id : form.id + '@' + d.dataset.r;
-            const { error } = await sb.from('umal_anket_durum').upsert({ anket: key, durum: d.dataset.d, gun: bugunISO(), zaman: z });
+            const { error } = await israrla(() => sb.from('umal_anket_durum').upsert({ anket: key, durum: d.dataset.d, gun: bugunISO(), zaman: z }));
             if (error) { $('#rBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
             D.durumlar[key] = { anket: key, durum: d.dataset.d, gun: bugunISO(), zaman: z }; ciz(); liste(); return;
           }
@@ -2041,7 +2053,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="cok-soluk kucuk" id="projeBilgi"></div></div>`;
     $('#projeIc').onclick = async ev => {
       const b = ev.target.closest('[data-p]'); if (!b) return;
-      const { error } = await sb.from('umal_proje_durum').upsert({ sinif: b.dataset.p, durum: b.dataset.d, zaman: Date.now() / 1000 });
+      $('#projeBilgi').textContent = 'Gönderiliyor…';
+      const { error } = await israrla(() => sb.from('umal_proje_durum').upsert({ sinif: b.dataset.p, durum: b.dataset.d, zaman: Date.now() / 1000 }));
       if (error) { $('#projeBilgi').textContent = 'Gönderilemedi: ' + hataYaz(error); return; }
       projeBolumu();
     };

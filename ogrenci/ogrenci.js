@@ -9,7 +9,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => ['giris', 'liste', 'form', 'bitti'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id));
+  const goster = id => { ['giris', 'liste', 'form', 'bitti'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); };
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
