@@ -152,6 +152,7 @@
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
+    { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538: disiplin kurulu dosyaları (rehberlik/öğretmen göremez)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -2038,6 +2039,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         await sb.storage.from('umal-testler').remove([r.yol]); const { error } = await sb.from('umal_testler').delete().eq('id', r.id); if (error) { alert('Silinemedi: ' + hataYaz(error)); return; } L = L.filter(x => x.id !== r.id); ciz(); }
     };
     ciz(); yenile(async () => { if (document.activeElement && document.activeElement.id === 'tsAra') return; L = await yukle(); ciz(); }, 60);
+  }
+  // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)
+  async function disiplinBolumu() {
+    const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611131200');
+    await ogrencileriYukle().catch(() => []);
+    window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
+      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href });
   }
   async function soruHazirla() {
     await soruYukle();
