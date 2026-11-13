@@ -356,6 +356,9 @@ table.risk td, table.risk th { border: 1px solid var(--cizgi); padding: 4px 6px;
 .turuncu-neonlar { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .t-neon { color: #ffd2a1; font-weight: 800; font-size: 15px; padding: 6px 14px; border-radius: 12px; border: 1.5px solid #ff9a3a; background: rgba(40,20,4,.75);
   box-shadow: 0 0 8px rgba(255,154,58,.55), inset 0 0 8px rgba(255,154,58,.22); text-shadow: 0 0 8px rgba(255,154,58,.75); white-space: nowrap; }
+button.r-cok { cursor: pointer; font: inherit; } .r-cok, .r-kisi-ust .t-neon { text-transform: none; } button.r-cok:hover { filter: brightness(1.25); }
+.r-kisiler { display: flex; flex-direction: column; gap: 10px; max-height: 62vh; overflow: auto; } .r-kisi { padding: 12px 14px; } .r-kisi.cok { border-color: #ff4d5e; box-shadow: 0 0 10px rgba(255,77,94,.25); }
+.r-kisi-ust { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .r-kisi-ust .t-neon { margin-left: auto; } .r-kisi ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.5; }
 .t-neon.kirmizi-neon { color: #ffc4ca; border-color: #ff4d5e; background: rgba(40,6,10,.75); box-shadow: 0 0 8px rgba(255,77,94,.6), inset 0 0 8px rgba(255,77,94,.25); text-shadow: 0 0 8px rgba(255,77,94,.8); }
 .turuncu-neonlar .geri-sayim { margin-left: 6px; }
 @media (max-width: 760px) { .turuncu-neonlar { margin-left: 0; justify-content: flex-start; } .t-neon { font-size: 13px; padding: 4px 10px; } }

@@ -1824,7 +1824,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').classList.add('reh-acik');
       $('#rehAyrinti').onclick = null;
       $('#rehAyrinti').innerHTML = `<div class="sinav-ust"><button class="ikincil" id="rehGeri">← Sınıflar</button><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(form.tanim.ad)}</span>
-          <span class="turuncu-neonlar"><span class="t-neon">${dolu.length} doldurdu</span><span class="t-neon">${k.length - dolu.length} bekleyen</span><span class="t-neon kirmizi-neon">${cok.length} öğrenci 3+ işaret</span><button class="birincil" id="rExcel">Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">PDF</button></span></div>
+          <span class="turuncu-neonlar"><span class="t-neon">${dolu.length} doldurdu</span><span class="t-neon">${k.length - dolu.length} bekleyen</span><button class="t-neon kirmizi-neon r-cok" id="rCok" title="İşaretli öğrencileri ve işaretledikleri maddeleri göster">${cok.length} öğrenci 3+ işaret ›</button><button class="birincil" id="rExcel">Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">PDF</button></span></div>
         ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}`;
       $('#rehGeri').onclick = () => { sinif = null; ciz(); };
       planiSigdir();
@@ -1837,6 +1837,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       });
       const satirlar = () => riskSatirlari(form, sinif);
       const _eski = () => k.map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(isaretler(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
+      // K-542: kırmızı tuş — işaretli öğrenciler ve işaretledikleri maddeler (çok işaretliden aza)
+      $('#rCok').onclick = () => {
+        const L = dolu.map(x => { const c = cevap(form, sinif, String(x.no)); return { x, c, I: isaretler(form, c) }; }).filter(o => o.I.length).sort((a, b) => b.I.length - a.I.length || a.x.ad.localeCompare(b.x.ad, tr));
+        const madde = o => o.I.map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]).join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || v !== 'Evet' ? ` <span class="kirmizi">— ${esc(v)}</span>` : ''}</li>`; }).join('');
+        const govde = L.length ? L.map(o => `<div class="kart r-kisi ${o.I.length >= 3 ? 'cok' : ''}"><div class="r-kisi-ust"><b>${esc(baslik(o.x.ad))}</b><span class="soluk">${esc(sinif)} · ${esc(o.x.no)}</span><span class="t-neon ${o.I.length >= 3 ? 'kirmizi-neon' : ''}">${o.I.length} işaret</span></div><ol>${madde(o)}</ol></div>`).join('') : '<div class="soluk">İşaretli öğrenci yok.</div>';
+        pencereAc(`<h1>${esc(sinif)} · İşaretli öğrenciler</h1><div class="soluk kucuk">${esc(form.tanim.ad)} · ${dolu.length} öğrenci doldurdu · ${L.length} öğrencide en az bir işaret, ${cok.length} öğrencide 3 ve üzeri</div><div class="dugmeler" style="margin:10px 0"><button class="birincil" id="rCokPdf">PDF / Yazdır</button></div><div class="r-kisiler">${govde}</div>`);
+        $('#rCokPdf').onclick = () => {
+          const t = L.map(o => `<tr><td>${esc(o.x.no)}</td><td><b>${esc(baslik(o.x.ad))}</b></td><td style="text-align:center"><b>${o.I.length}</b></td><td><ol style="margin:0;padding-left:16px">${o.I.map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]).join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || v !== 'Evet' ? ' — ' + esc(v) : ''}</li>`; }).join('')}</ol></td></tr>`).join('');
+          belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:10pt;color:#000;margin:0;padding:12mm}h1{font-size:13pt;text-align:center;margin:0 0 2mm}p{text-align:center;margin:0 0 5mm;font-size:9.5pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #333;padding:4px 6px;vertical-align:top;text-align:left}th{background:#eee}tr{page-break-inside:avoid}.g{font-size:8.5pt;color:#444;margin-top:5mm;text-align:center}@media print{body{padding:0}}</style>
+            <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:18mm"><div style="font-weight:bold;margin:2mm 0 4mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(sinif)} · ${esc(form.tanim.ad)}</h1><p>İşaretli öğrenciler · ${L.length} öğrenci · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })}</p><table><tr><th style="width:12%">No</th><th style="width:24%">Adı Soyadı</th><th style="width:8%">İşaret</th><th>İşaretlenen maddeler</th></tr>${t}</table><div class="g">Bu liste gizlidir; yalnız rehberlik servisinde kullanılır.</div>`, sinif + ' işaretli öğrenciler');
+        };
+      };
       $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar());
       $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true);
     };
