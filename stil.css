@@ -27,12 +27,15 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 .isik.iki { background: #2563eb; bottom: -200px; right: -140px; animation: suzul 17s ease-in-out infinite alternate-reverse; }
 @keyframes suzul { to { transform: translate(180px, 120px) scale(1.15); } }
 
-.giris .kutu { position: relative; z-index: 1; width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(22,41,74,.92), rgba(17,32,56,.92)); 
+.giris .kutu { position: relative; z-index: 1; width: 100%; max-width: 480px; background: #2a4468; overflow: hidden; isolation: isolate;
   border-radius: 24px; padding: 40px 40px 30px; text-align: center; box-shadow: 0 0 36px rgba(34,232,255,.3), 0 24px 60px rgba(0,0,0,.5);
   animation: belir .9s cubic-bezier(.2,.8,.2,1) both .15s; }
-.giris .kutu::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
-  background: conic-gradient(from var(--aci), rgba(34,232,255,.35) 0deg, #7ff6ff 40deg, rgba(34,232,255,.35) 90deg, rgba(34,232,255,.35) 360deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: don 6s linear 2; }   /* K-520: iki tur döner, sonra durur (her karede yeniden boyama yok) */
+.giris .kutu::before { content: ""; position: absolute; left: 50%; top: 50%; width: 220%; aspect-ratio: 1; pointer-events: none; z-index: 0;
+  background: conic-gradient(from 0deg, rgba(34,232,255,.35) 0deg, #7ff6ff 40deg, rgba(34,232,255,.35) 90deg, rgba(34,232,255,.35) 360deg);
+  transform: translate(-50%, -50%); will-change: transform; animation: donKenar 6s linear infinite; }   /* K-521: dönen kenar ışığı — yalnız döndürme (ekran kartı yapar, kasmaz) */
+.giris .kutu::after { content: ""; position: absolute; inset: 1.5px; border-radius: 22.5px; pointer-events: none; z-index: 0; background: linear-gradient(180deg, #16294a, #112038); }
+.giris .kutu > * { position: relative; z-index: 1; }
+@keyframes donKenar { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @property --aci { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes don { to { --aci: 360deg; } }
 @keyframes belir { from { opacity: 0; transform: translateY(24px) scale(.97); } }
