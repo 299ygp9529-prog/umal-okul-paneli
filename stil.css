@@ -985,3 +985,6 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .kn-sinif-ogr { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
 .kn-sinif-ogr .ogr b { font-size: 12.5px; display: block; overflow-wrap: anywhere; white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2; margin-top: 4px; } .kn-sinif-ogr .ogr small { color: var(--soluk); font-size: 11px; }
 @media (max-width: 760px) { .kn-ogrler { grid-template-columns: 1fr; } .kn-ogr .foto { width: 68px; } }
+.kn-ogr-ust { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 18px; } .kn-ogr-ust h2 { margin: 0; }
+.kn-o-sv { margin-left: 10px; color: var(--neon, #22e8ff); font-weight: 700; white-space: nowrap; }
+.kn-o-sv:hover { text-decoration: underline; }
