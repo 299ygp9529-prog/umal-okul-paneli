@@ -54,11 +54,19 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .giris-sekme .gs.secili { color: #fff; } .giris-sekme .gs.secili small { color: var(--neonacik); opacity: 1; }
 .giris-sekme:not(.ogr) .gs.secili { color: var(--soluk); } .giris-sekme:not(.ogr) .gs:not(.secili) { color: #fff; }
 .kim { display: flex; align-items: center; gap: 10px; } .kim .ad { font-weight: 800; } .kim .ikincil { margin-left: auto; }
+.mk-ust { display: flex; gap: 12px; align-items: center; } .mk-ust .z { font-size: 28px; width: 52px; height: 52px; flex: none; border-radius: 14px; display: grid; place-items: center; background: rgba(176,107,255,.16); border: 1px solid rgba(176,107,255,.5); }
+.mk-uyar { font-size: 13px; color: #d4b0ff; background: rgba(176,107,255,.1); border: 1px solid rgba(176,107,255,.35); border-radius: 12px; padding: 9px 12px; margin-top: 12px; }
+.mk-cipler { display: flex; flex-wrap: wrap; gap: 7px; } .mk-cipler button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 7px 12px; font-size: 14px; color: var(--soluk); cursor: pointer; }
+.mk-cipler button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
+.mk-kutu { display: flex; gap: 10px; align-items: center; margin-top: 12px; font-size: 15px; background: none; border: 0; color: #fff; padding: 4px 0; cursor: pointer; text-align: left; }
+.mk-kutu i { width: 22px; height: 22px; flex: none; border-radius: 6px; border: 2px solid var(--soluk); display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 13px; }
+.mk-kutu.secili i { background: var(--neon); border-color: var(--neon); color: var(--zemin); } .mk-kutu.secili i::after { content: '✓'; }
+.mk-gecmis div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 9px 0; border-top: 1px solid var(--cizgi); } .mk-gecmis .ok { color: var(--yesil); font-weight: 700; white-space: nowrap; } .mk-gecmis .bk { color: var(--soluk); white-space: nowrap; }
 </style>
 </head>
 <body>
 <main>
-  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Anketler ve Formlar</small></div></div>
+  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci Girişi · Anketler, Formlar ve Rehberlik</small></div></div>
 
   <nav class="giris-sekme ogr" id="sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
     <a class="gs" href="/" onclick="this.parentNode.classList.remove('ogr');setTimeout(()=>location.href='/',230);return false"><b>Yönetim</b><small>E-posta koduyla</small></a>
@@ -81,6 +89,16 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
   <section id="liste" class="gizli">
     <div class="kart kim"><div><div class="ad" id="kimAd"></div><div class="soluk kucuk" id="kimSinif"></div></div><button class="ikincil" id="cikis">Çıkış</button></div>
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
+    <div class="kart" id="mektupKart">
+      <div class="mk-ust"><div class="z">✉️</div><div><h2 style="margin:0">Rehberlik servisine mektup</h2><div class="soluk kucuk">Kendini yalnız ya da üzgün hissediyorsan, paylaşmak istediğin bir şey varsa yaz.</div></div></div>
+      <div class="mk-uyar">🔒 Mektubunu yalnız okulumuzun rehber öğretmenleri, <b>senin adınla</b> okur. Başka hiç kimse göremez.</div>
+      <label>Ne hakkında? (isteğe bağlı)</label><div class="mk-cipler" id="mkKonu"></div>
+      <label for="mkMetin">Mektubun</label><textarea id="mkMetin" rows="6" maxlength="4000" placeholder="İçinden geldiği gibi yaz…"></textarea>
+      <button class="mk-kutu" id="mkGorusme" type="button"><i></i>Rehber öğretmenimle görüşmek istiyorum</button>
+      <button class="birincil" id="mkGonder">Mektubu gönder</button><div id="mkBilgi" class="bilgi"></div>
+      <div class="not">Acil bir durumdaysan beklemeden bir öğretmenine git ya da <b>112</b>'yi ara. Mektuplar okul günlerinde okunur.</div>
+    </div>
+    <div class="kart gizli" id="mkGecmisKart"><h2>Gönderdiğin mektuplar</h2><div class="mk-gecmis" id="mkGecmis"></div></div>
   </section>
 
   <section id="form" class="gizli">
@@ -91,6 +109,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611130530"></script>
+<script src="ogrenci.js?v=202611131700"></script>
 </body>
 </html>

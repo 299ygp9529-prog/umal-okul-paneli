@@ -73,6 +73,7 @@
     $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
+    if (rol === 'rehberlik') mektupZarfi();
     if (rol !== 'ogretmen') komutOnar();
   }
   // K-464: DersMap mesaj kaydında veri.tur ister; K-457 komutu yazmıyordu → DersMap paneli "Yüklenemedi". Eski kayıtlar burada tamamlanır.
@@ -153,6 +154,7 @@
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
+    { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -2074,6 +2076,73 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         await sb.storage.from('umal-testler').remove([r.yol]); const { error } = await sb.from('umal_testler').delete().eq('id', r.id); if (error) { alert('Silinemedi: ' + hataYaz(error)); return; } L = L.filter(x => x.id !== r.id); ciz(); }
     };
     ciz(); yenile(async () => { if (document.activeElement && document.activeElement.id === 'tsAra') return; L = await yukle(); ciz(); }, 60);
+  }
+  // ------------------------------------------------------------------ K-543: Rehberliğe mektuplar
+  const MK = { L: [], suz: 'yeni', sec: null };
+  async function mektupZarfi() {   // okunmamış mektup varken her sayfada yanıp sönen zarf
+    let z = $('#mkZarf');
+    if (!z) { z = document.createElement('button'); z.id = 'mkZarf'; z.className = 'mk-zarf gizli'; z.title = 'Okunmamış mektuplar'; z.onclick = () => ac('mektup'); document.body.appendChild(z); }
+    const kontrol = async () => {
+      const r = await sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false);
+      if (r.error) return;
+      const n = (r.data || []).length, acil = (r.data || []).some(x => x.acil);
+      z.innerHTML = `✉️<b>${n}</b>`; z.classList.toggle('gizli', !n); z.classList.toggle('acil', acil);
+      const m = document.querySelector('.menu-oge[data-b="mektup"]'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
+    };
+    await kontrol(); setInterval(kontrol, 60000);
+    MK.kontrol = kontrol;
+  }
+  async function mektuplarBolumu() {
+    await sb.rpc('umal_mektup_temizle').catch(() => {});
+    const r = await sb.from('umal_rehberlik_mektup').select('id,no,ad,sinif,metin,konular,gorusme,acil,zaman,okundu,okuyan,cagrildi,arsiv,gizli_not').order('zaman', { ascending: false });
+    if (r.error) throw r.error;
+    MK.L = r.data || [];
+    const zaman = t => { const d = new Date(t), b = new Date(); const g = d.toDateString() === b.toDateString() ? 'bugün' : (new Date(b - 864e5).toDateString() === d.toDateString() ? 'dün' : d.toLocaleDateString(tr, { day: 'numeric', month: 'long' })); return g + ' ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); };
+    const SUZ = { yeni: ['Okunmamış', m => !m.okundu && !m.arsiv], hepsi: ['Tümü', m => !m.arsiv], gorus: ['Görüşülecek', m => m.gorusme && !m.cagrildi && !m.arsiv], arsiv: ['Arşiv', m => m.arsiv] };
+    const guncelle = async (m, alan) => {
+      const { error } = await israrla(() => sb.from('umal_rehberlik_mektup').update(alan).eq('id', m.id));
+      if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; }
+      Object.assign(m, alan); if (MK.kontrol) MK.kontrol(); return true;
+    };
+    const ciz = () => {
+      const G = MK.L.filter(SUZ[MK.suz][1]).sort((a, b) => (b.acil && !b.okundu) - (a.acil && !a.okundu) || String(b.zaman).localeCompare(String(a.zaman)));
+      if (!G.find(m => m.id === MK.sec)) MK.sec = G.length ? G[0].id : null;
+      const m = MK.L.find(x => x.id === MK.sec);
+      const etiket = x => `${x.acil ? '<span class="mk-e acil">ACİL</span>' : ''}${x.gorusme ? '<span class="mk-e gor">Görüşmek istiyor</span>' : ''}${(x.konular || []).map(k => `<span class="mk-e k">${esc(k)}</span>`).join('')}`;
+      const onceki = m ? MK.L.filter(x => x.no === m.no) : [];
+      $('#icerik').innerHTML = `<h1>Mektuplar</h1><div class="soluk kucuk">Öğrencilerin rehberlik servisine yazdığı mektuplar. Yalnız rehberlik rolü görür; mektuplar ders yılı sonunda silinir.</div>
+        <div class="mk-izgara"><section><div class="mk-sekme">${Object.entries(SUZ).map(([k, [a, f]]) => `<button class="cip ${MK.suz === k ? 'secili' : ''}" data-msuz="${k}">${a} · ${MK.L.filter(f).length}</button>`).join('')}</div>
+          ${G.length ? G.map(x => `<button class="mk-kart ${x.acil ? 'acil' : ''} ${!x.okundu ? 'yeni' : ''} ${x.id === MK.sec ? 'secili' : ''}" style="--sv:${seviyeRenk(x.sinif || '')}" data-mk="${x.id}">${foto(x.no, x.ad)}
+            <div><b>${esc(baslik(x.ad || ''))}</b><small>${esc(x.sinif || '')} · No ${esc(x.no)} · ${zaman(x.zaman)}</small><div>${etiket(x)}</div></div>
+            <div class="mk-sag">${!x.okundu ? '<span class="mk-e yeni">YENİ</span>' : 'okundu'}${x.cagrildi ? '<br>çağrıldı' : ''}</div></button>`).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde mektup yok.</div>'}</section>
+        <section class="kart mk-ayr">${m ? `<div class="mk-ayr-ust"><div><b style="font-size:18px">${esc(baslik(m.ad || ''))} · ${esc(m.sinif || '')}</b><div class="soluk kucuk">No ${esc(m.no)} · ${zaman(m.zaman)} · bu öğrencinin ${onceki.length}. mektubu${onceki.length > 1 ? '' : ''}</div></div><div>${etiket(m)}</div></div>
+          <div class="mk-metin">${esc(m.metin)}</div>
+          <div class="dugmeler"><button class="${m.okundu ? 'ikincil' : 'birincil'}" data-mis="okundu">${m.okundu ? '↺ Okunmadı yap' : '✓ Okundu'}</button><button class="ikincil" data-mis="cagir">Görüşmeye çağır · pusula</button>${onceki.length > 1 ? `<button class="ikincil" data-mis="onceki">Önceki mektupları (${onceki.length - 1})</button>` : ''}<button class="ikincil" data-mis="arsiv">${m.arsiv ? 'Arşivden çıkar' : 'Arşivle'}</button></div>
+          ${m.cagrildi ? `<div class="kucuk soluk" style="margin-top:8px">Görüşmeye çağrıldı: ${zaman(m.cagrildi)}</div>` : ''}${m.okundu ? `<div class="kucuk soluk" style="margin-top:4px">Okundu: ${zaman(m.okundu)}${m.okuyan ? ' · ' + esc(m.okuyan) : ''}</div>` : ''}
+          <label class="kucuk soluk" style="display:block;margin:12px 0 4px">Gizli not (yalnız rehberlik görür)</label><textarea id="mkNot" rows="3" style="width:100%" maxlength="2000">${esc(m.gizli_not || '')}</textarea>
+          ${m.acil ? '<div class="mk-acil-not">Bu mektupta acil olabilecek ifadeler var. Öğrenciyle bugün görüşmeniz önerilir.</div>' : ''}` : '<div class="soluk">Mektup seçin.</div>'}</section></div>`;
+      fotolariYukle(G.map(x => x.no));
+      const n = $('#mkNot'); if (n) n.onblur = async () => { if ((m.gizli_not || '') !== n.value) await guncelle(m, { gizli_not: n.value }); };
+    };
+    $('#icerik').onclick = async ev => {
+      const t = ev.target;
+      const s_ = t.closest('[data-msuz]'); if (s_) { MK.suz = s_.dataset.msuz; MK.sec = null; ciz(); return; }
+      const k = t.closest('[data-mk]'); if (k) {
+        MK.sec = k.dataset.mk; ciz(); return;   // "Okundu"ya basılınca öğrenci "Okundu" görür
+      }
+      const b = t.closest('[data-mis]'); const m = MK.L.find(x => x.id === MK.sec); if (!b || !m) return;
+      if (b.dataset.mis === 'okundu') { await guncelle(m, m.okundu ? { okundu: null, okuyan: null } : { okundu: new Date().toISOString(), okuyan: D.eposta }); ciz(); }
+      if (b.dataset.mis === 'arsiv') { await guncelle(m, { arsiv: !m.arsiv }); ciz(); }
+      if (b.dataset.mis === 'onceki') { MK.suz = 'hepsi'; ciz(); document.querySelectorAll('.mk-kart').forEach(e => { const x = MK.L.find(y => y.id === e.dataset.mk); e.style.opacity = x && x.no === m.no ? 1 : .35; }); }
+      if (b.dataset.mis === 'cagir') {
+        await guncelle(m, { cagrildi: new Date().toISOString(), ...(m.okundu ? {} : { okundu: new Date().toISOString(), okuyan: D.eposta }) }); ciz();
+        const ad = baslik(m.ad || ''), satir = '<span style="display:inline-block;border-bottom:1px dotted #000;min-width:30mm">&nbsp;</span>';
+        const tek = `<div class="p"><div class="u"><img src="${new URL('okul-logo.png', location.href).href}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><br>Rehberlik Servisi</div></div><h2>DAVET</h2>
+          <p>Sevgili <b>${esc(ad)}</b> (${esc(m.sinif || '')} · ${esc(m.no)}),</p><p>Seninle kısa bir sohbet etmek istiyoruz. ${satir} / ${satir} tarihinde (saat: ${satir}) rehberlik servisine uğrar mısın?</p><p class="s">Rehber Öğretmen<br><br>${satir}</p></div>`;
+        belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:12pt;margin:0;padding:12mm}.p{border:1.5px solid #0d2b55;border-radius:4mm;padding:8mm 10mm;margin-bottom:10mm;min-height:110mm}.u{display:flex;gap:4mm;align-items:center;font-size:11pt}.u img{height:16mm}h2{text-align:center;letter-spacing:3pt;margin:7mm 0 6mm}p{line-height:2}.s{text-align:right;margin-top:8mm;line-height:1.4}.k{border-top:1px dashed #999;margin:0 0 10mm}@media print{body{padding:0}}</style>${tek}<div class="k"></div>${tek}</html>`, 'Görüşme daveti · ' + ad);
+      }
+    };
+    ciz();
   }
   // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)
   async function disiplinBolumu() {

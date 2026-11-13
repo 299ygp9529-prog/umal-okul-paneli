@@ -31,9 +31,9 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    listeCiz();
+    listeCiz(); mektuplarYukle();
   };
-  const cikis = () => { Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
   $('#cikis').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -135,6 +135,36 @@
     $('#bittiYazi').textContent = f.mahrem !== false ? 'Formun rehberlik servisine ulaştı.' : 'Cevabın kaydedildi.';
     goster('bitti'); window.scrollTo(0, 0);
   };
+  // ---- K-543: rehberlik servisine mektup
+  const KONULAR = ['Yalnız hissediyorum', 'Üzgünüm', 'Arkadaşlık', 'Aile', 'Dersler', 'Başka bir şey'];
+  const MK = { konu: new Set(), gorusme: false };
+  const mkCiz = () => {
+    $('#mkKonu').innerHTML = KONULAR.map(k => `<button type="button" class="${MK.konu.has(k) ? 'secili' : ''}" data-k="${esc(k)}">${esc(k)}</button>`).join('');
+    $('#mkGorusme').classList.toggle('secili', MK.gorusme);
+  };
+  const mkSifirla = () => { MK.konu.clear(); MK.gorusme = false; $('#mkMetin').value = ''; $('#mkBilgi').textContent = ''; $('#mkGecmis').innerHTML = ''; $('#mkGecmisKart').classList.add('gizli'); mkCiz(); };
+  const gecmisCiz = L => {
+    $('#mkGecmisKart').classList.toggle('gizli', !(L && L.length));
+    $('#mkGecmis').innerHTML = (L || []).map(m => `<div><span>${esc(new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}${(m.konular || []).length ? ' · ' + esc(m.konular.join(', ')) : ''}</span><span class="${m.okundu ? 'ok' : 'bk'}">${m.okundu ? '✓ Okundu' : 'Gönderildi'}</span></div>`).join('');
+  };
+  async function mektuplarYukle() {
+    const { data } = await sb.rpc('umal_ogrenci_mektuplarim', { p_no: S.no, p_kod: S.kod }).catch(() => ({}));
+    if (data && data.ok) gecmisCiz(data.mektuplar);
+  }
+  $('#mkKonu').onclick = ev => { const b = ev.target.closest('[data-k]'); if (!b) return; MK.konu.has(b.dataset.k) ? MK.konu.delete(b.dataset.k) : MK.konu.add(b.dataset.k); mkCiz(); };
+  $('#mkGorusme').onclick = () => { MK.gorusme = !MK.gorusme; mkCiz(); };
+  $('#mkGonder').onclick = async () => {
+    const metin = $('#mkMetin').value.trim(), bilgi = $('#mkBilgi'); bilgi.classList.remove('hata');
+    if (metin.length < 2) { bilgi.textContent = 'Mektubunu yaz.'; bilgi.classList.add('hata'); return; }
+    $('#mkGonder').disabled = true; bilgi.textContent = 'Gönderiliyor…';
+    const { data, error } = await sb.rpc('umal_ogrenci_mektup_gonder', { p_no: S.no, p_kod: S.kod, p_metin: metin, p_konular: [...MK.konu], p_gorusme: MK.gorusme });
+    $('#mkGonder').disabled = false;
+    if (error || !data) { bilgi.textContent = 'Gönderilemedi, internet bağlantını kontrol edip yeniden dene. Mektubun bu sayfada duruyor.'; bilgi.classList.add('hata'); return; }
+    if (!data.ok) { bilgi.textContent = data.hata || 'Gönderilemedi.'; bilgi.classList.add('hata'); return; }
+    MK.konu.clear(); MK.gorusme = false; $('#mkMetin').value = ''; mkCiz(); gecmisCiz(data.mektuplar);
+    bilgi.textContent = '✓ Mektubun rehberlik servisine ulaştı. Okununca burada "Okundu" yazar.';
+  };
+  mkCiz();
   goster('giris');
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
   try {
