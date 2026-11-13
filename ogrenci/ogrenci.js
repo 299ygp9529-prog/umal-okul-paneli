@@ -148,7 +148,7 @@
     $('#mkGecmis').innerHTML = (L || []).map(m => `<div><span>${esc(new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}${(m.konular || []).length ? ' · ' + esc(m.konular.join(', ')) : ''}</span><span class="${m.okundu ? 'ok' : 'bk'}">${m.okundu ? '✓ Okundu' : 'Gönderildi'}</span></div>`).join('');
   };
   async function mektuplarYukle() {
-    const { data } = await sb.rpc('umal_ogrenci_mektuplarim', { p_no: S.no, p_kod: S.kod }).catch(() => ({}));
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_mektuplarim', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
     if (data && data.ok) gecmisCiz(data.mektuplar);
   }
   $('#mkKonu').onclick = ev => { const b = ev.target.closest('[data-k]'); if (!b) return; MK.konu.has(b.dataset.k) ? MK.konu.delete(b.dataset.k) : MK.konu.add(b.dataset.k); mkCiz(); };

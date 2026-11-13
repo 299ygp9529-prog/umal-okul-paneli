@@ -2093,7 +2093,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     MK.kontrol = kontrol;
   }
   async function mektuplarBolumu() {
-    await sb.rpc('umal_mektup_temizle').catch(() => {});
+    try { await sb.rpc('umal_mektup_temizle'); } catch (e) {}   // rpc .catch vermez (thenable)
     const r = await sb.from('umal_rehberlik_mektup').select('id,no,ad,sinif,metin,konular,gorusme,acil,zaman,okundu,okuyan,cagrildi,arsiv,gizli_not').order('zaman', { ascending: false });
     if (r.error) throw r.error;
     MK.L = r.data || [];
