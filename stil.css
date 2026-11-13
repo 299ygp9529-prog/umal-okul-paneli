@@ -1026,3 +1026,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .nb-cins.k { background: rgba(255,120,190,.18); color: #ff9fd0; box-shadow: inset 0 0 0 1.5px rgba(255,120,190,.6); }
 .nb-cins.e { background: rgba(34,232,255,.14); color: var(--neonacik); box-shadow: inset 0 0 0 1.5px rgba(34,232,255,.55); }
 .nb-ayni { float: right; font-style: normal; color: #ff9a3a; font-weight: 800; }
+.k-hava { margin: 10px 2px 0; padding: 8px 12px; border-radius: 10px; background: rgba(34,232,255,.06); border: 1px solid var(--cizgi); overflow-wrap: anywhere; }

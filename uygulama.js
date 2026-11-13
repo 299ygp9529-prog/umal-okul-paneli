@@ -2724,6 +2724,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       D._takvimEski = (m.data || []).filter(x => x.tur === 'takvim').map(x => x.id);
     };
     const karar = s => kararlar.find(k => (k.hedef || []).includes('*') || (k.hedef || []).includes(s));
+    const havaOzet = () => {   // K-529: tahtalar hava durumu servisine ulaşabiliyor mu (okul ağı süzgeci)
+      const bugun = bugunISO(), L = Object.values(tahtalar).map(t => t.durum || {}).filter(d => d.hava && /^\d/.test(String(d.sinif || '')));
+      if (!L.length) return '<div class="k-hava soluk kucuk">☁ Hava durumu: tahtalardan henüz bilgi gelmedi (Pro 101 ve sonrası bildirir).</div>';
+      const ok = L.filter(d => d.hava.tarih === bugun), kay = {}; ok.forEach(d => { kay[d.hava.kaynak] = (kay[d.hava.kaynak] || 0) + 1; });
+      const hat = {}; L.forEach(d => Object.entries(d.hava.hata || {}).forEach(([k, v]) => { (hat[k] = hat[k] || []).push(d.sinif + ': ' + v); }));
+      const ad = { om: 'Open-Meteo', mn: 'met.no' };
+      return `<div class="k-hava kucuk"><b class="${ok.length ? 'yeşil' : 'turuncu'}">☁ Hava durumu</b> · bugün indiren: <b>${ok.length} / ${L.length}</b> tahta${Object.keys(kay).length ? ' (' + Object.entries(kay).map(([k, n]) => `${ad[k] || k} ${n}`).join(', ') + ')' : ''}`
+        + `${Object.keys(hat).length ? `<div class="soluk" style="margin-top:4px">Ulaşılamayan: ${Object.entries(hat).map(([k, v]) => `<b>${esc(ad[k] || k)}</b> ${v.length} tahta <span title="${esc(v.slice(0, 6).join('\n'))}">(ör. ${esc(v[0])})</span>`).join(' · ')}</div>` : ''}</div>`;
+    };
     const odaMi = s => !/^\d/.test(String(s));
     const etkili = (s, zd) => {   // tahtanın kendi bildirdiği yoksa panelden tahmin
       const t = tahtalar[s], on = t && Date.now() - new Date(t.gorulme) < 6 * 60000, e = on ? ((t.durum || {}).erisim || {}) : null;
@@ -2753,7 +2762,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const say = c => siniflar.filter(s => durumlar[s].sinif === c).length;
       $('#kUst').innerHTML = `<div class="k-durum"><div><span class="soluk">Şu an</span><b>${esc(zd.ad)}</b><span class="soluk">${esc(zd.saat || zd.sonraki || '')}</span></div>
         <div><span class="soluk">Kilitli</span><b class="kirmizi">${say('kl') + say('bs')}</b></div><div><span class="soluk">Açık (izinli)</span><b class="neon">${say('ac')}</b></div>
-        <div><span class="soluk">Derste açık</span><b class="yeşil">${say('ok')}</b></div><div><span class="soluk">Kapalı tahta</span><b class="soluk">${say('kp')}</b></div></div>`;
+        <div><span class="soluk">Derste açık</span><b class="yeşil">${say('ok')}</b></div><div><span class="soluk">Kapalı tahta</span><b class="soluk">${say('kp')}</b></div></div>${havaOzet()}`;
       const odalar = siniflar.filter(odaMi);
       const odaKutu = odalar.map(s => `<button class="k-tahta k-oda" data-k="${esc(s)}"><span class="k-oda-ic">${ODA_SIMGE}</span><span><b>${esc(s)}</b><small>${esc(durumlar[s].yazi)}</small></span></button>`).join('');
       const sv4 = ['9', '10', '11', '12'].map(sv => [sv, siniflar.filter(s => String(s).split('-')[0] === sv)]).filter(x => x[1].length);
