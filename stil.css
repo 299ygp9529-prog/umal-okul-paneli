@@ -1279,3 +1279,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .nt-no { flex: none; width: 46px; color: var(--neon); font-weight: 800; font-variant-numeric: tabular-nums; } .nt-ad { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.200; }
 .nt-sat input { flex: none; width: 74px; text-align: center; font-weight: 800; font-size: 16px; padding: 7px 4px; }
 .nt-kayit .durum-etiketi { flex: none; }
+.nt-kayit { flex-wrap: wrap; } .nt-kayit .ana { flex: 1 1 220px; min-width: 0; }

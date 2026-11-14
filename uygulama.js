@@ -2307,7 +2307,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const dolu = T => Object.values(T.notlar).filter(v => String(v).trim()).length;
     const liste = () => NT.L.length ? NT.L.map(n => { const k = Object.values(n.notlar || {}).filter(v => String(v).trim()).length;
       return `<div class="satir nt-kayit"><div class="ana"><b>${esc(n.sinif)} · ${esc(n.ders)}</b><small>${esc(n.sinav)} · ${k} öğrenci · ${esc(n.yukleyen_ad || n.yukleyen)} · ${esc(new Date(n.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</small></div>
-        <span class="durum-etiketi ${n.yayin ? 'yeşil' : 'turuncu'}">${n.yayin ? 'yayında' : 'taslak'}</span><button class="ikincil" data-ntduz="${n.id}">Aç</button></div>`; }).join('') : '<div class="soluk" style="padding:10px 2px">Henüz not yüklenmedi.</div>';
+        <span class="durum-etiketi ${n.yayin ? 'yeşil' : 'turuncu'}">${n.yayin ? 'yayında' : 'taslak'}</span>${n.yayin ? `<button class="ikincil" data-ntkaldir="${n.id}">Yayından kaldır</button>` : `<button class="ikincil" data-ntyay="${n.id}">Yayınla</button>`}<button class="ikincil" data-ntduz="${n.id}">Aç</button></div>`; }).join('') : '<div class="soluk" style="padding:10px 2px">Henüz not yüklenmedi.</div>';
     const anaCiz = () => {
       NT.T = null;
       $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Not Yükle</h1><div class="soluk kucuk">Sınav notlarını PDF'ten ya da elle yükleyin. Yayınlayınca her öğrenci, öğrenci panelindeki Notlarım'da yalnız kendi notunu görür.</div></div></div>
@@ -2366,6 +2366,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#icerik').onclick = async ev => {
       const b = ev.target.closest('button'); if (!b) return; const T = NT.T;
       if (b.dataset.ntduz) { const n = NT.L.find(x => x.id === b.dataset.ntduz); if (!n) return; NT.T = { id: n.id, sinif: n.sinif, ders: n.ders, sinav: n.sinav, notlar: Object.assign({}, n.notlar || {}), yayin: n.yayin, sutunlar: [], sec: 0 }; duzCiz(); return; }
+      if (b.dataset.ntkaldir || b.dataset.ntyay) {   // K-621: listeden tek dokunuşla yayından kaldır / yayınla
+        const n = NT.L.find(x => x.id === (b.dataset.ntkaldir || b.dataset.ntyay)); if (!n) return; const yay = !!b.dataset.ntyay;
+        if (!await onayla(yay ? `${n.sinif} · ${n.ders} · ${n.sinav} notları öğrencilerin panelinde görünsün mü?` : `${n.sinif} · ${n.ders} · ${n.sinav} notları öğrencilerin panelinden kaldırılsın mı? (Kayıt silinmez, taslak olarak durur; istediğiniz zaman yeniden yayınlarsınız.)`)) return;
+        b.disabled = true; const { data, error } = await israrla(() => sb.from('umal_not').update({ yayin: yay, guncel: new Date().toISOString() }).eq('id', n.id).select().maybeSingle());
+        if (error || !data) { b.disabled = false; uyar('Değiştirilemedi: ' + (error ? hataYaz(error) : 'yetki yok')); return; }
+        NT.L = NT.L.map(x => x.id === data.id ? data : x); anaCiz(); $('#ntBilgi').className = 'kucuk yeşil'; $('#ntBilgi').textContent = yay ? `✓ ${data.sinif} · ${data.ders} · ${data.sinav} yayında.` : `✓ ${data.sinif} · ${data.ders} · ${data.sinav} öğrencilerin panelinden kaldırıldı.`; return;
+      }
       if (!T) return;
       if (b.id === 'ntSinifAc') { T.sinifAc = true; duzCiz(); return; }
       if (b.dataset.ntsinif) { T.sinif = b.dataset.ntsinif; T.sinifAc = false; if (T.sutunlar.length) sutunUygula(); else { const O = new Set(sinifOgr(T.sinif).map(o => String(o.no))); Object.keys(T.notlar).forEach(k => { if (!O.has(k)) delete T.notlar[k]; }); } T.degisti = true; duzCiz(); return; }
@@ -2374,7 +2381,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (b.dataset.ntsinav) { T.sinav = ((T.sinav.match(/^[12]\. Dönem/) || ['1. Dönem'])[0]) + ' ' + b.dataset.ntsinav; T.degisti = true; $('#ntSinav').value = T.sinav; return; }
       if (b.id === 'ntTaslak') return kaydet(false);
       if (b.id === 'ntYayin') return kaydet(true);
-      if (b.id === 'ntKaldir') { if (await onayla('Notlar öğrencilerin ekranından kaldırılsın mı? (Kayıt silinmez, taslak olarak durur.)')) kaydet(false); return; }
+      if (b.id === 'ntKaldir') { if (await onayla('Notlar öğrencilerin panelinden kaldırılsın mı? (Kayıt silinmez, taslak olarak durur.)')) { T.yayin = false; kaydet(false); } return; }
       if (b.id === 'ntSil') { if (!await onayla('Bu not kaydı kalıcı olarak silinsin mi?')) return; const { error } = await sb.from('umal_not').delete().eq('id', T.id); if (error) { uyar('Silinemedi: ' + hataYaz(error)); return; } NT.L = NT.L.filter(n => n.id !== T.id); anaCiz(); }
     };
     anaCiz();
