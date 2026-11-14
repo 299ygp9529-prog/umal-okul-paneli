@@ -280,7 +280,7 @@
       const d = new Date(x.tarih + 'T12:00:00'), n = parseInt(x.ders, 10), [bas, bit] = zil(gunIdx(d), n);
       const yer = (S.yerler || []).find(y => y.tarih === x.tarih && y.ders === x.ders);
       const sinifta = ((x.yer || {})[sv]) === 'sinif';   // K-624: sınıfta yapılan sınav (kelebek yok)
-      L.push({ tarih: x.tarih, d, n, ders: x.ders, ad, bas, bit, yer: sinifta ? null : yer, sinifta });
+      L.push({ tarih: x.tarih, d, n, ders: x.ders, ad, bas, bit, yer: sinifta ? null : yer, sinifta, senaryo: (x.senaryo || {})[sv] || '' });
     }
     return L.sort((a, b) => (a.tarih + a.bas).localeCompare(b.tarih + b.bas));
   }
@@ -342,7 +342,7 @@
       const yakin = !bt && ilkYakin; if (yakin) ilkYakin = false;
       const roz = bt ? 'bitti' : gk === 0 ? 'bugün' : gk === 1 ? 'yarın' : gk + ' gün kaldı';
       const bas_ = h !== son ? `<div class="hafta">${h}</div>` : ''; son = h;
-      return `${bas_}<div class="sv ${bt ? 'bitti' : ''} ${yakin ? 'yakin' : ''}"><div class="t"><b>${x.d.getDate()}</b><span>${AYK[x.d.getMonth()]}</span></div><div><h3>${esc(x.ad)}</h3><div class="s">${GUN[gunIdx(x.d)]} · ${esc(x.ders)} · ${x.bas.replace(':', '.')} – ${x.bit.replace(':', '.')}</div>
+      return `${bas_}<div class="sv ${bt ? 'bitti' : ''} ${yakin ? 'yakin' : ''}"><div class="t"><b>${x.d.getDate()}</b><span>${AYK[x.d.getMonth()]}</span></div><div><h3>${esc(x.ad)}</h3><div class="s">${GUN[gunIdx(x.d)]} · ${esc(x.ders)} · ${x.bas.replace(':', '.')} – ${x.bit.replace(':', '.')}</div>${x.senaryo ? `<div class="n" style="color:var(--neonacik)">${esc(x.senaryo)}</div>` : ''}
         ${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Sınav yerin: Salon ${esc(x.yer.salon)} · Sıra ${esc(x.yer.sira)}</div>` : (!bt ? (x.sinifta ? '<div class="n">Bu sınav kendi sınıfında yapılır.</div>' : '<div class="n">Sınav yerin kelebek planı yayınlanınca burada görünür.</div>') : '')}${(k_ => k_ ? `<details class="sv-konu" ${yakin ? 'open' : ''}><summary>Sınav konuları</summary><ul>${k_.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => `<li>${esc(l.replace(/^[-•*]\s*/, ''))}</li>`).join('')}</ul></details>` : '')((S.konular || new Map()).get([x.tarih, x.ders, S.sinif.split('-')[0], x.ad].join('|')))}</div><span class="rozet">${roz}</span></div>`;
     }).join('') : '<div class="kart soluk">Sınıfın için yayınlanmış sınav takvimi yok.</div>';
   }

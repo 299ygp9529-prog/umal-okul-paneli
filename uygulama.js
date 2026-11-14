@@ -3277,10 +3277,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611145800');
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150100');
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611150100');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
-      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href });
+      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl });
   }
   async function soruHazirla() {
     await soruYukle();
@@ -3680,7 +3681,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const sb_ = ((tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders) || {}).subeler || {}, sv = {};
       for (const v of SV) { const subeAd = Object.entries(sb_).filter(([s]) => seviye(s) === v); if (!(v in (x.siniflar || {})) && !subeAd.length) continue;
         const ad = subeAd.length ? enCok(subeAd.map(z => z[1])) : x.siniflar[v], fark = {}; subeAd.forEach(([s, d]) => { if (d !== ad) fark[s] = d; });
-        sv[v] = { ad, yer: (x.yer && x.yer[v]) || 'kelebek', fark, dahil: new Set(subeAd.length ? subeAd.map(z => z[0]) : sinifSv(v)) }; }
+        sv[v] = { ad, yer: (x.yer && x.yer[v]) || 'kelebek', fark, dahil: new Set(subeAd.length ? subeAd.map(z => z[0]) : sinifSv(v)), senaryo: (x.senaryo && x.senaryo[v]) || '' }; }
       return { id: nid++, tarih: x.tarih, n: parseInt(x.ders, 10) || 1, sv }; }) };
     let degisti = false;
     const ciz = () => {
@@ -3688,10 +3689,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="tdGeri">← Sınav takvimi</button><span class="neon-tabela">Takvimi düzenle</span></div>
         <div class="kart"><div class="nt-alan"><span>Takvimin adı</span><input id="tdAd" maxlength="120" value="${esc(E.ad)}" placeholder="Ör. 2026-2027 1. dönem 2. ortak yazılı sınavları" style="width:min(640px,100%)"></div>
           <div class="soluk kucuk" style="margin-top:8px">Her sınavda seviye seviye yer seçin: <b class="neon">Kelebek</b> sınavlar Kelebek Sistemi'nde salonlara dağıtılır; <b class="turuncu">Sınıfta</b> sınavlarda öğrenci kendi sınıfında oturur, kelebeğe girmez. Şubesi farklı derse giren sınıfları (ör. 11-I S. Temel Matematik) "Şube farkı" ile ekleyin.</div></div>
+        ${uyarilar()}${SV.map(v => `<datalist id="tdDers${v}">${dersOneri(v).map(d => `<option value="${esc(d)}">`).join('')}</datalist>`).join('')}
         <div class="td-liste">${E.sinavlar.map(x => { const d = x.tarih ? new Date(x.tarih + 'T12:00:00') : null;
           return `<div class="kart td-sinav" data-tdi="${x.id}"><div class="td-ust"><input type="date" data-tdt="${x.id}" value="${esc(x.tarih)}"><span class="soluk kucuk td-gun">${d ? esc(d.toLocaleDateString(tr, { weekday: 'long' })) : ''}</span>
             <div class="cipler td-ders">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip ${x.n === n ? 'secili' : ''}" data-tdn="${x.id}:${n}">${n}. ders</button>`).join('')}</div><button class="bag" style="color:var(--kirmizi);margin-left:auto" data-tdsil="${x.id}">Sınavı sil</button></div>
-            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi" maxlength="60">
+            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi" maxlength="80" list="tdDers${v}"><button class="bag" data-tdsec="${x.id}:${v}" title="Aynı oturuma bir seçmeli ders daha ekle">+ seçmeli</button><input data-tdsen="${x.id}:${v}" value="${esc(r.senaryo || '')}" placeholder="Senaryo (ör. Senaryo 1)" maxlength="40" style="flex:0 1 150px;min-width:110px">
               <div class="td-yer"><button class="${r.yer === 'kelebek' ? 'secili' : ''}" data-tdy="${x.id}:${v}:kelebek">Kelebek</button><button class="${r.yer === 'sinif' ? 'secili sinif' : ''}" data-tdy="${x.id}:${v}:sinif">Sınıfta</button></div>
               <div class="td-fark"><span class="soluk kucuk">Giren şubeler (${r.dahil.size}/${sinifSv(v).length}):</span>${sinifSv(v).map(s => `<button class="td-sube ${r.dahil.has(s) ? 'secili' : ''}" data-tdsb="${x.id}:${v}:${esc(s)}" title="${r.dahil.has(s) ? 'Bu şube sınava girmiyor yap' : 'Bu şube de sınava girsin'}">${esc(s.split('-')[1])}</button>`).join('')}
                 ${Object.entries(r.fark).filter(([s]) => r.dahil.has(s)).sort((a, b) => sinifSira(a[0], b[0])).map(([s, ad]) => `<span class="td-fcip">${esc(s)}: ${esc(ad)}<button data-tdfs="${x.id}:${v}:${esc(s)}" title="Farkı kaldır">✕</button></span>`).join('')}<button class="bag" data-tdfe="${x.id}:${v}">+ Şube farkı</button></div>
@@ -3700,6 +3702,21 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="dugmeler" style="margin-top:12px"><button class="ikincil" id="tdEkle" style="margin-right:auto">+ Sınav ekle</button><span class="kucuk" id="tdBilgi"></span><button class="ikincil" id="tdVazgec">Vazgeç</button><button class="birincil" id="tdKaydet">Kaydet</button></div>`;
     };
     const bul = id => E.sinavlar.find(x => x.id === +id);
+    // K-626 (v37 OYSS): sınav yapılmayan dersler öneride yok; takvimde olan ders o seviyede yeniden önerilmez
+    const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama/i;
+    const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr))) P_.add(baslik(h.ders));
+      const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => a.trim().toLocaleLowerCase(tr))); return [...P_].filter(d => !kul.has(d.toLocaleLowerCase(tr))).sort((a, b) => a.localeCompare(b, tr)); };
+    const dinMi = a => /din kültürü|peygamberimizin hayatı|kur.?an.?ı kerim|temel dini bilgiler|seçmeli din/.test(String(a).toLocaleLowerCase(tr));
+    const anahtarAd = a => String(a).trim().toLocaleLowerCase(tr);
+    function uyarilar() {
+      const O = E.sinavlar.flatMap(x => Object.entries(x.sv).map(([v, r]) => ({ v, t: x.tarih, adlar: [r.ad, ...Object.values(r.fark)].flatMap(a => String(a).split(' / ').map(z => z.trim()).filter(Boolean)) })));
+      const din = O.filter(o => o.t && o.adlar.some(dinMi)), dinG = [...new Set(din.map(o => o.t))], L = [];
+      if (new Set(din.map(o => o.v)).size > 1 && dinG.length > 1) L.push(`<b>Din kültürü ve seçmeli din dersleri farklı günlerde:</b> ${SV.map(v => { const T = [...new Set(din.filter(o => o.v === v).map(o => o.t))]; return T.length ? `${v}. sınıflar ${T.map(t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' })).join(', ')}` : ''; }).filter(Boolean).join(' · ')}. Okul uygulamasına göre aynı güne getirin.`);
+      const M = new Map(); O.forEach(o => o.adlar.filter(a => !dinMi(a)).forEach(a => { const k = anahtarAd(a); if (!M.has(k)) M.set(k, { ad: a, g: new Map() }); const m = M.get(k); (m.g.get(o.t) || m.g.set(o.t, new Set()).get(o.t)).add(o.v); }));
+      const fark = [...M.values()].filter(m => m.g.size > 1 && new Set([...m.g.values()].flatMap(z => [...z])).size > 1);
+      if (fark.length) L.push(`<b>Aynı adlı ders farklı seviyelerde farklı günlerde</b> (mümkünse aynı güne alın): ${fark.slice(0, 8).map(m => `${esc(m.ad)} (${[...m.g.entries()].map(([t, vs]) => `${[...vs].sort((a, b) => a - b).join(', ')}: ${t ? new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' }) : '?'}`).join(' · ')})`).join('; ')}${fark.length > 8 ? ` ve ${fark.length - 8} ders daha` : ''}.`);
+      return L.length ? `<div class="kart td-uyari">${L.map(x => `<div>${x}</div>`).join('')}</div>` : '';
+    }
     const kaydet = async () => {
       const bil = $('#tdBilgi'), hata = m => { bil.className = 'kucuk kirmizi'; bil.textContent = m; };
       E.ad = $('#tdAd').value.trim();
@@ -3710,12 +3727,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         for (const [v, r] of Object.entries(x.sv)) if (!r.ad.trim()) return hata(`${new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${x.n}. ders, ${v}. sınıflar: sınav dersi yazılmamış.`);
       }
       const cak = E.sinavlar.find((x, i) => E.sinavlar.some((y, j) => j !== i && y.tarih === x.tarih && y.n === x.n));
+      if (uyarilar().includes('Din kültürü') && !await onayla('Din kültürü ve seçmeli din dersleri farklı sınıflarda farklı günlere yazılmış. Yine de kaydedilsin mi?')) return;
       if (cak) return hata(`${new Date(cak.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${cak.n}. derste iki ayrı sınav kartı var; birleştirin.`);
       const yeni = { ad: E.ad, not: tk.not || '', subeler_not: tk.subeler_not || '', sinavlar: [], subeler: [], duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) };
       for (const x of E.sinavlar) {
-        const ders = x.n + '. Ders', siniflar = {}, yer = {}, sube = {};
-        for (const [v, r] of Object.entries(x.sv)) { siniflar[v] = r.ad.trim(); yer[v] = r.yer; [...r.dahil].forEach(s => { sube[s] = (r.fark[s] || r.ad).trim(); }); }
-        yeni.sinavlar.push({ tarih: x.tarih, ders, siniflar, yer }); yeni.subeler.push({ tarih: x.tarih, ders, subeler: sube });
+        const ders = x.n + '. Ders', siniflar = {}, yer = {}, sube = {}, senaryo = {};
+        for (const [v, r] of Object.entries(x.sv)) { siniflar[v] = r.ad.trim(); yer[v] = r.yer; if ((r.senaryo || '').trim()) senaryo[v] = r.senaryo.trim(); [...r.dahil].forEach(s => { sube[s] = (r.fark[s] || r.ad).trim(); }); }
+        yeni.sinavlar.push(Object.assign({ tarih: x.tarih, ders, siniflar, yer }, Object.keys(senaryo).length ? { senaryo } : {})); yeni.subeler.push({ tarih: x.tarih, ders, subeler: sube });
       }
       bil.className = 'kucuk soluk'; bil.textContent = 'Kaydediliyor…';
       const { error } = await israrla(() => sb.from('umal_ayarlar').upsert({ anahtar: 'sinav_takvimi', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' }));
@@ -3731,9 +3749,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (ds.tdn) { const [i, n] = ds.tdn.split(':'); bul(i).n = +n; degisti = true; ciz(); return; }
       if (ds.tdsil) { const x = bul(ds.tdsil); if (!await onayla(`${x.tarih ? new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }) : ''} ${x.n}. ders sınavı takvimden silinsin mi?`)) return; E.sinavlar = E.sinavlar.filter(y => y !== x); degisti = true; ciz(); return; }
       if (ds.tdy) { const [i, v, y] = ds.tdy.split(':'); bul(i).sv[v].yer = y; degisti = true; ciz(); return; }
-      if (ds.tdsve) { const [i, v] = ds.tdsve.split(':'); bul(i).sv[v] = { ad: '', yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)) }; degisti = true; ciz(); const g = document.querySelector(`[data-tdad="${i}:${v}"]`); if (g) g.focus(); return; }
+      if (ds.tdsve) { const [i, v] = ds.tdsve.split(':'); bul(i).sv[v] = { ad: '', yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; degisti = true; ciz(); const g = document.querySelector(`[data-tdad="${i}:${v}"]`); if (g) g.focus(); return; }
       if (ds.tdsvs) { const [i, v] = ds.tdsvs.split(':'); delete bul(i).sv[v]; degisti = true; ciz(); return; }
       if (ds.tdsb) { const [i, v, s] = ds.tdsb.split(':'), r = bul(i).sv[v]; r.dahil.has(s) ? r.dahil.delete(s) : r.dahil.add(s); degisti = true; ciz(); return; }
+      if (ds.tdsec) { const [i, v] = ds.tdsec.split(':'), r = bul(i).sv[v]; const m = await girdiAl(`${v}. sınıflarda aynı oturumda yapılacak seçmeli dersi yazın (ör. S. Coğrafya). Sınav dersi "${r.ad || '…'} / yeni ders" olur.`, ''); if (!m || !m.trim()) return; r.ad = r.ad.trim() ? r.ad.trim() + ' / ' + m.trim() : m.trim(); degisti = true; ciz(); return; }
       if (ds.tdfs) { const [i, v, s] = ds.tdfs.split(':'); delete bul(i).sv[v].fark[s]; degisti = true; ciz(); return; }
       if (ds.tdfe) { const [i, v] = ds.tdfe.split(':'); const m = await girdiAl(`Farklı derse giren şubeyi ve dersini yazın (ör. ${v}-I S. Temel Matematik).`, `${v}-`); if (m == null) return;
         const t = /^\s*(\d{1,2})\s*[-/ ]\s*([A-Za-zÇĞİÖŞÜçğıöşü])\s+(.+?)\s*$/.exec(m); if (!t) { uyar('Anlaşılamadı. Önce şubeyi, sonra dersi yazın: ör. 11-I S. Temel Matematik'); return; }
@@ -3742,6 +3761,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     $('#icerik').oninput = ev => { const t = ev.target; degisti = true;
       if (t.dataset.tdad) { const [i, v] = t.dataset.tdad.split(':'); bul(i).sv[v].ad = t.value; }
+      if (t.dataset.tdsen) { const [i, v] = t.dataset.tdsen.split(':'); bul(i).sv[v].senaryo = t.value; }
       if (t.dataset.tdt) { const x = bul(t.dataset.tdt); x.tarih = t.value; const g = t.parentElement.querySelector('.td-gun'); if (g) g.textContent = x.tarih ? new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }) : ''; } };
     ciz();
   }

@@ -434,6 +434,9 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     tutanaklar: 'M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8.5h6', iade: 'M4 12a8 8 0 0 1 13.7-5.7L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.7L4 15.5M4 20v-4.5h4.5',
     iadeCiz: 'M7 8V4h10v4M6 17H4.5V9.5h15V17H18M7 14h10v6H7z', istatistik: 'M4 20h16M7 20v-6M12 20V6M17 20v-9',
     cezaAlan: 'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19c.8-2.8 2.9-4.5 5.5-4.5s4.7 1.7 5.5 4.5M15 7h6M15 11h6M17 15h4', yonetmelik: 'M12 6.5c-2-1.5-4.5-2-8-2v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13',
+    sorumluluk: 'M5 4.5h14v16H5zM9 4.5V3h6v1.5M8.5 10h7M8.5 13.5h7M8.5 17h4', telafi: 'M4 6h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3M13 14.5h3M8 17.5h3',
+    kurul: 'M12 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM5 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 5 7ZM19 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 19 7ZM6.5 20c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6M1.5 18c0-2.2 1.4-3.8 3.5-4.2M22.5 18c0-2.2-1.4-3.8-3.5-4.2',
+    sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7z', veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
     dizi: 'M3.5 5h17v4h-17zM5 9v10h14V9M10 13h4', ara: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   };
   const ikon = (k, boy = 24) => `<svg viewBox="0 0 24 24" width="${boy}" height="${boy}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IK[k] || ''}"/></svg>`;
@@ -446,6 +449,8 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       ['teblig', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', 'Sene Başı / Sene Sonu Tutanakları', 'kurul toplantı tutanakları']]],
     ['DİĞER', [['iade', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
       ['cezaAlan', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', 'Dizi Pusulası', 'dosya içeriği']]],
+    ['İDARİ İŞLEMLER', [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci/ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, günde 3 sınav'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
+      ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak']]],   // K-625
   ];
   function ciz() {
     const E = { ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
@@ -453,6 +458,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     if (S.ekran === 'genel') { S.ekran = 'ana'; ayarFormu(); }
     if (S.ekran === 'olay') { S.ekran = 'ana'; yeniOlay(null); }
     if (S.ekran === 'yonetmelik') { S.ekran = 'ana'; yonetmelik(); }
+    if (['sorumluluk', 'telafi', 'kurul', 'sinifOlustur', 'veli'].includes(S.ekran) && window.UmalIdari) { const id = S.ekran; S.ekran = 'ana'; kok.onclick = null; window.UmalIdari.ac(id, kok, C, { ad: 'Disiplin', fn: () => { bagla(); ciz(); } }); return; }   // K-625
     (E[S.ekran] || cizAna)();
   }
   // sıradaki iş: { r, k, ad, dugme, hizli, son (ISO son gün), kalan (iş günü), bekle }
