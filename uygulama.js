@@ -2708,7 +2708,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="kk"><small>KODUN</small><span>${esc(r.kod)}</span></div>
       <ol><li>QR'ı telefonla okut, ya da</li><li><b>umalatlas.com.tr/ogrenci</b> adresine gir; numaranı ve kodunu yaz</li></ol></div>
       <div class="qr">${qr(r)}<small>Okut, gir</small></div></div>
-      <div class="n">Kodun ve QR'ın sana özeldir, kimseyle paylaşma. Kaybedersen ${ozel ? 'öğretmeninden' : 'rehberlikten'} yenisini iste.</div></div>`;
+      <div class="n">Bu kod ilk giriş içindir; sonra kendi şifreni belirlersin. Unutursan ${ozel ? 'öğretmeninden' : 'rehberlikten'} yeni kod iste.</div></div>`;
     const sayfalar = [], gruplar = [];   // her sınıf yeni sayfadan başlar (sınıf öğretmenine ayrı verilsin)
     L.forEach(r => { const g = gruplar[gruplar.length - 1]; if (g && g[0].sinif === r.sinif) g.push(r); else gruplar.push([r]); });
     gruplar.forEach(g => { for (let i = 0; i < g.length; i += 10) sayfalar.push(`<div class="sayfa">${g.slice(i, i + 10).map(kart).join('')}</div>`); });

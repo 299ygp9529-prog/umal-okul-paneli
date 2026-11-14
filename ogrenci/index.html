@@ -167,6 +167,12 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .sor-dug { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; } .sor-dug button { min-width: 96px; }
 .sor-ic.sor-tehlike .sor-dug .birincil { background: #ff6b6b; color: #2a0505; }
 @keyframes sorGel { from { opacity: 0; } } @keyframes sorIc { from { transform: translateY(8px) scale(.97); opacity: 0; } }
+#sifreEkran { position: fixed; inset: 0; z-index: 9990; background: radial-gradient(circle at 50% 25%, #12305a, #0d1726 70%); display: grid; place-items: center; padding: 16px; overflow: auto; }
+#sifreEkran .sf-ic { width: min(440px, 100%); background: linear-gradient(160deg, #15294a, #0f1c2e 70%); border: 1px solid rgba(34,232,255,.45); border-radius: 20px; padding: 22px 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 40px rgba(34,232,255,.14); }
+#sifreEkran .sf-ik { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(34,232,255,.14); color: #7ff6ff; border: 1px solid rgba(34,232,255,.45); }
+#sifreEkran h1 { margin: 12px 0 6px; font-size: 22px; } #sifreEkran p { margin: 0 0 6px; color: var(--soluk); font-size: 14.5px; line-height: 1.45; }
+#sifreEkran input { width: 100%; box-sizing: border-box; } #sifreEkran .sf-not { color: var(--soluk); font-size: 12.5px; margin: 8px 0 2px; line-height: 1.4; }
+#sifreEkran .birincil, #sifreEkran .ikincil { width: 100%; margin-top: 10px; padding: 13px; font-size: 16px; }
 #acilEkran { position: fixed; inset: 0; z-index: 10000; background: radial-gradient(circle at 50% 30%, #3a1406, #0d1726 70%); display: grid; place-items: center; padding: 20px; }
 #acilEkran .acil-ic { width: min(560px, 100%); text-align: center; border: 2px solid #ff9a3a; border-radius: 22px; padding: 26px 20px 18px; background: rgba(13,23,38,.85); box-shadow: 0 0 0 6px rgba(255,154,58,.12), 0 0 60px rgba(255,120,40,.35); animation: acilNabiz 1.6s ease-in-out infinite; }
 @keyframes acilNabiz { 50% { box-shadow: 0 0 0 10px rgba(255,154,58,.06), 0 0 80px rgba(255,120,40,.55); } }
@@ -263,13 +269,13 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="soluk kucuk">Okulun anketlerini ve rehberlik formlarını buradan doldurursun. Giriş kodun sınıf öğretmeninin dağıttığı fişte yazıyor.</div>
     <label for="no">Okul numaran</label>
     <input id="no" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Örnek: 1234">
-    <label for="kod">Giriş kodun</label>
-    <input id="kod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX">
+    <label for="kod">Giriş kodun ya da şifren</label>
+    <input id="kod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX">
     <button class="mk-kutu" id="hatirla" type="button"><i></i><span>Bu cihazda oturumum açık kalsın <small class="soluk" style="display:block;font-size:12.5px">Yalnız kendi telefonunda ya da bilgisayarında işaretle.</small></span></button>
     <button id="girisBtn" class="birincil">Giriş</button>
     <div id="girisBilgi" class="bilgi"></div>
     <div class="kvkk">🔒 <b>Özel</b> anketlerdeki bilgileri yalnız okulumuzun rehberlik servisi görür; sınıf arkadaşların, öğretmenlerin ya da başka biri göremez. 🌐 Genel anketlerin sonuçlarını okul idaresi görür; genel bir anketi tahtadan ve buradan doldurabilirsin, son cevabın geçerli olur.</div>
-    <div class="not">Kodunu kimseyle paylaşma. Kaybettiysen rehberlik servisinden yenisini iste. Ortak bir bilgisayardaysan işin bitince "Çıkış"a bas.</div>
+    <div class="not">İlk girişte sana verilen kodu yazarsın, sonra kendi şifreni belirlersin. Şifreni kimseyle paylaşma; unutursan rehberlik servisinden yeni kod iste. Ortak bir bilgisayardaysan işin bitince "Çıkış"a bas.</div>
   </section>
 
   <section id="liste" class="gizli">
@@ -341,7 +347,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
 <script src="../bicim.js?v=202611143900"></script>
-<script src="sozler.js?v=202611146100"></script>
-<script src="ogrenci.js?v=202611146100"></script>
+<script src="sozler.js?v=202611146200"></script>
+<script src="ogrenci.js?v=202611146200"></script>
 </body>
 </html>

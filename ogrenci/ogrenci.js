@@ -30,8 +30,8 @@
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
-    let v = $('#kod').value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-    if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4);
+    let v = $('#kod').value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);   // K-609: kendi şifresi 6–20 olabilir
+    if (v.length > 4 && v.length <= 8) v = v.slice(0, 4) + '-' + v.slice(4);
     $('#kod').value = v;
   });
   $('#no').addEventListener('input', () => { $('#no').value = $('#no').value.replace(/\D/g, '').slice(0, 8); });
@@ -40,9 +40,9 @@
     const no = $('#no').value.trim(); let kod = $('#kod').value.replace(/[^A-Z0-9]/gi, '');
     if (no === '1907' && !kod) kod = '6D97Q6JC';   // K-550: demo hesap (Fahri Fenerli) numarayla girer
     const bilgi = $('#girisBilgi'); bilgi.classList.remove('hata');
-    if (!no || kod.length !== 8) document.documentElement.classList.remove('oturumlu');
+    if (!no || kod.length < 6 || kod.length > 20) document.documentElement.classList.remove('oturumlu');
     if (!no) { bilgi.textContent = 'Okul numaranı yaz.'; bilgi.classList.add('hata'); return; }
-    if (kod.length !== 8) { bilgi.textContent = 'Kod 8 karakter (örnek: K7MP-4XQ2).'; bilgi.classList.add('hata'); return; }
+    if (kod.length < 6 || kod.length > 20) { bilgi.textContent = 'Sana verilen kodu (örnek: K7MP-4XQ2) ya da kendi şifreni yaz.'; bilgi.classList.add('hata'); return; }
     $('#girisBtn').disabled = true; bilgi.textContent = 'Kontrol ediliyor…';
     const { data, error } = await sb.rpc('umal_ogrenci_giris', { p_no: no, p_kod: kod });
     $('#girisBtn').disabled = false;
@@ -56,9 +56,45 @@
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
+    sifreDenetle();
     anaCiz(); mektuplarYukle(); ozetYukle(); acilYukle(); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
-  const cikis = () => { oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  // K-609: okulun verdiği kod geçicidir; ilk girişte öğrenci kendi şifresini belirler (unutana yeni kod verilir)
+  async function sifreDenetle() {
+    if (!S.kod || S.no === '1907' || document.getElementById('sifreEkran')) return;
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_kod_gecici', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok || !data.gecici || !S.kod) return;
+    const el = document.createElement('div'); el.id = 'sifreEkran'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = `<div class="sf-ic"><div class="sf-ik"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></div>
+      <h1>Kendi şifreni belirle</h1><p>Sana verilen kod yalnız ilk giriş içindi. Bundan sonra numaran ve burada belirlediğin şifreyle gireceksin.</p>
+      <label for="sfY">Yeni şifren</label><input id="sfY" type="password" autocomplete="new-password" maxlength="20" spellcheck="false">
+      <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="password" autocomplete="new-password" maxlength="20" spellcheck="false">
+      <button type="button" class="mk-kutu" id="sfGor"><i></i><span>Şifreyi göster</span></button>
+      <div class="sf-not">6–20 harf ya da rakam. Büyük-küçük harf fark etmez. Unutursan yeni bir kod verilir.</div>
+      <div class="bilgi" id="sfBilgi"></div>
+      <button class="birincil" id="sfKaydet">Şifremi kaydet</button><button class="ikincil" id="sfCik">Çıkış</button></div>`;
+    document.body.appendChild(el);
+    const y = el.querySelector('#sfY'), t = el.querySelector('#sfT'), b = el.querySelector('#sfBilgi'), temiz = v => v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const hata = m => { b.textContent = m; b.classList.add('hata'); };
+    el.querySelector('#sfGor').onclick = ev => { const d = ev.currentTarget.classList.toggle('secili'); y.type = t.type = d ? 'text' : 'password'; };
+    el.querySelector('#sfCik').onclick = () => { el.remove(); cikis(); };
+    const kaydet = async () => {
+      const yeni = temiz(y.value); b.classList.remove('hata');
+      if (/[^A-Za-z0-9]/.test(y.value)) return hata('Yalnız harf (ç, ğ, ı, ö, ş, ü hariç) ve rakam kullan; boşluk ve işaret olmaz.');
+      if (yeni.length < 6) return hata('Şifren en az 6 karakter olmalı.');
+      if (yeni !== temiz(t.value)) return hata('İki şifre birbirini tutmuyor.');
+      const dug = el.querySelector('#sfKaydet'); dug.disabled = true; b.textContent = 'Kaydediliyor…';
+      let r = null; try { ({ data: r } = await sb.rpc('umal_ogrenci_kod_degistir', { p_no: S.no, p_kod: S.kod, p_yeni: yeni })); } catch (e) {}
+      dug.disabled = false;
+      if (!r) return hata('Sunucuya ulaşılamadı. Yeniden dene.');
+      if (!r.ok) return hata(r.hata || 'Şifre kaydedilemedi.');
+      S.kod = yeni; oturumYaz(S.no, yeni); el.remove(); uyar('Şifren kaydedildi. Bundan sonra numaran ve bu şifreyle gireceksin.');
+    };
+    el.querySelector('#sfKaydet').onclick = kaydet;
+    [y, t].forEach(g => g.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); g === y ? t.focus() : kaydet(); } }));
+    setTimeout(() => y.focus(), 50);
+  }
+  const cikis = () => { const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod && !S.hatirla) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
