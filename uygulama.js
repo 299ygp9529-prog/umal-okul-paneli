@@ -2664,11 +2664,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const kodsuz = o.filter(y => !K[String(y.no)]);
       const tarih = t => t ? new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
       kutu.innerHTML = `<div class="sinav-ust"><button class="ikincil" id="gGeri">← Sınıflar</button><span class="neon-tabela">${esc(sec)}</span>
-          <span class="turuncu-neonlar"><button class="birincil" id="gKodsuz" ${kodsuz.length ? '' : 'disabled'}>Kodu olmayanlara üret · fiş yazdır (${kodsuz.length})</button><button class="ikincil" id="gHepsi">Bütün sınıfa yeni kod</button>${(D.sonFisler || {})[sec] ? '<button class="ikincil" id="gSon">Son kartları göster</button>' : ''}</span></div>
+          <span class="turuncu-neonlar"><button class="birincil" id="gKodsuz" ${kodsuz.length ? '' : 'disabled'}>Kodu olmayanlara üret · fiş yazdır (${kodsuz.length})</button><button class="ikincil" id="gHepsi">Bütün sınıfa yeni kod</button>${(D.sonFisler || {})[sec] ? '<button class="ikincil" id="gSon">Son kartları göster</button><button class="ikincil" id="gClass">Classroom için kopyala</button>' : ''}</span></div>
         <div class="cok-soluk kucuk" id="gBilgi" style="margin:6px 0 10px">Kartlar A4'e 10'lu (kartvizit boyu) basılır; sınıf öğretmeni kesik çizgilerden kesip dağıtır.</div>
         <div class="satirlar">${o.map(y => { const r = K[String(y.no)]; return `<div class="satir"><div class="ana"><b>${esc(baslik(y.ad))}</b><small>${esc(y.no)} · ${r ? 'kod ' + esc(tarih(r.uretildi)) + (r.son_giris ? ' · son giriş ' + esc(tarih(r.son_giris)) : ' · henüz girmedi') : 'kodu yok'}</small></div><button class="ikincil" data-yk="${esc(y.no)}">${r ? 'Yeni kod' : 'Kod üret'}</button></div>`; }).join('')}</div>`;
       $('#gGeri').onclick = () => { sec = null; ciz(); };
       if ($('#gSon')) $('#gSon').onclick = () => girisFisleri(D.sonFisler[sec], sec);
+      if ($('#gClass')) $('#gClass').onclick = () => classroomListe(D.sonFisler[sec], sec);   // K-602
       const uret = async (nolar, onay) => {
         if (!nolar.length) return;
         if (onay && !await onayla(onay)) return;
@@ -2676,7 +2677,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
         if (error) { $('#gBilgi').textContent = 'Üretilemedi: ' + hataYaz(error); return; }
         (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
-        ciz(); girisFisleri(data || [], sec);
+        girisFisleri(data || [], sec); ciz();
         $('#gBilgi').textContent = `${(data || []).length} kod üretildi. Kartlar önizlemede; "Yazdır / PDF" ile basın ya da PDF olarak kaydedin. Bu sayfa kapanınca kodlar bir daha gösterilemez (gerekirse yenisi üretilir).`;
       };
       $('#gKodsuz').onclick = () => uret(kodsuz.map(y => String(y.no)));
@@ -2684,6 +2685,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       kutu.onclick = ev => { const b = ev.target.closest('[data-yk]'); if (b) { const y = o.find(z => String(z.no) === b.dataset.yk); uret([b.dataset.yk], K[b.dataset.yk] ? `${baslik(y.ad)} için yeni kod üretilecek; eski kodu geçersiz olur. Devam edilsin mi?` : null); } };
     };
     ciz();
+  }
+  function classroomListe(L, sinif) {   // K-602: kodları Classroom'da öğrenciye ÖZEL YORUM olarak göndermek için tek tık kopyalama
+    const metin = r => `Merhaba ${baslik(r.ad).split(' ')[0]}, öğrenci paneline giriş bilgilerin:\numalatlas.com.tr/ogrenci\nOkul numaran: ${r.no}\nKodun: ${r.kod}\nKodunu kimseyle paylaşma.`;
+    pencereAc(`<div id="clKutu"><h2 style="margin-top:0">Classroom için kodlar · ${esc(sinif)}</h2>
+      <div class="soluk kucuk" style="margin-bottom:10px">Classroom'da bir ödev ya da malzeme açın, her öğrencinin teslim sayfasında <b>özel yorum</b> alanına yapıştırın (özel yorumu yalnız o öğrenci ve siz görürsünüz; sınıf akışına yazmayın). Bu liste yalnız bu oturumda, kodlar üretildikten sonra görünür.</div>
+      <div class="dugmeler" style="justify-content:flex-start;margin:0 0 10px"><button class="ikincil" id="clTablo">Hepsini tablo olarak kopyala (Ad · No · Kod)</button></div>
+      <div class="cl-liste">${L.map((r, i) => `<div class="cl-satir"><div><b>${esc(baslik(r.ad))}</b><small>${esc(r.no)} · <span class="cl-kod">${esc(r.kod)}</span></small></div><button class="birincil" data-cl="${i}">Kopyala</button></div>`).join('')}</div></div>`);
+    const kopyala = async (t, b) => { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } if (b) { b.textContent = '✓ Kopyalandı'; b.classList.add('cl-tamam'); } };
+    $('#clKutu').onclick = ev => { const b = ev.target.closest('[data-cl]'); if (b) kopyala(metin(L[+b.dataset.cl]), b); if (ev.target.id === 'clTablo') kopyala(L.map(r => [baslik(r.ad), r.no, r.kod].join('\t')).join('\n'), ev.target); };
   }
   function girisFisleri(L, sinif, ozel) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
     D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
