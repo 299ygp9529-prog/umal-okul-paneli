@@ -3015,16 +3015,28 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const tarih0 = x && x.zaman ? new Date(x.zaman) : null;
       pencereAc(`<h2 style="margin-top:0">${x && x.zaman ? 'Saati değiştir' : 'Öğrenciyi davet et'}</h2><div class="rv-form">
         ${sec ? `<b>${esc(baslik(sec.ad))} · ${esc(sec.sinif)} · No ${esc(sec.no)}</b>${x && x.tercih ? `<div class="soluk kucuk">Tercihi: ${esc(x.tercih)}</div>` : ''}${x && x.ogrenci_not ? `<div class="soluk kucuk">Notu: ${esc(x.ogrenci_not)}</div>` : ''}` : `<label>Öğrenci</label><input id="rvAra" placeholder="Ad ya da okul no"><div class="rv-secim" id="rvListe" style="max-height:160px"></div><div class="kucuk neon" id="rvSec"></div>`}
-        <div class="rv-yan"><div><label>Tarih</label><input type="hidden" id="rvTarih" value="${tarih0 ? isoGun(tarih0) : ''}"><div class="tk-sec" data-hedef="rvTarih"></div></div><div><label>Yer</label><input id="rvYer" value="${esc((x && x.yer) || 'Rehberlik servisi')}">
-        ${saatSecici('rv', tarih0 ? rvSaat(tarih0) : '')}<div class="kucuk neon" id="rvDersBilgi"></div>
-        <label>Öğrenciye mesaj (öğrenci görür, isteğe bağlı)</label><input id="rvMesaj" maxlength="300" value="${esc((x && x.mesaj) || '')}" placeholder="ör. Teneffüste rehberlik odasına uğra"></div></div>
+        <div class="rv-yan"><div><label>Tarih</label><input type="hidden" id="rvTarih" value="${tarih0 ? isoGun(tarih0) : ''}"><div class="tk-sec" data-hedef="rvTarih"></div><div style="margin-top:12px"><div class="rv-iki"><div><label>Saat</label><input type="time" id="rvSaat" value="${esc(tarih0 ? rvSaat(tarih0) : '')}"></div><div><label>Süre</label><div class="cipler rv-sure" id="rvSureC">${[10, 15, 20, 30, 40].map(d => `<button type="button" class="cip ${d === 20 ? 'secili' : ''}" data-sd="${d}">${d === 40 ? 'Tüm ders' : d + ' dk'}</button>`).join('')}</div><input type="hidden" id="rvSure" value="${(x && x.sure_dk) || 20}"></div></div><div class="kucuk neon" id="rvDersBilgi"></div></div><label>Öğrenciye mesaj (öğrenci görür, isteğe bağlı)</label><input id="rvMesaj" maxlength="300" value="${esc((x && x.mesaj) || '')}" placeholder="ör. Teneffüste rehberlik odasına uğra"></div><div><label>Yer</label><input id="rvYer" value="${esc((x && x.yer) || 'Rehberlik servisi')}"><label style="margin-top:12px">Sınıfın ders programı · saate tıklayın</label><div class="rv-prog" id="rvProg"></div></div></div>
         <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="rvGonder">Davet et</button></div><div class="kucuk" id="rvBilgi"></div></div>`);
-      saatBagla('rv', 'rvTarih'); takvimSec();
+      takvimSec(); await programYukle().catch(() => null);
+      // K-603: davet penceresinde öğrencinin sınıfının o günkü ders programı (öğretmenleriyle); rehberlik dersi turuncu; ders + süre tek tıkla
+      const progCiz = () => {
+        const k = $('#rvProg'); if (!k) return; const t = $('#rvTarih').value;
+        if (!sec) { k.innerHTML = '<div class="soluk kucuk rvp-bos">Öğrenciyi seçince sınıfının o günkü ders programı burada görünür.</div>'; return; }
+        if (!t) { k.innerHTML = '<div class="soluk kucuk rvp-bos">Takvimden gün seçin.</div>'; return; }
+        const d = new Date(t + 'T12:00'), g = (d.getDay() + 6) % 7, h = $('#rvSaat').value;
+        if (g > 4) { k.innerHTML = '<div class="soluk kucuk rvp-bos">Hafta sonu — ders yok.</div>'; return; }
+        const P_ = ((D.program || {}).siniflar || {})[sec.sinif] || {}, Z = rvZil(d);
+        k.innerHTML = `<div class="rvp-bas">${esc(d.toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' }))} · <b>${esc(sec.sinif)}</b></div>` + Z.map(([a, b], i) => { const c = P_[g + '-' + (i + 1)] || {}, reh = (c.ders || '').toLocaleLowerCase(tr).includes('rehberlik'), se = h && h >= a && h < b;
+          return `<button type="button" class="rvp ${reh ? 'reh' : ''} ${se ? 'secili' : ''} ${c.ders ? '' : 'bosd'}" data-rvp="${i}"><span class="rvp-n">${i + 1}<small>${a}–${b}</small></span><span class="rvp-d"><b>${esc(c.ders || 'Boş')}</b><small>${esc((c.ogretmen || []).map(baslik).join(', '))}</small></span>${reh ? '<em>Rehberlik</em>' : ''}</button>`; }).join('');
+      };
+      $('#rvProg').onclick = ev => { const b = ev.target.closest('[data-rvp]'); if (!b) return; const d = new Date(($('#rvTarih').value || isoGun(new Date())) + 'T12:00'), [a] = rvZil(d)[+b.dataset.rvp]; $('#rvSaat').value = a; $('#rvSaat').dispatchEvent(new Event('input')); progCiz(); };
+      $('#rvSureC').onclick = ev => { const b = ev.target.closest('[data-sd]'); if (!b) return; $('#rvSure').value = b.dataset.sd; $('#rvSureC').querySelectorAll('.cip').forEach(c => c.classList.toggle('secili', c === b)); };
+      { const s0 = +$('#rvSure').value; $('#rvSureC').querySelectorAll('.cip').forEach(c => c.classList.toggle('secili', +c.dataset.sd === s0)); }
       const dersYaz = () => { const t = $('#rvTarih').value, h = $('#rvSaat').value; $('#rvDersBilgi').textContent = sec && t && h ? (rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) ? 'O saatte öğrencinin ' + rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) : '') : ''; };
-      ['rvTarih', 'rvSaat'].forEach(i => $('#' + i).addEventListener('input', dersYaz)); $('#rvDersBilgi').parentNode.addEventListener('click', () => setTimeout(dersYaz, 0)); dersYaz();
+      ['rvTarih', 'rvSaat'].forEach(i => $('#' + i).addEventListener('input', () => { dersYaz(); progCiz(); })); $('#rvDersBilgi').parentNode.parentNode.addEventListener('click', () => setTimeout(() => { dersYaz(); progCiz(); }, 0)); dersYaz(); progCiz();
       if (!sec) { const ara = $('#rvAra'), L = $('#rvListe');
         ara.oninput = () => { const q = ara.value.trim().toLocaleLowerCase(tr); L.innerHTML = !q ? '' : ogrL.filter(o => o.no === q || (/^\d+$/.test(q) ? o.no.startsWith(q) : o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 10).map(o => `<button type="button" data-o="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(baslik(o.ad))} <small>· ${esc(o.no)}</small></button>`).join(''); };
-        L.onclick = ev => { const b = ev.target.closest('[data-o]'); if (!b) return; sec = ogrL.find(o => o.no === b.dataset.o); $('#rvSec').textContent = baslik(sec.ad) + ' · ' + sec.sinif + ' seçildi'; L.innerHTML = ''; ara.value = ''; dersYaz(); }; }
+        L.onclick = ev => { const b = ev.target.closest('[data-o]'); if (!b) return; sec = ogrL.find(o => o.no === b.dataset.o); $('#rvSec').textContent = baslik(sec.ad) + ' · ' + sec.sinif + ' seçildi'; L.innerHTML = ''; ara.value = ''; dersYaz(); progCiz(); }; }
       $('#rvGonder').onclick = async () => {
         const t = $('#rvTarih').value, h = $('#rvSaat').value, bil = $('#rvBilgi');
         if (!sec) { bil.textContent = 'Öğrenci seçin.'; return; } if (!t || !h) { bil.textContent = 'Tarih ve saat seçin.'; return; }
