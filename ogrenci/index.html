@@ -90,6 +90,16 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .rvana { display: flex; gap: 12px; align-items: center; border-color: rgba(176,107,255,.55); background: linear-gradient(160deg, rgba(176,107,255,.16), var(--kart) 65%); cursor: pointer; width: 100%; text-align: left; color: #fff; font: inherit; }
 .rvana .ik { width: 44px; height: 44px; flex: none; border-radius: 13px; display: grid; place-items: center; font-size: 24px; color: #d4b0ff; background: rgba(176,107,255,.16); border: 1px solid rgba(176,107,255,.5); }
 .rvana b { display: block; font-size: 15px; } .rvana span { color: var(--soluk); font-size: 13px; }
+/* K-550: açılış karşılaması + sağ üst çıkış */
+.cikis-ust { margin-left: auto; width: 42px; height: 42px; flex: none; border-radius: 13px; display: grid; place-items: center; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.4); color: var(--neonacik); cursor: pointer; padding: 0; }
+.cikis-ust svg { width: 21px; height: 21px; } .cikis-ust:hover { background: rgba(34,232,255,.16); }
+.selam { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center; cursor: pointer; overflow: hidden; background: linear-gradient(150deg, var(--s1, #17345e), #121f36 70%); border-color: var(--s2, rgba(34,232,255,.35));
+  transition: opacity .5s ease, max-height .5s ease, margin .5s ease, padding .5s ease; max-height: 260px; }
+.selam h2 { margin: 0; font-size: 25px; line-height: 1.2; } .selam .hv { font-size: 13.5px; color: var(--soluk); margin-top: 3px; }
+.selam .sz { grid-column: 1 / -1; font-size: 15px; line-height: 1.45; margin-top: 6px; color: #e8f4ff; }
+.selam .hi { width: 62px; height: 62px; grid-row: 1 / 3; grid-column: 2; color: var(--s3, #ffd166); } .selam .hi svg { width: 100%; height: 100%; }
+.selam.kapan { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+@media (prefers-reduced-motion: reduce) { .selam { transition: none; } }
 .hafta { font-size: 12.5px; font-weight: 800; letter-spacing: 1px; color: var(--soluk); margin: 16px 0 8px; }
 .sv { display: grid; grid-template-columns: 58px 1fr; gap: 12px; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 12px; margin-bottom: 10px; position: relative; }
 .sv .t { border-radius: 12px; background: var(--koyu); text-align: center; padding: 6px 0; border: 1px solid var(--cizgi); align-self: start; } .sv .t b { display: block; font-size: 24px; line-height: 1.1; } .sv .t span { font-size: 11px; color: var(--soluk); font-weight: 700; }
@@ -106,7 +116,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 </head>
 <body>
 <main>
-  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>Öğrenci</small></div></div>
+  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small id="ustAlt">Öğrenci</small></div><button class="cikis-ust gizli" id="cikisUst" title="Çıkış" aria-label="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/></svg></button></div>
 
   <nav class="giris-sekme ogr" id="sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
     <a class="gs" href="/" onclick="this.parentNode.classList.remove('ogr');setTimeout(()=>location.href='/',230);return false"><b>Yönetim</b><small>E-posta koduyla</small></a>
@@ -127,7 +137,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
   </section>
 
   <section id="liste" class="gizli">
-    <div class="kart kim"><div><div class="ad" id="kimAd"></div><div class="soluk kucuk" id="kimSinif"></div></div><button class="ikincil" id="cikis">Çıkış</button></div>
+    <div class="kart selam gizli" id="selam"></div>
     <div class="kart bugun gizli" id="bugunKart"></div>
     <div class="kart gizli" id="dersKart"><h2>Bugünkü derslerin</h2><div class="dersler" id="bugunDersler"></div></div>
     <button class="kart rvana gizli" id="rvAnaKart"></button>
@@ -172,6 +182,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611140830"></script>
+<script src="ogrenci.js?v=202611141000"></script>
 </body>
 </html>

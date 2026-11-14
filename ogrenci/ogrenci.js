@@ -20,7 +20,8 @@
   $('#no').addEventListener('input', () => { $('#no').value = $('#no').value.replace(/\D/g, '').slice(0, 8); });
   [$('#no'), $('#kod')].forEach(e => e.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#girisBtn').click(); }));
   $('#girisBtn').onclick = async () => {
-    const no = $('#no').value.trim(), kod = $('#kod').value.replace(/[^A-Z0-9]/gi, '');
+    const no = $('#no').value.trim(); let kod = $('#kod').value.replace(/[^A-Z0-9]/gi, '');
+    if (no === '1907' && !kod) kod = '6D97Q6JC';   // K-550: demo hesap (Fahri Fenerli) numarayla girer
     const bilgi = $('#girisBilgi'); bilgi.classList.remove('hata');
     if (!no) { bilgi.textContent = 'Okul numaranı yaz.'; bilgi.classList.add('hata'); return; }
     if (kod.length !== 8) { bilgi.textContent = 'Kod 8 karakter (örnek: K7MP-4XQ2).'; bilgi.classList.add('hata'); return; }
@@ -31,16 +32,16 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false);
+    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); selamla();
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
-  $('#cikis').onclick = cikis;
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
 
   // ---- form listesi
   function listeCiz() {
-    $('#kimAd').textContent = baslik(S.ad); $('#kimSinif').textContent = S.sinif + ' · ' + S.no;
+    ustBilgi();
     $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small><span class="etiket ${f.mahrem !== false ? 'mahrem' : 'anket'}">${f.mahrem !== false ? '🔒 Özel' : '🌐 Genel'}</span>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><span class="sag">${f.doldu ? '✓ Doldurdun · düzelt' : 'Doldur ›'}</span></button>`).join('')
       : '<div class="soluk">Şu an sana açık bir anket ya da form yok. Açılınca burada görünür.</div>';
     $('#formlar').onclick = ev => { const b = ev.target.closest('[data-i]'); if (b) formAc(S.formlar[+b.dataset.i]); };
@@ -193,7 +194,7 @@
     return L;
   }
   function anaCiz() {
-    $('#kimAd').textContent = baslik(S.ad); $('#kimSinif').textContent = S.sinif + ' · ' + S.no;
+    ustBilgi();
     const s = simdi(), SV = sinavlarim(), kalan = SV.filter(x => !bitti(x)), nx = kalan[0];
     const bk = $('#bugunKart');
     if (nx) {
@@ -280,6 +281,67 @@
     bilgi.textContent = '✓ Mektubun rehberlik servisine ulaştı. Okununca burada "Okundu" yazar.';
   };
   mkCiz();
+
+  // ---- K-550: açılış karşılaması (saate + Ümraniye havasına göre), sonra kendiliğinden kapanır
+  function ustBilgi() {
+    const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g);
+    $('#ustAlt').textContent = g ? baslik(S.ad) + ' · ' + S.sinif : 'Öğrenci';
+  }
+  const HI = {
+    gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
+    ay: '<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7Z"/><path d="M17 3.5v2.6M15.7 4.8h2.6"/>',
+    bulut: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
+    parcali: '<circle cx="8.5" cy="8" r="3"/><path d="M8.5 2.5v1.3M3 8h1.3M4.6 4.1l.9.9M12.4 4.1l-.9.9"/><path d="M9 19.5h8.5a3.4 3.4 0 0 0 .5-6.75 4.7 4.7 0 0 0-9 .8 3 3 0 0 0 0 5.95Z"/>',
+    yagmur: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/>',
+    kar: '<path d="M7 13.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 4.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17v4M6.3 18l3.4 2M6.3 20l3.4-2M16 17v4M14.3 18l3.4 2M14.3 20l3.4-2"/>',
+    sis: '<path d="M7 11.5h10.2a4 4 0 0 0 .6-7.6A5.6 5.6 0 0 0 7 3.9"/><path d="M3.5 15h17M5.5 18.5h13M8 22h8"/>',
+    simsek: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
+  const SOZ = {
+    gunes: ['Hava güneşli {ad}. Bugün tek bulutlu şey, sıradaki sınavın konuları olabilir.', 'Güneş açtı! D vitamini bedava, bilgi de öyle: derse gir, topla.', 'Hava o kadar güzel ki teneffüs zili bile daha neşeli çalacak.', 'Güneş gözlüğü serbest, ama tahtaya bakarken çıkarman rica olunur.', 'Bugün hava açık, kafan da öyle olsun {ad}.'],
+    ay: ['Gökyüzü açık, yıldızlar çıkmış. Çalışma masan da senin küçük uzay üssün.', 'Bu saatte ay bile ders çalışıyor, sen biraz da uyu {ad}.', 'Hava açık, gece sakin. Yarın için çantanı şimdiden hazırla.'],
+    parcali: ['Parçalı bulutlu: biraz güneş, biraz gölge. Tıpkı Pazartesi sabahı gibi.', 'Bulutlar geldi gitti, sen yerinde kal {ad}.', 'Hava kararsız; sen kararlı ol.'],
+    bulut: ['Hava kapalı {ad}. Ama sınıfın ışıkları açık, sorun yok.', 'Gökyüzü gri; defterini renkli kalemlerle süsleme günü.', 'Güneş bugün izinli. Senin izin yok ama :)'],
+    yagmur: ['Yağmur yağıyor {ad}. Şemsiyeni unuttuysan bugün saçların doğal dalgalı olacak.', 'Su birikintilerine atlama yarışması teneffüste değil, eve dönerken.', 'Yağmurlu hava ders çalışmak için birebirdir. Söylemesi bizden.', 'Islak ayakkabıyla girme, sınıf paspası sana minnettar kalacak.'],
+    kar: ['Kar yağıyor {ad}! Kartopu savaşı teneffüse kadar bekleyebilir.', 'Okul tatil mi? Hayır. Ama kardan adam yapma hakkın saklı.', 'Kar tanelerinin hepsi farklıymış; senin cevapların da özgün olsun.', 'Sıkı giyin, kaygan zemine dikkat. Düşersen de kalkıp derse yetiş.'],
+    sis: ['Sis var {ad}. Okulu bulamazsan sesimizi takip et, zil sesini.', 'Görüş mesafesi kısa, hedeflerin uzak olsun.', 'Sisli hava, Sherlock havası. Bugün bir problemi çöz.'],
+    simsek: ['Gök gürültülü fırtına var. Elektrik sende, enerji dolu bir gün olsun.', 'Şimşek çakıyor; fikirlerin de öyle çaksın {ad}.'],
+    ayaz: ['Hava {derece}°C {ad}. Atkını tak, matematik zaten yeterince soğuk.', 'Ayaz var! Sıcak bir çay ve sıcak bir sınıf seni bekliyor.', 'Burnun kızardıysa sebebi soğuk, heyecan değil.'],
+    sicak: ['Hava {derece}°C. Su şişeni doldur, beynin de susuz kalmasın.', 'Sıcak bir gün {ad}. Gölgede ders, güneşte teneffüs.'] };
+  const havaTur = (k, gun) => k === 0 ? (gun ? 'gunes' : 'ay') : k <= 2 ? (gun ? 'parcali' : 'ay') : k === 3 ? 'bulut' : k === 45 || k === 48 ? 'sis'
+    : (k >= 71 && k <= 77) || k === 85 || k === 86 ? 'kar' : k >= 95 ? 'simsek' : (k >= 51 && k <= 67) || (k >= 80 && k <= 82) ? 'yagmur' : 'bulut';
+  const HAD = { gunes: 'Güneşli', ay: 'Açık', parcali: 'Parçalı bulutlu', bulut: 'Kapalı', yagmur: 'Yağmurlu', kar: 'Karlı', sis: 'Sisli', simsek: 'Fırtınalı' };
+  const RENKS = { gunes: ['#1d3c66', 'rgba(255,209,102,.45)', '#ffd166'], ay: ['#1a2a55', 'rgba(176,107,255,.45)', '#d4b0ff'], parcali: ['#1b375f', 'rgba(127,246,255,.4)', '#7ff6ff'],
+    bulut: ['#1d2c45', 'rgba(160,180,210,.4)', '#b8c7dd'], yagmur: ['#14304f', 'rgba(90,168,255,.5)', '#5aa8ff'], kar: ['#1f3a5c', 'rgba(220,240,255,.6)', '#e8f6ff'],
+    sis: ['#22304a', 'rgba(170,185,205,.4)', '#c3cfdf'], simsek: ['#2a2350', 'rgba(255,209,102,.5)', '#ffd166'] };
+  async function hava() {
+    try { const c = JSON.parse(sessionStorage.getItem('umalHava') || 'null'); if (c && Date.now() - c.t < 30 * 6e4) return c.v; } catch (e) {}
+    try {
+      const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.03&longitude=29.12&current=temperature_2m,weather_code,is_day&timezone=Europe%2FIstanbul');
+      const j = await r.json(), v = { d: Math.round(j.current.temperature_2m), k: j.current.weather_code, gun: !!j.current.is_day };
+      try { sessionStorage.setItem('umalHava', JSON.stringify({ t: Date.now(), v })); } catch (e) {}
+      return v;
+    } catch (e) { return null; }
+  }
+  async function selamla() {
+    if (S.selamlandi) return; S.selamlandi = true;
+    const ad = baslik(S.ad).split(' ')[0], s = simdi(), h = s.getHours(), g = gunIdx(s);
+    const sel = h >= 5 && h < 11 ? 'Günaydın' : h < 17 && h >= 11 ? 'İyi günler' : h >= 17 && h < 22 ? 'İyi akşamlar' : 'İyi geceler';
+    const el = $('#selam'), hv = await Promise.race([hava(), new Promise(r => setTimeout(() => r(null), 2500))]);
+    if (!S.kod) return;
+    let tur = hv ? havaTur(hv.k, hv.gun) : (h >= 7 && h < 18 ? 'parcali' : 'ay'), anahtar = tur;
+    if (hv && hv.d <= 3 && tur !== 'kar') anahtar = 'ayaz'; else if (hv && hv.d >= 30) anahtar = 'sicak';
+    const L = SOZ[anahtar]; let soz = L[Math.floor(Math.random() * L.length)].replace(/\{ad\}/g, ad).replace(/\{derece\}/g, hv ? hv.d : '');
+    const bugunSv = sinavlarim().find(x => x.tarih === iso(s) && !bitti(x));
+    if (bugunSv) soz = `Bugün <b>${esc(bugunSv.ad)}</b> sınavın var, ${bugunSv.bas.replace(':', '.')}${bugunSv.yer ? ` · Salon ${esc(bugunSv.yer.salon)} · Sıra ${esc(bugunSv.yer.sira)}` : ''}. Başarılar ${esc(ad)}!`;
+    else { soz = esc(soz); if (g === 0 && h < 12) soz += ' Haftaya güzel bir başlangıç!'; else if (g === 4 && h >= 12) soz += ' Hafta sonu kapıda.'; }
+    if (h >= 0 && h < 5) soz = esc(`Bu saatte uyanık mısın ${ad}? Uyku da dersin bir parçası, yarın görüşürüz.`);
+    const [r1, r2, r3] = RENKS[tur];
+    el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
+    el.innerHTML = `<div><h2>${sel}, ${esc(ad)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${HAD[tur]}` : `${GUN[g]} · ${s.getDate()} ${AY[s.getMonth()]}`}</div></div><i class="hi">${`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${HI[tur]}</svg>`}</i><div class="sz">${soz}</div>`;
+    el.classList.remove('gizli', 'kapan');
+    const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.classList.add('gizli'), 600); };
+    el.onclick = kapat; clearTimeout(S.selamT); S.selamT = setTimeout(kapat, bugunSv ? 15000 : 9000);
+  }
 
   // ---- K-549: Rehberlik sayfası iki kutu (mektup / randevu) + randevu
   const RV = { L: [], M: [], sec: null, tercih: new Set(), gorunum: '' };
