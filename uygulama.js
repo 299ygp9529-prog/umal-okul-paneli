@@ -2306,13 +2306,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.dataset.rmsil) { if (!confirm('Bu mesaj öğrenciden de kaldırılsın mı?')) return; await sb.rpc('umal_rehberlik_mesaj_sil', { p_id: t.dataset.rmsil }); await yukle(); ciz(); }
     };
     ciz(); window.scrollTo(0, 0);
+    yenile(async () => { if (!document.getElementById('roGeri') || !canliGuvenli()) return; const e = JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]); await yukle(); if (e !== JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]) && document.getElementById('roGeri')) { const y = window.scrollY, m = $('#roMesaj').value; ciz(); $('#roMesaj').value = m; window.scrollTo(0, y); } }, 20);   // K-589
   }
   async function rehPlanDuzenle(no, sekme, geri, O) {
     D.altG = true;
     if (!O) { $('#icerik').innerHTML = rehSekme(sekme) + '<div class="kart soluk">Yükleniyor…</div>'; const { data, error } = await sb.rpc('umal_rehberlik_ogrenci', { p_no: no }); if (error || !data || !data.ok) { $('#icerik').innerHTML = rehSekme(sekme) + `<div class="kart">${error ? rpSqlYok(error) : esc((data && data.hata) || '')}</div>`; return; } O = data; }
     const P = O.plan || null, V = JSON.parse(JSON.stringify((P && P.veri) || {})); V.gorevler = V.gorevler || []; V.hedef = +V.hedef || 0; V.not = V.not || '';
     let form = null, degisti = false, yayin = P && P.yayin;
-    const ok = (P && P.ok) || {}, hk = rpIso(rpPzt());
+    let ok = (P && P.ok) || {}; const hk = rpIso(rpPzt());
     const ciz = () => {
       const top = V.gorevler.reduce((t, g) => t + (+g.dk || 0), 0);
       const haftalar = [3, 2, 1, 0].map(i => { const w = rpPzt(); w.setDate(w.getDate() - 7 * i); const k = rpIso(w), y = V.gorevler.filter(g => ok[k + '|' + g.id]).length; return { k, e: i === 0 ? 'Bu hafta' : w.getDate() + ' ' + AYLAR[w.getMonth()].slice(0, 3), y, n: V.gorevler.length }; });
@@ -2402,6 +2403,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.id === 'rpHafiflet') { if (!confirm('Her görevin süresi ve soru adedi %25 azaltılsın mı? Sonra "Güncelle ve yayınla" ile öğrenciye gider.')) return; V.gorevler.forEach(g => { g.dk = Math.max(10, Math.round((+g.dk || 0) * .75 / 5) * 5); if (g.soru) g.soru = Math.max(1, Math.round(g.soru * .75)); }); degisti = true; yer(); $('#rpBilgi').textContent = 'Süreler hafifletildi — yayınlamayı unutmayın'; return; }
     };
     ciz(); window.scrollTo(0, 0);
+    yenile(async () => {   // K-589: öğrencinin işaretleri ve değişiklikleri kendiliğinden gelsin
+      if (!document.getElementById('rpGeri') || !canliGuvenli() || form) return;
+      const { data } = await sb.rpc('umal_rehberlik_ogrenci', { p_no: no }); if (!data || !data.ok || !data.plan || !O.plan) return;
+      const eski = JSON.stringify([O.plan.ogr, O.plan.ok]); O.plan.ogr = data.plan.ogr; O.plan.ok = data.plan.ok; ok = data.plan.ok || {};
+      if (eski !== JSON.stringify([O.plan.ogr, O.plan.ok]) && document.getElementById('rpGeri')) { const y = window.scrollY, b_ = $('#rpBilgi') && $('#rpBilgi').textContent; ciz(); window.scrollTo(0, y); if (b_) $('#rpBilgi').textContent = b_; }
+    }, 15);
   }
   async function calismaPlanlariBolumu() {
     D.altG = false;
@@ -2417,6 +2424,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="kart"><h3 style="margin-top:0">Hazırlanan planlar · ${L.length}</h3>${L.length ? `<table class="st-tablo"><tr><th>Sınıf</th><th>Ad Soyad</th><th>Durum</th><th>Görev</th><th>Bu hafta</th><th>Uyum (geçen / bu hafta)</th><th>Güncelleme</th></tr>${L.map(p => `<tr class="st-sinif" data-rpo="${esc(p.no)}" style="--sv:${seviyeRenk(p.sinif || '')}"><td><b>${esc(p.sinif || '')}</b></td><td>${esc(baslik(p.ad || p.no))}</td><td>${p.yayin ? '<span class="durum-etiketi yeşil">Yayında</span>' : '<span class="durum-etiketi soluk">Taslak</span>'}</td><td>${p.n}</td><td>${p.yayin && p.n ? (il => `<b>${il.ok}/${il.n}</b>`)(rpIlerleme(p, hk)) : '—'}</td><td>${p.yayin ? (H => H.map(h => `<span class="rp-uy" style="--u:${rpRenk(h.u)}">${h.u == null ? '—' : '%' + h.u}</span>`).join(' '))(rpHaftalar(p, 2)) : '—'}</td><td class="soluk kucuk">${esc(rpZaman(p.guncel))}</td></tr>`).join('')}</table>` : '<div class="soluk kucuk">Henüz plan yok. Yukarıdan öğrenci arayın.</div>'}</div>`;
     $('#rpAra').oninput = ev => { q = ev.target.value; $('#rpSonuc').innerHTML = sonuc(); };
     $('#icerik').onclick = ev => { const t = ev.target.closest('[data-rpo]'); if (t) ac_(t.dataset.rpo); };
+    yenile(async () => { if (!document.getElementById('rpAra') || !canliGuvenli() || q) return; const { data: d2 } = await sb.rpc('umal_rehberlik_planlar'); if (d2 && JSON.stringify(d2) !== JSON.stringify(L)) calismaPlanlariBolumu(); }, 30);   // K-589
   }
   async function rehberlik() {
     await anketVerisi();
