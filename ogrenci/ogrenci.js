@@ -65,27 +65,27 @@
   }
   function formAc(f) {
     S.form = f; S.c = (f.sorular || []).map(() => null);
-    $('#formAd').textContent = f.ad || 'Form'; $('#formAciklama').textContent = f.aciklama || (f.doldu ? 'Bu formu daha önce doldurdun. Yeniden gönderirsen yeni cevapların geçerli olur.' : '');
+    $('#formAd').textContent = f.ad || 'Form'; $('#formAciklama').innerHTML = (f.veli ? '<span class="veli-not">Veli formu · velinle birlikte doldur</span> ' : '') + esc(f.aciklama || (f.doldu ? 'Bu formu daha önce doldurdun. Yeniden gönderirsen yeni cevapların geçerli olur.' : ''));
     $('#formBilgi').textContent = ''; ciz(); goster('form'); window.scrollTo(0, 0);
   }
   function ciz() {
     const f = S.form;
     $('#sorular').innerHTML = (f.sorular || []).map((q, i) => {
       if (!gorunur(i)) return '';
-      const v = S.c[i], n = `<div class="metin"><i>${i + 1}.</i>${esc(q.metin)}${zorunlu(q) ? '' : ' <span class="soluk kucuk">(isteğe bağlı)</span>'}</div>`;
-      if (q.tur === 'yazi') return `<div class="soru" data-s="${i}">${n}<textarea rows="3" maxlength="${+q.uzunluk || 300}" data-yaz="${i}">${esc(v || '')}</textarea></div>`;
-      if (q.tur === 'sayi') return `<div class="soru" data-s="${i}">${n}<input type="number" inputmode="decimal" data-sayi="${i}" ${q.enaz != null ? `min="${+q.enaz}"` : ''} ${q.encok != null ? `max="${+q.encok}"` : ''} value="${esc(v ?? '')}">${q.birim ? `<div class="soluk kucuk" style="margin-top:6px">${esc(q.birim)}</div>` : ''}</div>`;
+      const v = S.c[i], n = `<div class="metin"><i>${i + 1}.</i>${esc(q.metin)}${zorunlu(q) ? '' : ' <span class="soluk kucuk">(isteğe bağlı)</span>'}</div>`, bb = q.bolum ? `<h3 class="soru-bolum">${esc(q.bolum)}</h3>` : '';   // K-555: MEB formu bölüm başlığı
+      if (q.tur === 'yazi') return bb + `<div class="soru ${q.kompakt ? 'kompakt' : ''}" data-s="${i}">${n}<textarea rows="3" maxlength="${+q.uzunluk || 300}" data-yaz="${i}">${esc(v || '')}</textarea></div>`;
+      if (q.tur === 'sayi') return bb + `<div class="soru ${q.kompakt ? 'kompakt' : ''}" data-s="${i}">${n}<input type="number" inputmode="decimal" data-sayi="${i}" ${q.enaz != null ? `min="${+q.enaz}"` : ''} ${q.encok != null ? `max="${+q.encok}"` : ''} value="${esc(v ?? '')}">${q.birim ? `<div class="soluk kucuk" style="margin-top:6px">${esc(q.birim)}</div>` : ''}</div>`;
       if (q.tur === 'sira') {
         const L = dizi(v), n_ = Math.min(+q.ilk || (q.secenekler || []).length, (q.secenekler || []).length);
-        return `<div class="soru" data-s="${i}">${n}<div class="soluk kucuk">Sırayla dokun${n_ < (q.secenekler || []).length ? ` (ilk ${n_})` : ''}; yeniden dokununca çıkar.</div>${(q.secenekler || []).map(o => { const r = L.indexOf(o); return `<button class="secenek ${r >= 0 ? 'secili' : ''}" data-sira="${i}" data-o="${esc(o)}"><span class="t">${r >= 0 ? r + 1 : ''}</span>${esc(o)}</button>`; }).join('')}</div>`;
+        return bb + `<div class="soru ${q.kompakt ? 'kompakt' : ''}" data-s="${i}">${n}<div class="soluk kucuk">Sırayla dokun${n_ < (q.secenekler || []).length ? ` (ilk ${n_})` : ''}; yeniden dokununca çıkar.</div>${(q.secenekler || []).map(o => { const r = L.indexOf(o); return `<button class="secenek ${r >= 0 ? 'secili' : ''}" data-sira="${i}" data-o="${esc(o)}"><span class="t">${r >= 0 ? r + 1 : ''}</span>${esc(o)}</button>`; }).join('')}</div>`;
       }
       const coklu = q.tur === 'secim' && q.coklu, sec = dizi(v).map(String);
       const ss = secenekler(q).map(o => {
         const secili = o === DIGER ? sec.some(x => x === DIGER || x.startsWith(DIGER + ':')) : sec.includes(o);
-        return `<button class="secenek ${coklu ? 'kare' : ''} ${secili ? 'secili' : ''}" data-sec="${i}" data-o="${esc(o)}"><span class="t">${secili ? '✓' : ''}</span>${esc(o)}</button>`;
+        return `<button class="secenek ${coklu ? 'kare' : ''} ${secili ? 'secili' : ''}" data-sec="${i}" data-o="${esc(o)}"><span class="t">${secili ? '✓' : ''}</span>${q.numarali ? `<em class="no">${(q.secenekler || []).indexOf(o) + 1}</em>` : ''}${esc(o)}</button>`;
       }).join('');
       const digerYazi = sec.find(x => x === DIGER || x.startsWith(DIGER + ':'));
-      return `<div class="soru" data-s="${i}">${n}${q.tur === 'puan' ? `<div class="puanlar">${ss}</div><div class="soluk kucuk" style="display:flex;justify-content:space-between;margin-top:4px"><span>1 · hiç</span><span>5 · çok</span></div>` : ss}${digerYazi != null ? `<input type="text" style="margin-top:8px" maxlength="200" placeholder="Yaz…" data-diger="${i}" value="${esc(digerYazi.slice(DIGER.length + 1).trim())}">` : ''}</div>`;
+      return bb + `<div class="soru ${q.kompakt ? 'kompakt' : ''}" data-s="${i}">${n}${q.tur === 'puan' ? `<div class="puanlar">${ss}</div><div class="soluk kucuk" style="display:flex;justify-content:space-between;margin-top:4px"><span>1 · hiç</span><span>5 · çok</span></div>` : ss}${digerYazi != null ? `<input type="text" style="margin-top:8px" maxlength="200" placeholder="Yaz…" data-diger="${i}" value="${esc(digerYazi.slice(DIGER.length + 1).trim())}">` : ''}</div>`;
     }).join('');
   }
   $('#sorular').addEventListener('click', ev => {
@@ -374,6 +374,7 @@
     RV.gorunum = '';
     $('#rhKutular').innerHTML = `<button data-rh="mektup"><i class="ik" style="--c:#b06bff">${svg('zarf')}</i><b>Rehberlik servisine mektup</b><small>Paylaşmak istediğini yaz; yalnız rehber öğretmenler okur</small></button>`
       + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
+    $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
     $('#rhBaslik').textContent = 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa';
     goster('s-reh'); window.scrollTo(0, 0);

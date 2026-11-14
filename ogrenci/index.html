@@ -100,6 +100,15 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .selam .hi { width: 62px; height: 62px; grid-row: 1 / 3; grid-column: 2; color: var(--s3, #ffd166); } .selam .hi svg { width: 100%; height: 100%; }
 .selam.kapan { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
 @media (prefers-reduced-motion: reduce) { .selam { transition: none; } }
+/* K-555: MEB formları */
+.soru-bolum { margin: 22px 2px 8px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--neonacik); }
+.soru.kompakt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .soru.kompakt:has(.secenek:nth-of-type(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.soru.kompakt > :not(.secenek) { grid-column: 1 / -1; } .soru.kompakt .metin { margin: 0 0 2px; }
+.soru.kompakt .secenek { margin: 0; justify-content: center; padding: 10px 8px; font-weight: 700; } .soru.kompakt .secenek .t { display: none; } .soru.kompakt .secenek.secili { background: var(--neon); color: #04121f; border-color: var(--neon); }
+.secenek em.no { font-style: normal; font-weight: 800; color: var(--neonacik); min-width: 22px; display: inline-block; }
+.veli-not { display: inline-block; background: rgba(255,154,58,.18); color: #ffb867; border: 1px solid rgba(255,154,58,.5); border-radius: 8px; padding: 2px 8px; font-weight: 700; margin-bottom: 4px; }
+.izg .rh-link { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 14px; color: #fff; text-decoration: none; }
+.izg .rh-link b { font-size: 15px; } .izg .rh-link small { color: var(--soluk); font-size: 12px; }
 .hafta { font-size: 12.5px; font-weight: 800; letter-spacing: 1px; color: var(--soluk); margin: 16px 0 8px; }
 .sv { display: grid; grid-template-columns: 58px 1fr; gap: 12px; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 12px; margin-bottom: 10px; position: relative; }
 .sv .t { border-radius: 12px; background: var(--koyu); text-align: center; padding: 6px 0; border: 1px solid var(--cizgi); align-self: start; } .sv .t b { display: block; font-size: 24px; line-height: 1.1; } .sv .t span { font-size: 11px; color: var(--soluk); font-weight: 700; }
@@ -182,6 +191,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611141200"></script>
+<script src="ogrenci.js?v=202611141300"></script>
 </body>
 </html>

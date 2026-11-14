@@ -1388,7 +1388,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       zorunlu: 'zorunlu' in s ? !!s.zorunlu : s.tur !== 'yazi', gizli: 'gizli' in s ? !!s.gizli : null, sutun: s.sutun || null,
       kontenjanli: (s.kontenjanlar || []).some(x => +x > 0), kontenjanlar: (s.kontenjanlar || []).map(x => +x || 0),
       ilk: s.ilk || null, enaz: s.enaz ?? null, encok: s.encok ?? null, birim: s.birim || '',
-      kosulSoru: s.kosul && s.kosul.soru >= 1 ? s.kosul.soru - 1 : null, kosulDeger: (s.kosul && s.kosul.deger) || '' };
+      kosulSoru: s.kosul && s.kosul.soru >= 1 ? s.kosul.soru - 1 : null, kosulDeger: (s.kosul && s.kosul.deger) || '',
+      ek: Object.fromEntries(['kompakt', 'riskler', 'riskYalniz', 'riskYoksay', 'bolum', 'numarali', 'riba'].filter(k => s[k] != null).map(k => [k, s[k]])) };   // K-555: MEB form alanları
     if ((t.tur === 'secim' || t.tur === 'sira') && t.secenekler.length < 2) while (t.secenekler.length < 2) t.secenekler.push('');
     return t;
   }
@@ -1414,6 +1415,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     if (q.tur === 'yazi') { d.uzunluk = 300; d.gizli = soruGizliMi(q); }
     if (q.sutun) d.sutun = q.sutun;
     if (q.kosulSoru != null && q.kosulDeger) d.kosul = { soru: q.kosulSoru + 1, deger: q.kosulDeger };
+    if (q.ek) Object.assign(d, q.ek);
     return d;
   }
   function soruHatasi(q) {
@@ -1488,8 +1490,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let T;
     if (mevcut) {
       const h = mevcut.tanim;
-      T = { id: kopya ? yeniKimlik() : mevcut.id, ad: (h.ad || '') + (kopya ? ' (kopya)' : ''), aciklama: h.aciklama || '',
-        baslangic: kopya ? bugunISO() : (h.baslangic || bugunISO()), bitis: kopya ? gunEkle(bugunISO(), 3) : (h.bitis || bugunISO()),
+      T = { id: kopya ? yeniKimlik() : mevcut.id, ad: (h.ad || '') + (kopya && !mevcut.sablondan ? ' (kopya)' : ''), sablon: h.sablon || '', veli: !!h.veli, aciklama: h.aciklama || '',
+        baslangic: kopya && !mevcut.sablondan ? bugunISO() : (h.baslangic || bugunISO()), bitis: kopya && !mevcut.sablondan ? gunEkle(bugunISO(), 3) : (h.bitis || bugunISO()),
         siniflar: new Set(Object.keys(h.siniflar || {}).filter(s => s !== OGRETMEN_ODASI)), isimli: h.isimli !== false,
         rehberlik: mevcut.bolum === 'rehberlik', kimler: h.kimler || 'ogrenci', dersler: new Set(h.dersler || []),
         otokapat: !!h.otokapat, sonucGoster: !!h.sonuc_goster, kilit: h.acil ? 'acil' : (h.kilit ? 'ders' : ''), sorular: (h.sorular || []).map(soruTaslagi),
@@ -1525,6 +1527,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (T.sonucGoster) t.sonuc_goster = true;
       if (T.kilit && !ogretmen()) { t.kilit = true; if (T.kilit === 'acil') t.acil = true; }
       if (T.aciklama.trim()) t.aciklama = T.aciklama.trim();
+      if (T.sablon) t.sablon = T.sablon; if (T.veli) t.veli = true;
       return JSON.stringify(t);
     };
     const kaydet = async yayinda => {
@@ -1798,14 +1801,113 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function riskIsaretleri(a, c) {
     return (a.tanim.sorular || []).map((q, i) => i).filter(i => { const q = a.tanim.sorular[i], v = secimler((c.c || [])[i]); return q.tur === 'yazi' ? v.length > 0 : v.includes('Evet'); });
   }
-  function riskSatirlari(form, sinif) {
-    return katilanlar(form, sinif).slice().sort((x, y) => (+x.no) - (+y.no)).map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(riskIsaretleri(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
+  function riskSutunlari(form, c) {   // K-555: Evet → q.sutun; seçenek → q.riskler; "yalnız şununla yaşıyor" → q.riskYalniz; anne + baba → Q
+    const S_ = new Set(), Q = form.tanim.sorular || [];
+    Q.forEach((q, i) => {
+      const v = secimler((c.c || [])[i]).map(x => x.replace(/^Diğer:.*/, 'Diğer'));
+      if (q.sutun && (q.tur === 'yazi' ? v.length > 0 : v.includes('Evet'))) S_.add(q.sutun);
+      if (q.riskler) v.forEach(x => { if (q.riskler[x]) S_.add(q.riskler[x]); });
+      if (q.riskYalniz) { const k = v.filter(x => !(q.riskYoksay || []).includes(x)); if (k.length === 1 && q.riskYalniz[k[0]]) S_.add(q.riskYalniz[k[0]]); }
+    });
+    if (S_.has('O') && S_.has('P')) S_.add('Q');
+    return S_;
   }
+  function sablonIsaret(a, c) {   // K-555: MEB formlarında işaret = risk doğuran cevap; Yaşam Pencerem'de işaretlenen her madde (olumlu olanlar hariç)
+    const Q = a.tanim.sorular || [], I = [];
+    Q.forEach((q, i) => {
+      const v = secimler((c.c || [])[i]).map(x => x.replace(/^Diğer:.*/, 'Diğer'));
+      if (q.numarali) { v.filter(x => !(q.olumlu || []).includes(x)).forEach(() => I.push(i)); return; }
+      if ((q.sutun && v.includes('Evet')) || (q.riskler && v.some(x => q.riskler[x]))) I.push(i);
+      else if (q.tur === 'yazi' && q.kosul && v.length && I.includes(q.kosul.soru - 1)) I.push(i);
+    });
+    return I;
+  }
+  function riskSatirlari(form, sinif) {
+    return katilanlar(form, sinif).slice().sort((x, y) => (+x.no) - (+y.no)).map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? riskSutunlari(form, c) : null }; });
+  }
+  // ------------------------------------------------------------------ K-555: Hazır MEB rehberlik formları + MEB raporları
+  const egitimYili = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? `${y}-${y + 1}` : `${y - 1}-${y}`; };
+  const MEB_KIM = { ogrenci: ['Öğrenci', 'Öğrenci panelinden (okul no + giriş kodu)'], veli: ['Veli', 'Öğrenci panelinden, veliyle birlikte'], ogretmen: ['Öğretmen', 'Tahtada Öğretmenler Odası anketi olarak'] };
+  function mebFormlari() {
+    const L = window.MEB_FORMLAR || [];
+    $('#mebIc').innerHTML = `<div class="soluk kucuk" style="margin-bottom:10px">Orijinal MEB formlarının (Özel Eğitim ve Rehberlik Hizmetleri Genel Müdürlüğü, 2025) birebir soruları. "Hazırla"ya basınca form düzenleyicide açılır; sınıfları ve tarihleri seçip yayınlarsınız. Sonuçlar bu sekmede, form satırında; <b>MEB Raporu</b> düğmesiyle özet, risk haritası ve PDF alınır.</div>
+      <div class="meb-izgara">${L.map((f, i) => { const yayin = D.anketler.filter(a => a.tanim.sablon === f.sablon); const [k1, k2] = MEB_KIM[f.kim];
+        return `<div class="meb-kart k-${f.kim}"><div class="meb-ust"><b>${esc(f.ad)}</b><span class="meb-kod">${esc(f.kod)}</span></div>
+          <div class="meb-bilgi"><span class="meb-kim">${k1}</span>${esc(f.donem)} · ${f.sorular.length} ${f.sablon === 'yasam-pencerem' ? 'bölüm (48 madde)' : 'soru'}</div><div class="soluk kucuk">${esc(k2)}${f.risk ? ' · risk haritasına işler' : ''}</div>
+          ${yayin.length ? `<div class="meb-yayin">Yayınlanan: ${yayin.map(a => esc(a.tanim.ad)).join(', ')}</div>` : ''}
+          <div class="dugmeler"><button class="birincil" data-mebhazir="${i}">Hazırla</button><button class="ikincil" data-mebonizle="${i}">Soruları gör</button></div></div>`; }).join('')}
+        <a class="meb-kart meb-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><div class="meb-ust"><b>MEB Mesleki Rehberlik</b><span class="meb-kod">portal</span></div><div class="soluk kucuk">Meslek tanıtımları, ilgi ve yetenek envanterleri. Öğrenci panelinde Rehberlik sayfasında da bağlantısı var.</div><div class="neon kucuk" style="margin-top:8px">meslekirehberlik.meb.gov.tr ↗</div></a></div>`;
+    $('#mebIc').onclick = ev => {
+      const h = ev.target.closest('[data-mebhazir]'), o = ev.target.closest('[data-mebonizle]');
+      if (h) { const f = L[+h.dataset.mebhazir], bas = bugunISO();
+        anketHazirla({ sablondan: true, bolum: f.kim === 'ogretmen' ? 'anket' : 'rehberlik', tanim: { ad: `${f.ad} · ${egitimYili()}`, aciklama: f.aciklama, sablon: f.sablon, veli: f.kim === 'veli', kimler: f.kim === 'ogretmen' ? 'ogretmen' : 'ogrenci', isimli: true, baslangic: bas, bitis: gunEkle(bas, 14), sorular: f.sorular, siniflar: {} } }, true); }
+      if (o) { const f = L[+o.dataset.mebonizle];
+        pencereAc(`<h1 style="margin-top:0">${esc(f.ad)}</h1><div class="soluk kucuk">${esc(f.kod)} · ${esc(f.donem)} · ${MEB_KIM[f.kim][0]}</div><div class="soluk" style="margin:8px 0 12px">${esc(f.aciklama)}</div><ol class="meb-onizle">${f.sorular.map(q => `${q.bolum ? `<h3>${esc(q.bolum)}</h3>` : ''}<li>${esc(q.metin)}${q.kosul ? ' <span class="soluk kucuk">(önceki cevaba bağlı)</span>' : ''}${q.tur === 'secim' ? `<div class="meb-sec ${q.numarali ? 'uzun' : ''}">${q.secenekler.map((x, k) => `<span>${q.numarali ? k + 1 + '. ' : ''}${esc(x)}</span>`).join('')}</div>` : '<div class="meb-sec"><span class="soluk">yazılı cevap</span></div>'}</li>`).join('')}</ol>`);
+        $('#pencere .pencere-ic').classList.add('genis'); }
+    };
+  }
+  function mebRapor(form) {
+    const t = form.tanim, Q = t.sorular || [], ss = anketSiniflari(form);
+    let filtre = '';
+    const kayitlar = () => { const R = []; ss.filter(s => !filtre || s === filtre || s.startsWith(filtre + '-')).forEach(s => katilanlar(form, s).forEach(k => { const c = cevap(form, s, String(k.no)); if (c) R.push({ s, k, c }); })); return R; };
+    const yuzde = (a, n) => n ? Math.round(a * 100 / n) : 0;
+    const cubuk = (p, r) => `<div class="meb-bar"><i style="width:${p}%;background:${r || 'var(--neon)'}"></i></div>`;
+    const govdeUret = () => {
+      const R = kayitlar(), n = R.length; let h = '', yazdir = '';
+      const ust = `<div class="meb-ozet"><div><b>${n}</b><span>${t.veli ? 'veli' : t.kimler === 'ogretmen' ? 'öğretmen' : 'öğrenci'} doldurdu</span></div><div><b>${filtre ? esc(filtre) : 'Tüm okul'}</b><span>${filtre ? (filtre.includes('-') ? 'sınıf' : 'seviye') : ss.length + ' sınıf'}</span></div></div>`;
+      if (/^riba/.test(t.sablon)) {
+        const H = []; Q.forEach((q, i) => q.secenekler.forEach(o => H.push({ m: i + 1, o: o.replace(/^[AB] · /, ''), h: o[0], n: R.filter(r => secimler((r.c.c || [])[i]).includes(o)).length })));
+        H.sort((a, b) => b.n - a.n);
+        h = `<h3>İhtiyaç sıralaması</h3><div class="soluk kucuk">Her maddede iki hizmetten biri seçilir; en çok seçilenler önceliklidir. İlk 10 hizmet vurgulu.</div><table class="meb-tablo"><tr><th>#</th><th>Rehberlik hizmeti</th><th>Madde</th><th>Seçen</th><th style="width:28%">Oran</th></tr>${H.map((x, k) => `<tr class="${k < 10 ? 'ust10' : ''}"><td>${k + 1}</td><td>${esc(x.o)}</td><td>${x.m}${x.h}</td><td><b>${x.n}</b></td><td>${cubuk(yuzde(x.n, n), k < 10 ? '#22e8ff' : '#3a5a85')}<small>%${yuzde(x.n, n)}</small></td></tr>`).join('')}</table>`;
+        yazdir = `<table><tr><th>#</th><th>Rehberlik hizmeti</th><th>Madde</th><th>Seçen</th><th>%</th></tr>${H.map((x, k) => `<tr${k < 10 ? ' style="background:#e6f7fb;font-weight:bold"' : ''}><td>${k + 1}</td><td>${esc(x.o)}</td><td>${x.m}${x.h}</td><td>${x.n}</td><td>${yuzde(x.n, n)}</td></tr>`).join('')}</table>`;
+      } else if (t.sablon === 'devamsizlik') {
+        const H = Q.map((q, i) => { if (q.tur !== 'secim') return null; const say = o => R.filter(r => secimler((r.c.c || [])[i]).includes(o)).length; const e = say('Evet'), b = say('Bazen'); return { i, m: q.metin, e, b, hy: say('Hayır'), skor: n ? (e + b / 2) / n : 0 }; }).filter(Boolean).sort((a, b) => b.skor - a.skor);
+        h = `<h3>Devamsızlık nedenleri (en etkiliden)</h3><div class="soluk kucuk">Puan = Evet + Bazen/2. İlk 10 neden vurgulu.</div><table class="meb-tablo"><tr><th>#</th><th>Neden</th><th>Evet</th><th>Bazen</th><th>Hayır</th><th style="width:22%">Etki</th></tr>${H.map((x, k) => `<tr class="${k < 10 ? 'ust10' : ''}"><td>${k + 1}</td><td>${esc(x.m)}</td><td><b>${x.e}</b></td><td>${x.b}</td><td class="soluk">${x.hy}</td><td>${cubuk(Math.round(x.skor * 100), k < 10 ? '#ff9a3a' : '#3a5a85')}<small>%${Math.round(x.skor * 100)}</small></td></tr>`).join('')}</table>`;
+        const yz = Q.findIndex(q => q.tur === 'yazi'), Y = yz >= 0 ? R.map(r => [r, secimler((r.c.c || [])[yz]).join(' ')]).filter(x => x[1]) : [];
+        if (Y.length) h += `<h3>Diğer nedenler</h3><ul class="meb-yazi">${Y.map(([r, v]) => `<li><b>${esc(r.s)} · ${esc(baslik(r.k.ad))}</b> — ${esc(v)}</li>`).join('')}</ul>`;
+        yazdir = `<table><tr><th>#</th><th>Neden</th><th>Evet</th><th>Bazen</th><th>Hayır</th><th>Etki %</th></tr>${H.map((x, k) => `<tr${k < 10 ? ' style="background:#fff1e3;font-weight:bold"' : ''}><td>${k + 1}</td><td>${esc(x.m)}</td><td>${x.e}</td><td>${x.b}</td><td>${x.hy}</td><td>${Math.round(x.skor * 100)}</td></tr>`).join('')}</table>`;
+      } else {
+        if (t.sablon === 'yasam-pencerem') {
+          const qi = Q.findIndex(q => q.numarali), q = Q[qi];
+          const H = q.secenekler.map((o, k) => ({ k: k + 1, o, L: R.filter(r => secimler((r.c.c || [])[qi]).includes(o)) })).sort((a, b) => b.L.length - a.L.length);
+          h = `<h3>Maddelere göre</h3><div class="soluk kucuk">Satıra basınca o maddeyi işaretleyen öğrenciler açılır.</div><table class="meb-tablo"><tr><th>Madde</th><th>İfade</th><th>Öğrenci</th><th style="width:22%">Oran</th></tr>${H.filter(x => x.L.length).map(x => `<tr class="meb-ac" data-mk="${x.k}"><td>${x.k}</td><td>${esc(x.o)}</td><td><b>${x.L.length}</b></td><td>${cubuk(yuzde(x.L.length, n), (q.olumlu || []).includes(x.o) ? '#3ef08a' : '#b06bff')}<small>%${yuzde(x.L.length, n)}</small></td></tr><tr class="meb-liste gizli" data-ml="${x.k}"><td></td><td colspan="3">${x.L.map(r => `${esc(r.s)} · ${esc(baslik(r.k.ad))}`).join(' &nbsp;·&nbsp; ')}</td></tr>`).join('')}</table>`;
+          yazdir = `<table><tr><th>Madde</th><th>İfade</th><th>Sayı</th><th>%</th><th>Öğrenciler</th></tr>${H.filter(x => x.L.length).map(x => `<tr><td>${x.k}</td><td>${esc(x.o)}</td><td>${x.L.length}</td><td>${yuzde(x.L.length, n)}</td><td style="font-size:8pt">${x.L.map(r => `${esc(r.s)} ${esc(baslik(r.k.ad))}`).join(', ')}</td></tr>`).join('')}</table>`;
+        } else {
+          const H = Q.map((q, i) => ({ q, i })).filter(x => x.q.tur === 'secim' && !x.q.kosul);
+          h = `<h3>Cevap dağılımı</h3><div class="meb-dagilim">${H.map(({ q, i }) => `<div class="meb-d">${q.bolum ? `<div class="meb-bol">${esc(q.bolum)}</div>` : ''}<b>${esc(q.metin)}</b>${[...q.secenekler, ...(q.diger ? ['Diğer'] : [])].map(o => { const c = R.filter(r => secimler((r.c.c || [])[i]).some(x => x === o || (o === 'Diğer' && x.startsWith('Diğer')))).length; return `<div class="meb-dsat"><span>${esc(o)}</span>${cubuk(yuzde(c, n), q.riskler && q.riskler[o] ? '#ff5470' : null)}<small>${c}</small></div>`; }).join('')}</div>`).join('')}</div>`;
+          yazdir = H.map(({ q, i }) => `<p style="text-align:left;margin:3mm 0 1mm"><b>${esc(q.metin)}</b></p><table><tr>${q.secenekler.map(o => `<th>${esc(o)}</th>`).join('')}</tr><tr>${q.secenekler.map(o => `<td style="text-align:center">${R.filter(r => secimler((r.c.c || [])[i]).includes(o)).length}</td>`).join('')}</tr></table>`).join('');
+        }
+        if (t.risk !== false && Q.some(q => q.riskler || q.sutun)) {
+          const RS = {}; R.forEach(r => riskSutunlari(form, r.c).forEach(k => { (RS[k] = RS[k] || []).push(r); }));
+          const ad = k => (MEB_RISK_AD[k] || k);
+          const sir = Object.entries(RS).sort((a, b) => b[1].length - a[1].length);
+          h = `<h3>Risk alanları</h3><div class="soluk kucuk">MEB Sınıf Risk Haritası sütunlarına göre. Satıra basınca öğrenciler açılır; sınıf sınıf risk haritası (Excel / PDF) form satırındaki sınıf kutularından alınır.</div>${sir.length ? `<table class="meb-tablo">${sir.map(([k, L]) => `<tr class="meb-ac" data-mk="r${k}"><td><b>${esc(ad(k))}</b></td><td><b>${L.length}</b></td><td style="width:28%">${cubuk(yuzde(L.length, n), '#ff5470')}<small>%${yuzde(L.length, n)}</small></td></tr><tr class="meb-liste gizli" data-ml="r${k}"><td colspan="3">${L.map(r => `${esc(r.s)} · ${esc(baslik(r.k.ad))}`).join(' &nbsp;·&nbsp; ')}</td></tr>`).join('')}</table>` : '<div class="soluk">Risk alanına giren öğrenci yok.</div>'}` + h;
+          yazdir = `<p style="text-align:left"><b>Risk alanları</b></p><table><tr><th>Risk alanı</th><th>Sayı</th><th>Öğrenciler</th></tr>${sir.map(([k, L]) => `<tr><td>${esc(ad(k))}</td><td>${L.length}</td><td style="font-size:8pt">${L.map(r => `${esc(r.s)} ${esc(baslik(r.k.ad))}`).join(', ')}</td></tr>`).join('')}</table>` + yazdir;
+        }
+      }
+      return { html: ust + h, yazdir, n };
+    };
+    const ciz = () => {
+      const g = govdeUret(), seviyeler = [...new Set(ss.map(s => s.split('-')[0]))];
+      pencereAc(`<div class="ust" style="align-items:center;margin-bottom:6px"><div><h1 style="margin:0">${esc(t.ad)}</h1><div class="soluk kucuk">MEB raporu · ${esc((window.MEB_FORMLAR || []).find(f => f.sablon === t.sablon)?.kod || '')}</div></div><div class="dugmeler" style="margin:0"><button class="birincil" id="mebPdf">PDF / Yazdır</button></div></div>
+        <div class="cipler"><button class="cip ${!filtre ? 'secili' : ''}" data-mf="">Tüm okul</button>${seviyeler.map(v => `<button class="cip ${filtre === v ? 'secili' : ''}" data-mf="${v}" style="border-color:${SEVIYE_RENK[v] || ''}">${v}. sınıflar</button>`).join('')}${filtre && !filtre.includes('-') ? ss.filter(s => s.startsWith(filtre + '-')).map(s => `<button class="cip" data-mf="${s}">${s}</button>`).join('') : ''}${filtre.includes('-') ? `<button class="cip secili">${esc(filtre)}</button>` : ''}</div>
+        <div class="meb-rapor">${g.html}</div>`);
+      $('#pencere .pencere-ic').classList.add('genis');
+      $('#pencereIcerik').onclick = ev => {
+        const f = ev.target.closest('[data-mf]'); if (f) { filtre = f.dataset.mf; ciz(); return; }
+        const a = ev.target.closest('[data-mk]'); if (a) { const l = document.querySelector(`[data-ml="${a.dataset.mk}"]`); if (l) l.classList.toggle('gizli'); }
+      };
+      $('#mebPdf').onclick = () => belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><title>${esc(t.ad)}</title><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:9.5pt;color:#000;margin:0;padding:10mm}h1{font-size:13pt;text-align:center;margin:0 0 1mm}p{margin:0 0 4mm;text-align:center}table{width:100%;border-collapse:collapse;margin-bottom:4mm}td,th{border:1px solid #444;padding:3px 5px;vertical-align:top;text-align:left}th{background:#e8edf3}</style>
+        <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:18mm"><div style="font-weight:bold;margin:2mm 0 3mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(t.ad)}</h1><p>${filtre ? esc(filtre) + (filtre.includes('-') ? ' sınıfı' : '. sınıflar') : 'Tüm okul'} · ${g.n} kişi doldurdu · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })}</p>${g.yazdir}`, t.ad);
+    };
+    ciz();
+  }
+  const MEB_RISK_AD = { G: 'Anne en fazla ilkokul mezunu', H: 'Baba en fazla ilkokul mezunu', I: 'Tek çocuk olan', J: '5 ve üstü kardeşi olan', K: 'Anne ve babası ayrı yaşayan', L: 'Anne ve babası boşanmış olan', M: 'Yalnızca annesi ile yaşayan', N: 'Yalnızca babası ile yaşayan', O: 'Annesi hayatta olmayan', P: 'Babası hayatta olmayan', Q: 'Anne ve babası hayatta olmayan', R: 'Şehit çocuğu', S: 'Yalnızca büyükanne/büyükbabasıyla yaşayan', T: 'Yalnızca diğer akrabalarıyla yaşayan', U: 'Koruyucu aile gözetiminde olan', V: 'Sevgi evlerinde kalan', W: 'Kurumda kalan (SHÇEK)', X: 'Ailesinde süreğen hastalığı olan', Y: 'Ailesinde ruhsal hastalığı olan', Z: 'Ailesinde bağımlı birey bulunan', AA: 'Ailesinde cezai hükmü bulunan', AB: 'Ailesi mevsimlik işçi olan', AC: 'Aile içi şiddete maruz kalan', AD: 'Özel yetenekli tanısı olan', AE: 'Özel eğitim raporu olan', AF: 'Süreğen hastalığı olan', AG: 'Ruhsal hastalığı olan', AH: 'Danışmanlık tedbir kararı olan', AI: 'Eğitim tedbir kararı olan', AJ: 'Maddi sıkıntı yaşayan', AK: 'Sürekli devamsız olan', AL: 'Bir işte çalışan', AM: 'Akademik başarısı düşük', AN: 'Riskli akran grubuna dahil olan', AO: 'Diğer' };
   async function rehberlik() {
     await anketVerisi();
     const formlar = D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak');
     let acik = null, form = null, sinif = null;
-    const isaretler = (a, c) => (a.tanim.sorular || []).map((q, i) => i).filter(i => {
+    const isaretler = (a, c) => a.tanim.sablon ? sablonIsaret(a, c) : (a.tanim.sorular || []).map((q, i) => i).filter(i => {
       const q = a.tanim.sorular[i], v = secimler((c.c || [])[i]);
       return q.tur === 'yazi' ? v.length > 0 : v.includes('Evet');
     });
@@ -1814,8 +1916,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#rehIc').innerHTML = formlar.map(f => {
         const ss = anketSiniflari(f), n = ss.reduce((t, x) => t + katilanlar(f, x).length, 0), d = ss.reduce((t, x) => t + katilanlar(f, x).filter(k => cevap(f, x, String(k.no))).length, 0);
         return baslikSatiri(f.id, esc(f.tanim.ad), `${esc(gunAdi(f.tanim.baslangic || bugunISO()))}${f.tanim.bitis ? ' – ' + esc(gunAdi(f.tanim.bitis)) : ''} · ${ss.length} sınıf · ${d}/${n} doldurdu`, acikMi(f) ? '<span class="durum-etiketi yeşil">açık</span>' : '<span class="durum-etiketi soluk">kapalı</span>') + (acik === f.id ? '<div id="rehAyrinti"></div>' : '');
-      }).join('') + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
-      if (acik === 'proje') projeBolumu();
+      }).join('') + baslikSatiri('meb', 'Hazır MEB formları', `${(window.MEB_FORMLAR || []).length} resmi form · Öğrenci Bilgi, Aile Bilgi, Yaşam Pencerem, RİBA, Devamsızlık`) + (acik === 'meb' ? '<div class="kart" id="mebIc"></div>' : '')
+        + baslikSatiri('proje', 'Proje ödevi tercihi', 'Sınıf sınıf aç / kapat') + (acik === 'proje' ? '<div class="kart" id="projeIc"></div>' : '');
+      if (acik === 'meb') mebFormlari();
+      else if (acik === 'proje') projeBolumu();
       else if (acik) { form = formlar.find(f => f.id === acik); sinif = sinif && anketSiniflari(form).includes(sinif) ? sinif : null; ciz(); }
       else $('#icerik').classList.remove('reh-acik');
     };
@@ -1827,9 +1931,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
         // K-406: Proje ödevi tercihi ile aynı düzen: Hepsini aç / kapat + sınıf kutusunda Aç / Kapat; kutuya basınca sınıfın ayrıntısı
-        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">Bu form tahtada açılmaz. Açık olduğu sınıfların öğrencileri <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden okul numarası ve giriş koduyla doldurur.</div><div class="dugmeler"><button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-toprisk="${dz}" title="${dz}. sınıfların hepsinin risk haritası, sınıf başına bir sayfa">📄 Toplu risk haritası</button></div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
+        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">Bu form tahtada açılmaz. Açık olduğu sınıfların öğrencileri <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden okul numarası ve giriş koduyla doldurur.</div><div class="dugmeler">${form.tanim.sablon ? '<button class="birincil" data-mebrapor="1">MEB Raporu</button>' : ''}<button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-toprisk="${dz}" title="${dz}. sınıfların hepsinin risk haritası, sınıf başına bir sayfa">📄 Toplu risk haritası</button></div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
           return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Aç / kapat öğrenci panelinde hemen geçerli olur.</div></div>`;
         $('#rehAyrinti').onclick = async ev => {
+          if (ev.target.closest('[data-mebrapor]')) { ev.stopPropagation(); mebRapor(form); return; }
           const tr_ = ev.target.closest('[data-toprisk]');
           if (tr_) { ev.stopPropagation(); const dz = tr_.dataset.toprisk, L = ss.filter(x => x.startsWith(dz + '-')); riskYazdir(`${dz}. Sınıflar Risk Haritası (${L.length} sınıf)`, L.map(x => riskSayfasi(x, riskSatirlari(form, x)))); return; }
           const d = ev.target.closest('[data-r]');
@@ -1863,11 +1968,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       // K-542: kırmızı tuş — işaretli öğrenciler ve işaretledikleri maddeler (çok işaretliden aza)
       $('#rCok').onclick = () => {
         const L = dolu.map(x => { const c = cevap(form, sinif, String(x.no)); return { x, c, I: isaretler(form, c) }; }).filter(o => o.I.length).sort((a, b) => b.I.length - a.I.length || a.x.ad.localeCompare(b.x.ad, tr));
-        const madde = o => o.I.map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]).join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || v !== 'Evet' ? ` <span class="kirmizi">— ${esc(v)}</span>` : ''}</li>`; }).join('');
+        const madde = o => [...new Set(o.I)].map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]); if (q.numarali) return v.filter(x => !(q.olumlu || []).includes(x)).map(x => `<li>${(q.secenekler || []).indexOf(x) + 1}. ${esc(x)}</li>`).join(''); const vv = v.join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || vv !== 'Evet' ? ` <span class="kirmizi">— ${esc(vv)}</span>` : ''}</li>`; }).join('');
         const govde = L.length ? L.map(o => `<div class="kart r-kisi ${o.I.length >= 3 ? 'cok' : ''}"><div class="r-kisi-ust"><b>${esc(baslik(o.x.ad))}</b><span class="soluk">${esc(sinif)} · ${esc(o.x.no)}</span><span class="t-neon ${o.I.length >= 3 ? 'kirmizi-neon' : ''}">${o.I.length} işaret</span></div><ol>${madde(o)}</ol></div>`).join('') : '<div class="soluk">İşaretli öğrenci yok.</div>';
         pencereAc(`<h1>${esc(sinif)} · İşaretli öğrenciler</h1><div class="soluk kucuk">${esc(form.tanim.ad)} · ${dolu.length} öğrenci doldurdu · ${L.length} öğrencide en az bir işaret, ${cok.length} öğrencide 3 ve üzeri</div><div class="dugmeler" style="margin:10px 0"><button class="birincil" id="rCokPdf">PDF / Yazdır</button></div><div class="r-kisiler">${govde}</div>`);
         $('#rCokPdf').onclick = () => {
-          const t = L.map(o => `<tr><td>${esc(o.x.no)}</td><td><b>${esc(baslik(o.x.ad))}</b></td><td style="text-align:center"><b>${o.I.length}</b></td><td><ol style="margin:0;padding-left:16px">${o.I.map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]).join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || v !== 'Evet' ? ' — ' + esc(v) : ''}</li>`; }).join('')}</ol></td></tr>`).join('');
+          const t = L.map(o => `<tr><td>${esc(o.x.no)}</td><td><b>${esc(baslik(o.x.ad))}</b></td><td style="text-align:center"><b>${o.I.length}</b></td><td><ol style="margin:0;padding-left:16px">${[...new Set(o.I)].map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]); if (q.numarali) return v.filter(x => !(q.olumlu || []).includes(x)).map(x => `<li>${(q.secenekler || []).indexOf(x) + 1}. ${esc(x)}</li>`).join(''); const vv = v.join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || vv !== 'Evet' ? ' — ' + esc(vv) : ''}</li>`; }).join('')}</ol></td></tr>`).join('');
           belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:10pt;color:#000;margin:0;padding:12mm}h1{font-size:13pt;text-align:center;margin:0 0 2mm}p{text-align:center;margin:0 0 5mm;font-size:9.5pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #333;padding:4px 6px;vertical-align:top;text-align:left}th{background:#eee}tr{page-break-inside:avoid}.g{font-size:8.5pt;color:#444;margin-top:5mm;text-align:center}@media print{body{padding:0}}</style>
             <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:18mm"><div style="font-weight:bold;margin:2mm 0 4mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(sinif)} · ${esc(form.tanim.ad)}</h1><p>İşaretli öğrenciler · ${L.length} öğrenci · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })}</p><table><tr><th style="width:12%">No</th><th style="width:24%">Adı Soyadı</th><th style="width:8%">İşaret</th><th>İşaretlenen maddeler</th></tr>${t}</table><div class="g">Bu liste gizlidir; yalnız rehberlik servisinde kullanılır.</div>`, sinif + ' işaretli öğrenciler');
         };

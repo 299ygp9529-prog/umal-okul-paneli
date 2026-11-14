@@ -1096,3 +1096,20 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .reh-sekme { display: inline-flex; gap: 4px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
 .reh-sekme button { border: 0; background: transparent; color: var(--soluk); font-weight: 700; font-size: 15px; padding: 9px 18px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .reh-sekme button.secili { background: var(--neon); color: #04121f; } .reh-sekme button:hover:not(.secili) { color: var(--yazi); }
+/* K-555: MEB formları */
+.meb-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.meb-kart { background: var(--koyu); border: 1px solid var(--cizgi); border-left: 4px solid #22e8ff; border-radius: 14px; padding: 13px 14px; display: flex; flex-direction: column; gap: 5px; color: var(--yazi); text-decoration: none; }
+.meb-kart.k-veli { border-left-color: #ff9a3a; } .meb-kart.k-ogretmen { border-left-color: #b06bff; } .meb-link { border-left-color: #3ef08a; }
+.meb-ust { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; } .meb-ust b { font-size: 15.5px; } .meb-kod { font-size: 11px; color: var(--soluk); border: 1px solid var(--cizgi); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+.meb-bilgi { font-size: 13px; } .meb-kim { font-weight: 800; margin-right: 6px; color: var(--neonacik); } .meb-yayin { font-size: 12.5px; color: #6ee7a8; } .meb-kart .dugmeler { margin-top: auto; padding-top: 6px; }
+.meb-onizle { padding-left: 22px; } .meb-onizle h3 { margin: 16px 0 6px -22px; color: var(--neonacik); font-size: 15px; } .meb-onizle li { margin: 6px 0; }
+.meb-sec { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; } .meb-sec span { font-size: 12px; border: 1px solid var(--cizgi); border-radius: 6px; padding: 2px 7px; color: var(--soluk); } .meb-sec.uzun { flex-direction: column; }
+.meb-ozet { display: flex; gap: 10px; margin: 6px 0 4px; } .meb-ozet div { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 8px 14px; } .meb-ozet b { font-size: 20px; display: block; color: var(--neonacik); } .meb-ozet span { font-size: 12px; color: var(--soluk); }
+.meb-rapor h3 { margin: 16px 0 4px; } .meb-tablo { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; } .meb-tablo th { text-align: left; font-size: 12px; color: var(--soluk); padding: 6px; border-bottom: 1px solid var(--cizgi); }
+.meb-tablo td { padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: middle; } .meb-tablo tr.ust10 td { background: rgba(34,232,255,.06); } .meb-tablo td small { color: var(--soluk); margin-left: 6px; }
+.meb-bar { display: inline-block; width: calc(100% - 46px); height: 9px; border-radius: 6px; background: rgba(255,255,255,.07); vertical-align: middle; overflow: hidden; } .meb-bar i { display: block; height: 100%; border-radius: 6px; }
+.meb-ac { cursor: pointer; } .meb-ac:hover td { background: rgba(255,255,255,.04); } .meb-liste td { font-size: 13px; color: var(--neonacik); background: var(--koyu); }
+.meb-dagilim { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 8px; } .meb-d { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 10px 12px; } .meb-d > b { display: block; font-size: 13.5px; margin-bottom: 6px; }
+.meb-bol { font-size: 11px; font-weight: 800; letter-spacing: .5px; color: var(--neonacik); text-transform: uppercase; margin-bottom: 3px; }
+.meb-dsat { display: grid; grid-template-columns: 130px 1fr 30px; gap: 8px; align-items: center; font-size: 12.5px; margin: 3px 0; } .meb-dsat span { overflow-wrap: anywhere; } .meb-dsat .meb-bar { width: 100%; } .meb-dsat small { text-align: right; color: var(--soluk); }
+.meb-yazi li { margin: 4px 0; font-size: 13.5px; }
