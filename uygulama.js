@@ -2340,6 +2340,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const P = O.plan || null, V = JSON.parse(JSON.stringify((P && P.veri) || {})); V.gorevler = V.gorevler || []; V.hedef = +V.hedef || 0; V.not = V.not || '';
     let form = null, degisti = false, yayin = P && P.yayin;
     let ok = (P && P.ok) || {}; const hk = rpIso(rpPzt());
+    const tasi = new Set();   // K-601: öğrencinin kendi listesinden öğretmen planına alınan görevler (yayınlanınca oradan kalkar)
+    const kendiAl = x => { const id = 'k' + x.id; if (V.gorevler.some(g => g.id === id)) return; V.gorevler.push({ id, g: +x.g, ders: x.ders, konu: x.konu || '', soru: +x.soru || 0, kaynak: x.kaynak || '', dk: +x.dk || 45 }); tasi.add(String(x.id)); };
+    let birlesti = false;
+    if (O.sinif === 'ÖZEL' && !P && ((O.kendi || {})[hk] || []).length) { ((O.kendi || {})[hk] || []).forEach(kendiAl); birlesti = true; degisti = true; }
     const ciz = () => {
       const top = V.gorevler.reduce((t, g) => t + (+g.dk || 0), 0);
       const haftalar = [3, 2, 1, 0].map(i => { const w = rpPzt(); w.setDate(w.getDate() - 7 * i); const k = rpIso(w), y = V.gorevler.filter(g => ok[k + '|' + g.id]).length; return { k, e: i === 0 ? 'Bu hafta' : w.getDate() + ' ' + AYLAR[w.getMonth()].slice(0, 3), y, n: V.gorevler.length }; });
@@ -2349,6 +2353,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const HIS = { 1: 'Zor geçti', 2: 'İdare eder', 3: 'İyi geçti' };
       $('#icerik').innerHTML = `${rehSekme(sekme)}<div class="sinav-ust ro-ust"><button class="ikincil" id="rpGeri">← Geri</button>${O.sinif === 'ÖZEL' ? `<span class="neon-tabela oz-ad">${esc(baslik(O.ad))}</span><h1 style="margin:0">Çalışma planı</h1>` : `<span class="neon-tabela" style="--sv:${seviyeRenk(O.sinif)}">${esc(O.sinif)}</span><h1 style="margin:0">${esc(baslik(O.ad))} · Çalışma planı</h1>`}<span class="durum-etiketi ${yayin ? 'yeşil' : 'soluk'}">${yayin ? 'Yayında · ' + esc(rpZaman(yayin)) : (P ? 'Taslak' : 'Yeni plan')}</span>${degisti ? '<span class="turuncu-yazi kucuk">kaydedilmemiş değişiklik</span>' : ''}</div>
         <div class="soluk kucuk" style="margin:-4px 0 10px">${O.sinif === 'ÖZEL' ? 'Öğrencinle birlikte haftalık programı hazırla; yayına alınca öğrencinin çalışma planı ekranına düşer, öğrenci görevleri işaretler, ilerlemesi burada görünür.</div><div class="gizli">' : ''}Görüşmede öğrenciyle birlikte haftalık programı hazırlayın. Yayına alınca öğrencinin <b>Çalışma planım</b> ekranına düşer; öğrenci her hafta görevleri işaretler, ilerlemesi burada görünür.</div>
+        ${birlesti ? `<div class="rp-uyari" style="margin-bottom:10px"><b>Öğrencinin kendi hazırladığı plan yüklendi.</b> Üstüne ekleyip düzenleyin; "Yayına al" deyince plan öğrenciyle ortak olur ve öğrencinin ekranında tek liste olarak görünür.</div>` : ''}
         <div class="kart rp-ust"><div class="pl-hedef rp-hedef">Haftalık hedef:${[0, 300, 600, 900, 1200, 1800].map(d => `<button class="cip ${V.hedef === d ? 'secili' : ''}" data-rph="${d}">${d ? d / 60 + ' saat' : 'yok'}</button>`).join('')}</div><span class="soluk">Planlanan: <b>${rpSure(top)}</b> / hafta · ${V.gorevler.length} görev${(q => q ? ' · ' + q + ' soru' : '')(V.gorevler.reduce((t, g) => t + (+g.soru || 0), 0))}</span></div>
         <div class="rp-hafta">${RP_GUN.map((g, gi) => { const G = V.gorevler.filter(x => (yayin && EB[x.id] && EB[x.id].tasindi ? EB[x.id].gE : +x.g) === gi), fd = form && form.g === gi;   // K-595: taşınan görev bu hafta yeni gününde
           return `<div class="rp-gun"><div class="rp-gun-ust"><b>${g}</b><small>${G.length ? rpSure(G.reduce((t, x) => t + (+x.dk || 0), 0)) : ''}</small></div>
@@ -2363,13 +2368,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             ${Object.keys(NS).length ? `<h4>Yapamama nedenleri (4 hafta)</h4><div class="rp-neden">${Object.entries(NS).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<span>${esc(n)} <b>${c}</b></span>`).join('')}</div>` : ''}
             ${HL.filter(h => h.W.deger && (h.W.deger.not || (h.W.deger.zor || []).length)).slice(-2).map(h => `<div class="rp-deg"><small>${esc(h.e)} · öğrencinin değerlendirmesi</small>${(h.W.deger.zor || []).length ? `<div>Zorlandığı: <b>${esc(h.W.deger.zor.join(', '))}</b></div>` : ''}${h.W.deger.not ? `<p>${esc(h.W.deger.not)}</p>` : ''}</div>`).join('')}
             <div class="soluk kucuk" style="margin-top:8px">Uyum: tamamlanan sürenin yüzdesi (yarım ve kısa hâli yarım sayılır; öğrencinin bu hafta çıkardıkları hesaba katılmaz).</div>` : '<div class="soluk kucuk">Plan yayına alınınca öğrencinin işaretleri, değişiklikleri ve değerlendirmeleri burada görünür.</div>'}</div></div>
-        ${O.sinif === 'ÖZEL' ? `<div class="kart" style="margin-top:14px"><h3 style="margin-top:0">Öğrencinin kendi eklediği görevler · bu hafta</h3>${kendiPlanHtml(O.kendi, hk)}</div>` : ''}
+        ${O.sinif === 'ÖZEL' && ((O.kendi || {})[hk] || []).filter(x => !tasi.has(String(x.id))).length ? `<div class="kart" style="margin-top:14px"><div class="ro-bas"><h3 style="margin:0">Öğrencinin kendi eklediği görevler · bu hafta</h3><button class="ikincil" id="rpKendiAl">Hepsini plana al</button></div><div style="margin-top:8px">${kendiPlanHtml({ [hk]: ((O.kendi || {})[hk] || []).filter(x => !tasi.has(String(x.id))) }, hk)}</div></div>` : ''}
         <div class="dugmeler rp-dugmeler"><span class="soluk kucuk" id="rpBilgi" style="margin-right:auto"></span><button class="ikincil" id="rpPdf" ${V.gorevler.length ? '' : 'disabled'}>PDF · renkli</button><button class="ikincil" id="rpPdfSb" ${V.gorevler.length ? '' : 'disabled'}>PDF · siyah-beyaz</button>${yayin ? '<button class="ikincil" id="rpKaldir">Yayından kaldır</button>' : '<button class="ikincil" id="rpTaslak">Taslak kaydet</button>'}<button class="birincil" id="rpYayin" ${V.gorevler.length ? '' : 'disabled'}>${yayin ? 'Güncelle ve yayınla' : 'Yayına al'}</button></div>`;
     };
     const kaydet = async y => {
       $('#rpBilgi').textContent = 'Kaydediliyor…';
       const { data: r, error: e } = await israrla(() => sb.rpc('umal_rehberlik_plan_kaydet', { p_no: no, p_veri: V, p_yayin: y }));
       if (e || !r || !r.ok) { $('#rpBilgi').textContent = e ? 'Kaydedilemedi: ' + (/function/.test(e.message || '') ? '20261114150000 SQL çalıştırılmalı' : hataYaz(e)) : r.hata; return; }
+      if (y && tasi.size) { const ids = [...tasi]; const { error: te } = await sb.rpc('umal_ozel_kendi_tasi', { p_no: no, p_hafta: hk, p_idler: ids }); if (!te) { if (O.kendi && O.kendi[hk]) O.kendi[hk] = O.kendi[hk].filter(x => !tasi.has(String(x.id))); tasi.clear(); birlesti = false; } }
       yayin = y ? new Date().toISOString() : null; degisti = false; O.plan = { veri: JSON.parse(JSON.stringify(V)), yayin, ok, guncel: new Date().toISOString() }; ciz();
       $('#rpBilgi').textContent = y ? '✓ Yayında — öğrencinin ekranına düştü' : '✓ Kaydedildi (öğrenci görmez)';
     };
@@ -2425,6 +2431,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.id === 'rpTaslak') return kaydet(false);
       if (t.id === 'rpYayin') return kaydet(true);
       if (t.id === 'rpKaldir') { if (await onayla('Plan öğrencinin ekranından kaldırılsın mı? (Plan silinmez, taslak olarak durur.)')) kaydet(false); return; }
+      if (t.id === 'rpKendiAl') { ((O.kendi || {})[hk] || []).forEach(kendiAl); degisti = true; yer(); $('#rpBilgi').textContent = 'Öğrencinin görevleri plana alındı — yayınlayın'; return; }
       if (t.id === 'rpPdf') pdf(false);
       if (t.id === 'rpPdfSb') pdf(true);
       if (t.id === 'rpGorusme') { D.altG = false; RV.davet = { no: O.no, ad: O.ad, sinif: O.sinif, mesaj: 'Çalışma planını birlikte gözden geçirelim.' }; ac('randevu'); return; }

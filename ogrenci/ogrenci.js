@@ -523,6 +523,7 @@
     PL.veri = data.plan && typeof data.plan === 'object' ? data.plan : {}; return true;
   }
   function plKaydet() {
+    PL.sonYaz = Date.now();
     PL.durum = 'Kaydediliyor…'; $('#plKayit').textContent = PL.durum; clearTimeout(PL.kayitZ);
     PL.kayitZ = setTimeout(async () => {
       const v = PL.veri, lim = iso(new Date(Date.now() - 70 * 864e5));   // 10 haftadan eskiler silinir
@@ -888,7 +889,8 @@
     if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
     if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
-      mektuplarYukle(); await rhYukle(false); if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
+      mektuplarYukle(); await rhYukle(false);
+      if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
   }, 20000);
