@@ -3278,14 +3278,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151100'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151300'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150400');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151100');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151300');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
@@ -3774,7 +3774,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     function uyarilar() {
       const O = E.sinavlar.flatMap(x => Object.entries(x.sv).map(([v, r]) => ({ v, t: x.tarih, adlar: [r.ad, ...Object.values(r.fark)].flatMap(a => String(a).split(' / ').map(z => z.trim()).filter(Boolean)) })));
       const din = O.filter(o => o.t && o.adlar.some(dinMi)), dinG = [...new Set(din.map(o => o.t))], L = [];
-      if (new Set(din.map(o => o.v)).size > 1 && dinG.length > 1) L.push(`<b>Din kültürü ve seçmeli din dersleri farklı günlerde:</b> ${SV.map(v => { const T = [...new Set(din.filter(o => o.v === v).map(o => o.t))]; return T.length ? `${v}. sınıflar ${T.map(t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' })).join(', ')}` : ''; }).filter(Boolean).join(' · ')}. Okul uygulamasına göre aynı güne getirin.`);
+      if (false && new Set(din.map(o => o.v)).size > 1 && dinG.length > 1) L.push(`<b>Din kültürü ve seçmeli din dersleri farklı günlerde:</b> ${SV.map(v => { const T = [...new Set(din.filter(o => o.v === v).map(o => o.t))]; return T.length ? `${v}. sınıflar ${T.map(t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' })).join(', ')}` : ''; }).filter(Boolean).join(' · ')}. Okul uygulamasına göre aynı güne getirin.`);
       const M = new Map(); O.forEach(o => o.adlar.filter(a => !dinMi(a)).forEach(a => { const k = anahtarAd(a); if (!M.has(k)) M.set(k, { ad: a, g: new Map() }); const m = M.get(k); (m.g.get(o.t) || m.g.set(o.t, new Set()).get(o.t)).add(o.v); }));
       const fark = [...M.values()].filter(m => m.g.size > 1 && new Set([...m.g.values()].flatMap(z => [...z])).size > 1);
       if (fark.length) L.push(`<b>Aynı adlı ders farklı seviyelerde farklı günlerde</b> (mümkünse aynı güne alın): ${fark.slice(0, 8).map(m => `${esc(m.ad)} (${[...m.g.entries()].map(([t, vs]) => `${[...vs].sort((a, b) => a - b).join(', ')}: ${t ? new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' }) : '?'}`).join(' · ')})`).join('; ')}${fark.length > 8 ? ` ve ${fark.length - 8} ders daha` : ''}.`);
@@ -3790,7 +3790,6 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         for (const [v, r] of Object.entries(x.sv)) if (!r.ad.trim()) return hata(`${new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${x.n}. ders, ${v}. sınıflar: sınav dersi yazılmamış.`);
       }
       const cak = E.sinavlar.find((x, i) => E.sinavlar.some((y, j) => j !== i && y.tarih === x.tarih && y.n === x.n));
-      if (uyarilar().includes('Din kültürü') && !await onayla('Din kültürü ve seçmeli din dersleri farklı sınıflarda farklı günlere yazılmış. Yine de kaydedilsin mi?')) return;
       if (cak) return hata(`${new Date(cak.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${cak.n}. derste iki ayrı sınav kartı var; birleştirin.`);
       const yeni = { ad: E.ad, not: tk.not || '', subeler_not: tk.subeler_not || '', sinavlar: [], subeler: [], duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) };
       for (const x of E.sinavlar) {
