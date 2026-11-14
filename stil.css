@@ -1316,3 +1316,13 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .yan > .logo3d, .yan > .ust-ad, .yan > .kullanici { flex-shrink: 0; }
 
 .td-prg-secler{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}.td-prg-bas .bag{margin-left:auto}
+
+/* K-634: aylık tarih seçici */
+.td-tarih{display:inline-flex;align-items:center;gap:8px;background:var(--koyu);border:1px solid var(--cizgi);border-radius:11px;padding:8px 12px;color:inherit;cursor:pointer;font-size:14px}.td-tarih:hover{border-color:var(--neon)}.td-tarih svg{color:var(--neon);flex:none}.td-tarih .soluk{font-size:12.5px}
+.ay-tk{position:absolute;z-index:1000;width:292px;background:#10203a;border:1px solid rgba(34,232,255,.35);border-radius:16px;padding:12px;box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 18px rgba(34,232,255,.12);color:#e9f4ff}
+.ay-bas{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.ay-bas b{font-size:15px;text-transform:capitalize}.ay-bas button{width:32px;height:32px;border-radius:9px;border:1px solid var(--cizgi);background:var(--koyu);color:var(--neon);font-size:20px;line-height:1;cursor:pointer}
+.ay-gunler,.ay-izgara{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.ay-gunler span{font-size:11px;color:var(--soluk);padding:3px 0;font-weight:700}
+.ay-izgara button{height:34px;border-radius:9px;border:1px solid transparent;background:none;color:inherit;font-size:13.5px;cursor:pointer;position:relative}.ay-izgara button:hover{background:rgba(34,232,255,.1);border-color:rgba(34,232,255,.35)}
+.ay-izgara button.hs{color:#7f93b0}.ay-izgara button.bugun{border-color:rgba(34,232,255,.5)}.ay-izgara button.secili{background:var(--neon);color:var(--zemin);font-weight:800}
+.ay-izgara button.var::after{content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#ff9a3a}
+.ay-alt{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--soluk)}.ay-alt i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff9a3a;margin-right:6px;vertical-align:middle}
