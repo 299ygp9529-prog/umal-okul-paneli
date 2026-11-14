@@ -2354,7 +2354,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const kotu = Object.entries(T.notlar).find(([, v]) => !/^(100|\d{1,2})([.,]\d{1,2})?$/.test(v) && !/^(G|GM|M|MZ|K)$/i.test(v));
       if (kotu) { hata(`${kotu[0]} numaralı öğrencinin notu geçersiz: "${kotu[1]}". 0–100 arası bir sayı ya da G yazın.`); const i = document.querySelector(`[data-ntno="${CSS.escape(kotu[0])}"]`); if (i) i.focus(); return; }
       const ayni = !T.id && NT.L.find(n => n.sinif === T.sinif && ntNorm(n.ders) === ntNorm(T.ders) && ntNorm(n.sinav) === ntNorm(T.sinav));
-      if (ayni && !await onayla(`${T.sinif} · ${T.ders} · ${T.sinav} için daha önce not yüklenmiş. Yine de ayrı bir kayıt olarak eklensin mi?`)) return;
+      if (ayni) { if (!await onayla(`${T.sinif} · ${T.ders} · ${T.sinav} için ${new Date(ayni.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' })} tarihinde not yüklenmiş. Yeni notlar eskisinin yerine geçecek; öğrenciler yalnız son yüklenen notu görür. Devam edilsin mi?`)) return; T.id = ayni.id; T.yayin = ayni.yayin; }   // K-620: aynı sınav yeniden yüklenirse son yükleme geçerli
       if (yayin && !T.yayin && !await onayla(`${T.sinif} sınıfından ${dolu(T)} öğrenci ${T.ders} · ${T.sinav} notunu kendi panelinde görecek. Yayınlansın mı?`)) return;
       bil.className = 'kucuk soluk'; bil.textContent = 'Kaydediliyor…';
       const alan = { sinif: T.sinif, ders: T.ders, sinav: T.sinav, notlar: T.notlar, yayin, guncel: new Date().toISOString() };
