@@ -29,15 +29,24 @@
     const { data, error } = await sb.rpc('umal_ogrenci_giris', { p_no: no, p_kod: kod });
     $('#girisBtn').disabled = false;
     if (error || !data) { bilgi.textContent = 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.'; bilgi.classList.add('hata'); return; }
-    if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
+    if (!data.ok) { const h_ = S.hatirla; oturumSil(); S.hatirla = h_; bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
+    oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  const cikis = () => { oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
-  ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
+  ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod && !S.hatirla) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
+  // K-576: oturum — aynı sekmede yenilemede kalır (sessionStorage); "açık kalsın" işaretliyse bu cihazda 30 gün (localStorage)
+  function oturumYaz(no, kod) {
+    const v = JSON.stringify({ no, kod, t: Date.now() });
+    try { sessionStorage.setItem('umalOturum', v); } catch (e) {}
+    try { if (S.hatirla) localStorage.setItem('umalOturum', v); else localStorage.removeItem('umalOturum'); } catch (e) {}
+  }
+  function oturumSil() { try { sessionStorage.removeItem('umalOturum'); sessionStorage.removeItem('umalSelam'); } catch (e) {} try { localStorage.removeItem('umalOturum'); } catch (e) {} S.hatirla = false; }
+  $('#hatirla').onclick = () => { S.hatirla = !S.hatirla; $('#hatirla').classList.toggle('secili', S.hatirla); };
 
   // ---- form listesi
   function listeCiz() {
@@ -328,7 +337,7 @@
     } catch (e) { return null; }
   }
   async function selamla() {
-    if (S.selamlandi) return; S.selamlandi = true;
+    if (S.selamlandi) return; S.selamlandi = true; try { sessionStorage.setItem('umalSelam', '1'); } catch (e) {}
     const ad = baslik(S.ad).split(' ')[0], s = simdi(), h = s.getHours(), g = gunIdx(s);
     const sel = h >= 5 && h < 11 ? 'Günaydın' : h < 17 && h >= 11 ? 'İyi günler' : h >= 17 && h < 22 ? 'İyi akşamlar' : 'İyi geceler';
     const el = $('#selam'), hv = await Promise.race([hava(), new Promise(r => setTimeout(() => r(null), 2500))]);
@@ -720,8 +729,10 @@
       if (S.kod) { try { sessionStorage.setItem('umalYeniden', JSON.stringify({ no: S.no, kod: S.kod })); } catch (e) {} }   // girişli kalsın
       location.reload();
     }, 60000);
-    try { const g = JSON.parse(sessionStorage.getItem('umalYeniden') || 'null'); sessionStorage.removeItem('umalYeniden');
-      if (g && g.no && g.kod) { $('#no').value = g.no; $('#kod').value = g.kod; S.selamlandi = true; setTimeout(() => $('#girisBtn').click(), 0); } } catch (e) {}
+    try { let g = JSON.parse(sessionStorage.getItem('umalYeniden') || 'null'); sessionStorage.removeItem('umalYeniden');
+      if (!g) { try { g = JSON.parse(sessionStorage.getItem('umalOturum') || 'null'); } catch (e) {} }
+      if (!g) { try { const l = JSON.parse(localStorage.getItem('umalOturum') || 'null'); if (l && Date.now() - (l.t || 0) < 30 * 864e5) { g = l; S.hatirla = true; } } catch (e) {} }
+      if (g && g.no && g.kod) { try { if (sessionStorage.getItem('umalSelam')) S.selamlandi = true; } catch (e) {} $('#no').value = g.no; $('#kod').value = g.kod.length > 4 ? g.kod.slice(0, 4) + '-' + g.kod.slice(4) : g.kod; $('#hatirla').classList.toggle('secili', !!S.hatirla); setTimeout(() => $('#girisBtn').click(), 0); } } catch (e) {}
   })();
   goster('giris');
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
