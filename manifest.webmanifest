@@ -8,7 +8,31 @@
   "theme_color": "#0d1726",
   "lang": "tr",
   "icons": [
-    { "src": "simge-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "simge-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "simge-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "simge-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Not Yükle",
+      "short_name": "Not Yükle",
+      "url": "./#notlar",
+      "icons": [
+        {
+          "src": "simge-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

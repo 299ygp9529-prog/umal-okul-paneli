@@ -1266,3 +1266,16 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .yan #menu .menu-oge.acil-oge { color: #ff9a3a; } .yan #menu .menu-oge.acil-oge.secili { background: linear-gradient(140deg, #ffb867, #ff8a2a); color: #2a1200; box-shadow: 0 0 16px rgba(255,154,58,.5); }
   .yan #menu .menu-oge .mk-sayi { position: absolute; top: 5px; right: 8px; margin: 0; font-size: 10.500px; padding: 0 6px; }
 }
+
+/* K-619: Not Yükle */
+.nt-yukle { text-align: center; border: 1.500px dashed rgba(34,232,255,.5); padding: 22px 16px; } .nt-yukle b { display: block; font-size: 17px; margin: 8px 0 4px; }
+.nt-ik { width: 52px; height: 52px; margin: 0 auto; border-radius: 15px; display: grid; place-items: center; background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.45); color: #7ff6ff; } .nt-ik svg { width: 28px; height: 28px; }
+.nt-form { display: flex; flex-direction: column; gap: 12px; } .nt-alan > span { display: block; font-size: 12.500px; color: var(--soluk); margin-bottom: 5px; font-weight: 700; letter-spacing: .02em; }
+.nt-alan input { width: min(420px, 100%); } .nt-sinif { max-height: 132px; overflow: auto; }
+.nt-ozet { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; } .nt-ozet b { font-size: 17px; color: var(--neon); }
+.nt-tablo { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px; }
+.nt-sat { display: flex; align-items: center; gap: 10px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 11px; padding: 6px 8px 6px 12px; cursor: text; }
+.nt-sat.bos { border-color: rgba(255,154,58,.65); background: rgba(255,154,58,.06); }
+.nt-no { flex: none; width: 46px; color: var(--neon); font-weight: 800; font-variant-numeric: tabular-nums; } .nt-ad { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.200; }
+.nt-sat input { flex: none; width: 74px; text-align: center; font-weight: 800; font-size: 16px; padding: 7px 4px; }
+.nt-kayit .durum-etiketi { flex: none; }

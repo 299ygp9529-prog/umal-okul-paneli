@@ -173,6 +173,10 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 #sifreEkran h1 { margin: 12px 0 6px; font-size: 22px; } #sifreEkran p { margin: 0 0 6px; color: var(--soluk); font-size: 14.5px; line-height: 1.45; }
 #sifreEkran input { width: 100%; box-sizing: border-box; } #sifreEkran .sf-not { color: var(--soluk); font-size: 12.5px; margin: 8px 0 2px; line-height: 1.4; }
 #sifreEkran .birincil, #sifreEkran .ikincil { width: 100%; margin-top: 10px; padding: 13px; font-size: 16px; }
+.no-ders h2 { margin: 0 0 8px; font-size: 17px; } .no-sat { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--cizgi); } .no-sat:first-of-type { border-top: 0; }
+.no-sat > div { flex: 1; min-width: 0; } .no-sat b { display: block; font-size: 15px; overflow-wrap: anywhere; } .no-sat small { color: var(--soluk); font-size: 12.5px; }
+.no-not { flex: none; min-width: 64px; text-align: center; font-size: 24px; font-weight: 900; color: var(--c); border: 1.5px solid var(--c); border-radius: 13px; padding: 4px 10px; font-variant-numeric: tabular-nums; } .no-not.yazi { font-size: 14px; padding: 9px 10px; }
+.no-sat.yeni .no-not { box-shadow: 0 0 14px var(--c); } .no-ana { position: relative; } .no-sat .yeni_ { color: #ffb867; font-weight: 800; margin-left: 6px; } .izg button.genis.no-ana > span.zarf { display: grid; place-items: center; top: 12px; right: 12px; } .no-ana.yeni .so-mini { margin-right: 46px; }
 #acilEkran { position: fixed; inset: 0; z-index: 10000; background: radial-gradient(circle at 50% 30%, #3a1406, #0d1726 70%); display: grid; place-items: center; padding: 20px; }
 #acilEkran .acil-ic { width: min(560px, 100%); text-align: center; border: 2px solid #ff9a3a; border-radius: 22px; padding: 26px 20px 18px; background: rgba(13,23,38,.85); box-shadow: 0 0 0 6px rgba(255,154,58,.12), 0 0 60px rgba(255,120,40,.35); animation: acilNabiz 1.6s ease-in-out infinite; }
 @keyframes acilNabiz { 50% { box-shadow: 0 0 0 10px rgba(255,154,58,.06), 0 0 80px rgba(255,120,40,.55); } }
@@ -290,6 +294,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 
   <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="sinavListe"></div></section>
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
+  <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
   <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Çalışma planım</h1></div>
     <div id="ozMesaj"></div><div id="rplan"></div>
@@ -348,6 +353,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611146200"></script>
-<script src="ogrenci.js?v=202611147200"></script>
+<script src="ogrenci.js?v=202611147400"></script>
 </body>
 </html>

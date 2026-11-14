@@ -170,6 +170,7 @@
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: sinavKonulari },   // K-574
+    { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
@@ -209,6 +210,7 @@
     testler: '<path d="M12 3.500l8.500 4.300L12 12 3.500 7.800 12 3.500Z"/><path d="M3.500 12l8.500 4.200 8.500-4.200M3.500 16.200l8.500 4.300 8.500-4.300"/>',
     ogretmenler: '<circle cx="9" cy="8.500" r="3.200"/><path d="M3 19.500c.5-3.300 2.800-5.300 6-5.300s5.500 2 6 5.300"/><path d="M15.500 5.600a3.200 3.200 0 0 1 0 5.800M17.500 14.600c2 .7 3.200 2.400 3.500 4.900"/>',
     print: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/>',
+    notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
     acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>'
   };
   const menuIk = id => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
@@ -2246,6 +2248,136 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         K.set(x.anahtar, satir); bil.textContent = '✓ Kaydedildi; öğrencilerin panelinde görünür.'; if ($('#knDolu')) $('#knDolu').textContent = S_.filter(z => (K.get(z.anahtar) || {}).konular).length; const kk = t.closest('.kn-kart'); kk.classList.toggle('dolu', !!satir.konular); const y_ = kk.querySelector('.kn-yok, .kn-ust > .soluk.kucuk:last-child'); if (y_) { y_.className = 'soluk kucuk'; y_.style.marginLeft = 'auto'; y_.textContent = satir.konular ? (benimAd || 'Siz') + ' · şimdi' : 'konu yazılmadı'; } }
     };
     ciz();
+  }
+  // ------------------------------------------------------------------ K-619: Not Yükle (PDF'ten ya da elle; öğrenci yalnız kendi notunu görür)
+  const NT = { L: [], T: null, pdfjs: null };
+  const NT_SINAV = ['1. Yazılı', '2. Yazılı', '3. Yazılı', '1. Performans', '2. Performans', 'Proje'];
+  const ntNorm = s => String(s || '').toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim();
+  async function ntPdfSatirlari(dosya) {   // pdf.js: sayfadaki yazı parçalarını satırlara dizer (tarayıcının içinde okunur, dışarı gitmez)
+    const taban = new URL('soru/', location.href).href;
+    if (!NT.pdfjs) { NT.pdfjs = await import(taban + 'pdf.min.mjs'); NT.pdfjs.GlobalWorkerOptions.workerSrc = taban + 'pdf.worker.min.mjs'; }
+    const pdf = await NT.pdfjs.getDocument({ data: await dosya.arrayBuffer() }).promise, S = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const tc = await (await pdf.getPage(p)).getTextContent();
+      const P = tc.items.filter(i => (i.str || '').trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5], w: i.width || 0 })).sort((a, b) => b.y - a.y || a.x - b.x);
+      let cur = null;
+      for (const it of P) { if (!cur || Math.abs(cur.y - it.y) > 3.5) { cur = { y: it.y, o: [] }; S.push(cur); } cur.o.push(it); }
+    }
+    S.forEach(s => s.o.sort((a, b) => a.x - b.x));
+    return S;
+  }
+  function ntCoz(S) {   // satırlardan {sinif, ders, sutunlar:[{ad, deger:{no:not}}], baskaSinif:[no]} çıkarır
+    const ogr = new Map(D.ogrenciler.map(o => [String(o.no), o])), adlar = D.ogrenciler.map(o => [ntNorm(o.ad), String(o.no)]).filter(x => x[0].length > 4);
+    const sayiMi = t => /^(100|\d{1,2})([.,]\d{1,2})?$/.test(t), ozelMi = t => /^(G|GM|M|MZ|K)$/i.test(t);
+    const deger = t => sayiMi(t) ? String(Math.round(parseFloat(t.replace(',', '.')) * 100) / 100).replace('.', ',') : t.toUpperCase();
+    const K = [], bas = []; let metin = '';
+    for (const s of S) {
+      const T = []; s.o.forEach(it => { let off = 0; it.s.split(/\s+/).filter(Boolean).forEach(t => { const i = it.s.indexOf(t, off); off = i + t.length; T.push({ t, x: it.x + it.w * (i / Math.max(1, it.s.length)) }); }); });
+      const duz = T.map(x => x.t).join(' '); metin += duz + '\n';
+      let ni = T.findIndex(x => /^\d{3,6}$/.test(x.t) && ogr.has(x.t)); if (ni < 0) ni = T.findIndex((x, i) => i > 0 && /^\d{2}$/.test(x.t) && ogr.has(x.t));
+      let no = ni >= 0 ? T[ni].t : null, sonra = ni;
+      if (!no) { const n = ntNorm(duz), e = adlar.find(a => n.includes(a[0])); if (e) { no = e[1]; for (let i = T.length - 1; i >= 0; i--) if (/[A-Za-zÇĞİÖŞÜçğıöşü]{2,}/.test(T[i].t) && !ozelMi(T[i].t)) { sonra = i; break; } } }
+      if (!no) { if (!K.length) bas.push(s.o); continue; }
+      K.push({ no, say: T.slice(sonra + 1).filter(x => sayiMi(x.t) || ozelMi(x.t)).map(x => ({ x: x.x, v: deger(x.t) })) });
+    }
+    // sütunlar: sayıların yatay konumuna göre kümeler
+    const xs = K.flatMap(k => k.say.map(s => s.x)).sort((a, b) => a - b), kume = [];
+    xs.forEach(x => { const c = kume[kume.length - 1]; if (c && x - c.son <= 14) { c.son = x; c.n++; } else kume.push({ ilk: x, son: x, n: 1 }); });
+    const secK = kume.filter(c => c.n >= Math.max(1, K.length * .3) || kume.length === 1);
+    // başlık: tablonun hemen üstündeki satırın her parçası, ortasına en yakın sütuna yazılır
+    const basA = {}, ustS = bas[bas.length - 1] || [];
+    ustS.forEach(it => { const cx = it.x + it.w / 2; let en = -1, ed = 1e9; secK.forEach((c, i) => { const d = Math.abs(cx - (c.ilk + c.son) / 2 - 10); if (d < ed) { ed = d; en = i; } }); if (en >= 0 && ed < 70) basA[en] = ((basA[en] || '') + ' ' + it.s).trim(); });
+    const sutunlar = secK.map((c, i) => {
+      const d = {}; K.forEach(k => { const v = k.say.filter(s => s.x >= c.ilk - 1 && s.x <= c.son + 1).pop(); if (v) d[k.no] = v.v; });
+      const ust = basA[i] || '';
+      return { ad: ust && ust.length <= 30 ? ust : (i + 1) + '. sütun', deger: d };
+    });
+    const say = {}; K.forEach(k => { const o = ogr.get(k.no); if (o) say[o.sinif] = (say[o.sinif] || 0) + 1; });
+    const sinif = Object.keys(say).sort((a, b) => say[b] - say[a])[0] || null;
+    const dm = metin.match(/Ders(?:in)?\s*(?:Adı)?\s*[:：]\s*([^\n]{2,60}?)(?=\s+(?:Sınıf|Şube|Öğretmen|Dönem|Tarih)\b|\n|$)/i);
+    return { sinif, ders: dm ? baslik(dm[1].trim()) : '', sutunlar, okunan: K.length, baskaSinif: K.filter(k => (ogr.get(k.no) || {}).sinif !== sinif).map(k => k.no) };
+  }
+  async function notlarBolumu() {
+    await ogrencileriYukle();
+    const [r, ad] = await Promise.all([sb.from('umal_not').select('*').order('guncel', { ascending: false }), sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
+    if (r.error) { if (/umal_not/.test(r.error.message || '')) { $('#icerik').innerHTML = '<div class="kart">Not yükleme için Supabase\'de <b>20261115020000_umal_notlar.sql</b> çalıştırılmalı.</div>'; return; } throw r.error; }
+    NT.L = r.data || []; const benimAd = (ad.data && ad.data.ad) || '';
+    const siniflar = [...new Set(D.ogrenciler.map(o => o.sinif))].sort(sinifSira);
+    const sinifOgr = s => D.ogrenciler.filter(o => o.sinif === s).slice().sort((a, b) => (+a.no) - (+b.no));
+    const dolu = T => Object.values(T.notlar).filter(v => String(v).trim()).length;
+    const liste = () => NT.L.length ? NT.L.map(n => { const k = Object.values(n.notlar || {}).filter(v => String(v).trim()).length;
+      return `<div class="satir nt-kayit"><div class="ana"><b>${esc(n.sinif)} · ${esc(n.ders)}</b><small>${esc(n.sinav)} · ${k} öğrenci · ${esc(n.yukleyen_ad || n.yukleyen)} · ${esc(new Date(n.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</small></div>
+        <span class="durum-etiketi ${n.yayin ? 'yeşil' : 'turuncu'}">${n.yayin ? 'yayında' : 'taslak'}</span><button class="ikincil" data-ntduz="${n.id}">Aç</button></div>`; }).join('') : '<div class="soluk" style="padding:10px 2px">Henüz not yüklenmedi.</div>';
+    const anaCiz = () => {
+      NT.T = null;
+      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Not Yükle</h1><div class="soluk kucuk">Sınav notlarını PDF'ten ya da elle yükleyin. Yayınlayınca her öğrenci, öğrenci panelindeki Notlarım'da yalnız kendi notunu görür.</div></div></div>
+        <div class="kart nt-yukle"><div class="nt-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/></svg></div>
+          <b>Not listesinin PDF'ini seçin</b><div class="soluk kucuk">e-Okul'dan indirdiğiniz not listesi. Sınıfı Atlas kendisi bulur; yayınlamadan önce notları siz kontrol edersiniz. PDF bu cihazda okunur, başka bir yere gönderilmez.</div>
+          <div class="dugmeler" style="justify-content:center;margin:12px 0 0"><button class="birincil" id="ntSec">PDF seç</button><button class="ikincil" id="ntElle">Elle gir</button></div>
+          <input type="file" id="ntDosya" accept="application/pdf,.pdf" style="display:none"><div class="kucuk" id="ntBilgi" style="margin-top:8px"></div></div>
+        <div class="kart"><h2 style="margin-top:0">${D.rol === 'ogretmen' ? 'Yüklediklerim' : 'Yüklenen notlar'}</h2><div class="satirlar">${liste()}</div></div>`;
+      $('#ntSec').onclick = () => $('#ntDosya').click();
+      $('#ntElle').onclick = () => { NT.T = { sinif: null, ders: '', sinav: '1. Dönem 1. Yazılı', notlar: {}, sutunlar: [], sec: 0 }; duzCiz(); };
+      $('#ntDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const bil = $('#ntBilgi'); bil.className = 'kucuk soluk'; bil.textContent = 'PDF okunuyor…';
+        try { const c = ntCoz(await ntPdfSatirlari(f));
+          if (!c.okunan) { bil.className = 'kucuk turuncu'; bil.textContent = 'Bu PDF\'te okul numarası ya da öğrenci adı okunamadı. Taranmış (fotoğraf) bir PDF olabilir; "Elle gir" ile devam edebilirsiniz.'; ev.target.value = ''; return; }
+          NT.T = { sinif: c.sinif, ders: c.ders, sinav: '1. Dönem 1. Yazılı', sutunlar: c.sutunlar, sec: Math.max(0, c.sutunlar.reduce((b, s, i, A) => Object.keys(s.deger).length > Object.keys(A[b].deger).length ? i : b, 0)), notlar: {}, okunan: c.okunan, baska: c.baskaSinif, dosya: f.name };
+          sutunUygula(); duzCiz();
+        } catch (e) { bil.className = 'kucuk kirmizi'; bil.textContent = 'PDF okunamadı: ' + (e.message || e); }
+        ev.target.value = ''; };
+    };
+    const sutunUygula = () => { const T = NT.T, s = T.sutunlar[T.sec]; T.notlar = {}; if (s && T.sinif) sinifOgr(T.sinif).forEach(o => { const v = s.deger[String(o.no)]; if (v != null) T.notlar[String(o.no)] = v; }); };
+    const duzCiz = () => {
+      const T = NT.T, O = T.sinif ? sinifOgr(T.sinif) : [];
+      const sut = T.sutunlar.length > 1 ? `<div class="nt-alan"><span>PDF'teki hangi sütun?</span><div class="cipler">${T.sutunlar.map((s, i) => `<button class="cip ${T.sec === i ? 'secili' : ''}" data-ntsut="${i}" title="${esc(Object.values(s.deger).slice(0, 5).join(' · '))}">${esc(s.ad)} <small>(${esc(Object.values(s.deger).slice(0, 3).join(', '))}…)</small></button>`).join('')}</div></div>` : '';
+      $('#icerik').innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ntGeri">← Not Yükle</button>${T.sinif ? `<span class="neon-tabela">${esc(T.sinif)}</span>` : ''}<span class="soluk">${T.id ? (T.yayin ? 'yayında' : 'taslak') : (T.dosya ? esc(T.dosya) : 'elle giriş')}</span></div>
+        <div class="kart nt-form">
+          <div class="nt-alan"><span>Sınıf</span><div class="cipler nt-sinif">${T.sinif && !T.sinifAc ? `<button class="cip secili">${esc(T.sinif)}</button><button class="cip" id="ntSinifAc">Değiştir</button>` : siniflar.map(s => `<button class="cip ${T.sinif === s ? 'secili' : ''}" data-ntsinif="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+          <div class="nt-alan"><span>Ders</span><input id="ntDers" maxlength="80" placeholder="Ör. Matematik" value="${esc(T.ders)}"></div>
+          <div class="nt-alan"><span>Sınav</span><input id="ntSinav" maxlength="80" value="${esc(T.sinav)}"><div class="cipler" style="margin-top:6px">${['1. Dönem', '2. Dönem'].map(d => `<button class="cip" data-ntdonem="${d}">${d}</button>`).join('')}${NT_SINAV.map(s => `<button class="cip" data-ntsinav="${s}">${s}</button>`).join('')}</div></div>
+          ${sut}</div>
+        ${T.sinif ? `<div class="kart"><div class="nt-ozet"><b id="ntSay"></b>${T.okunan ? `<span class="soluk kucuk">PDF'te ${T.okunan} öğrenci okundu${T.baska && T.baska.length ? ` · ${T.baska.length} tanesi başka sınıftan, alınmadı` : ''}</span>` : ''}</div>
+          <div class="soluk kucuk" style="margin:2px 0 10px">Notları kontrol edin; yanlış okunanı düzeltin. Turuncu satırlarda not yok (boş bırakılan öğrenci hiçbir şey görmez). Sınava girmeyen için G yazabilirsiniz.</div>
+          <div class="nt-tablo">${O.map(o => { const v = T.notlar[String(o.no)] ?? ''; return `<label class="nt-sat ${String(v).trim() ? '' : 'bos'}"><span class="nt-no">${esc(o.no)}</span><span class="nt-ad">${esc(baslik(o.ad))}</span><input data-ntno="${esc(o.no)}" data-bicim="yok" inputmode="decimal" maxlength="6" value="${esc(v)}"></label>`; }).join('')}</div>
+          <div class="dugmeler" style="margin-top:14px"><span class="kucuk" id="ntKayit" style="margin-right:auto"></span>${T.id ? '<button class="bag" style="color:var(--kirmizi)" id="ntSil">Sil</button>' : ''}${T.yayin ? '<button class="ikincil" id="ntKaldir">Yayından kaldır</button>' : '<button class="ikincil" id="ntTaslak">Kaydet (taslak)</button>'}<button class="birincil" id="ntYayin">${T.yayin ? 'Kaydet' : 'Yayınla'}</button></div></div>` : '<div class="kart soluk">Önce sınıfı seçin.</div>'}`;
+      const say = () => { if ($('#ntSay')) $('#ntSay').textContent = `${dolu(T)}/${O.length} öğrencinin notu girildi`; }; say();
+      $('#ntGeri').onclick = async () => { if (T.degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return; anaCiz(); };
+      $('#ntDers').oninput = ev => { T.ders = ev.target.value; T.degisti = true; }; $('#ntSinav').oninput = ev => { T.sinav = ev.target.value; T.degisti = true; };
+      $('#icerik').oninput = ev => { const i = ev.target.closest('[data-ntno]'); if (!i) return; const v = i.value.trim(); if (v) T.notlar[i.dataset.ntno] = v; else delete T.notlar[i.dataset.ntno]; i.closest('.nt-sat').classList.toggle('bos', !v); T.degisti = true; say(); };
+    };
+    const kaydet = async yayin => {
+      const T = NT.T, bil = $('#ntKayit'), hata = m => { bil.className = 'kucuk kirmizi'; bil.textContent = m; };
+      T.ders = (T.ders || '').trim(); T.sinav = (T.sinav || '').trim();
+      if (!T.ders) { hata('Dersin adını yazın.'); $('#ntDers').focus(); return; }
+      if (!T.sinav) { hata('Sınavın adını yazın.'); $('#ntSinav').focus(); return; }
+      if (yayin && !dolu(T)) { hata('Hiç not girilmedi.'); return; }
+      const kotu = Object.entries(T.notlar).find(([, v]) => !/^(100|\d{1,2})([.,]\d{1,2})?$/.test(v) && !/^(G|GM|M|MZ|K)$/i.test(v));
+      if (kotu) { hata(`${kotu[0]} numaralı öğrencinin notu geçersiz: "${kotu[1]}". 0–100 arası bir sayı ya da G yazın.`); const i = document.querySelector(`[data-ntno="${CSS.escape(kotu[0])}"]`); if (i) i.focus(); return; }
+      const ayni = !T.id && NT.L.find(n => n.sinif === T.sinif && ntNorm(n.ders) === ntNorm(T.ders) && ntNorm(n.sinav) === ntNorm(T.sinav));
+      if (ayni && !await onayla(`${T.sinif} · ${T.ders} · ${T.sinav} için daha önce not yüklenmiş. Yine de ayrı bir kayıt olarak eklensin mi?`)) return;
+      if (yayin && !T.yayin && !await onayla(`${T.sinif} sınıfından ${dolu(T)} öğrenci ${T.ders} · ${T.sinav} notunu kendi panelinde görecek. Yayınlansın mı?`)) return;
+      bil.className = 'kucuk soluk'; bil.textContent = 'Kaydediliyor…';
+      const alan = { sinif: T.sinif, ders: T.ders, sinav: T.sinav, notlar: T.notlar, yayin, guncel: new Date().toISOString() };
+      const { data, error } = await israrla(() => T.id ? sb.from('umal_not').update(alan).eq('id', T.id).select().maybeSingle() : sb.from('umal_not').insert(Object.assign({ yukleyen: D.eposta, yukleyen_ad: benimAd || null }, alan)).select().maybeSingle());
+      if (error || !data) { hata('Kaydedilemedi: ' + (error ? hataYaz(error) : 'yetki yok')); return; }
+      NT.L = [data, ...NT.L.filter(n => n.id !== data.id)]; anaCiz();
+      $('#ntBilgi').className = 'kucuk yeşil'; $('#ntBilgi').textContent = yayin ? `✓ ${data.sinif} · ${data.ders} · ${data.sinav} yayında; öğrenciler Notlarım'da görür.` : '✓ Taslak kaydedildi (öğrenciler görmez).';
+    };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button'); if (!b) return; const T = NT.T;
+      if (b.dataset.ntduz) { const n = NT.L.find(x => x.id === b.dataset.ntduz); if (!n) return; NT.T = { id: n.id, sinif: n.sinif, ders: n.ders, sinav: n.sinav, notlar: Object.assign({}, n.notlar || {}), yayin: n.yayin, sutunlar: [], sec: 0 }; duzCiz(); return; }
+      if (!T) return;
+      if (b.id === 'ntSinifAc') { T.sinifAc = true; duzCiz(); return; }
+      if (b.dataset.ntsinif) { T.sinif = b.dataset.ntsinif; T.sinifAc = false; if (T.sutunlar.length) sutunUygula(); else { const O = new Set(sinifOgr(T.sinif).map(o => String(o.no))); Object.keys(T.notlar).forEach(k => { if (!O.has(k)) delete T.notlar[k]; }); } T.degisti = true; duzCiz(); return; }
+      if (b.dataset.ntsut != null) { if (T.degisti && !await onayla('Sütun değişince elle yaptığınız düzeltmeler silinir. Devam edilsin mi?')) return; T.sec = +b.dataset.ntsut; sutunUygula(); duzCiz(); return; }
+      if (b.dataset.ntdonem) { T.sinav = b.dataset.ntdonem + ' ' + T.sinav.replace(/^[12]\. Dönem\s*/, ''); T.degisti = true; $('#ntSinav').value = T.sinav; return; }
+      if (b.dataset.ntsinav) { T.sinav = ((T.sinav.match(/^[12]\. Dönem/) || ['1. Dönem'])[0]) + ' ' + b.dataset.ntsinav; T.degisti = true; $('#ntSinav').value = T.sinav; return; }
+      if (b.id === 'ntTaslak') return kaydet(false);
+      if (b.id === 'ntYayin') return kaydet(true);
+      if (b.id === 'ntKaldir') { if (await onayla('Notlar öğrencilerin ekranından kaldırılsın mı? (Kayıt silinmez, taslak olarak durur.)')) kaydet(false); return; }
+      if (b.id === 'ntSil') { if (!await onayla('Bu not kaydı kalıcı olarak silinsin mi?')) return; const { error } = await sb.from('umal_not').delete().eq('id', T.id); if (error) { uyar('Silinemedi: ' + hataYaz(error)); return; } NT.L = NT.L.filter(n => n.id !== T.id); anaCiz(); }
+    };
+    anaCiz();
   }
   // ------------------------------------------------------------------ K-575: Rehberlik → Soru takibi (izin veren 11-12 öğrencileri)
   const ST = { per: 'hafta', sinif: null, kul: false };
