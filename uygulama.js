@@ -2673,8 +2673,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
     const logo = new URL('okul-logo.png', location.href).href;
     const qr = r => { try { return window.UmalQR ? `<img alt="QR" src="${window.UmalQR.png(`https://umalatlas.com.tr/ogrenci/#n=${encodeURIComponent(r.no)}&k=${String(r.kod).replace(/[^A-Z0-9]/gi, '')}`, 10)}">` : ''; } catch (e) { return ''; } };   // K-508: okutunca doğrudan girer
-    const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>${ozel ? 'ÇALIŞMA PLANI GİRİŞ KARTI' : 'ÖĞRENCİ GİRİŞ KARTI'}</b><small>${ozel ? 'Özel ders · Ahmet Fehmi Çam' : 'Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi'}</small></div></div>
-      <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · ${ozel ? 'Numaran' : 'Okul no'} ${esc(r.no)}</div>
+    const kart = r => `<div class="f"><div class="bant">${ozel ? '' : `<span class="lg"><img src="${logo}" alt=""></span>`}<div><b>${ozel ? 'ÇALIŞMA PLANI GİRİŞ KARTI' : 'ÖĞRENCİ GİRİŞ KARTI'}</b><small>${ozel ? 'Ahmet Fehmi Çam' : 'Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi'}</small></div></div>
+      <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${ozel ? 'Numaran ' + esc(r.no) : esc(r.sinif) + ' · Okul no ' + esc(r.no)}</div>
       <div class="kk"><small>KODUN</small><span>${esc(r.kod)}</span></div>
       <ol><li>QR'ı telefonla okut, ya da</li><li><b>umalatlas.com.tr/ogrenci</b> adresine gir; numaranı ve kodunu yaz</li></ol></div>
       <div class="qr">${qr(r)}<small>Okut, gir</small></div></div>
