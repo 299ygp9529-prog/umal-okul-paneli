@@ -31,7 +31,7 @@
     $('#girisBtn').disabled = false;
     const otoAcik = document.documentElement.classList.contains('oturumlu');
     if (otoAcik && !error && data && data.ok) {   // K-582: oturum doğrulandı → tik, sonra ana sayfa
-      const ac_ = $('#acilis'); ac_.classList.add('tikli'); $('#acilis small').textContent = 'Hoş geldin';
+      const ac_ = $('#acilis'); ac_.classList.add('tikli');
       document.documentElement.classList.remove('oturumlu'); setTimeout(() => { ac_.classList.add('kalk'); setTimeout(() => ac_.classList.remove('tikli', 'kalk'), 260); }, 650);
     } else document.documentElement.classList.remove('oturumlu');   // K-581: yenilemede giriş ekranı görünmesin; sonuç gelince kalkar
     if (error || !data) { bilgi.textContent = 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.'; bilgi.classList.add('hata'); return; }
