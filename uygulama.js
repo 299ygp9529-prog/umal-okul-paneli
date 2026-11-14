@@ -73,7 +73,7 @@
     $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
-    if (rol === 'rehberlik') mektupZarfi();
+    if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
   }
   // K-464: DersMap mesaj kaydında veri.tur ister; K-457 komutu yazmıyordu → DersMap paneli "Yüklenemedi". Eski kayıtlar burada tamamlanır.
@@ -155,7 +155,7 @@
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
-    { id: 'randevu', ad: 'Randevular', roller: ['rehberlik'], ciz: randevularBolumu },   // K-549   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
+    { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu },   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -2203,7 +2203,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       const G = RV.L.filter(SUZ[RV.suz][1]).sort((a, b) => RV.suz === 'gecmis' ? String(b.zaman || b.olusturma).localeCompare(String(a.zaman || a.olusturma)) : String(a.zaman || '0').localeCompare(String(b.zaman || '0')));
       let gun = '';
-      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Randevular</h1><div class="soluk kucuk">Öğrenciler boş saatlerinizden doğrudan randevu alır ya da istek bırakır; siz de öğrenciyi davet edebilirsiniz. Yalnız rehberlik görür.</div></div>
+      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Randevular</h1><div class="soluk kucuk">Öğrenciler boş saatlerinizden doğrudan randevu alır ya da istek bırakır; siz de öğrenciyi davet edebilirsiniz. Rehberlik ve baş yönetici görür.</div></div>
           <div class="dugmeler" style="margin:0"><button class="ikincil" data-rv="bosac">+ Boş saat aç</button><button class="birincil" data-rv="davet">+ Öğrenci davet et</button></div></div>
         ${bekleyen.length ? `<div class="rv-uyari">Saati geçmiş ${bekleyen.length} randevunun sonucu girilmedi: aşağıda “Görüşüldü / Gelmedi” ile kapatın.</div>` : ''}
         <div class="mk-sekme" style="margin-top:12px">${Object.entries(SUZ).map(([k, [a, f]]) => `<button class="cip ${RV.suz === k ? 'secili' : ''}" data-rsuz="${k}">${a} · ${RV.L.filter(f).length}</button>`).join('')}</div>
