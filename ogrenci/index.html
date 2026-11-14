@@ -173,6 +173,8 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 #acilEkran .acil-ust { display: inline-flex; align-items: center; gap: 8px; color: #ffb867; font-weight: 900; letter-spacing: .12em; font-size: 14px; } #acilEkran .acil-isik { width: 12px; height: 12px; border-radius: 50%; background: #ff6b2b; box-shadow: 0 0 12px #ff6b2b; animation: acilIsik 1s steps(2) infinite; } @keyframes acilIsik { 50% { opacity: .25; } }
 #acilEkran h1 { margin: 14px 0 6px; font-size: 26px; line-height: 1.25; overflow-wrap: anywhere; } #acilEkran p { margin: 10px 0 20px; font-size: 18px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 #acilEkran button { width: 100%; padding: 14px; font-size: 17px; } #acilEkran small { display: block; margin-top: 12px; color: var(--soluk); font-size: 12px; }
+body.ozel .ust img { display: none; } body.ozel .ust b { display: inline-block; font-size: 28px; font-weight: 900; color: #e9fdff; padding: 4px 18px; border: 2px solid #22e8ff; border-radius: 14px; background: rgba(34,232,255,.08); box-shadow: 0 0 14px rgba(34,232,255,.55), inset 0 0 12px rgba(34,232,255,.25); text-shadow: 0 0 10px rgba(127,246,255,.85); line-height: 1.2; margin-bottom: 6px; } body.ozel .ust small { display: block; color: #7ff6ff; letter-spacing: .04em; }
+body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-top: 2px; }
 .pl-bos { color: var(--cs); font-size: 13px; padding: 4px 0; }
 .pl-form { background: var(--koyu); border: 1px solid var(--neon); border-radius: 14px; padding: 12px; margin-top: 10px; } .pl-form label { margin-top: 8px; }
 .pl-cip { display: flex; flex-wrap: wrap; gap: 6px; } .pl-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 6px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .pl-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
@@ -283,7 +285,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
   <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Çalışma planım</h1></div>
-    <div id="rplan"></div>
+    <div id="ozMesaj"></div><div id="rplan"></div>
     <div class="kart pl-ust"><div class="pl-hafta"><button class="ikincil" id="plOnce" aria-label="Önceki hafta">‹</button><div><b id="plBaslik"></b><small id="plAlt"></small></div><button class="ikincil" id="plSonra" aria-label="Sonraki hafta">›</button></div>
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
     <div id="plSinav"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
@@ -339,6 +341,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611143000"></script>
-<script src="ogrenci.js?v=202611145000"></script>
+<script src="ogrenci.js?v=202611145200"></script>
 </body>
 </html>

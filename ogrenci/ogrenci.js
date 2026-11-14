@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -246,7 +246,7 @@
     const acikForm = S.formlar.filter(f => !f.doldu).length;
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru" class="genis"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><span><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.gun.size} gün çalıştın` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></span>${st && st.n ? `<span class="so-mini"><b>${st.n.toLocaleString(tr)}</b><small>soru · net ${sayi1(st.net)}</small></span>` : ''}</button>`; })() : '';
-    if (ozel()) { $('#kutular').innerHTML = soK + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Öğretmeninden yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni()) + kutu('s-reh', 'reh', '#b06bff', 'Mesajlar', rhMesajYeni() ? 'Yeni mesajın var' : (RH.mesajlar.length ? 'Öğretmeninden' : 'Mesaj yok'), true, rhMesajYeni()); sozCiz(); if (sessiz === true) return; goster('liste'); window.scrollTo(0, 0); return; }
+    if (ozel()) { if (sessiz === true) { if (!$('#s-plan').classList.contains('gizli') && PL.veri) plCiz(); return; } plAc(); return; }   // K-598: özel ders öğrencisi doğrudan çalışma planına
     $('#kutular').innerHTML = soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
@@ -326,7 +326,9 @@
   const RHAD = () => ozel() ? 'Öğretmen' : 'Rehberlik';
   function ustBilgi() {
     const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g);
-    $('#ustAlt').textContent = g ? baslik(S.ad) + ' · ' + (ozel() ? 'Özel ders' : S.sinif) : 'Öğrenci';
+    document.body.classList.toggle('ozel', g && ozel()); if (!ustBilgi.t) ustBilgi.t = document.title; document.title = g && ozel() ? baslik(S.ad) + ' · Çalışma planı' : ustBilgi.t;   // K-598: özel ders öğrencisi — okul adı/logosu yok, yalnız adı
+    $('.ust b').textContent = g && ozel() ? baslik(S.ad) : 'Ümraniye Merkez Anadolu Lisesi';
+    $('#ustAlt').textContent = g ? (ozel() ? 'Haftalık çalışma planın' : baslik(S.ad) + ' · ' + S.sinif) : 'Öğrenci';
   }
   const HI = {
     gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
@@ -584,6 +586,12 @@
         ${d === 'yok' ? `<div class="pl-neden"><small>Neden yapamadın?</small><div class="pl-cip">${NEDEN.map(n => `<button data-pn="${esc(n)}" class="${x.n === n ? 'secili' : ''}">${esc(n)}</button>`).join('')}</div></div>` : ''}
         ${PL.bosAc === key ? `<div class="pl-serbest"><small>Hangi boş gününe taşınsın?</small>${bos.length ? `<div class="pl-cip">${bos.map(g => `<button data-ptel="${g}">${GUN[g]}</button>`).join('')}</div>` : '<div class="soluk kucuk">Bu hafta boş gün yok.</div>'}</div>` : ''}<div class="pl-alt">${d !== 'tam' ? `<button data-pbos="1" class="${PL.bosAc === key ? 'secili' : ''}">Boş günüme taşı</button>` : ''}<button data-pdz="1">${x.rh ? 'Taşı / kısalt' : 'Düzenle'}</button>${d ? '<button data-pgeri="1">İşareti kaldır</button>' : ''}<button data-psil2="1" class="sil">${x.rh ? 'Bu hafta çıkar' : 'Sil'}</button></div></div>` : ''}`;
   }
+  function ozMesajCiz() {   // K-598: özel ders öğrencisine öğretmen mesajları plan ekranının üstünde
+    const k = $('#ozMesaj'); if (!k) return; if (!ozel() || !RH.mesajlar.length) { k.innerHTML = ''; return; }
+    const yeni = new Set(RH.mesajlar.filter(m => !m.okundu).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeni]);
+    k.innerHTML = `<div class="rh-mesaj"><h2>Öğretmeninden</h2>${RH.mesajlar.slice(0, 3).map(m => `<div><p>${esc(m.metin)}</p><small>${esc(new Date(m.zaman).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}${RH.yeniGor.has(m.id) ? '<span class="yeni_">YENİ</span>' : ''}</small></div>`).join('')}</div>`;
+    if (yeni.size) rhYukle(true);
+  }
   async function plAc() {
     goster('s-plan'); window.scrollTo(0, 0);
     if (RH.plan && RH.plan.yayin) { try { localStorage.setItem(rpGorKey(), RH.plan.yayin); } catch (e) {} }
@@ -592,6 +600,7 @@
     plCiz();
   }
   function plCiz() {
+    ozMesajCiz();
     const hk = iso(PL.hafta), L = plHafta(), R = rhGorevler(hk), son = new Date(PL.hafta); son.setDate(son.getDate() + 6);
     rpUstCiz(hk);
     const T = [...R.filter(x => !x.sil), ...L], top = T.reduce((t, x) => t + (+x.dk || 0), 0), ok = Math.round(T.reduce((t, x) => t + (+x.dk || 0) * puan(x), 0)), hedef = +PL.veri.hedef || (RH.plan && RH.plan.veri && +RH.plan.veri.hedef) || 0;

@@ -1229,3 +1229,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .sor-dug { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; } .sor-dug button { min-width: 96px; }
 .sor-ic.sor-tehlike .sor-dug .birincil { background: #ff6b6b; color: #2a0505; }
 @keyframes sorGel { from { opacity: 0; } } @keyframes sorIc { from { transform: translateY(8px) scale(.97); opacity: 0; } }
+.ro-ust .neon-tabela.oz-ad { font-size: 26px; padding: 4px 18px; border-color: var(--neon); }
