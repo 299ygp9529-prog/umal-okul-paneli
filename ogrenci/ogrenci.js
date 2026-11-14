@@ -174,7 +174,7 @@
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   async function ozetYukle() {
     const [oz, tk] = await Promise.all([
-      (async () => { try { return (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; } catch (e) { return null; } })(),
+      (async () => { for (let i = 0; i < 3; i++) { try { const r = (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; if (r && r.ok) return r; } catch (e) {} await new Promise(z => setTimeout(z, 1500 * (i + 1))); } return null; })(),   // K-578: ilk denemede kilit/ağ yüzünden boş dönerse yeniden dene
       (async () => { try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);
     if (oz && oz.ok) { S.program = oz.program || {}; S.yerler = oz.yerler || []; }
     try { const { data } = await sb.from('umal_sinav_konu').select('anahtar,konular').eq('seviye', (S.sinif || '').split('-')[0]); S.konular = new Map((data || []).filter(k => k.konular).map(k => [k.anahtar, k.konular])); } catch (e) { S.konular = new Map(); }   // K-574

@@ -502,6 +502,7 @@
     const [{ data, error }, kb] = await Promise.all([sb.from('umal_sinav_plan').select('tarih,ders,sinav,gozcu,salonlar').gte('tarih', bugunISO()).order('tarih').order('ders'), kelebekPlanlari()]);
     // K-496: kelebekte artık olmayan (saati değişen / kaldırılan) sınav veritabanında kalsa da gösterilmez — aynı sınav iki kez görünmesin
     const kbVar = new Set(kb.map(p => p.tarih + '|' + p.ders)), kbOk = D._kb && D._kb.ok;
+    try { const { data: ky } = await sb.from('umal_ayarlar').select('anahtar,deger').like('anahtar', 'kelebek_%'); (ky || []).forEach(r => { try { const p = JSON.parse(r.deger); if (p && p.yayin) kbVar.add(p.tarih + '|' + p.ders); } catch (e) {} }); } catch (e) {}   // K-577: panelden yayınlanan kendi planlarımız kaybolmasın
     const L = (data || []).filter(p => !kbOk || kbVar.has(p.tarih + '|' + p.ders)), var_ = new Set(L.map(p => p.tarih + '|' + p.ders));
     if (kbOk && D.rol === 'bas' && !D._eskiPlanSil) {   // baş yönetici: veritabanındaki eski kopyayı da kaldırmayı dener (DersMap de iki kez göstermesin); izin yoksa sessizce geçer
       D._eskiPlanSil = true;
@@ -509,7 +510,7 @@
         sb.from('umal_sinav_plan').delete().eq('tarih', p.tarih).eq('ders', p.ders).then(r => { if (r && r.error) console.warn('eski plan silinemedi:', r.error.message); }, () => {});
       });
     }
-    kb.forEach(p => { if (!var_.has(p.tarih + '|' + p.ders)) L.push(p); });
+    kb.forEach(p => { if (!var_.has(p.tarih + '|' + p.ders)) L.push(p); });   // veritabanındaki (kendi yayınımız dahil) öncelikli
     L.sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, 'tr'));
     return { data: L, error: L.length ? null : error };
   }
@@ -3210,7 +3211,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           ${sec ? `<div class="kb-dersler">${Object.entries(dersler).sort((a, b) => b[1] - a[1]).map(([d, n]) => `<span class="tk-cip" style="--sv:#5cc8ff"><b>${n}</b>${esc(d)}</span>`).join('')}</div>` : ''}</div>
         ${sec ? `<div class="kart"><div class="kb-adim"><b>2</b> Salonlar <span class="soluk kucuk">· dokunarak çıkarın / ekleyin · ${kat.length} öğrenci, ${yerSay} yer${yerSay < kat.length ? ' · <span class="kirmizi">yer yetmiyor</span>' : ''}</span></div>
           ${seviyeGrupla(tumSalon, L => `<div class="cipler kb-svcip">${L.map(s => `<button class="cip ${kapali.has(s) ? '' : 'secili'}" data-sal="${esc(s)}">${esc(s)}</button>`).join('')}</div>`)}
-          <div class="dugmeler" style="justify-content:flex-start;margin-top:12px"><button class="birincil" id="kbYerlestir">${plan ? 'Yeniden yerleştir' : 'Yerleştir'}</button>${plan ? '<button class="ikincil" id="kbKaydet">Kaydet</button><button class="ikincil" id="kbYazdir">Kâğıtları yazdır</button><button class="ikincil" disabled title="Atlas planı veritabanından okuyunca açılacak">Tahtalara yayınla · yakında</button>' : ''}</div>
+          <div class="dugmeler" style="justify-content:flex-start;margin-top:12px"><button class="birincil" id="kbYerlestir">${plan ? 'Yeniden yerleştir' : 'Yerleştir'}</button>${plan ? '<button class="ikincil" id="kbKaydet">Kaydet</button><button class="ikincil" id="kbYazdir">Kâğıtları yazdır</button><button class="birincil" id="kbYayinla" title="Öğrenci paneli (Sınavlarım: salon ve sıra) ve Sınav merkezi bu planı kullanır">' + (plan.yayin ? 'Yeniden yayınla' : 'Öğrencilere yayınla') + '</button>' : ''}</div>
+          ${plan ? `<div class="kb-kod"><span>Plan kodu <b>${esc(kbKod(plan))}</b></span><small>Bütün kâğıtlarda yazar; yoklama ve oturma kâğıtlarının aynı plandan olduğunu bununla kontrol edin.</small>${plan.yayin ? `<span class="kb-yay">● Yayında · ${esc(new Date(plan.yayin * 1000).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}${plan.yayinKod && plan.yayinKod !== kbKod(plan) ? ' · <b class="kirmizi">yayındaki plan eski (' + esc(plan.yayinKod) + '), yeniden yayınlayın</b>' : ''}</span>` : '<span class="kb-yay soluk">Henüz yayınlanmadı — öğrenciler yerini göremez</span>'}</div>` : ''}
           <div class="kucuk" id="kbBilgi" style="margin-top:8px">${plan ? `<span class="${plan.yan ? 'kirmizi' : 'yeşil'}">Yan yana aynı ders: ${plan.yan}</span> · <span class="${plan.arka ? 'turuncu' : 'yeşil'}">Arka arkaya aynı ders: ${plan.arka}</span> · ${Object.keys(sal).length} salon${bepSay ? ` · <span class="soluk">◆ BEP ${bepSay} (yalnız bu ekranda)</span>` : ''}${plan.kayit ? ` · <span class="soluk">kaydedildi ${esc(new Date(plan.kayit * 1000).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</span>` : ' · <span class="turuncu">kaydedilmedi</span>'}` : ''}</div></div>` : ''}
         ${plan ? `<div class="kart"><div class="kb-adim"><b>3</b> Salonlar ve gözcüler <span class="soluk kucuk">· salona dokunun: oturma planı</span></div>
           ${seviyeGrupla(Object.keys(sal).sort(sinifSira), G => `<div class="kb-salonlar">${G.map(s => { const L = sal[s], g = (plan.gozcu || {})[s] || '', dd = {}; L.forEach(r => { const k = `${dersKisa(r.ders)} ${seviye(r.sinif)}`; dd[k] = (dd[k] || 0) + 1; });
@@ -3242,12 +3244,31 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const r = (ay || []).find(x => x.anahtar === anahtar(sec)); if (r) r.deger = JSON.stringify(plan); else (ay || []).push({ anahtar: anahtar(sec), deger: JSON.stringify(plan) });
         ciz(); return;
       }
+      if (t.id === 'kbYayinla') {   // K-577: kendi planımız → umal_sinav_plan (öğrenci paneli + Sınav merkezi)
+        document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); });
+        const bosG = Object.keys(plan.salonlar).filter(x => !plan.gozcu[x]); if (bosG.length && !confirm(`${bosG.length} salonun gözcüsü yazılmamış (${bosG.join(', ')}). Yine de yayınlansın mı?`)) return;
+        const salonlar = {}; Object.entries(plan.salonlar).forEach(([x, L]) => { salonlar[x] = L.slice().sort((a, b) => a.sira - b.sira).map(r => [r.sira, String(r.no), r.ad, r.sinif, r.ders]); });
+        const sinav = [...new Set(Object.values(sec.subeler || {}))].join(' / ');
+        const { error } = await israrla(() => sb.from('umal_sinav_plan').upsert({ tarih: sec.tarih, ders: sec.ders, sinav, gozcu: plan.gozcu, salonlar, guncel: new Date().toISOString() }));
+        if (error) { alert('Yayınlanamadı: ' + hataYaz(error)); return; }
+        plan.yayin = Math.floor(Date.now() / 1000); plan.yayinKod = kbKod(plan); plan.kayit = plan.yayin; plan.kim = D.eposta;
+        const { error: e2 } = await sb.from('umal_ayarlar').upsert({ anahtar: anahtar(sec), deger: JSON.stringify(plan) }, { onConflict: 'anahtar' });
+        if (e2) { alert('Plan yayınlandı ama taslak kaydedilemedi: ' + hataYaz(e2)); }
+        const r = (ay || []).find(x => x.anahtar === anahtar(sec)); if (r) r.deger = JSON.stringify(plan); else (ay || []).push({ anahtar: anahtar(sec), deger: JSON.stringify(plan) });
+        D._kb = null; ciz(); return;
+      }
       if (t.id === 'kbYazdir') { document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); }); kelebekYazdir(sec, plan); }
     };
     $('#kbIc').oninput = ev => { const i = ev.target.closest('[data-goz]'); if (i && plan) { plan.gozcu[i.dataset.goz] = i.value.trim(); i.classList.toggle('bos', !i.value.trim()); } };
     yukleTaslak(); ciz();
   }
   // Basılacak kâğıtlar (A4): salon başına imza listesi + kroki; sonda kâğıt dağıtım çizelgesi ve sınıf kapısı listeleri. BEP bilgisi YOK.
+  const KB_MUDUR = 'Erdoğan AKKAYA';
+  function kbKod(plan) {   // K-577: plan kodu — yerleşim değişirse değişir
+    let h = 2166136261; const t = JSON.stringify(Object.keys(plan.salonlar || {}).sort().map(x => [x, (plan.salonlar[x] || []).map(r => r.no + ':' + r.sira)]));
+    for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return 'KB-' + (h >>> 0).toString(36).toUpperCase().padStart(6, '0').slice(-6);
+  }
   function kelebekYazdir(sec, plan) {
     const sal = plan.salonlar, adlar = Object.keys(sal).sort(sinifSira);
     const tarih = new Date(sec.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
@@ -3255,14 +3276,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const g = (new Date(sec.tarih + 'T12:00:00').getDay() + 6) % 7, z = (((D.program || {}).zil || {})[g === 4 ? 'cuma' : 'normal'] || []).find(x => parseInt(x.ders, 10) === parseInt(sec.ders, 10));
     const saat = z ? `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}` : '';
     const logo = new URL('okul-logo.png', location.href).href;
-    const ust = (baslik_, alt) => `<div class="b-ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><span>${esc(baslik_)}</span></div><div class="b-sag">${esc(tarih)}<br>${esc(dersNo)} ${esc(saat)}${alt ? '<br>' + alt : ''}</div></div>`;
+    const kod = kbKod(plan), ust = (baslik_, alt) => `<div class="b-ust"><img src="${logo}"><div><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><span>${esc(baslik_)}</span></div><div class="b-sag">${esc(tarih)}<br>${esc(dersNo)} ${esc(saat)}${alt ? '<br>' + alt : ''}<br><span style="font-size:8pt">Plan kodu: <b>${esc(kod)}</b></span></div></div>`;
     const sayfalar = [];
     for (const s of adlar) {
       const L = sal[s].slice().sort((a, b) => a.sira - b.sira), goz = (plan.gozcu || {})[s] || '';
       sayfalar.push(`<section>${ust(`${s} SALONU · SINAV YERLEŞİM VE İMZA LİSTESİ`, `Gözcü: <b>${esc(goz || '—')}</b>`)}
         <table class="imza"><thead><tr><th>Sıra</th><th>No</th><th>Adı Soyadı</th><th>Sınıf</th><th>Ders</th><th>İmza</th></tr></thead><tbody>
         ${L.map(r => `<tr><td>${r.sira}</td><td>${esc(r.no)}</td><td>${esc(baslik(r.ad))}</td><td>${esc(r.sinif)}</td><td>${esc(baslik(r.ders))}</td><td></td></tr>`).join('')}</tbody></table>
-        <div class="alt">Salondaki öğrenci: <b>${L.length}</b> · Sınava giren: ______ · Girmeyen: ______<span>Gözcü öğretmen: ${esc(goz || '______________________')} &nbsp; İmza: ____________</span></div></section>`);
+        <div class="alt">Salondaki öğrenci: <b>${L.length}</b> · Sınava giren: ______ · Girmeyen: ______<span>Gözcü öğretmen: ${esc(goz || '______________________')} &nbsp; İmza: ____________</span></div><div class="alt" style="justify-content:flex-end;margin-top:6mm"><span style="text-align:center">${esc(KB_MUDUR)}<br>Okul Müdürü<br><br>İmza: ____________</span></div></section>`);
       const lay = salonDuzeni(s, L), by = Object.fromEntries(L.map(r => [r.sira, r]));
       const ux = 100 / lay.W, uy = 100 / lay.H;
       sayfalar.push(`<section>${ust(`${s} SALONU · OTURMA KROKİSİ`, `Gözcü: <b>${esc(goz || '—')}</b>`)}

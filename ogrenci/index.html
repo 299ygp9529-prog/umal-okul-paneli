@@ -137,7 +137,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .pl-form .dg { display: flex; gap: 8px; margin-top: 10px; } .pl-form .dg button { flex: 1; margin: 0; padding: 11px; font-size: 15px; }
 /* K-572: soru takibi */
 .ust2 .so-pdf { padding: 7px 12px; font-size: 14px; }
-.so-donem { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; } .so-sek { display: flex; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 3px; } .so-sek button { flex: 1; background: transparent; border: 0; color: var(--soluk); font-weight: 700; padding: 8px; border-radius: 9px; cursor: pointer; font-size: 15px; } .so-sek button.secili { background: var(--neon); color: var(--zemin); }
+.so-izin { width: 100%; margin: 0 0 12px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 12px 14px; text-align: left; } .so-donem { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; } .so-sek { display: flex; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 3px; } .so-sek button { flex: 1; background: transparent; border: 0; color: var(--soluk); font-weight: 700; padding: 8px; border-radius: 9px; cursor: pointer; font-size: 15px; } .so-sek button.secili { background: var(--neon); color: var(--zemin); }
 .so-nav { display: flex; align-items: center; gap: 10px; } .so-nav b { flex: 1; text-align: center; font-size: 16px; } .so-nav button { width: 40px; height: 40px; padding: 0; font-size: 20px; } .so-nav button:disabled { opacity: .3; }
 .so-kartlar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; } .so-k { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 11px 13px; } .so-k b { display: block; font-size: 24px; line-height: 1.1; color: var(--neonacik); } .so-k span { font-size: 12.5px; color: var(--soluk); } .so-k small { display: block; font-size: 11.5px; margin-top: 2px; } .so-k small.art { color: #6ee7a8; } .so-k small.aza { color: #ff8a95; }
 .so-gir { margin: 0 0 12px; }
@@ -212,6 +212,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
     <div id="plSinav"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
   </section>
   <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
+    <button class="mk-kutu so-izin" id="soIzin" type="button"><i></i><span>Rehberlik servisi haftalık soru özetimi görebilsin <small class="soluk" style="display:block;font-size:12.5px">Rehber öğretmenin sana daha iyi destek olabilir. İstediğin zaman kapatabilirsin.</small></span></button>
     <div class="so-donem" id="soDonem"></div>
     <div class="so-kartlar" id="soKartlar"></div>
     <button class="birincil so-gir" id="soGirBtn">+ Çözdüğüm soruları gir</button>
@@ -220,8 +221,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
     <div class="kart" id="soDersKart"><h2>Derslere göre</h2><div id="soDersler"></div></div>
     <div class="kart" id="soOneriKart"><h2>Sana öneriler</h2><div id="soOneri"></div></div>
     <div class="kart" id="soKayitKart"><h2>Kayıtlar</h2><div id="soKayit"></div></div>
-    <button class="mk-kutu so-izin" id="soIzin" type="button"><i></i><span>Rehberlik servisi haftalık soru özetimi görebilsin <small class="soluk" style="display:block;font-size:12.5px">Rehber öğretmenin sana daha iyi destek olabilir. İstediğin zaman kapatabilirsin.</small></span></button>
-    <div class="not">Kayıtlarını yalnız sen görürsün; yukarıdaki izni verirsen rehberlik servisi de özetini görür. Net = doğru − yanlış ÷ 4 (YKS hesabı).</div>
+    <div class="not">Kayıtlarını yalnız sen görürsün; en üstteki izni verirsen rehberlik servisi de özetini görür. Net = doğru − yanlış ÷ 4 (YKS hesabı).</div>
   </section>
   <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Anketler</h1></div>
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
@@ -259,6 +259,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611141800"></script>
+<script src="ogrenci.js?v=202611142900"></script>
 </body>
 </html>
