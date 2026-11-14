@@ -123,11 +123,27 @@
 .ds-katman h2{margin:0;padding:14px 18px;font-size:16px;letter-spacing:.08em;color:var(--neonacik);background:linear-gradient(180deg,rgba(34,232,255,.16),rgba(34,232,255,.04));border-bottom:2px solid var(--neon)}
 .ds-katman button{display:grid;grid-template-columns:40px 1fr 16px;gap:12px;align-items:center;width:100%;min-height:72px;padding:12px 18px;background:none;border:0;border-bottom:1px solid #1d3150;color:var(--yazi);text-align:left;font:inherit;cursor:pointer}
 .ds-katman button:hover{background:rgba(34,232,255,.08)}.ds-katman button i{font-style:normal;font-size:22px;width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:#16294a;border:1px solid #24406a}
+.ds-katman button{grid-template-columns:46px 1fr auto 16px}.ds-katman button i{width:46px;height:46px;border-radius:14px;color:#9ff8ff;background:linear-gradient(145deg,rgba(34,232,255,.26),rgba(34,232,255,.05) 70%);border:1px solid rgba(34,232,255,.42);box-shadow:inset 0 0 12px rgba(34,232,255,.16),0 4px 14px rgba(0,0,0,.35)}
+.ds-katman button i svg{filter:drop-shadow(0 0 5px rgba(34,232,255,.65))}.ds-katman button:hover i{border-color:var(--neon);box-shadow:inset 0 0 14px rgba(34,232,255,.3),0 0 16px rgba(34,232,255,.35)}
+.ds-katman button em{grid-column:4}.ds-katman button u{grid-column:3}.ds-katman u{text-decoration:none;font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 9px;background:rgba(34,232,255,.14);color:#9ff8ff;border:1px solid rgba(34,232,255,.4);white-space:nowrap}.ds-katman u.uyari{background:rgba(255,154,58,.16);color:#ffb867;border-color:rgba(255,154,58,.55)}.ds-katman u.sakin{background:transparent;color:var(--soluk);border-color:var(--cizgi)}
+.ds-hiz{position:relative;margin:14px 0 0}.ds-hiz input{width:100%;padding:13px 14px 13px 44px;font-size:15px;border-radius:14px;border:1px solid rgba(34,232,255,.4);background:linear-gradient(180deg,rgba(34,232,255,.07),var(--koyu))}.ds-hiz input:focus{box-shadow:0 0 0 2px rgba(34,232,255,.25)}
+.ds-hiz-ik{position:absolute;left:14px;top:13px;color:var(--neonacik);pointer-events:none}.ds-hiz-sonuc{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;background:#0f1c2e;border:1px solid rgba(34,232,255,.45);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.6);overflow:hidden}
+.ds-hiz-satir{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #1d3150;border-left:4px solid var(--sv)}.ds-hiz-satir:last-child{border-bottom:0}.ds-hiz-kim{flex:1;min-width:0}.ds-hiz-kim b{font-size:15px}.ds-hiz-kim small{display:block;color:var(--soluk)}.ds-hiz-kim small b{font-size:inherit;color:var(--yesil)}.ds-hiz-kim small b.turuncu{color:#ffb867}.ds-hiz-satir button{padding:7px 12px;font-size:13px;white-space:nowrap}
+.ds-son{display:flex;align-items:center;gap:12px;background:rgba(47,191,113,.12);border:1px solid rgba(47,191,113,.5);border-radius:12px;padding:9px 14px;margin:0 0 12px}.ds-son span{flex:1;font-weight:700;color:#8ff0bb}
+.ds-isler{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;margin:0 0 14px;overflow:hidden}.ds-isler h2{margin:0;padding:12px 18px;font-size:16px;border-bottom:1px solid var(--cizgi)}.ds-isler h2 small{font-weight:500;color:var(--soluk);font-size:12.5px;margin-left:8px}
+.ds-is{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(200px,1.3fr) 104px auto 84px;gap:12px;align-items:center;padding:10px 14px 10px 12px;border-bottom:1px solid #1d3150;border-left:5px solid var(--sv)}.ds-is:last-child{border-bottom:0}
+.ds-is.acil{background:linear-gradient(90deg,rgba(255,154,58,.10),transparent 60%)}.ds-is.bekle{opacity:.82}
+.ds-is-kim{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--yazi);text-align:left;font:inherit;cursor:pointer;min-width:0;padding:0}.ds-is-kim .foto{width:40px;height:52px;border-radius:8px;font-size:13px;flex:none;aspect-ratio:auto}.ds-is-kim b{display:block;font-size:15px}.ds-is-kim small,.ds-is-adim small{display:block;color:var(--soluk);font-size:12.5px;overflow-wrap:anywhere}.ds-is-kim:hover b{color:var(--neonacik)}
+.ds-is-adim b{display:block;font-size:14px}.ds-is-sure{justify-self:end;font-weight:800;font-size:13px;color:var(--neonacik);white-space:nowrap}.ds-is.acil .ds-is-sure{color:#ffb867}
+.ds-is>button.birincil,.ds-is>button.ikincil{white-space:nowrap;padding:9px 14px;min-width:170px}.ds-is-ayr{background:none;border:0;color:var(--soluk);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:4px;white-space:nowrap}.ds-is-ayr:hover{color:var(--neonacik)}
+.ds-hizcip{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.ds-hizcip button{background:var(--koyu);border:1px solid var(--cizgi);color:var(--soluk);border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}.ds-hizcip button:hover{border-color:var(--neon);color:var(--yazi)}
+.ds-oner{margin-top:10px;border-radius:12px;padding:10px 12px;border:1px solid rgba(255,154,58,.5);background:rgba(255,154,58,.10);font-size:13.5px}.ds-oner b{color:#ffb867}.ds-oner.yesil{border-color:rgba(47,191,113,.5);background:rgba(47,191,113,.10)}.ds-oner.yesil b{color:#8ff0bb}.ds-oner button{margin-top:8px}
 .ds-katman button b{display:block;font-size:15px}.ds-katman button small{color:var(--soluk);font-size:12px}.ds-katman button em{font-style:normal;color:var(--neon);font-size:20px}
 .ds-tablo{width:100%;border-collapse:collapse}.ds-tablo th{text-align:left;color:var(--soluk);font-size:12.5px;font-weight:600;padding:8px;border-bottom:1px solid var(--cizgi)}.ds-tablo td{padding:8px;border-bottom:1px solid #1d3150;vertical-align:middle;overflow-wrap:anywhere}
 .ds-tablo td:first-child{white-space:nowrap}.ds-tablo button{white-space:nowrap}
 .ds-tut{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.ds-ist{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
-@media (max-width:760px){.ds-sayac{grid-template-columns:1fr 1fr}.ds-katman,.ds-tut,.ds-ist{grid-template-columns:1fr}.ds-katman section{border-right:0}.ds-tablo{font-size:13px}.ds-izgara{grid-template-columns:1fr}.ds-belge{grid-template-columns:1fr 1fr}.ds-iki,.ds-uc{grid-template-columns:1fr}}`;
+@media (max-width:1100px){.ds-is{grid-template-columns:1fr 1fr;row-gap:6px}.ds-is-sure{justify-self:start}}
+@media (max-width:760px){.ds-is{grid-template-columns:1fr}.ds-is>button.birincil,.ds-is>button.ikincil{min-width:0;width:100%}.ds-hiz-satir{flex-wrap:wrap}.ds-sayac{grid-template-columns:1fr 1fr}.ds-katman,.ds-tut,.ds-ist{grid-template-columns:1fr}.ds-katman section{border-right:0}.ds-tablo{font-size:13px}.ds-izgara{grid-template-columns:1fr}.ds-belge{grid-template-columns:1fr 1fr}.ds-iki,.ds-uc{grid-template-columns:1fr}}`;
     document.head.appendChild(st);
   }
   function cizDosyalar() {
@@ -191,38 +207,68 @@
     const ciz_ = () => { const q = ara.value.toLocaleLowerCase(tr).trim(); liste.classList.toggle('gizli', !q); if (!q) { liste.innerHTML = ''; return; } const L = MADDE().filter(x => (x[0] + ' ' + x[2] + ' ' + x[1]).toLocaleLowerCase(tr).includes(q)).slice(0, 40);
       liste.innerHTML = L.map(x => `<button type="button" data-m="${esc(x[0])}"><b>${esc(x[0])}</b>${esc(x[2])}<br><small>${esc(x[1])}</small></button>`).join('') || '<div class="soluk kucuk" style="padding:8px">Bulunamadı.</div>'; };
     ara.oninput = ciz_; ciz_();
-    liste.onclick = ev => { const b = ev.target.closest('[data-m]'); if (!b) return; const x = MADDE().find(y => y[0] === b.dataset.m); document.getElementById(id).value = x[0]; document.getElementById(id + 'Sec').textContent = x[0] + ' · ' + x[2]; ara.value = ''; ciz_(); };
+    liste.onclick = ev => { const b = ev.target.closest('[data-m]'); if (!b) return; const x = MADDE().find(y => y[0] === b.dataset.m); document.getElementById(id).value = x[0]; document.getElementById(id + 'Sec').textContent = x[0] + ' · ' + x[2]; ara.value = ''; ciz_(); document.getElementById(id).dispatchEvent(new Event('change')); };
   }
-  async function yeniOlay(duzenlenen, kaynak) {
+  // K-604: sık görülen davranışlar (tek dokunuş) ve yönetmeliğe göre öneri (163/7 yazılı uyarı · 166 tekrar)
+  const SIK = [['164/1-ç', 'Tütün'], ['164/1-n', 'Derste telefon'], ['164/1-ı', 'Kopya'], ['164/1-c', 'Kılık kıyafet'], ['164/1-ğ', 'Kaba davranış'], ['164/1-h', 'Ders düzenini bozma'], ['164/1-f', 'Derse geç / katılmama'], ['164/2-ı', 'Kavga'], ['164/2-ö', 'Zorbalık'], ['164/2-ğ', 'Sosyal medya']];
+  const maddeYap = kod => { const m = MADDE().find(x => x[0] === kod); return m ? YAPTIRIM.find(y => y.puan && m[1].startsWith(y.ad.slice(0, 12))) || null : null; };
+  const kesinCezalar = (no, haric) => S.L.filter(r => !r.veri.tur && r.ogr_no === no && r.id !== haric && r.yil === S.yil && r.veri.adim && r.veri.adim.kesin && r.veri.adim.kesin.tarih && !r.veri.adim.kesin.kaldirildi && (yap((r.veri.adim.kurul || {}).yaptirim) || {}).puan);
+  const birAgir = y => { const L = YAPTIRIM.filter(x => x.puan), i = L.indexOf(y); return i >= 0 && i < L.length - 1 ? L[i + 1] : y; };
+  function olayOneri(ogrL, kod) {   // { html, uyari: yazılı uyarı uygun mu }
+    const y = maddeYap(kod); if (!ogrL.length || !y) return { html: '', uyari: false };
+    const S_ = ogrL.map(o => ({ o, ceza: oncekiCezalar(o.no).filter(r => (yap(r.veri.adim.kurul.yaptirim) || {}).puan).length, yil: kesinCezalar(o.no).length, uy: S.L.filter(r => r.veri.tur === 'uyari' && r.ogr_no === o.no).length }));
+    const ad = x => esc(C.baslik(x.o.ad)), L = [];
+    const ilk = y.ad === 'Kınama' ? S_.filter(x => !x.ceza && !x.uy) : [], tekrarUy = y.ad === 'Kınama' ? S_.filter(x => !x.ceza && x.uy) : [], tek = S_.filter(x => x.yil);
+    if (ilk.length) L.push(`<div class="ds-oner yesil"><b>Yazılı uyarı yeterli (m. 163/7):</b> ${ilk.map(ad).join(', ')} daha önce disiplin cezası almamış ve kınama gerektiren davranışı ilk kez işliyor. Kurula sevk edilmeden, rehber öğretmen değerlendirmesiyle okul müdürü yazılı uyarı yapar; e-Okul'a işlenmez.</div>`);
+    if (tekrarUy.length) L.push(`<div class="ds-oner"><b>Daha önce yazılı uyarı almış:</b> ${tekrarUy.map(ad).join(', ')}. Davranış sürdüğü için veli görüşmesi yapılır; gerekirse dosya açılıp kurula sevk edilir.</div>`);
+    if (tek.length) L.push(`<div class="ds-oner"><b>Tekrar (m. 166):</b> ${tek.map(ad).join(', ')} bu öğretim yılında kesinleşmiş ceza almış. Aynı yıl ceza gerektiren davranışın tekrarında bir derece ağır ceza verilir: <b>${esc(y.ad)} → ${esc(birAgir(y).ad)}</b>.</div>`);
+    return { html: L.join(''), uyari: ilk.length === S_.length };
+  }
+  const hizCip = (hedef, L) => `<div class="ds-hizcip" data-hedef="${hedef}">${L.map(x => `<button type="button" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+  async function yeniOlay(duzenlenen, kaynak, ilkOgr) {
     const ogrL = await C.ogrencileriYukle().catch(() => []);
     const v = duzenlenen ? duzenlenen.veri : kaynak ? { olay: Object.assign({}, kaynak.veri.olay), madde: kaynak.veri.madde } : { olay: { tarih: bugun() } };
-    let secilen = duzenlenen ? [{ no: duzenlenen.ogr_no, ad: v.ogr.ad, sinif: v.ogr.sinif }] : [];
+    let secilen = duzenlenen ? [{ no: duzenlenen.ogr_no, ad: v.ogr.ad, sinif: v.ogr.sinif }] : ilkOgr ? [ilkOgr] : [];
+    let sonSik = ''; try { sonSik = localStorage.getItem('umalDsSik') || ''; } catch (e) {}
     C.pencereAc(`<h2 style="margin-top:0">${duzenlenen ? 'Olay bilgileri' : kaynak ? 'Olaya öğrenci ekle · ' + esc(kaynak.dosya_no) : 'Olay girişi'}</h2>${kaynak ? `<div class="kucuk soluk">Olaydaki öğrenciler: ${esc(olayOgr(kaynak).map(x => C.baslik(x.veri.ogr.ad)).join(', '))}</div>` : ''}<div class="ds-form">
       ${duzenlenen ? '' : `<label>Öğrenci(ler) · her öğrenci için ayrı dosya açılır</label><input id="dsOgrAra" placeholder="Ad ya da okul no"><div class="ds-secim" id="dsOgrListe" style="max-height:160px"></div><div class="ds-cipler" id="dsOgrSec"></div>`}
-      <div class="ds-uc"><div><label>Olay tarihi</label><input type="date" id="dsT" value="${esc(v.olay.tarih || '')}"></div><div><label>Saat</label><input id="dsSaat" placeholder="ör. 3. teneffüs" value="${esc(v.olay.saat || '')}"></div><div><label>Yer</label><input id="dsYer" placeholder="ör. bahçe" value="${esc(v.olay.yer || '')}"></div></div>
+      <div class="ds-uc"><div><label>Olay tarihi</label><input type="date" id="dsT" value="${esc(v.olay.tarih || '')}"></div><div><label>Saat</label><input id="dsSaat" placeholder="ör. 3. teneffüs" value="${esc(v.olay.saat || '')}">${hizCip('dsSaat', ['Derste', 'Teneffüs', 'Öğle arası', 'Okul girişi', 'Okul çıkışı'])}</div><div><label>Yer</label><input id="dsYer" placeholder="ör. bahçe" value="${esc(v.olay.yer || '')}">${hizCip('dsYer', ['Sınıf', 'Koridor', 'Bahçe', 'Kantin', 'Tuvalet', 'Spor salonu', 'Okul çevresi'])}</div></div>
       <label>Olayın oluş şekli</label><textarea id="dsOzet" rows="3">${esc(v.olay.ozet || '')}</textarea>
-      <div class="ds-iki"><div><label>Şikâyet eden / tutanağı düzenleyen</label><input id="dsSik" value="${esc(v.olay.sikayet || '')}"></div><div><label>Tanıklar</label><input id="dsTanik" value="${esc(v.olay.tanik || '')}"></div></div>
+      <div class="ds-iki"><div><label>Şikâyet eden / tutanağı düzenleyen</label><input id="dsSik" value="${esc(v.olay.sikayet || sonSik)}"></div><div><label>Tanıklar</label><input id="dsTanik" value="${esc(v.olay.tanik || '')}"></div></div>
       <label>Deliller / ekler</label><input id="dsDelil" value="${esc(v.olay.delil || '')}">
-      <label>Davranış (yönetmelik maddesi)</label>${maddeSecici('dsMadde', v.madde)}
+      <label>Davranış (yönetmelik maddesi)</label><div class="ds-hizcip" id="dsSikM">${SIK.map(([k, a]) => `<button type="button" data-sm="${k}" title="${esc(k)}">${a}</button>`).join('')}</div>${maddeSecici('dsMadde', v.madde)}<div id="dsOner"></div>
       <div class="kucuk soluk" style="margin-top:8px">Yönetmelik: isimsiz ve imzasız şikâyetler işleme alınmaz.</div>
-      <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="dsKaydet">${duzenlenen ? 'Kaydet' : 'Dosya aç'}</button></div><div class="kucuk" id="dsBilgi"></div></div>`);
+      <div class="dugmeler" style="margin-top:14px"><button class="ikincil gizli" id="dsUyariKaydet">Yazılı uyarı olarak kaydet</button><button class="birincil" id="dsKaydet">${duzenlenen ? 'Kaydet' : 'Dosya aç'}</button></div><div class="kucuk" id="dsBilgi"></div></div>`);
     maddeBagla('dsMadde');
+    const pen = document.getElementById('dsKaydet').closest('.ds-form');
+    pen.addEventListener('click', ev => { const c = ev.target.closest('.ds-hizcip[data-hedef] [data-v]'); if (c) { const i = document.getElementById(c.parentNode.dataset.hedef); i.value = c.dataset.v; i.focus(); return; }
+      const sm = ev.target.closest('[data-sm]'); if (sm) { const x = MADDE().find(m_ => m_[0] === sm.dataset.sm); if (!x) return; document.getElementById('dsMadde').value = x[0]; document.getElementById('dsMaddeSec').textContent = x[0] + ' · ' + x[2]; onerCiz(); } });
+    const onerCiz = () => { const o = duzenlenen ? { html: '', uyari: false } : olayOneri(secilen, document.getElementById('dsMadde').value); document.getElementById('dsOner').innerHTML = o.html; document.getElementById('dsUyariKaydet').classList.toggle('gizli', !o.uyari); document.getElementById('dsKaydet').className = o.uyari ? 'ikincil' : 'birincil'; document.getElementById('dsUyariKaydet').className = o.uyari ? 'birincil' : 'ikincil gizli'; };
+    document.getElementById('dsMadde').addEventListener('change', onerCiz);
     if (!duzenlenen) {
       const ara = document.getElementById('dsOgrAra'), liste = document.getElementById('dsOgrListe'), sec = document.getElementById('dsOgrSec');
       const ciz_ = () => { const q = ara.value.trim().toLocaleLowerCase(tr); const L = !q ? [] : ogrL.filter(o => o.no === q || (/^\d+$/.test(q) ? o.no.startsWith(q) : o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 12);
         liste.innerHTML = L.map(o => `<button type="button" data-o="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(C.baslik(o.ad))} <small>· ${esc(o.no)}</small></button>`).join(''); };
-      const cizSec = () => { sec.innerHTML = secilen.map(o => `<button type="button" class="cip secili" data-ocik="${esc(o.no)}">${esc(C.baslik(o.ad))} · ${esc(o.sinif)} ✕</button>`).join(''); };
+      const cizSec = () => { sec.innerHTML = secilen.map(o => `<button type="button" class="cip secili" data-ocik="${esc(o.no)}">${esc(C.baslik(o.ad))} · ${esc(o.sinif)} · puan ${puanDurumu(o.no)} ✕</button>`).join(''); onerCiz(); };
       ara.oninput = ciz_;
       liste.onclick = ev => { const b = ev.target.closest('[data-o]'); if (!b) return; const o = ogrL.find(x => x.no === b.dataset.o); if (o && !secilen.some(x => x.no === o.no)) secilen.push(o); ara.value = ''; ciz_(); cizSec(); };
       sec.onclick = ev => { const b = ev.target.closest('[data-ocik]'); if (b) { secilen = secilen.filter(x => x.no !== b.dataset.ocik); cizSec(); } };
+      cizSec(); if (!secilen.length) ara.focus(); else document.getElementById('dsOzet').focus();
     }
+    document.getElementById('dsUyariKaydet').onclick = async () => {   // 163/7: kurula sevk etmeden yazılı uyarı
+      const g = id => document.getElementById(id).value.trim(), bil = document.getElementById('dsBilgi');
+      if (!secilen.length) { bil.textContent = 'Öğrenci seçin.'; return; } if (!g('dsT') || !g('dsOzet')) { bil.textContent = 'Olay tarihi ve oluş şekli gerekli.'; return; }
+      bil.textContent = 'Kaydediliyor…'; try { localStorage.setItem('umalDsSik', g('dsSik')); } catch (e) {}
+      for (const o of secilen) { if (!(await satirEkle({ tur: 'uyari', ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay: { tarih: g('dsT'), saat: g('dsSaat'), yer: g('dsYer'), ozet: g('dsOzet'), sikayet: g('dsSik') }, madde: g('dsMadde'), uyari: { tarih: bugun() }, olusturan: C.eposta }, 'uyari'))) return; }
+      C.pencereKapat(); S.ekran = 'uyari'; ciz();
+    };
     document.getElementById('dsKaydet').onclick = async () => {
       const g = id => document.getElementById(id).value.trim(), bil = document.getElementById('dsBilgi');
       const olay = { tarih: g('dsT'), saat: g('dsSaat'), yer: g('dsYer'), ozet: g('dsOzet'), sikayet: g('dsSik'), tanik: g('dsTanik'), delil: g('dsDelil') };
       if (!secilen.length) { bil.textContent = 'Öğrenci seçin.'; return; }
       if (!olay.tarih || !olay.ozet) { bil.textContent = 'Olay tarihi ve oluş şekli gerekli.'; return; }
       if (!olay.sikayet) { bil.textContent = 'Şikâyet edeni / tutanağı düzenleyeni yazın.'; return; }
-      bil.textContent = 'Kaydediliyor…';
+      bil.textContent = 'Kaydediliyor…'; try { localStorage.setItem('umalDsSik', olay.sikayet); } catch (e) {}
       if (duzenlenen) { duzenlenen.veri.olay = olay; duzenlenen.veri.madde = g('dsMadde'); if (await kaydet(duzenlenen)) { C.pencereKapat(); ciz(); } return; }
       let ilk = null;
       for (const o of secilen) {
@@ -248,13 +294,16 @@
       <label>Öğrenci ifadesinin özeti</label><textarea id="f_ozet" rows="3">${esc(x.ozet || '')}</textarea><label>Tanık ifadelerinin özeti</label><textarea id="f_tanik" rows="2">${esc(x.tanik || '')}</textarea>`;
     if (k === 'kurul') {
       const mm = MADDE().find(y => y[0] === v.madde), oner = mm ? (YAPTIRIM.find(y => mm[1].startsWith(y.ad.slice(0, 12))) || {}).ad : '';
-      const sec = x.yaptirim || oner || '';
-      ic = `<div class="ds-uc"><div><label>Toplantı tarihi</label><input type="date" id="f_tarih" value="${esc(x.tarih || b)}"></div><div><label>Karar no</label><input id="f_no" value="${esc(x.karar_no || '')}" placeholder="ör. 2026/07"></div><div><label>Toplantı yeri</label><input id="f_yer" value="${esc(x.yer || S.ayar.yer || 'Müdür odası')}"></div></div>
+      const tek = kesinCezalar(r.ogr_no, r.id), yM = maddeYap(v.madde), onerT = tek.length && yM ? birAgir(yM).ad : '';
+      const sec = x.yaptirim || onerT || oner || '';
+      const nolar = DOS().map(z => parseInt(String(((z.veri.adim || {}).kurul || {}).karar_no || '').split('/')[1], 10) || 0), kararNo = x.karar_no || `${S.yil.slice(0, 4)}/${String(Math.max(0, ...nolar) + 1).padStart(2, '0')}`;
+      ic = `<div class="ds-uc"><div><label>Toplantı tarihi</label><input type="date" id="f_tarih" value="${esc(x.tarih || b)}"></div><div><label>Karar no</label><input id="f_no" value="${esc(kararNo)}" placeholder="ör. 2026/07"></div><div><label>Toplantı yeri</label><input id="f_yer" value="${esc(x.yer || S.ayar.yer || 'Müdür odası')}"></div></div>
+        ${onerT && !x.yaptirim ? `<div class="ds-oner" style="margin-top:10px"><b>Tekrar (m. 166):</b> öğrenci bu öğretim yılında kesinleşmiş ceza almış (${tek.map(z => esc(z.veri.adim.kurul.yaptirim)).join(', ')}). Bir derece ağır ceza önerildi: <b>${esc(onerT)}</b>. Kurul, öğrencinin üstün yararını gözeterek bir alt cezayı da verebilir (m. 168).</div>` : ''}
         <label>Yaptırım</label><div class="ds-cipler" id="f_yap">${YAPTIRIM.map(y => `<button type="button" class="cip ${sec === y.ad ? 'secili' : ''}" data-y="${esc(y.ad)}">${esc(y.ad)}${y.puan ? ` · −${y.puan}` : ''}</button>`).join('')}</div>
         <div id="f_gunK" class="${sec === 'Okuldan kısa süreli uzaklaştırma' ? '' : 'gizli'}"><label>Uzaklaştırma süresi (1–5 gün)</label><input type="number" min="1" max="5" id="f_gun" value="${esc(x.gun || '')}"></div>
         <label>Dayanak madde</label>${maddeSecici('f_madde', x.madde || v.madde)}
         <div class="ds-iki"><div><label>Hafifletici nedenler</label><textarea id="f_hafif" rows="2">${esc(x.hafif || '')}</textarea></div><div><label>Ağırlaştırıcı nedenler</label><textarea id="f_agir" rows="2">${esc(x.agir || '')}</textarea></div></div>
-        <label>Gerekçe</label><textarea id="f_gerekce" rows="3">${esc(x.gerekce || '')}</textarea>
+        <label>Gerekçe <button type="button" class="bag" id="f_gOner" style="margin-left:8px">Gerekçe metni öner</button></label><textarea id="f_gerekce" rows="4">${esc(x.gerekce || '')}</textarea>
         <label>Toplantıya katılan üyeler</label><div class="ds-cipler" id="f_uye">${uyeler.length ? uyeler.map(u => `<button type="button" class="cip ${!x.katilan || x.katilan.includes(u) ? 'secili' : ''}" data-u="${esc(u)}">${esc(u)}</button>`).join('') : '<span class="soluk kucuk">Kurul üyeleri “Kurul ve okul bilgileri”nden girilir.</span>'}</div>
         ${oncekiCezalar(r.ogr_no, r.id).length ? `<div class="ds-madde" style="margin-top:10px"><b>Önceki dosyalar:</b> ${oncekiCezalar(r.ogr_no, r.id).map(o => `${esc(o.dosya_no)} ${esc(o.veri.adim.kurul.yaptirim)}`).join(' · ')}</div>` : ''}`;
     }
@@ -268,6 +317,9 @@
     C.pencereAc(`<h2 style="margin-top:0">${esc(ADIM.find(z => z[0] === k)[1])} · ${esc(C.baslik(v.ogr.ad))}</h2><div class="ds-form">${ic}<div class="dugmeler" style="margin-top:14px"><button class="birincil" id="f_kaydet">Kaydet</button>${x.tarih ? '<button class="tehlike" id="f_geri">Bu adımı geri al</button>' : ''}</div></div>`);
     if (k === 'kurul') {
       maddeBagla('f_madde');
+      document.getElementById('f_gOner').onclick = () => { const ys = document.querySelector('#f_yap .cip.secili'), yy = ys ? ys.dataset.y : '', mk = document.getElementById('f_madde').value, m_ = MADDE().find(z => z[0] === mk), gun = document.getElementById('f_gun').value;
+        const sv = a.savunma && a.savunma.tarih ? (a.savunma.vermedi ? 'usulüne uygun çağrıya rağmen savunma vermediği' : 'yazılı savunmasının alındığı') : 'savunmasının istendiği';
+        document.getElementById('f_gerekce').value = `${v.ogr.sinif} sınıfı ${r.ogr_no} numaralı öğrenci ${C.baslik(v.ogr.ad)} hakkında; ${tUzun(v.olay.tarih)} tarihinde${v.olay.yer ? ' (' + v.olay.yer + ')' : ''} gerçekleşen olaydaki "${(v.olay.ozet || '').replace(/\.$/, '')}" şeklindeki davranışının, Millî Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliğinin ${mk || '…'} bendinde yer alan "${m_ ? m_[2] : '…'}" fiilini oluşturduğu; öğrencinin ${sv}, tanık ifadeleri ve dosyadaki belgeler birlikte değerlendirilerek; öğrencinin yaşı, üstün yararı, olayın oluş şekli ve daha önceki durumu dikkate alınarak ${yy === 'Ceza verilmesine yer olmadığı' ? 'ceza verilmesine yer olmadığına' : yy === 'Yazılı uyarı' ? 'yazılı olarak uyarılmasına' : `"${yy || '…'}${yy === 'Okuldan kısa süreli uzaklaştırma' && gun ? ' (' + gun + ' gün)' : ''}" cezası ile cezalandırılmasına`} karar verilmiştir.`; };
       document.getElementById('f_yap').onclick = ev => { const b_ = ev.target.closest('[data-y]'); if (!b_) return; document.querySelectorAll('#f_yap .cip').forEach(c => c.classList.toggle('secili', c === b_)); document.getElementById('f_gunK').classList.toggle('gizli', b_.dataset.y !== 'Okuldan kısa süreli uzaklaştırma'); };
       const uy = document.getElementById('f_uye'); if (uy) uy.onclick = ev => { const b_ = ev.target.closest('[data-u]'); if (b_) b_.classList.toggle('secili'); };
     }
@@ -372,16 +424,28 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       g = `${ogrT}<table><tr><th style="width:10%">Sıra</th><th>Belgenin adı</th><th style="width:16%">Adet</th></tr>${L.map((x, i) => `<tr><td>${i + 1}</td><td>${x[0]}</td><td>1</td></tr>`).join('')}</table>${imzalar(['Düzenleyen', '', 'Okul müdürü'])}`; }
     C.belgeOnizle(belgeKabuk(b, g), (BELGE_AD[tur] || BELGELER.find(x => x[0] === tur)[1]) + ' · ' + ad);
   }
-  // ---------------------------------------------------------------- K-539: ana sayfa (katmanlar) ve ayrı ekranlar
+  // ---------------------------------------------------------------- K-604: ana sayfa — çizgi ikonlar, "sıradaki işler" (tek dokunuş), hızlı öğrenci arama
+  const IK = {
+    genel: 'M3 21h18M5 21V9.5L12 4l7 5.5V21M9.5 21v-5h5v5M9 11.5h.01M15 11.5h.01', ogrenciler: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5',
+    olay: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11.5v6M9 14.5h6', olayaEkle: 'M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2.5 20.5c1.1-3.4 3.9-5.5 7.5-5.5 1.6 0 3 .4 4.2 1.1M18 14v6M15 17h6',
+    uyari: 'M4 5h16v11H9.5L4 20zM12 8v4M12 14.2v.1', dosyalar: 'M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM8 13h8M8 16h5',
+    cagri: 'M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0', formlar: 'M9 4h6v3H9zM7 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-1M8.5 11h7M8.5 14.5h7M8.5 18h4',
+    karar: 'M12 3l7.5 3v5.5c0 4.5-3 8-7.5 9.5-4.5-1.5-7.5-5-7.5-9.5V6zM8.5 12l2.5 2.5 4.5-5', teblig: 'M3.5 6.5h17v11h-17zM4 7l8 6.5L20 7',
+    tutanaklar: 'M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8.5h6', iade: 'M4 12a8 8 0 0 1 13.7-5.7L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.7L4 15.5M4 20v-4.5h4.5',
+    iadeCiz: 'M7 8V4h10v4M6 17H4.5V9.5h15V17H18M7 14h10v6H7z', istatistik: 'M4 20h16M7 20v-6M12 20V6M17 20v-9',
+    cezaAlan: 'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19c.8-2.8 2.9-4.5 5.5-4.5s4.7 1.7 5.5 4.5M15 7h6M15 11h6M17 15h4', yonetmelik: 'M12 6.5c-2-1.5-4.5-2-8-2v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13',
+    dizi: 'M3.5 5h17v4h-17zM5 9v10h14V9M10 13h4', ara: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+  };
+  const ikon = (k, boy = 24) => `<svg viewBox="0 0 24 24" width="${boy}" height="${boy}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IK[k] || ''}"/></svg>`;
   const geriBas = (ad, sag) => `<div class="ds-ust"><div><button class="bag" data-ekran="ana">← Disiplin</button><h1 style="margin:2px 0 0">${ad}</h1></div><div class="dugmeler" style="margin:0">${sag || ''}</div></div>`;
   const olayOgr = r => S.L.filter(x => !x.veri.tur && (x.veri.olay_id || x.id) === (r.veri.olay_id || r.id));
   const KATMAN = [
-    ['GİRİŞLER', [['genel', '🏫', 'Genel Bilgiler', 'okul, müdür, kurul üyeleri'], ['ogrenciler', '👤', 'Öğrenciler', 'disiplin geçmişi ve puan'], ['olay', '📝', 'Olay Girişi', 'yeni olay, dosya açılır'],
-      ['olayaEkle', '➕', 'Olaya Öğrenci Ekle', 'var olan olaya'], ['uyari', '💬', 'Yazılı Uyarı', 'ilk kez kınama yerine'], ['dosyalar', '📂', 'Disiplin Dosyaları', 'adım adım takip']]],
-    ['KARAR', [['cagri', '📋', 'Çağrı Pusulaları', 'kurul üyelerine'], ['formlar', '📄', 'Tutanak ve Formlar', 'tutanak, savunma'], ['karar', '✅', 'KARAR', 'kurul kararı · EK-1'],
-      ['teblig', '✉️', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', '🗂️', 'Sene Başı / Sene Sonu Kurul Tutanakları', 'toplantı tutanakları']]],
-    ['DİĞER', [['iade', '♻️', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', '🖨️', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', '📊', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
-      ['cezaAlan', '🧑‍🎓', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', '📚', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', '🗃️', 'Dizi Pusulası', 'dosya içeriği']]],
+    ['GİRİŞLER', [['olay', 'Olay Girişi', 'yeni olay, dosya açılır'], ['uyari', 'Yazılı Uyarı', 'ilk kez kınama yerine'], ['dosyalar', 'Disiplin Dosyaları', 'adım adım takip'],
+      ['olayaEkle', 'Olaya Öğrenci Ekle', 'var olan olaya'], ['ogrenciler', 'Öğrenciler', 'disiplin geçmişi ve puan'], ['genel', 'Genel Bilgiler', 'okul, müdür, kurul üyeleri']]],
+    ['KARAR', [['cagri', 'Çağrı Pusulaları', 'kurul üyelerine'], ['formlar', 'Tutanak ve Formlar', 'tutanak, savunma'], ['karar', 'Karar', 'kurul kararı · EK-1'],
+      ['teblig', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', 'Sene Başı / Sene Sonu Tutanakları', 'kurul toplantı tutanakları']]],
+    ['DİĞER', [['iade', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
+      ['cezaAlan', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', 'Dizi Pusulası', 'dosya içeriği']]],
   ];
   function ciz() {
     const E = { ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
@@ -391,16 +455,74 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     if (S.ekran === 'yonetmelik') { S.ekran = 'ana'; yonetmelik(); }
     (E[S.ekran] || cizAna)();
   }
+  // sıradaki iş: { r, k, ad, dugme, hizli, son (ISO son gün), kalan (iş günü), bekle }
+  function isler() {
+    const b = bugun();
+    return DOS().filter(r => durumKod(r.veri) !== 'kesin').map(r => {
+      const v = r.veri, a = v.adim || {}, L = adimlar(v), i = siradaki(v); if (i >= L.length) return null;
+      const k = L[i][0], y = yap((a.kurul || {}).yaptirim); let son = null, dugme = 'Aç', hizli = false, bekle = false, not = '';
+      if (k === 'olay') dugme = 'Olayı doldur';
+      if (k === 'sevk') { dugme = 'Bugün sevk et'; hizli = true; not = 'Okul müdürü dosyayı kurula sevk eder'; }
+      if (k === 'savunma') { dugme = 'Savunmayı gir'; not = 'Yazılı savunma ve ifadeler'; if (a.sevk && a.sevk.tarih) son = isGunuEkle(a.sevk.tarih, 10); }
+      if (k === 'kurul') { dugme = 'Kararı gir'; son = a.sevk && a.sevk.tarih ? isGunuEkle(a.sevk.tarih, 10) : null; not = 'Kurul sevkten itibaren 10 iş günü içinde karar verir'; }
+      if (k === 'onay') { dugme = 'Bugün onaylandı'; hizli = true; not = (y ? y.onay : 'Onay mercii') + ' onayı'; }
+      if (k === 'teblig') { dugme = 'Bugün tebliğ edildi'; hizli = true; not = 'Veliye yazılı tebliğ, tebellüğ belgesi dosyaya'; }
+      if (k === 'kesin') { son = a.teblig && a.teblig.tarih ? isGunuEkle(a.teblig.tarih, 5) : null; bekle = !!(son && b <= son); dugme = bekle ? 'İtiraz geldi' : 'Kesinleştir'; hizli = !bekle; not = bekle ? 'İtiraz süresi sürüyor' + (y && y.itiraz ? ' · ' + y.itiraz : '') : 'İtiraz süresi doldu' + (y && y.puan ? ' · −' + y.puan + ' puan' : ''); }
+      const kalan = son ? (b > son ? -1 : isGunuArasi(b, son)) : null;
+      return { r, k, ad: L[i][1], dugme, hizli, son, kalan, bekle, not, sira: i };
+    }).filter(Boolean).sort((p, q) => (p.bekle - q.bekle) || ((p.kalan == null ? 99 : p.kalan) - (q.kalan == null ? 99 : q.kalan)) || (q.sira - p.sira));
+  }
+  async function hizliAdim(r, k) {   // tek dokunuş: bugünün tarihiyle, varsayılan değerlerle
+    const a = (r.veri.adim = r.veri.adim || {}), b = bugun();
+    if (k === 'sevk') a.sevk = { tarih: b, tedbir: null };
+    if (k === 'onay') a.onay = { tarih: b };
+    if (k === 'teblig') a.teblig = { tarih: b, kime: 'Veli', sekil: 'Elden imza karşılığı' };
+    if (k === 'kesin') a.kesin = { tarih: b, itiraz: null, kaldirildi: false };
+    if (!(await kaydet(r))) { delete a[k]; return; }
+    S.son = { id: r.id, k, yazi: { sevk: 'Kurula sevk edildi', onay: 'Onay kaydedildi', teblig: 'Veliye tebliğ edildi (elden, imza karşılığı)', kesin: 'Karar kesinleşti' }[k] + ' · ' + C.baslik(r.veri.ogr.ad) + ' · ' + tGoster(b) };
+    ciz();
+  }
   function cizAna() {
-    const b = bugun(), D_ = DOS();
+    const b = bugun(), D_ = DOS(), I = isler();
     const acik = D_.filter(r => durumKod(r.veri) !== 'kesin').length;
-    const kararYakin = D_.filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.kurul && a.kurul.tarih) && isGunuArasi(b, isGunuEkle(a.sevk.tarih, 10)) <= 3; }).length;
+    const kurulBek = D_.filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.kurul && a.kurul.tarih); });
+    const kararYakin = kurulBek.filter(r => isGunuArasi(b, isGunuEkle(r.veri.adim.sevk.tarih, 10)) <= 3).length;
     const tebligBek = D_.filter(r => { const a = r.veri.adim || {}, y = yap((a.kurul || {}).yaptirim); return a.kurul && a.kurul.tarih && y && y.onay && !(a.teblig && a.teblig.tarih); }).length;
     const itiraz = D_.filter(r => { const a = r.veri.adim || {}; return a.teblig && a.teblig.tarih && !(a.kesin && a.kesin.tarih) && isGunuArasi(b, isGunuEkle(a.teblig.tarih, 5)) > 0; }).length;
-    kok.innerHTML = `<div class="ds-ust"><h1>Disiplin</h1><span class="soluk">Okul Öğrenci Ödül ve Disiplin Kurulu · ${esc(S.yil)}</span></div>
+    const savBek = D_.filter(r => { const a = r.veri.adim || {}; return a.sevk && a.sevk.tarih && !(a.savunma && a.savunma.tarih); }).length;
+    const rozet = { dosyalar: acik ? [acik + ' açık', ''] : null, uyari: (n => n ? [String(n), 'sakin'] : null)(S.L.filter(r => r.veri.tur === 'uyari').length), ogrenciler: (n => n ? [String(n), 'sakin'] : null)(new Set(S.L.map(r => r.ogr_no)).size),
+      cagri: kurulBek.length ? [kurulBek.length + ' toplantı', ''] : null, formlar: savBek ? [savBek + ' savunma', ''] : null, karar: kurulBek.length ? [kurulBek.length + ' bekliyor', kararYakin ? 'uyari' : ''] : null, teblig: tebligBek ? [tebligBek + ' bekliyor', 'uyari'] : null,
+      tutanaklar: !S.tut.bas ? ['sene başı eksik', 'uyari'] : null, iade: (n => n ? [String(n), 'sakin'] : null)(S.L.filter(r => r.veri.tur === 'iade').length), genel: !(S.ayar.mudur && (S.ayar.uyeler || []).filter(Boolean).length) ? ['eksik', 'uyari'] : null };
+    const kalanYazi = x => x.kalan == null ? '' : x.kalan < 0 ? 'süre doldu' : x.kalan === 0 ? 'son gün bugün' : x.kalan + ' iş günü';
+    const isSatir = x => { const v = x.r.veri, acil = x.kalan != null && x.kalan <= 3 && !x.bekle;
+      return `<div class="ds-is ${acil ? 'acil' : ''} ${x.bekle ? 'bekle' : ''}" style="--sv:${C.seviyeRenk(v.ogr.sinif)}"><button class="ds-is-kim" data-isac="${x.r.id}" title="Dosyayı aç">${C.foto(x.r.ogr_no, v.ogr.ad)}<span><b>${esc(C.baslik(v.ogr.ad))}</b><small>${esc(v.ogr.sinif)} · Dosya ${esc(x.r.dosya_no)}${v.madde ? ' · ' + esc(v.madde) : ''}</small></span></button>
+        <div class="ds-is-adim"><b>${x.sira + 1}. ${esc(x.ad)}</b><small>${esc(x.not)}${x.son ? ' · son gün ' + tGoster(x.son) : ''}</small></div>
+        ${x.kalan != null ? `<span class="ds-is-sure">${kalanYazi(x)}</span>` : '<span></span>'}
+        <button class="${x.bekle ? 'ikincil' : 'birincil'}" ${x.hizli ? `data-hizli="${x.r.id}" data-k="${x.k}"` : `data-adimid="${x.r.id}" data-k="${x.k}"`}>${x.dugme}</button>${x.hizli ? `<button class="ds-is-ayr" data-adimid="${x.r.id}" data-k="${x.k}" title="Başka tarih ya da ayrıntı gir">Ayrıntılı</button>` : '<span></span>'}</div>`; };
+    kok.innerHTML = `<div class="ds-ust"><div><h1>Disiplin</h1><span class="soluk">Okul Öğrenci Ödül ve Disiplin Kurulu · ${esc(S.yil)}</span></div><div class="dugmeler" style="margin:0"><button class="ikincil" data-is="uyari">Yazılı uyarı</button><button class="birincil" data-is="yeni">+ Olay girişi</button></div></div>
+      <div class="ds-hiz"><span class="ds-hiz-ik">${ikon('ara', 20)}</span><input id="dsHiz" placeholder="Öğrenci ara: ad ya da okul no — olay gir, yazılı uyarı ver, geçmişine bak" autocomplete="off" data-bicim="yok"><div class="ds-hiz-sonuc gizli" id="dsHizSonuc"></div></div>
       <div class="ds-sayac"><button data-ekran="dosyalar"><b>${acik}</b><span>açık dosya</span></button><button data-ekran="dosyalar" class="${kararYakin ? 'uyari' : ''}"><b>${kararYakin}</b><span>karar süresi doluyor (10 iş günü)</span></button>
         <button data-ekran="teblig" class="${tebligBek ? 'uyari' : ''}"><b>${tebligBek}</b><span>tebliğ bekliyor</span></button><button data-ekran="dosyalar"><b>${itiraz}</b><span>itiraz süresi sürüyor (5 iş günü)</span></button></div>
-      <div class="ds-katman">${KATMAN.map(([bas, L]) => `<section><h2>${bas}</h2>${L.map(([k, ic, ad, alt]) => `<button data-ekran="${k}"><i>${ic}</i><span><b>${ad}</b><small>${alt}</small></span><em>›</em></button>`).join('')}</section>`).join('')}</div>`;
+      ${S.son ? `<div class="ds-son"><span>✓ ${esc(S.son.yazi)}</span><button class="bag" data-geri="1">Geri al</button><button class="bag" data-sonkapat="1">Kapat</button></div>` : ''}
+      <section class="ds-isler"><h2>Sıradaki işler <small>${I.length ? I.length + ' dosya · tek dokunuşla ilerletin' : ''}</small></h2>${I.length ? I.map(isSatir).join('') : '<div class="ds-bos">Bekleyen iş yok. Yeni olay için “+ Olay girişi”.</div>'}</section>
+      <div class="ds-katman">${KATMAN.map(([bas, L]) => `<section><h2>${bas}</h2>${L.map(([k, ad, alt]) => `<button data-ekran="${k}"><i>${ikon(k)}</i><span><b>${ad}</b><small>${alt}</small></span>${rozet[k] ? `<u class="${rozet[k][1]}">${esc(rozet[k][0])}</u>` : ''}<em>›</em></button>`).join('')}</section>`).join('')}</div>`;
+    C.fotolariYukle(I.map(x => x.r.ogr_no));
+    hizAraBagla();
+  }
+  async function hizAraBagla() {
+    const ara = kok.querySelector('#dsHiz'), kutu = kok.querySelector('#dsHizSonuc'); if (!ara) return;
+    const ogrL = await C.ogrencileriYukle().catch(() => []);
+    const cizS = () => { const q = ara.value.trim().toLocaleLowerCase(tr); if (q.length < 2 && !/^\d+$/.test(q)) { kutu.classList.add('gizli'); kutu.innerHTML = ''; return; }
+      const L = ogrL.filter(o => o.no === q || (/^\d+$/.test(q) ? o.no.startsWith(q) : o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 8);
+      kutu.classList.remove('gizli');
+      kutu.innerHTML = L.length ? L.map(o => { const n = S.L.filter(r => r.ogr_no === o.no && !r.veri.tur).length, u = S.L.filter(r => r.ogr_no === o.no && r.veri.tur === 'uyari').length, p = puanDurumu(o.no);
+        return `<div class="ds-hiz-satir" style="--sv:${C.seviyeRenk(o.sinif)}"><span class="ds-hiz-kim"><b>${esc(C.baslik(o.ad))}</b><small>${esc(o.sinif)} · No ${esc(o.no)} · puan <b class="${p < 100 ? 'turuncu' : ''}">${p}</b>${n ? ' · ' + n + ' dosya' : ''}${u ? ' · ' + u + ' yazılı uyarı' : ''}${!n && !u ? ' · kaydı yok' : ''}</small></span>
+          <button class="birincil" data-ho="olay" data-no="${esc(o.no)}">Olay gir</button><button class="ikincil" data-ho="uyari" data-no="${esc(o.no)}">Yazılı uyarı</button>${n || u ? `<button class="ikincil" data-ho="gecmis" data-no="${esc(o.no)}">Geçmiş</button>` : ''}</div>`; }).join('') : '<div class="ds-bos" style="padding:12px">Öğrenci bulunamadı.</div>'; };
+    ara.oninput = cizS;
+    kutu.onclick = ev => { const b_ = ev.target.closest('[data-ho]'); if (!b_) return; ev.stopPropagation(); const o = ogrL.find(x => x.no === b_.dataset.no); if (!o) return; ara.value = ''; kutu.classList.add('gizli'); kutu.innerHTML = '';
+      if (b_.dataset.ho === 'olay') return yeniOlay(null, null, o);
+      if (b_.dataset.ho === 'uyari') return uyariFormu(null, o);
+      S.ekran = 'ogrenciler'; S.ogrSec = o.no; S.ara = ''; ciz(); };
   }
   // ---- Öğrenciler: disiplin geçmişi
   function cizOgrenciler() {
@@ -467,7 +589,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     if (error) { window.UmalSor.uyar('Silinemedi: ' + C.hataYaz(error)); return; }
     S.L = S.L.filter(x => x.id !== id); ciz();
   }
-  async function uyariFormu(r) {
+  async function uyariFormu(r, ilkOgr) {
     const v = r ? r.veri : { olay: { tarih: bugun() }, uyari: { tarih: bugun() } };
     C.pencereAc(`<h2 style="margin-top:0">Yazılı uyarı</h2><div class="ds-form">${r ? `<b>${esc(C.baslik(v.ogr.ad))} · ${esc(v.ogr.sinif)}</b>` : ogrSecici()}
       <div class="ds-iki"><div><label>Olay tarihi</label><input type="date" id="u_ot" value="${esc(v.olay.tarih || '')}"></div><div><label>Yer</label><input id="u_yer" value="${esc(v.olay.yer || '')}"></div></div>
@@ -479,7 +601,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       <label>Sosyal sorumluluk çalışması (isteğe bağlı)</label><input id="u_sos" value="${esc(v.uyari.sosyal || '')}">
       <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="u_kaydet">Kaydet</button></div><div class="kucuk" id="u_bilgi"></div></div>`);
     maddeBagla('u_madde');
-    const sec = r ? null : await ogrSeciciBagla(false);
+    const sec = r ? null : await ogrSeciciBagla(false, ilkOgr);
     document.getElementById('u_kaydet').onclick = async () => {
       const g = id => document.getElementById(id).value.trim(), bil = document.getElementById('u_bilgi');
       const o = r ? v.ogr : (sec()[0] || null); if (!o) { bil.textContent = 'Öğrenci seçin.'; return; }
@@ -630,6 +752,10 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       const bl = t.closest('[data-belge]'); if (bl) { const rr = bl.dataset.id ? S.L.find(x => x.id === bl.dataset.id) : r; if (rr) return rr.veri.tur === 'uyari' ? uyariBelge(rr) : belge(rr, bl.dataset.belge); }
       const ek = t.closest('[data-ekran]'); if (ek) { S.ekran = ek.dataset.ekran; S.ogrSec = null; ciz(); kok.scrollIntoView({ block: 'start' }); window.scrollTo(0, 0); return; }
       const ra = t.closest('[data-rapor]'); if (ra) return rapor(ra.dataset.rapor);
+      const hz = t.closest('[data-hizli]'); if (hz) { const rr = S.L.find(x => x.id === hz.dataset.hizli); if (rr) { hz.disabled = true; return hizliAdim(rr, hz.dataset.k); } }
+      if (t.closest('[data-geri]') && S.son) { const rr = S.L.find(x => x.id === S.son.id); if (rr && rr.veri.adim) { delete rr.veri.adim[S.son.k]; await kaydet(rr); } S.son = null; ciz(); return; }
+      if (t.closest('[data-sonkapat]')) { S.son = null; ciz(); return; }
+      const ia = t.closest('[data-isac]'); if (ia) { S.secili = ia.dataset.isac; S.suz = 'acik'; S.ekran = 'dosyalar'; ciz(); window.scrollTo(0, 0); return; }
       const ad2 = t.closest('[data-adimid]'); if (ad2) { const rr = S.L.find(x => x.id === ad2.dataset.adimid); if (rr) { S.secili = rr.id; return adimFormu(rr, ad2.dataset.k); } }
       const oe = t.closest('[data-ogrsec]'); if (oe) { S.ogrSec = oe.dataset.ogrsec; ciz(); return; }
       const ekle = t.closest('[data-ekle]'); if (ekle) return yeniOlay(null, S.L.find(x => x.id === ekle.dataset.ekle));
