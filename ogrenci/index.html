@@ -135,6 +135,26 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .pl-form { background: var(--koyu); border: 1px solid var(--neon); border-radius: 14px; padding: 12px; margin-top: 10px; } .pl-form label { margin-top: 8px; }
 .pl-cip { display: flex; flex-wrap: wrap; gap: 6px; } .pl-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 6px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .pl-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
 .pl-form .dg { display: flex; gap: 8px; margin-top: 10px; } .pl-form .dg button { flex: 1; margin: 0; padding: 11px; font-size: 15px; }
+/* K-572: soru takibi */
+.ust2 .so-pdf { margin-left: auto; padding: 7px 12px; font-size: 14px; }
+.so-donem { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; } .so-sek { display: flex; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 3px; } .so-sek button { flex: 1; background: transparent; border: 0; color: var(--soluk); font-weight: 700; padding: 8px; border-radius: 9px; cursor: pointer; font-size: 15px; } .so-sek button.secili { background: var(--neon); color: var(--zemin); }
+.so-nav { display: flex; align-items: center; gap: 10px; } .so-nav b { flex: 1; text-align: center; font-size: 16px; } .so-nav button { width: 40px; height: 40px; padding: 0; font-size: 20px; } .so-nav button:disabled { opacity: .3; }
+.so-kartlar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; } .so-k { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 11px 13px; } .so-k b { display: block; font-size: 24px; line-height: 1.1; color: var(--neonacik); } .so-k span { font-size: 12.5px; color: var(--soluk); } .so-k small { display: block; font-size: 11.5px; margin-top: 2px; } .so-k small.art { color: #6ee7a8; } .so-k small.aza { color: #ff8a95; }
+.so-gir { margin: 0 0 12px; }
+.so-form label { margin-top: 10px; } .so-cip { display: flex; flex-wrap: wrap; gap: 6px; } .so-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 7px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .so-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.14); } .so-cip button.ozel { border-color: rgba(255,154,58,.6); color: #ffd2a8; } .so-cip button.ozel.secili { background: rgba(255,154,58,.22); border-color: #ff9a3a; color: #fff; }
+.so-grup { font-size: 11.5px; font-weight: 800; letter-spacing: 1px; color: var(--cs); margin: 8px 0 4px; }
+.so-sayi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; } .so-s { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 8px; text-align: center; } .so-s span { font-size: 12.5px; font-weight: 700; } .so-s.d span { color: #6ee7a8; } .so-s.y span { color: #ff8a95; } .so-s.b span { color: var(--soluk); }
+.so-s .ar { display: flex; align-items: center; gap: 4px; margin-top: 4px; } .so-s .ar button { width: 34px; height: 38px; flex: none; border-radius: 9px; border: 1px solid var(--cizgi); background: var(--kart); color: #fff; font-size: 20px; cursor: pointer; padding: 0; } .so-s input { text-align: center; font-size: 20px; font-weight: 800; padding: 6px 2px; min-width: 0; }
+.so-net { margin-top: 10px; font-size: 14px; color: var(--soluk); text-align: center; } .so-net b { color: var(--neonacik); font-size: 18px; }
+.so-dg { display: flex; gap: 8px; margin-top: 12px; } .so-dg button { flex: 1; margin: 0; padding: 12px; }
+.so-graf svg { width: 100%; height: auto; display: block; } .so-graf text { fill: #9fb3cc; font-size: 10px; } .so-leg { display: flex; gap: 14px; font-size: 12px; color: var(--soluk); margin-top: 6px; } .so-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.so-ders { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 7px 0; border-top: 1px solid rgba(255,255,255,.05); } .so-ders:first-child { border-top: 0; } .so-ders b { font-size: 14px; overflow-wrap: anywhere; } .so-ders .bar { height: 12px; border-radius: 6px; background: rgba(255,255,255,.07); overflow: hidden; display: flex; } .so-ders .bar i { display: block; height: 100%; } .so-ders .sag { font-size: 12.5px; color: var(--soluk); text-align: right; white-space: nowrap; } .so-ders .sag b { color: #fff; font-size: 14px; }
+.so-ders small { grid-column: 2 / 4; font-size: 11.5px; color: var(--cs); margin-top: -2px; }
+.so-oneri { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.05); font-size: 14.5px; } .so-oneri:first-child { border-top: 0; } .so-oneri i { width: 26px; height: 26px; flex: none; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 14px; } .so-oneri.iyi i { background: rgba(47,191,113,.18); color: #6ee7a8; } .so-oneri.uyari i { background: rgba(255,154,58,.18); color: #ffb867; } .so-oneri.bilgi i { background: rgba(34,232,255,.14); color: var(--neonacik); }
+.so-kay { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.05); font-size: 14px; } .so-kay:first-child { border-top: 0; } .so-kay .n { width: 9px; height: 9px; border-radius: 50%; flex: none; } .so-kay div { flex: 1; min-width: 0; } .so-kay small { display: block; color: var(--soluk); font-size: 12px; } .so-kay button { background: transparent; border: 0; color: var(--cs); font-size: 18px; cursor: pointer; }
+.so-s .ar { flex-wrap: wrap; justify-content: center; } .so-s .ar input { order: -1; flex: 1 1 100%; width: 100%; margin-bottom: 4px; text-align: center; } .so-s .ar button { flex: 1 1 0; } .so-form input[type=date] { background: var(--koyu); color: #fff; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
+.izg button.genis > span:not(.so-mini) { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; } .izg button.genis .so-mini small { white-space: nowrap; }
+.izg button.genis { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; } .izg button.genis .so-mini { margin-left: auto; text-align: right; } .izg button.genis .so-mini b { display: block; font-size: 20px; color: var(--neonacik); }
 .hafta { font-size: 12.5px; font-weight: 800; letter-spacing: 1px; color: var(--soluk); margin: 16px 0 8px; }
 .sv { display: grid; grid-template-columns: 58px 1fr; gap: 12px; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 12px; margin-bottom: 10px; position: relative; }
 .sv .t { border-radius: 12px; background: var(--koyu); text-align: center; padding: 6px 0; border: 1px solid var(--cizgi); align-self: start; } .sv .t b { display: block; font-size: 24px; line-height: 1.1; } .sv .t span { font-size: 11px; color: var(--soluk); font-weight: 700; }
@@ -188,6 +208,17 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
     <div id="plSinav"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
   </section>
+  <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
+    <div class="so-donem" id="soDonem"></div>
+    <div class="so-kartlar" id="soKartlar"></div>
+    <button class="birincil so-gir" id="soGirBtn">+ Çözdüğüm soruları gir</button>
+    <div class="kart so-form gizli" id="soForm"></div>
+    <div class="kart" id="soGrafikKart"><h2 id="soGrafikBaslik">Günlere göre</h2><div id="soGrafik"></div></div>
+    <div class="kart" id="soDersKart"><h2>Derslere göre</h2><div id="soDersler"></div></div>
+    <div class="kart" id="soOneriKart"><h2>Sana öneriler</h2><div id="soOneri"></div></div>
+    <div class="kart" id="soKayitKart"><h2>Kayıtlar</h2><div id="soKayit"></div></div>
+    <div class="not">Kayıtlarını yalnız sen görürsün. Net = doğru − yanlış ÷ 4 (YKS hesabı).</div>
+  </section>
   <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Anketler</h1></div>
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
   </section>
@@ -224,6 +255,6 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611141400"></script>
+<script src="ogrenci.js?v=202611141500"></script>
 </body>
 </html>

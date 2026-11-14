@@ -9,7 +9,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -32,9 +32,9 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); dyYukle(); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -146,6 +146,7 @@
     anket: '<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><path d="m8.5 10 1.5 1.5 3-3M8.5 15.5l1.5 1.5 3-3"/><path d="M15 10.5h1.5M15 16h1.5"/>',
     plan: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/><path d="m15.5 8.5 4-4M17 4.5h2.5V7"/>',
     yer: '<path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
+    soru: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     zarf: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.5 7 8.5 6.5L20.5 7"/>' };
   const svg = (k, renk = 'currentColor', w = 1.8) => `<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="${renk}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IK[k]}</svg>`;
   const ZARF = `<span class="zarf" title="Okunmamış">${svg('zarf', '#1a0d00', 2)}</span>`;
@@ -210,7 +211,8 @@
     $('#dersKart').classList.toggle('gizli', !BD.length);
     const acikForm = S.formlar.filter(f => !f.doldu).length;
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
-    $('#kutular').innerHTML = kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
+    const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru" class="genis"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><span><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.gun.size} gün çalıştın` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></span>${st && st.n ? `<span class="so-mini"><b>${st.n.toLocaleString(tr)}</b><small>soru · net ${sayi1(st.net)}</small></span>` : ''}</button>`; })() : '';
+    $('#kutular').innerHTML = soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni())
@@ -221,7 +223,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
   function sinavCiz() {
     const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
@@ -542,6 +544,152 @@
       PL.hafta = pzt(gun); const LL = plHafta(); LL.push({ id: Date.now().toString(36), g: gunIdx(gun), ders: x.ad, konu: 'Sınava hazırlık', dk: 60, ok: false }); plKaydet(); plCiz(); return; }
   });
   const plBugun = () => { if (!PL.veri) return null; const L = (PL.veri.haftalar || {})[iso(pzt(simdi()))] || [], g = gunIdx(simdi()), B = L.filter(x => +x.g === g); return { n: B.length, ok: B.filter(x => x.ok).length }; };
+
+  // ---- K-572: Soru takibi (11 ve 12. sınıflar; YKS dersleri + Paragraf ve Problemler ayrı)
+  const SO_TYT = ['Paragraf', 'Problemler', 'Türkçe', 'Matematik', 'Geometri', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Din Kültürü'];
+  const SO_AYT = ['AYT Matematik', 'AYT Geometri', 'AYT Fizik', 'AYT Kimya', 'AYT Biyoloji', 'Edebiyat', 'AYT Tarih', 'AYT Coğrafya', 'Felsefe Grubu', 'İngilizce (YDT)'];
+  const SO_RENK = { 'Paragraf': '#ff9a3a', 'Problemler': '#ffd166', 'Türkçe': '#ff6b8a', 'Matematik': '#22e8ff', 'Geometri': '#5aa8ff', 'Fizik': '#7c8cff', 'Kimya': '#3ef08a', 'Biyoloji': '#7bd88f', 'Tarih': '#ffb26b', 'Coğrafya': '#f4a261', 'Felsefe': '#c3a6ff', 'Din Kültürü': '#e9c46a',
+    'AYT Matematik': '#00b8d9', 'AYT Geometri': '#3d8bfd', 'AYT Fizik': '#9b6bff', 'AYT Kimya': '#2bd17e', 'AYT Biyoloji': '#5cc96b', 'Edebiyat': '#ff4f7b', 'AYT Tarih': '#ff9f57', 'AYT Coğrafya': '#e98a4d', 'Felsefe Grubu': '#b28dff', 'İngilizce (YDT)': '#ff7ab6' };
+  const soRenk = d => SO_RENK[d] || '#7ff6ff';
+  const soAktif = () => /^1[12]-/.test(S.sinif || '');
+  const SO = { L: null, per: 'hafta', ref: null, form: null };
+  const soNet = x => (x.do || 0) - (x.y || 0) / 4;
+  const sayi1 = v => (Math.round(v * 10) / 10).toLocaleString(tr);
+  function soAralik(per, ref) {
+    const r = new Date(ref); r.setHours(12, 0, 0, 0);
+    if (per === 'gun') return [iso(r), iso(r)];
+    if (per === 'hafta') { const a = pzt(r), b = new Date(a); b.setDate(b.getDate() + 6); return [iso(a), iso(b)]; }
+    const a = new Date(r.getFullYear(), r.getMonth(), 1, 12), b = new Date(r.getFullYear(), r.getMonth() + 1, 0, 12); return [iso(a), iso(b)];
+  }
+  function soOnceki(per, r0, a, b) {   // süren dönem: önceki dönemin aynı gün sayısıyla karşılaştır (ör. Pzt–Sal ile geçen Pzt–Sal)
+    const [oa, ob] = soAralik(per, r0), bugun = iso(simdi()); if (b < bugun || per === 'gun') return [oa, ob];
+    const n = Math.round((new Date(bugun + 'T12:00') - new Date(a + 'T12:00')) / 864e5), e = new Date(oa + 'T12:00'); e.setDate(e.getDate() + n); const k = iso(e); return [oa, k < ob ? k : ob];
+  }
+  function soIstat(a, b) {
+    const K = (SO.L || []).filter(x => x.t >= a && x.t <= b), s = { n: 0, d: 0, y: 0, b: 0, net: 0, dk: 0, dkn: 0, gun: new Set(), ders: {}, gunluk: {} };
+    K.forEach(x => { const n = (x.do || 0) + (x.y || 0) + (x.b || 0); s.n += n; s.d += x.do || 0; s.y += x.y || 0; s.b += x.b || 0; s.net += soNet(x); if (x.dk) { s.dk += x.dk; s.dkn += n; } s.gun.add(x.t);
+      const D_ = s.ders[x.d] = s.ders[x.d] || { n: 0, d: 0, y: 0, b: 0, net: 0 }; D_.n += n; D_.d += x.do || 0; D_.y += x.y || 0; D_.b += x.b || 0; D_.net += soNet(x);
+      const G = s.gunluk[x.t] = s.gunluk[x.t] || { n: 0, net: 0 }; G.n += n; G.net += soNet(x); });
+    s.acc = s.n ? Math.round(s.d * 100 / s.n) : 0; s.K = K; return s;
+  }
+  async function soYukle() {
+    if (SO.L) return true;
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_soru_al', { p_no: S.no, p_kod: S.kod, p_gun: 400 })); } catch (e) {}
+    if (!data || !data.ok) return false; SO.L = data.kayitlar || []; return true;
+  }
+  async function soAc() {
+    goster('s-soru'); window.scrollTo(0, 0); if (!SO.ref) SO.ref = simdi();
+    if (!SO.L) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Yükleniyor…</div>'; if (!(await soYukle())) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Kayıtlar yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
+    soCiz();
+  }
+  function soOneriler(s, o, per, a, b) {
+    const R = [], bugun = iso(simdi()), son = b < bugun ? b : bugun, gecen = Math.max(1, Math.round((new Date(son + 'T12:00') - new Date(a + 'T12:00')) / 864e5) + 1), gunAd = per === 'gun' ? 'bugün' : per === 'hafta' ? 'bu hafta' : 'bu ay';
+    if (!s.n) { R.push(['bilgi', `${gunAd[0].toUpperCase() + gunAd.slice(1)} için kayıt yok. Çözdüğün soruları her gün girersen sana daha isabetli öneriler sunarım.`]); return R; }
+    const hedef = (d, gunluk) => { const n = (s.ders[d] || {}).n || 0, h = gunluk * gecen; if (n < h * 0.8) R.push(['uyari', `${d}: ${gunAd} ${n} soru çözdün. Günde en az ${gunluk} ${d.toLocaleLowerCase(tr)} sorusu hedefle (${gunAd} hedefin ${h}).`]); else R.push(['iyi', `${d} hedefini tutturuyorsun: ${gunAd} ${n} soru (hedef ${h}). Böyle devam!`]); };
+    hedef('Paragraf', 20); hedef('Problemler', 15);
+    Object.entries(s.ders).filter(([, x]) => x.n >= 20).forEach(([d, x]) => { const p = Math.round(x.d * 100 / x.n); if (p < 60) R.push(['uyari', `${d} dersinde doğruluk %${p}. Yanlışlarını tek tek incele, ilgili konuyu tekrar edip benzer sorular çöz.`]); else if (p >= 85 && x.n >= 30) R.push(['iyi', `${d}'de doğruluk %${p}, çok iyi. Daha zor kaynaklara ve deneme sorularına geçebilirsin.`]); });
+    if (per !== 'gun') {
+      const ever = new Set((SO.L || []).filter(x => x.t >= iso(new Date(Date.now() - 60 * 864e5))).map(x => x.d)); ['Türkçe', 'Matematik'].forEach(d => ever.add(d));
+      const eksik = [...ever].filter(d => !s.ders[d] && d !== 'Paragraf' && d !== 'Problemler');
+      if (eksik.length) R.push(['uyari', `${gunAd[0].toUpperCase() + gunAd.slice(1)} hiç çözmediğin dersler: ${eksik.join(', ')}. Her derse haftada en az iki gün ayır.`]);
+    }
+    const sir = Object.entries(s.ders).sort((x, y) => y[1].n - x[1].n);
+    if (sir.length > 1 && s.n >= 60 && sir[0][1].n / s.n > 0.45) R.push(['bilgi', `Soruların %${Math.round(sir[0][1].n * 100 / s.n)}'i ${sir[0][0]} dersinden. Diğer derslere de zaman ayırarak dengeyi koru.`]);
+    if (s.b / s.n > 0.2) R.push(['uyari', `Boş oranın %${Math.round(s.b * 100 / s.n)}. Boş bıraktığın soruların çözümlerine mutlaka bak; bilmediğin konuları not al.`]);
+    if (per === 'hafta' && gecen >= 4 && s.gun.size < Math.min(5, gecen)) R.push(['uyari', `Bu hafta ${s.gun.size} gün soru çözdün. Az da olsa her gün çözmek, haftada bir gün çok çözmekten daha etkilidir.`]);
+    if (per === 'ay' && s.gun.size >= 20) R.push(['iyi', `Bu ay ${s.gun.size} gün soru çözdün. Düzenin harika!`]);
+    if (s.dkn && s.dk) { const h = s.dk * 60 / s.dkn; R.push(['bilgi', `Soru başına ortalama ${Math.round(h)} saniye harcadın.${h > 90 ? ' YKS\'de soru başına yaklaşık 75 saniye düşer; süre tutarak deneme çöz.' : ''}`]); }
+    if (o && o.n) { const f = Math.round((s.n - o.n) * 100 / o.n); if (per !== 'gun' && b < bugun || per === 'gun') R.push([f >= 0 ? 'iyi' : 'uyari', `${per === 'gun' ? 'Dünle' : per === 'hafta' ? 'Geçen haftayla' : 'Geçen ayla'} karşılaştırınca %${Math.abs(f)} ${f >= 0 ? 'daha fazla' : 'daha az'} soru çözdün (net ${sayi1(s.net)} / ${sayi1(o.net)}).`]); }
+    return R;
+  }
+  function soGrafik(s, per, a, b) {
+    if (per === 'gun') { const L = Object.entries(s.ders).sort((x, y) => y[1].n - x[1].n); if (!L.length) return '<div class="soluk kucuk">Bu gün kayıt yok.</div>'; const mx = Math.max(...L.map(x => x[1].n)); return L.map(([d, x]) => `<div class="so-ders"><b>${esc(d)}</b><div class="bar"><i style="width:${x.n * 100 / mx}%;background:${soRenk(d)}"></i></div><div class="sag"><b>${x.n}</b></div></div>`).join(''); }
+    const G = []; for (let d = new Date(a + 'T12:00'); iso(d) <= b; d.setDate(d.getDate() + 1)) G.push(iso(d));
+    const mx = Math.max(10, ...G.map(g => (s.gunluk[g] || {}).n || 0)), W = 340, H = 150, pad = 22, bw = (W - pad) / G.length, bugun = iso(simdi());
+    const bars = G.map((g, i) => { const v = s.gunluk[g] || { n: 0, net: 0 }, h = v.n * (H - 30) / mx, hn = Math.max(0, v.net) * (H - 30) / mx, x = pad + i * bw + bw * 0.15, w = bw * 0.7, d = new Date(g + 'T12:00');
+      return `<rect x="${x}" y="${H - 18 - h}" width="${w}" height="${h}" rx="2" fill="${g > bugun ? '#1c2c44' : 'rgba(34,232,255,.35)'}"/><rect x="${x}" y="${H - 18 - hn}" width="${w}" height="${hn}" rx="2" fill="#22e8ff"/>${per === 'hafta' ? `<text x="${x + w / 2}" y="${H - 18 - h - 3}" text-anchor="middle" style="fill:#fff;font-size:10px">${v.n || ''}</text>` : ''}<text x="${x + w / 2}" y="${H - 5}" text-anchor="middle" ${g === bugun ? 'style="fill:#7ff6ff;font-weight:700"' : ''}>${per === 'hafta' ? ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'][gunIdx(d)] : (d.getDate() % 5 === 0 || d.getDate() === 1 ? d.getDate() : '')}</text>`; }).join('');
+    const ys = [0, Math.round(mx / 2), mx].map(v => `<text x="0" y="${H - 18 - v * (H - 30) / mx + 3}">${v}</text><line x1="${pad - 2}" x2="${W}" y1="${H - 18 - v * (H - 30) / mx}" y2="${H - 18 - v * (H - 30) / mx}" stroke="rgba(255,255,255,.06)"/>`).join('');
+    return `<div class="so-graf"><svg viewBox="0 0 ${W} ${H}">${ys}${bars}</svg></div><div class="so-leg"><span><i style="background:rgba(34,232,255,.35)"></i>Toplam soru</span><span><i style="background:#22e8ff"></i>Net</span></div>`;
+  }
+  function soCiz() {
+    const [a, b] = soAralik(SO.per, SO.ref), s = soIstat(a, b), r0 = new Date(SO.ref);
+    if (SO.per === 'gun') r0.setDate(r0.getDate() - 1); else if (SO.per === 'hafta') r0.setDate(r0.getDate() - 7); else r0.setMonth(r0.getMonth() - 1);
+    const bugun = iso(simdi()), [oa, ob] = soOnceki(SO.per, r0, a, b), o = soIstat(oa, ob);
+    const da = new Date(a + 'T12:00'), db = new Date(b + 'T12:00');
+    const baslik_ = SO.per === 'gun' ? (a === bugun ? 'Bugün · ' : '') + `${da.getDate()} ${AY[da.getMonth()]} ${GUN[gunIdx(da)]}` : SO.per === 'hafta' ? `${da.getDate()} ${da.getMonth() !== db.getMonth() ? AY[da.getMonth()] + ' ' : ''}– ${db.getDate()} ${AY[db.getMonth()]}` : `${AY[da.getMonth()]} ${da.getFullYear()}`;
+    $('#soDonem').innerHTML = `<div class="so-sek">${[['gun', 'Günlük'], ['hafta', 'Haftalık'], ['ay', 'Aylık']].map(([k, t]) => `<button class="${SO.per === k ? 'secili' : ''}" data-sper="${k}">${t}</button>`).join('')}</div>
+      <div class="so-nav"><button class="ikincil" data-snav="-1" aria-label="Önceki">‹</button><b>${baslik_}</b><button class="ikincil" data-snav="1" aria-label="Sonraki" ${b >= bugun ? 'disabled' : ''}>›</button></div>`;
+    const fark = (v, w, f) => w ? (v >= w ? `<small class="art">▲ ${f(v - w)} ${SO.per === 'gun' ? 'düne' : SO.per === 'hafta' ? 'geçen haftaya' : 'geçen aya'} göre</small>` : `<small class="aza">▼ ${f(w - v)} ${SO.per === 'gun' ? 'düne' : SO.per === 'hafta' ? 'geçen haftaya' : 'geçen aya'} göre</small>`) : '';
+    $('#soKartlar').innerHTML = `<div class="so-k"><b>${s.n.toLocaleString(tr)}</b><span>çözülen soru</span>${fark(s.n, o.n, v => v.toLocaleString(tr))}</div><div class="so-k"><b>${sayi1(s.net)}</b><span>net</span>${fark(s.net, o.net, sayi1)}</div>
+      <div class="so-k"><b>%${s.acc}</b><span>doğruluk · ${s.d} D · ${s.y} Y · ${s.b} B</span></div><div class="so-k"><b>${s.gun.size}</b><span>${SO.per === 'gun' ? 'ders' : 'gün çalıştın'}${SO.per !== 'gun' ? ` · günlük ort. ${s.gun.size ? Math.round(s.n / s.gun.size) : 0}` : ''}</span></div>`;
+    if (SO.per === 'gun') $('#soKartlar .so-k:last-child').innerHTML = `<b>${Object.keys(s.ders).length}</b><span>farklı ders</span>`;
+    $('#soGrafikBaslik').textContent = SO.per === 'gun' ? 'Bugünkü dersler' : 'Günlere göre';
+    $('#soGrafik').innerHTML = soGrafik(s, SO.per, a, b);
+    const L = Object.entries(s.ders).sort((x, y) => y[1].n - x[1].n);
+    $('#soDersKart').classList.toggle('gizli', SO.per === 'gun' && !L.length);
+    $('#soDersler').innerHTML = L.length ? L.map(([d, x]) => `<div class="so-ders"><b>${esc(d)}</b><div class="bar"><i style="width:${x.d * 100 / x.n}%;background:${soRenk(d)}"></i><i style="width:${x.y * 100 / x.n}%;background:rgba(255,84,112,.75)"></i><i style="width:${x.b * 100 / x.n}%;background:rgba(255,255,255,.18)"></i></div><div class="sag"><b>${x.n}</b> soru · net ${sayi1(x.net)}</div><small>%${Math.round(x.d * 100 / x.n)} doğru · ${x.d} D · ${x.y} Y · ${x.b} B · soruların %${Math.round(x.n * 100 / s.n)}'i</small></div>`).join('')
+      : '<div class="soluk kucuk">Bu dönemde kayıt yok.</div>';
+    $('#soOneri').innerHTML = soOneriler(s, o, SO.per, a, b).map(([t, m]) => `<div class="so-oneri ${t}"><i>${t === 'iyi' ? '✓' : t === 'uyari' ? '!' : 'i'}</i><div>${esc(m)}</div></div>`).join('');
+    $('#soKayit').innerHTML = s.K.length ? s.K.slice(0, 60).map(x => { const d = new Date(x.t + 'T12:00'), n = (x.do || 0) + (x.y || 0) + (x.b || 0); return `<div class="so-kay"><i class="n" style="background:${soRenk(x.d)}"></i><div><b>${esc(x.d)}</b> · ${n} soru · net ${sayi1(soNet(x))}<small>${d.getDate()} ${AY[d.getMonth()]} · ${x.do || 0} D · ${x.y || 0} Y · ${x.b || 0} B${x.dk ? ' · ' + x.dk + ' dk' : ''}${x.k ? ' · ' + esc(x.k) : ''}</small></div><button data-ssil="${x.id}" aria-label="Sil">×</button></div>`; }).join('') : '<div class="soluk kucuk">Bu dönemde kayıt yok.</div>';
+    soFormCiz();
+  }
+  function soFormCiz() {
+    const F = SO.form, el = $('#soForm');
+    $('#soGirBtn').classList.toggle('gizli', !!F); el.classList.toggle('gizli', !F); if (!F) return;
+    const bugun = iso(simdi()), gun = k => { const d = simdi(); d.setDate(d.getDate() - k); return iso(d); }, net = (+F.d || 0) - (+F.y || 0) / 4;
+    const cip = (L, ozel) => L.map(d => `<button type="button" class="${F.ders === d ? 'secili' : ''} ${ozel && ozel.includes(d) ? 'ozel' : ''}" data-sfd="${esc(d)}">${esc(d)}</button>`).join('');
+    el.innerHTML = `<h2 style="margin:0">Soru gir</h2>
+      <label>Tarih</label><div class="so-cip">${[[0, 'Bugün'], [1, 'Dün'], [2, '2 gün önce']].map(([k, t]) => `<button type="button" class="${F.tarih === gun(k) ? 'secili' : ''}" data-sft="${gun(k)}">${t}</button>`).join('')}<input type="date" id="soTarih" value="${F.tarih}" max="${bugun}" min="${gun(31)}" style="width:auto;padding:6px 10px"></div>
+      <label>Ders</label><div class="so-grup">TYT</div><div class="so-cip">${cip(SO_TYT, ['Paragraf', 'Problemler'])}</div><div class="so-grup">AYT</div><div class="so-cip">${cip(SO_AYT)}</div>
+      <label>Sonuç</label><div class="so-sayi">${[['d', 'Doğru'], ['y', 'Yanlış'], ['b', 'Boş']].map(([k, t]) => `<div class="so-s ${k}"><span>${t}</span><div class="ar"><button type="button" data-sfa="${k}" data-v="-1">−</button><input type="number" inputmode="numeric" min="0" max="1000" id="so_${k}" value="${F[k] || ''}" placeholder="0"><button type="button" data-sfa="${k}" data-v="1">+</button></div></div>`).join('')}</div>
+      <div class="so-net" id="soNetY">Toplam <b>${(+F.d || 0) + (+F.y || 0) + (+F.b || 0)}</b> soru · net <b>${sayi1(net)}</b></div>
+      <label>Süre (isteğe bağlı)</label><div class="so-cip">${[15, 30, 45, 60, 90, 120].map(d => `<button type="button" class="${F.dk === d ? 'secili' : ''}" data-sfs="${d}">${d} dk</button>`).join('')}</div>
+      <label for="soKaynak">Kaynak / kitap (isteğe bağlı)</label><input type="text" id="soKaynak" maxlength="60" value="${esc(F.k || '')}" placeholder="ör. 3D TYT Paragraf, deneme">
+      <div class="so-dg"><button type="button" class="ikincil" data-sfvaz="1">Vazgeç</button><button type="button" class="birincil" data-sfkay="1">Kaydet</button></div><div class="bilgi" id="soBilgi"></div>`;
+  }
+  const soNetGuncel = () => { const F = SO.form; if (!F) return; const e = $('#soNetY'); if (e) e.innerHTML = `Toplam <b>${(+F.d || 0) + (+F.y || 0) + (+F.b || 0)}</b> soru · net <b>${sayi1((+F.d || 0) - (+F.y || 0) / 4)}</b>`; };
+  $('#s-soru').addEventListener('input', ev => { const t = ev.target, F = SO.form; if (!F) return; if (/^so_[dyb]$/.test(t.id)) { F[t.id.slice(3)] = Math.max(0, Math.min(1000, parseInt(t.value, 10) || 0)); soNetGuncel(); } if (t.id === 'soKaynak') F.k = t.value; if (t.id === 'soTarih' && t.value) { F.tarih = t.value; } });
+  $('#s-soru').addEventListener('click', async ev => {
+    const b = ev.target.closest('button'); if (!b) return; const F = SO.form;
+    if (b.dataset.sper) { SO.per = b.dataset.sper; soCiz(); return; }
+    if (b.dataset.snav) { const k = +b.dataset.snav, r = new Date(SO.ref); if (SO.per === 'gun') r.setDate(r.getDate() + k); else if (SO.per === 'hafta') r.setDate(r.getDate() + 7 * k); else r.setMonth(r.getMonth() + k); if (iso(r) > iso(simdi())) r.setTime(simdi().getTime()); SO.ref = r; soCiz(); return; }
+    if (b.id === 'soGirBtn') { const son = (SO.L || [])[0]; SO.form = { tarih: iso(simdi()), ders: son ? son.d : 'Paragraf', d: 0, y: 0, b: 0 }; soFormCiz(); $('#soForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    if (b.id === 'soPdf') return soPdf();
+    if (b.dataset.ssil) { if (!confirm('Bu kayıt silinsin mi?')) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_soru_sil', { p_no: S.no, p_kod: S.kod, p_id: b.dataset.ssil })); } catch (e) {} if (data && data.ok) { SO.L = data.kayitlar; soCiz(); } return; }
+    if (!F) return;
+    if (b.dataset.sft) { F.tarih = b.dataset.sft; soFormCiz(); return; }
+    if (b.dataset.sfd) { F.ders = b.dataset.sfd; soFormCiz(); return; }
+    if (b.dataset.sfs) { F.dk = F.dk === +b.dataset.sfs ? 0 : +b.dataset.sfs; soFormCiz(); return; }
+    if (b.dataset.sfa) { const k = b.dataset.sfa; F[k] = Math.max(0, Math.min(1000, (+F[k] || 0) + +b.dataset.v)); const i = $('#so_' + k); if (i) i.value = F[k] || ''; soNetGuncel(); return; }
+    if (b.dataset.sfvaz) { SO.form = null; soFormCiz(); return; }
+    if (b.dataset.sfkay) { const bil = $('#soBilgi'); bil.classList.remove('hata');
+      if (!F.ders) { bil.textContent = 'Ders seç.'; bil.classList.add('hata'); return; }
+      if (!((+F.d || 0) + (+F.y || 0) + (+F.b || 0))) { bil.textContent = 'Doğru, yanlış ya da boş sayısını gir.'; bil.classList.add('hata'); return; }
+      b.disabled = true; bil.textContent = 'Kaydediliyor…'; let data = null;
+      try { ({ data } = await sb.rpc('umal_ogrenci_soru_ekle', { p_no: S.no, p_kod: S.kod, p_tarih: F.tarih, p_ders: F.ders, p_dogru: +F.d || 0, p_yanlis: +F.y || 0, p_bos: +F.b || 0, p_dk: F.dk || 0, p_kaynak: F.k || '' })); } catch (e) {}
+      b.disabled = false;
+      if (!data) { bil.textContent = 'Kaydedilemedi; internet bağlantını kontrol et.'; bil.classList.add('hata'); return; }
+      if (!data.ok) { bil.textContent = data.hata || 'Kaydedilemedi.'; bil.classList.add('hata'); return; }
+      const n_ = sayi1((+F.d || 0) - (+F.y || 0) / 4), dd = F.ders, tt = F.tarih; SO.L = data.kayitlar || SO.L; SO.form = { tarih: tt, ders: dd, d: 0, y: 0, b: 0 };
+      if (tt < soAralik(SO.per, SO.ref)[0] || tt > soAralik(SO.per, SO.ref)[1]) SO.ref = new Date(tt + 'T12:00');
+      soCiz(); const bi = $('#soBilgi'); if (bi) bi.textContent = `✓ ${dd}: net ${n_} kaydedildi. Başka ders girebilirsin.`; }
+  });
+  function soPdf() {
+    const [a, b] = soAralik(SO.per, SO.ref), s = soIstat(a, b), r0 = new Date(SO.ref);
+    if (SO.per === 'gun') r0.setDate(r0.getDate() - 1); else if (SO.per === 'hafta') r0.setDate(r0.getDate() - 7); else r0.setMonth(r0.getMonth() - 1);
+    const [oa, ob] = soOnceki(SO.per, r0, a, b), o = soIstat(oa, ob), O = soOneriler(s, o, SO.per, a, b), da = new Date(a + 'T12:00'), db = new Date(b + 'T12:00');
+    const donem = SO.per === 'gun' ? `${da.getDate()} ${AY[da.getMonth()]} ${da.getFullYear()} (günlük)` : SO.per === 'hafta' ? `${da.getDate()} ${AY[da.getMonth()]} – ${db.getDate()} ${AY[db.getMonth()]} ${db.getFullYear()} (haftalık)` : `${AY[da.getMonth()]} ${da.getFullYear()} (aylık)`;
+    const L = Object.entries(s.ders).sort((x, y) => y[1].n - x[1].n), G = []; for (let d = new Date(a + 'T12:00'); iso(d) <= b; d.setDate(d.getDate() + 1)) G.push(iso(d));
+    const mx = Math.max(1, ...G.map(g => (s.gunluk[g] || {}).n || 0));
+    const html = `<!doctype html><html lang="tr"><meta charset="utf-8"><title>Soru Takibi · ${esc(baslik(S.ad))} · ${esc(donem)}</title><style>@page{size:A4;margin:12mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10pt;color:#111;margin:0;padding:6mm}h1{font-size:15pt;margin:0}h2{font-size:11.5pt;color:#0d3c57;border-bottom:1.5px solid #1aa6c4;padding-bottom:1mm;margin:6mm 0 2mm}.ust{display:flex;align-items:center;gap:5mm;border-bottom:2px solid #0d3c57;padding-bottom:3mm}.ust img{height:18mm}.ust small{display:block;color:#555}.kut{display:flex;gap:3mm;margin-top:4mm}.kut div{flex:1;border:1px solid #c9d6e2;border-radius:3mm;padding:3mm;text-align:center}.kut b{display:block;font-size:17pt;color:#0b7c99}.kut span{font-size:8.5pt;color:#555}table{width:100%;border-collapse:collapse}td,th{border:1px solid #c0ccd8;padding:2px 5px;text-align:left}th{background:#e8eef4;font-size:9pt}.bar{height:3mm;background:#e3e8ef;border-radius:2mm;overflow:hidden;display:flex}.bar i{display:block;height:100%}li{margin:1.5mm 0}.g{display:flex;align-items:flex-end;gap:1mm;height:32mm;border-bottom:1px solid #999;margin-top:2mm}.g div{flex:1;text-align:center;font-size:7pt;color:#333}.g span{display:block;background:#1aa6c4;border-radius:1mm 1mm 0 0;margin:0 auto;width:80%}.alt{margin-top:7mm;font-size:8pt;color:#777;text-align:center}</style>
+      <div class="ust"><img src="${new URL('../okul-logo.png', location.href).href}"><div><h1>Soru Takibi Raporu</h1><small>${esc(baslik(S.ad))} · ${esc(S.sinif)} · No ${esc(S.no)}</small><small>${esc(donem)}</small></div></div>
+      <div class="kut"><div><b>${s.n}</b><span>çözülen soru${o.n ? ` (önceki: ${o.n})` : ''}</span></div><div><b>${sayi1(s.net)}</b><span>net${o.n ? ` (önceki: ${sayi1(o.net)})` : ''}</span></div><div><b>%${s.acc}</b><span>doğruluk · ${s.d} D / ${s.y} Y / ${s.b} B</span></div><div><b>${s.gun.size}</b><span>${SO.per === 'gun' ? 'gün' : 'çalışılan gün'}</span></div></div>
+      ${SO.per !== 'gun' ? `<h2>Günlere göre soru sayısı</h2><div class="g">${G.map(g => { const v = (s.gunluk[g] || {}).n || 0, d = new Date(g + 'T12:00'); return `<div><small>${v || ''}</small><span style="height:${v * 26 / mx}mm"></span>${SO.per === 'hafta' ? ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'][gunIdx(d)] : d.getDate()}</div>`; }).join('')}</div>` : ''}
+      <h2>Derslere göre</h2>${L.length ? `<table><tr><th>Ders</th><th>Soru</th><th>D</th><th>Y</th><th>B</th><th>Net</th><th>Doğruluk</th><th style="width:28%">Dağılım (doğru / yanlış / boş)</th></tr>${L.map(([d, x]) => `<tr><td><b>${esc(d)}</b></td><td>${x.n}</td><td>${x.d}</td><td>${x.y}</td><td>${x.b}</td><td><b>${sayi1(x.net)}</b></td><td>%${Math.round(x.d * 100 / x.n)}</td><td><div class="bar"><i style="width:${x.d * 100 / x.n}%;background:#2bb673"></i><i style="width:${x.y * 100 / x.n}%;background:#e5484d"></i><i style="width:${x.b * 100 / x.n}%;background:#b8c2cc"></i></div></td></tr>`).join('')}</table>` : '<p>Bu dönemde kayıt yok.</p>'}
+      <h2>Öneriler</h2><ul>${O.map(([t, m]) => `<li><b style="color:${t === 'iyi' ? '#1f8f55' : t === 'uyari' ? '#c66a00' : '#0b7c99'}">${t === 'iyi' ? '✓' : t === 'uyari' ? '!' : 'i'}</b> ${esc(m)}</li>`).join('')}</ul>
+      <div class="alt">Ümraniye Merkez Anadolu Lisesi · Öğrenci paneli · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })} · Net = doğru − yanlış ÷ 4</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>`;
+    const w = window.open('', '_blank'); if (!w) { alert('Raporu açmak için açılır pencerelere izin ver.'); return; } w.document.open(); w.document.write(html); w.document.close();
+  }
 
   // ---- K-553: canlı yenileme (öğrenci yazmıyorken) + yeni sürümde kendiliğinden yenilenme
   const yaziyor = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
