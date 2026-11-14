@@ -259,7 +259,7 @@
   async function ozetYukle() {
     const [oz, tk] = await Promise.all([
       (async () => { for (let i = 0; i < 3; i++) { try { const r = (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; if (r && r.ok) return r; } catch (e) {} await new Promise(z => setTimeout(z, 1500 * (i + 1))); } return null; })(),   // K-578: ilk denemede kilit/ağ yüzünden boş dönerse yeniden dene
-      (async () => { try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);
+      (async () => { try { const { data, error } = await sb.rpc('umal_sinav_takvimi_al'); if (!error && data && Array.isArray(data.sinavlar)) return data; } catch (e) {} try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);   // K-624: panelde düzenlenen takvim
     if (oz && oz.ok) { S.program = oz.program || {}; S.yerler = oz.yerler || []; }
     await konuYukle();   // K-574
     S.takvim = tk; if (!$('#liste').classList.contains('gizli')) anaCiz(true);
@@ -279,7 +279,8 @@
       const ad = (sb_ && sb_.subeler && sb_.subeler[S.sinif]) || (x.siniflar || {})[sv]; if (!ad) continue;
       const d = new Date(x.tarih + 'T12:00:00'), n = parseInt(x.ders, 10), [bas, bit] = zil(gunIdx(d), n);
       const yer = (S.yerler || []).find(y => y.tarih === x.tarih && y.ders === x.ders);
-      L.push({ tarih: x.tarih, d, n, ders: x.ders, ad, bas, bit, yer });
+      const sinifta = ((x.yer || {})[sv]) === 'sinif';   // K-624: sınıfta yapılan sınav (kelebek yok)
+      L.push({ tarih: x.tarih, d, n, ders: x.ders, ad, bas, bit, yer: sinifta ? null : yer, sinifta });
     }
     return L.sort((a, b) => (a.tarih + a.bas).localeCompare(b.tarih + b.bas));
   }
@@ -305,7 +306,7 @@
         <div class="soluk kucuk">${GUN[gunIdx(nx.d)]} ${nx.d.getDate()} ${AY[nx.d.getMonth()]} · ${esc(nx.ders)} · ${nx.bas.replace(':', '.')}</div>
         ${fark > 0 ? `<div class="say"><div><b>${g}</b><span>gün</span></div><div><b>${h}</b><span>saat</span></div><div><b>${m}</b><span>dakika</span></div></div>` : '<div class="say"><div><b>Şimdi</b><span>sınav sürüyor</span></div></div>'}
         ${(S.konular || new Map()).get([nx.tarih, nx.ders, S.sinif.split('-')[0], nx.ad].join('|')) ? '<div class="soluk kucuk" style="margin-top:6px">Bu sınavın konuları yazıldı · Sınavlarım\'da gör</div>' : ''}
-        ${nx.yer ? `<div class="yer">${svg('yer', '#ffb867')}<span>Sınav yerin: <b>Salon ${esc(nx.yer.salon)} · Sıra ${esc(nx.yer.sira)}</b></span></div>` : ''}`;
+        ${nx.yer ? `<div class="yer">${svg('yer', '#ffb867')}<span>Sınav yerin: <b>Salon ${esc(nx.yer.salon)} · Sıra ${esc(nx.yer.sira)}</b></span></div>` : nx.sinifta ? `<div class="yer">${svg('yer', '#ffb867')}<span>Sınav yerin: <b>kendi sınıfın</b></span></div>` : ''}`;
       bk.classList.remove('gizli');
     } else bk.classList.add('gizli');
     const BD = bugunDersleri();
@@ -342,7 +343,7 @@
       const roz = bt ? 'bitti' : gk === 0 ? 'bugün' : gk === 1 ? 'yarın' : gk + ' gün kaldı';
       const bas_ = h !== son ? `<div class="hafta">${h}</div>` : ''; son = h;
       return `${bas_}<div class="sv ${bt ? 'bitti' : ''} ${yakin ? 'yakin' : ''}"><div class="t"><b>${x.d.getDate()}</b><span>${AYK[x.d.getMonth()]}</span></div><div><h3>${esc(x.ad)}</h3><div class="s">${GUN[gunIdx(x.d)]} · ${esc(x.ders)} · ${x.bas.replace(':', '.')} – ${x.bit.replace(':', '.')}</div>
-        ${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Sınav yerin: Salon ${esc(x.yer.salon)} · Sıra ${esc(x.yer.sira)}</div>` : (!bt ? '<div class="n">Sınav yerin kelebek planı yayınlanınca burada görünür.</div>' : '')}${(k_ => k_ ? `<details class="sv-konu" ${yakin ? 'open' : ''}><summary>Sınav konuları</summary><ul>${k_.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => `<li>${esc(l.replace(/^[-•*]\s*/, ''))}</li>`).join('')}</ul></details>` : '')((S.konular || new Map()).get([x.tarih, x.ders, S.sinif.split('-')[0], x.ad].join('|')))}</div><span class="rozet">${roz}</span></div>`;
+        ${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Sınav yerin: Salon ${esc(x.yer.salon)} · Sıra ${esc(x.yer.sira)}</div>` : (!bt ? (x.sinifta ? '<div class="n">Bu sınav kendi sınıfında yapılır.</div>' : '<div class="n">Sınav yerin kelebek planı yayınlanınca burada görünür.</div>') : '')}${(k_ => k_ ? `<details class="sv-konu" ${yakin ? 'open' : ''}><summary>Sınav konuları</summary><ul>${k_.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => `<li>${esc(l.replace(/^[-•*]\s*/, ''))}</li>`).join('')}</ul></details>` : '')((S.konular || new Map()).get([x.tarih, x.ders, S.sinif.split('-')[0], x.ad].join('|')))}</div><span class="rozet">${roz}</span></div>`;
     }).join('') : '<div class="kart soluk">Sınıfın için yayınlanmış sınav takvimi yok.</div>';
   }
   let PGUN = null;

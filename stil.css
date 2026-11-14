@@ -1288,3 +1288,17 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .yan .ust-ad { font-family: 'UMAL Cormorant', Georgia, 'Times New Roman', serif; font-weight: 700; font-size: 30px; line-height: .95; letter-spacing: .01em; color: #f4fdff; white-space: nowrap; }
   .yan .ust-ad small { font-family: 'UMAL Marcellus', Georgia, serif; font-weight: 400; font-size: 11px; letter-spacing: .2em; color: #7ff6ff; margin-top: 4px; text-transform: uppercase; }
 }
+
+/* K-624: Sınav takvimi düzenleme */
+.tk-cip.sinifta { border-style: dashed; } .tk-cip i { font-style: normal; font-size: 10.5px; font-weight: 800; color: #ffb867; margin-left: 6px; letter-spacing: .03em; }
+.td-liste { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.td-ust { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; } .td-gun { min-width: 70px; } .td-ders .cip { padding: 5px 10px; font-size: 12.5px; }
+.td-sv { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border-left: 3px solid var(--sv); background: var(--koyu); border-radius: 10px; padding: 7px 10px; margin-top: 6px; }
+.td-svno { flex: none; width: 30px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 900; color: #04121a; background: var(--sv); }
+.td-sv input { flex: 0 1 240px; min-width: 150px; }
+.td-yer { display: flex; border: 1px solid var(--cizgi); border-radius: 10px; overflow: hidden; flex: none; } .td-yer button { background: none; border: 0; color: #a9bcd8; padding: 6px 12px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.td-yer button.secili { background: var(--neon); color: #04222b; } .td-yer button.secili.sinif { background: #ff9a3a; color: #2a1200; }
+.td-fark { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex: 1 1 200px; } .td-fcip { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; border: 1px solid var(--cizgi); border-radius: 8px; padding: 2px 4px 2px 8px; }
+.td-fcip button { background: none; border: 0; color: var(--kirmizi); cursor: pointer; font-size: 12px; padding: 0 4px; } .td-svsil { color: var(--kirmizi) !important; margin-left: auto; }
+.td-sube { min-width: 28px; height: 26px; border-radius: 7px; border: 1px dashed var(--cizgi); background: none; color: #6f819c; font-weight: 800; font-size: 12.5px; cursor: pointer; padding: 0 6px; } .td-sube.secili { border: 1px solid var(--sv); background: color-mix(in srgb, var(--sv) 18%, transparent); color: #e9fdff; }
+.td-sv .td-fark { flex-basis: 100%; order: 3; } .td-sv .td-svsil { order: 2; } .td-sv { row-gap: 6px; } .td-ust [data-tdt] { width: 150px; flex: none; }
