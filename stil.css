@@ -1114,3 +1114,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .meb-dsat { display: grid; grid-template-columns: 130px 1fr 30px; gap: 8px; align-items: center; font-size: 12.5px; margin: 3px 0; } .meb-dsat span { overflow-wrap: anywhere; } .meb-dsat .meb-bar { width: 100%; } .meb-dsat small { text-align: right; color: var(--soluk); }
 .meb-yazi li { margin: 4px 0; font-size: 13.5px; }
 .meb-yayin { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; } .meb-yayin .bag { color: #6ee7a8; padding: 0; text-align: left; font-size: 12.5px; }
+/* K-563: dolduran / bekleyen listesi */
+.r-liste { cursor: pointer; font: inherit; } .r-liste:hover { filter: brightness(1.25); }
+.rl-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin-top: 12px; max-height: 70vh; overflow-y: auto; }
+.rl-kisi { display: flex; gap: 10px; align-items: center; text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 7px 10px; color: var(--yazi); cursor: default; }
+.rl-kisi.dolu { cursor: pointer; border-left: 4px solid var(--yesil); } .rl-kisi.dolu:hover { border-color: var(--neon); }
+.rl-kisi .foto { width: 42px; height: 54px; flex: none; border-radius: 8px; font-size: 13px; } .rl-kisi b { display: block; font-size: 14px; } .rl-kisi small { color: var(--soluk); font-size: 12px; }
+.oc-satir { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; } .oc-s { font-size: 13px; color: var(--soluk); font-weight: 700; } .oc-c { font-size: 15px; margin-top: 3px; overflow-wrap: anywhere; } .oc-c.kirmizi { color: #ff8a95; }
+.oc-bolum { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--neonacik); margin: 14px 0 6px; }
