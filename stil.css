@@ -1207,3 +1207,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .ro-izgara { grid-template-columns: 1fr; } .rp-hafta { grid-template-columns: 1fr; } .rp-gun { min-height: 0; } .ro-kayit > div { grid-template-columns: 1fr 1fr; } }
 .ro-izgara .st-ders { grid-template-columns: 110px minmax(0, 1fr) 190px; } .ro-izgara .st-ders small { text-align: right; }
 .rp-iki { display: grid; grid-template-columns: 1fr; gap: 6px; } .rp-iki input { min-width: 0; }
+.rp-gorev[data-rpduz] { cursor: pointer; } .rp-gorev[data-rpduz]:hover { border-color: var(--neon); background: rgba(34,232,255,.06); }

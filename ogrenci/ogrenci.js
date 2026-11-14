@@ -534,7 +534,7 @@
         const d = new Date(PL.hafta); d.setDate(d.getDate() + gi); const di = iso(d), G = L.filter(x => +x.g === gi);
         const fd = PL.form && PL.form.g === gi;
         return `<div class="pl-gun ${di === bugunIso ? 'bugun' : ''} ${di < bugunIso ? 'gecti' : ''}"><div class="pl-gun-ust"><b>${g}</b><small>${d.getDate()} ${AY[d.getMonth()]}${G.length ? ' · ' + sure(G.reduce((t, x) => t + (+x.dk || 0), 0)) : ''}</small>${fd ? '' : `<button class="ekle" data-pekle="${gi}"><i><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i>Ekle</button>`}</div>
-          ${G.map(x => `<div class="pl-gorev ${x.ok ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-ptik="${x.id}" aria-label="Tamamlandı">${x.ok ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${gAlt(x)}</small></div><button class="sil" data-psil="${x.id}" aria-label="Sil">×</button></div>`).join('') || (fd ? '' : '<div class="pl-bos">Boş gün</div>')}
+          ${G.filter(x => !(PL.form && PL.form.id === x.id)).map(x => `<div class="pl-gorev ${x.ok ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}" data-pduz="${x.id}"><button class="pl-tik" data-ptik="${x.id}" aria-label="Tamamlandı">${x.ok ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${gAlt(x)}</small></div><button class="sil" data-psil="${x.id}" aria-label="Sil">×</button></div>`).join('') || (fd ? '' : '<div class="pl-bos">Boş gün</div>')}
           ${fd ? plFormHtml() : ''}</div>`;
       }).join('');
     if (PL.form) { const k = $('#plKonu'); if (k && !PL.form.odak) { PL.form.odak = 1; } }
@@ -545,11 +545,12 @@
       <label for="plKonu">Konu (isteğe bağlı)</label><input type="text" id="plKonu" maxlength="80" value="${esc(f.konu || '')}" placeholder="ör. Türev">
       <div class="pl-iki"><div><label for="plSoru">Soru adedi</label><input type="number" id="plSoru" min="0" max="999" inputmode="numeric" value="${f.soru || ''}" placeholder="ör. 40"></div><div><label for="plKaynak">Kaynak</label><input type="text" id="plKaynak" maxlength="40" value="${esc(f.kaynak || '')}" placeholder="kitap / yayın"></div></div>
       <label>Süre</label><div class="pl-cip">${[15, 30, 45, 60, 90, 120].map(d => `<button type="button" class="${f.dk === d ? 'secili' : ''}" data-pfs="${d}">${sure(d)}</button>`).join('')}</div>
-      <div class="dg"><button type="button" class="ikincil" data-pfvaz="1">Vazgeç</button><button type="button" class="birincil" data-pfekle="1" ${f.ders ? '' : 'disabled'}>Ekle</button></div></div>`;
+      <div class="dg"><button type="button" class="ikincil" data-pfvaz="1">Vazgeç</button><button type="button" class="birincil" data-pfekle="1" ${f.ders ? '' : 'disabled'}>${f.id ? 'Kaydet' : 'Ekle'}</button></div></div>`;
   }
   $('#s-plan').addEventListener('input', ev => { if (!PL.form) return; if (ev.target.id === 'plKonu') PL.form.konu = ev.target.value; else if (ev.target.id === 'plSoru') PL.form.soru = Math.max(0, Math.min(999, parseInt(ev.target.value, 10) || 0)); else if (ev.target.id === 'plKaynak') PL.form.kaynak = ev.target.value; });
   $('#s-plan').addEventListener('click', ev => {
-    const t = ev.target, b = t.closest('button'); if (!b) return;
+    const t = ev.target, b = t.closest('button');
+    if (!b) { const d = t.closest('[data-pduz]'); if (d && PL.veri) { const x = plHafta().find(z => z.id === d.dataset.pduz); if (x) { PL.form = Object.assign({}, x); const sy = window.scrollY; plCiz(); window.scrollTo(0, sy); } } return; }   // K-586: göreve dokun → düzelt
     const L = PL.veri && plHafta(), y = () => { const sy = window.scrollY; plCiz(); window.scrollTo(0, sy); };
     if (b.id === 'plOnce' || b.id === 'plSonra') { PL.hafta.setDate(PL.hafta.getDate() + (b.id === 'plOnce' ? -7 : 7)); PL.form = null; plCiz(); return; }
     if (!L) return;
@@ -558,7 +559,8 @@
     if (b.dataset.pfd != null) { PL.form.ders = b.dataset.pfd; y(); return; }
     if (b.dataset.pfs != null) { PL.form.dk = +b.dataset.pfs; y(); return; }
     if (b.dataset.pfvaz) { PL.form = null; y(); return; }
-    if (b.dataset.pfekle && PL.form.ders) { L.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), g: PL.form.g, ders: PL.form.ders, konu: (PL.form.konu || '').trim(), soru: PL.form.soru || 0, kaynak: (PL.form.kaynak || '').trim(), dk: PL.form.dk || 45, ok: false }); PL.form = null; plKaydet(); y(); return; }
+    if (b.dataset.pfekle && PL.form.ders) { const f = PL.form, g_ = { id: f.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 5), g: f.g, ders: f.ders, konu: (f.konu || '').trim(), soru: f.soru || 0, kaynak: (f.kaynak || '').trim(), dk: f.dk || 45, ok: !!f.ok };
+      const k_ = L.findIndex(z => z.id === g_.id); if (k_ >= 0) L[k_] = g_; else L.push(g_); PL.form = null; plKaydet(); y(); return; }   // K-586: düzeltme
     if (b.dataset.ptik) { const x = L.find(z => z.id === b.dataset.ptik); if (x) { x.ok = !x.ok; plKaydet(); y(); } return; }
     if (b.dataset.psil) { const k = L.findIndex(z => z.id === b.dataset.psil); if (k >= 0) { L.splice(k, 1); plKaydet(); y(); } return; }
     if (b.dataset.pkopya) { const once = Object.keys(PL.veri.haftalar).filter(k => k < iso(PL.hafta) && PL.veri.haftalar[k].length).sort().pop(); if (once) { PL.veri.haftalar[once].forEach(x => L.push(Object.assign({}, x, { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ok: false }))); plKaydet(); y(); } return; }
