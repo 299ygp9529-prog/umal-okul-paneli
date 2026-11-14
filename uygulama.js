@@ -4004,55 +4004,122 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const kolon = r => { let c = 0; for (const ch of r.replace(/\d+$/, '')) c = c * 26 + ch.charCodeAt(0) - 64; return c - 1; };
     return [...X(await oku(sayfa)).getElementsByTagName('row')].map(row => { const S = []; [...row.getElementsByTagName('c')].forEach(c => { const v = (c.getElementsByTagName('v')[0] || {}).textContent, t = c.getAttribute('t');
       let d = t === 's' ? ss[+v] : t === 'inlineStr' ? [...c.getElementsByTagName('t')].map(z => z.textContent).join('') : v;
-      if (d != null && t !== 's' && t !== 'inlineStr' && t !== 'str' && /^\d{5}(\.\d+)?$/.test(d) && +d > 40000 && +d < 60000) { const g = new Date(Date.UTC(1899, 11, 30) + Math.floor(+d) * 864e5); d = g.toISOString().slice(0, 10); }   // Excel tarih sayısı
+
       S[kolon(c.getAttribute('r') || 'A')] = d == null ? '' : String(d); }); return [...S].map(z => z || ''); });
+  }
+  // K-640: eski .xls (BIFF8, OLE) ve e-Okul'un "Excel'e aktar" HTML/XML tabloları
+  async function xlsSatirlar(dosya) {
+    const B = new Uint8Array(await dosya.arrayBuffer()), dv = new DataView(B.buffer);
+    const imza = [0xD0, 0xCF, 0x11, 0xE0].every((b, i) => B[i] === b);
+    if (!imza) {   // HTML / SpreadsheetML / metin
+      let t = new TextDecoder('utf-8').decode(B); if (/�/.test(t.slice(0, 4000))) t = new TextDecoder('windows-1254').decode(B);
+      if (/<table/i.test(t)) { const d = new DOMParser().parseFromString(t, 'text/html'); return [...d.querySelectorAll('tr')].map(tr => [...tr.querySelectorAll('td,th')].map(c => c.textContent.replace(/\s+/g, ' ').trim())); }
+      if (/<Row/i.test(t)) { const d = new DOMParser().parseFromString(t, 'application/xml'); return [...d.getElementsByTagName('Row')].map(r => [...r.getElementsByTagName('Cell')].map(c => c.textContent.trim())); }
+      return t.split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ','));
+    }
+    const ss = 1 << dv.getUint16(30, true), mss = 1 << dv.getUint16(32, true), sek = n => 512 + n * ss;
+    const difat = []; for (let i = 0; i < 109; i++) { const v = dv.getInt32(76 + i * 4, true); if (v >= 0) difat.push(v); }
+    let dx = dv.getInt32(68, true), dn = dv.getUint32(72, true); while (dx >= 0 && dn-- > 0) { for (let i = 0; i < ss / 4 - 1; i++) { const v = dv.getInt32(sek(dx) + i * 4, true); if (v >= 0) difat.push(v); } dx = dv.getInt32(sek(dx) + ss - 4, true); }
+    const FAT = []; difat.forEach(s => { for (let i = 0; i < ss / 4; i++) FAT.push(dv.getInt32(sek(s) + i * 4, true)); });
+    const zincir = (bas, T, boy, kaynak) => { const out = []; let s = bas, g = 0; while (s >= 0 && s !== -2 && g++ < 1e6) { out.push(kaynak(s)); s = T[s]; } const u = new Uint8Array(out.reduce((t, a) => t + a.length, 0)); let o = 0; out.forEach(a => { u.set(a, o); o += a.length; }); return boy != null ? u.subarray(0, boy) : u; };
+    const buyuk = s => B.subarray(sek(s), sek(s) + ss);
+    const dir = zincir(dv.getInt32(48, true), FAT, null, buyuk), ddv = new DataView(dir.buffer, dir.byteOffset, dir.byteLength), E = [];
+    for (let o = 0; o + 128 <= dir.length; o += 128) { const nl = ddv.getUint16(o + 64, true); E.push({ ad: new TextDecoder('utf-16le').decode(dir.subarray(o, o + Math.max(0, nl - 2))), tip: dir[o + 66], bas: ddv.getInt32(o + 116, true), boy: ddv.getUint32(o + 120, true) }); }
+    const kok = E[0], wb = E.find(e => /^(workbook|book)$/i.test(e.ad)); if (!wb) throw new Error('Excel çalışma kitabı bulunamadı');
+    let W;
+    if (wb.boy < dv.getUint32(56, true)) {   // mini akış
+      const mini = zincir(kok.bas, FAT, null, buyuk), MF = []; const mfa = zincir(dv.getInt32(60, true), FAT, null, buyuk), mdv = new DataView(mfa.buffer, mfa.byteOffset, mfa.byteLength); for (let i = 0; i < mfa.length / 4; i++) MF.push(mdv.getInt32(i * 4, true));
+      W = zincir(wb.bas, MF, wb.boy, s => mini.subarray(s * mss, s * mss + mss));
+    } else W = zincir(wb.bas, FAT, wb.boy, buyuk);
+    const w = new DataView(W.buffer, W.byteOffset, W.byteLength), R = []; let o = 0;
+    while (o + 4 <= W.length) { const t = w.getUint16(o, true), l = w.getUint16(o + 2, true); R.push({ t, o: o + 4, l }); o += 4 + l; }
+    // SST (CONTINUE sınırlarına dikkat)
+    const SST = []; const si = R.findIndex(r => r.t === 0x00FC);
+    if (si >= 0) { const parcalar = [R[si]]; for (let k = si + 1; k < R.length && R[k].t === 0x003C; k++) parcalar.push(R[k]);
+      let pi = 0, p = parcalar[0].o + 8, son = parcalar[0].o + parcalar[0].l; const n = w.getUint32(parcalar[0].o + 4, true);
+      const ileri = () => { pi++; if (pi >= parcalar.length) return false; p = parcalar[pi].o; son = p + parcalar[pi].l; return true; };
+      const u8 = () => { if (p >= son && !ileri()) return 0; return W[p++]; }, u16 = () => u8() | (u8() << 8), u32 = () => (u16() | (u16() << 16)) >>> 0;
+      for (let i = 0; i < n; i++) { let cc = u16(), fl = u8(); const rt = fl & 8 ? u16() : 0, ex = fl & 4 ? u32() : 0; let s = '';
+        while (cc > 0) { if (p >= son) { if (!ileri()) break; fl = W[p++]; } const genis = fl & 1; while (cc > 0 && p < son) { if (genis) { s += String.fromCharCode(W[p] | (W[p + 1] << 8)); p += 2; } else s += String.fromCharCode(W[p++]); cc--; } }
+        for (let k = 0; k < rt * 4 + ex; k++) u8(); SST.push(s); } }
+    const rk = v => { let d; if (v & 2) d = v >> 2; else { const b = new DataView(new ArrayBuffer(8)); b.setUint32(4, v & 0xFFFFFFFC, true); b.setUint32(0, 0, true); d = b.getFloat64(0, true); } return v & 1 ? d / 100 : d; };
+    const tarihMi = n => n > 40000 && n < 60000 && Math.floor(n) === n;
+    const yaz = (M, r, c, v) => { (M[r] = M[r] || [])[c] = typeof v === 'number' ? String(v) : v; };   // tarih sayısı sütun bilinince çevrilir (okul no ile karışmasın)
+    const M = []; let bof = 0;
+    for (const r of R) { if (r.t === 0x0809) { bof++; continue; } if (bof < 2) continue; if (r.t === 0x000A) break;
+      const row = w.getUint16(r.o, true), col = w.getUint16(r.o + 2, true);
+      if (r.t === 0x00FD) yaz(M, row, col, SST[w.getUint32(r.o + 6, true)] || '');
+      else if (r.t === 0x0203) yaz(M, row, col, w.getFloat64(r.o + 6, true));
+      else if (r.t === 0x027E) yaz(M, row, col, rk(w.getInt32(r.o + 6, true)));
+      else if (r.t === 0x00BD) { const n = (r.l - 6) / 6; for (let k = 0; k < n; k++) yaz(M, row, col + k, rk(w.getInt32(r.o + 4 + k * 6 + 2, true))); }
+      else if (r.t === 0x0204) { const cc = w.getUint16(r.o + 6, true), fl = W[r.o + 8]; let s = ''; for (let k = 0; k < cc; k++) s += fl & 1 ? String.fromCharCode(w.getUint16(r.o + 9 + k * 2, true)) : String.fromCharCode(W[r.o + 9 + k]); yaz(M, row, col, s); } }
+    return M.filter(Boolean).map(r => [...r].map(z => z == null ? '' : String(z)));
   }
   function raporluKarsilastir(tk, saat, dersYaz) {
     let satirlar = [];
     pencereAc(`<h2 style="margin-top:0">Raporlu öğrenciler × sınav takvimi</h2>
-      <div class="soluk kucuk" style="line-height:1.5">e-Okul'dan aldığınız raporlu / izinli öğrenci listesini yükleyin (.xlsx, .csv) ya da Excel'de seçip buraya yapıştırın. Her satırda <b>okul numarası</b> (ya da ad soyad) ve <b>rapor tarihleri</b> (tek gün ya da başlangıç–bitiş) olması yeter; sütun sırası önemli değil.<br>Liste yalnız bu ekranda işlenir, hiçbir yere kaydedilmez.</div>
-      <div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><label class="ikincil" style="cursor:pointer">Dosya seç<input type="file" id="rpDosya" accept=".xlsx,.csv,.txt,.tsv" hidden></label><span class="kucuk soluk" id="rpDosyaAd"></span></div>
+      <div class="soluk kucuk" style="line-height:1.5">e-Okul'dan aldığınız raporlu / izinli öğrenci listesini yükleyin (.xls, .xlsx, .csv) ya da Excel'de seçip buraya yapıştırın. Her satırda <b>okul numarası</b> (ya da ad soyad) ve <b>rapor tarihleri</b> (tek gün ya da başlangıç–bitiş) olması yeter; sütun sırası önemli değil.<br>Liste yalnız bu ekranda işlenir, hiçbir yere kaydedilmez.</div>
+      <div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><label class="ikincil" style="cursor:pointer">Dosya seç<input type="file" id="rpDosya" accept=".xls,.xlsx,.csv,.txt,.tsv,.html,.htm,.xml" hidden></label><span class="kucuk soluk" id="rpDosyaAd"></span></div>
       <textarea id="rpYapistir" rows="7" style="width:100%;margin-top:8px;font-family:ui-monospace,monospace;font-size:12.5px" placeholder="Ör.\n1234\tAyşe Yılmaz\t11-A\t03.11.2026\t05.11.2026\tRaporlu"></textarea>
       <div class="dugmeler"><button class="birincil" id="rpKarsilastir">Karşılaştır</button></div><div id="rpSonuc"></div>`);
     $('#pencere .pencere-ic').classList.add('genis');
+    const seri = h => { h = String(h || '').trim(); if (!/^\d{5}(\.\d+)?$/.test(h) || +h < 40000 || +h > 60000) return null; return new Date(Date.UTC(1899, 11, 30) + Math.floor(+h) * 864e5).toISOString().slice(0, 10); };
     const tarihBul = h => { h = String(h).trim(); let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(h); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
       m = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/.exec(h); if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; return null; };
     const kisi = new Map(D.ogrenciler.map(o => [String(o.no), o])), adla = new Map(D.ogrenciler.map(o => [String(o.ad).toLocaleLowerCase(tr).replace(/\s+/g, ' ').trim(), o]));
-    const coz = L => { const K = new Map(), bilinmeyen = []; let tarihli = 0;
-      for (const r of L) { const H = r.map(x => String(x || '').trim()).filter(Boolean); if (!H.length) continue;
-        const T = H.flatMap(h => { const t1 = tarihBul(h); if (t1 && !/\d{4}.*\d{1,2}[./]\d{1,2}[./]\d{4}/.test(h)) return [t1]; return String(h).split(/\s+[–—-]\s+|\s*[–—]\s*|\s+/).map(tarihBul).filter(Boolean); }); if (!T.length) continue; tarihli++;
-        let o = null; for (const h of H) { if (/^\d{1,5}$/.test(h) && kisi.has(String(+h))) { o = kisi.get(String(+h)); break; } }
-        if (!o) for (const h of H) { const a = adla.get(h.toLocaleLowerCase(tr).replace(/\s+/g, ' ')); if (a) { o = a; break; } }
-        if (!o) { bilinmeyen.push(H.join(' · ')); continue; }
-        const bas = T.slice().sort()[0], bit = T.slice().sort().pop(); (K.get(o.no) || K.set(o.no, { o, A: [] }).get(o.no)).A.push([bas, bit]); }
-      return { K, bilinmeyen, tarihli }; };
+    // K-640: e-Okul devamsızlık listesi (OOK08001R080 vb.): başlık satırından sütunlar; neden kodu ve miktar (0,5 = yarım gün, 2 = iki gün)
+    const NEDEN = { S: 'Raporlu', SY: 'Raporlu (yarım gün)', 'İ': 'İzinli', D: 'Özürsüz', G: 'Özürsüz (yarım gün)', F: 'Faaliyet', N: 'Nakil', 'ÖY': 'Özürlü (yarım gün)', 'Ö': 'Özürlü' };
+    const TURLER = [['rapor', 'Raporlu', ['S', 'SY', 'R', 'RY']], ['izin', 'İzinli', ['İ', 'I', 'İY']], ['ozursuz', 'Özürsüz', ['D', 'G', 'Z', 'ZY']], ['diger', 'Diğer (faaliyet, özürlü…)', ['F', 'N', 'Ö', 'ÖY']]];
+    let secTur = new Set(['rapor']);
+    const isGunuSonra = (t, n) => { let d = new Date(t + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+    const coz = L => { const K = new Map(), bilinmeyen = []; let tarihli = 0, kodlu = false;
+      const bi = L.findIndex(r => r.some(c => /öğr\.?\s*no|okul\s*no|öğrenci\s*no/i.test(c)) && r.some(c => /tarih/i.test(c)));
+      const B = bi >= 0 ? L[bi].map(c => String(c || '').toLocaleLowerCase(tr)) : null, sut = re => B ? B.findIndex(c => re.test(c)) : -1;
+      const cNo = sut(/öğr\.?\s*no|okul\s*no|öğrenci\s*no/), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün sayı/), cN = sut(/neden|tür/);
+      for (const r of (bi >= 0 ? L.slice(bi + 1) : L)) { const H = r.map(x => String(x || '').trim()).filter(Boolean); if (!H.length) continue;
+        let T, o = null, yarim = false, neden = '';
+        if (B) { const g = k => k >= 0 ? String(r[k] || '').trim() : ''; const t0 = tarihBul(g(cBas) || g(cT)) || seri(g(cBas) || g(cT)); if (!t0) continue; const t1 = tarihBul(g(cBit)) || seri(g(cBit)) || t0;
+          const m = parseFloat(g(cM).replace(',', '.')) || 1; yarim = m > 0 && m < 1; T = [t0, m >= 2 && !g(cBit) ? isGunuSonra(t0, Math.ceil(m) - 1) : t1];
+          neden = g(cN).toLocaleUpperCase(tr); if (neden) kodlu = true; if (/Y$/.test(neden)) yarim = true;
+          const no = g(cNo); if (/^\d{1,6}$/.test(no) && kisi.has(String(+no))) o = kisi.get(String(+no)); if (!o && g(cAd)) o = adla.get(g(cAd).toLocaleLowerCase(tr).replace(/\s+/g, ' ')) || null; }
+        else { T = H.flatMap(h => { const t1 = tarihBul(h); if (t1 && !/\d{4}.*\d{1,2}[./]\d{1,2}[./]\d{4}/.test(h)) return [t1]; return String(h).split(/\s+[–—-]\s+|\s*[–—]\s*|\s+/).map(tarihBul).filter(Boolean); });
+          for (const h of H) { if (/^\d{1,5}$/.test(h) && kisi.has(String(+h))) { o = kisi.get(String(+h)); break; } }
+          if (o) T = T.concat(H.filter(h => h !== o.no).map(seri).filter(Boolean)).filter(Boolean);
+          if (!o) for (const h of H) { const a = adla.get(h.toLocaleLowerCase(tr).replace(/\s+/g, ' ')); if (a) { o = a; break; } }
+          if (o && !T.length) T = H.map(seri).filter(Boolean); if (!T.length) continue; }
+        tarihli++;
+        if (!o) { bilinmeyen.push(H.slice(0, 4).join(' · ')); continue; }
+        if (neden) { const tur = TURLER.find(([, , K_]) => K_.includes(neden)); if (tur && !secTur.has(tur[0])) continue; if (!tur && !secTur.has('diger')) continue; }
+        const S_ = T.slice().sort(); (K.get(o.no) || K.set(o.no, { o, A: [] }).get(o.no)).A.push([S_[0], S_[S_.length - 1], yarim, neden]); }
+      return { K, bilinmeyen, tarihli, kodlu }; };
     const gunY = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' }), kisaT = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' });
     const karsilastir = () => {
       const L = satirlar.length ? satirlar : $('#rpYapistir').value.split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : /[;,](?=(?:[^"]*"[^"]*")*[^"]*$)/).map(z => z.replace(/^"|"$/g, '')));
-      const { K, bilinmeyen, tarihli } = coz(L), S = (tk.subeler || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true })), E = [];
-      for (const { o, A } of K.values()) for (const x of S) { const ders = (x.subeler || {})[o.sinif]; if (!ders) continue; const a = A.find(([b, e]) => x.tarih >= b && x.tarih <= e); if (!a) continue;
+      const { K, bilinmeyen, tarihli, kodlu } = coz(L), S = (tk.subeler || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true })), E = [];
+      for (const { o, A } of K.values()) for (const x of S) { const ders = (x.subeler || {})[o.sinif]; if (!ders) continue; const a = A.filter(([b, e]) => x.tarih >= b && x.tarih <= e).sort((p, q) => p[2] - q[2])[0]; if (!a) continue;
         E.push({ o, x, ders, a, yer: tkYer(tk, x.tarih, x.ders, seviye(o.sinif)) }); }
       E.sort((p, q) => (p.x.tarih + p.x.ders).localeCompare(q.x.tarih + q.x.ders, tr, { numeric: true }) || sinifSira(p.o.sinif, q.o.sinif) || p.o.ad.localeCompare(q.o.ad, tr));
       const ogrS = new Set(E.map(z => z.o.no)).size;
-      $('#rpSonuc').innerHTML = `<div class="tk-ozet" style="margin-top:12px"><div><span class="soluk">Listede tanınan öğrenci</span><b>${K.size}</b><span class="soluk">${tarihli} tarihli satır</span></div><div><span class="soluk">Sınav gününde raporlu</span><b class="turuncu">${ogrS}</b><span class="soluk">öğrenci</span></div><div><span class="soluk">Kaçırılan sınav</span><b class="turuncu">${E.length}</b><span class="soluk">ders</span></div></div>
+      $('#rpSonuc').innerHTML = (kodlu ? `<div class="cipler" style="margin-top:12px"><span class="soluk kucuk" style="align-self:center">Devamsızlık türü:</span>${TURLER.map(([k, a]) => `<button class="cip ${secTur.has(k) ? 'secili' : ''}" data-rptur="${k}">${a}</button>`).join('')}</div>` : '') + `<div class="tk-ozet" style="margin-top:12px"><div><span class="soluk">Seçilen türde öğrenci</span><b>${K.size}</b><span class="soluk">${tarihli} tarihli satır okundu</span></div><div><span class="soluk">Sınav gününde raporlu</span><b class="turuncu">${ogrS}</b><span class="soluk">öğrenci</span></div><div><span class="soluk">Kaçırılan sınav</span><b class="turuncu">${E.length}</b><span class="soluk">ders</span></div></div>
         ${bilinmeyen.length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Okulda bulunamayan ${bilinmeyen.length} satır:</b> ${bilinmeyen.slice(0, 6).map(esc).join(' · ')}${bilinmeyen.length > 6 ? ' …' : ''}</div>` : ''}
         ${E.length ? `<div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><button class="ikincil" id="rpPdf">🖨 Liste · PDF</button></div>
-        <div style="margin-top:8px;max-height:46vh;overflow:auto"><table class="st-tablo"><thead><tr><th>Sınav</th><th>Öğrenci</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${E.map(z => `<tr><td>${esc(gunY(z.x.tarih))} · ${esc(dersYaz(z.x))}</td><td><b>${esc(baslik(z.o.ad))}</b> <span class="soluk">${esc(z.o.no)}</span></td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}${z.yer === 'sinif' ? ' <span class="soluk">(sınıfta)</span>' : ''}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}</td></tr>`).join('')}</tbody></table></div>`
+        <div style="margin-top:8px;max-height:46vh;overflow:auto"><table class="st-tablo"><thead><tr><th>Sınav</th><th>Öğrenci</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${E.map(z => `<tr><td>${esc(gunY(z.x.tarih))} · ${esc(dersYaz(z.x))}</td><td><b>${esc(baslik(z.o.ad))}</b> <span class="soluk">${esc(z.o.no)}</span></td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}${z.yer === 'sinif' ? ' <span class="soluk">(sınıfta)</span>' : ''}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}${z.a[3] ? ` <span class="soluk">· ${esc(NEDEN[z.a[3]] || z.a[3])}</span>` : z.a[2] ? ' <span class="soluk">· yarım gün</span>' : ''}</td></tr>`).join('')}</tbody></table></div>${E.some(z => z.a[2]) ? '<div class="soluk kucuk" style="margin-top:6px">Yarım gün devamsızlıkta e-Okul hangi yarının olduğunu göstermez; sınav saatini öğrenciyle teyit edin.</div>' : ''}`
         : `<div class="soluk" style="margin-top:12px">${K.size ? 'Raporlu öğrencilerin hiçbiri sınav gününde raporlu görünmüyor.' : 'Listeden öğrenci tanınamadı. Satırlarda okul numarası ve tarih olduğundan emin olun.'}</div>`}`;
       const pd = $('#rpPdf'); if (pd) pd.onclick = () => {
         const G = {}; E.forEach(z => { const k = z.x.tarih + '|' + z.x.ders; (G[k] = G[k] || []).push(z); });
         const govde = raporBant('Sınav Gününde Raporlu Öğrenciler', `${esc(tk.ad || 'Ortak sınavlar')} · ${ogrS} öğrenci · ${E.length} sınav`)
           + `<div class="kvkk">⚠ <b>Kişisel ve sağlık verisi içerir (KVKK).</b> Yalnız mazeret sınavı planlamasında kullanılır; işi bitince imha edilmelidir.</div>
-          <table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${Object.values(G).map(L => `<tr class="sube"><td colspan="6">${esc(gunY(L[0].x.tarih))} · ${esc(dersYaz(L[0].x))} <span>· ${esc(saat(L[0].x))} · ${L.length} öğrenci</span></td></tr>` + L.map((z, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(z.o.no)}</td><td class="ad">${esc(baslik(z.o.ad))}</td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}</td></tr>`).join('')).join('')}</tbody></table>`;
+          <table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${Object.values(G).map(L => `<tr class="sube"><td colspan="6">${esc(gunY(L[0].x.tarih))} · ${esc(dersYaz(L[0].x))} <span>· ${esc(saat(L[0].x))} · ${L.length} öğrenci</span></td></tr>` + L.map((z, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(z.o.no)}</td><td class="ad">${esc(baslik(z.o.ad))}</td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}${z.a[3] ? ' · ' + esc(NEDEN[z.a[3]] || z.a[3]) : z.a[2] ? ' · yarım gün' : ''}</td></tr>`).join('')).join('')}</tbody></table>`;
         raporYazdir(govde, 'Raporlu öğrenciler - sınavlar'); };
     };
     $('#rpDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; $('#rpDosyaAd').textContent = f.name + ' okunuyor…';
       try { if (/\.xlsx$/i.test(f.name)) satirlar = await xlsxSatirlar(f);
-        else if (/\.xls$/i.test(f.name)) { $('#rpDosyaAd').textContent = 'Eski .xls biçimi okunamıyor: dosyayı Excel/Numbers\'ta açıp tümünü seçin, kopyalayıp aşağıya yapıştırın.'; return; }
+        else if (/\.(xls|html?|xml)$/i.test(f.name)) satirlar = await xlsSatirlar(f);
         else { const t = await f.text(); satirlar = t.split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, ''))); }
         $('#rpDosyaAd').textContent = `${f.name} · ${satirlar.length} satır`; karsilastir(); } catch (e) { $('#rpDosyaAd').textContent = 'Okunamadı: ' + (e.message || e); } };
     $('#rpYapistir').oninput = () => { satirlar = []; $('#rpDosyaAd').textContent = ''; };
     $('#rpKarsilastir').onclick = karsilastir;
+    $('#rpSonuc').addEventListener('click', ev => { const b = ev.target.closest('[data-rptur]'); if (!b) return; const k = b.dataset.rptur; secTur.has(k) ? secTur.delete(k) : secTur.add(k); karsilastir(); });
   }
   // K-627: sınav takviminin şık PDF'i (yatay A4): gün gün, seviye sütunları, kelebek / sınıfta, şube farkları, senaryo
   function takvimRapor(tk, saat, dersYaz) {
