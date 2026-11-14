@@ -165,12 +165,12 @@
     { id: 'harita', ad: 'Kim Nerede?', roller: ['bas', 'yonetici', 'rehberlik'], ciz: harita },   // K-512: Harita + Şimdi ders birleşti
     { id: 'kontrol', ad: 'Tahta Kontrol', roller: ['bas', 'yonetici', 'rehberlik'], ciz: kontrol },   // K-377
     { id: 'sinav', ad: 'Sınav merkezi', roller: ['bas', 'yonetici'], ciz: sinav },
-    { id: 'takvim', ad: 'Sınav takvimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: takvim },   // K-379
+    { id: 'takvim', ad: 'Sınav takvimi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: takvim },   // K-615: öğretmen yalnız görür   // K-379
     { id: 'kelebek', ad: 'Kelebek Sistemi', roller: ['bas', 'yonetici'], ciz: kelebek },   // K-380
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: sinavKonulari },   // K-574
-    { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik'], ciz: duyurularBolumu },   // K-569
+    { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
@@ -180,7 +180,7 @@
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
     { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
-    { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
+    { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik', 'ogretmen'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
     { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
@@ -242,7 +242,7 @@
   // ------------------------------------------------------------------ Ortak veri
   async function ogrencileriYukle() {
     if (D.ogrenciler.length) return D.ogrenciler;
-    D.ogrenciler = (await hepsi('umal_ogrenciler', 'no,ad,sinif', q => q.order('no'))).filter(o => !(String(o.no) === '1907' && /FENERL/i.test(o.ad || '')));   // K-610: tanıtım hesabı sınıf öğrencisi sayılmaz (liste, kod, kart, sınav hiçbirinde görünmez)
+    D.ogrenciler = (D.rol === 'ogretmen' ? ((await sb.rpc('umal_panel_ogrenciler')).data || []).map(o => ({ no: String(o.no), ad: o.ad, sinif: o.sinif })).sort((a, b) => (+a.no) - (+b.no)) : await hepsi('umal_ogrenciler', 'no,ad,sinif', q => q.order('no'))).filter(o => !(String(o.no) === '1907' && /FENERL/i.test(o.ad || '')));   // K-610: tanıtım hesabı sınıf öğrencisi sayılmaz (liste, kod, kart, sınav hiçbirinde görünmez)
     return D.ogrenciler;
   }
   async function programYukle() {
@@ -2015,16 +2015,17 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const hedefOgr = d => (D.ogrenciler || []).filter(x => d.hedef && (d.hedef.tum || (d.hedef.siniflar || []).includes(x.sinif) || (d.hedef.seviyeler || []).includes(String(x.sinif).split('-')[0])));
     const hedefYazi = h => h.tum ? 'Tüm okul' : [...(h.seviyeler || []).map(v => v + '. sınıflar'), ...(h.siniflar || [])].join(', ') || '—';
     const SEK = { yayin: ['Yayında', yayinda], bekle: ['İleri tarihli', bekliyor], gecmis: ['Geçmiş / kaldırılan', d => !yayinda(d) && !bekliyor(d)] };
+    const salt = D.rol === 'ogretmen';   // K-615: öğretmen duyuruları yalnız görür
     const kart = d => { const H = hedefOgr(d), ok = new Set(DU.O.filter(x => x.duyuru === d.id).map(x => x.no)), n = H.filter(x => ok.has(String(x.no))).length;
       return `<div class="du-kart ${d.onemli ? 'onemli' : ''} ${yayinda(d) ? '' : 'pasif'}"><div class="du-ust">${d.onemli ? '<span class="du-etk">ÖNEMLİ</span>' : ''}<b>${esc(d.baslik)}</b></div>
         <div class="soluk kucuk">${esc(hedefYazi(d.hedef || {}))} · ${esc(gunAdi(d.baslangic))} – ${esc(gunAdi(d.bitis))} · ${esc(d.yazan_ad || d.yazan)}</div>
         ${d.metin ? `<div class="du-metin">${esc(d.metin)}</div>` : ''}
-        <div class="du-alt"><button class="du-okuma" data-dok="${d.id}"><span class="du-bar"><i style="width:${H.length ? Math.round(n * 100 / H.length) : 0}%"></i></span>${n}/${H.length} öğrenci okudu ›</button>
-          <span class="dugmeler" style="margin:0">${d.arsiv ? `<button class="ikincil" data-dgeri="${d.id}">Yeniden yayınla</button><button class="bag" style="color:var(--kirmizi)" data-dsil="${d.id}">Sil</button>` : `<button class="ikincil" data-dduz="${d.id}">Düzenle</button><button class="tehlike" data-dkaldir="${d.id}">Yayından kaldır</button>`}</span></div></div>`; };
+        ${salt ? '' : `<div class="du-alt"><button class="du-okuma" data-dok="${d.id}"><span class="du-bar"><i style="width:${H.length ? Math.round(n * 100 / H.length) : 0}%"></i></span>${n}/${H.length} öğrenci okudu ›</button>
+          <span class="dugmeler" style="margin:0">${d.arsiv ? `<button class="ikincil" data-dgeri="${d.id}">Yeniden yayınla</button><button class="bag" style="color:var(--kirmizi)" data-dsil="${d.id}">Sil</button>` : `<button class="ikincil" data-dduz="${d.id}">Düzenle</button><button class="tehlike" data-dkaldir="${d.id}">Yayından kaldır</button>`}</span></div>`}</div>`; };
     const ciz = () => {
       const G = DU.L.filter(SEK[DU.sek][1]);
       $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Öğrenci Duyuruları</h1><div class="soluk kucuk">Öğrenci panelinde (umalatlas.com.tr/ogrenci) görünür; okunmamış duyuru öğrencinin ekranında yanıp sönen mektupla işaretlenir. Önemli duyurular ana sayfanın üstünde çıkar.</div></div>
-          <div class="dugmeler" style="margin:0"><button class="birincil" data-dyeni="1">+ Yeni duyuru</button></div></div>
+          <div class="dugmeler" style="margin:0">${salt ? '' : '<button class="birincil" data-dyeni="1">+ Yeni duyuru</button>'}</div></div>
         <div class="mk-sekme" style="margin-top:12px">${Object.entries(SEK).map(([k, [a, f]]) => `<button class="cip ${DU.sek === k ? 'secili' : ''}" data-dsek="${k}">${a} · ${DU.L.filter(f).length}</button>`).join('')}</div>
         <div class="du-liste">${G.length ? G.map(kart).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde duyuru yok.</div>'}</div>`;
     };
@@ -2649,13 +2650,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     kutu.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     await ogrencileriYukle();
     const { data: dr, error } = await sb.rpc('umal_ogrenci_kod_durum');
-    if (error) { kutu.innerHTML = `<div class="kirmizi">Kod bilgisi alınamadı: ${esc(hataYaz(error))}. (Sunucu kurulumu yapıldı mı?)</div>`; return; }
+    const saltKod = D.rol === 'ogretmen'; kutu.classList.toggle('salt-kod', saltKod);   // K-615: öğretmen kimin girdiğini görür, kod üretemez
+    if (error) { kutu.innerHTML = saltKod ? '<div class="soluk">Bu ekran için Supabase\'de <b>20261115000000_umal_ogretmen_gorunum.sql</b> çalıştırılmalı.</div>' : `<div class="kirmizi">Kod bilgisi alınamadı: ${esc(hataYaz(error))}. (Sunucu kurulumu yapıldı mı?)</div>`; return; }
     const K = {}; (dr || []).forEach(r => { K[String(r.no)] = r; });
     const siniflar = [...new Set(D.ogrenciler.map(o => o.sinif))].sort(sinifSira);
     let sec = null;
     const ciz = () => {
       if (!sec) {
-        kutu.innerHTML = `<div class="kucuk soluk" style="margin-bottom:10px">Her öğrencinin kendi giriş kodu olur (fişte yazar). Öğrenci <b class="neon">umalatlas.com.tr/ogrenci</b> adresine okul numarası ve koduyla girer, yalnız kendisine açık rehberlik formlarını görür ve doldurur. Kodların kendisi sunucuda saklanmaz; fişi kaybeden öğrenciye yeni kod üretilir, eskisi geçersiz olur.</div>
+        kutu.innerHTML = `${saltKod ? '<div class="kucuk turuncu" style="margin-bottom:6px">Bu ekranı yalnız görüntülersiniz: kimin kodu var, kim giriş yaptı. Kodu olmayan ya da şifresini unutan öğrenciyi rehberlik servisine yönlendirin.</div>' : ''}<div class="kucuk soluk" style="margin-bottom:10px">Her öğrencinin kendi giriş kodu olur (fişte yazar). Öğrenci <b class="neon">umalatlas.com.tr/ogrenci</b> adresine okul numarası ve koduyla girer, yalnız kendisine açık rehberlik formlarını görür ve doldurur. Kodların kendisi sunucuda saklanmaz; fişi kaybeden öğrenciye yeni kod üretilir, eskisi geçersiz olur.</div>
           ${['9', '10', '11', '12'].map(dz => { const L = siniflar.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; const o_ = D.ogrenciler.filter(y => L.includes(y.sinif)), kz = o_.filter(y => !K[String(y.no)]).length;
             return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-topkod="${dz}" ${kz ? '' : 'disabled'} title="Kodu olmayan bütün ${dz}. sınıf öğrencilerine kod üret, kartları sınıf sınıf bas">🔑 Toplu kod (${kz})</button>${(D.sonFisler || {})['*' + dz] ? `<button class="ikincil kucuk-d" data-topson="${dz}">Son kartlar</button>` : ''}</div><div class="pj-kutular">${L.map(x => { const o = D.ogrenciler.filter(y => y.sinif === x), k = o.filter(y => K[String(y.no)]).length, g = o.filter(y => (K[String(y.no)] || {}).son_giris).length;
             return `<div class="pj-kutu ${k === o.length && o.length ? 'acik' : 'kapali'}" data-gs="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b></div><small style="white-space:normal;line-height:1.3">${k}/${o.length} kodlu<br>${g} girdi</small></div>`; }).join('')}</div></div>`; }).join('')}`;
@@ -3659,19 +3661,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const anahtar = s => `${s.tarih}|${parseInt(s.ders, 10)}`;
     // yoklamalar → gelmeyenler (sınav başına)
     const tarihler = [...new Set(sinavlar.map(s => s.tarih))];
-    const { data: yk } = tarihler.length ? await sb.from('umal_sinav_salon').select('tarih,ders,salon,veri').in('tarih', tarihler) : { data: [] };
+    const { data: yk } = tarihler.length && D.rol !== 'ogretmen' ? await sb.from('umal_sinav_salon').select('tarih,ders,salon,veri').in('tarih', tarihler) : { data: [] };
     const gelmeyen = {}, yoklamaVar = {};
     for (const r of yk || []) {
       const k = `${r.tarih}|${parseInt(r.ders, 10)}`, v = r.veri || {};
       if (v.zaman) yoklamaVar[k] = (yoklamaVar[k] || 0) + 1;
       for (const g of v.gelmedi || []) { const o = D.ogrenciler.find(x => x.no === String(g.no)) || {}; (gelmeyen[k] = gelmeyen[k] || []).push({ no: String(g.no), ad: o.ad || g.ad || '', sinif: o.sinif || g.sinif || '', salon: r.salon, ders: g.ders || '' }); }
     }
-    const zil = gun => ((D.program || {}).zil || {})[gun === 4 ? 'cuma' : 'normal'] || [];
+    const ZIL_Y = { n: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:30', '13:10'], ['13:20', '14:00'], ['14:10', '14:50']], c: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:10', '12:50'], ['13:30', '14:10'], ['14:20', '15:00']] };   // K-615: ders programını okuyamayan rolde (öğretmen) öğrenci sayfasındaki zil çizelgesi
+    const zil = gun => { const z = ((D.program || {}).zil || {})[gun === 4 ? 'cuma' : 'normal'] || []; return z.length ? z : ZIL_Y[gun === 4 ? 'c' : 'n'].map(([bas, bit], i) => ({ ders: i + 1, bas, bit })); };
     const saat = s => { const g = (new Date(s.tarih + 'T12:00:00').getDay() + 6) % 7, z = zil(g).find(x => parseInt(x.ders, 10) === parseInt(s.ders, 10)); return z ? `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}` : ''; };
     const bitti = s => { const z = saat(s).split('–')[1]; return new Date(`${s.tarih}T${(z || '23.59').replace('.', ':')}:00`) < new Date(); };
     const dersYaz = s => /ders/i.test(String(s.ders)) ? s.ders : `${s.ders}. Ders`;
     const cipler = s => Object.entries(s.siniflar || {}).map(([sv, d]) => `<span class="tk-cip" style="--sv:${SEVIYE_RENK[sv] || '#5cc8ff'}"><b>${esc(sv)}</b>${esc(d)}</span>`).join('');
-    const yonetir = D.rol === 'bas' || D.rol === 'yonetici';
+    const yonetir = D.rol === 'bas' || D.rol === 'yonetici', ogrt = D.rol === 'ogretmen';   // K-615: öğretmen yalnız takvimi görür (gelmeyen / mazeret yok)
     let acik = null;
     const kaydetMazeret = async () => {
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'mazeret_sinavlari', deger: JSON.stringify(mazeret) }, { onConflict: 'anahtar' });
@@ -3703,19 +3706,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const gun = (L, cls) => { const G = {}; L.forEach(s => (G[s.tarih] = G[s.tarih] || []).push(s)); return Object.entries(G).map(([t, S]) => `<div class="tk-gun ${cls}"><div class="tk-tarih"><b>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))}</span></div><div class="tk-sinavlar">${S.map(sat).join('')}</div></div>`).join(''); };
       const sat = s => { const k = anahtar(s), G = gelmeyen[k] || [], yv = yoklamaVar[k], b = bitti(s);
         return `<div class="tk-sinav"><div class="tk-saat"><b>${esc(dersYaz(s))}</b><small>${saat(s)}</small></div><div class="tk-dersler">${cipler(s)}</div>
-          ${b ? (yv || G.length ? `<span class="tk-sag"><button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(k)}">${G.length ? `Gelmeyen ${G.length}` : 'Gelmeyen yok'}</button>${G.length && yonetir && !mazeret.some(m => m.asil === k) ? `<button class="tk-mz-ekle" data-mzek="${esc(k)}" title="Bu sınav için mazeret sınavı planla">+ Mazeret</button>` : ''}</span>` : '<span class="tk-gel tk-yok">yoklama yok</span>') : (s === siradaki ? `<span class="tk-gel neon">${esc(kalan)}</span>` : '')}</div>
+          ${b ? (yv || G.length ? `<span class="tk-sag"><button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(k)}">${G.length ? `Gelmeyen ${G.length}` : 'Gelmeyen yok'}</button>${G.length && yonetir && !mazeret.some(m => m.asil === k) ? `<button class="tk-mz-ekle" data-mzek="${esc(k)}" title="Bu sınav için mazeret sınavı planla">+ Mazeret</button>` : ''}</span>` : (ogrt ? '' : '<span class="tk-gel tk-yok">yoklama yok</span>')) : (s === siradaki ? `<span class="tk-gel neon">${esc(kalan)}</span>` : '')}</div>
           ${acik === k ? liste(k) : ''}`; };
       const topGel = Object.values(gelmeyen).reduce((t, L) => t + L.length, 0), farkli = new Set(Object.values(gelmeyen).flat().map(g => g.no)).size;
       const mz = mazeret.slice().sort((a, b) => (a.tarih + a.saat).localeCompare(b.tarih + b.saat));
       $('#tkIc').innerHTML = `<div class="tk-ozet">
           <div><span class="soluk">Sıradaki sınav</span><b>${siradaki ? esc(new Date(siradaki.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' })) + ' · ' + esc(dersYaz(siradaki)) : '—'}</b><span class="neon">${esc(kalan)}</span></div>
           <div><span class="soluk">Kalan sınav</span><b>${olacak.length}</b><span class="soluk">${olan.length} sınav yapıldı</span></div>
-          <div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınava girilmedi</span></div>
-          <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div></div>
+          ${ogrt ? '' : `<div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınava girilmedi</span></div>
+          <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div>`}</div>
         <div class="tk-iki">
           <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : '<div class="soluk">Takvimde kalan sınav yok.</div>'}</div>
-          <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Tamamlananlar${olan.length ? '<button class="tk-pdf" data-pdf="hepsi" style="margin-left:auto">🖨 Tüm gelmeyenler · PDF</button>' : ''}</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
-        <div class="kart"><h2 style="margin-top:0">Mazeret sınavları</h2>
+          <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Tamamlananlar${olan.length && !ogrt ? '<button class="tk-pdf" data-pdf="hepsi" style="margin-left:auto">🖨 Tüm gelmeyenler · PDF</button>' : ''}</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
+        <div class="kart" ${ogrt ? 'style="display:none"' : ''}><h2 style="margin-top:0">Mazeret sınavları</h2>
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
               <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
