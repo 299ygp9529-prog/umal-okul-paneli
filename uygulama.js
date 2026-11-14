@@ -3278,14 +3278,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151300'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151400'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150400');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151300');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151400');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
@@ -3686,7 +3686,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       kok.innerHTML = `<div class="ay-bas"><button data-ayk="-1" aria-label="Önceki ay">‹</button><b>${esc(ay.toLocaleDateString(tr, { month: 'long', year: 'numeric' }))}</b><button data-ayk="1" aria-label="Sonraki ay">›</button></div>
         <div class="ay-gunler">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(z => `<span>${z}</span>`).join('')}</div><div class="ay-izgara">${H.join('')}</div>
         <div class="ay-alt">${isaret && isaret.size ? '<span><i></i>Sınav olan gün</span>' : '<span></span>'}<button data-ayg="${bug}" class="bag">Bugün</button></div>`; yerles(); };
-    const dis = ev => { if (!kok.contains(ev.target) && !el.contains(ev.target)) kapat(); }, tus = ev => { if (ev.key === 'Escape') kapat(); };
+    const dis = ev => { if (!kok.contains(ev.target) && ev.target !== el && !el.contains(ev.target)) kapat(); }, tus = ev => { if (ev.key === 'Escape') kapat(); };
     const kapat = () => { kok.remove(); document.removeEventListener('mousedown', dis, true); document.removeEventListener('keydown', tus, true); };
     kok.onclick = ev => { const b = ev.target.closest('button'); if (!b) return; ev.stopPropagation();
       if (b.dataset.ayk) { ay = new Date(ay.getFullYear(), ay.getMonth() + +b.dataset.ayk, 1, 12); ciz(); return; }

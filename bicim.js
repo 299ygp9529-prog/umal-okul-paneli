@@ -78,7 +78,10 @@
   }, true);
   document.addEventListener('focusin', ev => { const el = ev.target; if (telMi(el) && !ham(el)) { hamYaz(el, '05'); try { el.setSelectionRange(2, 2); } catch (x) {} } }, true);
   document.addEventListener('focusout', ev => { const el = ev.target; if (el.dataset && el.dataset.tarih) tarihDenetle(el); else if (telMi(el) && ham(el).replace(/\D/g, '') === '05') hamYaz(el, ''); }, true);
-  const st = document.createElement('style'); st.textContent = 'input.tarih-hatali { border-color: #ff8a3a !important; box-shadow: 0 0 0 1px rgba(255,138,58,.5) !important; }'; document.head.appendChild(st);
+  // K-637: tarih kutusuna tıklayınca aylık takvim (panel yüklediyse); elle yazmak da sürer
+  document.addEventListener('click', ev => { const el = ev.target && ev.target.closest && ev.target.closest('input[data-tarih]'); if (!el || el.disabled || el.readOnly || !window.UmalAyTakvimi || document.querySelector('.ay-tk')) return;
+    window.UmalAyTakvimi(el, el.value, t => { el.value = t; el.classList.remove('tarih-hatali'); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }); }, true);
+  const st = document.createElement('style'); st.textContent = 'input.tarih-hatali { border-color: #ff8a3a !important; box-shadow: 0 0 0 1px rgba(255,138,58,.5) !important; } input[data-tarih] { cursor: pointer; padding-right: 30px !important; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2322e8ff%27 stroke-width=%271.8%27 stroke-linecap=%27round%27%3E%3Crect x=%273.5%27 y=%275%27 width=%2717%27 height=%2715%27 rx=%272.5%27/%3E%3Cpath d=%27M3.5 10h17M8 3v4M16 3v4%27/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 9px center !important; background-size: 17px !important; }'; document.head.appendChild(st);
   tara(document);
   new MutationObserver(L => { for (const m of L) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches && n.matches('input[type="date"]')) tarihHazirla(n); else tara(n); } }).observe(document.documentElement, { childList: true, subtree: true });
   window.UmalBicim = { isoGos, gosIso };

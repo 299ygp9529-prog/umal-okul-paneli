@@ -394,7 +394,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (d.tfm) { P[d.tfm] = t.value; TF.degisti = true; }
     if (d.tfbas) TF.bas = t.value;
     if (d.tfgs) TF.gs = +t.value || 3;
-    if (d.tfg) { P.gunler[+d.tfg].tarih = t.value; TF.degisti = true; }
+    if (d.tfg) { P.gunler[+d.tfg].tarih = t.value; TF.degisti = true; const sp = t.nextElementSibling; if (sp && t.value) sp.textContent = gunAd(t.value); }
     if (d.tfs) { const [g, s, a] = d.tfs.split(':'); P.gunler[+g].slot[+s][a] = t.value; TF.degisti = true; }
   }
 
