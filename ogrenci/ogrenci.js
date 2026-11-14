@@ -33,9 +33,9 @@
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); mektuplarYukle(); ozetYukle(); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
-  const cikis = () => { oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  const cikis = () => { oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod && !S.hatirla) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -226,9 +226,10 @@
     $('#kutular').innerHTML = soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
-      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni())
+      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
-      + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()));
+      + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
+    sozCiz();
     rvAnaCiz(); dyAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
@@ -390,11 +391,13 @@
     $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
     $('#rhBaslik').textContent = 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa';
+    const yeniM = new Set(RH.mesajlar.filter(m => !m.okundu).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeniM]); rhMesajCiz(RH.yeniGor); $('#rhMesajlar').classList.remove('gizli');
+    if (yeniM.size) rhYukle(true).then(() => rhMesajCiz(RH.yeniGor));   // okundu (zarf gider; bu ekranda YENİ etiketi kalır)
     goster('s-reh'); window.scrollTo(0, 0);
   }
   $('#rhKutular').onclick = ev => { const b = ev.target.closest('[data-rh]'); if (!b) return; b.dataset.rh === 'mektup' ? mkAc() : rvAc(); };
   $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : anaCiz();
-  const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
+  const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMesajlar').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
     $('#rhBaslik').textContent = baslik_; $('#rhGeri').textContent = '← Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
   function mkAc() { altAc('mektup', 'Mektup'); }
   function rvAc() {
@@ -499,11 +502,13 @@
   }
   async function plAc() {
     goster('s-plan'); window.scrollTo(0, 0);
+    if (RH.plan && RH.plan.yayin) { try { localStorage.setItem(rpGorKey(), RH.plan.yayin); } catch (e) {} }
     if (!PL.hafta) PL.hafta = pzt(simdi());
     if (!PL.veri) { $('#plGunler').innerHTML = '<div class="kart soluk">Yükleniyor…</div>'; if (!(await plYukle())) { $('#plGunler').innerHTML = '<div class="kart soluk">Plan yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
     plCiz();
   }
   function plCiz() {
+    rpCiz();
     const L = plHafta(), son = new Date(PL.hafta); son.setDate(son.getDate() + 6);
     const top = L.reduce((t, x) => t + (+x.dk || 0), 0), ok = L.filter(x => x.ok).reduce((t, x) => t + (+x.dk || 0), 0), hedef = +PL.veri.hedef || 0;
     const buHafta = iso(PL.hafta) === iso(pzt(simdi()));
@@ -554,7 +559,48 @@
       if (gun < new Date(iso(simdi()) + 'T00:00')) gun.setTime(new Date(iso(simdi()) + 'T12:00').getTime());
       PL.hafta = pzt(gun); const LL = plHafta(); LL.push({ id: Date.now().toString(36), g: gunIdx(gun), ders: x.ad, konu: 'Sınava hazırlık', dk: 60, ok: false }); plKaydet(); plCiz(); return; }
   });
-  const plBugun = () => { if (!PL.veri) return null; const L = (PL.veri.haftalar || {})[iso(pzt(simdi()))] || [], g = gunIdx(simdi()), B = L.filter(x => +x.g === g); return { n: B.length, ok: B.filter(x => x.ok).length }; };
+
+  // ---- K-579: rehberlik servisinden mesajlar ve rehberlikle birlikte hazırlanan çalışma planı
+  const RH = { plan: null, mesajlar: [], yuklendi: false };
+  async function rhYukle(gordu) {
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_rehber', { p_no: S.no, p_kod: S.kod, p_gordu: !!gordu })); } catch (e) {}
+    if (!data || !data.ok) return false;
+    RH.plan = data.plan || null; RH.mesajlar = data.mesajlar || []; RH.yuklendi = true; return true;
+  }
+  const rhMesajYeni = () => RH.mesajlar.some(m => !m.okundu);
+  const rpGorKey = () => 'umalRplan_' + S.no;
+  const rpYeni = () => { if (!RH.plan || !RH.plan.yayin) return false; let g = ''; try { g = localStorage.getItem(rpGorKey()) || ''; } catch (e) {} return g !== RH.plan.yayin; };
+  function rhMesajCiz(yeniler) {
+    const k = $('#rhMesajlar'); if (!k) return;
+    k.innerHTML = RH.mesajlar.length ? `<div class="rh-mesaj"><h2>Rehberlik servisinden mesajlar</h2>${RH.mesajlar.slice(0, 8).map(m => `<div><p>${esc(m.metin)}</p><small>${esc(new Date(m.zaman).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}${yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : ''}</small></div>`).join('')}</div>` : '';
+  }
+  function rpCiz() {
+    const k = $('#rplan'); if (!k) return;
+    const P = RH.plan; if (!P || !P.veri) { k.innerHTML = ''; return; }
+    const G = P.veri.gorevler || [], hk = iso(PL.hafta || pzt(simdi())), ok = P.ok || {}, bg = iso(PL.hafta || pzt(simdi())) === iso(pzt(simdi())) ? gunIdx(simdi()) : -1;
+    const yap = G.filter(g => ok[hk + '|' + g.id]).length, top = G.reduce((t, g) => t + (+g.dk || 0), 0);
+    k.innerHTML = `<div class="rp-kart"><h2>Rehberlik servisiyle hazırladığın plan</h2><div class="alt">Haftada ${G.length} görev · ${sure(top)}${P.veri.hedef ? ' · hedef ' + sure(+P.veri.hedef) : ''} · her hafta yeniden başlar</div>
+      ${P.veri.not ? `<div class="rp-not">${esc(P.veri.not)}</div>` : ''}
+      <div class="pl-bar"><i style="width:${G.length ? yap * 100 / G.length : 0}%"></i></div><div class="alt" style="margin-top:4px"><b style="color:#fff">${yap}/${G.length}</b> görev bu hafta tamamlandı</div>
+      ${GUN.map((g, gi) => { const L = G.filter(x => +x.g === gi); if (!L.length) return ''; return `<div class="rp-gun2 ${gi === bg ? 'bugun' : ''}"><b>${g}${gi === bg ? ' · bugün' : ''}</b>${L.map(x => `<div class="pl-gorev ${ok[hk + '|' + x.id] ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-rptik="${esc(x.id)}" aria-label="Tamamlandı">${ok[hk + '|' + x.id] ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${x.konu ? esc(x.konu) + ' · ' : ''}${sure(+x.dk || 0)}</small></div></div>`).join('')}</div>`; }).join('')}
+      <div class="alt" style="margin-top:10px">İşaretlediklerini rehber öğretmenin görür. Kendi planını aşağıda ayrıca yapabilirsin.</div></div>`;
+  }
+  $('#rplan').addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-rptik]'); if (!b || !RH.plan) return;
+    const key = iso(PL.hafta || pzt(simdi())) + '|' + b.dataset.rptik, ok = RH.plan.ok = RH.plan.ok || {}, yeni = !ok[key];
+    if (yeni) ok[key] = true; else delete ok[key]; rpCiz();
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_rplan_tik', { p_no: S.no, p_kod: S.kod, p_anahtar: key, p_ok: yeni })); } catch (e) {}
+    if (data && data.ok) RH.plan.ok = data.isaret || ok; else { if (yeni) delete ok[key]; else ok[key] = true; }
+    rpCiz();
+  });
+  const rpBugun = () => { const P = RH.plan; if (!P || !P.veri) return null; const G = (P.veri.gorevler || []).filter(x => +x.g === gunIdx(simdi())), hk = iso(pzt(simdi())); return { n: G.length, ok: G.filter(x => (P.ok || {})[hk + '|' + x.id]).length }; };
+  // ---- K-580: Günün sözü (her gün farklı)
+  function sozCiz() {
+    const L = window.SOZLER || [], k = $('#gununSozu'); if (!k || !L.length) return;
+    const gun = Math.floor((Date.now() + 3 * 36e5) / 864e5), s_ = L[(gun * 97) % L.length];
+    k.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#22e8ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11H6.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/><path d="M18 11h-3.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/></svg><small>GÜNÜN SÖZÜ</small><p>${esc(s_[0])}</p><span>— ${esc(s_[1])}</span>`;
+  }
+  const plBugun = () => { if (!PL.veri && !RH.plan) return null; if (!PL.veri) { return rpBugun(); } const L = (PL.veri.haftalar || {})[iso(pzt(simdi()))] || [], g = gunIdx(simdi()), B = L.filter(x => +x.g === g); const R = rpBugun() || { n: 0, ok: 0 }; return { n: B.length + R.n, ok: B.filter(x => x.ok).length + R.ok }; };
 
   // ---- K-572: Soru takibi (11 ve 12. sınıflar; YKS dersleri + Paragraf ve Problemler ayrı)
   const SO_TYT = ['Paragraf', 'Problemler', 'Türkçe', 'Matematik', 'Geometri', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Din Kültürü'];
@@ -714,7 +760,7 @@
     if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
     if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
-      mektuplarYukle(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
+      mektuplarYukle(); await rhYukle(false); if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-plan').classList.contains('gizli')) rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
   }, 20000);

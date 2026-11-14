@@ -131,6 +131,11 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .pl-tik { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 2px solid var(--soluk); background: transparent; color: var(--zemin); font-weight: 900; cursor: pointer; display: grid; place-items: center; padding: 0; } .pl-gorev.ok .pl-tik { background: var(--yesil); border-color: var(--yesil); }
 .pl-gorev .ic { flex: 1; min-width: 0; } .pl-gorev .ic b { display: block; font-size: 14.5px; } .pl-gorev .ic small { color: var(--soluk); font-size: 12.5px; overflow-wrap: anywhere; } .pl-gorev.ok .ic b { text-decoration: line-through; color: var(--soluk); }
 .pl-gorev .nokta { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--r); } .pl-gorev .sil { background: transparent; border: 0; color: var(--cs); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+.soz { position: relative; margin: 4px 0 18px; padding: 18px 18px 16px 54px; border-radius: 18px; border: 1px solid rgba(34,232,255,.35); background: linear-gradient(135deg, rgba(34,232,255,.10), rgba(19,35,58,.9) 55%); } .soz:empty { display: none; }
+.soz svg { position: absolute; left: 16px; top: 18px; width: 26px; height: 26px; } .soz small { display: block; color: var(--neon); font-weight: 800; letter-spacing: .08em; font-size: 11.5px; margin-bottom: 6px; } .soz p { margin: 0; font-size: 16.5px; line-height: 1.45; font-weight: 600; overflow-wrap: anywhere; } .soz span { display: block; margin-top: 8px; color: var(--soluk); font-size: 13.5px; text-align: right; }
+.rh-mesaj { background: var(--kart); border: 1px solid rgba(176,107,255,.45); border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; } .rh-mesaj h2 { margin: 0 0 8px; font-size: 16px; } .rh-mesaj > div { border-top: 1px solid rgba(255,255,255,.06); padding: 9px 0 4px; } .rh-mesaj > div:first-of-type { border-top: 0; } .rh-mesaj p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14.5px; } .rh-mesaj small { color: var(--soluk); font-size: 12px; } .rh-mesaj .yeni_ { color: #ffb867; font-weight: 800; margin-left: 6px; }
+.rp-kart { background: linear-gradient(160deg, rgba(176,107,255,.14), var(--kart) 60%); border: 1px solid rgba(176,107,255,.5); border-radius: 18px; padding: 14px; margin-bottom: 14px; } .rp-kart h2 { margin: 0; font-size: 16.5px; } .rp-kart .alt { color: var(--soluk); font-size: 12.5px; } .rp-not { margin: 10px 0 4px; background: var(--koyu); border-radius: 12px; padding: 9px 12px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rp-gun2 { margin-top: 10px; } .rp-gun2 > b { font-size: 13px; color: #d4b0ff; } .rp-gun2.bugun > b { color: var(--neon); } .rp-kart .pl-bar { margin-top: 10px; }
 .pl-bos { color: var(--cs); font-size: 13px; padding: 4px 0; }
 .pl-form { background: var(--koyu); border: 1px solid var(--neon); border-radius: 14px; padding: 12px; margin-top: 10px; } .pl-form label { margin-top: 8px; }
 .pl-cip { display: flex; flex-wrap: wrap; gap: 6px; } .pl-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 6px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .pl-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
@@ -201,12 +206,14 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
     <button class="kart rvana gizli" id="rvAnaKart"></button>
     <button class="kart duyana gizli" id="duyAnaKart"></button>
     <div class="izg" id="kutular"></div>
+    <div class="soz" id="gununSozu"></div>
   </section>
 
   <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="sinavListe"></div></section>
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
   <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Çalışma planım</h1></div>
+    <div id="rplan"></div>
     <div class="kart pl-ust"><div class="pl-hafta"><button class="ikincil" id="plOnce" aria-label="Önceki hafta">‹</button><div><b id="plBaslik"></b><small id="plAlt"></small></div><button class="ikincil" id="plSonra" aria-label="Sonraki hafta">›</button></div>
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
     <div id="plSinav"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
@@ -227,6 +234,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
   </section>
   <section id="s-reh" class="gizli"><div class="ust2"><button class="ikincil geri" id="rhGeri">← Ana sayfa</button><h1 id="rhBaslik">Rehberlik</h1></div>
+    <div id="rhMesajlar"></div>
     <div class="izg" id="rhKutular"></div>
     <div id="rhMektup" class="gizli">
     <div class="kart" id="mektupKart">
@@ -259,6 +267,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="ogrenci.js?v=202611142900"></script>
+<script src="sozler.js?v=202611143000"></script>
+<script src="ogrenci.js?v=202611143000"></script>
 </body>
 </html>
