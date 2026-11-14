@@ -167,7 +167,7 @@
       (async () => { try { return (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; } catch (e) { return null; } })(),
       (async () => { try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);
     if (oz && oz.ok) { S.program = oz.program || {}; S.yerler = oz.yerler || []; }
-    S.takvim = tk; if (!$('#liste').classList.contains('gizli')) anaCiz();
+    S.takvim = tk; if (!$('#liste').classList.contains('gizli')) anaCiz(true);
   }
   function sinavlarim() {   // bu sınıfın kelebek sınavları: [{tarih, ders(n. Ders), ad, bas, bit, yer}]
     const tk = S.takvim; if (!tk || !S.sinif) return [];
@@ -193,7 +193,7 @@
     }
     return L;
   }
-  function anaCiz() {
+  function anaCiz(sessiz) {
     ustBilgi();
     const s = simdi(), SV = sinavlarim(), kalan = SV.filter(x => !bitti(x)), nx = kalan[0];
     const bk = $('#bugunKart');
@@ -217,6 +217,7 @@
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', 'yakında', false);
     rvAnaCiz();
+    if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
@@ -359,7 +360,7 @@
     let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_randevu', { p_no: S.no, p_kod: S.kod, p_gordu: !!gordu })); } catch (e) {}
     if (!data || !data.ok) return false;
     RV.L = data.randevular || []; RV.M = data.musait || [];
-    if (!$('#liste').classList.contains('gizli')) anaCiz();
+    if (!$('#liste').classList.contains('gizli')) anaCiz(true);
     return true;
   }
   function rvAnaCiz() {   // ana sayfada yaklaşan randevu / cevap bekleyen davet
@@ -429,6 +430,34 @@
       rc.disabled = true; const d = await rpc('umal_ogrenci_randevu_cevap', { p_id: rc.dataset.id, p_cevap: c, p_not: not });
       rvSonuc(d, bil, c === 'geliyorum' ? '' : ''); }
   };
+  // ---- K-553: canlı yenileme (öğrenci yazmıyorken) + yeni sürümde kendiliğinden yenilenme
+  const yaziyor = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  let canliSay = 0;
+  setInterval(async () => {
+    if (!S.kod || document.hidden || yaziyor()) return;
+    canliSay++;
+    await rvYukle(false);
+    if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
+    else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
+    if (canliSay % 3 === 0) {   // dakikada bir: formlar ve mektup okundu bilgisi
+      mektuplarYukle();
+      try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
+    }
+  }, 20000);
+  (function surumDenetle() {
+    const surum = h => (h.match(/ogrenci\.js\?v=(\d+)/) || [])[1] || '';
+    const bu = surum(document.documentElement.innerHTML); let son = Date.now();
+    ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { son = Date.now(); }, { passive: true }));
+    setInterval(async () => {
+      if (document.hidden || !bu) return;
+      let h = ''; try { h = await (await fetch('./?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }
+      const yeni = surum(h); if (!yeni || yeni === bu || yaziyor() || Date.now() - son < 20000) return;
+      if (S.kod) { try { sessionStorage.setItem('umalYeniden', JSON.stringify({ no: S.no, kod: S.kod })); } catch (e) {} }   // girişli kalsın
+      location.reload();
+    }, 60000);
+    try { const g = JSON.parse(sessionStorage.getItem('umalYeniden') || 'null'); sessionStorage.removeItem('umalYeniden');
+      if (g && g.no && g.kod) { $('#no').value = g.no; $('#kod').value = g.kod; S.selamlandi = true; setTimeout(() => $('#girisBtn').click(), 0); } } catch (e) {}
+  })();
   goster('giris');
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
   try {

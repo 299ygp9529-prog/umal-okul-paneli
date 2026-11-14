@@ -155,7 +155,7 @@
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
-    { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu },   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
+    { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -166,7 +166,7 @@
   ];
   function menuKur() {
     const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
-    $('#menu').innerHTML = izinli.map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${b.ad}</button>`).join('');
+    $('#menu').innerHTML = izinli.filter(b => !b.ust).map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${b.ad}</button>`).join('');
     $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
     const h0 = ['simdi', 'ogrenci'].includes(location.hash.slice(1)) ? 'harita' : location.hash.slice(1);   // eski "Şimdi ders" bağlantıları
     const ilk = (h0 && izinli.find(b => b.id === h0)) || izinli[0];
@@ -177,7 +177,7 @@
     const b = BOLUMLER.find(x => x.id === id && x.roller.includes(D.rol));
     if (!b) return;
     D.bolum = id; location.hash = id;
-    document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === id));
+    document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
     $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3');
@@ -198,6 +198,21 @@
     for (let h = 82; h >= 52 && sigmiyor(); h -= 3) el.style.setProperty('--kh', h + 'px');
   }
   window.addEventListener('resize', () => { clearTimeout(kutulariSigdir.z); kutulariSigdir.z = setTimeout(() => document.querySelectorAll('.sigar').forEach(kutulariSigdir), 150); });
+  // K-553: canlı yenileme yalnız kullanıcı bir şey yazmıyorken / pencere açık değilken
+  const canliGuvenli = () => $('#pencere').classList.contains('gizli') && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName));
+  // K-553: yeni sürüm yayınlanınca sayfa kendiliğinden yenilenir (kullanıcı bir şey yazmıyorsa); yoksa küçük bir uyarı
+  (function surumDenetle() {
+    const surum = h => ((h.match(/uygulama\.js\?v=(\d+)/) || [])[1] || '') + ((h.match(/stil\.css\?v=(\d+)/) || [])[1] || '');
+    const bu = surum(document.documentElement.innerHTML); let son = Date.now();
+    ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { son = Date.now(); }, { passive: true }));
+    setInterval(async () => {
+      if (document.hidden || !bu) return;
+      let h = ''; try { h = await (await fetch('index.html?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }
+      const yeni = surum(h); if (!yeni || yeni === bu) return;
+      if (canliGuvenli() && Date.now() - son > 20000) { location.reload(); return; }
+      if (!document.getElementById('surumUyari')) { const u = document.createElement('button'); u.id = 'surumUyari'; u.className = 'surum-uyari'; u.textContent = 'Yeni sürüm hazır · Yenile'; u.onclick = () => location.reload(); document.body.appendChild(u); }
+    }, 60000);
+  })();
   function yenile(fn, sn) { const b = D.bolum; clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== b) return; if (!document.hidden) fn().catch(() => {}); }, sn * 1000); }
 
   // ------------------------------------------------------------------ Ortak veri
@@ -1860,9 +1875,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar());
       $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true);
     };
-    $('#icerik').innerHTML = `<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
+    $('#icerik').innerHTML = `${['bas', 'rehberlik'].includes(D.rol) ? rehSekme('rehberlik') : ''}<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
-    liste();
+    liste();    yenile(async () => { if (!canliGuvenli()) return; const eski = JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length; await anketVerisi();   // K-553: öğrenci doldurdukça işaretler kendiliğinden gelir
+      if (eski !== JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length) { formlar.splice(0, formlar.length, ...D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak')); liste(); } }, 30);
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
@@ -2097,15 +2113,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       z.innerHTML = ZARF_SVG + `<b>${n + nr}</b>`; z.classList.toggle('gizli', !(n + nr)); z.classList.toggle('acil', acil);
       z.onclick = () => ac(n ? 'mektup' : 'randevu');
       const m = document.querySelector('.menu-oge[data-b="mektup"]'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
-      const m2 = document.querySelector('.menu-oge[data-b="randevu"]'); if (m2) m2.innerHTML = 'Randevular' + (nr ? ` <span class="mk-sayi">${nr}</span>` : '');
+      MK.nr = nr; const m2 = document.querySelector('.menu-oge[data-b="rehberlik"]'); if (m2) m2.innerHTML = 'Rehberlik' + (nr ? ` <span class="mk-sayi">${nr}</span>` : ''); const t2 = document.querySelector('.reh-sekme [data-rs="randevu"]'); if (t2) t2.innerHTML = 'Randevular' + (nr ? ` <span class="mk-sayi">${nr}</span>` : '');
     };
-    await kontrol(); setInterval(kontrol, 60000);
+    await kontrol(); setInterval(() => { if (!document.hidden) kontrol(); }, 15000);   // K-553: 15 sn
     MK.kontrol = kontrol;
   }
-  async function mektuplarBolumu() {
+  async function mektuplarBolumu(sessiz) {
     try { await sb.rpc('umal_mektup_temizle'); } catch (e) {}   // rpc .catch vermez (thenable)
     const r = await sb.from('umal_rehberlik_mektup').select('id,no,ad,sinif,metin,konular,gorusme,acil,zaman,okundu,okuyan,cagrildi,arsiv,gizli_not').order('zaman', { ascending: false });
-    if (r.error) throw r.error;
+    if (r.error) { if (sessiz) return; throw r.error; }
+    const h_ = JSON.stringify(r.data || []); if (sessiz && h_ === MK.h) return; MK.h = h_;
     MK.L = r.data || [];
     const zaman = t => { const d = new Date(t), b = new Date(); const g = d.toDateString() === b.toDateString() ? 'bugün' : (new Date(b - 864e5).toDateString() === d.toDateString() ? 'dün' : d.toLocaleDateString(tr, { day: 'numeric', month: 'long' })); return g + ' ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); };
     const SUZ = { yeni: ['Okunmamış', m => !m.okundu && !m.arsiv], hepsi: ['Tümü', m => !m.arsiv], gorus: ['Görüşülecek', m => m.gorusme && !m.cagrildi && !m.arsiv], arsiv: ['Arşiv', m => m.arsiv] };
@@ -2168,11 +2185,35 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const c = simdikiDers(r.sinif, d);
     return c ? `${c.no}. ders: ${c.ders}${(c.ogretmen || []).length ? ' · ' + c.ogretmen.map(baslik).join(', ') : ''}` : 'ders saati dışında (teneffüs / öğle arası)';
   }
-  async function randevularBolumu() {
+  // K-554: Rehberlik bölümünün üst sekmeleri (Formlar ve anketler / Randevular)
+  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button></div>`;
+  document.addEventListener('click', ev => { const b = ev.target.closest('.reh-sekme [data-rs]'); if (b && D.bolum !== b.dataset.rs) ac(b.dataset.rs); });
+  const isoGun = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  function takvimSec() {   // K-552: büyük ay takvimi (tarayıcının küçük tarih kutusu yerine); seçim gizli input'a yazılır
+    document.querySelectorAll('.tk-sec').forEach(k => {
+      const inp = document.getElementById(k.dataset.hedef), bugun = isoGun(new Date());
+      let ay = inp.value ? new Date(inp.value + 'T12:00') : new Date(); ay = new Date(ay.getFullYear(), ay.getMonth(), 1);
+      const ciz = () => {
+        const bas = new Date(ay); bas.setDate(1 - ((ay.getDay() + 6) % 7));
+        const gunler = []; for (let i = 0; i < 42; i++) { const d = new Date(bas); d.setDate(bas.getDate() + i); gunler.push(d); }
+        while (gunler.length > 35 && gunler.slice(-7).every(d => d.getMonth() !== ay.getMonth())) gunler.splice(-7);
+        k.innerHTML = `<div class="tk-ust"><button type="button" data-tk="-1" aria-label="Önceki ay">‹</button><b>${ay.toLocaleDateString(tr, { month: 'long', year: 'numeric' })}</b><button type="button" data-tk="1" aria-label="Sonraki ay">›</button></div>
+          <div class="tk-izgara">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(g => `<span class="tk-g">${g}</span>`).join('')}${gunler.map(d => { const v = isoGun(d), hs = d.getDay() === 0 || d.getDay() === 6;
+            return `<button type="button" data-tg="${v}" class="${d.getMonth() !== ay.getMonth() ? 'dis' : ''} ${hs ? 'hs' : ''} ${v === bugun ? 'bugun' : ''} ${v === inp.value ? 'secili' : ''}" ${v < bugun ? 'disabled' : ''}>${d.getDate()}</button>`; }).join('')}</div>
+          <div class="tk-alt">${inp.value ? new Date(inp.value + 'T12:00').toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' }) : 'Bir gün seçin'}</div>`;
+      };
+      k.onclick = ev => { const b = ev.target.closest('button'); if (!b) return;
+        if (b.dataset.tk) { ay.setMonth(ay.getMonth() + +b.dataset.tk); ciz(); return; }
+        if (b.dataset.tg) { inp.value = b.dataset.tg; const d = new Date(inp.value + 'T12:00'); if (d.getMonth() !== ay.getMonth()) ay = new Date(d.getFullYear(), d.getMonth(), 1); ciz(); inp.dispatchEvent(new Event('input', { bubbles: true })); } };
+      ciz();
+    });
+  }
+  async function randevularBolumu(sessiz) {
     await Promise.all([ogrencileriYukle().catch(() => []), programYukle().catch(() => null)]);
     const [r, o] = await Promise.all([sb.from('umal_rehberlik_randevu').select('*').order('zaman', { ascending: true, nullsFirst: true }),
       sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
-    if (r.error) throw r.error;
+    if (r.error) { if (sessiz) return; throw r.error; }
+    const h_ = JSON.stringify(r.data || []); if (sessiz && h_ === RV.h) return; RV.h = h_;
     RV.L = r.data || []; RV.ad = (o.data && o.data.ad) || D.eposta;
     const yeniler = RV.L.filter(x => !x.reh_gordu && x.durum !== 'bos').map(x => x.id);
     const simdi = Date.now(), gelecek = x => x.zaman && new Date(x.zaman).getTime() + (x.sure_dk || 20) * 6e4 > simdi;
@@ -2203,7 +2244,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       const G = RV.L.filter(SUZ[RV.suz][1]).sort((a, b) => RV.suz === 'gecmis' ? String(b.zaman || b.olusturma).localeCompare(String(a.zaman || a.olusturma)) : String(a.zaman || '0').localeCompare(String(b.zaman || '0')));
       let gun = '';
-      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Randevular</h1><div class="soluk kucuk">Öğrenciler boş saatlerinizden doğrudan randevu alır ya da istek bırakır; siz de öğrenciyi davet edebilirsiniz. Rehberlik ve baş yönetici görür.</div></div>
+      $('#icerik').innerHTML = `${rehSekme('randevu')}<div class="rv-bas"><div><h1 style="margin:0">Randevular</h1><div class="soluk kucuk">Öğrenciler boş saatlerinizden doğrudan randevu alır ya da istek bırakır; siz de öğrenciyi davet edebilirsiniz. Rehberlik ve baş yönetici görür.</div></div>
           <div class="dugmeler" style="margin:0"><button class="ikincil" data-rv="bosac">+ Boş saat aç</button><button class="birincil" data-rv="davet">+ Öğrenci davet et</button></div></div>
         ${bekleyen.length ? `<div class="rv-uyari">Saati geçmiş ${bekleyen.length} randevunun sonucu girilmedi: aşağıda “Görüşüldü / Gelmedi” ile kapatın.</div>` : ''}
         <div class="mk-sekme" style="margin-top:12px">${Object.entries(SUZ).map(([k, [a, f]]) => `<button class="cip ${RV.suz === k ? 'secili' : ''}" data-rsuz="${k}">${a} · ${RV.L.filter(f).length}</button>`).join('')}</div>
@@ -2220,11 +2261,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const tarih0 = x && x.zaman ? new Date(x.zaman) : null;
       pencereAc(`<h2 style="margin-top:0">${x && x.zaman ? 'Saati değiştir' : 'Öğrenciyi davet et'}</h2><div class="rv-form">
         ${sec ? `<b>${esc(baslik(sec.ad))} · ${esc(sec.sinif)} · No ${esc(sec.no)}</b>${x && x.tercih ? `<div class="soluk kucuk">Tercihi: ${esc(x.tercih)}</div>` : ''}${x && x.ogrenci_not ? `<div class="soluk kucuk">Notu: ${esc(x.ogrenci_not)}</div>` : ''}` : `<label>Öğrenci</label><input id="rvAra" placeholder="Ad ya da okul no"><div class="rv-secim" id="rvListe" style="max-height:160px"></div><div class="kucuk neon" id="rvSec"></div>`}
-        <div class="rv-iki"><div><label>Tarih</label><input type="date" id="rvTarih" value="${tarih0 ? tarih0.toISOString().slice(0, 10) : ''}"></div><div><label>Yer</label><input id="rvYer" value="${esc((x && x.yer) || 'Rehberlik servisi')}"></div></div>
+        <div class="rv-yan"><div><label>Tarih</label><input type="hidden" id="rvTarih" value="${tarih0 ? isoGun(tarih0) : ''}"><div class="tk-sec" data-hedef="rvTarih"></div></div><div><label>Yer</label><input id="rvYer" value="${esc((x && x.yer) || 'Rehberlik servisi')}">
         ${saatSecici('rv', tarih0 ? rvSaat(tarih0) : '')}<div class="kucuk neon" id="rvDersBilgi"></div>
-        <label>Öğrenciye mesaj (öğrenci görür, isteğe bağlı)</label><input id="rvMesaj" maxlength="300" value="${esc((x && x.mesaj) || '')}" placeholder="ör. Teneffüste rehberlik odasına uğra">
+        <label>Öğrenciye mesaj (öğrenci görür, isteğe bağlı)</label><input id="rvMesaj" maxlength="300" value="${esc((x && x.mesaj) || '')}" placeholder="ör. Teneffüste rehberlik odasına uğra"></div></div>
         <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="rvGonder">Davet et</button></div><div class="kucuk" id="rvBilgi"></div></div>`);
-      saatBagla('rv', 'rvTarih');
+      saatBagla('rv', 'rvTarih'); takvimSec();
       const dersYaz = () => { const t = $('#rvTarih').value, h = $('#rvSaat').value; $('#rvDersBilgi').textContent = sec && t && h ? (rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) ? 'O saatte öğrencinin ' + rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) : '') : ''; };
       ['rvTarih', 'rvSaat'].forEach(i => $('#' + i).addEventListener('input', dersYaz)); $('#rvDersBilgi').parentNode.addEventListener('click', () => setTimeout(dersYaz, 0)); dersYaz();
       if (!sec) { const ara = $('#rvAra'), L = $('#rvListe');
@@ -2247,11 +2288,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const bosFormu = () => {
       pencereAc(`<h2 style="margin-top:0">Boş saat aç</h2><div class="soluk kucuk">Öğrenciler bu saatlerden birini telefondan doğrudan alır. Aynı gün için birden çok ders saati seçebilirsiniz.</div><div class="rv-form">
-        <div class="rv-iki"><div><label>Tarih</label><input type="date" id="bsTarih"></div><div><label>Kaç hafta tekrarlansın</label><input type="number" id="bsHafta" min="1" max="12" value="1"></div></div>
+        <div class="rv-yan"><div><label>Tarih</label><input type="hidden" id="bsTarih"><div class="tk-sec" data-hedef="bsTarih"></div></div><div><label>Kaç hafta tekrarlansın</label><input type="number" id="bsHafta" min="1" max="12" value="1">
         <label>Ders saatleri (birden çok seçilebilir)</label><div class="cipler" id="bsDers">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button type="button" class="cip" data-n="${n}">${n}. ders</button>`).join('')}</div>
         <div class="rv-iki"><div><label>ya da tek saat</label><input type="time" id="bsSaat"></div><div><label>Süre (dk)</label><input type="number" id="bsSure" min="5" max="120" value="20"></div></div>
-        <label>Yer</label><input id="bsYer" value="Rehberlik servisi">
+        <label>Yer</label><input id="bsYer" value="Rehberlik servisi"></div></div>
         <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="bsKaydet">Saatleri aç</button></div><div class="kucuk" id="bsBilgi"></div></div>`);
+      takvimSec();
       $('#bsDers').onclick = ev => { const b = ev.target.closest('[data-n]'); if (b) b.classList.toggle('secili'); };
       $('#bsKaydet').onclick = async () => {
         const t = $('#bsTarih').value, bil = $('#bsBilgi'); if (!t) { bil.textContent = 'Tarih seçin.'; return; }
@@ -2280,7 +2322,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (i === 'iptal') { const m = prompt('Randevu iptal edilecek. Öğrenciye bir not yazmak ister misiniz? (boş bırakılabilir)', ''); if (m === null) return; if (await yaz(x.id, { durum: 'iptal', iptal_eden: 'rehberlik', mesaj: m.trim() || x.mesaj, ogr_gordu: false, reh_gordu: true })) ciz(); }
       if (i === 'not') { const m = prompt('Gizli not (yalnız rehberlik görür):', x.gizli_not || ''); if (m === null) return; if (await yaz(x.id, { gizli_not: m.trim() || null })) ciz(); }
     };
-    ciz();
+    ciz(); yenile(() => canliGuvenli() ? randevularBolumu(true) : Promise.resolve(), 15);   // K-553: canlı
     if (yeniler.length) { await sb.from('umal_rehberlik_randevu').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 3000); }   // görüldü (YENİ etiketi bu açılışta kalır)
   }
   // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)

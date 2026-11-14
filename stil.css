@@ -1071,8 +1071,28 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .rv-ana .dugmeler { margin-top: 8px; gap: 8px; }
 .mk-zarf svg { display: block; }
 .rv-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-right: 80px; }
-.rv-form { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; } .rv-form > label, .rv-iki label { display: block; font-size: 12.5px; font-weight: 700; color: var(--soluk); margin-top: 8px; }
+.rv-form { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; } .rv-form label { display: block; font-size: 12.5px; font-weight: 700; color: var(--soluk); margin-top: 8px; }
 .rv-form input { width: 100%; box-sizing: border-box; } .rv-iki { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .rv-secim { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; } .rv-secim button { display: flex; gap: 8px; align-items: center; text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 8px; padding: 6px 10px; color: var(--yazi); cursor: pointer; }
 .rv-secim button b { color: var(--neon); min-width: 40px; } .rv-form .cip.secili { background: var(--neon); color: #04121f; border-color: var(--neon); }
 @media (max-width: 760px) { .rv-iki { grid-template-columns: 1fr; } .rv-kart { grid-template-columns: 44px minmax(0, 1fr); } .rv-kart .foto { width: 44px; height: 56px; } }
+/* K-552: büyük ay takvimi */
+.tk-sec { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 12px 14px 10px; max-width: 420px; }
+.tk-ust { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .tk-ust b { font-size: 17px; text-transform: capitalize; }
+.tk-ust button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--cizgi); background: var(--kart); color: var(--neon); font-size: 22px; line-height: 1; cursor: pointer; }
+.tk-izgara { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; } .tk-g { text-align: center; font-size: 12px; font-weight: 700; color: var(--soluk); padding-bottom: 2px; }
+.tk-izgara button { height: 44px; border-radius: 10px; border: 1px solid transparent; background: var(--kart); color: var(--yazi); font-size: 16px; font-weight: 700; cursor: pointer; }
+.tk-izgara button:hover:not(:disabled) { border-color: var(--neon); } .tk-izgara button.hs { color: var(--soluk); background: transparent; } .tk-izgara button.dis { opacity: .35; }
+.tk-izgara button:disabled { opacity: .2; cursor: default; } .tk-izgara button.bugun { border-color: rgba(34,232,255,.55); color: var(--neonacik); }
+.tk-izgara button.secili { background: var(--neon); color: #04121f; border-color: var(--neon); box-shadow: 0 0 12px rgba(34,232,255,.45); }
+.tk-alt { margin-top: 8px; font-size: 13.5px; color: var(--neonacik); font-weight: 600; }
+.rv-yan { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 22px; align-items: start; } .rv-yan .cipler .cip { padding: 6px 11px; }
+.rv-yan .rv-iki { gap: 10px; }
+.pencere-ic:has(.rv-yan) { width: min(940px, 94vw); max-width: 940px; }
+@media (max-width: 900px) { .rv-yan { grid-template-columns: 1fr; } .tk-sec { max-width: none; } }
+/* K-553: yeni sürüm uyarısı */
+.surum-uyari { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 9999; background: var(--neon); color: #04121f; border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.45); cursor: pointer; }
+/* K-554: Rehberlik üst sekmeleri */
+.reh-sekme { display: inline-flex; gap: 4px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+.reh-sekme button { border: 0; background: transparent; color: var(--soluk); font-weight: 700; font-size: 15px; padding: 9px 18px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.reh-sekme button.secili { background: var(--neon); color: #04121f; } .reh-sekme button:hover:not(.secili) { color: var(--yazi); }
