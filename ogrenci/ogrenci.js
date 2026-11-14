@@ -633,7 +633,7 @@
       : '<div class="soluk kucuk">Bu dönemde kayıt yok.</div>';
     $('#soOneri').innerHTML = soOneriler(s, o, SO.per, a, b).map(([t, m]) => `<div class="so-oneri ${t}"><i>${t === 'iyi' ? '✓' : t === 'uyari' ? '!' : 'i'}</i><div>${esc(m)}</div></div>`).join('');
     $('#soKayit').innerHTML = s.K.length ? s.K.slice(0, 60).map(x => { const d = new Date(x.t + 'T12:00'), n = (x.do || 0) + (x.y || 0) + (x.b || 0); return `<div class="so-kay"><i class="n" style="background:${soRenk(x.d)}"></i><div><b>${esc(x.d)}</b> · ${n} soru · net ${sayi1(soNet(x))}<small>${d.getDate()} ${AY[d.getMonth()]} · ${x.do || 0} D · ${x.y || 0} Y · ${x.b || 0} B${x.dk ? ' · ' + x.dk + ' dk' : ''}${x.k ? ' · ' + esc(x.k) : ''}</small></div><button data-ssil="${x.id}" aria-label="Sil">×</button></div>`; }).join('') : '<div class="soluk kucuk">Bu dönemde kayıt yok.</div>';
-    soFormCiz();
+    soFormCiz(); soIzinCiz();
   }
   function soFormCiz() {
     const F = SO.form, el = $('#soForm');
@@ -676,6 +676,8 @@
       if (tt < soAralik(SO.per, SO.ref)[0] || tt > soAralik(SO.per, SO.ref)[1]) SO.ref = new Date(tt + 'T12:00');
       soCiz(); const bi = $('#soBilgi'); if (bi) bi.textContent = `✓ ${dd}: net ${n_} kaydedildi. Başka ders girebilirsin.`; }
   });
+  async function soIzinCiz() { const b = $('#soIzin'); if (!b) return; if (!PL.veri) await plYukle(); b.classList.toggle('secili', !!(PL.veri && PL.veri.soruPaylas)); }
+  $('#soIzin').onclick = async () => { if (!PL.veri && !(await plYukle())) return; PL.veri.soruPaylas = !PL.veri.soruPaylas; soIzinCiz(); plKaydet(); };   // K-575: rehberlikle paylaşım izni
   function soPdf() {
     const [a, b] = soAralik(SO.per, SO.ref), s = soIstat(a, b), r0 = new Date(SO.ref);
     if (SO.per === 'gun') r0.setDate(r0.getDate() - 1); else if (SO.per === 'hafta') r0.setDate(r0.getDate() - 7); else r0.setMonth(r0.getMonth() - 1);

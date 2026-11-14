@@ -158,6 +158,7 @@
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
+    { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
     { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
@@ -2185,6 +2186,41 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz();
   }
+  // ------------------------------------------------------------------ K-575: Rehberlik → Soru takibi (izin veren 11-12 öğrencileri)
+  const ST = { per: 'hafta', sinif: null };
+  async function soruTakipBolumu() {
+    const b = new Date(), a = new Date(); b.setHours(12); a.setHours(12);
+    if (ST.per === 'hafta') a.setDate(a.getDate() - ((a.getDay() + 6) % 7)); else if (ST.per === 'gecen') { a.setDate(a.getDate() - ((a.getDay() + 6) % 7) - 7); b.setTime(a.getTime()); b.setDate(b.getDate() + 6); } else if (ST.per === 'ay') a.setDate(1); else a.setDate(a.getDate() - 29);
+    const ia = a.toISOString().slice(0, 10), ib = b.toISOString().slice(0, 10);
+    const { data, error } = await sb.rpc('umal_rehberlik_soru_ozet', { p_bas: ia, p_bit: ib });
+    if (error) { if (/umal_rehberlik_soru_ozet|function/.test(error.message || '')) { $('#icerik').innerHTML = rehSekme('sorutakip') + '<div class="kart">Supabase\'de <b>20261114140000_umal_rehberlik_soru_ozet.sql</b> çalıştırılmalı.</div>'; return; } throw error; }
+    const L = (data && data.ogrenciler) || [], top = x => Object.values(x.dersler || {}).reduce((t, d) => t + d.d + d.y + d.b, 0), net = x => Object.values(x.dersler || {}).reduce((t, d) => t + d.d - d.y / 4, 0), dog = x => Object.values(x.dersler || {}).reduce((t, d) => t + d.d, 0);
+    const P = L.filter(x => x.paylas), sinflar = [...new Set(L.map(x => x.sinif))].sort(sinifSira), s1 = v => (Math.round(v * 10) / 10).toLocaleString(tr);
+    const okulD = {}; P.forEach(x => Object.entries(x.dersler || {}).forEach(([d, v]) => { const o = okulD[d] = okulD[d] || { n: 0, d: 0 }; o.n += v.d + v.y + v.b; o.d += v.d; }));
+    const donemAd = { hafta: 'Bu hafta', gecen: 'Geçen hafta', ay: 'Bu ay', otuz: 'Son 30 gün' }[ST.per];
+    const ciz = () => {
+      const seciliL = ST.sinif ? L.filter(x => x.sinif === ST.sinif) : null;
+      $('#icerik').innerHTML = `${rehSekme('sorutakip')}<div class="rv-bas"><div><h1 style="margin:0">Soru takibi</h1><div class="soluk kucuk">11 ve 12. sınıf öğrencilerinin öğrenci panelinden girdiği soru ve netler. Yalnız "Rehberlik servisi görebilsin" diyen öğrencilerin verisi görünür.</div></div><div class="dugmeler" style="margin:0"><button class="birincil" id="stPdf">PDF</button></div></div>
+        <div class="cipler" style="margin-top:10px">${[['hafta', 'Bu hafta'], ['gecen', 'Geçen hafta'], ['ay', 'Bu ay'], ['otuz', 'Son 30 gün']].map(([k, t]) => `<button class="cip ${ST.per === k ? 'secili' : ''}" data-stp="${k}">${t}</button>`).join('')}<span class="soluk kucuk" style="margin-left:8px">${esc(gunAdi(ia))} – ${esc(gunAdi(ib))}</span></div>
+        <div class="st-ozet"><div><b>${P.length}</b><span>izin veren öğrenci / ${L.length}</span></div><div><b>${L.filter(x => x.kullaniyor).length}</b><span>soru takibini kullanan</span></div><div><b>${P.reduce((t, x) => t + top(x), 0).toLocaleString(tr)}</b><span>toplam soru (izinli)</span></div><div><b>${P.length ? s1(P.reduce((t, x) => t + net(x), 0) / P.length) : 0}</b><span>öğrenci başına net</span></div></div>
+        ${ST.sinif ? `<div class="kart"><div class="sinav-ust" style="margin-bottom:8px"><button class="ikincil" data-sts="">← Sınıflar</button><span class="neon-tabela">${esc(ST.sinif)}</span><span class="soluk">${seciliL.filter(x => x.paylas).length}/${seciliL.length} öğrenci izin verdi · ${donemAd}</span></div>
+            <table class="st-tablo"><tr><th>No</th><th>Ad Soyad</th><th>Soru</th><th>Net</th><th>Doğruluk</th><th>Gün</th><th>En çok</th><th>En az / hiç</th></tr>${seciliL.slice().sort((p, q) => (q.paylas - p.paylas) || top(q) - top(p)).map(x => { if (!x.paylas) return `<tr class="st-yok"><td>${esc(x.no)}</td><td>${esc(baslik(x.ad))}</td><td colspan="6">${x.kullaniyor ? 'Kullanıyor, izin vermedi' : 'Soru takibini kullanmıyor'}</td></tr>`;
+              const D_ = Object.entries(x.dersler || {}).map(([d, v]) => [d, v.d + v.y + v.b]).sort((p, q) => q[1] - p[1]), n = top(x), eks = ['Paragraf', 'Problemler', 'Türkçe', 'Matematik'].filter(d => !(x.dersler || {})[d]);
+              return `<tr class="${n === 0 ? 'st-sifir' : ''}"><td>${esc(x.no)}</td><td><b>${esc(baslik(x.ad))}</b></td><td><b>${n}</b></td><td>${s1(net(x))}</td><td>${n ? '%' + Math.round(dog(x) * 100 / n) : '—'}</td><td>${x.gun || 0}</td><td>${D_[0] ? esc(D_[0][0]) + ' (' + D_[0][1] + ')' : '—'}</td><td class="kucuk">${eks.length ? esc(eks.join(', ')) : (D_.length ? esc(D_[D_.length - 1][0]) : '—')}</td></tr>`; }).join('')}</table></div>`
+        : `<div class="st-izgara"><div class="kart"><h3 style="margin-top:0">Sınıflar</h3><table class="st-tablo"><tr><th>Sınıf</th><th>İzin</th><th>Ort. soru</th><th>Ort. net</th><th>Hiç çözmeyen</th></tr>${sinflar.map(s => { const A = L.filter(x => x.sinif === s), Q = A.filter(x => x.paylas); return `<tr class="st-sinif" data-sts="${esc(s)}" style="--sv:${seviyeRenk(s)}"><td><b>${esc(s)}</b></td><td>${Q.length}/${A.length}</td><td>${Q.length ? Math.round(Q.reduce((t, x) => t + top(x), 0) / Q.length) : '—'}</td><td>${Q.length ? s1(Q.reduce((t, x) => t + net(x), 0) / Q.length) : '—'}</td><td>${Q.filter(x => !top(x)).length || ''}</td></tr>`; }).join('')}</table></div>
+            <div class="kart"><h3 style="margin-top:0">Derslere göre (izinli öğrenciler)</h3>${Object.keys(okulD).length ? Object.entries(okulD).sort((p, q) => q[1].n - p[1].n).map(([d, v]) => { const mx = Math.max(...Object.values(okulD).map(o => o.n)); return `<div class="st-ders"><span>${esc(d)}</span><i><em style="width:${v.n * 100 / mx}%"></em></i><small>${v.n.toLocaleString(tr)} · %${Math.round(v.d * 100 / v.n)}</small></div>`; }).join('') : '<div class="soluk kucuk">Bu dönemde veri yok.</div>'}</div></div>`}`;
+    };
+    $('#icerik').onclick = ev => {
+      const t = ev.target.closest('[data-stp], [data-sts], #stPdf'); if (!t) return;
+      if (t.dataset.stp) { ST.per = t.dataset.stp; soruTakipBolumu(); return; }
+      if (t.dataset.sts != null) { ST.sinif = t.dataset.sts || null; ciz(); window.scrollTo(0, 0); return; }
+      if (t.id === 'stPdf') { const S_ = ST.sinif ? [ST.sinif] : sinflar;
+        belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><title>Soru takibi</title><style>@page{size:A4;margin:11mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9pt;margin:0;padding:8mm}h1{font-size:13pt;text-align:center;margin:0 0 1mm}h2{font-size:10.5pt;margin:5mm 0 1.5mm;color:#0d3c57}p{text-align:center;margin:0 0 4mm;color:#444}table{width:100%;border-collapse:collapse}td,th{border:1px solid #9aa6b2;padding:2px 4px;text-align:left}th{background:#e8eef4}.y td{color:#888}.s td{background:#fff1e3}</style>
+          <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:16mm"><div style="font-weight:bold;margin:1.5mm 0 3mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>Soru Takibi · ${esc(ST.sinif ? ST.sinif + ' sınıfı' : '11 ve 12. sınıflar')}</h1><p>${esc(donemAd)} (${esc(gunAdi(ia))} – ${esc(gunAdi(ib))}) · izin veren öğrencilerin verisi</p>
+          ${S_.map(s => { const A = L.filter(x => x.sinif === s); return `<h2>${esc(s)} · ${A.filter(x => x.paylas).length}/${A.length} izinli</h2><table><tr><th>No</th><th>Ad Soyad</th><th>Soru</th><th>Net</th><th>Doğruluk</th><th>Gün</th><th>Dersler</th></tr>${A.slice().sort((p, q) => (q.paylas - p.paylas) || top(q) - top(p)).map(x => x.paylas ? `<tr class="${top(x) ? '' : 's'}"><td>${esc(x.no)}</td><td>${esc(baslik(x.ad))}</td><td>${top(x)}</td><td>${s1(net(x))}</td><td>${top(x) ? '%' + Math.round(dog(x) * 100 / top(x)) : '—'}</td><td>${x.gun || 0}</td><td style="font-size:7.5pt">${Object.entries(x.dersler || {}).map(([d, v]) => `${esc(d)} ${v.d + v.y + v.b}`).join(', ')}</td></tr>` : `<tr class="y"><td>${esc(x.no)}</td><td>${esc(baslik(x.ad))}</td><td colspan="5">${x.kullaniyor ? 'izin vermedi' : 'kullanmıyor'}</td></tr>`).join('')}</table>`; }).join('')}`, 'Soru takibi'); }
+    };
+    ciz();
+  }
   async function rehberlik() {
     await anketVerisi();
     const rehForm = a => (a.bolum === 'rehberlik' || (a.tanim.sablon && a.tanim.kimler !== 'ogretmen')) && a.durum !== 'taslak';   // K-559: MEB formları genel yayınlansa da burada
@@ -2614,7 +2650,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return c ? `${c.no}. ders: ${c.ders}${(c.ogretmen || []).length ? ' · ' + c.ogretmen.map(baslik).join(', ') : ''}` : 'ders saati dışında (teneffüs / öğle arası)';
   }
   // K-554: Rehberlik bölümünün üst sekmeleri (Formlar ve anketler / Randevular)
-  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button><button class="${aktif === 'yonlendirme' ? 'secili' : ''}" data-rs="yonlendirme">Yönlendirmeler${MK.ny ? ` <span class="mk-sayi">${MK.ny}</span>` : ''}</button></div>`;
+  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button><button class="${aktif === 'yonlendirme' ? 'secili' : ''}" data-rs="yonlendirme">Yönlendirmeler${MK.ny ? ` <span class="mk-sayi">${MK.ny}</span>` : ''}</button><button class="${aktif === 'sorutakip' ? 'secili' : ''}" data-rs="sorutakip">Soru takibi</button></div>`;
   document.addEventListener('click', ev => { const b = ev.target.closest('.reh-sekme [data-rs]'); if (b && D.bolum !== b.dataset.rs) ac(b.dataset.rs); });
   const isoGun = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   function takvimSec() {   // K-552: büyük ay takvimi (tarayıcının küçük tarih kutusu yerine); seçim gizli input'a yazılır
