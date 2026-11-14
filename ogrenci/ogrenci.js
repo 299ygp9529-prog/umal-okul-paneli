@@ -29,7 +29,11 @@
     $('#girisBtn').disabled = true; bilgi.textContent = 'Kontrol ediliyor…';
     const { data, error } = await sb.rpc('umal_ogrenci_giris', { p_no: no, p_kod: kod });
     $('#girisBtn').disabled = false;
-    document.documentElement.classList.remove('oturumlu');   // K-581: yenilemede giriş ekranı görünmesin; sonuç gelince kalkar
+    const otoAcik = document.documentElement.classList.contains('oturumlu');
+    if (otoAcik && !error && data && data.ok) {   // K-582: oturum doğrulandı → tik, sonra ana sayfa
+      const ac_ = $('#acilis'); ac_.classList.add('tikli'); $('#acilis small').textContent = 'Hoş geldin';
+      document.documentElement.classList.remove('oturumlu'); setTimeout(() => { ac_.classList.add('kalk'); setTimeout(() => ac_.classList.remove('tikli', 'kalk'), 260); }, 650);
+    } else document.documentElement.classList.remove('oturumlu');   // K-581: yenilemede giriş ekranı görünmesin; sonuç gelince kalkar
     if (error || !data) { bilgi.textContent = 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.'; bilgi.classList.add('hata'); return; }
     if (!data.ok) { const h_ = S.hatirla; oturumSil(); S.hatirla = h_; bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
