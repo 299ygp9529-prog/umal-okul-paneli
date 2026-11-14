@@ -152,6 +152,7 @@
     { id: 'kelebek', ad: 'Kelebek Sistemi', roller: ['bas', 'yonetici'], ciz: kelebek },   // K-380
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
+    { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: sinavKonulari },   // K-574
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
@@ -2140,6 +2141,49 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz(); yenile(() => canliGuvenli() ? yonlendirmelerBolumu(true) : Promise.resolve(), 20);
     if (yeniler.length) { await sb.from('umal_rehberlik_yonlendirme').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 2000); }
+  }
+  // ------------------------------------------------------------------ K-574: Sınav konuları (öğretmen yazar, öğrenci Sınavlarım'da görür)
+  const KN = { gecmis: false, sv: '' };
+  async function sinavKonulari() {
+    const [tk, kr, ad] = await Promise.all([fetch('sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null),
+      sb.from('umal_sinav_konu').select('*'), sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
+    if (kr.error && /umal_sinav_konu/.test(kr.error.message || '')) { $('#icerik').innerHTML = '<div class="kart">Supabase\'de <b>20261114130000_umal_sinav_konu.sql</b> çalıştırılmalı.</div>'; return; }
+    if (kr.error) throw kr.error;
+    const K = new Map((kr.data || []).map(x => [x.anahtar, x])), benimAd = (ad.data && ad.data.ad) || '';
+    // sınav × seviye × ad (şube dersi farklıysa ayrı satır)
+    const S_ = [];
+    for (const x of (tk && tk.sinavlar) || []) {
+      const sb_ = ((tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders) || {}).subeler || {};
+      for (const [sv, a] of Object.entries(x.siniflar || {})) {
+        const adlar = new Map(); Object.entries(sb_).filter(([s]) => s.split('-')[0] === sv).forEach(([s, d]) => { (adlar.get(d) || adlar.set(d, []).get(d)).push(s); });
+        if (!adlar.size) adlar.set(a, []);
+        for (const [d, ss] of adlar) S_.push({ tarih: x.tarih, ders: x.ders, sv, ad: d, siniflar: ss, anahtar: [x.tarih, x.ders, sv, d].join('|') });
+      }
+    }
+    S_.sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders) || (+a.sv) - (+b.sv) || a.ad.localeCompare(b.ad, tr));
+    const bugun = bugunISO();
+    const ciz = () => {
+      const G = S_.filter(x => (KN.gecmis || x.tarih >= bugun) && (!KN.sv || x.sv === KN.sv)), dolu = S_.filter(x => (K.get(x.anahtar) || {}).konular).length;
+      let gun = '';
+      $('#icerik').innerHTML = `<h1 style="margin-bottom:4px">Sınav Konuları</h1><div class="soluk kucuk" style="margin-bottom:12px">${esc((tk && tk.ad) || 'Ortak yazılı sınavlar')} · ${S_.length} sınav, ${dolu} tanesinin konusu yazıldı. Yazdığınız konular öğrencilerin panelinde, Sınavlarım'da o sınavın altında görünür.</div>
+        <div class="cipler"><button class="cip ${!KN.sv ? 'secili' : ''}" data-kv="">Bütün seviyeler</button>${['9', '10', '11', '12'].map(v => `<button class="cip ${KN.sv === v ? 'secili' : ''}" data-kv="${v}" style="border-color:${SEVIYE_RENK[v]}">${v}. sınıflar</button>`).join('')}<button class="cip ${KN.gecmis ? 'secili' : ''}" data-kg="1">Geçmiş sınavları da göster</button></div>
+        <div class="kn-liste">${G.length ? G.map(x => { const k = K.get(x.anahtar) || {}, d = new Date(x.tarih + 'T12:00'), h = d.toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' }); const bas_ = h !== gun ? `<div class="rv-gun">${esc(h)}</div>` : ''; gun = h;
+          return `${bas_}<div class="kn-kart ${k.konular ? 'dolu' : ''}" style="--sv:${SEVIYE_RENK[x.sv] || '#22e8ff'}"><div class="kn-ust"><span class="kn-sv">${x.sv}</span><b>${esc(x.ad)}</b><span class="soluk kucuk">${esc(x.ders)}${x.siniflar.length ? ' · ' + esc(x.siniflar.join(', ')) : ''}</span>${k.konular ? `<span class="soluk kucuk" style="margin-left:auto">${esc(k.ekleyen_ad || k.ekleyen || '')} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'short' }))}</span>` : '<span class="kn-yok">konu yazılmadı</span>'}</div>
+            <textarea rows="${k.konular ? Math.min(8, 2 + (k.konular.match(/\n/g) || []).length) : 2}" maxlength="2000" data-ka="${esc(x.anahtar)}" placeholder="Konuları yazın (her satıra bir konu). ör.&#10;Hücre ve organeller&#10;Canlıların sınıflandırılması">${esc(k.konular || '')}</textarea>
+            <div class="kn-alt"><span class="kucuk soluk" data-kb="${esc(x.anahtar)}"></span><button class="birincil" data-kk="${esc(x.anahtar)}">Kaydet</button></div></div>`; }).join('') : '<div class="kart soluk">Gösterilecek sınav yok.</div>'}</div>`;
+    };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.kv != null) { KN.sv = b.dataset.kv; ciz(); return; }
+      if (b.dataset.kg) { KN.gecmis = !KN.gecmis; ciz(); return; }
+      if (b.dataset.kk) { const x = S_.find(y => y.anahtar === b.dataset.kk), t = document.querySelector(`textarea[data-ka="${CSS.escape(x.anahtar)}"]`), bil = document.querySelector(`[data-kb="${CSS.escape(x.anahtar)}"]`);
+        b.disabled = true; bil.textContent = 'Kaydediliyor…';
+        const satir = { anahtar: x.anahtar, tarih: x.tarih, ders: x.ders, seviye: x.sv, ad: x.ad, konular: t.value.trim(), ekleyen: D.eposta, ekleyen_ad: benimAd || null, guncel: new Date().toISOString() };
+        const { error } = await israrla(() => sb.from('umal_sinav_konu').upsert(satir));
+        b.disabled = false; if (error) { bil.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; }
+        K.set(x.anahtar, satir); bil.textContent = '✓ Kaydedildi; öğrencilerin panelinde görünür.'; const kk = t.closest('.kn-kart'); kk.classList.toggle('dolu', !!satir.konular); const y_ = kk.querySelector('.kn-yok, .kn-ust > .soluk.kucuk:last-child'); if (y_) { y_.className = 'soluk kucuk'; y_.style.marginLeft = 'auto'; y_.textContent = satir.konular ? (benimAd || 'Siz') + ' · şimdi' : 'konu yazılmadı'; } }
+    };
+    ciz();
   }
   async function rehberlik() {
     await anketVerisi();

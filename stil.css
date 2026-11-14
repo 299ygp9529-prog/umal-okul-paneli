@@ -1161,3 +1161,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .yn-rk.a-acil { border-left-color: #ff3b4e !important; } .yn-neden { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; } .yn-neden span { font-size: 12px; border: 1px solid var(--cizgi); border-radius: 999px; padding: 2px 9px; } .yn-neden span.kritik { border-color: #ff3b4e; color: #ff8a95; }
 .yn-durum { display: inline-flex; gap: 4px; flex-wrap: wrap; } .yn-durum .cip { padding: 4px 10px; font-size: 12.5px; }
 @media (max-width: 900px) { .yn-izgara { grid-template-columns: 1fr; } }
+/* K-574: sınav konuları */
+.kn-liste { max-width: 1000px; margin-top: 8px; } .kn-kart { background: var(--kart); border: 1px solid var(--cizgi); border-left: 5px solid var(--sv); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; } .kn-kart.dolu { border-color: color-mix(in srgb, var(--sv) 50%, var(--cizgi)); }
+.kn-ust { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; } .kn-sv { background: var(--sv); color: #04121f; font-weight: 900; border-radius: 7px; padding: 1px 8px; font-size: 13px; } .kn-ust b { font-size: 15.5px; } .kn-yok { margin-left: auto; font-size: 12px; color: #ffb867; }
+.kn-kart textarea { width: 100%; box-sizing: border-box; resize: vertical; font-size: 14px; min-height: 56px; height: auto; } .kn-alt { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 6px; } .kn-alt .birincil { padding: 6px 16px; }
