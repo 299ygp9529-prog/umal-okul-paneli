@@ -167,6 +167,12 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .sor-dug { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; } .sor-dug button { min-width: 96px; }
 .sor-ic.sor-tehlike .sor-dug .birincil { background: #ff6b6b; color: #2a0505; }
 @keyframes sorGel { from { opacity: 0; } } @keyframes sorIc { from { transform: translateY(8px) scale(.97); opacity: 0; } }
+#acilEkran { position: fixed; inset: 0; z-index: 10000; background: radial-gradient(circle at 50% 30%, #3a1406, #0d1726 70%); display: grid; place-items: center; padding: 20px; }
+#acilEkran .acil-ic { width: min(560px, 100%); text-align: center; border: 2px solid #ff9a3a; border-radius: 22px; padding: 26px 20px 18px; background: rgba(13,23,38,.85); box-shadow: 0 0 0 6px rgba(255,154,58,.12), 0 0 60px rgba(255,120,40,.35); animation: acilNabiz 1.6s ease-in-out infinite; }
+@keyframes acilNabiz { 50% { box-shadow: 0 0 0 10px rgba(255,154,58,.06), 0 0 80px rgba(255,120,40,.55); } }
+#acilEkran .acil-ust { display: inline-flex; align-items: center; gap: 8px; color: #ffb867; font-weight: 900; letter-spacing: .12em; font-size: 14px; } #acilEkran .acil-isik { width: 12px; height: 12px; border-radius: 50%; background: #ff6b2b; box-shadow: 0 0 12px #ff6b2b; animation: acilIsik 1s steps(2) infinite; } @keyframes acilIsik { 50% { opacity: .25; } }
+#acilEkran h1 { margin: 14px 0 6px; font-size: 26px; line-height: 1.25; overflow-wrap: anywhere; } #acilEkran p { margin: 10px 0 20px; font-size: 18px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+#acilEkran button { width: 100%; padding: 14px; font-size: 17px; } #acilEkran small { display: block; margin-top: 12px; color: var(--soluk); font-size: 12px; }
 .pl-bos { color: var(--cs); font-size: 13px; padding: 4px 0; }
 .pl-form { background: var(--koyu); border: 1px solid var(--neon); border-radius: 14px; padding: 12px; margin-top: 10px; } .pl-form label { margin-top: 8px; }
 .pl-cip { display: flex; flex-wrap: wrap; gap: 6px; } .pl-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 6px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .pl-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
@@ -333,6 +339,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611143000"></script>
-<script src="ogrenci.js?v=202611144900"></script>
+<script src="ogrenci.js?v=202611145000"></script>
 </body>
 </html>

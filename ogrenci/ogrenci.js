@@ -56,7 +56,7 @@
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle(); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); mektuplarYukle(); ozetYukle(); acilYukle(); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   const cikis = () => { oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
@@ -690,6 +690,25 @@
   const rpCiz = () => { if (PL.veri && !$('#s-plan').classList.contains('gizli')) plCiz(); };
   const gAlt = x => [x.konu, x.soru ? x.soru + ' soru' : '', x.kaynak, sure(+x.dk || 0)].filter(Boolean).map(esc).join(' · ');   // K-584
   const rpBugun = () => { const hk = iso(pzt(simdi())), G = rhGorevler(hk).filter(x => !x.sil && x.g === gunIdx(simdi())); return G.length ? { n: G.length, ok: G.filter(x => puan(x) > 0).length } : null; };
+
+  // ---- K-597: acil mesaj (panelden "Öğrenci web paneli" seçilirse ekranı kaplar; "Okudum" bu cihazda kapatır)
+  const ACIL = { L: [] };
+  const acilOkunan = () => { try { return new Set(JSON.parse(localStorage.getItem('umalAcilOk') || '[]')); } catch (e) { return new Set(); } };
+  async function acilYukle() {
+    if (!S.kod) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_acil', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok) return; ACIL.L = data.mesajlar || []; acilGoster();
+  }
+  function acilGoster() {
+    const ok = acilOkunan(), m = ACIL.L.find(x => !ok.has(x.id)); let el = document.getElementById('acilEkran');
+    if (!m) { if (el) el.remove(); return; }
+    if (el && el.dataset.id === m.id) return; if (el) el.remove();
+    el = document.createElement('div'); el.id = 'acilEkran'; el.dataset.id = m.id; el.setAttribute('role', 'alertdialog');
+    el.innerHTML = `<div class="acil-ic"><div class="acil-ust"><span class="acil-isik"></span>ACİL DUYURU</div>${m.baslik ? '<h1></h1>' : ''}<p></p><button class="birincil" id="acilOk">Okudum</button><small>Ümraniye Merkez Anadolu Lisesi</small></div>`;
+    if (m.baslik) el.querySelector('h1').textContent = m.baslik; el.querySelector('p').textContent = m.metin || '';
+    document.body.appendChild(el); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+    el.querySelector('#acilOk').onclick = () => { const o = acilOkunan(); o.add(m.id); try { localStorage.setItem('umalAcilOk', JSON.stringify([...o].slice(-50))); } catch (e) {} el.remove(); acilGoster(); };
+  }
+  setInterval(() => { if (!document.hidden) acilYukle(); }, 20000);
   // ---- K-580: Günün sözü (her gün farklı)
   function sozCiz() {
     const L = window.SOZLER || [], k = $('#gununSozu'); if (!k || !L.length) return;

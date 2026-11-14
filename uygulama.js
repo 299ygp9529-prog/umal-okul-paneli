@@ -3912,7 +3912,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
     $('#icerik').innerHTML = `<h1>${kapla ? 'Acil Mesaj' : 'Gönder'}</h1>${kapla ? '<div class="turuncu" style="margin-top:4px">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince ya da siz aşağıdan "Kaldır" deyince kalkar. Sınavdaki salonlarda da çıkar.</div>' : '<div class="soluk kucuk">Tahtanın üstünde şerit olarak görünür; yazıyı kapatmaz.</div>'}
-      <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px"><h2 style="margin-top:0">Hangi tahtalar</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+      <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px">${kapla ? '<h2 style="margin-top:0">Nereye</h2><div class="cipler" id="nereye"><button class="cip secili" data-y="tahta">Tahtalar</button><button class="cip" data-y="web">Öğrenci web paneli</button></div><div class="soluk kucuk" style="margin-top:4px">Öğrenci web panelinde açık olan öğrencilerin ekranı en geç 20 saniyede kaplanır; sayfayı açan öğrenci de görür. (Fotoğraf yalnız tahtalarda.)</div>' : ''}<h2 style="${kapla ? '' : 'margin-top:0'}">${kapla ? 'Hangi sınıflar' : 'Hangi tahtalar'}</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
       <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
       ${kapla ? `<h2>Fotoğraf (isteğe bağlı)</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><label class="ikincil" style="cursor:pointer">📷 Fotoğraf seç<input type="file" id="gResim" accept="image/*" hidden></label><span class="kucuk soluk" id="gResimAd">Seçilmedi</span><button class="bag gizli" id="gResimSil">Kaldır</button></div><img id="gResimOn" class="gizli" style="max-height:140px;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--cizgi)">
@@ -3921,7 +3921,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>
       <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Yayındaki mesajlar</h2><div class="soluk kucuk">"Kaldır" deyince tahtalardan en geç 20 saniyede kalkar; kimsenin "Okudum"a basması gerekmez.</div><div id="gListe" style="margin-top:8px"></div></div>`;
     let sure = 'gun', ne = 'simdi', resim = null;   // K-415: fotoğraf ve zamanlı gösterim
+    const yer = new Set(['tahta']);   // K-597: tahtalar / öğrenci web paneli
     if (kapla) {
+      $('#nereye').onclick = ev => { const b = ev.target.closest('[data-y]'); if (!b) return; const y = b.dataset.y; yer.has(y) ? yer.delete(y) : yer.add(y); if (!yer.size) yer.add(y === 'tahta' ? 'web' : 'tahta'); document.querySelectorAll('#nereye .cip').forEach(c => c.classList.toggle('secili', yer.has(c.dataset.y))); $('#gGonder').textContent = (yer.has('tahta') && yer.has('web') ? 'Tahtalara ve öğrencilere gönder' : yer.has('web') ? 'Öğrencilere gönder' : 'Tahtalara gönder') + ' (ekranı kaplar)'; };
       $('#ne').onclick = ev => { const b = ev.target.closest('[data-n]'); if (!b) return; ne = b.dataset.n; document.querySelectorAll('#ne .cip').forEach(c => c.classList.toggle('secili', c === b)); $('#gSaat').classList.toggle('gizli', ne !== 'saat'); };
       $('#gResim').onchange = async () => {
         const f = $('#gResim').files[0]; if (!f) return;
@@ -3946,12 +3948,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         .sort((a, b) => ((b.veri && b.veri.zaman) || 0) - ((a.veri && a.veri.zaman) || 0));
       if (!L.length) { el.innerHTML = '<div class="soluk kucuk">Şu an yayında mesaj yok.</div>'; return; }
       const saat = t => new Date(t * 1000).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
-      el.innerHTML = L.map(r => { const v = r.veri || {}, hd = (v.hedef || []).includes('*') ? 'Bütün tahtalar' : (v.hedef || []).join(', ');
+      el.innerHTML = L.map(r => { const v = r.veri || {}, hd = [(v.hedef || []).includes('-') ? '' : ((v.hedef || []).includes('*') ? 'Bütün tahtalar' : (v.hedef || []).join(', ') + ' tahtaları'), v.ogr ? 'Öğrenci paneli' + ((v.ogr.hedef || []).includes('*') ? '' : ' (' + (v.ogr.hedef || []).join(', ') + ')') : ''].filter(Boolean).join(' · ');
         const bek = v.baslangic && v.baslangic * 1000 > simdi;
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--cizgi)"><div style="flex:1;min-width:0"><b>${esc(v.baslik || (v.metin || '').slice(0, 60) || (v.resim ? 'Fotoğraf' : 'Mesaj'))}</b>${v.resim ? ' 📷' : ''}<div class="kucuk soluk">${esc(hd)} · ${bek ? '<span class="turuncu">' + 'saat ' + saat(v.baslangic) + ' olunca çıkacak</span>' : saat(v.zaman || 0) + ' gönderildi'}${r.bitis ? ' · bitiş ' + saat(new Date(r.bitis).getTime() / 1000) : ' · kaldırılana kadar'}</div></div><button class="tehlike" data-sil="${esc(r.id)}">Kaldır</button></div>`; }).join('');
       el.onclick = async ev => {
         const b = ev.target.closest('[data-sil]'); if (!b) return; const r = L.find(x => x.id === b.dataset.sil); if (!r) return;
-        if (!await onayla('Bu mesaj bütün tahtalardan kaldırılsın mı?')) return;
+        if (!await onayla('Bu mesaj ' + (r.veri && r.veri.ogr ? 'tahtalardan ve öğrenci panelinden' : 'bütün tahtalardan') + ' kaldırılsın mı?')) return;
         b.disabled = true;
         const { error: se } = await sb.from('umal_mesajlar').delete().eq('id', r.id);
         if (se) { b.disabled = false; uyar('Kaldırılamadı: ' + hataYaz(se)); return; }
@@ -3979,13 +3981,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       let ne_ = '';
       if (kapla) {
         veri.kapla = true;   // K-341: Atlas Pro 40+ tahtayı kaplar; eskiler şerit gösterir
+        if (yer.has('web')) veri.ogr = { hedef: [...hedef] };   // K-597: öğrenci web paneli
+        if (!yer.has('tahta')) veri.hedef = ['-'];
         if (ne === 'saat') {
           const [hh, mm] = ($('#gSaat').value || '').split(':').map(Number); if (isNaN(hh)) { $('#gBilgi').textContent = 'Saati seçin.'; return; }
           const t = new Date(); t.setHours(hh, mm, 0, 0); if (t.getTime() < Date.now() - 60000) t.setDate(t.getDate() + 1);
           veri.baslangic = Math.floor(t.getTime() / 1000); ne_ = ` ${t.toLocaleDateString(tr, { day: 'numeric', month: 'long' })} saat ${$('#gSaat').value.replace(':', '.')} olunca`;
           if (veri.bitis && veri.bitis < veri.baslangic + 600) veri.bitis = veri.baslangic + (sure === 'ders' ? 40 * 60 : 12 * 3600);
         }
-        if (!await onayla(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'}${ne_} ekranı kaplayacak${resim ? ' (fotoğraflı)' : ''}. Gönderilsin mi?`)) return;
+        const kim = hedef.has('*') ? 'bütün okul' : [...hedef].join(', '), nere = [yer.has('tahta') ? 'tahtalarda' : '', yer.has('web') ? 'öğrenci web panelinde' : ''].filter(Boolean).join(' ve ');
+        if (!await onayla(`Mesaj ${kim} için ${nere}${ne_} ekranı kaplayacak${resim && yer.has('tahta') ? ' (fotoğraflı)' : ''}. Gönderilsin mi?`)) return;
       }
       $('#gGonder').disabled = true;
       if (resim) {
