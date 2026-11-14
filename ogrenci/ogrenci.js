@@ -388,6 +388,7 @@
 
   // ---- K-549: Rehberlik sayfası iki kutu (mektup / randevu) + randevu
   const RV = { L: [], M: [], sec: null, tercih: new Set(), gorunum: '' };
+  const RV_NEDEN = ['Çalışma planı', 'Kendimi iyi hissetmiyorum', 'Dersler', 'Meslek / üniversite', 'Arkadaşlık', 'Aile', 'Başka bir konu'];
   const TERCIH = ['Teneffüste', 'Öğle arasında', 'Ders saatinde olabilir', 'Okul çıkışında'];
   const RV_D = { talep: ['İsteğin iletildi', 'tur'], davet: ['Davet edildin', 'tur'], onay: ['Kesinleşti', 'yes'], gelemem: ['Gelemeyeceğini bildirdin', 'kir'], iptal: ['İptal edildi', 'kir'], gorusuldu: ['Görüşüldü', 'yes'], gelmedi: ['Gelmedin', 'kir'] };
   const rvT = z => new Date(z);
@@ -450,6 +451,8 @@
         return h + `<button data-al="${m.id}" class="${RV.sec === m.id ? 'secili' : ''}">${rvSaat(m.zaman)}<small>${esc(m.ogretmen ? hoca(m.ogretmen) : m.yer)} · ${m.sure_dk} dk</small></button>`; }).join('') + '</div>'
         + (RV.sec ? `<label for="rvAlNot">Kısaca konu (isteğe bağlı)</label><input id="rvAlNot" maxlength="500" placeholder="ör. Ders çalışma düzenim"><button class="birincil" id="rvAlBtn">${esc(rvGunAd(RV.M.find(m => m.id === RV.sec).zaman))} ${rvSaat(RV.M.find(m => m.id === RV.sec).zaman)} randevusunu al</button>` : '')
       : '<div class="soluk kucuk" style="margin-top:10px">Şu an açık boş saat yok. Aşağıdan randevu isteyebilirsin.</div>';
+    RV.neden = RV.neden || new Set();   // K-599: tek dokunuşla görüşme nedeni
+    $('#rvNeden').innerHTML = RV_NEDEN.map(k => `<button type="button" class="${RV.neden.has(k) ? 'secili' : ''} ${k === 'Kendimi iyi hissetmiyorum' ? 'iyi' : ''}" data-rn="${esc(k)}">${esc(k)}</button>`).join('');
     $('#rvTercih').innerHTML = TERCIH.map(k => `<button type="button" class="${RV.tercih.has(k) ? 'secili' : ''}" data-t="${esc(k)}">${esc(k)}</button>`).join('');
     $('#rvTalepBtn').disabled = talepVar || dolu;
     $('#rvTalepBtn').textContent = talepVar ? 'İsteğin rehberlik servisinde' : dolu ? 'İki bekleyen randevun var' : 'Randevu iste';
@@ -463,11 +466,12 @@
   $('#rhRandevu').onclick = async ev => {
     const t = ev.target, bil = $('#rvBilgi');
     const al = t.closest('[data-al]'); if (al) { RV.sec = RV.sec === al.dataset.al ? null : al.dataset.al; rvCiz(); if (RV.sec) $('#rvAlBtn').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    const rn = t.closest('[data-rn]'); if (rn) { RV.neden.has(rn.dataset.rn) ? RV.neden.delete(rn.dataset.rn) : RV.neden.add(rn.dataset.rn); rvCiz(); return; }
     const tc = t.closest('[data-t]'); if (tc) { RV.tercih.has(tc.dataset.t) ? RV.tercih.delete(tc.dataset.t) : RV.tercih.add(tc.dataset.t); rvCiz(); return; }
     if (t.id === 'rvAlBtn') { t.disabled = true; const d = await rpc('umal_ogrenci_randevu_al', { p_id: RV.sec, p_not: ($('#rvAlNot').value || '').trim() });
       if (rvSonuc(d, bil, '')) window.scrollTo({ top: 0, behavior: 'smooth' }); else t.disabled = false; return; }
-    if (t.id === 'rvTalepBtn') { t.disabled = true; const d = await rpc('umal_ogrenci_randevu_talep', { p_tercih: [...RV.tercih].join(', '), p_not: $('#rvNot').value.trim() });
-      if (rvSonuc(d, bil, '✓ İsteğin rehberlik servisine ulaştı. Sana saat verilince burada görünür.')) { RV.tercih.clear(); $('#rvNot').value = ''; rvCiz(); } else t.disabled = false; return; }
+    if (t.id === 'rvTalepBtn') { t.disabled = true; const d = await rpc('umal_ogrenci_randevu_talep', { p_tercih: [...RV.tercih].join(', '), p_not: [RV.neden && RV.neden.size ? 'Konu: ' + [...RV.neden].join(', ') : '', $('#rvNot').value.trim()].filter(Boolean).join(' — ') });
+      if (rvSonuc(d, bil, '✓ İsteğin rehberlik servisine ulaştı. Sana saat verilince burada görünür.')) { RV.tercih.clear(); RV.neden && RV.neden.clear(); $('#rvNot').value = ''; rvCiz(); } else t.disabled = false; return; }
     const rc = t.closest('[data-rc]'); if (rc) {
       const c = rc.dataset.rc; let not = '';
       if (c === 'gelemem') { const m = await girdiAl('Neden gelemeyeceğini kısaca yazabilirsin (isteğe bağlı). Rehber öğretmenin sana yeni bir saat verebilir.', ''); if (m === null) return; not = m; }

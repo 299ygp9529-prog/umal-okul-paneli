@@ -1230,3 +1230,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .sor-ic.sor-tehlike .sor-dug .birincil { background: #ff6b6b; color: #2a0505; }
 @keyframes sorGel { from { opacity: 0; } } @keyframes sorIc { from { transform: translateY(8px) scale(.97); opacity: 0; } }
 .ro-ust .neon-tabela.oz-ad { font-size: 26px; padding: 4px 18px; border-color: var(--neon); }
+.rv-iyi { display: inline-block; margin: 6px 0 2px; background: rgba(176,107,255,.18); border: 1px solid rgba(176,107,255,.55); color: #e2c9ff; border-radius: 8px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; }
