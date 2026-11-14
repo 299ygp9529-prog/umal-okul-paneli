@@ -173,7 +173,7 @@
     { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
-    { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
+    { id: 'disiplin', ad: 'İdari İşlemler', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
@@ -201,7 +201,7 @@
     konu: '<path d="M12 6.500c-1.800-1.300-4.300-1.800-7.500-1.500v13c3.200-.3 5.700.2 7.500 1.500 1.800-1.300 4.300-1.800 7.500-1.500V5c-3.200-.3-5.700.2-7.500 1.500Z"/><path d="M12 6.500v13"/>',
     duyuru: '<path d="M4 10v4h3.500l6 4.500v-13l-6 4.500H4Z"/><path d="M17 9.500a4 4 0 0 1 0 5"/>',
     rehberlik: '<path d="M20 12a8 8 0 0 1-11.800 7L4 20l1.100-4A8 8 0 1 1 20 12Z"/><path d="M12 15.200s-3-1.900-3-3.900a1.700 1.700 0 0 1 3-1 1.700 1.700 0 0 1 3 1c0 2-3 3.900-3 3.900Z"/>',
-    disiplin: '<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-2.500 6a2.700 2.700 0 0 0 5 0L5 8ZM19 8l-2.500 6a2.700 2.700 0 0 0 5 0L19 8Z"/>',
+    disiplin: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18M10.5 12.5v2h3v-2"/>',   // K-629: İdari İşlemler (çanta)
     mektup: '<rect x="3.500" y="5.500" width="17" height="13" rx="2.500"/><path d="M4 7l8 6.200L20 7"/>',
     ozelders: '<path d="M2.500 9.500L12 5l9.500 4.500L12 14 2.500 9.500Z"/><path d="M6.500 11.500v4.200c1.500 1.400 3.300 2.100 5.500 2.100s4-.7 5.500-2.100v-4.200M21.500 9.500v5"/>',
     yonlendir: '<circle cx="9" cy="8" r="3.300"/><path d="M3 19.500c.5-3.300 2.800-5.200 6-5.200 1.200 0 2.300.3 3.200.8M14.500 17h6.500M18 14l3 3-3 3"/>',
@@ -3277,8 +3277,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150100');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611150300');   // K-625: idari işlemler
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150400');
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611150400');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });

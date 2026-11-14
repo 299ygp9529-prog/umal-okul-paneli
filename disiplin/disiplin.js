@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   let C = null, kok = null;   // C: panelden gelen yardımcılar
-  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027', ekran: 'ana', ogrSec: null, tut: {} };
+  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027', ekran: 'idari', ogrSec: null, tut: {} };
   const DOS = () => S.L.filter(r => !r.veri.tur);   // kurul dosyaları (yazılı uyarı ve puan iadesi ayrı satırlar)
   const tr = 'tr';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -118,6 +118,8 @@
 .ds-bos{padding:30px;text-align:center;color:var(--soluk)}
 .ds-sayac button{background:var(--kart);border:1px solid var(--cizgi);border-radius:14px;padding:12px 14px;text-align:left;color:var(--yazi);font:inherit;cursor:pointer}.ds-sayac button:hover{border-color:var(--neon)}
 .ds-sayac button.uyari{border-color:#ff9a3a;box-shadow:0 0 12px rgba(255,154,58,.25)}.ds-sayac button.uyari b{color:#ffb867}
+.ia-izgara{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}.ia-kart{display:grid;grid-template-columns:58px 1fr 16px;grid-template-rows:auto auto;gap:4px 14px;align-items:center;text-align:left;min-height:118px;padding:18px 20px;border-radius:18px;border:1px solid var(--cizgi);background:var(--kart);color:inherit;cursor:pointer;position:relative}.ia-kart:hover{border-color:var(--neon);box-shadow:0 0 18px rgba(34,232,255,.18)}.ia-kart i{grid-row:1/3;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;color:#9ff8ff;background:linear-gradient(145deg,rgba(34,232,255,.18),rgba(34,232,255,.04));border:1px solid rgba(34,232,255,.35)}.ia-kart i svg{filter:drop-shadow(0 0 5px rgba(34,232,255,.65))}.ia-kart span{grid-row:1/3}.ia-kart b{display:block;font-size:17px}.ia-kart small{display:block;color:var(--soluk);font-size:12.5px;margin-top:3px;line-height:1.35}.ia-kart em{grid-row:1/3;grid-column:3;font-style:normal;color:var(--neon);font-size:22px}.ia-kart u{position:absolute;top:10px;right:14px;text-decoration:none;font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 9px;background:rgba(255,154,58,.16);color:#ff9a3a}
+@media (max-width:1100px){.ia-izgara{grid-template-columns:repeat(2,1fr)}}@media (max-width:760px){.ia-izgara{grid-template-columns:1fr}.ia-kart{min-height:88px}}
 .ds-katman{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--cizgi);border-radius:16px;overflow:hidden;background:var(--kart)}
 .ds-katman section{border-right:1px solid var(--cizgi)}.ds-katman section:last-child{border-right:0}
 .ds-katman h2{margin:0;padding:14px 18px;font-size:16px;letter-spacing:.08em;color:var(--neonacik);background:linear-gradient(180deg,rgba(34,232,255,.16),rgba(34,232,255,.04));border-bottom:2px solid var(--neon)}
@@ -437,7 +439,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     sorumluluk: 'M5 4.5h14v16H5zM9 4.5V3h6v1.5M8.5 10h7M8.5 13.5h7M8.5 17h4', telafi: 'M4 6h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3M13 14.5h3M8 17.5h3',
     kurul: 'M12 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM5 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 5 7ZM19 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 19 7ZM6.5 20c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6M1.5 18c0-2.2 1.4-3.8 3.5-4.2M22.5 18c0-2.2-1.4-3.8-3.5-4.2',
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7z', veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
-    dizi: 'M3.5 5h17v4h-17zM5 9v10h14V9M10 13h4', ara: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+    dizi: 'M3.5 5h17v4h-17zM5 9v10h14V9M10 13h4', disiplinPanel: 'M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.7 2.7 0 0 0 5 0L5 8zM19 8l-2.5 6a2.7 2.7 0 0 0 5 0L19 8z', ara: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   };
   const ikon = (k, boy = 24) => `<svg viewBox="0 0 24 24" width="${boy}" height="${boy}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IK[k] || ''}"/></svg>`;
   const geriBas = (ad, sag) => `<div class="ds-ust"><div><button class="bag" data-ekran="ana">← Disiplin</button><h1 style="margin:2px 0 0">${ad}</h1></div><div class="dugmeler" style="margin:0">${sag || ''}</div></div>`;
@@ -448,17 +450,23 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     ['KARAR', [['cagri', 'Çağrı Pusulaları', 'kurul üyelerine'], ['formlar', 'Tutanak ve Formlar', 'tutanak, savunma'], ['karar', 'Karar', 'kurul kararı · EK-1'],
       ['teblig', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', 'Sene Başı / Sene Sonu Tutanakları', 'kurul toplantı tutanakları']]],
     ['DİĞER', [['iade', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
-      ['cezaAlan', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', 'Dizi Pusulası', 'dosya içeriği']]],
-    ['İDARİ İŞLEMLER', [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci/ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, günde 3 sınav'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-      ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak']]],   // K-625
+      ['cezaAlan', 'Ceza Alan Öğrenciler', 'liste ve çıktı'], ['yonetmelik', 'Yönetmelik Maddeleri', 'davranış ve karşılığı'], ['dizi', 'Dizi Pusulası', 'dosya içeriği']]]
   ];
+  // K-629: menüde "İdari İşlemler"; açılış ekranı panellerden oluşur, Disiplin bunlardan biri
+  const IDARI = [['ana', 'Disiplin', 'Okul Öğrenci Ödül ve Disiplin Kurulu: olay, dosya, karar, tebliğ'], ['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci/ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, günde 3 sınav'],
+    ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'], ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak']];
+  function cizIdari() {
+    const acik = DOS().filter(r => durumKod(r.veri) !== 'kesin').length, isS = isler().length;
+    kok.innerHTML = `<div class="ds-ust"><div><h1>İdari İşlemler</h1><span class="soluk">Ümraniye Merkez Anadolu Lisesi · ${esc(S.yil)}</span></div></div>
+      <div class="ia-izgara">${IDARI.map(([k, ad, alt]) => `<button data-ekran="${k}" class="ia-kart"><i>${ikon(k === 'ana' ? 'disiplinPanel' : k, 30)}</i><span><b>${ad}</b><small>${alt}</small></span>${k === 'ana' && (acik || isS) ? `<u>${acik} açık dosya${isS ? ' · ' + isS + ' iş' : ''}</u>` : ''}<em>›</em></button>`).join('')}</div>`;
+  }
   function ciz() {
-    const E = { ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
+    const E = { idari: cizIdari, ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
       karar: () => cizBelgeListe('karar'), teblig: () => cizBelgeListe('teblig'), dizi: () => cizBelgeListe('dizi'), tutanaklar: cizTutanaklar, iade: cizIade, iadeCiz: cizIadeCiz, istatistik: cizIstatistik, cezaAlan: cizCezaAlan };
     if (S.ekran === 'genel') { S.ekran = 'ana'; ayarFormu(); }
     if (S.ekran === 'olay') { S.ekran = 'ana'; yeniOlay(null); }
     if (S.ekran === 'yonetmelik') { S.ekran = 'ana'; yonetmelik(); }
-    if (['sorumluluk', 'telafi', 'kurul', 'sinifOlustur', 'veli'].includes(S.ekran) && window.UmalIdari) { const id = S.ekran; S.ekran = 'ana'; kok.onclick = null; window.UmalIdari.ac(id, kok, C, { ad: 'Disiplin', fn: () => { bagla(); ciz(); } }); return; }   // K-625
+    if (['sorumluluk', 'telafi', 'kurul', 'sinifOlustur', 'veli'].includes(S.ekran) && window.UmalIdari) { const id = S.ekran; S.ekran = 'ana'; kok.onclick = null; window.UmalIdari.ac(id, kok, C, { ad: 'İdari İşlemler', fn: () => { S.ekran = 'idari'; bagla(); ciz(); } }); return; }   // K-625
     (E[S.ekran] || cizAna)();
   }
   // sıradaki iş: { r, k, ad, dugme, hizli, son (ISO son gün), kalan (iş günü), bekle }
@@ -505,7 +513,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
         <div class="ds-is-adim"><b>${x.sira + 1}. ${esc(x.ad)}</b><small>${esc(x.not)}${x.son ? ' · son gün ' + tGoster(x.son) : ''}</small></div>
         ${x.kalan != null ? `<span class="ds-is-sure">${kalanYazi(x)}</span>` : '<span></span>'}
         <button class="${x.bekle ? 'ikincil' : 'birincil'}" ${x.hizli ? `data-hizli="${x.r.id}" data-k="${x.k}"` : `data-adimid="${x.r.id}" data-k="${x.k}"`}>${x.dugme}</button>${x.hizli ? `<button class="ds-is-ayr" data-adimid="${x.r.id}" data-k="${x.k}" title="Başka tarih ya da ayrıntı gir">Ayrıntılı</button>` : '<span></span>'}</div>`; };
-    kok.innerHTML = `<div class="ds-ust"><div><h1>Disiplin</h1><span class="soluk">Okul Öğrenci Ödül ve Disiplin Kurulu · ${esc(S.yil)}</span></div><div class="dugmeler" style="margin:0"><button class="ikincil" data-is="uyari">Yazılı uyarı</button><button class="birincil" data-is="yeni">+ Olay girişi</button></div></div>
+    kok.innerHTML = `<div class="ds-ust"><div><button class="bag" data-ekran="idari">← İdari İşlemler</button><h1 style="margin:2px 0 0">Disiplin</h1><span class="soluk">Okul Öğrenci Ödül ve Disiplin Kurulu · ${esc(S.yil)}</span></div><div class="dugmeler" style="margin:0"><button class="ikincil" data-is="uyari">Yazılı uyarı</button><button class="birincil" data-is="yeni">+ Olay girişi</button></div></div>
       <div class="ds-hiz"><span class="ds-hiz-ik">${ikon('ara', 20)}</span><input id="dsHiz" placeholder="Öğrenci ara: ad ya da okul no — olay gir, yazılı uyarı ver, geçmişine bak" autocomplete="off" data-bicim="yok"><div class="ds-hiz-sonuc gizli" id="dsHizSonuc"></div></div>
       <div class="ds-sayac"><button data-ekran="dosyalar"><b>${acik}</b><span>açık dosya</span></button><button data-ekran="dosyalar" class="${kararYakin ? 'uyari' : ''}"><b>${kararYakin}</b><span>karar süresi doluyor (10 iş günü)</span></button>
         <button data-ekran="teblig" class="${tebligBek ? 'uyari' : ''}"><b>${tebligBek}</b><span>tebliğ bekliyor</span></button><button data-ekran="dosyalar"><b>${itiraz}</b><span>itiraz süresi sürüyor (5 iş günü)</span></button></div>
