@@ -1276,10 +1276,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }
     await ogrencileriYukle();
     const k = katilanlar(a, sinif).slice().sort((x, y) => (+x.no) - (+y.no)), dolu = k.filter(x => cevap(a, sinif, String(x.no)));
-    pencereAc(`<div class="sinav-ust" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(a.tanim.ad)}</span><span class="turuncu-neonlar"><span class="t-neon">${dolu.length} cevapladı</span><span class="t-neon">${k.length - dolu.length} bekleyen</span></span></div>
+    pencereAc(`<div class="sinav-ust" data-akp="1" style="margin-top:0"><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(a.tanim.ad)}</span><span class="turuncu-neonlar"><span class="t-neon">${dolu.length} cevapladı</span><span class="t-neon">${k.length - dolu.length} bekleyen</span></span></div>
       ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}`);
     $('#pencere .pencere-ic').classList.add('genis');
     planiSigdir(); fotolariYukle(k.map(x => String(x.no)));
+    // K-611: cevaplayan öğrenciye (tikine / fotoğrafına) basınca verdiği cevaplar açılır
+    $('#pencereIcerik').querySelectorAll('[data-ogr]').forEach(e => { if (cevap(a, sinif, e.dataset.ogr)) { e.style.cursor = 'pointer'; e.title = 'Cevaplarını göster'; } });
+    $('#pencereIcerik').onclick = ev => {
+      if (!$('#pencereIcerik').querySelector('[data-akp]')) return;   // başka pencere açıldıysa karışma
+      if (ev.target.closest('#akGeri')) { sinifKatilimPlani(a, sinif); return; }
+      const e = ev.target.closest('[data-ogr]'); if (!e) return;
+      const x = k.find(y => String(y.no) === e.dataset.ogr), c = x && cevap(a, sinif, String(x.no)); if (!c) return;
+      const zaman = c.zaman ? new Date(c.zaman * 1000).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+      pencereAc(`<div class="sinav-ust" data-akp="1" style="margin-top:0"><button class="ikincil" id="akGeri">← ${esc(sinif)}</button><span class="neon-tabela">${esc(baslik(x.ad))}</span><span class="soluk">${esc(sinif)} · ${esc(x.no)}${zaman ? ' · ' + esc(zaman) : ''}</span></div>
+        <div class="soluk kucuk" style="margin:4px 0 10px">${esc(a.tanim.ad)}</div>
+        <div class="satirlar">${(a.tanim.sorular || []).map((q, i) => { const V = secimler((c.c || [])[i]); if (q.kosul && !V.length) return ''; return `${q.bolum ? `<div class="oc-bolum">${esc(q.bolum)}</div>` : ''}<div class="oc-satir"><div class="oc-s">${i + 1}. ${esc(q.metin)}</div><div class="oc-c">${!V.length ? '—' : gizliMi(q) ? '<span class="soluk">Yazdı · kişisel veri, burada gösterilmez (Excel\'de var)</span>' : V.map(v => esc(v)).join('<br>')}</div></div>`; }).join('')}</div>`);
+    };
   }
 
   // ------------------------------------------------------------------ Anketler
