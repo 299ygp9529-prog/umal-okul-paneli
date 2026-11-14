@@ -396,7 +396,7 @@
   function ustBilgi() {
     const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g); sesDugme();
     document.body.classList.toggle('ozel', g && ozel()); if (!ustBilgi.t) ustBilgi.t = document.title; document.title = g && ozel() ? baslik(S.ad) + ' · Çalışma planı' : ustBilgi.t;   // K-598: özel ders öğrencisi — okul adı/logosu yok, yalnız adı
-    $('.ust b').textContent = g && ozel() ? baslik(S.ad) : 'Ümraniye Merkez Anadolu Lisesi';
+    const ob = $('.ust b'); if (g && ozel()) { ob.classList.remove('okul-ad'); ob.textContent = baslik(S.ad); } else if (!ob.classList.contains('okul-ad')) { ob.classList.add('okul-ad'); ob.innerHTML = '<span class="oa1">ÜMRANİYE MERKEZ</span><span class="oa2">Anadolu Lisesi</span>'; }   // K-622
     $('#ustAlt').textContent = g ? (ozel() ? 'Haftalık çalışma planın' : baslik(S.ad) + ' · ' + S.sinif) : 'Öğrenci';
   }
   const HI = {
