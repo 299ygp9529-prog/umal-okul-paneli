@@ -2277,6 +2277,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   const rpSonIki = P => rpHaftalar(P, 3).filter(h => !h.bu && h.u != null).slice(-2);
   const rpIlerleme = (P, hafta) => { const E = rpEtkin(P, hafta).filter(x => !x.sil); return { n: E.length, ok: E.filter(x => (RP_PUAN[x.d] || 0) > 0).length }; };
+  function kendiPlanHtml(K, hk) {   // K-600: özel ders öğrencisinin kendi eklediği görevler (bu hafta)
+    const L = ((K || {})[hk] || []).slice().sort((a, b) => (+a.g) - (+b.g)); const dur = x => x.d || (x.ok ? 'tam' : '');
+    if (!L.length) return '<div class="soluk kucuk">Öğrenci bu hafta kendi planına görev eklemedi.</div>';
+    const top = L.reduce((t, x) => t + (+x.dk || 0), 0), yap = L.reduce((t, x) => t + (+x.dk || 0) * (RP_PUAN[dur(x)] || 0), 0);
+    return `<div class="soluk kucuk" style="margin-bottom:6px">${L.length} görev · ${rpSure(top)} · tamamlanan <b style="color:${rpRenk(top ? Math.round(yap * 100 / top) : null)}">%${top ? Math.round(yap * 100 / top) : 0}</b></div>
+      <div class="kp-liste">${L.map(x => { const d = dur(x); return `<div class="kp d-${d || 'bos'}"><span class="kp-g">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][+x.g]}</span><div><b>${esc(x.ders)}</b><small>${rpAlt(x)}${d ? ' · ' + (RP_DAD[d] || '') + (x.n ? ' (' + esc(x.n) + ')' : '') : ''}</small></div>${d ? `<span class="rp-tik d-${d}">${{ tam: '✓', kisa: '½', yarim: '½', yok: '✕' }[d]}</span>` : ''}</div>`; }).join('')}</div>`;
+  }
   async function rehOgrenciKarti(no, sekme, geri) {
     D.altG = true;
     $('#icerik').innerHTML = rehSekme(sekme) + '<div class="kart soluk">Yükleniyor…</div>';
@@ -2306,6 +2313,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           </div></div>
           <div>
             <div class="kart"><h3 style="margin-top:0">Çalışma planı</h3>${P ? `<div class="ro-plan-ozet"><span class="durum-etiketi ${P.yayin ? 'yeşil' : 'soluk'}">${P.yayin ? 'Yayında' : 'Taslak'}</span><span>${il.n} görev / hafta</span>${P.yayin ? `<span>Bu hafta <b>${il.ok}/${il.n}</b> tamamlandı</span>` : ''}${P.yayin ? (u => `<span>Uyum <b style="color:${rpRenk(u)}">${u == null ? '—' : '%' + u}</b></span>`)(rpUyum(P, hk, (new Date().getDay() + 6) % 7)) : ''}</div><div class="pl-bar ro-bar"><i style="width:${il.n ? il.ok * 100 / il.n : 0}%"></i></div><button class="ikincil" id="roPlanAc2" style="margin-top:10px">Planı aç</button>` : '<div class="soluk kucuk">Henüz plan yok. Görüşmede öğrenciyle birlikte hazırlayıp yayına alın; öğrencinin ekranına düşer.</div><button class="ikincil" id="roPlanAc2" style="margin-top:10px">Plan hazırla</button>'}</div>
+            ${O.sinif === 'ÖZEL' ? `<div class="kart"><h3 style="margin-top:0">Öğrencinin kendi planı · bu hafta</h3>${kendiPlanHtml(O.kendi, hk)}</div>` : ''}
             <div class="kart" id="roMesajKart"><h3 style="margin-top:0">Öğrenciye mesaj</h3><textarea id="roMesaj" maxlength="2000" rows="3" placeholder="${O.sinif === 'ÖZEL' ? 'Kısa bir mesaj yazın (öğrenci çalışma planı ekranının üstünde görür)' : 'Kısa bir mesaj yazın (öğrenci panelinde Rehberlik bölümünde görür)'}"></textarea><div class="dugmeler" style="justify-content:flex-end;margin-top:6px"><span class="soluk kucuk" id="roMBilgi" style="margin-right:auto"></span><button class="birincil" id="roGonder">Gönder</button></div>
               ${(O.mesajlar || []).length ? `<div class="ro-mesajlar">${O.mesajlar.map(m => `<div><p>${esc(m.metin)}</p><small>${esc(rpZaman(m.zaman))} · ${esc((m.yazan || '').split('@')[0])} · ${m.okundu ? '<span class="yesil-yazi">okundu</span>' : 'henüz okunmadı'}</small><button class="ro-sil" data-rmsil="${esc(m.id)}" title="Mesajı geri al">×</button></div>`).join('')}</div>` : ''}</div>
           </div></div>`;
@@ -2324,7 +2332,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.dataset.rmsil) { if (!await onayla('Bu mesaj öğrenciden de kaldırılsın mı?')) return; await sb.rpc('umal_rehberlik_mesaj_sil', { p_id: t.dataset.rmsil }); await yukle(); ciz(); }
     };
     ciz(); window.scrollTo(0, 0);
-    yenile(async () => { if (!document.getElementById('roGeri') || !canliGuvenli()) return; const e = JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]); await yukle(); if (e !== JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]) && document.getElementById('roGeri')) { const y = window.scrollY, m = $('#roMesaj').value; ciz(); $('#roMesaj').value = m; window.scrollTo(0, y); } }, 20);   // K-589
+    yenile(async () => { if (!document.getElementById('roGeri') || !canliGuvenli()) return; const e = JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length, O.kendi]); await yukle(); if (e !== JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length, O.kendi]) && document.getElementById('roGeri')) { const y = window.scrollY, m = $('#roMesaj').value; ciz(); $('#roMesaj').value = m; window.scrollTo(0, y); } }, 20);   // K-589
   }
   async function rehPlanDuzenle(no, sekme, geri, O) {
     D.altG = true;
@@ -2355,6 +2363,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             ${Object.keys(NS).length ? `<h4>Yapamama nedenleri (4 hafta)</h4><div class="rp-neden">${Object.entries(NS).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<span>${esc(n)} <b>${c}</b></span>`).join('')}</div>` : ''}
             ${HL.filter(h => h.W.deger && (h.W.deger.not || (h.W.deger.zor || []).length)).slice(-2).map(h => `<div class="rp-deg"><small>${esc(h.e)} · öğrencinin değerlendirmesi</small>${(h.W.deger.zor || []).length ? `<div>Zorlandığı: <b>${esc(h.W.deger.zor.join(', '))}</b></div>` : ''}${h.W.deger.not ? `<p>${esc(h.W.deger.not)}</p>` : ''}</div>`).join('')}
             <div class="soluk kucuk" style="margin-top:8px">Uyum: tamamlanan sürenin yüzdesi (yarım ve kısa hâli yarım sayılır; öğrencinin bu hafta çıkardıkları hesaba katılmaz).</div>` : '<div class="soluk kucuk">Plan yayına alınınca öğrencinin işaretleri, değişiklikleri ve değerlendirmeleri burada görünür.</div>'}</div></div>
+        ${O.sinif === 'ÖZEL' ? `<div class="kart" style="margin-top:14px"><h3 style="margin-top:0">Öğrencinin kendi eklediği görevler · bu hafta</h3>${kendiPlanHtml(O.kendi, hk)}</div>` : ''}
         <div class="dugmeler rp-dugmeler"><span class="soluk kucuk" id="rpBilgi" style="margin-right:auto"></span><button class="ikincil" id="rpPdf" ${V.gorevler.length ? '' : 'disabled'}>PDF · renkli</button><button class="ikincil" id="rpPdfSb" ${V.gorevler.length ? '' : 'disabled'}>PDF · siyah-beyaz</button>${yayin ? '<button class="ikincil" id="rpKaldir">Yayından kaldır</button>' : '<button class="ikincil" id="rpTaslak">Taslak kaydet</button>'}<button class="birincil" id="rpYayin" ${V.gorevler.length ? '' : 'disabled'}>${yayin ? 'Güncelle ve yayınla' : 'Yayına al'}</button></div>`;
     };
     const kaydet = async y => {
@@ -2425,8 +2434,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     yenile(async () => {   // K-589: öğrencinin işaretleri ve değişiklikleri kendiliğinden gelsin
       if (!document.getElementById('rpGeri') || !canliGuvenli() || form) return;
       const { data } = await sb.rpc('umal_rehberlik_ogrenci', { p_no: no }); if (!data || !data.ok || !data.plan || !O.plan) return;
-      const eski = JSON.stringify([O.plan.ogr, O.plan.ok]); O.plan.ogr = data.plan.ogr; O.plan.ok = data.plan.ok; ok = data.plan.ok || {};
-      if (eski !== JSON.stringify([O.plan.ogr, O.plan.ok]) && document.getElementById('rpGeri')) { const y = window.scrollY, b_ = $('#rpBilgi') && $('#rpBilgi').textContent; ciz(); window.scrollTo(0, y); if (b_) $('#rpBilgi').textContent = b_; }
+      const eski = JSON.stringify([O.plan.ogr, O.plan.ok, O.kendi]); O.plan.ogr = data.plan.ogr; O.plan.ok = data.plan.ok; O.kendi = data.kendi; ok = data.plan.ok || {};
+      if (eski !== JSON.stringify([O.plan.ogr, O.plan.ok, O.kendi]) && document.getElementById('rpGeri')) { const y = window.scrollY, b_ = $('#rpBilgi') && $('#rpBilgi').textContent; ciz(); window.scrollTo(0, y); if (b_) $('#rpBilgi').textContent = b_; }
     }, 15);
   }
   // ------------------------------------------------------------------ K-591: Özel Ders (okul dışı öğrenciler; yalnız baş yönetici)
