@@ -2092,7 +2092,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     await yukle();
     const listeHtml = () => benim.length ? benim.map(y => { const [da, ds] = YN_DURUM[y.durum] || [y.durum, '']; const [aa, as] = YN_ACIL[y.aciliyet] || ['', ''];
         return `<div class="yn-k"><div class="yn-ust"><b>${esc(baslik(y.ad || ''))}</b><span class="soluk kucuk">${esc(y.sinif || '')} · ${esc(y.no)}</span><span class="rv-d ${ds}">${da}</span>${y.aciliyet !== 'normal' ? `<span class="rv-d ${as}">${aa}</span>` : ''}</div>
-          <div class="soluk kucuk">${esc(new Date(y.tarih).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} · ${esc((y.nedenler || []).join(', '))}</div>${y.geri ? `<div class="yn-geri"><b>Rehberlik servisi:</b> ${esc(y.geri)}</div>` : ''}</div>`; }).join('') : '<div class="soluk kucuk">Henüz yönlendirme yapmadınız.</div>';
+          <div class="soluk kucuk">${esc(new Date(y.tarih).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} · ${esc((y.nedenler || []).join(', '))}</div>${y.geri ? `<div class="yn-geri"><b>Rehberlik servisi:</b> ${esc(y.geri)}</div>` : ''}${['yeni', 'inceleniyor'].includes(y.durum) ? `<button class="bag yn-cek" data-ycek="${esc(y.id)}">Geri çek</button>` : ''}</div>`; }).join('') : '<div class="soluk kucuk">Henüz yönlendirme yapmadınız.</div>';
     const ciz = () => {
       const q = T.ara.trim().toLocaleLowerCase(tr), L = !q || T.sec ? [] : YN_OGR.filter(o => o.no === q || (/^\d+$/.test(q) ? String(o.no).startsWith(q) : (o.ad || '').toLocaleLowerCase(tr).includes(q) || o.sinif.toLocaleLowerCase(tr) === q)).slice(0, 12);
       $('#icerik').innerHTML = `<h1 style="margin-bottom:4px">Rehberliğe Yönlendir</h1><div class="soluk kucuk" style="margin-bottom:14px">Desteğe ihtiyacı olduğunu düşündüğünüz öğrenciyi rehberlik servisine bildirin. Formu yalnız rehberlik servisi ve okul müdürü görür; öğrenci ve velisi görmez.</div>
@@ -2115,6 +2115,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (b.dataset.yn) { T.nedenler.has(b.dataset.yn) ? T.nedenler.delete(b.dataset.yn) : T.nedenler.add(b.dataset.yn); if (b.dataset.yn === 'İhmal ya da istismar şüphesi' && T.nedenler.has(b.dataset.yn)) T.aciliyet = 'acil'; ciz(); return; }
       if (b.dataset.ya) { T.aciliyet = b.dataset.ya; ciz(); return; }
       if (b.dataset.yy) { T.yapilan.has(b.dataset.yy) ? T.yapilan.delete(b.dataset.yy) : T.yapilan.add(b.dataset.yy); ciz(); return; }
+      if (b.dataset.ycek) { const y = benim.find(z => z.id === b.dataset.ycek); if (!y || !await onayla(`${baslik(y.ad || '')} için yaptığınız yönlendirme geri çekilsin mi? Rehberlik servisinin listesinden de kalkar.`)) return;   // K-605
+        const { data, error } = await sb.rpc('umal_yonlendirme_geri_cek', { p_id: y.id });
+        if (error || !data || !data.ok) { uyar(error ? (/function/.test(error.message || '') ? 'Bunun için Supabase\'de 20261114220000 SQL\'i çalıştırılmalı.' : hataYaz(error)) : data.hata); return; }
+        await yukle(); const l = document.querySelector('.yn-liste'); if (l) l.innerHTML = listeHtml(); return; }
       if (b.id === 'ynGonder') { const bil = $('#ynBilgi');
         if (!T.sec) { bil.textContent = 'Öğrenciyi seçin.'; return; } if (!T.nedenler.size) { bil.textContent = 'En az bir neden seçin.'; return; }
         b.disabled = true; bil.textContent = 'Gönderiliyor…';
