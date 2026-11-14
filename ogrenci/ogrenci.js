@@ -726,7 +726,9 @@
   // ---- K-580: Günün sözü (her gün farklı)
   function sozCiz() {
     const L = window.SOZLER || [], k = $('#gununSozu'); if (!k || !L.length) return;
-    const gun = Math.floor((Date.now() + 3 * 36e5) / 864e5), s_ = L[(gun * 97) % L.length];
+    const gun = Math.floor((Date.now() + 3 * 36e5) / 864e5), ist = new Date(Date.now() + 3 * 36e5), ad_ = String(ist.getUTCMonth() + 1).padStart(2, '0') + '-' + String(ist.getUTCDate()).padStart(2, '0');
+    const AT = L.filter(x => x[1] === 'Mustafa Kemal Atatürk'), ozelGun = ['11-10', '10-29', '04-23', '05-19', '08-30'].includes(ad_) && AT.length;   // K-607: millî günlerde Atatürk'ten
+    const s_ = ozelGun ? AT[(ist.getUTCFullYear() * 7 + ist.getUTCMonth()) % AT.length] : L[(gun * 97) % L.length];
     k.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#22e8ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11H6.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/><path d="M18 11h-3.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/></svg><small>GÜNÜN SÖZÜ</small><p>${esc(s_[0])}</p><span>— ${esc(s_[1])}</span>`;
   }
   const plBugun = () => { if (!PL.veri && !RH.plan) return null; const G = gunGorevleri(iso(pzt(simdi())), gunIdx(simdi())); return { n: G.length, ok: G.filter(x => puan(x) > 0).length }; };
