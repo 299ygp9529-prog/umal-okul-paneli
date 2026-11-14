@@ -1912,11 +1912,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   const MEB_RISK_AD = { G: 'Anne en fazla ilkokul mezunu', H: 'Baba en fazla ilkokul mezunu', I: 'Tek çocuk olan', J: '5 ve üstü kardeşi olan', K: 'Anne ve babası ayrı yaşayan', L: 'Anne ve babası boşanmış olan', M: 'Yalnızca annesi ile yaşayan', N: 'Yalnızca babası ile yaşayan', O: 'Annesi hayatta olmayan', P: 'Babası hayatta olmayan', Q: 'Anne ve babası hayatta olmayan', R: 'Şehit çocuğu', S: 'Yalnızca büyükanne/büyükbabasıyla yaşayan', T: 'Yalnızca diğer akrabalarıyla yaşayan', U: 'Koruyucu aile gözetiminde olan', V: 'Sevgi evlerinde kalan', W: 'Kurumda kalan (SHÇEK)', X: 'Ailesinde süreğen hastalığı olan', Y: 'Ailesinde ruhsal hastalığı olan', Z: 'Ailesinde bağımlı birey bulunan', AA: 'Ailesinde cezai hükmü bulunan', AB: 'Ailesi mevsimlik işçi olan', AC: 'Aile içi şiddete maruz kalan', AD: 'Özel yetenekli tanısı olan', AE: 'Özel eğitim raporu olan', AF: 'Süreğen hastalığı olan', AG: 'Ruhsal hastalığı olan', AH: 'Danışmanlık tedbir kararı olan', AI: 'Eğitim tedbir kararı olan', AJ: 'Maddi sıkıntı yaşayan', AK: 'Sürekli devamsız olan', AL: 'Bir işte çalışan', AM: 'Akademik başarısı düşük', AN: 'Riskli akran grubuna dahil olan', AO: 'Diğer' };
   // ------------------------------------------------------------------ K-560: risk formu değilse "Toplu sonuç" PDF'i (istatistik + öğrenci bazlı)
-  // K-565: Arşiv — form silinmez; yayından kaldırılınca kapanır ve arşive gider (umal_anket_durum '<id>@arsiv')
-  const arsivde = a => ((D.durumlar || {})[a.id + '@arsiv'] || {}).durum === 'arsiv';
+  // K-565/K-566: Arşiv — form silinmez; yayından kaldırılınca kapanır ve arşive gider (umal_anket_durum '<id>@yayin' = kapali; tablo yalnız acik/kapali kabul eder)
+  const arsivde = a => ((D.durumlar || {})[a.id + '@yayin'] || {}).durum === 'kapali';
   let rehListeYenile = null;
   async function arsivle(a, evet) {
-    const z = Date.now() / 1000, g = bugunISO(), R = [{ anket: a.id + '@arsiv', durum: evet ? 'arsiv' : 'aktif', gun: g, zaman: z }, { anket: a.id, durum: evet ? 'kapali' : 'acik', gun: g, zaman: z }];
+    const z = Date.now() / 1000, g = bugunISO(), R = [{ anket: a.id + '@yayin', durum: evet ? 'kapali' : 'acik', gun: g, zaman: z }, { anket: a.id, durum: evet ? 'kapali' : 'acik', gun: g, zaman: z }];
     const { error } = await israrla(() => sb.from('umal_anket_durum').upsert(R));
     if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; }
     R.forEach(r => { D.durumlar[r.anket] = r; }); return true;
