@@ -1343,7 +1343,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const { error } = await israrla(() => sb.from('umal_anket_durum').upsert({ anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 }));
         if (!error) {   // K-516: etiket ve "açık anket" sayısı hemen yenilensin
           D.durumlar[a.id] = { anket: a.id, durum: acik ? 'acik' : 'kapali', gun: bugunISO(), zaman: Date.now() / 1000 };
-          ciz(); if ($('#acikSay')) $('#acikSay').textContent = `${D.anketler.filter(x => x.durum !== 'taslak' && acikMi(x)).length} açık anket`;
+          ciz(); if ($('#acikSay')) $('#acikSay').textContent = `${D.anketler.filter(x => x.durum !== 'taslak' && x.bolum !== 'rehberlik' && acikMi(x)).length} açık anket`;
         }
         if ($('#aBilgi')) $('#aBilgi').textContent = error ? 'Olmadı: ' + hataYaz(error) : (acik ? 'Bugün için açıldı.' : 'Kapatıldı.');
       };
@@ -1352,7 +1352,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#aKopya')) $('#aKopya').onclick = () => anketHazirla(a, true);
       if ($('#aAc')) { $('#aAc').onclick = () => durumYaz(true); $('#aKapat').onclick = () => durumYaz(false); }
     };
-    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Anketler</h1><div class="dugmeler" style="margin:0;align-items:center"><span class="t-neon" id="acikSay">${D.anketler.filter(a => a.durum !== 'taslak' && acikMi(a)).length} açık anket</span><button class="birincil" id="yeniAnket">+ Yeni anket</button></div></div><div class="cipler" id="anketFiltre"></div><div class="satirlar" id="anketIc" style="margin-top:6px"></div>`;
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Anketler</h1><div class="dugmeler" style="margin:0;align-items:center"><span class="t-neon" id="acikSay">${D.anketler.filter(a => a.durum !== 'taslak' && a.bolum !== 'rehberlik' && acikMi(a)).length} açık anket</span><button class="birincil" id="yeniAnket">+ Yeni anket</button></div></div><div class="cipler" id="anketFiltre"></div><div class="satirlar" id="anketIc" style="margin-top:6px"></div>`;
     $('#yeniAnket').onclick = () => anketHazirla(null, false);
     $('#anketFiltre').onclick = ev => { const b = ev.target.closest('[data-lf]'); if (b) { listeFiltre = b.dataset.lf; acikId = null; ciz(); } };
     $('#anketIc').onclick = ev => {
