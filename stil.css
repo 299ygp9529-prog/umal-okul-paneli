@@ -1057,3 +1057,22 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 
 /* K-545: tahtanın sınıfını değiştir */
 .k-sec-sat { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; } .k-sec-sev { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; color: #06121f; flex: none; } .k-sec-sat .cip:disabled { opacity: .35; }
+
+/* K-549: rehberlik randevuları */
+.rv-uyari { margin-top: 10px; color: #ffd8b0; background: rgba(255,154,58,.12); border: 1px solid rgba(255,154,58,.5); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; }
+.rv-liste { max-width: 980px; } .rv-gun { margin: 16px 0 8px; font-weight: 800; color: var(--neonacik); font-size: 14px; letter-spacing: .5px; }
+.rv-kart { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; background: var(--kart); border: 1px solid var(--cizgi); border-left: 5px solid var(--sv); border-radius: 13px; padding: 11px 13px; margin-bottom: 9px; }
+.rv-kart.yeni { box-shadow: 0 0 0 1px rgba(255,154,58,.7); } .rv-kart .foto { width: 56px; height: 72px; aspect-ratio: auto; border-radius: 9px; font-size: 15px; }
+.rv-bos { display: grid; place-items: center; background: #16294a; color: var(--neon); font-size: 26px; border: 1px dashed var(--cizgi); }
+.rv-ust { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .rv-ust b { font-size: 15.5px; } .rv-ana small { color: var(--soluk); }
+.rv-d { font-size: 11.5px; font-weight: 800; border-radius: 6px; padding: 1px 8px; background: rgba(255,255,255,.08); color: var(--soluk); }
+.rv-d.tur { background: rgba(255,154,58,.18); color: #ffb867; } .rv-d.yes { background: rgba(47,191,113,.18); color: #6ee7a8; } .rv-d.kir { background: rgba(255,59,78,.16); color: #ff8a95; } .rv-d.yeni { background: #ff9a3a; color: #1a0d00; }
+.rv-z { margin-top: 4px; font-size: 14px; } .rv-ders { margin-top: 4px; font-size: 13px; color: var(--neonacik); } .rv-not { margin-top: 6px; font-size: 13px; background: var(--koyu); border-radius: 8px; padding: 6px 9px; overflow-wrap: anywhere; }
+.rv-ana .dugmeler { margin-top: 8px; gap: 8px; }
+.mk-zarf svg { display: block; }
+.rv-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-right: 80px; }
+.rv-form { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; } .rv-form > label, .rv-iki label { display: block; font-size: 12.5px; font-weight: 700; color: var(--soluk); margin-top: 8px; }
+.rv-form input { width: 100%; box-sizing: border-box; } .rv-iki { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rv-secim { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; } .rv-secim button { display: flex; gap: 8px; align-items: center; text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 8px; padding: 6px 10px; color: var(--yazi); cursor: pointer; }
+.rv-secim button b { color: var(--neon); min-width: 40px; } .rv-form .cip.secili { background: var(--neon); color: #04121f; border-color: var(--neon); }
+@media (max-width: 760px) { .rv-iki { grid-template-columns: 1fr; } .rv-kart { grid-template-columns: 44px minmax(0, 1fr); } .rv-kart .foto { width: 44px; height: 56px; } }

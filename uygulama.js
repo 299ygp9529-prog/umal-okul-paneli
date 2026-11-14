@@ -154,7 +154,8 @@
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
-    { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
+    { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
+    { id: 'randevu', ad: 'Randevular', roller: ['rehberlik'], ciz: randevularBolumu },   // K-549   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -2084,15 +2085,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   // ------------------------------------------------------------------ K-543: Rehberliğe mektuplar
   const MK = { L: [], suz: 'yeni', sec: null };
+  const ZARF_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg>';
   async function mektupZarfi() {   // okunmamış mektup varken her sayfada yanıp sönen zarf
     let z = $('#mkZarf');
-    if (!z) { z = document.createElement('button'); z.id = 'mkZarf'; z.className = 'mk-zarf gizli'; z.title = 'Okunmamış mektuplar'; z.onclick = () => ac('mektup'); document.body.appendChild(z); }
+    if (!z) { z = document.createElement('button'); z.id = 'mkZarf'; z.className = 'mk-zarf gizli'; z.title = 'Okunmamış mektuplar / yeni randevu hareketleri'; document.body.appendChild(z); }
     const kontrol = async () => {
-      const r = await sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false);
+      const [r, rv] = await Promise.all([sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false),
+        sb.from('umal_rehberlik_randevu').select('id').eq('reh_gordu', false).neq('durum', 'bos')]);
       if (r.error) return;
-      const n = (r.data || []).length, acil = (r.data || []).some(x => x.acil);
-      z.innerHTML = `✉️<b>${n}</b>`; z.classList.toggle('gizli', !n); z.classList.toggle('acil', acil);
+      const n = (r.data || []).length, acil = (r.data || []).some(x => x.acil), nr = rv.error ? 0 : (rv.data || []).length;
+      z.innerHTML = ZARF_SVG + `<b>${n + nr}</b>`; z.classList.toggle('gizli', !(n + nr)); z.classList.toggle('acil', acil);
+      z.onclick = () => ac(n ? 'mektup' : 'randevu');
       const m = document.querySelector('.menu-oge[data-b="mektup"]'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
+      const m2 = document.querySelector('.menu-oge[data-b="randevu"]'); if (m2) m2.innerHTML = 'Randevular' + (nr ? ` <span class="mk-sayi">${nr}</span>` : '');
     };
     await kontrol(); setInterval(kontrol, 60000);
     MK.kontrol = kontrol;
@@ -2148,6 +2153,135 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       }
     };
     ciz();
+  }
+  // ------------------------------------------------------------------ K-549: Rehberlik randevuları (yalnız rehberlik rolü)
+  const RV = { L: [], suz: 'yakin', ad: '' };
+  const RV_DURUM = { bos: ['Boş saat', 'k'], talep: ['İstek', 'tur'], davet: ['Davet edildi · cevap bekleniyor', 'tur'], onay: ['Onaylandı', 'yes'], gelemem: ['Öğrenci gelemiyor', 'kir'], iptal: ['İptal', 'kir'], gorusuldu: ['Görüşüldü', 'yes'], gelmedi: ['Gelmedi', 'kir'] };
+  const RV_ZIL = { n: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:30', '13:10'], ['13:20', '14:00'], ['14:10', '14:50']],
+                   c: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:10', '12:50'], ['13:30', '14:10'], ['14:20', '15:00']] };
+  const rvZil = d => (d.getDay() === 5 ? RV_ZIL.c : RV_ZIL.n);
+  const rvSaat = t => new Date(t).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
+  const rvGun = t => new Date(t).toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' });
+  function rvDers(r) {   // o saatte öğrencinin hangi dersi var (öğretmenine haber vermek için)
+    if (!r.zaman || !r.sinif || !D.program) return '';
+    const d = new Date(r.zaman); if ((d.getDay() + 6) % 7 > 4) return '';
+    const c = simdikiDers(r.sinif, d);
+    return c ? `${c.no}. ders: ${c.ders}${(c.ogretmen || []).length ? ' · ' + c.ogretmen.map(baslik).join(', ') : ''}` : 'ders saati dışında (teneffüs / öğle arası)';
+  }
+  async function randevularBolumu() {
+    await Promise.all([ogrencileriYukle().catch(() => []), programYukle().catch(() => null)]);
+    const [r, o] = await Promise.all([sb.from('umal_rehberlik_randevu').select('*').order('zaman', { ascending: true, nullsFirst: true }),
+      sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
+    if (r.error) throw r.error;
+    RV.L = r.data || []; RV.ad = (o.data && o.data.ad) || D.eposta;
+    const yeniler = RV.L.filter(x => !x.reh_gordu && x.durum !== 'bos').map(x => x.id);
+    const simdi = Date.now(), gelecek = x => x.zaman && new Date(x.zaman).getTime() + (x.sure_dk || 20) * 6e4 > simdi;
+    const SUZ = {
+      yakin: ['Yaklaşan', x => ['davet', 'onay'].includes(x.durum) && gelecek(x)],
+      istek: ['İstekler ve cevaplar', x => x.durum === 'talep' || (['gelemem', 'iptal'].includes(x.durum) && !x.reh_gordu) || (['gelemem'].includes(x.durum) && gelecek(x))],
+      bos: ['Boş saatlerim', x => x.durum === 'bos' && gelecek(x)],
+      gecmis: ['Geçmiş', x => !gelecek(x) && x.durum !== 'talep' && x.durum !== 'bos' || ['gorusuldu', 'gelmedi', 'iptal'].includes(x.durum)],
+    };
+    const bekleyen = RV.L.filter(x => ['davet', 'onay'].includes(x.durum) && x.zaman && !gelecek(x));   // saati geçti, sonucu girilmedi
+    const kart = x => {
+      const [dad, dsn] = RV_DURUM[x.durum] || [x.durum, ''], ders = rvDers(x), yeni = yeniler.includes(x.id);
+      const once = x.no ? RV.L.filter(y => y.no === x.no && y.id !== x.id && ['gorusuldu'].includes(y.durum)).length : 0;
+      return `<div class="rv-kart ${yeni ? 'yeni' : ''}" style="--sv:${x.sinif ? seviyeRenk(x.sinif) : '#2a4468'}">
+        ${x.no ? foto(x.no, x.ad) : '<div class="foto rv-bos">＋</div>'}
+        <div class="rv-ana"><div class="rv-ust"><b>${x.no ? esc(baslik(x.ad || '')) : 'Boş saat'}</b><span class="rv-d ${dsn}">${esc(dad)}</span>${yeni ? '<span class="rv-d yeni">YENİ</span>' : ''}</div>
+          <small>${x.no ? `${esc(x.sinif || '')} · No ${esc(x.no)}${once ? ` · daha önce ${once} görüşme` : ''}` : esc(x.yer)}</small>
+          ${x.zaman ? `<div class="rv-z">${esc(rvGun(x.zaman))} · ${rvSaat(x.zaman)} (${x.sure_dk} dk) · ${esc(x.yer)}${x.ogretmen_ad ? ' · ' + esc(x.ogretmen_ad) : ''}</div>` : `<div class="rv-z">Tercihi: ${esc(x.tercih || 'belirtmedi')}</div>`}
+          ${x.no && x.zaman && ['davet', 'onay'].includes(x.durum) && ders ? `<div class="rv-ders">O saatte ${esc(ders)}</div>` : ''}
+          ${x.ogrenci_not ? `<div class="rv-not"><b>Öğrencinin notu:</b> ${esc(x.ogrenci_not)}</div>` : ''}${x.mesaj ? `<div class="rv-not soluk">Öğrenciye mesajınız: ${esc(x.mesaj)}</div>` : ''}
+          <div class="dugmeler">${x.durum === 'talep' || x.durum === 'gelemem' ? `<button class="birincil" data-rv="davet" data-id="${x.id}">Saat ver · davet et</button>` : ''}
+            ${['davet', 'onay'].includes(x.durum) && x.zaman && !gelecek(x) ? `<button class="birincil" data-rv="gorusuldu" data-id="${x.id}">Görüşüldü</button><button class="ikincil" data-rv="gelmedi" data-id="${x.id}">Gelmedi</button>` : ''}
+            ${['davet', 'onay'].includes(x.durum) && gelecek(x) ? `<button class="ikincil" data-rv="davet" data-id="${x.id}">Saati değiştir</button><button class="ikincil" data-rv="gorusuldu" data-id="${x.id}">Görüşüldü</button>` : ''}
+            ${['talep', 'davet', 'onay', 'gelemem'].includes(x.durum) ? `<button class="bag" style="color:var(--kirmizi)" data-rv="iptal" data-id="${x.id}">İptal</button>` : ''}
+            ${x.durum === 'bos' ? `<button class="bag" style="color:var(--kirmizi)" data-rv="sil" data-id="${x.id}">Saati kaldır</button>` : ''}
+            ${x.no ? `<button class="bag" data-rv="not" data-id="${x.id}">Gizli not${x.gizli_not ? ' ●' : ''}</button>` : ''}</div></div></div>`;
+    };
+    const ciz = () => {
+      const G = RV.L.filter(SUZ[RV.suz][1]).sort((a, b) => RV.suz === 'gecmis' ? String(b.zaman || b.olusturma).localeCompare(String(a.zaman || a.olusturma)) : String(a.zaman || '0').localeCompare(String(b.zaman || '0')));
+      let gun = '';
+      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Randevular</h1><div class="soluk kucuk">Öğrenciler boş saatlerinizden doğrudan randevu alır ya da istek bırakır; siz de öğrenciyi davet edebilirsiniz. Yalnız rehberlik görür.</div></div>
+          <div class="dugmeler" style="margin:0"><button class="ikincil" data-rv="bosac">+ Boş saat aç</button><button class="birincil" data-rv="davet">+ Öğrenci davet et</button></div></div>
+        ${bekleyen.length ? `<div class="rv-uyari">Saati geçmiş ${bekleyen.length} randevunun sonucu girilmedi: aşağıda “Görüşüldü / Gelmedi” ile kapatın.</div>` : ''}
+        <div class="mk-sekme" style="margin-top:12px">${Object.entries(SUZ).map(([k, [a, f]]) => `<button class="cip ${RV.suz === k ? 'secili' : ''}" data-rsuz="${k}">${a} · ${RV.L.filter(f).length}</button>`).join('')}</div>
+        <div class="rv-liste">${G.length ? G.map(x => { const g = x.zaman ? rvGun(x.zaman) : 'Saat bekleyen istekler'; const h = g !== gun ? `<div class="rv-gun">${esc(g)}</div>` : ''; gun = g; return h + kart(x); }).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde kayıt yok.</div>'}</div>`;
+      fotolariYukle(G.filter(x => x.no).map(x => x.no));
+    };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_randevu').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(RV.L.find(x => x.id === id) || {}, alan); return true; };
+    const saatSecici = (onek, deger) => `<label>Ders saati</label><div class="cipler" id="${onek}Ders">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button type="button" class="cip" data-n="${n}">${n}. ders</button>`).join('')}</div>
+      <div class="rv-iki"><div><label>ya da saat</label><input type="time" id="${onek}Saat" value="${esc(deger || '')}"></div><div><label>Süre (dk)</label><input type="number" id="${onek}Sure" min="5" max="120" value="20"></div></div>`;
+    const saatBagla = (onek, tarihId) => { const k = $('#' + onek + 'Ders'); k.onclick = ev => { const b = ev.target.closest('[data-n]'); if (!b) return; k.querySelectorAll('.cip').forEach(c => c.classList.toggle('secili', c === b));
+      const t = $('#' + tarihId).value ? new Date($('#' + tarihId).value + 'T12:00') : new Date(); const [a, bb] = rvZil(t)[+b.dataset.n - 1]; $('#' + onek + 'Saat').value = a; $('#' + onek + 'Sure').value = Math.min(40, (bb.split(':')[0] * 60 + +bb.split(':')[1]) - (a.split(':')[0] * 60 + +a.split(':')[1])); }; };
+    const davetFormu = async x => {   // x: talep / gelemem / mevcut randevu (saat değiştir) ya da yok (yeni davet)
+      const ogrL = await ogrencileriYukle().catch(() => []); let sec = x && x.no ? { no: x.no, ad: x.ad, sinif: x.sinif } : null;
+      const tarih0 = x && x.zaman ? new Date(x.zaman) : null;
+      pencereAc(`<h2 style="margin-top:0">${x && x.zaman ? 'Saati değiştir' : 'Öğrenciyi davet et'}</h2><div class="rv-form">
+        ${sec ? `<b>${esc(baslik(sec.ad))} · ${esc(sec.sinif)} · No ${esc(sec.no)}</b>${x && x.tercih ? `<div class="soluk kucuk">Tercihi: ${esc(x.tercih)}</div>` : ''}${x && x.ogrenci_not ? `<div class="soluk kucuk">Notu: ${esc(x.ogrenci_not)}</div>` : ''}` : `<label>Öğrenci</label><input id="rvAra" placeholder="Ad ya da okul no"><div class="rv-secim" id="rvListe" style="max-height:160px"></div><div class="kucuk neon" id="rvSec"></div>`}
+        <div class="rv-iki"><div><label>Tarih</label><input type="date" id="rvTarih" value="${tarih0 ? tarih0.toISOString().slice(0, 10) : ''}"></div><div><label>Yer</label><input id="rvYer" value="${esc((x && x.yer) || 'Rehberlik servisi')}"></div></div>
+        ${saatSecici('rv', tarih0 ? rvSaat(tarih0) : '')}<div class="kucuk neon" id="rvDersBilgi"></div>
+        <label>Öğrenciye mesaj (öğrenci görür, isteğe bağlı)</label><input id="rvMesaj" maxlength="300" value="${esc((x && x.mesaj) || '')}" placeholder="ör. Teneffüste rehberlik odasına uğra">
+        <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="rvGonder">Davet et</button></div><div class="kucuk" id="rvBilgi"></div></div>`);
+      saatBagla('rv', 'rvTarih');
+      const dersYaz = () => { const t = $('#rvTarih').value, h = $('#rvSaat').value; $('#rvDersBilgi').textContent = sec && t && h ? (rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) ? 'O saatte öğrencinin ' + rvDers({ zaman: new Date(t + 'T' + h).toISOString(), sinif: sec.sinif }) : '') : ''; };
+      ['rvTarih', 'rvSaat'].forEach(i => $('#' + i).addEventListener('input', dersYaz)); $('#rvDersBilgi').parentNode.addEventListener('click', () => setTimeout(dersYaz, 0)); dersYaz();
+      if (!sec) { const ara = $('#rvAra'), L = $('#rvListe');
+        ara.oninput = () => { const q = ara.value.trim().toLocaleLowerCase(tr); L.innerHTML = !q ? '' : ogrL.filter(o => o.no === q || (/^\d+$/.test(q) ? o.no.startsWith(q) : o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 10).map(o => `<button type="button" data-o="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(baslik(o.ad))} <small>· ${esc(o.no)}</small></button>`).join(''); };
+        L.onclick = ev => { const b = ev.target.closest('[data-o]'); if (!b) return; sec = ogrL.find(o => o.no === b.dataset.o); $('#rvSec').textContent = baslik(sec.ad) + ' · ' + sec.sinif + ' seçildi'; L.innerHTML = ''; ara.value = ''; dersYaz(); }; }
+      $('#rvGonder').onclick = async () => {
+        const t = $('#rvTarih').value, h = $('#rvSaat').value, bil = $('#rvBilgi');
+        if (!sec) { bil.textContent = 'Öğrenci seçin.'; return; } if (!t || !h) { bil.textContent = 'Tarih ve saat seçin.'; return; }
+        const z = new Date(t + 'T' + h); if (z.getTime() < Date.now()) { bil.textContent = 'Geçmiş bir saate davet edilemez.'; return; }
+        const cak = RV.L.find(y => y.id !== (x && x.id) && y.ogretmen_eposta === D.eposta && y.zaman && ['bos', 'davet', 'onay'].includes(y.durum) && Math.abs(new Date(y.zaman) - z) < 60000);
+        if (cak && !(cak.durum === 'bos' && confirm('Bu saatte açtığınız boş saat var; o saat kaldırılıp davete çevrilsin mi?'))) { if (cak.durum !== 'bos') bil.textContent = 'Bu saatte başka randevunuz var: ' + baslik(cak.ad || '') + '.'; return; }
+        if (cak) { await sb.from('umal_rehberlik_randevu').delete().eq('id', cak.id); RV.L = RV.L.filter(y => y.id !== cak.id); }
+        const alan = { durum: 'davet', zaman: z.toISOString(), sure_dk: +$('#rvSure').value || 20, yer: $('#rvYer').value.trim() || 'Rehberlik servisi', mesaj: $('#rvMesaj').value.trim() || null, ogretmen_eposta: D.eposta, ogretmen_ad: RV.ad, ogr_gordu: false, reh_gordu: true };
+        let error;
+        if (x && x.id && ['talep', 'gelemem', 'davet', 'onay'].includes(x.durum)) ({ error } = await israrla(() => sb.from('umal_rehberlik_randevu').update(Object.assign({ guncel: new Date().toISOString() }, alan, x.durum === 'onay' && x.zaman && new Date(x.zaman).getTime() === z.getTime() ? { durum: 'onay' } : {})).eq('id', x.id)));
+        else ({ error } = await israrla(() => sb.from('umal_rehberlik_randevu').insert(Object.assign({ kaynak: 'davet', no: sec.no, ad: sec.ad, sinif: sec.sinif }, alan))));
+        if (error) { bil.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; }
+        $('#pencere').classList.add('gizli'); await randevularBolumu();
+      };
+    };
+    const bosFormu = () => {
+      pencereAc(`<h2 style="margin-top:0">Boş saat aç</h2><div class="soluk kucuk">Öğrenciler bu saatlerden birini telefondan doğrudan alır. Aynı gün için birden çok ders saati seçebilirsiniz.</div><div class="rv-form">
+        <div class="rv-iki"><div><label>Tarih</label><input type="date" id="bsTarih"></div><div><label>Kaç hafta tekrarlansın</label><input type="number" id="bsHafta" min="1" max="12" value="1"></div></div>
+        <label>Ders saatleri (birden çok seçilebilir)</label><div class="cipler" id="bsDers">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button type="button" class="cip" data-n="${n}">${n}. ders</button>`).join('')}</div>
+        <div class="rv-iki"><div><label>ya da tek saat</label><input type="time" id="bsSaat"></div><div><label>Süre (dk)</label><input type="number" id="bsSure" min="5" max="120" value="20"></div></div>
+        <label>Yer</label><input id="bsYer" value="Rehberlik servisi">
+        <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="bsKaydet">Saatleri aç</button></div><div class="kucuk" id="bsBilgi"></div></div>`);
+      $('#bsDers').onclick = ev => { const b = ev.target.closest('[data-n]'); if (b) b.classList.toggle('secili'); };
+      $('#bsKaydet').onclick = async () => {
+        const t = $('#bsTarih').value, bil = $('#bsBilgi'); if (!t) { bil.textContent = 'Tarih seçin.'; return; }
+        const dersler = [...document.querySelectorAll('#bsDers .cip.secili')].map(b => +b.dataset.n), tek = $('#bsSaat').value, hafta = Math.min(12, Math.max(1, +$('#bsHafta').value || 1));
+        if (!dersler.length && !tek) { bil.textContent = 'Ders saati ya da saat seçin.'; return; }
+        const satir = [];
+        for (let w = 0; w < hafta; w++) { const g = new Date(t + 'T12:00'); g.setDate(g.getDate() + 7 * w); const gs = g.toISOString().slice(0, 10);
+          const saatler = dersler.map(n => rvZil(g)[n - 1][0]).concat(tek ? [tek] : []);
+          for (const h of [...new Set(saatler)]) { const z = new Date(gs + 'T' + h); if (z.getTime() < Date.now()) continue;
+            if (RV.L.some(y => y.ogretmen_eposta === D.eposta && y.zaman && ['bos', 'davet', 'onay'].includes(y.durum) && Math.abs(new Date(y.zaman) - z) < 60000)) continue;
+            satir.push({ durum: 'bos', kaynak: 'saat', zaman: z.toISOString(), sure_dk: +$('#bsSure').value || 20, yer: $('#bsYer').value.trim() || 'Rehberlik servisi', ogretmen_eposta: D.eposta, ogretmen_ad: RV.ad }); } }
+        if (!satir.length) { bil.textContent = 'Açılacak yeni saat yok (geçmiş ya da zaten dolu).'; return; }
+        const { error } = await israrla(() => sb.from('umal_rehberlik_randevu').insert(satir));
+        if (error) { bil.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; }
+        $('#pencere').classList.add('gizli'); RV.suz = 'bos'; await randevularBolumu();
+      };
+    };
+    $('#icerik').onclick = async ev => {
+      const t = ev.target, s_ = t.closest('[data-rsuz]'); if (s_) { RV.suz = s_.dataset.rsuz; ciz(); return; }
+      const b = t.closest('[data-rv]'); if (!b) return; const x = RV.L.find(y => y.id === b.dataset.id), i = b.dataset.rv;
+      if (i === 'bosac') return bosFormu();
+      if (i === 'davet') return davetFormu(x);
+      if (!x) return;
+      if (i === 'gorusuldu' || i === 'gelmedi') { if (await yaz(x.id, { durum: i, reh_gordu: true })) ciz(); }
+      if (i === 'sil') { if (!confirm('Bu boş saat kaldırılsın mı?')) return; const { error } = await sb.from('umal_rehberlik_randevu').delete().eq('id', x.id); if (error) { alert(hataYaz(error)); return; } RV.L = RV.L.filter(y => y.id !== x.id); ciz(); }
+      if (i === 'iptal') { const m = prompt('Randevu iptal edilecek. Öğrenciye bir not yazmak ister misiniz? (boş bırakılabilir)', ''); if (m === null) return; if (await yaz(x.id, { durum: 'iptal', iptal_eden: 'rehberlik', mesaj: m.trim() || x.mesaj, ogr_gordu: false, reh_gordu: true })) ciz(); }
+      if (i === 'not') { const m = prompt('Gizli not (yalnız rehberlik görür):', x.gizli_not || ''); if (m === null) return; if (await yaz(x.id, { gizli_not: m.trim() || null })) ciz(); }
+    };
+    ciz();
+    if (yeniler.length) { await sb.from('umal_rehberlik_randevu').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 3000); }   // görüldü (YENİ etiketi bu açılışta kalır)
   }
   // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)
   async function disiplinBolumu() {

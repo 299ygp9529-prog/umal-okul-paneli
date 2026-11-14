@@ -31,9 +31,9 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle();
+    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false);
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
   $('#cikis').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -140,6 +140,7 @@
     sinav: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="m9 14.5 2 2 4-4"/>',
     ders: '<rect x="3.5" y="4" width="17" height="16.5" rx="3"/><path d="M3.5 9h17M3.5 14h17M9.5 9v11.5M15 9v11.5"/>',
     duy: '<path d="M4 10v4a1 1 0 0 0 1 1h2.5l6.5 4V5L7.5 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6M19.8 7a7 7 0 0 1 0 10"/>',
+    saat: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     reh: '<path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M12.4 14.6s-3-1.8-3-3.7a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.9-3 3.7-3 3.7Z"/>',
     anket: '<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><path d="m8.5 10 1.5 1.5 3-3M8.5 15.5l1.5 1.5 3-3"/><path d="M15 10.5h1.5M15 16h1.5"/>',
     plan: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/><path d="m15.5 8.5 4-4M17 4.5h2.5V7"/>',
@@ -207,17 +208,18 @@
     $('#bugunDersler').innerHTML = BD.map(x => `<div class="${x.d === 'bit' ? 'bit' : x.d ? 'sr' : ''}">${x.n}. Ders${x.d === 'simdi' ? ' · şimdi' : x.d === 'sira' ? ' · sıradaki' : ''}<b>${esc(x.ders)}</b></div>`).join('');
     $('#dersKart').classList.toggle('gizli', !BD.length);
     const acikForm = S.formlar.filter(f => !f.doldu).length;
-    const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false) => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
+    const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     $('#kutular').innerHTML = kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', 'yakında', false)
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
-      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', 'Mektup yaz')
-      + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, acikForm > 0)
+      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni())
+      + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', 'yakında', false);
+    rvAnaCiz();
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
   function sinavCiz() {
     const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
@@ -278,6 +280,93 @@
     bilgi.textContent = '✓ Mektubun rehberlik servisine ulaştı. Okununca burada "Okundu" yazar.';
   };
   mkCiz();
+
+  // ---- K-549: Rehberlik sayfası iki kutu (mektup / randevu) + randevu
+  const RV = { L: [], M: [], sec: null, tercih: new Set(), gorunum: '' };
+  const TERCIH = ['Teneffüste', 'Öğle arasında', 'Ders saatinde olabilir', 'Okul çıkışında'];
+  const RV_D = { talep: ['İsteğin iletildi', 'tur'], davet: ['Davet edildin', 'tur'], onay: ['Kesinleşti', 'yes'], gelemem: ['Gelemeyeceğini bildirdin', 'kir'], iptal: ['İptal edildi', 'kir'], gorusuldu: ['Görüşüldü', 'yes'], gelmedi: ['Gelmedin', 'kir'] };
+  const rvT = z => new Date(z);
+  const rvSaat = z => rvT(z).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+  const rvGunAd = z => { const d = rvT(z), b = new Date(); b.setHours(0, 0, 0, 0); const f = Math.round((new Date(d).setHours(0, 0, 0, 0) - b) / 864e5);
+    return (f === 0 ? 'Bugün' : f === 1 ? 'Yarın' : GUN[gunIdx(d)]) + ' ' + d.getDate() + ' ' + AY[d.getMonth()]; };
+  const rvKisa = z => rvGunAd(z).replace(/ \d+ \S+$/, m => /Bugün|Yarın/.test(rvGunAd(z)) ? '' : m) + ' ' + rvSaat(z);
+  const rvEtkin = x => ['davet', 'onay'].includes(x.durum) && x.zaman && rvT(x.zaman).getTime() + (x.sure_dk || 20) * 6e4 > Date.now();
+  const rvYakin = () => RV.L.filter(rvEtkin).sort((a, b) => String(a.zaman).localeCompare(String(b.zaman)))[0] || null;
+  const rvYeni = () => RV.L.some(x => x.yeni && x.durum !== 'talep');
+  async function rvYukle(gordu) {
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_randevu', { p_no: S.no, p_kod: S.kod, p_gordu: !!gordu })); } catch (e) {}
+    if (!data || !data.ok) return false;
+    RV.L = data.randevular || []; RV.M = data.musait || [];
+    if (!$('#liste').classList.contains('gizli')) anaCiz();
+    return true;
+  }
+  function rvAnaCiz() {   // ana sayfada yaklaşan randevu / cevap bekleyen davet
+    const x = rvYakin(), k = $('#rvAnaKart');
+    if (!x) { k.classList.add('gizli'); return; }
+    k.innerHTML = `<i class="ik">${svg('saat')}</i><div><b>${x.durum === 'davet' ? 'Rehberlik servisi seni davet etti' : 'Rehberlik randevun'}</b><span>${esc(rvGunAd(x.zaman))} · ${rvSaat(x.zaman)} · ${esc(x.yer || 'Rehberlik servisi')}${x.durum === 'davet' ? ' · cevabını bekliyor' : ''}</span></div>`;
+    k.classList.remove('gizli');
+  }
+  $('#rvAnaKart').onclick = () => { rehAc(); rvAc(); };
+  function rehAc() {
+    RV.gorunum = '';
+    $('#rhKutular').innerHTML = `<button data-rh="mektup"><i class="ik" style="--c:#b06bff">${svg('zarf')}</i><b>Rehberlik servisine mektup</b><small>Paylaşmak istediğini yaz; yalnız rehber öğretmenler okur</small></button>`
+      + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
+    ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
+    $('#rhBaslik').textContent = 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa';
+    goster('s-reh'); window.scrollTo(0, 0);
+  }
+  $('#rhKutular').onclick = ev => { const b = ev.target.closest('[data-rh]'); if (!b) return; b.dataset.rh === 'mektup' ? mkAc() : rvAc(); };
+  $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : anaCiz();
+  const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
+    $('#rhBaslik').textContent = baslik_; $('#rhGeri').textContent = '← Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
+  function mkAc() { altAc('mektup', 'Mektup'); }
+  function rvAc() {
+    altAc('randevu', 'Randevu'); rvCiz();
+    if (rvYeni()) rvYukle(true).then(() => { RV.L.forEach(x => { x.yeni = false; }); });   // görüldü: mektup işareti gider (bu ekranda "yeni" çerçevesi kalır)
+  }
+  function rvCiz() {
+    const benim = RV.L.filter(x => x.durum === 'talep' || rvEtkin(x) || (x.yeni && ['iptal', 'gelemem'].includes(x.durum))),
+      gecmis = RV.L.filter(x => !benim.includes(x)).slice(0, 5);
+    const kart = (x, gc) => { const [da, ds] = RV_D[x.durum] || [x.durum, ''];
+      return `<div class="rv ${gc ? 'gecmis' : x.durum}"><h3>${x.zaman ? esc(rvGunAd(x.zaman)) + ' · ' + rvSaat(x.zaman) : 'Randevu isteği'}<span class="d ${ds}">${da}</span></h3>
+        <div class="s">${x.zaman ? `${esc(x.yer || 'Rehberlik servisi')}${x.ogretmen ? ' · ' + esc(hoca(x.ogretmen)) : ''} · ${x.sure_dk || 20} dk` : 'Rehber öğretmenin sana bir saat verince burada görünür.' + (x.tercih ? ' Tercihin: ' + esc(x.tercih) : '')}</div>
+        ${x.mesaj ? `<div class="m">${svg('reh', '#d4b0ff')} ${esc(x.mesaj)}</div>` : ''}
+        ${!gc && x.durum === 'davet' ? `<div class="dg"><button class="birincil" data-rc="geliyorum" data-id="${x.id}">Geliyorum</button><button class="ikincil" data-rc="gelemem" data-id="${x.id}">Gelemem</button></div>` : ''}
+        ${!gc && x.durum === 'onay' ? `<div class="dg"><button class="ikincil" data-rc="${x.kaynak === 'saat' ? 'iptal' : 'gelemem'}" data-id="${x.id}">${x.kaynak === 'saat' ? 'Randevuyu iptal et' : 'Gelemeyeceğim'}</button></div>` : ''}
+        ${!gc && x.durum === 'talep' ? `<div class="dg"><button class="ikincil" data-rc="iptal" data-id="${x.id}">İsteği geri al</button></div>` : ''}</div>`; };
+    $('#rvBenim').innerHTML = (benim.length ? `<div class="rvgun">RANDEVULARIN</div>${benim.map(x => kart(x)).join('')}` : '')
+      + (gecmis.length ? `<div class="rvgun">ÖNCEKİLER</div>${gecmis.map(x => kart(x, true)).join('')}` : '');
+    const talepVar = RV.L.some(x => x.durum === 'talep'), dolu = RV.L.filter(x => x.durum === 'talep' || rvEtkin(x)).length >= 2;
+    let gun = '';
+    $('#rvMusait').innerHTML = dolu ? '<div class="soluk kucuk" style="margin-top:10px">İki bekleyen randevun var. Yeni saat almak için önce birini iptal et.</div>' : RV.M.length ? RV.M.map(m => { const g = rvGunAd(m.zaman), h = g !== gun ? `${gun ? '</div>' : ''}<div class="rvgun">${esc(g.toLocaleUpperCase(tr))}</div><div class="rvsaat">` : ''; gun = g;
+        return h + `<button data-al="${m.id}" class="${RV.sec === m.id ? 'secili' : ''}">${rvSaat(m.zaman)}<small>${esc(m.ogretmen ? hoca(m.ogretmen) : m.yer)} · ${m.sure_dk} dk</small></button>`; }).join('') + '</div>'
+        + (RV.sec ? `<label for="rvAlNot">Kısaca konu (isteğe bağlı)</label><input id="rvAlNot" maxlength="500" placeholder="ör. Ders çalışma düzenim"><button class="birincil" id="rvAlBtn">${esc(rvGunAd(RV.M.find(m => m.id === RV.sec).zaman))} ${rvSaat(RV.M.find(m => m.id === RV.sec).zaman)} randevusunu al</button>` : '')
+      : '<div class="soluk kucuk" style="margin-top:10px">Şu an açık boş saat yok. Aşağıdan randevu isteyebilirsin.</div>';
+    $('#rvTercih').innerHTML = TERCIH.map(k => `<button type="button" class="${RV.tercih.has(k) ? 'secili' : ''}" data-t="${esc(k)}">${esc(k)}</button>`).join('');
+    $('#rvTalepBtn').disabled = talepVar || dolu;
+    $('#rvTalepBtn').textContent = talepVar ? 'İsteğin rehberlik servisinde' : dolu ? 'İki bekleyen randevun var' : 'Randevu iste';
+  }
+  const rvSonuc = (data, bil, ok) => { bil.classList.remove('hata');
+    if (!data) { bil.textContent = 'Sunucuya ulaşılamadı, internet bağlantını kontrol edip yeniden dene.'; bil.classList.add('hata'); return false; }
+    if (data.randevular) { RV.L = data.randevular; RV.M = data.musait || []; }
+    if (!data.ok) { bil.textContent = data.hata || 'Yapılamadı.'; bil.classList.add('hata'); rvCiz(); return false; }
+    RV.sec = null; rvCiz(); bil.textContent = ok; return true; };
+  const rpc = async (ad, arg) => { try { const { data } = await sb.rpc(ad, Object.assign({ p_no: S.no, p_kod: S.kod }, arg)); return data; } catch (e) { return null; } };
+  $('#rhRandevu').onclick = async ev => {
+    const t = ev.target, bil = $('#rvBilgi');
+    const al = t.closest('[data-al]'); if (al) { RV.sec = RV.sec === al.dataset.al ? null : al.dataset.al; rvCiz(); if (RV.sec) $('#rvAlBtn').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    const tc = t.closest('[data-t]'); if (tc) { RV.tercih.has(tc.dataset.t) ? RV.tercih.delete(tc.dataset.t) : RV.tercih.add(tc.dataset.t); rvCiz(); return; }
+    if (t.id === 'rvAlBtn') { t.disabled = true; const d = await rpc('umal_ogrenci_randevu_al', { p_id: RV.sec, p_not: ($('#rvAlNot').value || '').trim() });
+      if (rvSonuc(d, bil, '')) window.scrollTo({ top: 0, behavior: 'smooth' }); else t.disabled = false; return; }
+    if (t.id === 'rvTalepBtn') { t.disabled = true; const d = await rpc('umal_ogrenci_randevu_talep', { p_tercih: [...RV.tercih].join(', '), p_not: $('#rvNot').value.trim() });
+      if (rvSonuc(d, bil, '✓ İsteğin rehberlik servisine ulaştı. Sana saat verilince burada görünür.')) { RV.tercih.clear(); $('#rvNot').value = ''; rvCiz(); } else t.disabled = false; return; }
+    const rc = t.closest('[data-rc]'); if (rc) {
+      const c = rc.dataset.rc; let not = '';
+      if (c === 'gelemem') { const m = prompt('Neden gelemeyeceğini kısaca yazabilirsin (isteğe bağlı). Rehber öğretmenin sana yeni bir saat verebilir.', ''); if (m === null) return; not = m; }
+      if (c === 'iptal' && !confirm(RV.L.find(x => x.id === rc.dataset.id)?.durum === 'talep' ? 'Randevu isteğin geri alınsın mı?' : 'Randevun iptal edilsin mi?')) return;
+      rc.disabled = true; const d = await rpc('umal_ogrenci_randevu_cevap', { p_id: rc.dataset.id, p_cevap: c, p_not: not });
+      rvSonuc(d, bil, c === 'geliyorum' ? '' : ''); }
+  };
   goster('giris');
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
   try {
