@@ -229,6 +229,7 @@
     const acikForm = S.formlar.filter(f => !f.doldu).length;
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru" class="genis"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><span><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.gun.size} gün çalıştın` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></span>${st && st.n ? `<span class="so-mini"><b>${st.n.toLocaleString(tr)}</b><small>soru · net ${sayi1(st.net)}</small></span>` : ''}</button>`; })() : '';
+    if (ozel()) { $('#kutular').innerHTML = soK + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Öğretmeninden yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni()) + kutu('s-reh', 'reh', '#b06bff', 'Mesajlar', rhMesajYeni() ? 'Yeni mesajın var' : (RH.mesajlar.length ? 'Öğretmeninden' : 'Mesaj yok'), true, rhMesajYeni()); sozCiz(); if (sessiz === true) return; goster('liste'); window.scrollTo(0, 0); return; }
     $('#kutular').innerHTML = soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
@@ -304,9 +305,11 @@
   mkCiz();
 
   // ---- K-550: açılış karşılaması (saate + Ümraniye havasına göre), sonra kendiliğinden kapanır
+  const ozel = () => S.sinif === 'ÖZEL';   // K-591: okul dışı özel ders öğrencisi
+  const RHAD = () => ozel() ? 'Öğretmen' : 'Rehberlik';
   function ustBilgi() {
     const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g);
-    $('#ustAlt').textContent = g ? baslik(S.ad) + ' · ' + S.sinif : 'Öğrenci';
+    $('#ustAlt').textContent = g ? baslik(S.ad) + ' · ' + (ozel() ? 'Özel ders' : S.sinif) : 'Öğrenci';
   }
   const HI = {
     gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
@@ -396,7 +399,7 @@
       + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
     $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
-    $('#rhBaslik').textContent = 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa';
+    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa'; $('#rhKutular').classList.toggle('gizli', ozel());
     const yeniM = new Set(RH.mesajlar.filter(m => !m.okundu).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeniM]); rhMesajCiz(RH.yeniGor); $('#rhMesajlar').classList.remove('gizli');
     if (yeniM.size) rhYukle(true).then(() => rhMesajCiz(RH.yeniGor));   // okundu (zarf gider; bu ekranda YENİ etiketi kalır)
     goster('s-reh'); window.scrollTo(0, 0);
@@ -524,7 +527,7 @@
   function rhKaydet(hk) {
     RH.yerelZ = Date.now(); $('#plKayit').textContent = 'Kaydediliyor…'; clearTimeout(RH.kz);
     RH.kz = setTimeout(async () => { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_rplan_hafta', { p_no: S.no, p_kod: S.kod, p_hafta: hk, p_veri: rhW(hk) })); } catch (e) {}
-      $('#plKayit').textContent = data && data.ok ? '✓ Kaydedildi. Rehberlik planındaki işaretlerini rehber öğretmenin görür.' : 'Kaydedilemedi; internet bağlantını kontrol et, tekrar denenecek.'; if (!(data && data.ok)) setTimeout(() => rhKaydet(hk), 15000); }, 500);
+      $('#plKayit').textContent = data && data.ok ? (ozel() ? '✓ Kaydedildi. İşaretlerini öğretmenin görür.' : '✓ Kaydedildi. Rehberlik planındaki işaretlerini rehber öğretmenin görür.') : 'Kaydedilemedi; internet bağlantını kontrol et, tekrar denenecek.'; if (!(data && data.ok)) setTimeout(() => rhKaydet(hk), 15000); }, 500);
   }
   function seri() {   // plana uyduğu ardışık günler (görev olmayan gün zinciri bozmaz)
     let n = 0; const b = simdi();
@@ -544,7 +547,7 @@
     if (!P || !P.veri) { k.innerHTML = ''; return; }
     const W = rhWoku(hk), dh = iso(PL.hafta) === iso(pzt(simdi())) ? degerHafta() : null, D_ = PL.deg || {};
     const zorL = [...new Set((P.veri.gorevler || []).map(x => x.ders))];
-    k.innerHTML = `<div class="rp-kart"><div class="rp-bas"><div><h2>Rehberlik servisiyle hazırladığın plan</h2><div class="alt"><b>Rehberlik</b> etiketli görevler. Dokun: işaretle, taşı, kısalt.</div></div>
+    k.innerHTML = `<div class="rp-kart"><div class="rp-bas"><div><h2>${ozel() ? 'Öğretmeninle hazırladığın plan' : 'Rehberlik servisiyle hazırladığın plan'}</h2><div class="alt"><b>${RHAD()}</b> etiketli görevler. Dokun: işaretle, taşı, kısalt.</div></div>
         <button class="rp-yogun ${W.yogun ? 'acik' : ''}" data-pyogun="1"><i></i><span>Yoğun hafta<small>${W.yogun ? 'süreler yarıya indi' : 'sınav / ödev haftası'}</small></span></button></div>
       ${P.veri.not ? `<div class="rp-not">${esc(P.veri.not)}</div>` : ''}</div>
       ${dh ? `<div class="rp-deger"><h2>${dh === iso(pzt(simdi())) ? 'Bu hafta' : 'Geçen hafta'} nasıl geçti?</h2>
@@ -557,13 +560,12 @@
     const key = (x.rh ? 'r:' : 'o:') + x.id, d = durumOf(x), ac = PL.acik === key;
     const ik = { tam: '✓', kisa: '½', yarim: '½', yok: '✕' }[d] || '';
     const bugun = iso(PL.hafta) === iso(pzt(simdi())) ? gunIdx(simdi()) : -1;
-    let tel = null; if (bugun >= 0 && d !== 'tam' && d !== 'kisa' && gi <= bugun && bugun < 6) { let en = 1e9; for (let g = bugun + 1; g <= 6; g++) { const yuk = gunGorevleri(hk, g).reduce((t, z) => t + (+z.dk || 0), 0); if (yuk < en) { en = yuk; tel = g; } } }
-    const serbest = bugun >= 0 && d !== 'tam' ? [...Array(7).keys()].filter(g => g > bugun && g !== gi && !gunGorevleri(hk, g).length) : [];   // K-590: boş (serbest) günler
+    const bos = d !== 'tam' ? [...Array(7).keys()].filter(g => g !== gi && !gunGorevleri(hk, g).length) : [];   // K-592: haftanın bütün boş günleri
     return `<div class="pl-gorev d-${d || 'bos'} ${x.rh ? 'rh' : ''} ${ac ? 'acik' : ''}" style="--r:${dersRenk(x.ders)}" data-pac="${key}"><span class="pl-tik d-${d || 'bos'}">${ik}</span><i class="nokta"></i>
-      <div class="ic"><b>${esc(x.ders)}${x.rh ? '<em class="et-rh">Rehberlik</em>' : ''}${x.degisti ? `<em class="et-dg">${x.telafi ? 'telafi' : 'değiştirdin'}</em>` : ''}</b><small>${gAlt(x)}</small>${x.kisa ? `<small class="kisa">Kötü günde: ${esc(x.kisa)}</small>` : ''}${d === 'yok' && x.n ? `<small class="neden">${esc(x.n)}</small>` : ''}</div><span class="ok-ac">›</span></div>
+      <div class="ic"><b>${esc(x.ders)}${x.rh ? `<em class="et-rh">${RHAD()}</em>` : ''}${x.degisti ? `<em class="et-dg">${x.telafi ? 'taşındı' : 'değiştirdin'}</em>` : ''}</b><small>${gAlt(x)}</small>${x.kisa ? `<small class="kisa">Kötü günde: ${esc(x.kisa)}</small>` : ''}${d === 'yok' && x.n ? `<small class="neden">${esc(x.n)}</small>` : ''}</div><span class="ok-ac">›</span></div>
       ${ac ? `<div class="pl-sheet"><div class="pl-dur">${Object.entries(DURUM).filter(([k_]) => k_ !== 'kisa' || x.kisa).map(([k_, [ad]]) => `<button data-pd="${k_}" class="d-${k_} ${d === k_ ? 'secili' : ''}">${ad}</button>`).join('')}</div>
         ${d === 'yok' ? `<div class="pl-neden"><small>Neden yapamadın?</small><div class="pl-cip">${NEDEN.map(n => `<button data-pn="${esc(n)}" class="${x.n === n ? 'secili' : ''}">${esc(n)}</button>`).join('')}</div></div>` : ''}
-        ${serbest.length ? `<div class="pl-serbest"><small>Serbest güne gönder</small><div class="pl-cip">${serbest.map(g => `<button data-ptel="${g}">${GUN[g]}</button>`).join('')}</div></div>` : ''}<div class="pl-alt">${tel != null && !serbest.includes(tel) ? `<button data-ptel="${tel}">Telafiye taşı · ${GUN[tel]}</button>` : ''}<button data-pdz="1">${x.rh ? 'Taşı / kısalt' : 'Düzenle'}</button>${d ? '<button data-pgeri="1">İşareti kaldır</button>' : ''}<button data-psil2="1" class="sil">${x.rh ? 'Bu hafta çıkar' : 'Sil'}</button></div></div>` : ''}`;
+        ${PL.bosAc === key ? `<div class="pl-serbest"><small>Hangi boş gününe taşınsın?</small>${bos.length ? `<div class="pl-cip">${bos.map(g => `<button data-ptel="${g}">${GUN[g]}</button>`).join('')}</div>` : '<div class="soluk kucuk">Bu hafta boş gün yok.</div>'}</div>` : ''}<div class="pl-alt">${d !== 'tam' ? `<button data-pbos="1" class="${PL.bosAc === key ? 'secili' : ''}">Boş günüme taşı</button>` : ''}<button data-pdz="1">${x.rh ? 'Taşı / kısalt' : 'Düzenle'}</button>${d ? '<button data-pgeri="1">İşareti kaldır</button>' : ''}<button data-psil2="1" class="sil">${x.rh ? 'Bu hafta çıkar' : 'Sil'}</button></div></div>` : ''}`;
   }
   async function plAc() {
     goster('s-plan'); window.scrollTo(0, 0);
@@ -599,7 +601,7 @@
   }
   function plFormHtml() {
     const f = PL.form;
-    if (f.rh) return `<div class="pl-form"><b style="font-size:15px">${esc(f.ders)}</b><span class="et-rh" style="margin-left:6px">Rehberlik</span>
+    if (f.rh) return `<div class="pl-form"><b style="font-size:15px">${esc(f.ders)}</b><span class="et-rh" style="margin-left:6px">${RHAD()}</span>
       <label>Gün</label><div class="pl-cip">${GUN.map((g, i) => `<button type="button" class="${f.g === i ? 'secili' : ''}" data-pfg="${i}">${g.slice(0, 3)}</button>`).join('')}</div>
       <label>Süre</label><div class="pl-cip">${[10, 15, 20, 30, 45, 60, 90, 120].map(d => `<button type="button" class="${f.dk === d ? 'secili' : ''}" data-pfs="${d}">${sure(d)}</button>`).join('')}</div>
       <div class="dg"><button type="button" class="ikincil" data-pfvaz="1">Vazgeç</button><button type="button" class="birincil" data-pfekle="1">Kaydet</button></div></div>`;
@@ -632,7 +634,8 @@
     if (b.dataset.pd && (own || rx)) { const k_ = b.dataset.pd; if (rx) rDur({ d: k_, n: k_ === 'yok' ? (rx.n || '') : '' }); else { own.d = k_; own.ok = k_ !== 'yok'; if (k_ !== 'yok') own.n = ''; plKaydet(); } if (k_ !== 'yok') PL.acik = null; y(); return; }
     if (b.dataset.pn && (own || rx)) { if (rx) rDur({ d: 'yok', n: b.dataset.pn }); else { own.n = b.dataset.pn; plKaydet(); } PL.acik = null; y(); return; }
     if (b.dataset.pgeri && (own || rx)) { if (rx) rDur(null); else { own.d = ''; own.ok = false; own.n = ''; plKaydet(); } PL.acik = null; y(); return; }
-    if (b.dataset.ptel != null && (own || rx)) { const g = +b.dataset.ptel; if (rx) { rDeg({ g, telafi: true }); rDur(null); } else { own.g = g; own.d = ''; own.ok = false; own.n = ''; plKaydet(); } PL.acik = null; y(); return; }
+    if (b.dataset.pbos) { PL.bosAc = PL.bosAc === ak ? null : ak; y(); return; }
+    if (b.dataset.ptel != null && (own || rx)) { PL.bosAc = null; const g = +b.dataset.ptel; if (rx) { rDeg({ g, telafi: true }); rDur(null); } else { own.g = g; own.d = ''; own.ok = false; own.n = ''; plKaydet(); } PL.acik = null; y(); return; }
     if (b.dataset.psil2 && (own || rx)) { if (rx) rDeg({ sil: true }); else { L.splice(L.indexOf(own), 1); plKaydet(); } PL.acik = null; y(); return; }
     if (b.dataset.pdz && (own || rx)) { PL.form = rx ? { rh: true, id, g: rx.g, dk: rx.dkAyar, ders: rx.ders } : Object.assign({}, own); PL.acik = null; y(); return; }
     // form
@@ -665,7 +668,7 @@
   const rpYeni = () => { if (!RH.plan || !RH.plan.yayin) return false; let g = ''; try { g = localStorage.getItem(rpGorKey()) || ''; } catch (e) {} return g !== RH.plan.yayin; };
   function rhMesajCiz(yeniler) {
     const k = $('#rhMesajlar'); if (!k) return;
-    k.innerHTML = RH.mesajlar.length ? `<div class="rh-mesaj"><h2>Rehberlik servisinden mesajlar</h2>${RH.mesajlar.slice(0, 8).map(m => `<div><p>${esc(m.metin)}</p><small>${esc(new Date(m.zaman).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}${yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : ''}</small></div>`).join('')}</div>` : '';
+    k.innerHTML = RH.mesajlar.length ? `<div class="rh-mesaj"><h2>${ozel() ? 'Öğretmeninden mesajlar' : 'Rehberlik servisinden mesajlar'}</h2>${RH.mesajlar.slice(0, 8).map(m => `<div><p>${esc(m.metin)}</p><small>${esc(new Date(m.zaman).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}${yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : ''}</small></div>`).join('')}</div>` : '';
   }
   const rpCiz = () => { if (PL.veri && !$('#s-plan').classList.contains('gizli')) plCiz(); };
   const gAlt = x => [x.konu, x.soru ? x.soru + ' soru' : '', x.kaynak, sure(+x.dk || 0)].filter(Boolean).map(esc).join(' · ');   // K-584
@@ -684,7 +687,7 @@
   const SO_RENK = { 'Paragraf': '#ff9a3a', 'Problemler': '#ffd166', 'Türkçe': '#ff6b8a', 'Matematik': '#22e8ff', 'Geometri': '#5aa8ff', 'Fizik': '#7c8cff', 'Kimya': '#3ef08a', 'Biyoloji': '#7bd88f', 'Tarih': '#ffb26b', 'Coğrafya': '#f4a261', 'Felsefe': '#c3a6ff', 'Din Kültürü': '#e9c46a',
     'AYT Matematik': '#00b8d9', 'AYT Geometri': '#3d8bfd', 'AYT Fizik': '#9b6bff', 'AYT Kimya': '#2bd17e', 'AYT Biyoloji': '#5cc96b', 'Edebiyat': '#ff4f7b', 'AYT Tarih': '#ff9f57', 'AYT Coğrafya': '#e98a4d', 'Felsefe Grubu': '#b28dff', 'İngilizce (YDT)': '#ff7ab6' };
   const soRenk = d => SO_RENK[d] || '#7ff6ff';
-  const soAktif = () => /^1[12]-/.test(S.sinif || '');
+  const soAktif = () => /^1[12]-/.test(S.sinif || '') || ozel();
   const SO = { L: null, per: 'hafta', ref: null, form: null };
   const soNet = x => (x.do || 0) - (x.y || 0) / 4;
   const sayi1 = v => (Math.round(v * 10) / 10).toLocaleString(tr);
@@ -711,7 +714,7 @@
     if (!data || !data.ok) return false; SO.L = data.kayitlar || []; return true;
   }
   async function soAc() {
-    goster('s-soru'); window.scrollTo(0, 0); if (!SO.ref) SO.ref = simdi();
+    goster('s-soru'); window.scrollTo(0, 0); if (!SO.ref) SO.ref = simdi(); $('#soIzin').classList.toggle('gizli', ozel());
     if (!SO.L) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Yükleniyor…</div>'; if (!(await soYukle())) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Kayıtlar yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
     soCiz();
   }

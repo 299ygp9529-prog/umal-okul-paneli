@@ -159,6 +159,7 @@
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
+    { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
     { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
@@ -2326,7 +2327,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="kart rp-ust"><div class="pl-hedef rp-hedef">Haftalık hedef:${[0, 300, 600, 900, 1200, 1800].map(d => `<button class="cip ${V.hedef === d ? 'secili' : ''}" data-rph="${d}">${d ? d / 60 + ' saat' : 'yok'}</button>`).join('')}</div><span class="soluk">Planlanan: <b>${rpSure(top)}</b> / hafta · ${V.gorevler.length} görev${(q => q ? ' · ' + q + ' soru' : '')(V.gorevler.reduce((t, g) => t + (+g.soru || 0), 0))}</span></div>
         <div class="rp-hafta">${RP_GUN.map((g, gi) => { const G = V.gorevler.filter(x => +x.g === gi), fd = form && form.g === gi;
           return `<div class="rp-gun"><div class="rp-gun-ust"><b>${g}</b><small>${G.length ? rpSure(G.reduce((t, x) => t + (+x.dk || 0), 0)) : ''}</small></div>
-            ${G.filter(x => !(form && form.id === x.id)).map(x => { const e = EB[x.id] || {}; return `<div class="rp-gorev d-${e.d || 'bos'} ${e.sil ? 'cikti' : ''}" data-rpduz="${esc(x.id)}" title="Düzeltmek için tıklayın"><div><b>${esc(x.ders)}</b><small>${rpAlt(x)}</small>${x.kisa ? `<small class="rp-kisa">Kısa hâli: ${esc(x.kisa)}</small>` : ''}${yayin && (e.d || e.sil || e.tasindi || e.kisaldi) ? `<small class="rp-ogr">${e.sil ? 'öğrenci bu hafta çıkardı' : [e.d ? RP_DAD[e.d] + (e.n ? ' · ' + esc(e.n) : '') : '', e.tasindi ? (e.telafi ? 'telafi: ' : 'taşıdı: ') + RP_GUN[e.gE] : '', e.kisaldi ? 'süre ' + rpSure(e.dkE) : ''].filter(Boolean).join(' · ')}</small>` : ''}</div>${e.d ? `<span class="rp-tik d-${e.d}" title="${esc(RP_DAD[e.d] || '')}">${{ tam: '✓', kisa: '½', yarim: '½', yok: '✕' }[e.d]}</span>` : ''}<button class="ro-sil" data-rpsil="${esc(x.id)}" title="Kaldır">×</button></div>`; }).join('')}
+            ${G.filter(x => !(form && form.id === x.id)).map(x => { const e = EB[x.id] || {}; return `<div class="rp-gorev d-${e.d || 'bos'} ${e.sil ? 'cikti' : ''}" data-rpduz="${esc(x.id)}" title="Düzeltmek için tıklayın"><div><b>${esc(x.ders)}</b><small>${rpAlt(x)}</small>${x.kisa ? `<small class="rp-kisa">Kısa hâli: ${esc(x.kisa)}</small>` : ''}${yayin && (e.d || e.sil || e.tasindi || e.kisaldi) ? `<small class="rp-ogr">${e.sil ? 'öğrenci bu hafta çıkardı' : [e.d ? RP_DAD[e.d] + (e.n ? ' · ' + esc(e.n) : '') : '', e.tasindi ? (e.telafi ? 'boş güne taşıdı: ' : 'taşıdı: ') + RP_GUN[e.gE] : '', e.kisaldi ? 'süre ' + rpSure(e.dkE) : ''].filter(Boolean).join(' · ')}</small>` : ''}</div>${e.d ? `<span class="rp-tik d-${e.d}" title="${esc(RP_DAD[e.d] || '')}">${{ tam: '✓', kisa: '½', yarim: '½', yok: '✕' }[e.d]}</span>` : ''}<button class="ro-sil" data-rpsil="${esc(x.id)}" title="Kaldır">×</button></div>`; }).join('')}
             ${fd ? `<div class="rp-form">${form.id ? `<small class="soluk" style="font-size:11px">Gün</small><div class="rp-cip">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((k, i) => `<button class="${form.g === i ? 'secili' : ''}" data-rpgun="${i}">${k}</button>`).join('')}</div>` : ''}<div class="rp-cip">${RP_DERS.map(d => `<button class="${form.ders === d ? 'secili' : ''}" data-rpd="${esc(d)}">${esc(d)}</button>`).join('')}</div>
                 <input type="text" id="rpDersBaska" maxlength="30" placeholder="Başka ders / çalışma" value="${RP_DERS.includes(form.ders || '') ? '' : esc(form.ders || '')}"><input type="text" id="rpKonu" maxlength="80" placeholder="Konu (ör. Türev)" value="${esc(form.konu || '')}"><div class="rp-iki"><input type="number" id="rpSoru" min="0" max="999" inputmode="numeric" placeholder="Soru adedi" value="${form.soru || ''}"><input type="text" id="rpKaynak" maxlength="40" placeholder="Kaynak (kitap / yayın)" value="${esc(form.kaynak || '')}"></div><input type="text" id="rpKisa" maxlength="50" placeholder="Kötü gün için kısa hâli (ör. en az 10 soru)" value="${esc(form.kisa || '')}"><small class="soluk" style="font-size:11px">Soru adedi, kaynak ve kısa hâli isteğe bağlı</small>
                 <div class="rp-cip">${[15, 30, 45, 60, 90, 120].map(d => `<button class="${form.dk === d ? 'secili' : ''}" data-rps="${d}">${rpSure(d)}</button>`).join('')}</div>
@@ -2410,6 +2411,46 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const eski = JSON.stringify([O.plan.ogr, O.plan.ok]); O.plan.ogr = data.plan.ogr; O.plan.ok = data.plan.ok; ok = data.plan.ok || {};
       if (eski !== JSON.stringify([O.plan.ogr, O.plan.ok]) && document.getElementById('rpGeri')) { const y = window.scrollY, b_ = $('#rpBilgi') && $('#rpBilgi').textContent; ciz(); window.scrollTo(0, y); if (b_) $('#rpBilgi').textContent = b_; }
     }, 15);
+  }
+  // ------------------------------------------------------------------ K-591: Özel Ders (okul dışı öğrenciler; yalnız baş yönetici)
+  async function ozelDersBolumu() {
+    D.altG = false;
+    $('#icerik').innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
+    const { data, error } = await sb.rpc('umal_ozel_liste');
+    if (error) { $('#icerik').innerHTML = `<div class="kart">${/umal_ozel_liste|function/.test(error.message || '') ? "Supabase'de <b>20261114170000_umal_ozel_ders.sql</b> çalıştırılmalı." : esc(hataYaz(error))}</div>`; return; }
+    const L = data || [], hk = rpIso(rpPzt()), gi = (new Date().getDay() + 6) % 7; let F = { ad: '', seviye: '', notu: '' }, yeni = null;
+    const kartBas = (R) => girisFisleri(R.map(r => ({ no: r.no, ad: r.ad, sinif: 'Özel ders', kod: r.kod })), null, true);
+    const ciz = () => {
+      const aktif = L.filter(x => x.aktif), pasif = L.filter(x => !x.aktif);
+      const satir = x => { const P = x.plan, u = P && P.yayin ? rpUyum(P, hk, gi) : null; return `<tr class="st-ogr ${x.aktif ? '' : 'st-yok'}" data-ozo="${esc(x.no)}"><td><b>${esc(baslik(x.ad))}</b>${x.notu ? `<small class="soluk" style="display:block">${esc(x.notu)}</small>` : ''}</td><td>${esc(x.no)}</td><td>${esc(x.seviye || '—')}</td>
+        <td>${P ? (P.yayin ? '<span class="durum-etiketi yeşil">Yayında</span>' : '<span class="durum-etiketi soluk">Taslak</span>') : '<span class="soluk">—</span>'}</td><td>${P && P.yayin ? `<b style="color:${rpRenk(u)}">${u == null ? '—' : '%' + u}</b>` : '—'}</td><td>${x.soru_hafta || '—'}</td>
+        <td class="soluk kucuk">${x.son_giris ? esc(rpZaman(x.son_giris)) : 'hiç girmedi'}</td>
+        <td class="oz-dug"><button class="ikincil" data-ozplan="${esc(x.no)}">Plan</button><button class="ikincil" data-ozkod="${esc(x.no)}" title="Yeni kod üret ve kartını yazdır">Kart</button><button class="ikincil" data-ozpasif="${esc(x.no)}">${x.aktif ? 'Pasif yap' : 'Etkinleştir'}</button></td></tr>`; };
+      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Özel Ders</h1><div class="soluk kucuk">Okul dışından özel ders öğrencilerin. Okulda olmayan bir numara (90001…) ve kodla öğrenci sayfasına girerler; yalnız çalışma planı, soru takibi ve senin mesajların açık. Bu bölümü yalnız baş yönetici görür.</div></div></div>
+        ${yeni ? `<div class="kart oz-yeni"><div><small class="soluk">Giriş bilgisi · ${esc(baslik(yeni.ad))}</small><div class="oz-kod"><span>No <b>${esc(yeni.no)}</b></span><span>Kod <b>${esc(yeni.kod)}</b></span></div><div class="soluk kucuk">umalatlas.com.tr/ogrenci adresinden girer. Bu kod bir daha gösterilmez; gerekirse "Kart" ile yenisi üretilir.</div></div><div class="dugmeler" style="margin:0"><button class="ikincil" id="ozKopya">Mesaj olarak kopyala</button><button class="birincil" id="ozKart">Kartı yazdır</button><button class="ikincil" id="ozKapat">Kapat</button></div></div>` : ''}
+        <div class="kart"><h3 style="margin-top:0">Yeni öğrenci</h3><div class="oz-form"><input id="ozAd" maxlength="80" placeholder="Ad Soyad" value="${esc(F.ad)}"><input id="ozSeviye" maxlength="30" placeholder="Seviye (ör. 12, Mezun, LGS)" value="${esc(F.seviye)}"><input id="ozNot" maxlength="300" placeholder="Not (isteğe bağlı, ör. okul / hedef)" value="${esc(F.notu)}"><button class="birincil" id="ozEkle">Ekle ve kod üret</button></div><div class="soluk kucuk" id="ozBilgi"></div></div>
+        <div class="kart"><h3 style="margin-top:0">Öğrencilerin · ${aktif.length}</h3>${aktif.length ? `<table class="st-tablo"><tr><th>Ad Soyad</th><th>No</th><th>Seviye</th><th>Plan</th><th>Uyum</th><th>Bu hafta soru</th><th>Son giriş</th><th></th></tr>${aktif.map(satir).join('')}</table>` : '<div class="soluk kucuk">Henüz öğrenci yok.</div>'}
+          ${pasif.length ? `<details style="margin-top:12px"><summary class="soluk">Pasif öğrenciler · ${pasif.length}</summary><table class="st-tablo">${pasif.map(satir).join('')}</table></details>` : ''}</div>`;
+    };
+    const yukle = async () => { const r = await sb.rpc('umal_ozel_liste'); if (!r.error) { L.length = 0; (r.data || []).forEach(x => L.push(x)); } };
+    $('#icerik').oninput = ev => { if (ev.target.id === 'ozAd') F.ad = ev.target.value; else if (ev.target.id === 'ozSeviye') F.seviye = ev.target.value; else if (ev.target.id === 'ozNot') F.notu = ev.target.value; };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button');
+      if (!b) { const r = ev.target.closest('[data-ozo]'); if (r) rehOgrenciKarti(r.dataset.ozo, 'ozelders', ozelDersBolumu); return; }
+      if (b.id === 'ozEkle') { if (F.ad.trim().length < 2) { $('#ozAd').focus(); return; } b.disabled = true; $('#ozBilgi').textContent = 'Ekleniyor…';
+        const { data: r, error: e } = await israrla(() => sb.rpc('umal_ozel_ekle', { p_ad: F.ad.trim().split(/\s+/).map(w => w.charAt(0).toLocaleUpperCase('tr') + w.slice(1)).join(' '), p_seviye: F.seviye, p_notu: F.notu })); b.disabled = false;
+        if (e || !r || !r.ok) { $('#ozBilgi').textContent = e ? 'Eklenemedi: ' + hataYaz(e) : r.hata; return; }
+        yeni = { no: r.no, kod: r.kod, ad: F.ad.trim().split(/\s+/).map(w => w.charAt(0).toLocaleUpperCase('tr') + w.slice(1)).join(' ') }; F = { ad: '', seviye: '', notu: '' }; await yukle(); ciz(); window.scrollTo(0, 0); return; }
+      if (b.id === 'ozKapat') { yeni = null; ciz(); return; }
+      if (b.id === 'ozKart' && yeni) { kartBas([yeni]); return; }
+      if (b.id === 'ozKopya' && yeni) { const m = `Merhaba ${baslik(yeni.ad).split(' ')[0]}, çalışma planın için giriş bilgilerin:\numalatlas.com.tr/ogrenci\nNumara: ${yeni.no}\nKod: ${yeni.kod}\nKodunu kimseyle paylaşma.`; try { await navigator.clipboard.writeText(m); b.textContent = '✓ Kopyalandı'; } catch (x) { prompt('Kopyalayın:', m); } return; }
+      if (b.dataset.ozplan) { rehPlanDuzenle(b.dataset.ozplan, 'ozelders', ozelDersBolumu); return; }
+      if (b.dataset.ozkod) { const x = L.find(z => z.no === b.dataset.ozkod); if (!confirm(`${baslik(x.ad)} için yeni kod üretilecek; eski kodu geçersiz olur. Devam edilsin mi?`)) return;
+        const { data: r } = await sb.rpc('umal_ozel_kod_yenile', { p_no: x.no }); if (r && r.ok) { yeni = { no: x.no, kod: r.kod, ad: x.ad }; ciz(); window.scrollTo(0, 0); } return; }
+      if (b.dataset.ozpasif) { const x = L.find(z => z.no === b.dataset.ozpasif); if (x.aktif && !confirm(`${baslik(x.ad)} pasif yapılsın mı? Giriş yapamaz; verileri silinmez.`)) return;
+        await sb.rpc('umal_ozel_guncelle', { p_no: x.no, p_ad: x.ad, p_seviye: x.seviye, p_notu: x.notu, p_aktif: !x.aktif }); await yukle(); ciz(); return; }
+    };
+    ciz();
   }
   async function calismaPlanlariBolumu() {
     D.altG = false;
@@ -2611,16 +2652,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz();
   }
-  function girisFisleri(L, sinif) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
+  function girisFisleri(L, sinif, ozel) {   // K-498: A4'e 2 × 5 = 10 kart (kartvizit boyu, kesim çizgili); önizleme penceresi + Yazdır / PDF
     D.sonFisler = D.sonFisler || {}; if (sinif) D.sonFisler[sinif] = L;
     const logo = new URL('okul-logo.png', location.href).href;
     const qr = r => { try { return window.UmalQR ? `<img alt="QR" src="${window.UmalQR.png(`https://umalatlas.com.tr/ogrenci/#n=${encodeURIComponent(r.no)}&k=${String(r.kod).replace(/[^A-Z0-9]/gi, '')}`, 10)}">` : ''; } catch (e) { return ''; } };   // K-508: okutunca doğrudan girer
-    const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>ÖĞRENCİ GİRİŞ KARTI</b><small>Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi</small></div></div>
-      <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · Okul no ${esc(r.no)}</div>
+    const kart = r => `<div class="f"><div class="bant"><span class="lg"><img src="${logo}" alt=""></span><div><b>${ozel ? 'ÇALIŞMA PLANI GİRİŞ KARTI' : 'ÖĞRENCİ GİRİŞ KARTI'}</b><small>${ozel ? 'Özel ders · Ahmet Fehmi Çam' : 'Ümraniye Merkez Anadolu Lisesi · Rehberlik Servisi'}</small></div></div>
+      <div class="ic"><div class="sol"><div class="ad">${esc(baslik(r.ad))}</div><div class="s">${esc(r.sinif)} · ${ozel ? 'Numaran' : 'Okul no'} ${esc(r.no)}</div>
       <div class="kk"><small>KODUN</small><span>${esc(r.kod)}</span></div>
       <ol><li>QR'ı telefonla okut, ya da</li><li><b>umalatlas.com.tr/ogrenci</b> adresine gir; numaranı ve kodunu yaz</li></ol></div>
       <div class="qr">${qr(r)}<small>Okut, gir</small></div></div>
-      <div class="n">Kodun ve QR'ın sana özeldir, kimseyle paylaşma. Kaybedersen rehberlikten yenisini iste.</div></div>`;
+      <div class="n">Kodun ve QR'ın sana özeldir, kimseyle paylaşma. Kaybedersen ${ozel ? 'öğretmeninden' : 'rehberlikten'} yenisini iste.</div></div>`;
     const sayfalar = [], gruplar = [];   // her sınıf yeni sayfadan başlar (sınıf öğretmenine ayrı verilsin)
     L.forEach(r => { const g = gruplar[gruplar.length - 1]; if (g && g[0].sinif === r.sinif) g.push(r); else gruplar.push([r]); });
     gruplar.forEach(g => { for (let i = 0; i < g.length; i += 10) sayfalar.push(`<div class="sayfa">${g.slice(i, i + 10).map(kart).join('')}</div>`); });
@@ -2856,7 +2897,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return c ? `${c.no}. ders: ${c.ders}${(c.ogretmen || []).length ? ' · ' + c.ogretmen.map(baslik).join(', ') : ''}` : 'ders saati dışında (teneffüs / öğle arası)';
   }
   // K-554: Rehberlik bölümünün üst sekmeleri (Formlar ve anketler / Randevular)
-  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button><button class="${aktif === 'yonlendirme' ? 'secili' : ''}" data-rs="yonlendirme">Yönlendirmeler${MK.ny ? ` <span class="mk-sayi">${MK.ny}</span>` : ''}</button><button class="${aktif === 'sorutakip' ? 'secili' : ''}" data-rs="sorutakip">Soru takibi</button><button class="${aktif === 'calismaplan' ? 'secili' : ''}" data-rs="calismaplan">Çalışma planları</button></div>`;
+  const rehSekme = aktif => aktif === 'ozelders' ? '' : `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button><button class="${aktif === 'yonlendirme' ? 'secili' : ''}" data-rs="yonlendirme">Yönlendirmeler${MK.ny ? ` <span class="mk-sayi">${MK.ny}</span>` : ''}</button><button class="${aktif === 'sorutakip' ? 'secili' : ''}" data-rs="sorutakip">Soru takibi</button><button class="${aktif === 'calismaplan' ? 'secili' : ''}" data-rs="calismaplan">Çalışma planları</button></div>`;
   document.addEventListener('click', ev => { const b = ev.target.closest('.reh-sekme [data-rs]'); if (b && (D.bolum !== b.dataset.rs || D.altG)) { D.altG = false; ac(b.dataset.rs); } });
   const isoGun = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   function takvimSec() {   // K-552: büyük ay takvimi (tarayıcının küçük tarih kutusu yerine); seçim gizli input'a yazılır
