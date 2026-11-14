@@ -1326,3 +1326,8 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ay-izgara button.hs{color:#7f93b0}.ay-izgara button.bugun{border-color:rgba(34,232,255,.5)}.ay-izgara button.secili{background:var(--neon);color:var(--zemin);font-weight:800}
 .ay-izgara button.var::after{content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#ff9a3a}
 .ay-alt{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--soluk)}.ay-alt i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff9a3a;margin-right:6px;vertical-align:middle}
+
+/* K-635: sınav takvimi sekmeleri ve senaryo tablosu */
+.tk-sekme{margin:4px 0 12px}.sn-ust{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.sn-ayar{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}.sn-ayar label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--soluk)}.sn-ayar input,.sn-ayar select{min-width:150px}
+.sn-tablo{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}.sn-tablo th{text-align:left;padding:9px 10px;font-size:12.5px;letter-spacing:.04em;border-bottom:2px solid var(--sv,var(--cizgi));color:var(--neonacik)}.sn-tablo th:first-child{color:var(--soluk)}
+.sn-tablo td{padding:7px 10px;border-bottom:1px solid var(--cizgi);vertical-align:top}.sn-tablo td:first-child{font-weight:700;white-space:nowrap}.sn-tablo td input{width:100%;min-width:120px;padding:6px 9px}.sn-tablo td small{display:block;color:var(--soluk);font-size:11px;margin-top:3px}.sn-tablo td.bos{color:var(--soluk)}

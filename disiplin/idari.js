@@ -317,6 +317,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     try { TF.P = (await oku(TF.anahtar)) || { yil, donem, baslik: 'Telafi Sınavları Takvimi', durum: 'GÜNCEL', mudur: MUDUR, gunler: [] }; } catch (e) { kok.innerHTML = bas('Telafi Sınavı') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
     if (!TF.bas) TF.bas = sonrakiPzt(); TF.degisti = false; tfCiz();
+    if (!TF.P.gunler.length && geri && geri.otoAktar) { await tfAktar(); bilgi('Sınav takvimindeki sınavlar telafi haftasına aktarıldı. Tarihleri, saatleri ve yerleri düzenleyip kaydedin.', 'yesil'); }   // K-635
   }
   function tfUyari() { const O = TF.P.gunler.flatMap(g => g.slot.flatMap(s => SV.filter(v => g.tarih && dinMi(s['s' + v])).map(v => ({ v, t: g.tarih })))); const T = [...new Set(O.map(x => x.t))]; return new Set(O.map(x => x.v)).size > 1 && T.length > 1 ? SV.map(v => [v, [...new Set(O.filter(x => x.v === v).map(x => x.t))]]).filter(x => x[1].length) : []; }
   function tfCiz() {
