@@ -9,7 +9,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); };
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -31,9 +31,9 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    listeCiz(); mektuplarYukle();
+    anaCiz(); mektuplarYukle(); ozetYukle();
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; goster('giris'); };
   $('#cikis').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -44,7 +44,7 @@
     $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small><span class="etiket ${f.mahrem !== false ? 'mahrem' : 'anket'}">${f.mahrem !== false ? '🔒 Özel' : '🌐 Genel'}</span>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><span class="sag">${f.doldu ? '✓ Doldurdun · düzelt' : 'Doldur ›'}</span></button>`).join('')
       : '<div class="soluk">Şu an sana açık bir anket ya da form yok. Açılınca burada görünür.</div>';
     $('#formlar').onclick = ev => { const b = ev.target.closest('[data-i]'); if (b) formAc(S.formlar[+b.dataset.i]); };
-    goster('liste'); window.scrollTo(0, 0);
+    goster('s-anket'); window.scrollTo(0, 0);
   }
 
   // ---- form doldurma (tahtadaki anketle aynı soru türleri ve cevap biçimi)
@@ -115,7 +115,7 @@
     t.closest('.soru') && t.closest('.soru').classList.remove('eksik');
   });
   $('#geri').onclick = listeCiz;
-  $('#bittiGeri').onclick = listeCiz;
+  $('#bittiGeri').onclick = () => { anaCiz(); };
   $('#gonder').onclick = async () => {
     const f = S.form, eksik = [];
     (f.sorular || []).forEach((q, i) => {
@@ -135,6 +135,119 @@
     $('#bittiYazi').textContent = f.mahrem !== false ? 'Formun rehberlik servisine ulaştı.' : 'Cevabın kaydedildi.';
     goster('bitti'); window.scrollTo(0, 0);
   };
+  // ---- K-548: ana sayfa (kutucuklar), Sınavlarım, Ders programım
+  const IK = {
+    sinav: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="m9 14.5 2 2 4-4"/>',
+    ders: '<rect x="3.5" y="4" width="17" height="16.5" rx="3"/><path d="M3.5 9h17M3.5 14h17M9.5 9v11.5M15 9v11.5"/>',
+    duy: '<path d="M4 10v4a1 1 0 0 0 1 1h2.5l6.5 4V5L7.5 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6M19.8 7a7 7 0 0 1 0 10"/>',
+    reh: '<path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M12.4 14.6s-3-1.8-3-3.7a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.9-3 3.7-3 3.7Z"/>',
+    anket: '<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><path d="m8.5 10 1.5 1.5 3-3M8.5 15.5l1.5 1.5 3-3"/><path d="M15 10.5h1.5M15 16h1.5"/>',
+    plan: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/><path d="m15.5 8.5 4-4M17 4.5h2.5V7"/>',
+    yer: '<path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
+    zarf: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.5 7 8.5 6.5L20.5 7"/>' };
+  const svg = (k, renk = 'currentColor', w = 1.8) => `<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="${renk}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IK[k]}</svg>`;
+  const ZARF = `<span class="zarf" title="Okunmamış">${svg('zarf', '#1a0d00', 2)}</span>`;
+  // zil çizelgesi (Atlas'taki ile aynı; Cuma 6–8 farklı)
+  const ZIL = { n: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:30', '13:10'], ['13:20', '14:00'], ['14:10', '14:50']],
+                c: [['08:00', '08:40'], ['08:50', '09:30'], ['09:40', '10:20'], ['10:30', '11:10'], ['11:20', '12:00'], ['12:10', '12:50'], ['13:30', '14:10'], ['14:20', '15:00']] };
+  const zil = (gun, n) => (gun === 4 ? ZIL.c : ZIL.n)[n - 1] || ['', ''];   // gun: 0 = Pazartesi
+  const GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'], AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  const AYK = ['OCA', 'ŞUB', 'MAR', 'NİS', 'MAY', 'HAZ', 'TEM', 'AĞU', 'EYL', 'EKİ', 'KAS', 'ARA'];
+  const hoca = s => String(s || '').split(/\s+/).map(w => w.length > 1 && w === w.toLocaleUpperCase(tr) && /\p{L}/u.test(w) ? w[0] + w.slice(1).toLocaleLowerCase(tr) : w).join(' ');
+  const RENK = [['Matematik', '#22e8ff'], ['Fizik', '#5aa8ff'], ['Kimya', '#3ef08a'], ['Biyoloji', '#7bd88f'], ['İngilizce', '#ff9a3a'], ['Yabancı', '#ff9a3a'], ['Edebiyat', '#ff6b8a'], ['Türk Dili', '#ff6b8a'], ['Müzik', '#d68cff'], ['Görsel', '#d68cff'], ['Din', '#ffd166'], ['Kur', '#ffd166'], ['Peygamber', '#ffd166'], ['Ahlak', '#ffd166'], ['Tarih', '#ffb26b'], ['İnkılap', '#ffb26b'], ['Coğrafya', '#f4a261'], ['Felsefe', '#c3a6ff'], ['Rehberlik', '#b06bff'], ['Beden', '#3ef08a'], ['Spor', '#3ef08a']];
+  const dersRenk = d => (RENK.find(([k]) => String(d).includes(k)) || [0, '#7ff6ff'])[1];
+  const simdi = () => new Date();
+  const dk = hm => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
+  const gunIdx = d => (d.getDay() + 6) % 7;   // 0 = Pazartesi
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  async function ozetYukle() {
+    const [oz, tk] = await Promise.all([
+      (async () => { try { return (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; } catch (e) { return null; } })(),
+      (async () => { try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);
+    if (oz && oz.ok) { S.program = oz.program || {}; S.yerler = oz.yerler || []; }
+    S.takvim = tk; if (!$('#liste').classList.contains('gizli')) anaCiz();
+  }
+  function sinavlarim() {   // bu sınıfın kelebek sınavları: [{tarih, ders(n. Ders), ad, bas, bit, yer}]
+    const tk = S.takvim; if (!tk || !S.sinif) return [];
+    const sv = S.sinif.split('-')[0], L = [];
+    for (const x of tk.sinavlar || []) {
+      const sb_ = (tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders);
+      const ad = (sb_ && sb_.subeler && sb_.subeler[S.sinif]) || (x.siniflar || {})[sv]; if (!ad) continue;
+      const d = new Date(x.tarih + 'T12:00:00'), n = parseInt(x.ders, 10), [bas, bit] = zil(gunIdx(d), n);
+      const yer = (S.yerler || []).find(y => y.tarih === x.tarih && y.ders === x.ders);
+      L.push({ tarih: x.tarih, d, n, ders: x.ders, ad, bas, bit, yer });
+    }
+    return L.sort((a, b) => (a.tarih + a.bas).localeCompare(b.tarih + b.bas));
+  }
+  const bitti = x => { const s = simdi(), b = iso(s); return x.tarih < b || (x.tarih === b && s.getHours() * 60 + s.getMinutes() >= dk(x.bit)); };
+  function bugunDersleri() {
+    const s = simdi(), g = gunIdx(s); if (g > 4 || !S.program) return [];
+    const t = s.getHours() * 60 + s.getMinutes(), L = []; let sira = false;
+    for (let n = 1; n <= 8; n++) {
+      const c = S.program[g + '-' + n]; if (!c || !c.ders) continue;
+      const [a, b] = zil(g, n); let d = t >= dk(b) ? 'bit' : t >= dk(a) ? 'simdi' : '';
+      if (!d && !sira && !L.some(x => x.d === 'simdi')) { d = 'sira'; sira = true; }
+      L.push({ n, ders: c.ders, a, d });
+    }
+    return L;
+  }
+  function anaCiz() {
+    $('#kimAd').textContent = baslik(S.ad); $('#kimSinif').textContent = S.sinif + ' · ' + S.no;
+    const s = simdi(), SV = sinavlarim(), kalan = SV.filter(x => !bitti(x)), nx = kalan[0];
+    const bk = $('#bugunKart');
+    if (nx) {
+      const bas = new Date(nx.tarih + 'T' + nx.bas + ':00'), fark = Math.max(0, bas - s), g = Math.floor(fark / 864e5), h = Math.floor(fark % 864e5 / 36e5), m = Math.floor(fark % 36e5 / 6e4);
+      bk.innerHTML = `<div class="soluk kucuk">${GUN[gunIdx(s)]} · ${s.getDate()} ${AY[s.getMonth()]}</div><h2 style="margin:4px 0 0">Sıradaki sınavın: ${esc(nx.ad)}</h2>
+        <div class="soluk kucuk">${GUN[gunIdx(nx.d)]} ${nx.d.getDate()} ${AY[nx.d.getMonth()]} · ${esc(nx.ders)} · ${nx.bas.replace(':', '.')}</div>
+        ${fark > 0 ? `<div class="say"><div><b>${g}</b><span>gün</span></div><div><b>${h}</b><span>saat</span></div><div><b>${m}</b><span>dakika</span></div></div>` : '<div class="say"><div><b>Şimdi</b><span>sınav sürüyor</span></div></div>'}
+        ${nx.yer ? `<div class="yer">${svg('yer', '#ffb867')}<span>Sınav yerin: <b>Salon ${esc(nx.yer.salon)} · Sıra ${esc(nx.yer.sira)}</b></span></div>` : ''}`;
+      bk.classList.remove('gizli');
+    } else bk.classList.add('gizli');
+    const BD = bugunDersleri();
+    $('#bugunDersler').innerHTML = BD.map(x => `<div class="${x.d === 'bit' ? 'bit' : x.d ? 'sr' : ''}">${x.n}. Ders${x.d === 'simdi' ? ' · şimdi' : x.d === 'sira' ? ' · sıradaki' : ''}<b>${esc(x.ders)}</b></div>`).join('');
+    $('#dersKart').classList.toggle('gizli', !BD.length);
+    const acikForm = S.formlar.filter(f => !f.doldu).length;
+    const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false) => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
+    $('#kutular').innerHTML = kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
+      + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', 'yakında', false)
+      + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
+      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', 'Mektup yaz')
+      + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, acikForm > 0)
+      + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', 'yakında', false);
+    goster('liste'); window.scrollTo(0, 0);
+  }
+  $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); goster(id); window.scrollTo(0, 0); };
+  document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
+  function sinavCiz() {
+    const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
+    const hs = new Date(d0); hs.setDate(hs.getDate() - gunIdx(hs));   // bu haftanın pazartesisi
+    const hafta = x => { const f = Math.floor((x.d - hs) / (7 * 864e5)); return f < 0 ? 'GEÇEN HAFTALAR' : f === 0 ? 'BU HAFTA' : f === 1 ? 'GELECEK HAFTA' : 'İLERİDE'; };
+    $('#sinavAlt').textContent = S.sinif + ' · ' + ((S.takvim && S.takvim.ad) || 'Ortak yazılı sınavlar') + ' · saatler okulun zil çizelgesinden';
+    let son = '', ilkYakin = true;
+    $('#sinavListe').innerHTML = SV.length ? SV.map(x => {
+      const bt = bitti(x), h = hafta(x), gk = Math.round((new Date(x.tarih + 'T12:00:00') - new Date(b + 'T12:00:00')) / 864e5);
+      const yakin = !bt && ilkYakin; if (yakin) ilkYakin = false;
+      const roz = bt ? 'bitti' : gk === 0 ? 'bugün' : gk === 1 ? 'yarın' : gk + ' gün kaldı';
+      const bas_ = h !== son ? `<div class="hafta">${h}</div>` : ''; son = h;
+      return `${bas_}<div class="sv ${bt ? 'bitti' : ''} ${yakin ? 'yakin' : ''}"><div class="t"><b>${x.d.getDate()}</b><span>${AYK[x.d.getMonth()]}</span></div><div><h3>${esc(x.ad)}</h3><div class="s">${GUN[gunIdx(x.d)]} · ${esc(x.ders)} · ${x.bas.replace(':', '.')} – ${x.bit.replace(':', '.')}</div>
+        ${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Sınav yerin: Salon ${esc(x.yer.salon)} · Sıra ${esc(x.yer.sira)}</div>` : (!bt ? '<div class="n">Sınav yerin kelebek planı yayınlanınca burada görünür.</div>' : '')}</div><span class="rozet">${roz}</span></div>`;
+    }).join('') : '<div class="kart soluk">Sınıfın için yayınlanmış sınav takvimi yok.</div>';
+  }
+  let PGUN = null;
+  function programCiz() {
+    const s = simdi(), bg = gunIdx(s); if (PGUN == null) PGUN = bg > 4 ? 0 : bg;
+    $('#gunSec').innerHTML = GUN.slice(0, 5).map((g, i) => `<button class="${i === PGUN ? 'secili' : ''} ${i === bg ? 'bugun_' : ''}" data-g="${i}">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum'][i]}${i === bg ? ' •' : ''}</button>`).join('');
+    $('#gunSec').onclick = ev => { const b = ev.target.closest('[data-g]'); if (b) { PGUN = +b.dataset.g; programCiz(); } };
+    const t = s.getHours() * 60 + s.getMinutes(), bu = PGUN === bg; let sira = false;
+    $('#programListe').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8].map(n => {
+      const c = (S.program || {})[PGUN + '-' + n]; if (!c || !c.ders) return '';
+      const [a, b] = zil(PGUN, n); let d = bu ? (t >= dk(b) ? 'bit' : t >= dk(a) ? 'sr' : '') : '';
+      if (bu && !d && !sira && t < dk(a)) { d = 'sr'; sira = true; } else if (d === 'sr') sira = true;
+      return `<div class="ps ${d}" style="--r:${dersRenk(c.ders)}"><div class="no">${n}. Ders<small>${a.replace(':', '.')} – ${b.replace(':', '.')}</small></div><div><b>${esc(c.ders)}</b><span>${esc((c.ogretmen || []).map(hoca).join(', '))}</span></div></div>`;
+    }).join('') || '<div class="kart soluk">Bu gün ders yok.</div>';
+  }
+
   // ---- K-543: rehberlik servisine mektup
   const KONULAR = ['Yalnız hissediyorum', 'Üzgünüm', 'Arkadaşlık', 'Aile', 'Dersler', 'Başka bir şey'];
   const MK = { konu: new Set(), gorusme: false };

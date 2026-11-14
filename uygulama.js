@@ -602,9 +602,9 @@
   function siraKarti(r, no, gelmedi) {
     if (!r) return `<div class="koltuk bos"><span class="kno">${no}</span><span class="bosyazi">boş</span></div>`;
     const c = seviyeRenk(r.sinif);
-    return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''} ${r.tamam ? 'tamam' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">${r.tamam ? '<span class="tik-isaret">✓</span>' : ''}
+    return `<button class="koltuk ${gelmedi ? 'gelmedi' : ''} ${r.tamam ? 'tamam' : ''}" style="--sv:${c}" data-ogr="${esc(r.no)}">
       ${r.etiket === '' ? '' : `<span class="kno">${esc(r.etiket ?? no)}</span>`}${foto(r.no, r.ad)}
-      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><i class="ilkad">${esc(baslik(String(r.ad || '').trim().split(/\s+/)[0] || ''))}</i><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}</small></span>
+      <span class="kyazi"><b>${esc(baslik(r.ad))}</b><i class="ilkad">${esc(baslik(String(r.ad || '').trim().split(/\s+/)[0] || ''))}</i><em>${esc(r.ek ?? kisaDers(baslik(r.ders || '')))}</em><small>${esc(r.sinif)}${r.ek == null ? ` · <i class="kno2">${esc(r.no)}</i>` : ''}${r.tamam ? '<span class="tik-isaret" title="Doldurdu">✓</span>' : ''}</small></span>
       ${gelmedi ? '<span class="gelmedi-etiket">GELMEDİ</span>' : ''}</button>`;
   }
   // satır yüksekliği: kart eni (sayfa enine göre) × fotoğraf oranı + yazı payı; foto büyük, ad sığar
@@ -932,6 +932,7 @@
 
   // ------------------------------------------------------------------ Anketler (ortak hesap)
   async function anketVerisi() {
+    ogrencileriYukle().catch(() => []);   // K-547: formdan sonra sınıfa gelen öğrenciler de listede
     const [a, c, d] = await Promise.all([
       hepsi('umal_anketler', 'id,bolum,tanim,kaynak,durum').catch(() => hepsi('umal_anketler', 'id,bolum,tanim')),
       hepsi('umal_anket_cevap', 'anket,sinif,veri'),
@@ -941,7 +942,11 @@
     D.cevaplar = {}; c.forEach(r => { (D.cevaplar[r.anket] = D.cevaplar[r.anket] || {})[r.sinif] = (r.veri || {}).cevaplar || {}; });
     D.durumlar = {}; d.forEach(r => { D.durumlar[r.anket] = r; });
   }
-  const katilanlar = (a, s) => ((a.tanim.siniflar || {})[s] || []).filter(k => k.katilir !== false);
+  const katilanlar = (a, s) => {   // K-547: form açıldıktan sonra sınıfa gelen öğrenci (listede hiç yoksa) katılır sayılır
+    const L = (a.tanim.siniflar || {})[s] || [], var_ = new Set(L.map(k => String(k.no)));
+    const yeni = (D.ogrenciler || []).filter(o => o.sinif === s && !var_.has(String(o.no))).map(o => ({ no: o.no, ad: o.ad, katilir: true, yeni: true }));
+    return L.filter(k => k.katilir !== false).concat(yeni);
+  };
   const cevap = (a, s, no) => ((D.cevaplar[a.id] || {})[s] || {})[no];
   const anketSiniflari = a => Object.keys(a.tanim.siniflar || {}).sort(sinifSira);
   const secimler = v => v == null ? [] : Array.isArray(v) ? v.map(String) : (String(v).trim() ? [String(v)] : []);
@@ -2869,6 +2874,35 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       await yukle(); ciz();
     };
     const gunSonu = () => { const d = new Date(); d.setHours(23, 59, 0, 0); return Math.floor(d.getTime() / 1000); };
+    // K-545: tahtanın sınıfı yalnız buradan değiştirilir (tahtada ilk seçimden sonra kilitli). Komut yalnız o cihaza gider; kapalıysa açılınca uygulanır.
+    const SUBELER = { 9: 'ABCD', 10: 'ABCDEFGH', 11: 'ABCDEFGHI', 12: 'ABCDEFGHI' };
+    const sinifKomutu = s => { const v = String(((tahtalar[s] || {}).durum || {}).surum || ''), m = v.match(/ultra\s*(\d+)/i); return !!(m && +m[1] >= 3); };   // tahtadaki Atlas Ultra 3 ve sonrası bu komutu tanır
+    const sinifDegistir = s => {
+      const t = tahtalar[s];
+      if (!t || !t.cihaz) { pencereAc(`<h2 style="margin-top:0">${esc(s)}</h2><div class="soluk">Bu tahta panele hiç bağlanmamış; sınıfı tahtanın ilk açılışında seçilir.</div>`); return; }
+      let sec = '';
+      const ciz_ = () => {
+        const dolu = sec && sec !== s && tahtalar[sec];
+        $('#pencereIcerik').innerHTML = `<h2 style="margin-top:0">${esc(s)} tahtasının sınıfını değiştir</h2>
+          <div class="soluk kucuk">Tahta bir iki dakika içinde yeni sınıfa geçer: kelebek, yoklama, anket ve ders programı yeni sınıfa göre çalışır. Tahta kapalıysa açılınca uygulanır.</div>
+          ${Object.entries(SUBELER).map(([sv, ss]) => `<div class="k-sec-sat"><span class="k-sec-sev" style="background:${SEVIYE_RENK[sv]}">${sv}</span>${[...ss].map(h => { const v = sv + '-' + h; return `<button class="cip ${sec === v ? 'secili' : ''}" data-yeni="${v}" ${v === s ? 'disabled' : ''}>${v}</button>`; }).join('')}</div>`).join('')}
+          <div class="k-sec-sat"><span class="k-sec-sev k-oda-sev">${ODA_SIMGE}</span><button class="cip ${sec === 'Öğretmenler odası' ? 'secili' : ''}" data-yeni="Öğretmenler odası" ${s === 'Öğretmenler odası' ? 'disabled' : ''}>Öğretmenler Odası</button></div>
+          ${dolu ? `<div class="turuncu kucuk" style="margin-top:8px">⚠︎ ${esc(sec)} sınıfında zaten bir tahta görünüyor. İki tahta aynı sınıf olursa panelde tek görünür.</div>` : ''}
+          <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="kSinifGonder" ${sec ? '' : 'disabled'}>${sec ? esc(s) + ' → ' + esc(sec) : 'Yeni sınıfı seçin'}</button></div><div class="kucuk" id="kSinifBilgi"></div>`;
+      };
+      pencereAc(''); ciz_();
+      $('#pencereIcerik').onclick = async ev3 => {
+        const y = ev3.target.closest('[data-yeni]'); if (y && !y.disabled) { sec = y.dataset.yeni; ciz_(); return; }
+        if (!ev3.target.closest('#kSinifGonder') || !sec) return;
+        const simdi = Math.floor(Date.now() / 1000), bitis = simdi + 7 * 86400, id = 'sn-' + new Date().toISOString().replace(/\D/g, '').slice(2, 14) + '-' + Math.random().toString(16).slice(2, 6);
+        const veri = { id, tur: 'komut', komut: 'sinif', hedef: [s], cihaz: t.cihaz, yeni: sec, zaman: simdi, bitis, kim: ROL_AD[D.rol] || 'İdare', eposta: D.eposta || '',
+          baslik: 'Tahta Kontrol', metin: `Tahtanın sınıfı: ${s} → ${sec}` };
+        const { error } = await sb.from('umal_mesajlar').insert({ id, tur: 'komut', veri, bitis: new Date(bitis * 1000).toISOString() });
+        if (error) { $('#kSinifBilgi').innerHTML = `<span class="kirmizi">Gönderilemedi: ${esc(hataYaz(error))}</span>`; return; }
+        $('#pencere').classList.add('gizli');
+        $('#kBilgi').innerHTML = `<span class="yeşil">${esc(s)} tahtasına “${esc(sec)}” komutu gönderildi. Tahta açıksa bir iki dakikada geçer; kutusu yeni sınıfın yerine taşınır.</span>`;
+      };
+    };
     const ciz = () => {
       if (D.bolum !== 'kontrol' || !$('#kUst')) return;   // sayfadan çıkıldı
       const zd = zilDurumu(), siniflar = [...new Set([...listeSinif, ...Object.keys(tahtalar)])].sort(sinifSira);
@@ -2923,15 +2957,17 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#kSiniflar').onclick = ev => {
       const b = ev.target.closest('[data-k]'); if (!b) return; const s = b.dataset.k, zd = zilDurumu();
       if (odaMi(s)) pencereAc(`<h2 style="margin-top:0">${esc(s)}</h2><div class="soluk">Bu tahta kilitlenmez. İsterseniz kapatabilirsiniz (2 dk uyarı, "30 dk ertele" var).</div>
-        <div class="dugmeler" style="justify-content:flex-start;margin-top:14px"><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button></div>`);
+        <div class="dugmeler" style="justify-content:flex-start;margin-top:14px"><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button>${(D.rol === 'bas' || D.rol === 'yonetici') && sinifKomutu(s) ? '<button class="ikincil" data-i="sinif">Sınıfı değiştir</button>' : ''}</div>`);
       else pencereAc(`<h2 style="margin-top:0">${esc(s)} tahtası</h2><div class="soluk">Şu an: ${esc(zd.ad)} ${esc(zd.saat || zd.sonraki || '')}</div>
         <div class="dugmeler" style="flex-wrap:wrap;justify-content:flex-start;margin-top:14px">
         <button class="birincil" data-i="ac-ten">Aç · bu teneffüs</button><button class="ikincil" data-i="ac-gun">Aç · bugün</button>
         ${zd.tur === 'ders' ? '<button class="tehlike" data-i="bos">Boş ders: kilitle (ders bitene kadar)</button>' : ''}<button class="tehlike" data-i="kil">Kilitle · bugün</button>
-        <button class="ikincil" data-i="normal">Normale döndür</button><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button></div>
+        <button class="ikincil" data-i="normal">Normale döndür</button><button class="tehlike" data-i="kapat">⏻ Tahtayı kapat</button>${(D.rol === 'bas' || D.rol === 'yonetici') && sinifKomutu(s) ? '<button class="ikincil" data-i="sinif">Sınıfı değiştir</button>' : ''}</div>
         <div class="soluk kucuk" style="margin-top:10px">Kapat: tahta 2 dakika uyarı verir, sınıftaki "30 dk ertele" diyebilir. 16.30–07.00 arası açık kalan sınıf tahtası zaten kendiliğinden kapanır.</div>`);
       $('#pencereIcerik').onclick = ev2 => {
-        const x = ev2.target.closest('[data-i]'); if (!x) return; $('#pencere').classList.add('gizli');
+        const x = ev2.target.closest('[data-i]'); if (!x) return;
+        if (x.dataset.i === 'sinif') return sinifDegistir(s);
+        $('#pencere').classList.add('gizli');
         const i = x.dataset.i, zd2 = zilDurumu();
         if (i === 'ac-ten') gonderKarar('ac', [s], zd2.tur === 'teneffus' ? zd2.bitis : Math.floor(Date.now() / 1000) + 15 * 60);
         else if (i === 'ac-gun') gonderKarar('ac', [s], gunSonu());

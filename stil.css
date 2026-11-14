@@ -493,8 +493,10 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 
 /* Formu dolduranın fotoğrafında neon tik */
 .koltuk.tamam .foto { position: relative; }
-.tik-isaret { position: absolute; z-index: 2; left: calc(50% + 2px); top: 38%; transform: translate(-50%, -50%); width: 38%; max-width: 64px; aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: rgba(47,191,113,.88); color: #fff; font-weight: 900; font-size: clamp(14px, 22cqi, 30px); box-shadow: 0 0 0 2px #fff, 0 0 14px rgba(47,191,113,.9); }
+/* K-546: tik fotoğrafı ve adı kapatmaz — sınıf · no satırının sonunda küçük yeşil rozet; fotoğrafın çevresi yeşil */
+.koltuk.tamam .foto { box-shadow: 0 0 0 2.5px #2fbf71, 0 0 10px rgba(47,191,113,.65); }
+.tik-isaret { display: inline-flex; align-items: center; justify-content: center; width: 1.35em; height: 1.35em; margin-left: .35em; vertical-align: -.2em; border-radius: 50%;
+  background: #2fbf71; color: #fff; font-weight: 900; font-size: 1em; line-height: 1; font-style: normal; box-shadow: 0 0 6px rgba(47,191,113,.8); }
 .pencere-ic.genis { max-width: min(1200px, 96vw); }
 .rs-cerceve { width: 100%; overflow: hidden; border-radius: 10px; margin-top: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.4); background: #fff; }
 .rs-olcek { transform-origin: 0 0; width: 841.89pt; }
@@ -576,7 +578,7 @@ button.og-kutu { cursor: pointer; }
   .koltuk .kno { left: 5px; top: 3px; font-size: 8.5px; padding: 0 3px; }
   .koltuk.bos .bosyazi { font-size: 9px; }
   .gelmedi-etiket { font-size: 7.5px; padding: 1px 3px; }
-  .tik-isaret { font-size: 14px; }
+
 }
 
 /* Bilet: gözcü öğrenci adının karşısında, tam adıyla, turuncu neon */
@@ -1052,3 +1054,6 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .mk-ayr textarea { color: var(--yazi); background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px; }
 .mk-acil-not { margin-top: 10px; color: #ffc4ca; background: rgba(255,59,78,.12); border: 1px solid rgba(255,59,78,.5); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; }
 @media (max-width: 760px) { .mk-izgara { grid-template-columns: 1fr; } .mk-zarf { top: auto; bottom: 16px; } }
+
+/* K-545: tahtanın sınıfını değiştir */
+.k-sec-sat { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; } .k-sec-sev { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; color: #06121f; flex: none; } .k-sec-sat .cip:disabled { opacity: .35; }
