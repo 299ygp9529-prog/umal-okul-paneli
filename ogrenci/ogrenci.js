@@ -810,8 +810,8 @@
       if (tt < soAralik(SO.per, SO.ref)[0] || tt > soAralik(SO.per, SO.ref)[1]) SO.ref = new Date(tt + 'T12:00');
       soCiz(); const bi = $('#soBilgi'); if (bi) bi.textContent = `✓ ${dd}: net ${n_} kaydedildi. Başka ders girebilirsin.`; }
   });
-  async function soIzinCiz() { const b = $('#soIzin'); if (!b) return; if (!PL.veri) await plYukle(); b.classList.toggle('secili', !!(PL.veri && PL.veri.soruPaylas)); }
-  $('#soIzin').onclick = async () => { if (!PL.veri && !(await plYukle())) return; PL.veri.soruPaylas = !PL.veri.soruPaylas; soIzinCiz(); plKaydet(); };   // K-575: rehberlikle paylaşım izni
+  async function soIzinCiz() { const b = $('#soIzin'); if (!b) return; if (!PL.veri) await plYukle(); b.classList.toggle('secili', !PL.veri || PL.veri.soruPaylas !== false); }   // K-593: varsayılan açık
+  $('#soIzin').onclick = async () => { if (!PL.veri && !(await plYukle())) return; PL.veri.soruPaylas = PL.veri.soruPaylas === false; soIzinCiz(); plKaydet(); };   // K-575: rehberlikle paylaşım izni
   function soPdf() {
     const [a, b] = soAralik(SO.per, SO.ref), s = soIstat(a, b), r0 = new Date(SO.ref);
     if (SO.per === 'gun') r0.setDate(r0.getDate() - 1); else if (SO.per === 'hafta') r0.setDate(r0.getDate() - 7); else r0.setMonth(r0.getMonth() - 1);
