@@ -534,7 +534,7 @@
         const d = new Date(PL.hafta); d.setDate(d.getDate() + gi); const di = iso(d), G = L.filter(x => +x.g === gi);
         const fd = PL.form && PL.form.g === gi;
         return `<div class="pl-gun ${di === bugunIso ? 'bugun' : ''} ${di < bugunIso ? 'gecti' : ''}"><div class="pl-gun-ust"><b>${g}</b><small>${d.getDate()} ${AY[d.getMonth()]}${G.length ? ' · ' + sure(G.reduce((t, x) => t + (+x.dk || 0), 0)) : ''}</small>${fd ? '' : `<button class="ekle" data-pekle="${gi}"><i><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i>Ekle</button>`}</div>
-          ${G.map(x => `<div class="pl-gorev ${x.ok ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-ptik="${x.id}" aria-label="Tamamlandı">${x.ok ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${x.konu ? esc(x.konu) + ' · ' : ''}${sure(+x.dk || 0)}</small></div><button class="sil" data-psil="${x.id}" aria-label="Sil">×</button></div>`).join('') || (fd ? '' : '<div class="pl-bos">Boş gün</div>')}
+          ${G.map(x => `<div class="pl-gorev ${x.ok ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-ptik="${x.id}" aria-label="Tamamlandı">${x.ok ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${gAlt(x)}</small></div><button class="sil" data-psil="${x.id}" aria-label="Sil">×</button></div>`).join('') || (fd ? '' : '<div class="pl-bos">Boş gün</div>')}
           ${fd ? plFormHtml() : ''}</div>`;
       }).join('');
     if (PL.form) { const k = $('#plKonu'); if (k && !PL.form.odak) { PL.form.odak = 1; } }
@@ -542,11 +542,12 @@
   function plFormHtml() {
     const f = PL.form;
     return `<div class="pl-form"><label>Ders / çalışma</label><div class="pl-cip">${plDersler().map(d => `<button type="button" class="${f.ders === d ? 'secili' : ''}" data-pfd="${esc(d)}">${esc(d)}</button>`).join('')}</div>
-      <label for="plKonu">Konu (isteğe bağlı)</label><input type="text" id="plKonu" maxlength="80" value="${esc(f.konu || '')}" placeholder="ör. Türev, 40 soru">
+      <label for="plKonu">Konu (isteğe bağlı)</label><input type="text" id="plKonu" maxlength="80" value="${esc(f.konu || '')}" placeholder="ör. Türev">
+      <div class="pl-iki"><div><label for="plSoru">Soru adedi</label><input type="number" id="plSoru" min="0" max="999" inputmode="numeric" value="${f.soru || ''}" placeholder="ör. 40"></div><div><label for="plKaynak">Kaynak</label><input type="text" id="plKaynak" maxlength="40" value="${esc(f.kaynak || '')}" placeholder="kitap / yayın"></div></div>
       <label>Süre</label><div class="pl-cip">${[15, 30, 45, 60, 90, 120].map(d => `<button type="button" class="${f.dk === d ? 'secili' : ''}" data-pfs="${d}">${sure(d)}</button>`).join('')}</div>
       <div class="dg"><button type="button" class="ikincil" data-pfvaz="1">Vazgeç</button><button type="button" class="birincil" data-pfekle="1" ${f.ders ? '' : 'disabled'}>Ekle</button></div></div>`;
   }
-  $('#s-plan').addEventListener('input', ev => { if (ev.target.id === 'plKonu' && PL.form) PL.form.konu = ev.target.value; });
+  $('#s-plan').addEventListener('input', ev => { if (!PL.form) return; if (ev.target.id === 'plKonu') PL.form.konu = ev.target.value; else if (ev.target.id === 'plSoru') PL.form.soru = Math.max(0, Math.min(999, parseInt(ev.target.value, 10) || 0)); else if (ev.target.id === 'plKaynak') PL.form.kaynak = ev.target.value; });
   $('#s-plan').addEventListener('click', ev => {
     const t = ev.target, b = t.closest('button'); if (!b) return;
     const L = PL.veri && plHafta(), y = () => { const sy = window.scrollY; plCiz(); window.scrollTo(0, sy); };
@@ -557,7 +558,7 @@
     if (b.dataset.pfd != null) { PL.form.ders = b.dataset.pfd; y(); return; }
     if (b.dataset.pfs != null) { PL.form.dk = +b.dataset.pfs; y(); return; }
     if (b.dataset.pfvaz) { PL.form = null; y(); return; }
-    if (b.dataset.pfekle && PL.form.ders) { L.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), g: PL.form.g, ders: PL.form.ders, konu: (PL.form.konu || '').trim(), dk: PL.form.dk || 45, ok: false }); PL.form = null; plKaydet(); y(); return; }
+    if (b.dataset.pfekle && PL.form.ders) { L.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), g: PL.form.g, ders: PL.form.ders, konu: (PL.form.konu || '').trim(), soru: PL.form.soru || 0, kaynak: (PL.form.kaynak || '').trim(), dk: PL.form.dk || 45, ok: false }); PL.form = null; plKaydet(); y(); return; }
     if (b.dataset.ptik) { const x = L.find(z => z.id === b.dataset.ptik); if (x) { x.ok = !x.ok; plKaydet(); y(); } return; }
     if (b.dataset.psil) { const k = L.findIndex(z => z.id === b.dataset.psil); if (k >= 0) { L.splice(k, 1); plKaydet(); y(); } return; }
     if (b.dataset.pkopya) { const once = Object.keys(PL.veri.haftalar).filter(k => k < iso(PL.hafta) && PL.veri.haftalar[k].length).sort().pop(); if (once) { PL.veri.haftalar[once].forEach(x => L.push(Object.assign({}, x, { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ok: false }))); plKaydet(); y(); } return; }
@@ -588,7 +589,7 @@
     k.innerHTML = `<div class="rp-kart"><h2>Rehberlik servisiyle hazırladığın plan</h2><div class="alt">Haftada ${G.length} görev · ${sure(top)}${P.veri.hedef ? ' · hedef ' + sure(+P.veri.hedef) : ''} · her hafta yeniden başlar</div>
       ${P.veri.not ? `<div class="rp-not">${esc(P.veri.not)}</div>` : ''}
       <div class="pl-bar"><i style="width:${G.length ? yap * 100 / G.length : 0}%"></i></div><div class="alt" style="margin-top:4px"><b style="color:#fff">${yap}/${G.length}</b> görev bu hafta tamamlandı</div>
-      ${GUN.map((g, gi) => { const L = G.filter(x => +x.g === gi); if (!L.length) return ''; return `<div class="rp-gun2 ${gi === bg ? 'bugun' : ''}"><b>${g}${gi === bg ? ' · bugün' : ''}</b>${L.map(x => `<div class="pl-gorev ${ok[hk + '|' + x.id] ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-rptik="${esc(x.id)}" aria-label="Tamamlandı">${ok[hk + '|' + x.id] ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${x.konu ? esc(x.konu) + ' · ' : ''}${sure(+x.dk || 0)}</small></div></div>`).join('')}</div>`; }).join('')}
+      ${GUN.map((g, gi) => { const L = G.filter(x => +x.g === gi); if (!L.length) return ''; return `<div class="rp-gun2 ${gi === bg ? 'bugun' : ''}"><b>${g}${gi === bg ? ' · bugün' : ''}</b>${L.map(x => `<div class="pl-gorev ${ok[hk + '|' + x.id] ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-rptik="${esc(x.id)}" aria-label="Tamamlandı">${ok[hk + '|' + x.id] ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${gAlt(x)}</small></div></div>`).join('')}</div>`; }).join('')}
       <div class="alt" style="margin-top:10px">İşaretlediklerini rehber öğretmenin görür. Kendi planını aşağıda ayrıca yapabilirsin.</div></div>`;
   }
   $('#rplan').addEventListener('click', async ev => {
@@ -599,6 +600,7 @@
     if (data && data.ok) RH.plan.ok = data.isaret || ok; else { if (yeni) delete ok[key]; else ok[key] = true; }
     rpCiz();
   });
+  const gAlt = x => [x.konu, x.soru ? x.soru + ' soru' : '', x.kaynak, sure(+x.dk || 0)].filter(Boolean).map(esc).join(' · ');   // K-584
   const rpBugun = () => { const P = RH.plan; if (!P || !P.veri) return null; const G = (P.veri.gorevler || []).filter(x => +x.g === gunIdx(simdi())), hk = iso(pzt(simdi())); return { n: G.length, ok: G.filter(x => (P.ok || {})[hk + '|' + x.id]).length }; };
   // ---- K-580: Günün sözü (her gün farklı)
   function sozCiz() {
