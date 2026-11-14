@@ -196,17 +196,40 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .ps.bit { opacity: .45; } .ps.sr { border-color: var(--neon); border-left-color: var(--r); background: rgba(34,232,255,.08); }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
-html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .28s; } #acilis.kalk { opacity: 0; }
-#acilis .tk { position: relative; width: 104px; height: 104px; }
-#acilis .tk .halka { position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(34,232,255,.14); border-top-color: #22e8ff; border-right-color: rgba(34,232,255,.55); animation: tkDon .9s linear infinite; }
-#acilis .tk .dolu { position: absolute; inset: 8px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #8ff8ff 0%, #22e8ff 38%, #0aa6c9 100%); box-shadow: 0 0 0 6px rgba(34,232,255,.12), 0 0 34px rgba(34,232,255,.55), inset 0 -6px 14px rgba(0,60,90,.35); transform: scale(.4); opacity: 0; transition: transform .34s cubic-bezier(.2,1.5,.4,1), opacity .2s; display: grid; place-items: center; }
-#acilis .tk svg path { stroke-dasharray: 34; stroke-dashoffset: 34; transition: stroke-dashoffset .32s ease-out .16s; }
-#acilis.tikli .tk .halka { animation: none; border-color: rgba(34,232,255,.0); transition: border-color .2s; } #acilis.tikli .tk .dolu { transform: scale(1); opacity: 1; } #acilis.tikli .tk svg path { stroke-dashoffset: 0; }
-@keyframes tkDon { to { transform: rotate(360deg); } }</style>
+html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
+#acilis .atl { width: min(62vw, 250px); height: auto; overflow: visible; }
+#acilis .govde { animation: atlSuz 1.8s ease-in-out infinite; transform-box: view-box; transform-origin: 192px 390px; }
+@keyframes atlSuz { 50% { transform: translateY(-6px); } }
+#acilis .gozler ellipse { transform-box: fill-box; transform-origin: center; animation: atlKirp 3.2s infinite; } @keyframes atlKirp { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+#acilis .mutlu { opacity: 0; } #acilis .el { transform-box: view-box; transform-origin: 262px 280px; transform: translateY(46px) rotate(24deg) scale(.7); opacity: 0; }
+#acilis .rozet { transform-box: fill-box; transform-origin: center; transform: scale(0); opacity: 0; }
+#acilis.tikli .el { animation: atlEl .55s cubic-bezier(.2,1.5,.45,1) forwards; }
+@keyframes atlEl { 0% { opacity: 0; transform: translateY(46px) rotate(24deg) scale(.7); } 35% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) rotate(-4deg) scale(1.08); } }
+#acilis.tikli .bas { transform-box: fill-box; transform-origin: 50% 100%; animation: atlBas .32s ease-out .5s 2 alternate; } @keyframes atlBas { to { transform: translateY(-4px) scaleY(1.06); } }
+#acilis.tikli .gozler { animation: atlSon .15s .35s forwards; } #acilis.tikli .mutlu { animation: atlGel .2s .35s forwards; }
+@keyframes atlSon { to { opacity: 0; } } @keyframes atlGel { to { opacity: 1; } }
+#acilis.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .45s forwards; } @keyframes atlRozet { to { transform: scale(1); opacity: 1; } }
+#acilis.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .7s forwards; } @keyframes atlHalka { to { transform: scale(1.9); opacity: 0; } }
+</style>
 <script>try { if (sessionStorage.getItem('umalYeniden') || sessionStorage.getItem('umalOturum') || ((j => j && Date.now() - (j.t || 0) < 30 * 864e5)(JSON.parse(localStorage.getItem('umalOturum') || 'null')))) document.documentElement.classList.add('oturumlu'); } catch (e) {}</script>
 </head>
 <body>
-<div id="acilis"><div class="tk"><div class="halka"></div><div class="dolu"><svg viewBox="0 0 24 24" width="62" height="62" fill="none" stroke="#04202a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 12.5l4.3 4.3L18.5 8"/></svg></div></div></div>
+<div id="acilis"><svg class="atl" viewBox="0 0 384 390" aria-hidden="true">
+  <defs><linearGradient id="elG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe6f1"/></linearGradient>
+    <radialGradient id="tkG" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8ff8ff"/><stop offset=".45" stop-color="#22e8ff"/><stop offset="1" stop-color="#0aa6c9"/></radialGradient>
+    <filter id="parla" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <g class="govde"><image href="img/atlas-govde.png" width="384" height="390"/>
+    <g class="gozler" filter="url(#parla)" fill="#7ff0ff"><ellipse class="g1" cx="124" cy="130" rx="15" ry="20"/><ellipse class="g2" cx="192" cy="130" rx="15" ry="20"/></g>
+    <g class="mutlu" filter="url(#parla)" fill="none" stroke="#7ff0ff" stroke-width="10" stroke-linecap="round"><path d="M106 136q18-22 36 0"/><path d="M174 136q18-22 36 0"/></g>
+    <g class="el"><g transform="translate(286 236)">
+      <path d="M-30 30 Q-22 10 -4 6 L8 26 Q-8 34 -18 44 Z" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/>
+      <rect x="-12" y="4" width="26" height="15" rx="7" transform="rotate(-30 1 11)" fill="#101a3a"/>
+      <rect x="-6" y="-26" width="58" height="50" rx="18" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/>
+      <path d="M8 -11h34M8 1h36M8 13h32" stroke="#c3cee0" stroke-width="3" stroke-linecap="round"/>
+      <g class="bas"><rect x="0" y="-66" width="22" height="50" rx="11" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/><path d="M5.5 -55q5.5-5 11 0" stroke="#eef3fa" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+    </g></g></g>
+  <g class="rozet"><circle class="halka" cx="332" cy="150" r="26" fill="none" stroke="#22e8ff" stroke-width="3"/><circle cx="332" cy="150" r="24" fill="url(#tkG)"/><path d="M320 150.5l8.5 8.5 15.5-17" fill="none" stroke="#04202a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg></div>
 <main>
   <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small id="ustAlt">Öğrenci</small></div><button class="cikis-ust gizli" id="cikisUst" title="Çıkış" aria-label="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/></svg></button></div>
 
@@ -299,6 +322,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611143000"></script>
-<script src="ogrenci.js?v=202611144600"></script>
+<script src="ogrenci.js?v=202611144700"></script>
 </body>
 </html>
