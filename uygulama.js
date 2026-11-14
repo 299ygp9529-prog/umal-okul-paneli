@@ -2015,8 +2015,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const hedefOgr = d => (D.ogrenciler || []).filter(x => d.hedef && (d.hedef.tum || (d.hedef.siniflar || []).includes(x.sinif) || (d.hedef.seviyeler || []).includes(String(x.sinif).split('-')[0])));
     const hedefYazi = h => h.tum ? 'Tüm okul' : [...(h.seviyeler || []).map(v => v + '. sınıflar'), ...(h.siniflar || [])].join(', ') || '—';
     const SEK = { yayin: ['Yayında', yayinda], bekle: ['İleri tarihli', bekliyor], gecmis: ['Geçmiş / kaldırılan', d => !yayinda(d) && !bekliyor(d)] };
-    const salt = D.rol === 'ogretmen';   // K-615: öğretmen duyuruları yalnız görür
-    const kart = d => { const H = hedefOgr(d), ok = new Set(DU.O.filter(x => x.duyuru === d.id).map(x => x.no)), n = H.filter(x => ok.has(String(x.no))).length;
+    const ogrtD = D.rol === 'ogretmen';   // K-616: öğretmen duyuru yapar; yalnız kendi duyurusunu düzenler / kaldırır, okunma dökümünü yalnız kendi duyurusunda görür
+    const kart = d => { const salt = ogrtD && String(d.yazan || '').toLowerCase() !== String(D.eposta || '').toLowerCase(); const H = hedefOgr(d), ok = new Set(DU.O.filter(x => x.duyuru === d.id).map(x => x.no)), n = H.filter(x => ok.has(String(x.no))).length;
       return `<div class="du-kart ${d.onemli ? 'onemli' : ''} ${yayinda(d) ? '' : 'pasif'}"><div class="du-ust">${d.onemli ? '<span class="du-etk">ÖNEMLİ</span>' : ''}<b>${esc(d.baslik)}</b></div>
         <div class="soluk kucuk">${esc(hedefYazi(d.hedef || {}))} · ${esc(gunAdi(d.baslangic))} – ${esc(gunAdi(d.bitis))} · ${esc(d.yazan_ad || d.yazan)}</div>
         ${d.metin ? `<div class="du-metin">${esc(d.metin)}</div>` : ''}
@@ -2025,7 +2025,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       const G = DU.L.filter(SEK[DU.sek][1]);
       $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Öğrenci Duyuruları</h1><div class="soluk kucuk">Öğrenci panelinde (umalatlas.com.tr/ogrenci) görünür; okunmamış duyuru öğrencinin ekranında yanıp sönen mektupla işaretlenir. Önemli duyurular ana sayfanın üstünde çıkar.</div></div>
-          <div class="dugmeler" style="margin:0">${salt ? '' : '<button class="birincil" data-dyeni="1">+ Yeni duyuru</button>'}</div></div>
+          <div class="dugmeler" style="margin:0"><button class="birincil" data-dyeni="1">+ Yeni duyuru</button></div></div>
         <div class="mk-sekme" style="margin-top:12px">${Object.entries(SEK).map(([k, [a, f]]) => `<button class="cip ${DU.sek === k ? 'secili' : ''}" data-dsek="${k}">${a} · ${DU.L.filter(f).length}</button>`).join('')}</div>
         <div class="du-liste">${G.length ? G.map(kart).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde duyuru yok.</div>'}</div>`;
     };
