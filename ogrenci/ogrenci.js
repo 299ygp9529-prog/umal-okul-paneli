@@ -236,8 +236,15 @@
       (async () => { for (let i = 0; i < 3; i++) { try { const r = (await sb.rpc('umal_ogrenci_ozet', { p_no: S.no, p_kod: S.kod })).data; if (r && r.ok) return r; } catch (e) {} await new Promise(z => setTimeout(z, 1500 * (i + 1))); } return null; })(),   // K-578: ilk denemede kilit/ağ yüzünden boş dönerse yeniden dene
       (async () => { try { const r = await fetch('../sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } })()]);
     if (oz && oz.ok) { S.program = oz.program || {}; S.yerler = oz.yerler || []; }
-    try { const { data } = await sb.from('umal_sinav_konu').select('anahtar,konular').eq('seviye', (S.sinif || '').split('-')[0]); S.konular = new Map((data || []).filter(k => k.konular).map(k => [k.anahtar, k.konular])); } catch (e) { S.konular = new Map(); }   // K-574
+    await konuYukle();   // K-574
     S.takvim = tk; if (!$('#liste').classList.contains('gizli')) anaCiz(true);
+  }
+  // K-613: sınav konuları girişte, Sınavlarım açılınca ve dakikada bir yeniden okunur (öğretmen sonradan yazınca da görünsün). Değiştiyse true.
+  async function konuYukle() {
+    if (!S.sinif) return false;
+    try { const { data, error } = await sb.from('umal_sinav_konu').select('anahtar,konular').eq('seviye', S.sinif.split('-')[0]); if (error || !data) { S.konular = S.konular || new Map(); return false; }
+      const y = new Map(data.filter(k => k.konular).map(k => [k.anahtar, k.konular])), e = JSON.stringify([...(S.konular || new Map())].sort()), d = JSON.stringify([...y].sort()); S.konular = y; return e !== d;
+    } catch (e) { S.konular = S.konular || new Map(); return false; }
   }
   function sinavlarim() {   // bu sınıfın kelebek sınavları: [{tarih, ders(n. Ders), ad, bas, bit, yer}]
     const tk = S.takvim; if (!tk || !S.sinif) return [];
@@ -295,7 +302,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
   function sinavCiz() {
     const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
@@ -928,7 +935,9 @@
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
     if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
       mektuplarYukle(); await rhYukle(false);
-      if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
+      if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın
+      if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
+      if (await konuYukle() && !$('#s-sinav').classList.contains('gizli')) sinavCiz();   // K-613: öğretmenin yeni yazdığı sınav konuları
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
   }, 20000);
