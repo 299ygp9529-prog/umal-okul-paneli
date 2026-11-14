@@ -152,6 +152,7 @@
     { id: 'kelebek', ad: 'Kelebek Sistemi', roller: ['bas', 'yonetici'], ciz: kelebek },   // K-380
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
+    { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
@@ -1964,6 +1965,94 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const tarih = new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' });
     belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><title>${esc(t.ad)} · ${esc(kapsam)}</title><style>@page{size:A4${dv ? ' landscape' : ''};margin:11mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;margin:0;padding:9mm}h1{font-size:13pt;text-align:center;margin:0 0 1mm}h2{font-size:11pt;margin:6mm 0 2mm;padding-bottom:1mm;border-bottom:1.5px solid #1aa6c4;color:#0d3c57}h3{font-size:10pt;margin:4mm 0 1.5mm;break-after:avoid}p{margin:0 0 2mm}.alt{text-align:center;color:#444;margin-bottom:4mm}.g{color:#666;font-weight:normal}.s{margin:3.5mm 0 1mm;break-after:avoid}table{width:100%;border-collapse:collapse;margin-bottom:2mm}td,th{border:1px solid #9aa6b2;padding:2px 4px;text-align:left;vertical-align:middle}th{background:#e8eef4}table.o td{border:0;border-bottom:1px solid #e3e8ef}table.ogr td,table.ogr th{font-size:8pt}td.m,th.m{text-align:center;padding:1px;width:3.9mm;font-size:7.5pt}td.e{background:#ffe2c4;font-weight:bold}td.ad{white-space:nowrap}ul{margin:0 0 2mm;padding-left:5mm}li{margin:.6mm 0}tr{break-inside:avoid}</style>
       <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:17mm"><div style="font-weight:bold;margin:1.5mm 0 3mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(t.ad)}</h1><p class="alt">${esc(kapsam)} · ${n}/${K.length} kişi doldurdu · ${tarih}</p>${h}`, `${t.ad} · ${kapsam}`, dv);
+  }
+  // ------------------------------------------------------------------ K-569: Öğrenci duyuruları (öğrenci paneline)
+  const DU = { L: [], O: [], sek: 'yayin' };
+  async function duyurularBolumu(sessiz) {
+    await ogrencileriYukle().catch(() => []);
+    const [r, o, ad] = await Promise.all([sb.from('umal_duyuru').select('*').order('olusturma', { ascending: false }), hepsi('umal_duyuru_okundu', 'duyuru,no,zaman').catch(() => []),
+      sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
+    if (r.error) { if (sessiz) return; if (/umal_duyuru/.test(r.error.message || '')) { $('#icerik').innerHTML = '<div class="kart">Duyurular için Supabase\'de <b>20261114100000_umal_ogrenci_duyuru_plan.sql</b> çalıştırılmalı.</div>'; return; } throw r.error; }
+    const h_ = JSON.stringify([r.data, o.length]); if (sessiz && h_ === DU.h) return; DU.h = h_;
+    DU.L = r.data || []; DU.O = o; DU.ad = (ad.data && ad.data.ad) || ({ bas: 'Okul müdürlüğü', yonetici: 'Okul idaresi', rehberlik: 'Rehberlik servisi' }[D.rol] || 'Okul idaresi');
+    const bugun = bugunISO(), yayinda = d => !d.arsiv && d.bitis >= bugun && d.baslangic <= bugun, bekliyor = d => !d.arsiv && d.baslangic > bugun;
+    const hedefOgr = d => (D.ogrenciler || []).filter(x => d.hedef && (d.hedef.tum || (d.hedef.siniflar || []).includes(x.sinif) || (d.hedef.seviyeler || []).includes(String(x.sinif).split('-')[0])));
+    const hedefYazi = h => h.tum ? 'Tüm okul' : [...(h.seviyeler || []).map(v => v + '. sınıflar'), ...(h.siniflar || [])].join(', ') || '—';
+    const SEK = { yayin: ['Yayında', yayinda], bekle: ['İleri tarihli', bekliyor], gecmis: ['Geçmiş / kaldırılan', d => !yayinda(d) && !bekliyor(d)] };
+    const kart = d => { const H = hedefOgr(d), ok = new Set(DU.O.filter(x => x.duyuru === d.id).map(x => x.no)), n = H.filter(x => ok.has(String(x.no))).length;
+      return `<div class="du-kart ${d.onemli ? 'onemli' : ''} ${yayinda(d) ? '' : 'pasif'}"><div class="du-ust">${d.onemli ? '<span class="du-etk">ÖNEMLİ</span>' : ''}<b>${esc(d.baslik)}</b></div>
+        <div class="soluk kucuk">${esc(hedefYazi(d.hedef || {}))} · ${esc(gunAdi(d.baslangic))} – ${esc(gunAdi(d.bitis))} · ${esc(d.yazan_ad || d.yazan)}</div>
+        ${d.metin ? `<div class="du-metin">${esc(d.metin)}</div>` : ''}
+        <div class="du-alt"><button class="du-okuma" data-dok="${d.id}"><span class="du-bar"><i style="width:${H.length ? Math.round(n * 100 / H.length) : 0}%"></i></span>${n}/${H.length} öğrenci okudu ›</button>
+          <span class="dugmeler" style="margin:0">${d.arsiv ? `<button class="ikincil" data-dgeri="${d.id}">Yeniden yayınla</button><button class="bag" style="color:var(--kirmizi)" data-dsil="${d.id}">Sil</button>` : `<button class="ikincil" data-dduz="${d.id}">Düzenle</button><button class="tehlike" data-dkaldir="${d.id}">Yayından kaldır</button>`}</span></div></div>`; };
+    const ciz = () => {
+      const G = DU.L.filter(SEK[DU.sek][1]);
+      $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Öğrenci Duyuruları</h1><div class="soluk kucuk">Öğrenci panelinde (umalatlas.com.tr/ogrenci) görünür; okunmamış duyuru öğrencinin ekranında yanıp sönen mektupla işaretlenir. Önemli duyurular ana sayfanın üstünde çıkar.</div></div>
+          <div class="dugmeler" style="margin:0"><button class="birincil" data-dyeni="1">+ Yeni duyuru</button></div></div>
+        <div class="mk-sekme" style="margin-top:12px">${Object.entries(SEK).map(([k, [a, f]]) => `<button class="cip ${DU.sek === k ? 'secili' : ''}" data-dsek="${k}">${a} · ${DU.L.filter(f).length}</button>`).join('')}</div>
+        <div class="du-liste">${G.length ? G.map(kart).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde duyuru yok.</div>'}</div>`;
+    };
+    const form = d => {
+      const T = d ? { baslik: d.baslik, metin: d.metin, hedef: JSON.parse(JSON.stringify(d.hedef || { tum: true })), onemli: d.onemli, baslangic: d.baslangic, bitis: d.bitis }
+        : { baslik: '', metin: '', hedef: { tum: true }, onemli: false, baslangic: bugunISO(), bitis: gunEkle(bugunISO(), 7) };
+      const tum = [...new Set((D.ogrenciler || []).map(o => o.sinif))].sort(sinifSira);
+      const fc = () => {
+        const h = T.hedef, sv = h.seviyeler || [], sn = h.siniflar || [], kac = hedefOgr({ hedef: h }).length;
+        pencereAc(`<h2 style="margin-top:0">${d ? 'Duyuruyu düzenle' : 'Yeni duyuru'}</h2><div class="du-form"><div>
+          <label>Başlık</label><input id="duB" maxlength="120" value="${esc(T.baslik)}" placeholder="ör. Veli toplantısı 20 Kasım Cuma 14.00'te">
+          <label>Duyuru metni (isteğe bağlı)</label><textarea id="duM" rows="6" maxlength="3000" placeholder="Ayrıntılar, yer, saat, bağlantı…">${esc(T.metin)}</textarea>
+          <label>Kime</label><div class="cipler"><button class="cip ${h.tum ? 'secili' : ''}" data-dh="tum">Tüm okul</button>${['9', '10', '11', '12'].map(v => `<button class="cip ${sv.includes(v) ? 'secili' : ''}" data-dh="s${v}" style="border-color:${SEVIYE_RENK[v]}">${v}. sınıflar</button>`).join('')}</div>
+          ${h.tum ? '' : `<div class="du-sinif">${tum.map(x => `<button class="cip ${sn.includes(x) || sv.includes(x.split('-')[0]) ? 'secili' : ''}" data-dh="=${esc(x)}" ${sv.includes(x.split('-')[0]) ? 'disabled' : ''}>${esc(x)}</button>`).join('')}</div>`}
+          <div class="kucuk neon">${kac} öğrenciye gider</div>
+          <label>Ne kadar süre yayında kalsın</label><div class="cipler">${[[1, '1 gün'], [3, '3 gün'], [7, '1 hafta'], [14, '2 hafta'], [30, '1 ay']].map(([g, a]) => `<button class="cip ${T.bitis === gunEkle(T.baslangic, g) ? 'secili' : ''}" data-dg="${g}">${a}</button>`).join('')}</div>
+          <div class="rv-iki"><div><label>Başlangıç</label><input type="date" id="duBas" value="${T.baslangic}"></div><div><label>Bitiş</label><input type="date" id="duBit" value="${T.bitis}"></div></div>
+          <button class="mk-onem ${T.onemli ? 'secili' : ''}" data-donem="1"><i></i><span><b>Önemli</b><small>Öğrencinin ana sayfasında en üstte kırmızı kartla çıkar</small></span></button>
+          <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="duKaydet">${d ? 'Kaydet' : 'Yayınla'}</button></div><div class="kucuk" id="duBilgi"></div></div>
+          <div class="du-onizle"><div class="soluk kucuk" style="margin-bottom:6px">Öğrencinin göreceği</div><div class="du-tel"><div class="duy-o ${T.onemli ? 'onemli' : ''}"><div class="soluk kucuk">${T.onemli ? '<span style="color:#ff8a95;font-weight:800">ÖNEMLİ</span> · ' : ''}Bugün · ${esc(DU.ad)}</div><b>${esc(T.baslik || 'Başlık')}</b>${T.metin ? `<div class="m">${esc(T.metin)}</div>` : ''}</div></div></div></div>`);
+        $('#pencere .pencere-ic').classList.add('genis');
+        const oku = () => { T.baslik = $('#duB').value; T.metin = $('#duM').value; T.baslangic = $('#duBas').value || T.baslangic; T.bitis = $('#duBit').value || T.bitis; };
+        const onizle = () => { const p = document.querySelector('.du-tel .duy-o'); if (!p) return; p.querySelector('b:last-of-type').textContent = T.baslik || 'Başlık'; let m = p.querySelector('.m'); if (!m) { m = document.createElement('div'); m.className = 'm'; p.appendChild(m); } m.textContent = T.metin; };
+        ['duB', 'duM', 'duBas', 'duBit'].forEach(i => $('#' + i).addEventListener('input', () => { oku(); onizle(); }));   // yazarken yeniden çizilmez (odak kaybolmasın)
+        $('#pencereIcerik').onclick = async ev => {
+          const b = ev.target.closest('button'); if (!b) return;
+          if (b.dataset.dh) { oku(); const k = b.dataset.dh; if (k === 'tum') T.hedef = h.tum ? { seviyeler: [], siniflar: [] } : { tum: true };
+            else { delete T.hedef.tum; T.hedef.seviyeler = T.hedef.seviyeler || []; T.hedef.siniflar = T.hedef.siniflar || [];
+              const L = k[0] === 's' ? T.hedef.seviyeler : T.hedef.siniflar, v = k.slice(1), i = L.indexOf(v); if (i >= 0) L.splice(i, 1); else L.push(v);
+              if (k[0] === 's') T.hedef.siniflar = T.hedef.siniflar.filter(x => !T.hedef.seviyeler.includes(x.split('-')[0])); }
+            fc(); return; }
+          if (b.dataset.dg) { oku(); T.bitis = gunEkle(T.baslangic, +b.dataset.dg); fc(); return; }
+          if (b.dataset.donem) { oku(); T.onemli = !T.onemli; fc(); return; }
+          if (b.id === 'duKaydet') { oku(); const bil = $('#duBilgi');
+            if (!T.baslik.trim()) { bil.textContent = 'Başlık yazın.'; return; }
+            if (!T.hedef.tum && !(T.hedef.seviyeler || []).length && !(T.hedef.siniflar || []).length) { bil.textContent = 'Kime gideceğini seçin.'; return; }
+            if (T.bitis < T.baslangic) { bil.textContent = 'Bitiş, başlangıçtan önce olamaz.'; return; }
+            b.disabled = true; bil.textContent = 'Kaydediliyor…';
+            const alan = { baslik: T.baslik.trim(), metin: T.metin.trim(), hedef: T.hedef, onemli: T.onemli, baslangic: T.baslangic, bitis: T.bitis };
+            const { error } = await israrla(() => d ? sb.from('umal_duyuru').update(alan).eq('id', d.id) : sb.from('umal_duyuru').insert(Object.assign({ yazan: D.eposta, yazan_ad: DU.ad }, alan)));
+            if (error) { bil.textContent = 'Kaydedilemedi: ' + hataYaz(error); b.disabled = false; return; }
+            $('#pencere').classList.add('gizli'); DU.sek = T.baslangic > bugunISO() ? 'bekle' : 'yayin'; DU.h = null; await duyurularBolumu(); }
+        };
+      };
+      fc();
+    };
+    const okuyanlar = d => {
+      const H = hedefOgr(d), ok = new Map(DU.O.filter(x => x.duyuru === d.id).map(x => [x.no, x.zaman])), ss = [...new Set(H.map(x => x.sinif))].sort(sinifSira);
+      pencereAc(`<h1 style="margin-top:0">${esc(d.baslik)}</h1><div class="soluk kucuk">${ok.size} öğrenci okudu · ${H.length - H.filter(x => ok.has(String(x.no))).length} öğrenci henüz okumadı</div>
+        <div class="du-sinifok">${ss.map(s => { const A = H.filter(x => x.sinif === s), n = A.filter(x => ok.has(String(x.no))).length; return `<details><summary><b>${esc(s)}</b><span>${n}/${A.length} okudu</span><span class="du-bar"><i style="width:${A.length ? Math.round(n * 100 / A.length) : 0}%"></i></span></summary><div class="du-isim">${A.slice().sort((a, b) => (+a.no) - (+b.no)).map(x => `<span class="${ok.has(String(x.no)) ? 'ok' : ''}">${ok.has(String(x.no)) ? '✓ ' : ''}${esc(x.no)} ${esc(baslik(x.ad))}</span>`).join('')}</div></details>`; }).join('')}</div>`);
+    };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_duyuru').update(alan).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button'); if (!b) return; const d = DU.L.find(x => x.id === (b.dataset.dok || b.dataset.dduz || b.dataset.dkaldir || b.dataset.dgeri || b.dataset.dsil));
+      if (b.dataset.dsek) { DU.sek = b.dataset.dsek; ciz(); return; }
+      if (b.dataset.dyeni) return form(null);
+      if (!d) return;
+      if (b.dataset.dok) return okuyanlar(d);
+      if (b.dataset.dduz) return form(d);
+      if (b.dataset.dkaldir) return yaz(d.id, { arsiv: true });
+      if (b.dataset.dgeri) return yaz(d.id, { arsiv: false, bitis: d.bitis < bugunISO() ? gunEkle(bugunISO(), 7) : d.bitis });
+      if (b.dataset.dsil) { if (!confirm('Duyuru ve okunma bilgisi kalıcı olarak silinsin mi?')) return; const { error } = await sb.from('umal_duyuru').delete().eq('id', d.id); if (error) { alert(hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); }
+    };
+    ciz(); yenile(() => canliGuvenli() ? duyurularBolumu(true) : Promise.resolve(), 30);
   }
   async function rehberlik() {
     await anketVerisi();

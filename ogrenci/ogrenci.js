@@ -9,7 +9,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', id.startsWith('s-') || id === 'form'); };
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -32,9 +32,9 @@
     if (!data.ok) { bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     $('#kod').value = ''; bilgi.textContent = '';
-    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); selamla();
+    anaCiz(); mektuplarYukle(); ozetYukle(); rvYukle(false); dyYukle(); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
-  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  const cikis = () => { mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(PL, { veri: null, hafta: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
@@ -211,17 +211,17 @@
     const acikForm = S.formlar.filter(f => !f.doldu).length;
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     $('#kutular').innerHTML = kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
-      + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', 'yakında', false)
+      + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
-      + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', 'yakında', false);
-    rvAnaCiz();
+      + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()));
+    rvAnaCiz(); dyAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') sinavCiz(); if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
   function sinavCiz() {
     const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
@@ -431,6 +431,118 @@
       rc.disabled = true; const d = await rpc('umal_ogrenci_randevu_cevap', { p_id: rc.dataset.id, p_cevap: c, p_not: not });
       rvSonuc(d, bil, c === 'geliyorum' ? '' : ''); }
   };
+  // ---- K-569: Duyurular (okunmamış → kutucukta yanıp sönen mektup; önemli olan ana sayfada)
+  const DY = { L: [] };
+  const linkle = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  const dyTarih = z => { const d = new Date(z), b = new Date(); const f = Math.round((new Date(b).setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
+    return f === 0 ? 'Bugün ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : f === 1 ? 'Dün' : d.getDate() + ' ' + AY[d.getMonth()]; };
+  async function dyYukle(okunan) {
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_duyurular', okunan ? { p_no: S.no, p_kod: S.kod, p_okundu: okunan } : { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok) return false;
+    const eski = JSON.stringify(DY.L); DY.L = data.duyurular || [];
+    if (eski !== JSON.stringify(DY.L) && !$('#liste').classList.contains('gizli')) anaCiz(true);
+    return true;
+  }
+  const dyYeni = () => DY.L.some(d => !d.okundu);
+  function dyAnaCiz() {
+    const d = DY.L.find(x => x.onemli && !x.okundu), k = $('#duyAnaKart');
+    if (!d) { k.classList.add('gizli'); return; }
+    k.innerHTML = `<i class="ik">${svg('duy')}</i><div><b>Önemli duyuru: ${esc(d.baslik)}</b><span>${esc(d.yazan)} · ${esc(dyTarih(d.tarih))} · okumak için dokun</span></div>`;
+    k.classList.remove('gizli');
+  }
+  $('#duyAnaKart').onclick = () => dyAc();
+  function dyCiz(yeniler) {
+    $('#duyListe').innerHTML = DY.L.length ? DY.L.map(d => `<div class="duy ${d.onemli ? 'onemli' : ''} ${yeniler.has(d.id) ? 'yeni' : ''}"><div class="ust">${d.onemli ? '<span class="etk">ÖNEMLİ</span>' : ''}${yeniler.has(d.id) ? '<span class="etk yeni">YENİ</span>' : ''}<span>${esc(dyTarih(d.tarih))} · ${esc(d.yazan)}</span></div><h3>${esc(d.baslik)}</h3>${d.metin ? `<div class="m">${linkle(d.metin)}</div>` : ''}</div>`).join('')
+      : '<div class="kart soluk" style="text-align:center">Şu an sana gönderilmiş bir duyuru yok.</div>';
+  }
+  async function dyAc() {
+    const yeniler = new Set(DY.L.filter(d => !d.okundu).map(d => d.id));
+    dyCiz(yeniler); goster('s-duy'); window.scrollTo(0, 0);
+    if (yeniler.size) { await dyYukle([...yeniler]); dyCiz(yeniler); }   // okundu (mektup gider; bu ekranda YENİ etiketi kalır)
+  }
+
+  // ---- K-569: Çalışma planım (haftalık; yalnız öğrenci görür; sunucuda saklanır)
+  const PL = { veri: null, hafta: null, form: null, kayitZ: null, durum: '' };
+  const pzt = d => { const x = new Date(d); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - gunIdx(x)); return x; };
+  const sure = dk => dk >= 60 ? `${Math.floor(dk / 60)} sa${dk % 60 ? ' ' + (dk % 60) + ' dk' : ''}` : `${dk} dk`;
+  const PL_EK = ['Soru çözümü', 'Konu tekrarı', 'Deneme sınavı', 'Kitap okuma', 'Ödev'];
+  const plDersler = () => { const s_ = new Set(); Object.values(S.program || {}).forEach(c => c && c.ders && s_.add(c.ders)); return [...s_].sort((a, b) => a.localeCompare(b, tr)).concat(PL_EK); };
+  const plHafta = () => { const k = iso(PL.hafta); const v = PL.veri; v.haftalar = v.haftalar || {}; return (v.haftalar[k] = v.haftalar[k] || []); };
+  async function plYukle() {
+    if (PL.veri) return true;
+    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_plan_al', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok) return false;
+    PL.veri = data.plan && typeof data.plan === 'object' ? data.plan : {}; return true;
+  }
+  function plKaydet() {
+    PL.durum = 'Kaydediliyor…'; $('#plKayit').textContent = PL.durum; clearTimeout(PL.kayitZ);
+    PL.kayitZ = setTimeout(async () => {
+      const v = PL.veri, lim = iso(new Date(Date.now() - 70 * 864e5));   // 10 haftadan eskiler silinir
+      Object.keys(v.haftalar || {}).forEach(k => { if (k < lim || !v.haftalar[k].length) delete v.haftalar[k]; });
+      let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_plan_kaydet', { p_no: S.no, p_kod: S.kod, p_plan: v })); } catch (e) {}
+      $('#plKayit').textContent = data && data.ok ? '✓ Kaydedildi. Planını yalnız sen görürsün.' : (data && data.hata) || 'Kaydedilemedi; internet bağlantını kontrol et. Değişiklikler bu sayfada duruyor, tekrar denenecek.';
+      if (!(data && data.ok)) setTimeout(plKaydet, 15000);
+    }, 700);
+  }
+  async function plAc() {
+    goster('s-plan'); window.scrollTo(0, 0);
+    if (!PL.hafta) PL.hafta = pzt(simdi());
+    if (!PL.veri) { $('#plGunler').innerHTML = '<div class="kart soluk">Yükleniyor…</div>'; if (!(await plYukle())) { $('#plGunler').innerHTML = '<div class="kart soluk">Plan yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
+    plCiz();
+  }
+  function plCiz() {
+    const L = plHafta(), son = new Date(PL.hafta); son.setDate(son.getDate() + 6);
+    const top = L.reduce((t, x) => t + (+x.dk || 0), 0), ok = L.filter(x => x.ok).reduce((t, x) => t + (+x.dk || 0), 0), hedef = +PL.veri.hedef || 0;
+    const buHafta = iso(PL.hafta) === iso(pzt(simdi()));
+    $('#plBaslik').textContent = `${PL.hafta.getDate()} ${PL.hafta.getMonth() !== son.getMonth() ? AY[PL.hafta.getMonth()] + ' ' : ''}– ${son.getDate()} ${AY[son.getMonth()]}`;
+    $('#plAlt').textContent = buHafta ? 'Bu hafta' : (PL.hafta < pzt(simdi()) ? 'Geçmiş hafta' : 'Gelecek hafta');
+    const pay = hedef ? Math.min(100, Math.round(ok * 100 / hedef)) : (top ? Math.round(ok * 100 / top) : 0);
+    $('#plBar').style.width = pay + '%';
+    $('#plSayi').innerHTML = `<b>${sure(ok)}</b> tamamlandı / ${hedef ? 'hedef ' + sure(hedef) : sure(top) + ' planlı'}`;
+    $('#plHedef').innerHTML = 'Haftalık hedef:' + [0, 300, 600, 900, 1200, 1800].map(d => `<button class="${hedef === d ? 'secili' : ''}" data-ph="${d}">${d ? d / 60 + ' saat' : 'yok'}</button>`).join('');
+    // yaklaşan sınavlar → plana ekle
+    const SV = sinavlarim().filter(x => !bitti(x)).filter(x => (x.d - simdi()) / 864e5 < 15).slice(0, 6);
+    $('#plSinav').innerHTML = SV.length ? `<div class="hafta">YAKLAŞAN SINAVLAR · plana eklemek için dokun</div><div class="pl-sinav">${SV.map((x, k) => { const g = Math.max(0, Math.ceil((new Date(x.tarih + 'T00:00') - new Date(iso(simdi()) + 'T00:00')) / 864e5)); return `<button data-psv="${k}">${esc(x.ad)}<small>${g === 0 ? 'bugün' : g === 1 ? 'yarın' : g + ' gün sonra'} · ${GUN[gunIdx(x.d)]}</small></button>`; }).join('')}</div>` : '';
+    PL.sv = SV;
+    const bugunIso = iso(simdi());
+    $('#plGunler').innerHTML = (L.length ? '' : `<div class="kart soluk" style="text-align:center">Bu hafta için plan yok. Günlerin yanındaki "+ Ekle" ile görev ekle${iso(PL.hafta) !== iso(pzt(simdi())) ? '' : ''}.${Object.keys(PL.veri.haftalar || {}).some(k => k < iso(PL.hafta) && PL.veri.haftalar[k].length) ? '<br><button class="ikincil" data-pkopya="1" style="margin-top:10px">Önceki haftanın planını kopyala</button>' : ''}</div>`)
+      + GUN.map((g, gi) => {
+        const d = new Date(PL.hafta); d.setDate(d.getDate() + gi); const di = iso(d), G = L.filter(x => +x.g === gi);
+        const fd = PL.form && PL.form.g === gi;
+        return `<div class="pl-gun ${di === bugunIso ? 'bugun' : ''} ${di < bugunIso ? 'gecti' : ''}"><div class="pl-gun-ust"><b>${g}</b><small>${d.getDate()} ${AY[d.getMonth()]}${G.length ? ' · ' + sure(G.reduce((t, x) => t + (+x.dk || 0), 0)) : ''}</small>${fd ? '' : `<button class="ekle" data-pekle="${gi}">+ Ekle</button>`}</div>
+          ${G.map(x => `<div class="pl-gorev ${x.ok ? 'ok' : ''}" style="--r:${dersRenk(x.ders)}"><button class="pl-tik" data-ptik="${x.id}" aria-label="Tamamlandı">${x.ok ? '✓' : ''}</button><i class="nokta"></i><div class="ic"><b>${esc(x.ders)}</b><small>${x.konu ? esc(x.konu) + ' · ' : ''}${sure(+x.dk || 0)}</small></div><button class="sil" data-psil="${x.id}" aria-label="Sil">×</button></div>`).join('') || (fd ? '' : '<div class="pl-bos">Boş gün</div>')}
+          ${fd ? plFormHtml() : ''}</div>`;
+      }).join('');
+    if (PL.form) { const k = $('#plKonu'); if (k && !PL.form.odak) { PL.form.odak = 1; } }
+  }
+  function plFormHtml() {
+    const f = PL.form;
+    return `<div class="pl-form"><label>Ders / çalışma</label><div class="pl-cip">${plDersler().map(d => `<button type="button" class="${f.ders === d ? 'secili' : ''}" data-pfd="${esc(d)}">${esc(d)}</button>`).join('')}</div>
+      <label for="plKonu">Konu (isteğe bağlı)</label><input type="text" id="plKonu" maxlength="80" value="${esc(f.konu || '')}" placeholder="ör. Türev, 40 soru">
+      <label>Süre</label><div class="pl-cip">${[15, 30, 45, 60, 90, 120].map(d => `<button type="button" class="${f.dk === d ? 'secili' : ''}" data-pfs="${d}">${sure(d)}</button>`).join('')}</div>
+      <div class="dg"><button type="button" class="ikincil" data-pfvaz="1">Vazgeç</button><button type="button" class="birincil" data-pfekle="1" ${f.ders ? '' : 'disabled'}>Ekle</button></div></div>`;
+  }
+  $('#s-plan').addEventListener('input', ev => { if (ev.target.id === 'plKonu' && PL.form) PL.form.konu = ev.target.value; });
+  $('#s-plan').addEventListener('click', ev => {
+    const t = ev.target, b = t.closest('button'); if (!b) return;
+    const L = PL.veri && plHafta(), y = () => { const sy = window.scrollY; plCiz(); window.scrollTo(0, sy); };
+    if (b.id === 'plOnce' || b.id === 'plSonra') { PL.hafta.setDate(PL.hafta.getDate() + (b.id === 'plOnce' ? -7 : 7)); PL.form = null; plCiz(); return; }
+    if (!L) return;
+    if (b.dataset.ph != null) { PL.veri.hedef = +b.dataset.ph; plKaydet(); y(); return; }
+    if (b.dataset.pekle != null) { PL.form = { g: +b.dataset.pekle, dk: 45 }; y(); const k = $('#plKonu'); return; }
+    if (b.dataset.pfd != null) { PL.form.ders = b.dataset.pfd; y(); return; }
+    if (b.dataset.pfs != null) { PL.form.dk = +b.dataset.pfs; y(); return; }
+    if (b.dataset.pfvaz) { PL.form = null; y(); return; }
+    if (b.dataset.pfekle && PL.form.ders) { L.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), g: PL.form.g, ders: PL.form.ders, konu: (PL.form.konu || '').trim(), dk: PL.form.dk || 45, ok: false }); PL.form = null; plKaydet(); y(); return; }
+    if (b.dataset.ptik) { const x = L.find(z => z.id === b.dataset.ptik); if (x) { x.ok = !x.ok; plKaydet(); y(); } return; }
+    if (b.dataset.psil) { const k = L.findIndex(z => z.id === b.dataset.psil); if (k >= 0) { L.splice(k, 1); plKaydet(); y(); } return; }
+    if (b.dataset.pkopya) { const once = Object.keys(PL.veri.haftalar).filter(k => k < iso(PL.hafta) && PL.veri.haftalar[k].length).sort().pop(); if (once) { PL.veri.haftalar[once].forEach(x => L.push(Object.assign({}, x, { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ok: false }))); plKaydet(); y(); } return; }
+    if (b.dataset.psv != null) { const x = PL.sv[+b.dataset.psv]; if (!x) return; const gun = new Date(x.d); gun.setDate(gun.getDate() - 1); const hp = pzt(gun);
+      if (gun < new Date(iso(simdi()) + 'T00:00')) gun.setTime(new Date(iso(simdi()) + 'T12:00').getTime());
+      PL.hafta = pzt(gun); const LL = plHafta(); LL.push({ id: Date.now().toString(36), g: gunIdx(gun), ders: x.ad, konu: 'Sınava hazırlık', dk: 60, ok: false }); plKaydet(); plCiz(); return; }
+  });
+  const plBugun = () => { if (!PL.veri) return null; const L = (PL.veri.haftalar || {})[iso(pzt(simdi()))] || [], g = gunIdx(simdi()), B = L.filter(x => +x.g === g); return { n: B.length, ok: B.filter(x => x.ok).length }; };
+
   // ---- K-553: canlı yenileme (öğrenci yazmıyorken) + yeni sürümde kendiliğinden yenilenme
   const yaziyor = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   let canliSay = 0;
@@ -440,8 +552,8 @@
     await rvYukle(false);
     if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
-    if (canliSay % 3 === 0) {   // dakikada bir: formlar ve mektup okundu bilgisi
-      mektuplarYukle();
+    if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
+      mektuplarYukle(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
   }, 20000);

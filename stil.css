@@ -1134,3 +1134,20 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .pdf-kapsam { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; } .pdf-kapsam button { margin: 0; padding: 14px; font-size: 16px; font-weight: 800; border-radius: 13px; cursor: pointer; text-align: left; }
 .pdf-kapsam button small { display: block; font-size: 12px; font-weight: 600; opacity: .8; } .pk-sv { background: color-mix(in srgb, var(--sv) 14%, var(--koyu)); border: 1px solid var(--sv); color: #fff; }
 .pk-satir { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; } .pk-satir b { color: var(--sv); width: 30px; } .pk-satir .cip { border-color: color-mix(in srgb, var(--sv) 55%, transparent); }
+/* K-569: Öğrenci duyuruları */
+.du-liste { max-width: 980px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.du-kart { background: var(--kart); border: 1px solid var(--cizgi); border-left: 5px solid #ff9a3a; border-radius: 13px; padding: 12px 14px; } .du-kart.onemli { border-left-color: #ff3b4e; } .du-kart.pasif { opacity: .7; }
+.du-ust { display: flex; gap: 8px; align-items: center; } .du-ust b { font-size: 16px; } .du-etk { font-size: 11px; font-weight: 800; border-radius: 6px; padding: 1px 7px; background: rgba(255,59,78,.2); color: #ff8a95; }
+.du-metin { margin-top: 6px; white-space: pre-wrap; font-size: 14px; max-height: 7.5em; overflow: hidden; overflow-wrap: anywhere; }
+.du-alt { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.du-okuma { background: transparent; border: 0; color: var(--neonacik); font: inherit; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 0; }
+.du-bar { display: inline-block; width: 90px; height: 7px; border-radius: 5px; background: rgba(255,255,255,.08); overflow: hidden; vertical-align: middle; } .du-bar i { display: block; height: 100%; background: var(--yesil); }
+.du-form { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; } .du-form label { display: block; font-size: 12.5px; font-weight: 700; color: var(--soluk); margin: 10px 0 4px; } .du-form input, .du-form textarea { width: 100%; box-sizing: border-box; }
+.du-sinif { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; } .du-sinif .cip { padding: 4px 9px; font-size: 12.5px; } .du-sinif .cip:disabled { opacity: .55; }
+.mk-onem { display: flex; gap: 10px; align-items: center; margin-top: 12px; background: none; border: 1px solid var(--cizgi); border-radius: 12px; padding: 10px 12px; color: var(--yazi); cursor: pointer; text-align: left; width: 100%; }
+.mk-onem i { width: 22px; height: 22px; flex: none; border-radius: 6px; border: 2px solid var(--soluk); } .mk-onem.secili { border-color: #ff3b4e; } .mk-onem.secili i { background: #ff3b4e; border-color: #ff3b4e; } .mk-onem b { display: block; } .mk-onem small { color: var(--soluk); font-size: 12px; }
+.du-tel { background: #0d1726; border: 6px solid #1c2c44; border-radius: 26px; padding: 14px 10px; min-height: 260px; } .duy-o { background: #13233a; border: 1px solid #2a4468; border-left: 5px solid #ff9a3a; border-radius: 14px; padding: 10px 12px; } .duy-o.onemli { border-left-color: #ff3b4e; }
+.duy-o b { display: block; margin-top: 3px; font-size: 15px; } .duy-o .m { margin-top: 6px; white-space: pre-wrap; font-size: 13px; color: #dbe7f7; overflow-wrap: anywhere; }
+.du-sinifok details { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 8px 12px; margin-top: 6px; } .du-sinifok summary { display: flex; gap: 12px; align-items: center; cursor: pointer; } .du-sinifok summary span { font-size: 13px; color: var(--soluk); }
+.du-isim { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 13px; color: var(--soluk); } .du-isim .ok { color: #6ee7a8; }
+@media (max-width: 900px) { .du-form { grid-template-columns: 1fr; } }
