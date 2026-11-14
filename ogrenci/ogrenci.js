@@ -2,6 +2,23 @@
 // Sunucu her istekte kodu yeniden doğrular; öğrenci yalnız kendi formunu gönderir, kimsenin cevabını okuyamaz.
 (function () {
   'use strict';
+  // K-596: tarayıcının beyaz onay / soru / uyarı pencereleri yerine temaya uygun pencere (lacivert + camgöbeği)
+  function sorKutu({ m, girdi, v, tek }) {
+    return new Promise(son => {
+      const k = document.createElement('div'); k.className = 'sor-kutu'; const tehlike = !girdi && !tek && /silin|kaldırıl|iptal|kapan|geçersiz|kilitlen|dönülecek/i.test(m);
+      k.innerHTML = `<div class="sor-ic${tehlike ? ' sor-tehlike' : ''}" role="dialog" aria-modal="true"><div class="sor-ik">${tek ? '!' : girdi ? '✎' : '?'}</div><p></p>${girdi ? '<textarea rows="3" maxlength="1000"></textarea><small>Enter: tamam · Shift+Enter: yeni satır</small>' : ''}<div class="sor-dug">${tek ? '' : '<button class="ikincil" data-s="0">Vazgeç</button>'}<button class="birincil" data-s="1">${tek ? 'Tamam' : tehlike ? 'Evet' : 'Tamam'}</button></div></div>`;
+      k.querySelector('p').textContent = String(m == null ? '' : m);
+      const ta = k.querySelector('textarea'); if (ta) ta.value = v || '';
+      const bit = r => { k.classList.add('kapan'); document.removeEventListener('keydown', tus, true); setTimeout(() => k.remove(), 140); son(r); };
+      const evet = () => bit(girdi ? ta.value : true), hayir = () => bit(girdi ? null : false);
+      const tus = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); hayir(); } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); evet(); } };
+      k.onclick = e => { const b = e.target.closest('[data-s]'); if (b) (b.dataset.s === '1' ? evet : hayir)(); else if (e.target === k && !tek) hayir(); };
+      document.body.appendChild(k); document.addEventListener('keydown', tus, true);
+      setTimeout(() => { const f = ta || k.querySelector('[data-s="1"]'); f.focus(); if (ta) ta.setSelectionRange(ta.value.length, ta.value.length); }, 30);
+    });
+  }
+  const onayla = m => sorKutu({ m }), girdiAl = (m, v) => sorKutu({ m, girdi: true, v }), uyar = m => sorKutu({ m, tek: true });
+  window.UmalSor = { onayla, girdiAl, uyar };
   const sb = window.supabase.createClient('https://ceqdghykweubeaokwadt.supabase.co', 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ',
     { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const $ = s => document.querySelector(s);
@@ -451,8 +468,8 @@
       if (rvSonuc(d, bil, '✓ İsteğin rehberlik servisine ulaştı. Sana saat verilince burada görünür.')) { RV.tercih.clear(); $('#rvNot').value = ''; rvCiz(); } else t.disabled = false; return; }
     const rc = t.closest('[data-rc]'); if (rc) {
       const c = rc.dataset.rc; let not = '';
-      if (c === 'gelemem') { const m = prompt('Neden gelemeyeceğini kısaca yazabilirsin (isteğe bağlı). Rehber öğretmenin sana yeni bir saat verebilir.', ''); if (m === null) return; not = m; }
-      if (c === 'iptal' && !confirm(RV.L.find(x => x.id === rc.dataset.id)?.durum === 'talep' ? 'Randevu isteğin geri alınsın mı?' : 'Randevun iptal edilsin mi?')) return;
+      if (c === 'gelemem') { const m = await girdiAl('Neden gelemeyeceğini kısaca yazabilirsin (isteğe bağlı). Rehber öğretmenin sana yeni bir saat verebilir.', ''); if (m === null) return; not = m; }
+      if (c === 'iptal' && !await onayla(RV.L.find(x => x.id === rc.dataset.id)?.durum === 'talep' ? 'Randevu isteğin geri alınsın mı?' : 'Randevun iptal edilsin mi?')) return;
       rc.disabled = true; const d = await rpc('umal_ogrenci_randevu_cevap', { p_id: rc.dataset.id, p_cevap: c, p_not: not });
       rvSonuc(d, bil, c === 'geliyorum' ? '' : ''); }
   };
@@ -791,7 +808,7 @@
     if (b.dataset.snav) { const k = +b.dataset.snav, r = new Date(SO.ref); if (SO.per === 'gun') r.setDate(r.getDate() + k); else if (SO.per === 'hafta') r.setDate(r.getDate() + 7 * k); else r.setMonth(r.getMonth() + k); if (iso(r) > iso(simdi())) r.setTime(simdi().getTime()); SO.ref = r; soCiz(); return; }
     if (b.id === 'soGirBtn') { const son = (SO.L || [])[0]; SO.form = { tarih: iso(simdi()), ders: son ? son.d : 'Paragraf', d: 0, y: 0, b: 0 }; soFormCiz(); $('#soForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     if (b.id === 'soPdf') return soPdf();
-    if (b.dataset.ssil) { if (!confirm('Bu kayıt silinsin mi?')) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_soru_sil', { p_no: S.no, p_kod: S.kod, p_id: b.dataset.ssil })); } catch (e) {} if (data && data.ok) { SO.L = data.kayitlar; soCiz(); } return; }
+    if (b.dataset.ssil) { if (!await onayla('Bu kayıt silinsin mi?')) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_soru_sil', { p_no: S.no, p_kod: S.kod, p_id: b.dataset.ssil })); } catch (e) {} if (data && data.ok) { SO.L = data.kayitlar; soCiz(); } return; }
     if (!F) return;
     if (b.dataset.sft) { F.tarih = b.dataset.sft; soFormCiz(); return; }
     if (b.dataset.sfd) { F.ders = b.dataset.sfd; soFormCiz(); return; }
@@ -826,7 +843,7 @@
       <h2>Derslere göre</h2>${L.length ? `<table><tr><th>Ders</th><th>Soru</th><th>D</th><th>Y</th><th>B</th><th>Net</th><th>Doğruluk</th><th style="width:28%">Dağılım (doğru / yanlış / boş)</th></tr>${L.map(([d, x]) => `<tr><td><b>${esc(d)}</b></td><td>${x.n}</td><td>${x.d}</td><td>${x.y}</td><td>${x.b}</td><td><b>${sayi1(x.net)}</b></td><td>%${Math.round(x.d * 100 / x.n)}</td><td><div class="bar"><i style="width:${x.d * 100 / x.n}%;background:#2bb673"></i><i style="width:${x.y * 100 / x.n}%;background:#e5484d"></i><i style="width:${x.b * 100 / x.n}%;background:#b8c2cc"></i></div></td></tr>`).join('')}</table>` : '<p>Bu dönemde kayıt yok.</p>'}
       <h2>Öneriler</h2><ul>${O.map(([t, m]) => `<li><b style="color:${t === 'iyi' ? '#1f8f55' : t === 'uyari' ? '#c66a00' : '#0b7c99'}">${t === 'iyi' ? '✓' : t === 'uyari' ? '!' : 'i'}</b> ${esc(m)}</li>`).join('')}</ul>
       <div class="alt">Ümraniye Merkez Anadolu Lisesi · Öğrenci paneli · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })} · Net = doğru − yanlış ÷ 4</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>`;
-    const w = window.open('', '_blank'); if (!w) { alert('Raporu açmak için açılır pencerelere izin ver.'); return; } w.document.open(); w.document.write(html); w.document.close();
+    const w = window.open('', '_blank'); if (!w) { uyar('Raporu açmak için açılır pencerelere izin ver.'); return; } w.document.open(); w.document.write(html); w.document.close();
   }
 
   // ---- K-553: canlı yenileme (öğrenci yazmıyorken) + yeni sürümde kendiliğinden yenilenme

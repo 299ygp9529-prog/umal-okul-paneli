@@ -79,7 +79,7 @@
   async function kaydet(r) {
     r.durum = durumKod(r.veri);
     const { error } = await C.israrla(() => C.sb.from('umal_disiplin').update({ veri: r.veri, durum: r.durum, guncel: new Date().toISOString() }).eq('id', r.id));
-    if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return false; }
+    if (error) { window.UmalSor.uyar('Kaydedilemedi: ' + C.hataYaz(error)); return false; }
     return true;
   }
   function yeniDosyaNo() {
@@ -274,19 +274,19 @@
     const g = id => { const e = document.getElementById(id); return e ? (e.type === 'checkbox' ? e.checked : e.value.trim()) : ''; };
     const geri = document.getElementById('f_geri');
     if (geri) geri.onclick = async () => {
-      if (!confirm('Bu adım ve sonraki adımlar geri alınsın mı?')) return;
+      if (!await window.UmalSor.onayla('Bu adım ve sonraki adımlar geri alınsın mı?')) return;
       const sira = ADIM.map(z => z[0]); for (const kk of sira.slice(sira.indexOf(k))) if (kk !== 'olay') delete a[kk];
       if (await kaydet(r)) { C.pencereKapat(); ciz(); }
     };
     document.getElementById('f_kaydet').onclick = async () => {
-      const t = g('f_tarih'); if (!t) { alert('Tarih gerekli.'); return; }
-      if (k === 'sevk') { const td = parseInt(g('f_tedbir'), 10) || 0; if (td > 10) { alert('Tedbir en çok 10 iş günü olabilir.'); return; } a.sevk = { tarih: t, tedbir: td || null }; }
+      const t = g('f_tarih'); if (!t) { window.UmalSor.uyar('Tarih gerekli.'); return; }
+      if (k === 'sevk') { const td = parseInt(g('f_tedbir'), 10) || 0; if (td > 10) { window.UmalSor.uyar('Tedbir en çok 10 iş günü olabilir.'); return; } a.sevk = { tarih: t, tedbir: td || null }; }
       if (k === 'savunma') a.savunma = { tarih: t, vermedi: g('f_vermedi'), ozet: g('f_ozet'), tanik: g('f_tanik') };
       if (k === 'kurul') {
-        const ys = document.querySelector('#f_yap .cip.secili'); if (!ys) { alert('Yaptırımı seçin.'); return; }
+        const ys = document.querySelector('#f_yap .cip.secili'); if (!ys) { window.UmalSor.uyar('Yaptırımı seçin.'); return; }
         const yaptirim = ys.dataset.y, gun = parseInt(g('f_gun'), 10) || null;
-        if (yaptirim === 'Okuldan kısa süreli uzaklaştırma' && !(gun >= 1 && gun <= 5)) { alert('Uzaklaştırma 1–5 gün olmalı.'); return; }
-        if (!g('f_gerekce')) { alert('Kararın gerekçesini yazın.'); return; }
+        if (yaptirim === 'Okuldan kısa süreli uzaklaştırma' && !(gun >= 1 && gun <= 5)) { window.UmalSor.uyar('Uzaklaştırma 1–5 gün olmalı.'); return; }
+        if (!g('f_gerekce')) { window.UmalSor.uyar('Kararın gerekçesini yazın.'); return; }
         a.kurul = { tarih: t, karar_no: g('f_no'), yer: g('f_yer'), yaptirim, gun: yaptirim === 'Okuldan kısa süreli uzaklaştırma' ? gun : null, madde: g('f_madde'), hafif: g('f_hafif'), agir: g('f_agir'), gerekce: g('f_gerekce'),
           katilan: [...document.querySelectorAll('#f_uye .cip.secili')].map(c => c.dataset.u) };
         if (!yap(yaptirim).onay) { delete a.onay; delete a.teblig; }
@@ -310,7 +310,7 @@
       const g = id => document.getElementById(id).value.trim();
       const veri = { mudur: g('a_mudur'), baskan: g('a_bas'), uyeler: [...document.querySelectorAll('[data-uye]')].map(e => e.value.trim()), yer: g('a_yer'), yil: g('a_yil') || S.yil, tel: g('a_tel'), adres: g('a_adres') };
       const { error } = await C.israrla(() => C.sb.from('umal_disiplin_ayar').upsert({ id: 'okul', veri, guncel: new Date().toISOString() }, { onConflict: 'id' }));
-      if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return; }
+      if (error) { window.UmalSor.uyar('Kaydedilemedi: ' + C.hataYaz(error)); return; }
       S.ayar = veri; S.yil = veri.yil; C.pencereKapat(); ciz();
     };
   }
@@ -458,13 +458,13 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
   async function satirEkle(veri, durum) {
     const satir = { dosya_no: yeniDosyaNo(), yil: S.yil, ogr_no: veri.ogr.no, veri, durum };
     const { data, error } = await C.israrla(() => C.sb.from('umal_disiplin').insert(satir).select('id,dosya_no,yil,ogr_no,veri,durum,olusturma,guncel').single());
-    if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return null; }
+    if (error) { window.UmalSor.uyar('Kaydedilemedi: ' + C.hataYaz(error)); return null; }
     S.L.unshift(data); return data;
   }
   async function satirSil(id) {
-    const r = S.L.find(x => x.id === id); if (!r || !confirm('Bu kayıt kalıcı olarak silinsin mi? Geri alınamaz.')) return;
+    const r = S.L.find(x => x.id === id); if (!r || !await window.UmalSor.onayla('Bu kayıt kalıcı olarak silinsin mi? Geri alınamaz.')) return;
     const { error } = await C.sb.from('umal_disiplin').delete().eq('id', id);
-    if (error) { alert('Silinemedi: ' + C.hataYaz(error)); return; }
+    if (error) { window.UmalSor.uyar('Silinemedi: ' + C.hataYaz(error)); return; }
     S.L = S.L.filter(x => x.id !== id); ciz();
   }
   async function uyariFormu(r) {
@@ -484,7 +484,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       const g = id => document.getElementById(id).value.trim(), bil = document.getElementById('u_bilgi');
       const o = r ? v.ogr : (sec()[0] || null); if (!o) { bil.textContent = 'Öğrenci seçin.'; return; }
       if (!g('u_ozet') || !g('u_t')) { bil.textContent = 'Davranış ve uyarı tarihi gerekli.'; return; }
-      if (!r && DOS().some(x => x.ogr_no === o.no && ((x.veri.adim || {}).kurul || {}).yaptirim && yap(x.veri.adim.kurul.yaptirim).puan) && !confirm('Bu öğrencinin önceden disiplin cezası var; yazılı uyarı yalnız ilk kez için uygulanır. Yine de kaydedilsin mi?')) return;
+      if (!r && DOS().some(x => x.ogr_no === o.no && ((x.veri.adim || {}).kurul || {}).yaptirim && yap(x.veri.adim.kurul.yaptirim).puan) && !await window.UmalSor.onayla('Bu öğrencinin önceden disiplin cezası var; yazılı uyarı yalnız ilk kez için uygulanır. Yine de kaydedilsin mi?')) return;
       const veri = { tur: 'uyari', ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay: { tarih: g('u_ot'), yer: g('u_yer'), ozet: g('u_ozet') }, madde: g('u_madde'),
         uyari: { tarih: g('u_t'), gorusme: g('u_g'), rehber: g('u_rehber'), sinif_rehber: g('u_sinifr'), degerlendirme: g('u_deger'), sosyal: g('u_sos') }, olusturan: C.eposta };
       if (r) { r.veri = veri; const { error } = await C.israrla(() => C.sb.from('umal_disiplin').update({ veri, guncel: new Date().toISOString() }).eq('id', r.id)); if (error) { bil.textContent = 'Kaydedilemedi: ' + C.hataYaz(error); return; } }
@@ -541,7 +541,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     document.getElementById('t_kay').onclick = async () => {
       const g = id => document.getElementById(id).value.trim(), veri = { tarih: g('t_t'), yer: g('t_y'), gundem: g('t_g'), kararlar: g('t_k') };
       const { error } = await C.israrla(() => C.sb.from('umal_disiplin_ayar').upsert({ id: `tutanak-${S.yil}-${k}`, veri, guncel: new Date().toISOString() }, { onConflict: 'id' }));
-      if (error) { alert('Kaydedilemedi: ' + C.hataYaz(error)); return; }
+      if (error) { window.UmalSor.uyar('Kaydedilemedi: ' + C.hataYaz(error)); return; }
       S.tut[k] = veri; ciz();
       const ay = S.ayar, uye = [ay.baskan ? ay.baskan + ' (Başkan)' : '', ...(ay.uyeler || [])].filter(Boolean);
       const gov = `<p>Okul Öğrenci Ödül ve Disiplin Kurulu ${esc(tUzun(veri.tarih))} tarihinde ${esc(veri.yer)}nda aşağıdaki gündemle toplanmıştır.</p><table><tr><th style="width:60%">Katılan üyeler</th><th>İmza</th></tr>${(uye.length ? uye : ['', '', '', '', '']).map(u => `<tr><td>${esc(u) || '&nbsp;'}</td><td></td></tr>`).join('')}</table>
@@ -643,9 +643,9 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
       if (is.dataset.is === 'yonetmelik') return yonetmelik();
       if (is.dataset.is === 'olayduz' && r) return yeniOlay(r);
       if (is.dataset.is === 'sil' && r) {
-        if (!confirm(`${r.dosya_no} numaralı dosya kalıcı olarak silinsin mi? Geri alınamaz.`)) return;
+        if (!await window.UmalSor.onayla(`${r.dosya_no} numaralı dosya kalıcı olarak silinsin mi? Geri alınamaz.`)) return;
         const { error } = await C.sb.from('umal_disiplin').delete().eq('id', r.id);
-        if (error) { alert('Silinemedi: ' + C.hataYaz(error)); return; }
+        if (error) { window.UmalSor.uyar('Silinemedi: ' + C.hataYaz(error)); return; }
         S.L = S.L.filter(x => x.id !== r.id); S.secili = null; ciz();
       }
     };

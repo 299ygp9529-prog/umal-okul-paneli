@@ -40,6 +40,23 @@
     }
     return out;
   }
+  // K-596: tarayıcının beyaz onay / soru / uyarı pencereleri yerine temaya uygun pencere (lacivert + camgöbeği)
+  function sorKutu({ m, girdi, v, tek }) {
+    return new Promise(son => {
+      const k = document.createElement('div'); k.className = 'sor-kutu'; const tehlike = !girdi && !tek && /silin|kaldırıl|iptal|kapan|geçersiz|kilitlen|dönülecek/i.test(m);
+      k.innerHTML = `<div class="sor-ic${tehlike ? ' sor-tehlike' : ''}" role="dialog" aria-modal="true"><div class="sor-ik">${tek ? '!' : girdi ? '✎' : '?'}</div><p></p>${girdi ? '<textarea rows="3" maxlength="1000"></textarea><small>Enter: tamam · Shift+Enter: yeni satır</small>' : ''}<div class="sor-dug">${tek ? '' : '<button class="ikincil" data-s="0">Vazgeç</button>'}<button class="birincil" data-s="1">${tek ? 'Tamam' : tehlike ? 'Evet' : 'Tamam'}</button></div></div>`;
+      k.querySelector('p').textContent = String(m == null ? '' : m);
+      const ta = k.querySelector('textarea'); if (ta) ta.value = v || '';
+      const bit = r => { k.classList.add('kapan'); document.removeEventListener('keydown', tus, true); setTimeout(() => k.remove(), 140); son(r); };
+      const evet = () => bit(girdi ? ta.value : true), hayir = () => bit(girdi ? null : false);
+      const tus = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); hayir(); } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); evet(); } };
+      k.onclick = e => { const b = e.target.closest('[data-s]'); if (b) (b.dataset.s === '1' ? evet : hayir)(); else if (e.target === k && !tek) hayir(); };
+      document.body.appendChild(k); document.addEventListener('keydown', tus, true);
+      setTimeout(() => { const f = ta || k.querySelector('[data-s="1"]'); f.focus(); if (ta) ta.setSelectionRange(ta.value.length, ta.value.length); }, 30);
+    });
+  }
+  const onayla = m => sorKutu({ m }), girdiAl = (m, v) => sorKutu({ m, girdi: true, v }), uyar = m => sorKutu({ m, tek: true });
+  window.UmalSor = { onayla, girdiAl, uyar };
   function hataYaz(e) { return (e && (e.message || e.error_description)) || String(e); }
   // K-518: ağ kopması ("Load failed", "Failed to fetch") olursa iki kez daha dener (Mac uykudan uyanınca ilk istek düşebiliyor)
   const agHatasi = e => !!e && /load failed|failed to fetch|networkerror|network request failed/i.test(hataYaz(e));
@@ -840,14 +857,14 @@
       if (ey) ey.onclick = () => { elle = elle ? null : { salon: x, plan: secili, set: new Set((v.gelmedi || []).map(g => String(g.no))) }; salonCiz(); };
       const eg = $('#elleGonder');
       if (eg) eg.onclick = async () => {
-        if (!confirm(`${x} salonu: ${elle.set.size ? elle.set.size + ' öğrenci gelmedi' : 'herkes geldi'}. Yoklama onaylanıp kaydedilsin mi?`)) return;
+        if (!await onayla(`${x} salonu: ${elle.set.size ? elle.set.size + ' öğrenci gelmedi' : 'herkes geldi'}. Yoklama onaylanıp kaydedilsin mi?`)) return;
         eg.disabled = true;
         const { data: ss } = await sb.auth.getSession(); const kim = ((ss || {}).session || {}).user ? ss.session.user.email : '';
         const veri = Object.assign({}, v, { tarih: secili.tarih, ders: secili.ders, ders_no: String(parseInt(secili.ders, 10) || ''), salon: x, sinav: secili.sinav || '', ogrenci: L.length,
           gozetmen: v.gozetmen || (gozcuAdi(secili, x) ? [gozcuAdi(secili, x)] : []), onay: true, kapandi: true, zaman: Date.now() / 1000, mesajlar: v.mesajlar || [], kaynak: 'panel', giren: kim,
           gelmedi: L.filter(r => elle.set.has(String(r.no))).map(r => ({ sira: r.sira, no: String(r.no), ad: r.ad, sinif: r.sinif, ders: r.ders || '', ders_adi: kisaDers(baslik(r.ders || '')) })) });
         const { error } = await sb.from('umal_sinav_salon').upsert({ tarih: secili.tarih, ders: secili.ders, salon: x, veri, guncel: new Date().toISOString() });
-        if (error) { eg.disabled = false; alert('Kaydedilemedi: ' + hataYaz(error)); return; }
+        if (error) { eg.disabled = false; uyar('Kaydedilemedi: ' + hataYaz(error)); return; }
         // K-457: Öğretmenler odası tahtası (Karargah) ve Gelmeyenler raporu Drive'dan okur: kayıt komutla oradaki tahtaya da gider, o Drive'a yazar
         try {
           const gunSonu = new Date(); gunSonu.setHours(23, 59, 0, 0); const kid = 'yk-' + Date.now();
@@ -1165,7 +1182,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza', '.kart'] } }).from(ic).outputPdf('blob');
       dugme._dosya = new File([blob], ad, { type: 'application/pdf' });
       dugme.textContent = '📤 Paylaş / Kaydet';
-    } catch (e) { dugme.textContent = eski; alert('PDF hazırlanamadı: ' + (e && e.message || e)); }
+    } catch (e) { dugme.textContent = eski; uyar('PDF hazırlanamadı: ' + (e && e.message || e)); }
     finally { kat.remove(); dugme.disabled = false; }
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
@@ -1677,7 +1694,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (b.id === 'hzSablon') return sablonSec();
       if (b.id === 'hzOnceki') return oncekiSorular();
       if (b.id === 'hzSil') {
-        if (!confirm('Taslak silinsin mi?')) return;
+        if (!await onayla('Taslak silinsin mi?')) return;
         const { error } = await sb.rpc('umal_anket_taslak_sil', { p_id: T.id });
         if (error) { bilgi = 'Silinemedi: ' + hataYaz(error); durumCiz(); return; }
         return ac('anket');
@@ -1926,7 +1943,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   async function arsivle(a, evet) {
     const z = Date.now() / 1000, g = bugunISO(), R = [{ anket: a.id + '@yayin', durum: evet ? 'kapali' : 'acik', gun: g, zaman: z }, { anket: a.id, durum: evet ? 'kapali' : 'acik', gun: g, zaman: z }];
     const { error } = await israrla(() => sb.from('umal_anket_durum').upsert(R));
-    if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; }
+    if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return false; }
     R.forEach(r => { D.durumlar[r.anket] = r; }); return true;
   }
   const riskFormu = form => !form.tanim.sablon && (form.tanim.sorular || []).some(q => q.sutun);   // K-561: risk haritası düğmeleri yalnız okulun risk haritası formunda (MEB formlarında sonuç PDF'i + MEB Raporu)
@@ -2047,7 +2064,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       pencereAc(`<h1 style="margin-top:0">${esc(d.baslik)}</h1><div class="soluk kucuk">${ok.size} öğrenci okudu · ${H.length - H.filter(x => ok.has(String(x.no))).length} öğrenci henüz okumadı</div>
         <div class="du-sinifok">${ss.map(s => { const A = H.filter(x => x.sinif === s), n = A.filter(x => ok.has(String(x.no))).length; return `<details><summary><b>${esc(s)}</b><span>${n}/${A.length} okudu</span><span class="du-bar"><i style="width:${A.length ? Math.round(n * 100 / A.length) : 0}%"></i></span></summary><div class="du-isim">${A.slice().sort((a, b) => (+a.no) - (+b.no)).map(x => `<span class="${ok.has(String(x.no)) ? 'ok' : ''}">${ok.has(String(x.no)) ? '✓ ' : ''}${esc(x.no)} ${esc(baslik(x.ad))}</span>`).join('')}</div></details>`; }).join('')}</div>`);
     };
-    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_duyuru').update(alan).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_duyuru').update(alan).eq('id', id)); if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); };
     $('#icerik').onclick = async ev => {
       const b = ev.target.closest('button'); if (!b) return; const d = DU.L.find(x => x.id === (b.dataset.dok || b.dataset.dduz || b.dataset.dkaldir || b.dataset.dgeri || b.dataset.dsil));
       if (b.dataset.dsek) { DU.sek = b.dataset.dsek; ciz(); return; }
@@ -2057,7 +2074,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (b.dataset.dduz) return form(d);
       if (b.dataset.dkaldir) return yaz(d.id, { arsiv: true });
       if (b.dataset.dgeri) return yaz(d.id, { arsiv: false, bitis: d.bitis < bugunISO() ? gunEkle(bugunISO(), 7) : d.bitis });
-      if (b.dataset.dsil) { if (!confirm('Duyuru ve okunma bilgisi kalıcı olarak silinsin mi?')) return; const { error } = await sb.from('umal_duyuru').delete().eq('id', d.id); if (error) { alert(hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); }
+      if (b.dataset.dsil) { if (!await onayla('Duyuru ve okunma bilgisi kalıcı olarak silinsin mi?')) return; const { error } = await sb.from('umal_duyuru').delete().eq('id', d.id); if (error) { uyar(hataYaz(error)); return; } DU.h = null; await duyurularBolumu(); }
     };
     ciz(); yenile(() => canliGuvenli() ? duyurularBolumu(true) : Promise.resolve(), 30);
   }
@@ -2133,15 +2150,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="rv-liste" style="margin-top:10px">${G.length ? G.map(kart).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde yönlendirme yok.</div>'}</div>`;
       fotolariYukle(G.map(y => y.no));
     };
-    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_yonlendirme').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(YNR.L.find(x => x.id === id) || {}, alan); return true; };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_yonlendirme').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(YNR.L.find(x => x.id === id) || {}, alan); return true; };
     $('#icerik').onclick = async ev => {
       const b = ev.target.closest('button'); if (!b) return;
       if (b.dataset.ysuz) { YNR.suz = b.dataset.ysuz; ciz(); return; }
       if (b.dataset.ydu) { if (await yaz(b.dataset.id, { durum: b.dataset.ydu, reh_gordu: true })) ciz(); return; }
       const y = YNR.L.find(x => x.id === (b.dataset.ydavet || b.dataset.ygeri || b.dataset.ynot)); if (!y) return;
       if (b.dataset.ydavet) { if (y.durum === 'yeni') await yaz(y.id, { durum: 'inceleniyor', reh_gordu: true }); RV.davet = { no: y.no, ad: y.ad, sinif: y.sinif }; ac('randevu'); return; }
-      if (b.dataset.ygeri) { const m = prompt('Öğretmene kısa geri bildirim (öğretmen görür; ayrıntı yazmayın):', y.ogretmene_not || 'Öğrenciyle görüşüldü, takip ediliyor. Teşekkürler.'); if (m === null) return; if (await yaz(y.id, { ogretmene_not: m.trim() || null })) ciz(); return; }
-      if (b.dataset.ynot) { const m = prompt('Gizli not (yalnız rehberlik görür):', y.reh_not || ''); if (m === null) return; if (await yaz(y.id, { reh_not: m.trim() || null })) ciz(); return; }
+      if (b.dataset.ygeri) { const m = await girdiAl('Öğretmene kısa geri bildirim (öğretmen görür; ayrıntı yazmayın):', y.ogretmene_not || 'Öğrenciyle görüşüldü, takip ediliyor. Teşekkürler.'); if (m === null) return; if (await yaz(y.id, { ogretmene_not: m.trim() || null })) ciz(); return; }
+      if (b.dataset.ynot) { const m = await girdiAl('Gizli not (yalnız rehberlik görür):', y.reh_not || ''); if (m === null) return; if (await yaz(y.id, { reh_not: m.trim() || null })) ciz(); return; }
     };
     ciz(); yenile(() => canliGuvenli() ? yonlendirmelerBolumu(true) : Promise.resolve(), 20);
     if (yeniler.length) { await sb.from('umal_rehberlik_yonlendirme').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 2000); }
@@ -2304,7 +2321,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const { data: r, error: e } = await israrla(() => sb.rpc('umal_rehberlik_mesaj_gonder', { p_no: no, p_metin: m })); t.disabled = false;
         if (e || !r || !r.ok) { $('#roMBilgi').textContent = e ? 'Gönderilemedi: ' + hataYaz(e) : r.hata; return; }
         await yukle(); ciz(); $('#roMBilgi').textContent = '✓ Gönderildi'; return; }
-      if (t.dataset.rmsil) { if (!confirm('Bu mesaj öğrenciden de kaldırılsın mı?')) return; await sb.rpc('umal_rehberlik_mesaj_sil', { p_id: t.dataset.rmsil }); await yukle(); ciz(); }
+      if (t.dataset.rmsil) { if (!await onayla('Bu mesaj öğrenciden de kaldırılsın mı?')) return; await sb.rpc('umal_rehberlik_mesaj_sil', { p_id: t.dataset.rmsil }); await yukle(); ciz(); }
     };
     ciz(); window.scrollTo(0, 0);
     yenile(async () => { if (!document.getElementById('roGeri') || !canliGuvenli()) return; const e = JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]); await yukle(); if (e !== JSON.stringify([O.plan, O.mesajlar, (O.soru || []).length]) && document.getElementById('roGeri')) { const y = window.scrollY, m = $('#roMesaj').value; ciz(); $('#roMesaj').value = m; window.scrollTo(0, y); } }, 20);   // K-589
@@ -2386,7 +2403,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const yer = () => { const y = window.scrollY; ciz(); window.scrollTo(0, y); };
       const dz = !ev.target.closest('button') && ev.target.closest('[data-rpduz]'); if (dz) { const x = V.gorevler.find(z => z.id === dz.dataset.rpduz); if (x) { form = Object.assign({}, x); yer(); } return; }   // K-586: göreve tıkla → düzelt
       const t = ev.target.closest('button'); if (!t) return;
-      if (t.id === 'rpGeri') { if (degisti && !confirm('Kaydedilmemiş değişiklikler var. Çıkılsın mı?')) return; D.altG = false; geri(); return; }
+      if (t.id === 'rpGeri') { if (degisti && !await onayla('Kaydedilmemiş değişiklikler var. Çıkılsın mı?')) return; D.altG = false; geri(); return; }
       if (t.dataset.rph != null) { V.hedef = +t.dataset.rph; degisti = true; yer(); return; }
       if (t.dataset.rpg != null) { form = { g: +t.dataset.rpg, dk: 45 }; yer(); const k = $('#rpKonu'); return; }
       if (t.dataset.rpd != null) { form.ders = t.dataset.rpd; yer(); return; }
@@ -2398,11 +2415,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.dataset.rpsil) { V.gorevler = V.gorevler.filter(x => x.id !== t.dataset.rpsil); degisti = true; yer(); return; }
       if (t.id === 'rpTaslak') return kaydet(false);
       if (t.id === 'rpYayin') return kaydet(true);
-      if (t.id === 'rpKaldir') { if (confirm('Plan öğrencinin ekranından kaldırılsın mı? (Plan silinmez, taslak olarak durur.)')) kaydet(false); return; }
+      if (t.id === 'rpKaldir') { if (await onayla('Plan öğrencinin ekranından kaldırılsın mı? (Plan silinmez, taslak olarak durur.)')) kaydet(false); return; }
       if (t.id === 'rpPdf') pdf(false);
       if (t.id === 'rpPdfSb') pdf(true);
       if (t.id === 'rpGorusme') { D.altG = false; RV.davet = { no: O.no, ad: O.ad, sinif: O.sinif, mesaj: 'Çalışma planını birlikte gözden geçirelim.' }; ac('randevu'); return; }
-      if (t.id === 'rpHafiflet') { if (!confirm('Her görevin süresi ve soru adedi %25 azaltılsın mı? Sonra "Güncelle ve yayınla" ile öğrenciye gider.')) return; V.gorevler.forEach(g => { g.dk = Math.max(10, Math.round((+g.dk || 0) * .75 / 5) * 5); if (g.soru) g.soru = Math.max(1, Math.round(g.soru * .75)); }); degisti = true; yer(); $('#rpBilgi').textContent = 'Süreler hafifletildi — yayınlamayı unutmayın'; return; }
+      if (t.id === 'rpHafiflet') { if (!await onayla('Her görevin süresi ve soru adedi %25 azaltılsın mı? Sonra "Güncelle ve yayınla" ile öğrenciye gider.')) return; V.gorevler.forEach(g => { g.dk = Math.max(10, Math.round((+g.dk || 0) * .75 / 5) * 5); if (g.soru) g.soru = Math.max(1, Math.round(g.soru * .75)); }); degisti = true; yer(); $('#rpBilgi').textContent = 'Süreler hafifletildi — yayınlamayı unutmayın'; return; }
     };
     ciz(); window.scrollTo(0, 0);
     yenile(async () => {   // K-589: öğrencinin işaretleri ve değişiklikleri kendiliğinden gelsin
@@ -2443,11 +2460,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         yeni = { no: r.no, kod: r.kod, ad: F.ad.trim().split(/\s+/).map(w => w.charAt(0).toLocaleUpperCase('tr') + w.slice(1)).join(' ') }; F = { ad: '', seviye: '', notu: '' }; await yukle(); ciz(); window.scrollTo(0, 0); return; }
       if (b.id === 'ozKapat') { yeni = null; ciz(); return; }
       if (b.id === 'ozKart' && yeni) { kartBas([yeni]); return; }
-      if (b.id === 'ozKopya' && yeni) { const m = `Merhaba ${baslik(yeni.ad).split(' ')[0]}, çalışma planın için giriş bilgilerin:\numalatlas.com.tr/ogrenci\nNumara: ${yeni.no}\nKod: ${yeni.kod}\nKodunu kimseyle paylaşma.`; try { await navigator.clipboard.writeText(m); b.textContent = '✓ Kopyalandı'; } catch (x) { prompt('Kopyalayın:', m); } return; }
+      if (b.id === 'ozKopya' && yeni) { const m = `Merhaba ${baslik(yeni.ad).split(' ')[0]}, çalışma planın için giriş bilgilerin:\numalatlas.com.tr/ogrenci\nNumara: ${yeni.no}\nKod: ${yeni.kod}\nKodunu kimseyle paylaşma.`; try { await navigator.clipboard.writeText(m); b.textContent = '✓ Kopyalandı'; } catch (x) { await girdiAl('Kopyalayın:', m); } return; }
       if (b.dataset.ozplan) { rehPlanDuzenle(b.dataset.ozplan, 'ozelders', ozelDersBolumu); return; }
-      if (b.dataset.ozkod) { const x = L.find(z => z.no === b.dataset.ozkod); if (!confirm(`${baslik(x.ad)} için yeni kod üretilecek; eski kodu geçersiz olur. Devam edilsin mi?`)) return;
+      if (b.dataset.ozkod) { const x = L.find(z => z.no === b.dataset.ozkod); if (!await onayla(`${baslik(x.ad)} için yeni kod üretilecek; eski kodu geçersiz olur. Devam edilsin mi?`)) return;
         const { data: r } = await sb.rpc('umal_ozel_kod_yenile', { p_no: x.no }); if (r && r.ok) { yeni = { no: x.no, kod: r.kod, ad: x.ad }; ciz(); window.scrollTo(0, 0); } return; }
-      if (b.dataset.ozpasif) { const x = L.find(z => z.no === b.dataset.ozpasif); if (x.aktif && !confirm(`${baslik(x.ad)} pasif yapılsın mı? Giriş yapamaz; verileri silinmez.`)) return;
+      if (b.dataset.ozpasif) { const x = L.find(z => z.no === b.dataset.ozpasif); if (x.aktif && !await onayla(`${baslik(x.ad)} pasif yapılsın mı? Giriş yapamaz; verileri silinmez.`)) return;
         await sb.rpc('umal_ozel_guncelle', { p_no: x.no, p_ad: x.ad, p_seviye: x.seviye, p_notu: x.notu, p_aktif: !x.aktif }); await yukle(); ciz(); return; }
     };
     ciz();
@@ -2615,10 +2632,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           const tk = ev.target.closest('[data-topkod]');
           if (tk) {
             const dz = tk.dataset.topkod, nolar = D.ogrenciler.filter(y => y.sinif.startsWith(dz + '-') && !K[String(y.no)]).map(y => String(y.no));
-            if (!nolar.length || !confirm(`${dz}. sınıflarda kodu olmayan ${nolar.length} öğrenciye kod üretilecek ve kartlar sınıf sınıf basılacak. Devam edilsin mi?`)) return;
+            if (!nolar.length || !await onayla(`${dz}. sınıflarda kodu olmayan ${nolar.length} öğrenciye kod üretilecek ve kartlar sınıf sınıf basılacak. Devam edilsin mi?`)) return;
             tk.disabled = true; tk.textContent = 'Üretiliyor…';
             const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
-            if (error) { alert('Üretilemedi: ' + hataYaz(error)); ciz(); return; }
+            if (error) { uyar('Üretilemedi: ' + hataYaz(error)); ciz(); return; }
             (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
             ciz(); girisFisleri((data || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no)), '*' + dz);
             return;
@@ -2638,7 +2655,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#gSon')) $('#gSon').onclick = () => girisFisleri(D.sonFisler[sec], sec);
       const uret = async (nolar, onay) => {
         if (!nolar.length) return;
-        if (onay && !confirm(onay)) return;
+        if (onay && !await onayla(onay)) return;
         $('#gBilgi').textContent = 'Kodlar üretiliyor…';
         const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar });
         if (error) { $('#gBilgi').textContent = 'Üretilemedi: ' + hataYaz(error); return; }
@@ -2746,17 +2763,17 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         g.onblur = kaydet; g.onkeydown = ev => { if (ev.key === 'Enter') g.blur(); };
       });
       $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
-        if (!confirm(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
+        if (!await onayla(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
         const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
         const e2 = yRol.has(b.dataset.sil) ? (await sb.from('umal_yoneticiler').delete().eq('eposta', b.dataset.sil)).error : null;
-        if (error || e2) { alert('Kaldırılamadı: ' + hataYaz(error || e2)); return; }
+        if (error || e2) { uyar('Kaldırılamadı: ' + hataYaz(error || e2)); return; }
         L = await yukle(); await yYukle(); ciz();
       });
       $('#ogRol').onclick = ev => { const b = ev.target.closest('[data-yrol]'); if (!b) return; const v = $('#ogEkle').value; yeniRol = b.dataset.yrol; ciz(); $('#ogEkle').value = v; };
       $('#icerik').querySelectorAll('[data-rolde]').forEach(b => b.onclick = async () => {
         const ep = b.dataset.rolde, rol = b.dataset.r; if (rolu(ep) === rol) return;
-        if (!L.some(r => r.eposta === ep)) { const { error } = await sb.from('umal_ogretmenler').upsert({ eposta: ep, ekleyen: D.eposta }, { onConflict: 'eposta' }); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; } }
-        const er = await rolYaz(ep, rol); if (er) { alert('Rol değişmedi: ' + hataYaz(er)); return; }
+        if (!L.some(r => r.eposta === ep)) { const { error } = await sb.from('umal_ogretmenler').upsert({ eposta: ep, ekleyen: D.eposta }, { onConflict: 'eposta' }); if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; } }
+        const er = await rolYaz(ep, rol); if (er) { uyar('Rol değişmedi: ' + hataYaz(er)); return; }
         L = await yukle(); await yYukle(); ciz();
       });
     };
@@ -2804,8 +2821,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const ind = ev.target.closest('[data-indir]');
       if (ind) { const r = L.find(x => x.id === ind.dataset.indir); ind.disabled = true; try { const bl = await (await fetch(url(r))).blob(); indir(bl, 'UMAL-' + String(r.ad).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-') + '.pdf'); } catch (e) { window.open(url(r), '_blank'); } ind.disabled = false; return; }
       const sl = ev.target.closest('[data-tsil]');
-      if (sl) { const r = L.find(x => x.id === sl.dataset.tsil); if (!confirm(`“${r.ad}” silinsin mi? (Tahtalardaki PDF Havuzu kopyası kalır.)`)) return;
-        await sb.storage.from('umal-testler').remove([r.yol]); const { error } = await sb.from('umal_testler').delete().eq('id', r.id); if (error) { alert('Silinemedi: ' + hataYaz(error)); return; } L = L.filter(x => x.id !== r.id); ciz(); }
+      if (sl) { const r = L.find(x => x.id === sl.dataset.tsil); if (!await onayla(`“${r.ad}” silinsin mi? (Tahtalardaki PDF Havuzu kopyası kalır.)`)) return;
+        await sb.storage.from('umal-testler').remove([r.yol]); const { error } = await sb.from('umal_testler').delete().eq('id', r.id); if (error) { uyar('Silinemedi: ' + hataYaz(error)); return; } L = L.filter(x => x.id !== r.id); ciz(); }
     };
     ciz(); yenile(async () => { if (document.activeElement && document.activeElement.id === 'tsAra') return; L = await yukle(); ciz(); }, 60);
   }
@@ -2839,7 +2856,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const SUZ = { yeni: ['Okunmamış', m => !m.okundu && !m.arsiv], hepsi: ['Tümü', m => !m.arsiv], gorus: ['Görüşülecek', m => m.gorusme && !m.cagrildi && !m.arsiv], arsiv: ['Arşiv', m => m.arsiv] };
     const guncelle = async (m, alan) => {
       const { error } = await israrla(() => sb.from('umal_rehberlik_mektup').update(alan).eq('id', m.id));
-      if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; }
+      if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return false; }
       Object.assign(m, alan); if (MK.kontrol) MK.kontrol(); return true;
     };
     const ciz = () => {
@@ -2962,7 +2979,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="rv-liste">${G.length ? G.map(x => { const g = x.zaman ? rvGun(x.zaman) : 'Saat bekleyen istekler'; const h = g !== gun ? `<div class="rv-gun">${esc(g)}</div>` : ''; gun = g; return h + kart(x); }).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde kayıt yok.</div>'}</div>`;
       fotolariYukle(G.filter(x => x.no).map(x => x.no));
     };
-    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_randevu').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(RV.L.find(x => x.id === id) || {}, alan); return true; };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_randevu').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(RV.L.find(x => x.id === id) || {}, alan); return true; };
     const saatSecici = (onek, deger) => `<label>Ders saati</label><div class="cipler" id="${onek}Ders">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button type="button" class="cip" data-n="${n}">${n}. ders</button>`).join('')}</div>
       <div class="rv-iki"><div><label>ya da saat</label><input type="time" id="${onek}Saat" value="${esc(deger || '')}"></div><div><label>Süre (dk)</label><input type="number" id="${onek}Sure" min="5" max="120" value="20"></div></div>`;
     const saatBagla = (onek, tarihId) => { const k = $('#' + onek + 'Ders'); k.onclick = ev => { const b = ev.target.closest('[data-n]'); if (!b) return; k.querySelectorAll('.cip').forEach(c => c.classList.toggle('secili', c === b));
@@ -2987,7 +3004,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!sec) { bil.textContent = 'Öğrenci seçin.'; return; } if (!t || !h) { bil.textContent = 'Tarih ve saat seçin.'; return; }
         const z = new Date(t + 'T' + h); if (z.getTime() < Date.now()) { bil.textContent = 'Geçmiş bir saate davet edilemez.'; return; }
         const cak = RV.L.find(y => y.id !== (x && x.id) && y.ogretmen_eposta === D.eposta && y.zaman && ['bos', 'davet', 'onay'].includes(y.durum) && Math.abs(new Date(y.zaman) - z) < 60000);
-        if (cak && !(cak.durum === 'bos' && confirm('Bu saatte açtığınız boş saat var; o saat kaldırılıp davete çevrilsin mi?'))) { if (cak.durum !== 'bos') bil.textContent = 'Bu saatte başka randevunuz var: ' + baslik(cak.ad || '') + '.'; return; }
+        if (cak && !(cak.durum === 'bos' && await onayla('Bu saatte açtığınız boş saat var; o saat kaldırılıp davete çevrilsin mi?'))) { if (cak.durum !== 'bos') bil.textContent = 'Bu saatte başka randevunuz var: ' + baslik(cak.ad || '') + '.'; return; }
         if (cak) { await sb.from('umal_rehberlik_randevu').delete().eq('id', cak.id); RV.L = RV.L.filter(y => y.id !== cak.id); }
         const alan = { durum: 'davet', zaman: z.toISOString(), sure_dk: +$('#rvSure').value || 20, yer: $('#rvYer').value.trim() || 'Rehberlik servisi', mesaj: $('#rvMesaj').value.trim() || null, ogretmen_eposta: D.eposta, ogretmen_ad: RV.ad, ogr_gordu: false, reh_gordu: true };
         let error;
@@ -3029,9 +3046,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (i === 'davet') return davetFormu(x);
       if (!x) return;
       if (i === 'gorusuldu' || i === 'gelmedi') { if (await yaz(x.id, { durum: i, reh_gordu: true })) ciz(); }
-      if (i === 'sil') { if (!confirm('Bu boş saat kaldırılsın mı?')) return; const { error } = await sb.from('umal_rehberlik_randevu').delete().eq('id', x.id); if (error) { alert(hataYaz(error)); return; } RV.L = RV.L.filter(y => y.id !== x.id); ciz(); }
-      if (i === 'iptal') { const m = prompt('Randevu iptal edilecek. Öğrenciye bir not yazmak ister misiniz? (boş bırakılabilir)', ''); if (m === null) return; if (await yaz(x.id, { durum: 'iptal', iptal_eden: 'rehberlik', mesaj: m.trim() || x.mesaj, ogr_gordu: false, reh_gordu: true })) ciz(); }
-      if (i === 'not') { const m = prompt('Gizli not (yalnız rehberlik görür):', x.gizli_not || ''); if (m === null) return; if (await yaz(x.id, { gizli_not: m.trim() || null })) ciz(); }
+      if (i === 'sil') { if (!await onayla('Bu boş saat kaldırılsın mı?')) return; const { error } = await sb.from('umal_rehberlik_randevu').delete().eq('id', x.id); if (error) { uyar(hataYaz(error)); return; } RV.L = RV.L.filter(y => y.id !== x.id); ciz(); }
+      if (i === 'iptal') { const m = await girdiAl('Randevu iptal edilecek. Öğrenciye bir not yazmak ister misiniz? (boş bırakılabilir)', ''); if (m === null) return; if (await yaz(x.id, { durum: 'iptal', iptal_eden: 'rehberlik', mesaj: m.trim() || x.mesaj, ogr_gordu: false, reh_gordu: true })) ciz(); }
+      if (i === 'not') { const m = await girdiAl('Gizli not (yalnız rehberlik görür):', x.gizli_not || ''); if (m === null) return; if (await yaz(x.id, { gizli_not: m.trim() || null })) ciz(); }
     };
     ciz(); yenile(() => canliGuvenli() ? randevularBolumu(true) : Promise.resolve(), 15);   // K-553: canlı
     if (RV.davet && !sessiz) { const x = RV.davet; RV.davet = null; davetFormu(x); }   // K-571: yönlendirmeden davet
@@ -3041,7 +3058,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611131215');
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611144900');
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href });
@@ -3206,7 +3223,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const kaydet = async donemler => {
       const yeni = { ...N, donemler, kayit: Math.floor(Date.now() / 1000), kim: D.eposta };
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'nobet', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' });
-      if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; }
+      if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return false; }
       N.donemler = donemler; nobetKayitliAl(N); return true;
     };
     let sekme = 'cizelge', ayIdx = nobetAyFark(R, simdi.getFullYear(), simdi.getMonth());
@@ -3248,7 +3265,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (d('cins') && yonetir) {   // K-523: K ↔ E, hemen kaydedilir
         const a = d('cins').dataset.cins; cins[a] = nobetCins(cins, a) === 'K' ? 'E' : 'K'; ciz();
         const { error } = await israrla(() => sb.from('umal_ayarlar').upsert({ anahtar: 'nobet_cinsiyet', deger: JSON.stringify(cins) }, { onConflict: 'anahtar' }));
-        if (error) alert('Kaydedilemedi: ' + hataYaz(error));
+        if (error) uyar('Kaydedilemedi: ' + hataYaz(error));
         return; }
       if (t.id === 'nbYazdir') { nobetYazdir(ayIdx, ayAd(ayIdx)); return; }
       if (!yonetir) return;
@@ -3266,11 +3283,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         $('#nbD0').onclick = () => baslat(0); $('#nbD1').onclick = () => baslat(1); return; }
       if (t.id === 'nbKaris' && dagitMod !== null) { tohum += 7919; taslak = nobetDagit(nobetDonemGunler(ayIdx), !!dagitMod, dersGun, cins, tohum, karma); secAd = null; ciz(); return; }
       if (t.id === 'nbKaydet' && taslak) {
-        if (!confirm(`${ayAd(ayIdx)} ayından itibaren nöbet çizelgesi bu hâliyle geçerli olacak. Kaydedilsin mi?`)) return;
+        if (!await onayla(`${ayAd(ayIdx)} ayından itibaren nöbet çizelgesi bu hâliyle geçerli olacak. Kaydedilsin mi?`)) return;
         const b = ayBas(ayIdx), once = NOBET_KAYITLI.filter(x => x.baslangic < b && ayKod(new Date(x.baslangic + 'T12:00:00')) < ayKod(new Date(b + 'T12:00:00')));
         if (await kaydet([...once, { baslangic: b, gunler: taslak }])) { taslak = null; secAd = null; dagitMod = null; ciz(); }
         return; }
-      if (t.id === 'nbResmi') { if (confirm('Panelden yapılan bütün nöbet düzenlemeleri silinip resmî çizelgeye dönülecek. Emin misiniz?') && await kaydet([])) ciz(); return; }
+      if (t.id === 'nbResmi') { if (await onayla('Panelden yapılan bütün nöbet düzenlemeleri silinip resmî çizelgeye dönülecek. Emin misiniz?') && await kaydet([])) ciz(); return; }
       if (taslak) {
         const ad = d('nbad'), hc = d('hucre');
         const bul = a => { for (let g = 0; g < 5; g++) for (const y of NOBET_DONGU) { const i = taslak[g][y].indexOf(a); if (i >= 0) return [g, y, i]; } return null; };
@@ -3478,7 +3495,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.id === 'kbYerlestir') {
         $('#kbBilgi') && ($('#kbBilgi').textContent = 'Yerleştiriliyor…'); await new Promise(r => setTimeout(r, 30));
         const salonlar = tumSalon.filter(s => !kapali.has(s));
-        let en = null; for (let d = 0; d < 4; d++) { const r = kelebekYerlestir(katilanlar(), salonlar, bep, tohum++); if (r.hata) { alert(r.hata); return; } if (!en || r.yan * 1000 + r.arka < en.yan * 1000 + en.arka) en = r; if (!en.yan && !en.arka) break; }
+        let en = null; for (let d = 0; d < 4; d++) { const r = kelebekYerlestir(katilanlar(), salonlar, bep, tohum++); if (r.hata) { uyar(r.hata); return; } if (!en || r.yan * 1000 + r.arka < en.yan * 1000 + en.arka) en = r; if (!en.yan && !en.arka) break; }
         const gozcu = {}; Object.keys(en.salonlar).forEach(s => { gozcu[s] = (plan && plan.gozcu && plan.gozcu[s]) || gozcuOner(s); });
         plan = { tarih: sec.tarih, ders: sec.ders, salonlar: en.salonlar, yan: en.yan, arka: en.arka, gozcu, kapali: [...kapali] }; ciz(); return;
       }
@@ -3486,20 +3503,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); });
         plan.kayit = Math.floor(Date.now() / 1000); plan.kim = D.eposta;
         const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: anahtar(sec), deger: JSON.stringify(plan) }, { onConflict: 'anahtar' });
-        if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return; }
+        if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; }
         const r = (ay || []).find(x => x.anahtar === anahtar(sec)); if (r) r.deger = JSON.stringify(plan); else (ay || []).push({ anahtar: anahtar(sec), deger: JSON.stringify(plan) });
         ciz(); return;
       }
       if (t.id === 'kbYayinla') {   // K-577: kendi planımız → umal_sinav_plan (öğrenci paneli + Sınav merkezi)
         document.querySelectorAll('[data-goz]').forEach(i => { plan.gozcu[i.dataset.goz] = i.value.trim(); });
-        const bosG = Object.keys(plan.salonlar).filter(x => !plan.gozcu[x]); if (bosG.length && !confirm(`${bosG.length} salonun gözcüsü yazılmamış (${bosG.join(', ')}). Yine de yayınlansın mı?`)) return;
+        const bosG = Object.keys(plan.salonlar).filter(x => !plan.gozcu[x]); if (bosG.length && !await onayla(`${bosG.length} salonun gözcüsü yazılmamış (${bosG.join(', ')}). Yine de yayınlansın mı?`)) return;
         const salonlar = {}; Object.entries(plan.salonlar).forEach(([x, L]) => { salonlar[x] = L.slice().sort((a, b) => a.sira - b.sira).map(r => [r.sira, String(r.no), r.ad, r.sinif, r.ders]); });
         const sinav = [...new Set(Object.values(sec.subeler || {}))].join(' / ');
         const { error } = await israrla(() => sb.from('umal_sinav_plan').upsert({ tarih: sec.tarih, ders: sec.ders, sinav, gozcu: plan.gozcu, salonlar, guncel: new Date().toISOString() }));
-        if (error) { alert('Yayınlanamadı: ' + hataYaz(error)); return; }
+        if (error) { uyar('Yayınlanamadı: ' + hataYaz(error)); return; }
         plan.yayin = Math.floor(Date.now() / 1000); plan.yayinKod = kbKod(plan); plan.kayit = plan.yayin; plan.kim = D.eposta;
         const { error: e2 } = await sb.from('umal_ayarlar').upsert({ anahtar: anahtar(sec), deger: JSON.stringify(plan) }, { onConflict: 'anahtar' });
-        if (e2) { alert('Plan yayınlandı ama taslak kaydedilemedi: ' + hataYaz(e2)); }
+        if (e2) { uyar('Plan yayınlandı ama taslak kaydedilemedi: ' + hataYaz(e2)); }
         const r = (ay || []).find(x => x.anahtar === anahtar(sec)); if (r) r.deger = JSON.stringify(plan); else (ay || []).push({ anahtar: anahtar(sec), deger: JSON.stringify(plan) });
         D._kb = null; ciz(); return;
       }
@@ -3604,7 +3621,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let acik = null;
     const kaydetMazeret = async () => {
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'mazeret_sinavlari', deger: JSON.stringify(mazeret) }, { onConflict: 'anahtar' });
-      if (error) alert('Kaydedilemedi: ' + hataYaz(error));
+      if (error) uyar('Kaydedilemedi: ' + hataYaz(error));
     };
     const liste = k => { const G = (gelmeyen[k] || []).slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
       return `<div class="tk-liste">${G.length ? `<div style="flex-basis:100%"><button class="tk-pdf" data-pdf="${esc(k)}">🖨 Bu listeyi yazdır / PDF</button></div>` : ''}${G.length ? G.map(g => `<button class="oz-ogr" data-oz="${esc(g.no)}"><span class="sv-nokta" style="background:${seviyeRenk(g.sinif)};color:${seviyeRenk(g.sinif)}"></span>${esc(baslik(g.ad) || g.no)} <small>${esc(g.sinif)} · ${esc(g.no)}${g.ders ? ' · ' + esc(g.ders) : ''} · ${esc(g.salon)} salonu</small></button>`).join('') : '<span class="soluk kucuk">Gelmeyen yok.</span>'}</div>`; };
@@ -3666,7 +3683,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           mazeret.push({ id: Date.now().toString(36), asil: k, tarih: t, saat: $('#mzSaat').value.trim(), yer: $('#mzYer').value.trim(), kim: D.eposta, zaman: Math.floor(Date.now() / 1000) });
           $('#pencere').classList.add('gizli'); await kaydetMazeret(); ciz(); };
         return; }
-      const s = ev.target.closest('[data-mzsil]'); if (s && confirm('Bu mazeret sınavı silinsin mi?')) { mazeret = mazeret.filter(m => m.id !== s.dataset.mzsil); await kaydetMazeret(); ciz(); }
+      const s = ev.target.closest('[data-mzsil]'); if (s && await onayla('Bu mazeret sınavı silinsin mi?')) { mazeret = mazeret.filter(m => m.id !== s.dataset.mzsil); await kaydetMazeret(); ciz(); }
     };
     ciz();
     yenile(async () => ciz(), 60);
@@ -3698,9 +3715,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const eskiler = L.filter(t => !/^Print/i.test((t.durum || {}).surum || ''));
       $('#prEski').style.display = eskiler.length ? '' : 'none';
       $('#prEski').onclick = async () => {
-        if (!confirm(`${eskiler.length} eski Ajan kaydı listeden kaldırılacak:\n${eskiler.map(t => '• ' + ((t.durum || {}).sinif || t.cihaz)).join('\n')}\n\nEski Ajan hâlâ çalışan bilgisayar birkaç dakikada yeniden görünür; o bilgisayara önce Print kurun.`)) return;
+        if (!await onayla(`${eskiler.length} eski Ajan kaydı listeden kaldırılacak:\n${eskiler.map(t => '• ' + ((t.durum || {}).sinif || t.cihaz)).join('\n')}\n\nEski Ajan hâlâ çalışan bilgisayar birkaç dakikada yeniden görünür; o bilgisayara önce Print kurun.`)) return;
         const { data: silinen, error: se } = await sb.from('umal_tahtalar').delete().in('cihaz', eskiler.map(t => t.cihaz)).select('cihaz');
-        if (se || !(silinen || []).length) alert('Kaldırılamadı' + (se ? ': ' + hataYaz(se) : ' (yetki yok).'));
+        if (se || !(silinen || []).length) uyar('Kaldırılamadı' + (se ? ': ' + hataYaz(se) : ' (yetki yok).'));
         await yukle();
       };
       $('#prListe').classList.toggle('soluk', !L.length);
@@ -3858,10 +3875,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="kart"><h2 style="margin-top:0">Sınıflar <span class="soluk kucuk">· tahtaya dokunun: Aç / Kilitle / Boş ders</span></h2><div id="kSiniflar"></div></div><div id="kTakvim"></div>`;
     $('#kAcTen').onclick = () => { const zd = zilDurumu(); gonderKarar('ac', ['*'], zd.tur === 'teneffus' ? zd.bitis : Math.floor(Date.now() / 1000) + 15 * 60); };
     $('#kAcGun').onclick = () => gonderKarar('ac', ['*'], gunSonu());
-    $('#kKilit').onclick = () => { if (confirm('Bütün sınıf tahtaları bugün ders saatinde de kilitlenecek (yalnız Atlas). Emin misiniz?')) gonderKarar('kilitle', ['*'], gunSonu()); };
+    $('#kKilit').onclick = async () => { if (await onayla('Bütün sınıf tahtaları bugün ders saatinde de kilitlenecek (yalnız Atlas). Emin misiniz?')) gonderKarar('kilitle', ['*'], gunSonu()); };
     $('#kNormal').onclick = () => gonderKarar('normal', ['*'], gunSonu());
     const kapatGonder = hedef => gonderKarar('kapat', hedef, Math.floor(Date.now() / 1000) + 600);   // K-378: tahta 2 dk uyarıyla kapanır ("30 dk ertele" var)
-    $('#kKapatHepsi').onclick = () => { if (confirm('Açık bütün tahtalar (Öğretmenler odası dahil) 2 dakika uyarıyla kapanacak. Emin misiniz?')) kapatGonder(['*']); };
+    $('#kKapatHepsi').onclick = async () => { if (await onayla('Açık bütün tahtalar (Öğretmenler odası dahil) 2 dakika uyarıyla kapanacak. Emin misiniz?')) kapatGonder(['*']); };
     $('#kSiniflar').onclick = ev => {
       const b = ev.target.closest('[data-k]'); if (!b) return; const s = b.dataset.k, zd = zilDurumu();
       if (odaMi(s)) pencereAc(`<h2 style="margin-top:0">${esc(s)}</h2><div class="soluk">Bu tahta kilitlenmez. İsterseniz kapatabilirsiniz (2 dk uyarı, "30 dk ertele" var).</div>
@@ -3934,10 +3951,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--cizgi)"><div style="flex:1;min-width:0"><b>${esc(v.baslik || (v.metin || '').slice(0, 60) || (v.resim ? 'Fotoğraf' : 'Mesaj'))}</b>${v.resim ? ' 📷' : ''}<div class="kucuk soluk">${esc(hd)} · ${bek ? '<span class="turuncu">' + 'saat ' + saat(v.baslangic) + ' olunca çıkacak</span>' : saat(v.zaman || 0) + ' gönderildi'}${r.bitis ? ' · bitiş ' + saat(new Date(r.bitis).getTime() / 1000) : ' · kaldırılana kadar'}</div></div><button class="tehlike" data-sil="${esc(r.id)}">Kaldır</button></div>`; }).join('');
       el.onclick = async ev => {
         const b = ev.target.closest('[data-sil]'); if (!b) return; const r = L.find(x => x.id === b.dataset.sil); if (!r) return;
-        if (!confirm('Bu mesaj bütün tahtalardan kaldırılsın mı?')) return;
+        if (!await onayla('Bu mesaj bütün tahtalardan kaldırılsın mı?')) return;
         b.disabled = true;
         const { error: se } = await sb.from('umal_mesajlar').delete().eq('id', r.id);
-        if (se) { b.disabled = false; alert('Kaldırılamadı: ' + hataYaz(se)); return; }
+        if (se) { b.disabled = false; uyar('Kaldırılamadı: ' + hataYaz(se)); return; }
         if (r.veri && r.veri.resim && r.veri.resim.yol) { try { await sb.storage.from('umal-resim').remove([r.veri.resim.yol]); } catch (e) {} }
         listeCiz();
       };
@@ -3968,7 +3985,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           veri.baslangic = Math.floor(t.getTime() / 1000); ne_ = ` ${t.toLocaleDateString(tr, { day: 'numeric', month: 'long' })} saat ${$('#gSaat').value.replace(':', '.')} olunca`;
           if (veri.bitis && veri.bitis < veri.baslangic + 600) veri.bitis = veri.baslangic + (sure === 'ders' ? 40 * 60 : 12 * 3600);
         }
-        if (!confirm(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'}${ne_} ekranı kaplayacak${resim ? ' (fotoğraflı)' : ''}. Gönderilsin mi?`)) return;
+        if (!await onayla(`${hedef.has('*') ? 'Açık olan bütün tahtalarda' : [...hedef].join(', ') + ' tahtalarında'}${ne_} ekranı kaplayacak${resim ? ' (fotoğraflı)' : ''}. Gönderilsin mi?`)) return;
       }
       $('#gGonder').disabled = true;
       if (resim) {
