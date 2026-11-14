@@ -1128,3 +1128,5 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .reh-sv i { display: inline-block; width: 70px; height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; } .reh-sv i em { display: block; height: 100%; background: var(--sv); }
 .reh-hizli { display: inline-flex; gap: 6px; flex-wrap: wrap; } .reh-hizli button { padding: 6px 12px; font-size: 13px; }
 @media (max-width: 760px) { .reh-hizli { width: 100%; order: 5; } }
+/* K-565: arşiv */
+.reh-arsiv { border-style: dashed; opacity: .9; } .reh-arsiv-ic { padding-left: 14px; border-left: 2px dashed var(--cizgi); display: flex; flex-direction: column; gap: 8px; }
