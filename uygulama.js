@@ -1538,7 +1538,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       kaydediliyor = false;
       if (error) { bilgi = 'Kaydedilemedi: ' + hataYaz(error); durumCiz(); return; }
       T.yeni = false;
-      if (yayinda) { ac('anket'); return; }
+      if (yayinda) { ac(T.rehberlik || T.sablon ? 'rehberlik' : 'anket'); return; }   // K-559: rehberlik formu yayınlanınca Rehberlik'e dön
       bilgi = 'Taslak kaydedildi. Tahtalara gitmez; "Yayınla" deyince gider.'; durumCiz();
     };
 
@@ -1839,10 +1839,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <div class="meb-izgara">${L.map((f, i) => { const yayin = D.anketler.filter(a => a.tanim.sablon === f.sablon); const [k1, k2] = MEB_KIM[f.kim];
         return `<div class="meb-kart k-${f.kim}"><div class="meb-ust"><b>${esc(f.ad)}</b><span class="meb-kod">${esc(f.kod)}</span></div>
           <div class="meb-bilgi"><span class="meb-kim">${k1}</span>${esc(f.donem)} · ${f.sorular.length} ${f.sablon === 'yasam-pencerem' ? 'bölüm (48 madde)' : 'soru'}</div><div class="soluk kucuk">${esc(k2)}${f.risk ? ' · risk haritasına işler' : ''}</div>
-          ${yayin.length ? `<div class="meb-yayin">Yayınlanan: ${yayin.map(a => esc(a.tanim.ad)).join(', ')}</div>` : ''}
+          ${yayin.length ? `<div class="meb-yayin">${yayin.map(a => `<button class="bag" data-mebgit="${esc(a.id)}">${a.durum === 'taslak' ? 'Taslak' : 'Yayında'}: ${esc(a.tanim.ad)} →</button>`).join('')}</div>` : ''}
           <div class="dugmeler"><button class="birincil" data-mebhazir="${i}">Hazırla</button><button class="ikincil" data-mebonizle="${i}">Soruları gör</button></div></div>`; }).join('')}
         <a class="meb-kart meb-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><div class="meb-ust"><b>MEB Mesleki Rehberlik</b><span class="meb-kod">portal</span></div><div class="soluk kucuk">Meslek tanıtımları, ilgi ve yetenek envanterleri. Öğrenci panelinde Rehberlik sayfasında da bağlantısı var.</div><div class="neon kucuk" style="margin-top:8px">meslekirehberlik.meb.gov.tr ↗</div></a></div>`;
     $('#mebIc').onclick = ev => {
+      const g_ = ev.target.closest('[data-mebgit]'); if (g_) { const a = D.anketler.find(x => x.id === g_.dataset.mebgit); if (a && a.durum === 'taslak') anketHazirla(a); else if (a) { const b = document.querySelector(`#rehIc [data-ac="${CSS.escape(a.id)}"]`); if (b) { b.click(); b.scrollIntoView({ block: 'start' }); } } return; }
       const h = ev.target.closest('[data-mebhazir]'), o = ev.target.closest('[data-mebonizle]');
       if (h) { const f = L[+h.dataset.mebhazir], bas = bugunISO();
         anketHazirla({ sablondan: true, bolum: f.kim === 'ogretmen' ? 'anket' : 'rehberlik', tanim: { ad: `${f.ad} · ${egitimYili()}`, aciklama: f.aciklama, sablon: f.sablon, veli: f.kim === 'veli', kanal: f.kim === 'ogretmen' ? undefined : 'web', kimler: f.kim === 'ogretmen' ? 'ogretmen' : 'ogrenci', isimli: true, baslangic: bas, bitis: gunEkle(bas, 14), sorular: f.sorular, siniflar: {} } }, true); }
@@ -1910,7 +1911,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const MEB_RISK_AD = { G: 'Anne en fazla ilkokul mezunu', H: 'Baba en fazla ilkokul mezunu', I: 'Tek çocuk olan', J: '5 ve üstü kardeşi olan', K: 'Anne ve babası ayrı yaşayan', L: 'Anne ve babası boşanmış olan', M: 'Yalnızca annesi ile yaşayan', N: 'Yalnızca babası ile yaşayan', O: 'Annesi hayatta olmayan', P: 'Babası hayatta olmayan', Q: 'Anne ve babası hayatta olmayan', R: 'Şehit çocuğu', S: 'Yalnızca büyükanne/büyükbabasıyla yaşayan', T: 'Yalnızca diğer akrabalarıyla yaşayan', U: 'Koruyucu aile gözetiminde olan', V: 'Sevgi evlerinde kalan', W: 'Kurumda kalan (SHÇEK)', X: 'Ailesinde süreğen hastalığı olan', Y: 'Ailesinde ruhsal hastalığı olan', Z: 'Ailesinde bağımlı birey bulunan', AA: 'Ailesinde cezai hükmü bulunan', AB: 'Ailesi mevsimlik işçi olan', AC: 'Aile içi şiddete maruz kalan', AD: 'Özel yetenekli tanısı olan', AE: 'Özel eğitim raporu olan', AF: 'Süreğen hastalığı olan', AG: 'Ruhsal hastalığı olan', AH: 'Danışmanlık tedbir kararı olan', AI: 'Eğitim tedbir kararı olan', AJ: 'Maddi sıkıntı yaşayan', AK: 'Sürekli devamsız olan', AL: 'Bir işte çalışan', AM: 'Akademik başarısı düşük', AN: 'Riskli akran grubuna dahil olan', AO: 'Diğer' };
   async function rehberlik() {
     await anketVerisi();
-    const formlar = D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak');
+    const rehForm = a => (a.bolum === 'rehberlik' || (a.tanim.sablon && a.tanim.kimler !== 'ogretmen')) && a.durum !== 'taslak';   // K-559: MEB formları genel yayınlansa da burada
+    const formlar = D.anketler.filter(rehForm);
     let acik = null, form = null, sinif = null;
     const isaretler = (a, c) => a.tanim.sablon ? sablonIsaret(a, c) : (a.tanim.sorular || []).map((q, i) => i).filter(i => {
       const q = a.tanim.sorular[i], v = secimler((c.c || [])[i]);
@@ -1989,7 +1991,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#icerik').innerHTML = `${['bas', 'rehberlik'].includes(D.rol) ? rehSekme('rehberlik') : ''}<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
     liste();    yenile(async () => { if (!canliGuvenli()) return; const eski = JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length; await anketVerisi();   // K-553: öğrenci doldurdukça işaretler kendiliğinden gelir
-      if (eski !== JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length) { formlar.splice(0, formlar.length, ...D.anketler.filter(a => a.bolum === 'rehberlik' && a.durum !== 'taslak')); liste(); } }, 30);
+      if (eski !== JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length) { formlar.splice(0, formlar.length, ...D.anketler.filter(rehForm)); liste(); } }, 30);
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
