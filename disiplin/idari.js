@@ -153,10 +153,10 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   async function sbKaydet(m) { try { await yaz('sorumluluk', SB.W); SB.degisti = false; bilgi(m || 'Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } }
   function sbCiz() {
     const p = sbP(), e = SB.ekran;
-    const yan = `<aside class="id-yan"><h3>Sınavlar</h3><button class="birincil" data-sb="yeni" style="width:100%">+ Yeni sınav</button>
+    const yan = `<aside class="id-yan"><h3>Sınavlar<button class="birincil id-mini" data-sb="yeni">+ Yeni sınav</button></h3>
       ${(SB.W.programlar || []).map(x => `<button class="id-prg ${x.id === SB.W.secili ? 'secili' : ''}" data-sbp="${x.id}"><b>${esc(x.tur)}</b><small>${esc(x.yil)} · ${esc(x.donem)}</small></button>`).join('') || '<div class="soluk kucuk">Kayıtlı sınav yok.</div>'}
       ${p ? `<div class="id-ozet"><span>Ders</span><b>${p.atamalar.length}</b><span>Yerleşen</span><b>${p.sinavlar.filter(x => x.tarih).length}</b><span>Oturum</span><b>${p.oturumlar.length}</b></div>` : ''}
-      <button class="ikincil" data-sb="kaydet" style="width:100%;margin-top:8px">Kaydet</button></aside>`;
+      ${p ? '<button class="ikincil id-mini" data-sb="kaydet" style="margin-top:10px">Kaydet</button>' : ''}</aside>`;
     let ic = '';
     if (e === 'ana') ic = p ? SB_MENU.map(([b, L]) => `<section class="id-grup"><h2>${b}</h2><div class="id-kartlar">${L.map(([k, ad, alt]) => `<button data-sbe="${k}"><b>${ad}</b><small>${alt}</small></button>`).join('')}</div></section>`).join('')
       : '<div class="kart"><b>Önce bir sınav açın.</b><div class="soluk" style="margin-top:6px">"+ Yeni sınav" ile başlayın. Ders, öğrenci, oturum ve görevler bu sınavın içinde saklanır; sonra soldaki listeden yeniden açarsınız.</div></div>';
@@ -657,7 +657,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
 .id-et{display:block;font-size:12.5px;font-weight:700;color:var(--soluk);margin:10px 0 5px;letter-spacing:.02em}
 .id-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px 16px;align-items:start}.id-form label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:700;color:var(--soluk)}.id-form label.genis{grid-column:1/-1}.id-form textarea{width:100%;box-sizing:border-box}.id-form .id-tik{grid-column:1/-1}
 .id-satir{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.id-satir>input{flex:1 1 160px;min-width:120px}
-.id-sb{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start;margin-top:10px}.id-yan{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:12px;position:sticky;top:10px}.id-yan h3{margin:0 0 8px;font-size:14px;letter-spacing:.06em;color:var(--soluk)}
+.id-sb{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start;margin-top:10px}.id-yan{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:12px;position:sticky;top:10px}.id-yan h3{margin:0 0 8px;font-size:14px;letter-spacing:.06em;color:var(--soluk);display:flex;align-items:center;justify-content:space-between;gap:8px}.id-mini{padding:6px 12px!important;font-size:13px!important;border-radius:9px!important;min-height:0!important;width:auto!important;letter-spacing:0;font-weight:700}
 .id-prg{display:block;width:100%;text-align:left;background:var(--koyu);border:1px solid var(--cizgi);border-radius:11px;padding:8px 10px;margin-top:6px;color:inherit;cursor:pointer}.id-prg b{display:block;font-size:14px}.id-prg small{color:var(--soluk)}.id-prg.secili{border-color:var(--neon);box-shadow:0 0 10px rgba(34,232,255,.3)}
 .id-ozet{display:grid;grid-template-columns:1fr auto;gap:3px 8px;margin-top:12px;font-size:13px;color:var(--soluk)}.id-ozet b{color:#e9fdff;text-align:right}
 .id-grup h2{font-size:13px;letter-spacing:.12em;color:var(--soluk);margin:6px 0 8px}.id-kartlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:14px}.id-kartlar button{text-align:left;background:var(--kart);border:1px solid var(--cizgi);border-left:3px solid var(--neon);border-radius:13px;padding:11px 13px;color:inherit;cursor:pointer}.id-kartlar button:hover{border-color:var(--neon)}.id-kartlar b{display:block}.id-kartlar small{color:var(--soluk)}
