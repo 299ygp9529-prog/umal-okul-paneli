@@ -1314,3 +1314,5 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .td-prg-ad{font-weight:600;font-size:14px}.td-prg-sb{font-size:12px;color:var(--sv)}.td-prg-og{font-size:12px;opacity:.8}
 /* K-628: kısa ekranda logo kutusu sıkışıp menünün altına girmesin */
 .yan > .logo3d, .yan > .ust-ad, .yan > .kullanici { flex-shrink: 0; }
+
+.td-prg-secler{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}.td-prg-bas .bag{margin-left:auto}
