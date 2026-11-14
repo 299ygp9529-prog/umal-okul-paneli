@@ -1909,6 +1909,51 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     ciz();
   }
   const MEB_RISK_AD = { G: 'Anne en fazla ilkokul mezunu', H: 'Baba en fazla ilkokul mezunu', I: 'Tek çocuk olan', J: '5 ve üstü kardeşi olan', K: 'Anne ve babası ayrı yaşayan', L: 'Anne ve babası boşanmış olan', M: 'Yalnızca annesi ile yaşayan', N: 'Yalnızca babası ile yaşayan', O: 'Annesi hayatta olmayan', P: 'Babası hayatta olmayan', Q: 'Anne ve babası hayatta olmayan', R: 'Şehit çocuğu', S: 'Yalnızca büyükanne/büyükbabasıyla yaşayan', T: 'Yalnızca diğer akrabalarıyla yaşayan', U: 'Koruyucu aile gözetiminde olan', V: 'Sevgi evlerinde kalan', W: 'Kurumda kalan (SHÇEK)', X: 'Ailesinde süreğen hastalığı olan', Y: 'Ailesinde ruhsal hastalığı olan', Z: 'Ailesinde bağımlı birey bulunan', AA: 'Ailesinde cezai hükmü bulunan', AB: 'Ailesi mevsimlik işçi olan', AC: 'Aile içi şiddete maruz kalan', AD: 'Özel yetenekli tanısı olan', AE: 'Özel eğitim raporu olan', AF: 'Süreğen hastalığı olan', AG: 'Ruhsal hastalığı olan', AH: 'Danışmanlık tedbir kararı olan', AI: 'Eğitim tedbir kararı olan', AJ: 'Maddi sıkıntı yaşayan', AK: 'Sürekli devamsız olan', AL: 'Bir işte çalışan', AM: 'Akademik başarısı düşük', AN: 'Riskli akran grubuna dahil olan', AO: 'Diğer' };
+  // ------------------------------------------------------------------ K-560: risk formu değilse "Toplu sonuç" PDF'i (istatistik + öğrenci bazlı)
+  const riskFormu = form => (form.tanim.sorular || []).some(q => q.sutun || q.riskler || q.riskYalniz);
+  function sonucPdf(form, siniflar, kapsam) {
+    const t = form.tanim, Q = t.sorular || [], K = [];
+    siniflar.forEach(s => katilanlar(form, s).slice().sort((x, y) => (+x.no) - (+y.no)).forEach(k => K.push({ s, k, c: cevap(form, s, String(k.no)) })));
+    const R = K.filter(x => x.c), n = R.length, yz = (a, b) => b ? Math.round(a * 100 / b) : 0;
+    const v_ = (r, i) => secimler((r.c.c || [])[i]);
+    const bar = (p, r) => `<span style="display:inline-block;width:30mm;height:3mm;background:#e3e8ef;border-radius:2mm;vertical-align:middle"><span style="display:block;height:100%;width:${p}%;background:${r || '#1aa6c4'};border-radius:2mm"></span></span>`;
+    let h = `<h2>1. Katılım</h2><table><tr><th>Sınıf</th><th>Dolduran</th><th>Toplam</th><th>Oran</th></tr>${siniflar.map(s => { const a = K.filter(x => x.s === s), d = a.filter(x => x.c).length; return `<tr><td><b>${esc(s)}</b></td><td>${d}</td><td>${a.length}</td><td>${bar(yz(d, a.length))} %${yz(d, a.length)}</td></tr>`; }).join('')}<tr><td><b>Toplam</b></td><td><b>${n}</b></td><td><b>${K.length}</b></td><td><b>%${yz(n, K.length)}</b></td></tr></table>`;
+    const riba = /^riba/.test(t.sablon || ''), dv = t.sablon === 'devamsizlik';
+    if (riba || dv) {
+      const H = [];
+      if (riba) Q.forEach((q, i) => (q.secenekler || []).forEach(o => H.push({ m: `${i + 1}${o[0]}`, o: o.replace(/^[AB] · /, ''), p: R.filter(r => v_(r, i).includes(o)).length / (n || 1), ek: R.filter(r => v_(r, i).includes(o)).length })));
+      else Q.forEach((q, i) => { if (q.tur !== 'secim') return; const e = R.filter(r => v_(r, i).includes('Evet')).length, b = R.filter(r => v_(r, i).includes('Bazen')).length; H.push({ m: i + 1, o: q.metin, p: (e + b / 2) / (n || 1), ek: `${e} evet · ${b} bazen` }); });
+      H.sort((a, b) => b.p - a.p);
+      h += `<h2>2. ${riba ? 'Rehberlik ihtiyaç sıralaması (ilk 15)' : 'En etkili devamsızlık nedenleri (ilk 15)'}</h2><table><tr><th>#</th><th>${riba ? 'Hizmet' : 'Neden'}</th><th>Madde</th><th>${riba ? 'Seçen' : 'Cevap'}</th><th>Oran</th></tr>${H.slice(0, 15).map((x, k) => `<tr><td>${k + 1}</td><td>${esc(x.o)}</td><td>${x.m}</td><td style="white-space:nowrap">${x.ek}</td><td style="white-space:nowrap">${bar(Math.round(x.p * 100), riba ? '#1aa6c4' : '#e8892b')} %${Math.round(x.p * 100)}</td></tr>`).join('')}</table>`;
+    } else {
+      h += `<h2>2. Soru bazında sonuçlar</h2>` + Q.map((q, i) => {
+        const cev = R.filter(r => v_(r, i).length), m = `<p class="s"><b>${i + 1}.</b> ${esc(q.metin)} <span class="g">(${cev.length} cevap)</span></p>`;
+        if (q.tur === 'yazi') return m + (cev.length ? `<ul>${cev.slice(0, 40).map(r => `<li><b>${esc(r.s)} · ${esc(baslik(r.k.ad))}:</b> ${esc(v_(r, i).join(' '))}</li>`).join('')}${cev.length > 40 ? `<li class="g">… ${cev.length - 40} cevap daha (öğrenci bazlı listede)</li>` : ''}</ul>` : '');
+        if (q.tur === 'sayi') { const L = cev.map(r => +v_(r, i)[0]).filter(x => !isNaN(x)); return m + (L.length ? `<p class="g">Ortalama <b>${(L.reduce((a, b) => a + b, 0) / L.length).toFixed(1)}</b> · en az ${Math.min(...L)} · en çok ${Math.max(...L)}</p>` : ''); }
+        const ops = q.tur === 'puan' ? ['1', '2', '3', '4', '5'] : q.tur === 'begeni' ? ['Beğendim', 'Beğenmedim'] : [...(q.secenekler || []), ...(q.diger ? ['Diğer'] : [])];
+        return m + `<table class="o">${ops.map(o => { const c = cev.filter(r => v_(r, i).some(x => x === o || (o === 'Diğer' && x.startsWith('Diğer')))).length; return `<tr><td>${esc(o)}</td><td style="width:12mm;text-align:right"><b>${c}</b></td><td style="width:52mm">${bar(yz(c, cev.length))} %${yz(c, cev.length)}</td></tr>`; }).join('')}</table>`;
+      }).join('');
+    }
+    // 3. öğrenci bazlı
+    const kisa = (r, i) => { const q = Q[i], v = v_(r, i); if (!v.length) return '—'; if (riba) return v[0][0]; if (dv) return v[0][0]; if (q.numarali) return v.map(x => (q.secenekler || []).indexOf(x) + 1).join(', '); return v.join(', '); };
+    h += `<h2>3. Öğrenci bazlı sonuçlar</h2>${riba ? '<p class="g">Her madde için seçilen hizmet: A ya da B.</p>' : dv ? '<p class="g">E = Evet, B = Bazen, H = Hayır.</p>' : ''}` + siniflar.map(s => {
+      const a = K.filter(x => x.s === s), d = a.filter(x => x.c), yok = a.filter(x => !x.c);
+      if (!a.length) return '';
+      let tb;
+      if (riba || dv) {
+        const qi = Q.map((q, i) => i).filter(i => Q[i].tur === 'secim');
+        tb = `<table class="ogr"><tr><th>No</th><th>Ad Soyad</th>${qi.map(i => `<th class="m">${i + 1}</th>`).join('')}${dv ? '<th>Evet</th>' : ''}</tr>${d.map(r => `<tr><td>${esc(r.k.no)}</td><td class="ad">${esc(baslik(r.k.ad))}</td>${qi.map(i => { const k_ = kisa(r, i); return `<td class="m${dv && k_ === 'E' ? ' e' : ''}">${k_}</td>`; }).join('')}${dv ? `<td><b>${qi.filter(i => v_(r, i).includes('Evet')).length}</b></td>` : ''}</tr>`).join('')}</table>`;
+      } else if (Q.length <= 8 && Q.every(q => q.tur !== 'yazi')) {
+        tb = `<table class="ogr"><tr><th>No</th><th>Ad Soyad</th>${Q.map((q, i) => `<th>${i + 1}. soru</th>`).join('')}</tr>${d.map(r => `<tr><td>${esc(r.k.no)}</td><td class="ad">${esc(baslik(r.k.ad))}</td>${Q.map((q, i) => `<td>${esc(kisa(r, i))}</td>`).join('')}</tr>`).join('')}</table>`;
+      } else {
+        tb = `<table class="ogr"><tr><th style="width:12mm">No</th><th style="width:42mm">Ad Soyad</th><th>Cevaplar</th></tr>${d.map(r => `<tr><td>${esc(r.k.no)}</td><td class="ad">${esc(baslik(r.k.ad))}</td><td>${Q.map((q, i) => v_(r, i).length ? `<b>${i + 1})</b> ${esc(kisa(r, i))}` : '').filter(Boolean).join(' &nbsp; ')}</td></tr>`).join('')}</table>`;
+      }
+      return `<h3>${esc(s)} <span class="g">· ${d.length}/${a.length} doldurdu</span></h3>${d.length ? tb : ''}${yok.length ? `<p class="g">Doldurmayanlar: ${yok.map(x => `${esc(x.k.no)} ${esc(baslik(x.k.ad))}`).join(', ')}</p>` : ''}`;
+    }).join('');
+    const tarih = new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' });
+    belgeOnizle(`<!doctype html><html lang="tr"><meta charset="utf-8"><title>${esc(t.ad)} · ${esc(kapsam)}</title><style>@page{size:A4${dv ? ' landscape' : ''};margin:11mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;margin:0;padding:9mm}h1{font-size:13pt;text-align:center;margin:0 0 1mm}h2{font-size:11pt;margin:6mm 0 2mm;padding-bottom:1mm;border-bottom:1.5px solid #1aa6c4;color:#0d3c57}h3{font-size:10pt;margin:4mm 0 1.5mm;break-after:avoid}p{margin:0 0 2mm}.alt{text-align:center;color:#444;margin-bottom:4mm}.g{color:#666;font-weight:normal}.s{margin:3.5mm 0 1mm;break-after:avoid}table{width:100%;border-collapse:collapse;margin-bottom:2mm}td,th{border:1px solid #9aa6b2;padding:2px 4px;text-align:left;vertical-align:middle}th{background:#e8eef4}table.o td{border:0;border-bottom:1px solid #e3e8ef}table.ogr td,table.ogr th{font-size:8pt}td.m,th.m{text-align:center;padding:1px;width:3.9mm;font-size:7.5pt}td.e{background:#ffe2c4;font-weight:bold}td.ad{white-space:nowrap}ul{margin:0 0 2mm;padding-left:5mm}li{margin:.6mm 0}tr{break-inside:avoid}</style>
+      <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:17mm"><div style="font-weight:bold;margin:1.5mm 0 3mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(t.ad)}</h1><p class="alt">${esc(kapsam)} · ${n}/${K.length} kişi doldurdu · ${tarih}</p>${h}`, `${t.ad} · ${kapsam}`, dv);
+  }
   async function rehberlik() {
     await anketVerisi();
     const rehForm = a => (a.bolum === 'rehberlik' || (a.tanim.sablon && a.tanim.kimler !== 'ogretmen')) && a.durum !== 'taslak';   // K-559: MEB formları genel yayınlansa da burada
@@ -1938,11 +1983,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!sinif) {   // bütün sınıflar: seviye satırları
         $('#icerik').classList.remove('reh-acik');
         // K-406: Proje ödevi tercihi ile aynı düzen: Hepsini aç / kapat + sınıf kutusunda Aç / Kapat; kutuya basınca sınıfın ayrıntısı
-        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">${(form.tanim.kanal || 'web') === 'tahta' ? 'Bu form yalnız sınıf tahtasından doldurulur.' : (form.tanim.kanal === 'ikisi' ? 'Bu form sınıf tahtasından ya da öğrenci panelinden doldurulur.' : 'Bu form tahtada açılmaz.')} ${(form.tanim.kanal || 'web') !== 'tahta' ? 'Öğrenci paneli: <b class="neon">umalatlas.com.tr/ogrenci</b> (okul numarası + giriş kodu).' : ''} <button class="bag" data-kanaldegis="1">Değiştir</button></div><div class="dugmeler">${form.tanim.sablon ? '<button class="birincil" data-mebrapor="1">MEB Raporu</button>' : ''}<button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar<button class="ikincil kucuk-d" data-toprisk="${dz}" title="${dz}. sınıfların hepsinin risk haritası, sınıf başına bir sayfa">📄 Toplu risk haritası</button></div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
+        $('#rehAyrinti').innerHTML = `<div class="kart"><div class="kucuk soluk" style="margin-bottom:8px">${(form.tanim.kanal || 'web') === 'tahta' ? 'Bu form yalnız sınıf tahtasından doldurulur.' : (form.tanim.kanal === 'ikisi' ? 'Bu form sınıf tahtasından ya da öğrenci panelinden doldurulur.' : 'Bu form tahtada açılmaz.')} ${(form.tanim.kanal || 'web') !== 'tahta' ? 'Öğrenci paneli: <b class="neon">umalatlas.com.tr/ogrenci</b> (okul numarası + giriş kodu).' : ''} <button class="bag" data-kanaldegis="1">Değiştir</button></div><div class="dugmeler">${form.tanim.sablon ? '<button class="birincil" data-mebrapor="1">MEB Raporu</button>' : ''}${riskFormu(form) ? '' : '<button class="birincil" data-topsonuc="*">Tüm okul sonuçları (PDF)</button>'}<button class="ikincil" data-r="*" data-d="acik">Hepsini aç</button><button class="ikincil" data-r="*" data-d="kapali">Hepsini kapat</button></div>${['9', '10', '11', '12'].map(dz => { const L = ss.filter(x => x.startsWith(dz + '-')); if (!L.length) return ''; return `<div class="pj-satir" style="--sv:${SEVIYE_RENK[dz]}"><div class="pj-duzey">${dz}. Sınıflar${riskFormu(form) ? `<button class="ikincil kucuk-d" data-toprisk="${dz}" title="${dz}. sınıfların hepsinin risk haritası, sınıf başına bir sayfa">📄 Toplu risk haritası</button>` : `<button class="ikincil kucuk-d" data-topsonuc="${dz}" title="${dz}. sınıfların istatistikleri ve öğrenci bazlı cevapları">📄 Toplu sonuç (PDF)</button>`}</div><div class="pj-kutular">${L.map(x => { const kk = katilanlar(form, x), n = kk.filter(y => cevap(form, x, String(y.no))).length, ac = acikMi(form, x);
           return `<div class="pj-kutu ${ac ? 'acik' : 'kapali'}" data-s="${esc(x)}" style="cursor:pointer"><div class="pj-ust"><b>${esc(x)}</b><button class="pj-dugme ${ac ? 'pj-kapa' : 'pj-ac'}" data-r="${esc(x)}" data-d="${ac ? 'kapali' : 'acik'}">${ac ? 'Kapat' : 'Aç'}</button></div><small>${ac ? 'açık' : 'kapalı'} · ${n}/${kk.length}</small></div>`; }).join('')}</div></div>`; }).join('')}<div class="cok-soluk kucuk" id="rBilgi">Kutuya basınca sınıfın listesi açılır. Aç / kapat öğrenci panelinde hemen geçerli olur.</div></div>`;
         $('#rehAyrinti').onclick = async ev => {
           if (ev.target.closest('[data-mebrapor]')) { ev.stopPropagation(); mebRapor(form); return; }
           if (ev.target.closest('[data-kanaldegis]')) { ev.stopPropagation(); anketHazirla(form); return; }
+          const ts_ = ev.target.closest('[data-topsonuc]'); if (ts_) { ev.stopPropagation(); const dz = ts_.dataset.topsonuc; if (dz === '*') sonucPdf(form, ss, 'Tüm okul'); else sonucPdf(form, ss.filter(x => x.startsWith(dz + '-')), `${dz}. Sınıflar`); return; }
           const tr_ = ev.target.closest('[data-toprisk]');
           if (tr_) { ev.stopPropagation(); const dz = tr_.dataset.toprisk, L = ss.filter(x => x.startsWith(dz + '-')); riskYazdir(`${dz}. Sınıflar Risk Haritası (${L.length} sınıf)`, L.map(x => riskSayfasi(x, riskSatirlari(form, x)))); return; }
           const d = ev.target.closest('[data-r]');
@@ -1960,7 +2006,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').classList.add('reh-acik');
       $('#rehAyrinti').onclick = null;
       $('#rehAyrinti').innerHTML = `<div class="sinav-ust"><button class="ikincil" id="rehGeri">← Sınıflar</button><span class="neon-tabela">${esc(sinif)}</span><span class="soluk">${esc(form.tanim.ad)}</span>
-          <span class="turuncu-neonlar"><span class="t-neon">${dolu.length} doldurdu</span><span class="t-neon">${k.length - dolu.length} bekleyen</span><button class="t-neon kirmizi-neon r-cok" id="rCok" title="İşaretli öğrencileri ve işaretledikleri maddeleri göster">${cok.length} öğrenci 3+ işaret ›</button><button class="birincil" id="rExcel">Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">PDF</button></span></div>
+          <span class="turuncu-neonlar"><span class="t-neon">${dolu.length} doldurdu</span><span class="t-neon">${k.length - dolu.length} bekleyen</span>${riskFormu(form) || !form.tanim.sablon ? `<button class="t-neon kirmizi-neon r-cok" id="rCok" title="İşaretli öğrencileri ve işaretledikleri maddeleri göster">${cok.length} öğrenci 3+ işaret ›</button>` : ''}${riskFormu(form) ? '<button class="birincil" id="rExcel">Excel (MEB Şablonu)</button><button class="birincil" id="rPdf">PDF</button>' : '<button class="birincil" id="rSonuc">Sınıf sonuçları (PDF)</button>'}</span></div>
         ${sinifOturmaPlani(sinif, k.map(x => ({ no: String(x.no), ad: x.ad, sinif })), new Set(dolu.map(x => String(x.no))))}`;
       $('#rehGeri').onclick = () => { sinif = null; ciz(); };
       planiSigdir();
@@ -1974,7 +2020,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const satirlar = () => riskSatirlari(form, sinif);
       const _eski = () => k.map(x => { const c = cevap(form, sinif, String(x.no)); return { no: String(x.no), ad: x.ad, sutunlar: c ? new Set(isaretler(form, c).map(i => form.tanim.sorular[i].sutun).filter(Boolean)) : null }; });
       // K-542: kırmızı tuş — işaretli öğrenciler ve işaretledikleri maddeler (çok işaretliden aza)
-      $('#rCok').onclick = () => {
+      if ($('#rSonuc')) $('#rSonuc').onclick = () => sonucPdf(form, [sinif], `${sinif} sınıfı`);
+      if ($('#rCok')) $('#rCok').onclick = () => {
         const L = dolu.map(x => { const c = cevap(form, sinif, String(x.no)); return { x, c, I: isaretler(form, c) }; }).filter(o => o.I.length).sort((a, b) => b.I.length - a.I.length || a.x.ad.localeCompare(b.x.ad, tr));
         const madde = o => [...new Set(o.I)].map(i => { const q = form.tanim.sorular[i], v = secimler((o.c.c || [])[i]); if (q.numarali) return v.filter(x => !(q.olumlu || []).includes(x)).map(x => `<li>${(q.secenekler || []).indexOf(x) + 1}. ${esc(x)}</li>`).join(''); const vv = v.join(', '); return `<li>${esc(q.metin)}${q.tur === 'yazi' || vv !== 'Evet' ? ` <span class="kirmizi">— ${esc(vv)}</span>` : ''}</li>`; }).join('');
         const govde = L.length ? L.map(o => `<div class="kart r-kisi ${o.I.length >= 3 ? 'cok' : ''}"><div class="r-kisi-ust"><b>${esc(baslik(o.x.ad))}</b><span class="soluk">${esc(sinif)} · ${esc(o.x.no)}</span><span class="t-neon ${o.I.length >= 3 ? 'kirmizi-neon' : ''}">${o.I.length} işaret</span></div><ol>${madde(o)}</ol></div>`).join('') : '<div class="soluk">İşaretli öğrenci yok.</div>';
@@ -1985,8 +2032,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             <div style="text-align:center"><img src="${new URL('okul-logo.png', location.href).href}" style="height:18mm"><div style="font-weight:bold;margin:2mm 0 4mm">ÜMRANİYE MERKEZ ANADOLU LİSESİ · REHBERLİK SERVİSİ</div></div><h1>${esc(sinif)} · ${esc(form.tanim.ad)}</h1><p>İşaretli öğrenciler · ${L.length} öğrenci · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })}</p><table><tr><th style="width:12%">No</th><th style="width:24%">Adı Soyadı</th><th style="width:8%">İşaret</th><th>İşaretlenen maddeler</th></tr>${t}</table><div class="g">Bu liste gizlidir; yalnız rehberlik servisinde kullanılır.</div>`, sinif + ' işaretli öğrenciler');
         };
       };
-      $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar());
-      $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true);
+      if ($('#rExcel')) { $('#rExcel').onclick = () => riskOnizleme(sinif, satirlar()); $('#rPdf').onclick = () => riskOnizleme(sinif, satirlar(), true); }
     };
     $('#icerik').innerHTML = `${['bas', 'rehberlik'].includes(D.rol) ? rehSekme('rehberlik') : ''}<h1>Rehberlik</h1><div class="satirlar" id="rehIc" style="margin-top:12px"></div>`;
     $('#rehIc').addEventListener('click', ev => { const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
