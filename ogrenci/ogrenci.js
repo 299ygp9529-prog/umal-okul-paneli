@@ -57,7 +57,7 @@
   // ---- form listesi
   function listeCiz() {
     ustBilgi();
-    $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small><span class="etiket ${f.mahrem !== false ? 'mahrem' : 'anket'}">${f.mahrem !== false ? '🔒 Özel' : '🌐 Genel'}</span>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div><span class="sag">${f.doldu ? '✓ Doldurdun · düzelt' : 'Doldur ›'}</span></button>`).join('')
+    $('#formlar').innerHTML = S.formlar.length ? S.formlar.map((f, i) => `<button class="form-satir ${f.doldu ? 'doldu' : ''}" data-i="${i}"><div><b>${esc(f.ad)}</b><small><span class="etiket ${f.mahrem !== false ? 'mahrem' : 'anket'}">${f.mahrem !== false ? 'Özel' : 'Genel'}</span>${(f.sorular || []).length} soru${f.bitis && f.bitis < '9999' ? ' · son gün ' + esc(new Date(f.bitis + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small></div>${f.doldu ? '<span class="sag tamam" title="Doldurdun · dokunup düzeltebilirsin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#04210f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 12.5l4.3 4.3L18.5 8"/></svg></span>' : '<span class="sag">Doldur ›</span>'}</button>`).join('')
       : '<div class="soluk">Şu an sana açık bir anket ya da form yok. Açılınca burada görünür.</div>';
     $('#formlar').onclick = ev => { const b = ev.target.closest('[data-i]'); if (b) formAc(S.formlar[+b.dataset.i]); };
     goster('s-anket'); window.scrollTo(0, 0);
