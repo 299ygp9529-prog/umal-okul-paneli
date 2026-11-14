@@ -137,6 +137,24 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .rp-kart { background: linear-gradient(160deg, rgba(176,107,255,.14), var(--kart) 60%); border: 1px solid rgba(176,107,255,.5); border-radius: 18px; padding: 14px; margin-bottom: 14px; } .rp-kart h2 { margin: 0; font-size: 16.5px; } .rp-kart .alt { color: var(--soluk); font-size: 12.5px; } .rp-not { margin: 10px 0 4px; background: var(--koyu); border-radius: 12px; padding: 9px 12px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .rp-gun2 { margin-top: 10px; } .rp-gun2 > b { font-size: 13px; color: #d4b0ff; } .rp-gun2.bugun > b { color: var(--neon); } .rp-kart .pl-bar { margin-top: 10px; }
 .pl-iki { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; } .pl-iki input { width: 100%; min-width: 0; }
+.pl-gorev[data-pac] { cursor: pointer; border-radius: 10px; } .pl-gorev.acik { background: rgba(34,232,255,.06); }
+.pl-tik.d-bos, .pl-tik.d-tam, .pl-tik.d-kisa, .pl-tik.d-yarim, .pl-tik.d-yok { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 14px; border: 2px solid var(--soluk); }
+.pl-tik.d-tam { background: #3ef08a; border-color: #3ef08a; color: #04210f; } .pl-tik.d-kisa { background: #22e8ff; border-color: #22e8ff; color: #04202a; } .pl-tik.d-yarim { background: #ffd166; border-color: #ffd166; color: #2a1d00; } .pl-tik.d-yok { background: rgba(255,90,90,.15); border-color: #ff6b6b; color: #ff8a8a; }
+.pl-gorev.d-tam .ic b { text-decoration: line-through; color: var(--soluk); } .pl-gorev .ok-ac { color: var(--cs); font-size: 20px; padding: 0 4px; } .pl-gorev.acik .ok-ac { transform: rotate(90deg); color: var(--neon); }
+.et-rh, .et-dg { display: inline-block; font-style: normal; font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; text-decoration: none; } .et-rh { background: rgba(176,107,255,.2); color: #d4b0ff; } .et-dg { background: rgba(255,184,103,.16); color: #ffb867; }
+.pl-gorev .ic small.kisa { display: block; color: #7ff6ff; } .pl-gorev .ic small.neden { display: block; color: #ff9a9a; }
+.pl-sheet { background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 10px; margin: 2px 0 8px; display: flex; flex-direction: column; gap: 10px; }
+.pl-dur { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .pl-dur button { border: 1px solid var(--cizgi); background: var(--kart); color: #fff; border-radius: 10px; padding: 10px 6px; font-weight: 800; font-size: 13.5px; cursor: pointer; }
+.pl-dur .d-tam.secili { background: #3ef08a; color: #04210f; border-color: #3ef08a; } .pl-dur .d-kisa.secili { background: #22e8ff; color: #04202a; border-color: #22e8ff; } .pl-dur .d-yarim.secili { background: #ffd166; color: #2a1d00; border-color: #ffd166; } .pl-dur .d-yok.secili { background: rgba(255,107,107,.2); color: #ffb0b0; border-color: #ff6b6b; }
+.pl-neden small { color: var(--soluk); display: block; margin-bottom: 6px; }
+.pl-alt { display: flex; flex-wrap: wrap; gap: 6px; } .pl-alt button { background: transparent; border: 1px solid var(--cizgi); color: var(--neonacik); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; } .pl-alt button.sil { color: #ff9a9a; margin-left: auto; }
+.pl-cikan { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--cs); padding: 4px 0; } .pl-cikan button { margin-left: auto; background: none; border: 0; color: var(--neon); font-weight: 700; cursor: pointer; }
+.pl-seri { display: inline-block; margin-left: 8px; color: #ffb867; font-weight: 800; white-space: nowrap; }
+.rp-bas { display: flex; gap: 10px; align-items: flex-start; } .rp-bas > div { flex: 1; min-width: 0; }
+.rp-yogun { flex: none; display: flex; align-items: center; gap: 8px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 12px; padding: 8px 10px; color: #fff; text-align: left; cursor: pointer; } .rp-yogun i { width: 34px; height: 20px; border-radius: 10px; background: #2a4468; position: relative; flex: none; } .rp-yogun i:after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #9fb3cc; transition: left .15s; }
+.rp-yogun.acik { border-color: #ffb867; } .rp-yogun.acik i { background: rgba(255,184,103,.45); } .rp-yogun.acik i:after { left: 16px; background: #ffb867; } .rp-yogun span { font-size: 13px; font-weight: 800; } .rp-yogun small { display: block; font-weight: 400; color: var(--soluk); font-size: 11px; }
+.rp-deger { background: linear-gradient(160deg, rgba(34,232,255,.12), var(--kart) 60%); border: 1px solid rgba(34,232,255,.45); border-radius: 18px; padding: 14px; margin-bottom: 14px; } .rp-deger h2 { margin: 0 0 10px; font-size: 16.5px; } .rp-deger label { display: block; margin: 10px 0 6px; color: var(--soluk); font-size: 13px; } .rp-deger textarea { width: 100%; margin-top: 10px; } .rp-deger .dg { margin-top: 10px; display: flex; justify-content: flex-end; }
+.rp-his { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .rp-his button { border: 1px solid var(--cizgi); background: var(--koyu); color: #fff; border-radius: 12px; padding: 12px 4px; font-weight: 800; cursor: pointer; } .rp-his button.secili { border-color: var(--neon); background: rgba(34,232,255,.16); }
 .pl-bos { color: var(--cs); font-size: 13px; padding: 4px 0; }
 .pl-form { background: var(--koyu); border: 1px solid var(--neon); border-radius: 14px; padding: 12px; margin-top: 10px; } .pl-form label { margin-top: 8px; }
 .pl-cip { display: flex; flex-wrap: wrap; gap: 6px; } .pl-cip button { background: transparent; border: 1px solid var(--cizgi); border-radius: 999px; padding: 6px 11px; color: var(--soluk); font-size: 13.5px; cursor: pointer; } .pl-cip button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.12); }
@@ -280,6 +298,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611143000"></script>
-<script src="ogrenci.js?v=202611143900"></script>
+<script src="ogrenci.js?v=202611144100"></script>
 </body>
 </html>
