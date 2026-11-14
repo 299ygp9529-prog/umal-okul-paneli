@@ -558,11 +558,12 @@
     const ik = { tam: '✓', kisa: '½', yarim: '½', yok: '✕' }[d] || '';
     const bugun = iso(PL.hafta) === iso(pzt(simdi())) ? gunIdx(simdi()) : -1;
     let tel = null; if (bugun >= 0 && d !== 'tam' && d !== 'kisa' && gi <= bugun && bugun < 6) { let en = 1e9; for (let g = bugun + 1; g <= 6; g++) { const yuk = gunGorevleri(hk, g).reduce((t, z) => t + (+z.dk || 0), 0); if (yuk < en) { en = yuk; tel = g; } } }
+    const serbest = bugun >= 0 && d !== 'tam' ? [...Array(7).keys()].filter(g => g > bugun && g !== gi && !gunGorevleri(hk, g).length) : [];   // K-590: boş (serbest) günler
     return `<div class="pl-gorev d-${d || 'bos'} ${x.rh ? 'rh' : ''} ${ac ? 'acik' : ''}" style="--r:${dersRenk(x.ders)}" data-pac="${key}"><span class="pl-tik d-${d || 'bos'}">${ik}</span><i class="nokta"></i>
       <div class="ic"><b>${esc(x.ders)}${x.rh ? '<em class="et-rh">Rehberlik</em>' : ''}${x.degisti ? `<em class="et-dg">${x.telafi ? 'telafi' : 'değiştirdin'}</em>` : ''}</b><small>${gAlt(x)}</small>${x.kisa ? `<small class="kisa">Kötü günde: ${esc(x.kisa)}</small>` : ''}${d === 'yok' && x.n ? `<small class="neden">${esc(x.n)}</small>` : ''}</div><span class="ok-ac">›</span></div>
       ${ac ? `<div class="pl-sheet"><div class="pl-dur">${Object.entries(DURUM).filter(([k_]) => k_ !== 'kisa' || x.kisa).map(([k_, [ad]]) => `<button data-pd="${k_}" class="d-${k_} ${d === k_ ? 'secili' : ''}">${ad}</button>`).join('')}</div>
         ${d === 'yok' ? `<div class="pl-neden"><small>Neden yapamadın?</small><div class="pl-cip">${NEDEN.map(n => `<button data-pn="${esc(n)}" class="${x.n === n ? 'secili' : ''}">${esc(n)}</button>`).join('')}</div></div>` : ''}
-        <div class="pl-alt">${tel != null ? `<button data-ptel="${tel}">Telafiye taşı · ${GUN[tel]}</button>` : ''}<button data-pdz="1">${x.rh ? 'Taşı / kısalt' : 'Düzenle'}</button>${d ? '<button data-pgeri="1">İşareti kaldır</button>' : ''}<button data-psil2="1" class="sil">${x.rh ? 'Bu hafta çıkar' : 'Sil'}</button></div></div>` : ''}`;
+        ${serbest.length ? `<div class="pl-serbest"><small>Serbest güne gönder</small><div class="pl-cip">${serbest.map(g => `<button data-ptel="${g}">${GUN[g]}</button>`).join('')}</div></div>` : ''}<div class="pl-alt">${tel != null && !serbest.includes(tel) ? `<button data-ptel="${tel}">Telafiye taşı · ${GUN[tel]}</button>` : ''}<button data-pdz="1">${x.rh ? 'Taşı / kısalt' : 'Düzenle'}</button>${d ? '<button data-pgeri="1">İşareti kaldır</button>' : ''}<button data-psil2="1" class="sil">${x.rh ? 'Bu hafta çıkar' : 'Sil'}</button></div></div>` : ''}`;
   }
   async function plAc() {
     goster('s-plan'); window.scrollTo(0, 0);

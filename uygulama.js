@@ -2337,7 +2337,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             ${Object.keys(NS).length ? `<h4>Yapamama nedenleri (4 hafta)</h4><div class="rp-neden">${Object.entries(NS).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<span>${esc(n)} <b>${c}</b></span>`).join('')}</div>` : ''}
             ${HL.filter(h => h.W.deger && (h.W.deger.not || (h.W.deger.zor || []).length)).slice(-2).map(h => `<div class="rp-deg"><small>${esc(h.e)} · öğrencinin değerlendirmesi</small>${(h.W.deger.zor || []).length ? `<div>Zorlandığı: <b>${esc(h.W.deger.zor.join(', '))}</b></div>` : ''}${h.W.deger.not ? `<p>${esc(h.W.deger.not)}</p>` : ''}</div>`).join('')}
             <div class="soluk kucuk" style="margin-top:8px">Uyum: tamamlanan sürenin yüzdesi (yarım ve kısa hâli yarım sayılır; öğrencinin bu hafta çıkardıkları hesaba katılmaz).</div>` : '<div class="soluk kucuk">Plan yayına alınınca öğrencinin işaretleri, değişiklikleri ve değerlendirmeleri burada görünür.</div>'}</div></div>
-        <div class="dugmeler rp-dugmeler"><span class="soluk kucuk" id="rpBilgi" style="margin-right:auto"></span><button class="ikincil" id="rpPdf" ${V.gorevler.length ? '' : 'disabled'}>PDF</button>${yayin ? '<button class="ikincil" id="rpKaldir">Yayından kaldır</button>' : '<button class="ikincil" id="rpTaslak">Taslak kaydet</button>'}<button class="birincil" id="rpYayin" ${V.gorevler.length ? '' : 'disabled'}>${yayin ? 'Güncelle ve yayınla' : 'Yayına al'}</button></div>`;
+        <div class="dugmeler rp-dugmeler"><span class="soluk kucuk" id="rpBilgi" style="margin-right:auto"></span><button class="ikincil" id="rpPdf" ${V.gorevler.length ? '' : 'disabled'}>PDF · renkli</button><button class="ikincil" id="rpPdfSb" ${V.gorevler.length ? '' : 'disabled'}>PDF · siyah-beyaz</button>${yayin ? '<button class="ikincil" id="rpKaldir">Yayından kaldır</button>' : '<button class="ikincil" id="rpTaslak">Taslak kaydet</button>'}<button class="birincil" id="rpYayin" ${V.gorevler.length ? '' : 'disabled'}>${yayin ? 'Güncelle ve yayınla' : 'Yayına al'}</button></div>`;
     };
     const kaydet = async y => {
       $('#rpBilgi').textContent = 'Kaydediliyor…';
@@ -2346,7 +2346,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       yayin = y ? new Date().toISOString() : null; degisti = false; O.plan = { veri: JSON.parse(JSON.stringify(V)), yayin, ok, guncel: new Date().toISOString() }; ciz();
       $('#rpBilgi').textContent = y ? '✓ Yayında — öğrencinin ekranına düştü' : '✓ Kaydedildi (öğrenci görmez)';
     };
-    const pdf = () => {   // K-587: şık haftalık plan (A4 yatay)
+    const pdf = (sb_) => {   // K-587: şık haftalık plan (A4 yatay) · K-590: siyah-beyaz seçeneği, body etiketi (yatay genişlik)
       const logo = new URL('okul-logo.png', location.href).href, top = V.gorevler.reduce((t, g) => t + (+g.dk || 0), 0), soru = V.gorevler.reduce((t, g) => t + (+g.soru || 0), 0);
       const RK = [['Paragraf', '#0e9fb8'], ['Problem', '#0b7fa8'], ['Geometri', '#2563eb'], ['Matematik', '#0891b2'], ['Fizik', '#3b5bdb'], ['Kimya', '#16a34a'], ['Biyoloji', '#15803d'], ['Türkçe', '#e11d48'], ['Edebiyat', '#be185d'], ['Tarih', '#c2410c'], ['Coğrafya', '#b45309'], ['Felsefe', '#7c3aed'], ['Din', '#a16207'], ['İngilizce', '#ea580c'], ['Deneme', '#0b2a5b'], ['Kitap', '#6d28d9']];
       const rk = d => (RK.find(([k]) => String(d).includes(k)) || [0, '#0e7490'])[1];
@@ -2368,17 +2368,17 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         .gun.hs>h3{background:linear-gradient(135deg,#123d7a,#1c5aa6)}
         .ic{padding:2mm;display:flex;flex-direction:column;gap:1.8mm;flex:1}
         .g{background:#fff;border:1px solid #e1e9f2;border-left:1.1mm solid var(--r);border-radius:2mm;padding:1.8mm 2mm 1.8mm 2.2mm;break-inside:avoid}
-        .gu{display:flex;align-items:center;gap:1.6mm}.gu i{width:3.4mm;height:3.4mm;border:.35mm solid #0b2a5b;border-radius:.9mm;flex:none}.gu b{font-size:10pt;line-height:1.15;flex:1;min-width:0;overflow-wrap:anywhere}
-        .k{font-size:8.6pt;color:#24364f;margin:.8mm 0 0 5mm;line-height:1.25}.m{display:flex;flex-wrap:wrap;gap:1mm;margin:1mm 0 0 5mm}.m span{font-size:7.6pt;background:#eef5fb;color:#24476b;border-radius:1.2mm;padding:.3mm 1.4mm;overflow-wrap:anywhere}.m .sr{background:var(--r);color:#fff;font-weight:700}
+        .gu{display:flex;align-items:center;gap:1.6mm}.gu i{width:3.4mm;height:3.4mm;border:.35mm solid #0b2a5b;border-radius:.9mm;flex:none}.gu b{font-size:10pt;line-height:1.15;flex:1;min-width:0;hyphens:auto;-webkit-hyphens:auto}
+        .k{font-size:8.6pt;color:#24364f;margin:.8mm 0 0 5mm;line-height:1.25}.m{display:flex;flex-wrap:wrap;gap:1mm;margin:1mm 0 0 5mm}.m span{font-size:7.6pt;background:#eef5fb;color:#24476b;border-radius:1.2mm;padding:.3mm 1.4mm;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.m .sr{background:var(--r);color:#fff;font-weight:700}body.yatay{width:297mm}.izg{grid-template-columns:repeat(7,minmax(0,1fr))}body.sb .ust{border-bottom-color:#000}body.sb .ust:after{background:#000;height:.4mm}body.sb .kim,body.sb .oz div,body.sb .not{background:#fff;border-color:#000}body.sb h1,body.sb .oz b{color:#000}body.sb .gun{background:#fff;border-color:#000}body.sb .gun>h3{background:#fff!important;color:#000;border-bottom:.5mm solid #000}body.sb .gun>h3 small{color:#000}body.sb .gun.hs>h3{background:#eee!important}body.sb .g{border-color:#999;border-left:1.1mm solid #000}body.sb .m span{background:#fff;border:.25mm solid #666;color:#000}body.sb .m .sr{background:#000;color:#fff;border-color:#000}body.sb .imza,body.sb .not{border-color:#000}body.sb .bos{color:#777}
         .bos{margin:auto;color:#a3b3c7;font-size:8.5pt;font-style:italic}
         .alt{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:4mm;margin-top:4mm}
         .not{border:1px solid #d5e1ee;border-radius:3mm;padding:2.5mm 3.5mm;background:#f7fafd;font-size:9.5pt;white-space:pre-wrap;line-height:1.35}.not b{display:block;font-size:8pt;color:#5b6f8c;letter-spacing:.5px;margin-bottom:1mm}
         .imza{border:1px solid #d5e1ee;border-radius:3mm;padding:2.5mm 3.5mm;font-size:9pt}.imza b{display:block;font-size:8pt;color:#5b6f8c;letter-spacing:.5px}.imza div{margin-top:9mm;border-top:.3mm dashed #8ea3bd;padding-top:1mm;color:#5b6f8c;font-size:8pt}
-      </style>
+      </style><body class="yatay${sb_ ? ' sb' : ''}">
         <div class="ust"><img src="${logo}"><div class="okul"><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><span>Rehberlik ve Psikolojik Danışma Servisi</span></div><div class="kim"><b>${esc(baslik(O.ad))}</b><span>${esc(O.sinif)} · No ${esc(O.no)} · ${esc(new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }))}</span></div></div>
         <div class="bas"><h1>Haftalık Çalışma Planı<small>Her hafta yeniden uygulanır · yaptığın görevin kutusunu işaretle</small></h1><div class="oz">${ozet.map(([a, b]) => `<div><b>${a}</b><span>${b}</span></div>`).join('')}</div></div>
         <div class="izg">${RP_GUN.map((g, gi) => { const L = gun(gi), d = L.reduce((t, x) => t + (+x.dk || 0), 0); return `<div class="gun ${gi > 4 ? 'hs' : ''}"><h3>${g}${d ? `<small>${rpSure(d)}</small>` : ''}</h3><div class="ic">${L.length ? L.map(kart).join('') : '<div class="bos">Serbest gün</div>'}</div></div>`; }).join('')}</div>
-        <div class="alt"><div class="not"><b>REHBER ÖĞRETMENİN NOTU</b>${V.not ? esc(V.not) : '&nbsp;'}</div><div class="imza"><b>ÖĞRENCİ</b>${esc(baslik(O.ad))}<div>İmza</div></div><div class="imza"><b>REHBER ÖĞRETMEN</b>&nbsp;<div>İmza</div></div></div></html>`, 'Çalışma planı · ' + baslik(O.ad), true);
+        <div class="alt"><div class="not"><b>REHBER ÖĞRETMENİN NOTU</b>${V.not ? esc(V.not) : '&nbsp;'}</div><div class="imza"><b>ÖĞRENCİ</b>${esc(baslik(O.ad))}<div>İmza</div></div><div class="imza"><b>REHBER ÖĞRETMEN</b>&nbsp;<div>İmza</div></div></div></body></html>`, 'Çalışma planı · ' + baslik(O.ad) + (sb_ ? ' (siyah-beyaz)' : ''), true);
     };
     $('#icerik').oninput = ev => { if (ev.target.id === 'rpNot') { V.not = ev.target.value; degisti = true; } else if (ev.target.id === 'rpKonu' && form) form.konu = ev.target.value; else if (ev.target.id === 'rpSoru' && form) form.soru = Math.max(0, Math.min(999, parseInt(ev.target.value, 10) || 0)); else if (ev.target.id === 'rpKaynak' && form) form.kaynak = ev.target.value; else if (ev.target.id === 'rpKisa' && form) form.kisa = ev.target.value; else if (ev.target.id === 'rpDersBaska' && form) { form.ders = ev.target.value.trim() || null; document.querySelectorAll('[data-rpd]').forEach(b => b.classList.remove('secili')); } };
     $('#icerik').onclick = async ev => {
@@ -2398,7 +2398,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (t.id === 'rpTaslak') return kaydet(false);
       if (t.id === 'rpYayin') return kaydet(true);
       if (t.id === 'rpKaldir') { if (confirm('Plan öğrencinin ekranından kaldırılsın mı? (Plan silinmez, taslak olarak durur.)')) kaydet(false); return; }
-      if (t.id === 'rpPdf') pdf();
+      if (t.id === 'rpPdf') pdf(false);
+      if (t.id === 'rpPdfSb') pdf(true);
       if (t.id === 'rpGorusme') { D.altG = false; RV.davet = { no: O.no, ad: O.ad, sinif: O.sinif, mesaj: 'Çalışma planını birlikte gözden geçirelim.' }; ac('randevu'); return; }
       if (t.id === 'rpHafiflet') { if (!confirm('Her görevin süresi ve soru adedi %25 azaltılsın mı? Sonra "Güncelle ve yayınla" ile öğrenciye gider.')) return; V.gorevler.forEach(g => { g.dk = Math.max(10, Math.round((+g.dk || 0) * .75 / 5) * 5); if (g.soru) g.soru = Math.max(1, Math.round(g.soru * .75)); }); degisti = true; yer(); $('#rpBilgi').textContent = 'Süreler hafifletildi — yayınlamayı unutmayın'; return; }
     };
