@@ -1253,3 +1253,16 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 
 /* K-615: öğretmen Öğrenci Girişi'ni yalnız görür */
 .salt-kod [data-topkod], .salt-kod [data-topson], .salt-kod #gKodsuz, .salt-kod #gHepsi, .salt-kod #gSon, .salt-kod #gClass, .salt-kod [data-yk] { display: none !important; }
+
+/* K-618: yan menü — simge üstte, ad altta; seçili öğe dolu camgöbeği kutu. Yalnız masaüstü; telefonda eski şerit (simgesiz). */
+.menu-oge .mi { display: none; }
+@media (min-width: 761px) {
+  .yan #menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+  .yan #menu .menu-oge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; margin: 0; padding: 9px 3px 8px; min-height: 64px; border-radius: 15px; font-size: 11.500px; line-height: 1.150; color: #a9bcd8; position: relative; transition: background .12s, color .12s; }
+  .yan #menu .menu-oge .mi { display: grid; place-items: center; } .yan #menu .menu-oge .mi svg { width: 23px; height: 23px; }
+  .yan #menu .menu-oge .mad { display: block; overflow-wrap: anywhere; }
+  .yan #menu .menu-oge:hover { background: rgba(34,232,255,.07); color: #e9fdff; }
+  .yan #menu .menu-oge.secili { background: linear-gradient(140deg, #2ff0ff, #12b6d6); color: #04222b; font-weight: 800; outline: 0; box-shadow: 0 0 16px rgba(34,232,255,.45); }
+  .yan #menu .menu-oge.acil-oge { color: #ff9a3a; } .yan #menu .menu-oge.acil-oge.secili { background: linear-gradient(140deg, #ffb867, #ff8a2a); color: #2a1200; box-shadow: 0 0 16px rgba(255,154,58,.5); }
+  .yan #menu .menu-oge .mk-sayi { position: absolute; top: 5px; right: 8px; margin: 0; font-size: 10.500px; padding: 0 6px; }
+}

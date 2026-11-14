@@ -188,9 +188,33 @@
     { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
+  // K-618: menü simgeleri (çizgi SVG) — masaüstünde simge üstte, ad altta
+  const MENU_IK = {
+    harita: '<path d="M12 21s-6.500-5.600-6.500-11a6.500 6.500 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.400"/>',
+    kontrol: '<rect x="3" y="4.500" width="18" height="12" rx="2"/><path d="M8.500 20h7M12 16.500V20"/>',
+    sinav: '<rect x="5" y="4.500" width="14" height="16" rx="2.500"/><path d="M9 4.500V3.500h6v1M8.800 13l2.200 2.200 4.200-4.400"/>',
+    takvim: '<rect x="4" y="5" width="16" height="15" rx="2.500"/><path d="M4 10h16M8.500 3v4M15.500 3v4"/>',
+    kelebek: '<rect x="4" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="4" y="13.500" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="13.500" width="6.500" height="6.500" rx="1.500"/>',
+    nobet: '<path d="M12 3.500l7 2.600v5.400c0 4.300-2.900 7.400-7 9-4.100-1.600-7-4.700-7-9V6.100l7-2.600Z"/><path d="M9.200 12l2 2 3.600-3.800"/>',
+    anket: '<path d="M4 20h16"/><path d="M7 16.500v-5M12 16.500V7M17 16.500v-8"/>',
+    konu: '<path d="M12 6.500c-1.800-1.300-4.300-1.800-7.500-1.500v13c3.200-.3 5.700.2 7.500 1.500 1.800-1.300 4.300-1.800 7.500-1.500V5c-3.200-.3-5.700.2-7.500 1.500Z"/><path d="M12 6.500v13"/>',
+    duyuru: '<path d="M4 10v4h3.500l6 4.500v-13l-6 4.500H4Z"/><path d="M17 9.500a4 4 0 0 1 0 5"/>',
+    rehberlik: '<path d="M20 12a8 8 0 0 1-11.800 7L4 20l1.100-4A8 8 0 1 1 20 12Z"/><path d="M12 15.200s-3-1.900-3-3.900a1.700 1.700 0 0 1 3-1 1.700 1.700 0 0 1 3 1c0 2-3 3.900-3 3.900Z"/>',
+    disiplin: '<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-2.500 6a2.700 2.700 0 0 0 5 0L5 8ZM19 8l-2.500 6a2.700 2.700 0 0 0 5 0L19 8Z"/>',
+    mektup: '<rect x="3.500" y="5.500" width="17" height="13" rx="2.500"/><path d="M4 7l8 6.200L20 7"/>',
+    ozelders: '<path d="M2.500 9.500L12 5l9.500 4.500L12 14 2.500 9.500Z"/><path d="M6.500 11.500v4.200c1.500 1.400 3.300 2.100 5.500 2.100s4-.7 5.500-2.100v-4.200M21.500 9.500v5"/>',
+    yonlendir: '<circle cx="9" cy="8" r="3.300"/><path d="M3 19.500c.5-3.300 2.800-5.200 6-5.200 1.200 0 2.300.3 3.200.8M14.500 17h6.500M18 14l3 3-3 3"/>',
+    giriskod: '<circle cx="8" cy="14.500" r="3.800"/><path d="M10.800 11.800L19.500 3.500M15.500 7.500l2.800 2.800M18 5l2.300 2.300"/>',
+    soru: '<path d="M13.500 3.500H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.500-5.500Z"/><path d="M13.500 3.500V9H19M12 12.500v5M9.500 15h5"/>',
+    testler: '<path d="M12 3.500l8.500 4.300L12 12 3.500 7.800 12 3.500Z"/><path d="M3.500 12l8.500 4.200 8.500-4.200M3.500 16.200l8.500 4.300 8.500-4.300"/>',
+    ogretmenler: '<circle cx="9" cy="8.500" r="3.200"/><path d="M3 19.500c.5-3.300 2.800-5.300 6-5.300s5.500 2 6 5.300"/><path d="M15.500 5.600a3.200 3.200 0 0 1 0 5.800M17.500 14.600c2 .7 3.200 2.400 3.500 4.900"/>',
+    print: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/>',
+    acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>'
+  };
+  const menuIk = id => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   function menuKur() {
     const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
-    $('#menu').innerHTML = izinli.filter(b => !b.ust).map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${b.ad}</button>`).join('');
+    $('#menu').innerHTML = izinli.filter(b => !b.ust).map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join('');
     $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
     const h0 = ['simdi', 'ogrenci'].includes(location.hash.slice(1)) ? 'harita' : location.hash.slice(1);   // eski "Şimdi ders" bağlantıları
     const ilk = (h0 && izinli.find(b => b.id === h0)) || izinli[0];
@@ -2884,8 +2908,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const t3 = document.querySelector('.reh-sekme [data-rs="yonlendirme"]'); if (t3) t3.innerHTML = 'Yönlendirmeler' + (ny ? ` <span class="mk-sayi">${ny}</span>` : '');
       z.innerHTML = ZARF_SVG + `<b>${n + nr}</b>`; z.classList.toggle('gizli', !(n + nr)); z.classList.toggle('acil', acil);
       z.onclick = () => ac(n ? 'mektup' : ny ? 'yonlendirme' : 'randevu');
-      const m = document.querySelector('.menu-oge[data-b="mektup"]'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
-      MK.nr = nr - ny; const m2 = document.querySelector('.menu-oge[data-b="rehberlik"]'); if (m2) m2.innerHTML = 'Rehberlik' + (nr ? ` <span class="mk-sayi">${nr}</span>` : ''); const t2 = document.querySelector('.reh-sekme [data-rs="randevu"]'); if (t2) t2.innerHTML = 'Randevular' + (nr - ny ? ` <span class="mk-sayi">${nr - ny}</span>` : '');
+      const m = document.querySelector('.menu-oge[data-b="mektup"] .mad'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
+      MK.nr = nr - ny; const m2 = document.querySelector('.menu-oge[data-b="rehberlik"] .mad'); if (m2) m2.innerHTML = 'Rehberlik' + (nr ? ` <span class="mk-sayi">${nr}</span>` : ''); const t2 = document.querySelector('.reh-sekme [data-rs="randevu"]'); if (t2) t2.innerHTML = 'Randevular' + (nr - ny ? ` <span class="mk-sayi">${nr - ny}</span>` : '');
     };
     await kontrol(); setInterval(() => { if (!document.hidden) kontrol(); }, 15000);   // K-553: 15 sn
     MK.kontrol = kontrol;
