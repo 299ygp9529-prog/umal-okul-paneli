@@ -62,7 +62,19 @@
   // ---------------------------------------------------------------- ortak görünüm
   const bas = (ad, alt, sag) => `<div class="ds-ust"><div><button class="bag" data-id-geri="1">← ${esc(geri.ad)}</button><h1 style="margin:2px 0 0">${esc(ad)}</h1>${alt ? `<span class="soluk kucuk">${alt}</span>` : ''}</div><div class="dugmeler id-bas-sag" style="margin:0">${sag || ''}</div></div>`;
   const bilgi = (m, tur) => { const b = kok.querySelector('#idBilgi'); if (b) { b.className = 'id-bilgi ' + (tur || ''); b.textContent = m || ''; } };
-  function belgeKabuk(baslik, govde, yatay) {
+  // K-627: idari çıktılar panelin rapor tasarımıyla (lacivert-camgöbeği bant, logo, ayak) — resmî disiplin formları ayrı, resmî düzende kalır
+  const ID_CSS = `.id-belge{padding:5mm 14mm 0}.id-belge table{width:100%;border-collapse:collapse;font-size:9pt;margin:2mm 0 4mm}
+.id-belge th{background:#13305a;color:#fff;padding:1.8mm 2mm;text-align:left;font-size:8.4pt;font-weight:700}.id-belge td{padding:1.6mm 2mm;border-bottom:.2mm solid #e3e9f1;vertical-align:top}
+.id-belge tr{page-break-inside:avoid}.id-belge tbody tr:nth-child(even) td,.id-belge tr:nth-child(even) td{background:#f7f9fc}
+.id-belge p{margin:2mm 0;line-height:1.5}.id-belge p[style*="center"]{color:#13305a;font-size:10.5pt;letter-spacing:.3px}.id-belge .k{font-size:8.5pt;color:#5b6b82}
+.id-belge .imza{justify-content:space-around;gap:10mm;margin:14mm 0 0}.id-belge .imza div{min-width:45mm;width:auto}
+.id-belge .sayfa{page-break-after:always}.id-belge .sayfa:last-child{page-break-after:auto}.id-belge h2{margin-top:6mm}`;
+  function belgeKabuk(baslik, govde, yatay, alt) {
+    if (C.raporYazdir && C.raporBant) return { rapor: true, govde: C.raporBant(esc(baslik), alt || esc(`${new Date().getFullYear() - (new Date().getMonth() < 8 ? 1 : 0)}-${new Date().getFullYear() + (new Date().getMonth() < 8 ? 0 : 1)} Eğitim Öğretim Yılı · İdari İşlemler`)) + `<style>${ID_CSS}</style><div class="id-belge">${govde}</div>`, baslik };
+    return belgeKabukEski(baslik, govde, yatay);
+  }
+  function belgeGoster(k, ad, yatay) { if (k && k.rapor) C.raporYazdir(k.govde, ad, yatay); else C.belgeOnizle(k, ad, yatay); }
+  function belgeKabukEski(baslik, govde, yatay) {
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>
 @page{size:A4 ${yatay ? 'landscape' : 'portrait'};margin:12mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;color:#000;margin:0;padding:12mm}
 .ust{text-align:center;font-weight:bold;line-height:1.35}.ust img{height:18mm;display:block;margin:0 auto 2mm}h1{font-size:12.5pt;text-align:center;margin:5mm 0 4mm}h2{font-size:11pt;margin:5mm 0 2mm}
@@ -282,7 +294,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
       else { if (!x) { x = { id: 'x' + uid(), kod: 'SNV-' + String(p.sinavlar.length + 1).padStart(3, '0'), ders: a.ders, sinif: a.sinif, sure: '40', salon: '', ogretmen: '', komisyon: '', gozcu: '', kilit: false }; p.sinavlar.push(x); } x.tarih = o.tarih; x.saat = o.saat; x.oturum = String(O.indexOf(o) + 1); }
       SB.degisti = true; sbCiz(); return true; }
     if (k === 'excel') { sbExcel(p); return true; }
-    if (k === 'rapor') { const [ad, govde, yatay] = sbRaporBelge(p); C.belgeOnizle(belgeKabuk(ad, govde, yatay), `${ad} · ${p.tur}`, yatay); return true; }
+    if (k === 'rapor') { const [ad, govde, yatay] = sbRaporBelge(p); belgeGoster(belgeKabuk(ad, govde, yatay), `${ad} · ${p.tur}`, yatay); return true; }
     return false;
   }
   function sbGirdi(ev) {
@@ -354,7 +366,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
       <table><tr><th>TARİH</th><th>GÜN</th><th>SINAV</th><th>DERS SAATİ</th><th>9. SINIFLAR</th><th>10. SINIFLAR</th><th>11. SINIFLAR</th><th>12. SINIFLAR</th><th>SINAV YERİ</th></tr>
       ${G.flatMap(g => g.slot.map((s, i) => `<tr>${i === 0 ? `<td rowspan="3"><b>${tGos(g.tarih)}</b></td><td rowspan="3">${esc(gunAd(g.tarih).toLocaleUpperCase(tr))}</td>` : ''}<td>${s.no}. SINAV</td><td>${s.ders}. DERS</td>${SV.map(v => `<td class="k">${hucre(s, v)}</td>`).join('')}<td>${esc(s.yer)}</td></tr>`)).join('') || '<tr><td colspan="9">Sınav günü yok.</td></tr>'}</table>
       <div class="imza" style="justify-content:flex-end"><div>${esc(P.mudur)}<br>Okul Müdürü</div></div>`;
-    C.belgeOnizle(belgeKabuk(P.baslik, govde, true), P.baslik, true);
+    belgeGoster(belgeKabuk(P.baslik, govde, true), P.baslik, true);
   }
   async function tfTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, P = TF.P;
@@ -427,7 +439,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     const V = KR.V, gr = t => V.kurullar.filter(k => k.tur === t);
     const tablo = k => `<h2>${esc(k.ad)} <span class="k">(Md. ${esc(k.madde)})</span></h2><table><tr><th style="width:8mm">#</th><th>Adı Soyadı</th><th>Görevi</th><th style="width:30mm">İmza</th></tr>${k.uyeler.map((u, i) => `<tr><td>${i + 1}</td><td>${esc(krAd(V, u))}</td><td>${esc(u.gorev)}</td><td></td></tr>`).join('') || '<tr><td colspan="4">Üye girilmedi.</td></tr>'}</table>`;
     const govde = `<p style="text-align:center"><b>${esc(KR.yil)} EĞİTİM ÖĞRETİM YILI KURUL, KOMİSYON VE EKİPLER</b></p>${[['KURUL', 'KURULLAR'], ['KOMISYON', 'KOMİSYONLAR'], ['EKIP', 'EKİPLER']].map(([t, a]) => gr(t).length ? `<h2 style="text-align:center;border-bottom:1px solid #000">${a}</h2>${gr(t).map(tablo).join('')}` : '').join('')}<div class="imza" style="justify-content:flex-end"><div>${esc(MUDUR)}<br>Okul Müdürü</div></div>`;
-    C.belgeOnizle(belgeKabuk('Kurul ve Komisyonlar', govde), 'Kurul ve Komisyonlar');
+    belgeGoster(belgeKabuk('Kurul ve Komisyonlar', govde), 'Kurul ve Komisyonlar');
   }
   async function krTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, V = KR.V;
@@ -507,7 +519,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   function soYazdir() {
     const V = SO.V, N = soSubeler();
     const govde = N.map(s => { const L = V.ogr.filter(o => o.sube === s).sort((a, b) => a.ad.localeCompare(b.ad, tr)); return `<div class="sayfa"><p style="text-align:center"><b>${esc(SO.yil)} EĞİTİM ÖĞRETİM YILI ${esc(s)} SINIF LİSTESİ</b></p><p>Toplam ${L.length} öğrenci · Kız ${L.filter(o => o.cins === 'K').length} · Erkek ${L.filter(o => o.cins === 'E').length}</p><table><tr><th style="width:8mm">#</th><th style="width:22mm">Okul No</th><th>Adı Soyadı</th><th style="width:20mm">Cinsiyet</th><th style="width:26mm">Önceki Sınıf</th></tr>${L.map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.no)}</td><td>${esc(o.ad)}</td><td>${o.cins === 'K' ? 'Kız' : o.cins === 'E' ? 'Erkek' : ''}</td><td>${esc(o.onceki)}</td></tr>`).join('')}</table><div class="imza" style="justify-content:flex-end"><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></div>`; }).join('');
-    C.belgeOnizle(belgeKabuk('Sınıf Listeleri', govde), `${SO.sv}. sınıf listeleri`);
+    belgeGoster(belgeKabuk('Sınıf Listeleri', govde), `${SO.sv}. sınıf listeleri`);
   }
   async function soTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, V = SO.V, k = d.so;
@@ -588,7 +600,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
       gorusme: (() => { const g = M.gorusme, o = OGR.find(x => String(x.no) === String(g.no)) || {}; return ['Bireysel Veli Görüşme Formu', `<p><b>Öğrenci:</b> ${esc(o.ad ? C.baslik(o.ad) : g.no)} · <b>Sınıf / No:</b> ${esc(o.sinif || '')} / ${esc(g.no)}</p><p><b>Veli:</b> ${esc(vtK(M, g.no).veli || '……………………')} · <b>Tarih:</b> ${tGos(M.tarih)}</p><p><b>Görüşme konusu:</b> ${esc(g.konu || '……')}</p><h2>Görüşme özeti</h2><p>${esc(g.ozet).replace(/\n/g, '<br>') || cizgi}</p><h2>Kararlaştırılan destek / izleme adımı</h2><p>${esc(g.adim).replace(/\n/g, '<br>') || cizgi}</p><p class="k">Bu form öğrenciye ait kişisel değerlendirme içerebilir; yetkili okul personelince gizlilik içinde saklanmalıdır.</p><div class="imza"><div>Veli</div><div>Görüşmeyi yapan</div></div>`]; })(),
       takip: ['Toplantı Kararları Takip Çizelgesi', ust + `<table><tr><th>#</th><th>İş / karar</th><th>Sorumlu</th><th>Hedef tarih</th><th>Durum</th><th>Sonuç</th></tr>${M.takip.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.is)}</td><td>${esc(x.sorumlu)}</td><td>${tGos(x.tarih)}</td><td>${esc(x.durum)}</td><td></td></tr>`).join('')}</table>`],
     }[tur];
-    C.belgeOnizle(belgeKabuk(D_[0], D_[1]), D_[0]);
+    belgeGoster(belgeKabuk(D_[0], D_[1]), D_[0]);
   }
   async function vtTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, M = VT.M, k = d.vtx;

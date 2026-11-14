@@ -3278,10 +3278,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150100');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611150100');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611150300');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
-      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl });
+      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
   }
   async function soruHazirla() {
     await soruYukle();
@@ -3683,7 +3683,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const ad = subeAd.length ? enCok(subeAd.map(z => z[1])) : x.siniflar[v], fark = {}; subeAd.forEach(([s, d]) => { if (d !== ad) fark[s] = d; });
         sv[v] = { ad, yer: (x.yer && x.yer[v]) || 'kelebek', fark, dahil: new Set(subeAd.length ? subeAd.map(z => z[0]) : sinifSv(v)), senaryo: (x.senaryo && x.senaryo[v]) || '' }; }
       return { id: nid++, tarih: x.tarih, n: parseInt(x.ders, 10) || 1, sv }; }) };
-    let degisti = false;
+    let degisti = false, secAcik = null;   // K-628: ders programından ders seçici {id, v, ek}
     const ciz = () => {
       E.sinavlar.sort((a, b) => (a.tarih + String(a.n).padStart(2, '0')).localeCompare(b.tarih + String(b.n).padStart(2, '0')));
       $('#icerik').innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="tdGeri">← Sınav takvimi</button><span class="neon-tabela">Takvimi düzenle</span></div>
@@ -3693,10 +3693,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="td-liste">${E.sinavlar.map(x => { const d = x.tarih ? new Date(x.tarih + 'T12:00:00') : null;
           return `<div class="kart td-sinav" data-tdi="${x.id}"><div class="td-ust"><input type="date" data-tdt="${x.id}" value="${esc(x.tarih)}"><span class="soluk kucuk td-gun">${d ? esc(d.toLocaleDateString(tr, { weekday: 'long' })) : ''}</span>
             <div class="cipler td-ders">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip ${x.n === n ? 'secili' : ''}" data-tdn="${x.id}:${n}">${n}. ders</button>`).join('')}</div><button class="bag" style="color:var(--kirmizi);margin-left:auto" data-tdsil="${x.id}">Sınavı sil</button></div>
-            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi" maxlength="80" list="tdDers${v}"><button class="bag" data-tdsec="${x.id}:${v}" title="Aynı oturuma bir seçmeli ders daha ekle">+ seçmeli</button><input data-tdsen="${x.id}:${v}" value="${esc(r.senaryo || '')}" placeholder="Senaryo (ör. Senaryo 1)" maxlength="40" style="flex:0 1 150px;min-width:110px">
+            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi" maxlength="80" list="tdDers${v}"><button class="bag td-prgb${secAcik && secAcik.id === x.id && secAcik.v === v && !secAcik.ek ? ' acik' : ''}" data-tdprg="${x.id}:${v}" title="Ders programındaki dersler, öğretmenleri ve şubeleri">Ders programı ▾</button><button class="bag" data-tdsec="${x.id}:${v}" title="Aynı oturuma bir seçmeli ders daha ekle">+ seçmeli</button><input data-tdsen="${x.id}:${v}" value="${esc(r.senaryo || '')}" placeholder="Senaryo (ör. Senaryo 1)" maxlength="40" style="flex:0 1 150px;min-width:110px">
               <div class="td-yer"><button class="${r.yer === 'kelebek' ? 'secili' : ''}" data-tdy="${x.id}:${v}:kelebek">Kelebek</button><button class="${r.yer === 'sinif' ? 'secili sinif' : ''}" data-tdy="${x.id}:${v}:sinif">Sınıfta</button></div>
               <div class="td-fark"><span class="soluk kucuk">Giren şubeler (${r.dahil.size}/${sinifSv(v).length}):</span>${sinifSv(v).map(s => `<button class="td-sube ${r.dahil.has(s) ? 'secili' : ''}" data-tdsb="${x.id}:${v}:${esc(s)}" title="${r.dahil.has(s) ? 'Bu şube sınava girmiyor yap' : 'Bu şube de sınava girsin'}">${esc(s.split('-')[1])}</button>`).join('')}
                 ${Object.entries(r.fark).filter(([s]) => r.dahil.has(s)).sort((a, b) => sinifSira(a[0], b[0])).map(([s, ad]) => `<span class="td-fcip">${esc(s)}: ${esc(ad)}<button data-tdfs="${x.id}:${v}:${esc(s)}" title="Farkı kaldır">✕</button></span>`).join('')}<button class="bag" data-tdfe="${x.id}:${v}">+ Şube farkı</button></div>
+              ${secAcik && secAcik.id === x.id && secAcik.v === v ? secPanel(x, v) : ''}
               <button class="bag td-svsil" data-tdsvs="${x.id}:${v}" title="Bu seviyeyi sınavdan çıkar">✕</button></div>`; }).join('')}
             ${SV.some(v => !x.sv[v]) ? `<div class="cipler" style="margin-top:8px">${SV.filter(v => !x.sv[v]).map(v => `<button class="cip" style="border-color:${SEVIYE_RENK[v]}" data-tdsve="${x.id}:${v}">+ ${v}. sınıflar</button>`).join('')}</div>` : ''}</div>`; }).join('')}</div>
         <div class="dugmeler" style="margin-top:12px"><button class="ikincil" id="tdEkle" style="margin-right:auto">+ Sınav ekle</button><span class="kucuk" id="tdBilgi"></span><button class="ikincil" id="tdVazgec">Vazgeç</button><button class="birincil" id="tdKaydet">Kaydet</button></div>`;
@@ -3706,6 +3707,27 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama/i;
     const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr))) P_.add(baslik(h.ders));
       const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => a.trim().toLocaleLowerCase(tr))); return [...P_].filter(d => !kul.has(d.toLocaleLowerCase(tr))).sort((a, b) => a.localeCompare(b, tr)); };
+    // K-628: ders programı → seviyedeki dersler, öğretmenleri, şubeleri; seçilen ders karta işlenir, sonraki kartlarda çıkmaz
+    const prgDersler = v => { const M = new Map();
+      for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr))) continue;
+        const ad = baslik(h.ders), k = ad.toLocaleLowerCase(tr); if (!M.has(k)) M.set(k, { ad, sube: new Map() }); const m = M.get(k);
+        if (!m.sube.has(s)) m.sube.set(s, { saat: 0, og: new Set() }); const z = m.sube.get(s); z.saat++; (h.ogretmen || []).forEach(o => z.og.add(baslik(o))); }
+      return [...M.values()].sort((a, b) => b.sube.size - a.sube.size || a.ad.localeCompare(b.ad, tr)); };
+    const kullanilan = (v, haric) => new Set(E.sinavlar.flatMap(x => x.sv[v] && x !== haric ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => a.trim().toLocaleLowerCase(tr)).filter(Boolean));
+    function secPanel(x, v) {
+      const r = x.sv[v], kul = kullanilan(v, null), bu = new Set(String(r.ad).split(' / ').map(a => a.trim().toLocaleLowerCase(tr)).filter(Boolean)), tum = sinifSv(v).length;
+      const L = prgDersler(v).filter(d => !kul.has(d.ad.toLocaleLowerCase(tr)) || bu.has(d.ad.toLocaleLowerCase(tr)));
+      if (!Object.keys((D.program || {}).siniflar || {}).length) return `<div class="td-prg"><div class="soluk kucuk">Ders programı yüklenmemiş. Ders Programı bölümünden programı yükleyin; dersler burada öğretmenleriyle görünür.</div></div>`;
+      return `<div class="td-prg"><div class="td-prg-bas"><b>${v}. sınıflar · ders programındaki dersler</b><span class="soluk kucuk">${secAcik.ek ? 'Seçtiğiniz ders aynı oturuma seçmeli olarak eklenir.' : 'Dokununca karta işlenir; giren şubeler programdan seçilir. Takvime işlenen ders sonraki kartlarda listelenmez.'}</span><button class="bag" data-tdprgk="1">Kapat ✕</button></div>
+        ${L.length ? `<div class="td-prg-liste">${L.map(d => { const S = [...d.sube.keys()].sort(sinifSira), ogM = new Map(); S.forEach(z => d.sube.get(z).og.forEach(o => (ogM.get(o) || ogM.set(o, []).get(o)).push(z.split('-')[1]))); const og = [...ogM.entries()].sort((a, b) => a[0].localeCompare(b[0], tr)).map(([o, L]) => `${esc(o)}${ogM.size > 1 || L.length < tum ? ` <span class="soluk">(${L.join(', ')})</span>` : ''}`), sec = bu.has(d.ad.toLocaleLowerCase(tr));
+          return `<button class="td-prg-d${sec ? ' secili' : ''}" data-tdpd="${x.id}:${v}:${esc(d.ad)}"><span class="td-prg-ad">${esc(d.ad)}${sec ? ' <span class="neon kucuk">· bu kartta</span>' : ''}</span>
+            <span class="td-prg-sb">${S.length === tum ? `Bütün şubeler (${tum})` : S.map(z => esc(z.split('-')[1])).join(' · ')}</span>
+            <span class="td-prg-og">${og.length ? og.join(' · ') : '<span class="soluk">öğretmen yok</span>'}</span></button>`; }).join('')}</div>` : `<div class="soluk kucuk" style="padding:6px 2px">Bu seviyede programdaki sınavlı derslerin hepsi takvime işlendi.</div>`}</div>`;
+    }
+    const prgSec = (x, v, ad, ek) => { const r = x.sv[v], d = prgDersler(v).find(z => z.ad === ad); if (!d) return;
+      const S = new Set(d.sube.keys());
+      if (ek && r.ad.trim()) { if (!r.ad.split(' / ').map(a => a.trim()).includes(ad)) r.ad = r.ad.trim() + ' / ' + ad; S.forEach(z => r.dahil.add(z)); }
+      else { r.ad = ad; r.dahil = S; r.fark = {}; } };
     const dinMi = a => /din kültürü|peygamberimizin hayatı|kur.?an.?ı kerim|temel dini bilgiler|seçmeli din/.test(String(a).toLocaleLowerCase(tr));
     const anahtarAd = a => String(a).trim().toLocaleLowerCase(tr);
     function uyarilar() {
@@ -3749,10 +3771,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (ds.tdn) { const [i, n] = ds.tdn.split(':'); bul(i).n = +n; degisti = true; ciz(); return; }
       if (ds.tdsil) { const x = bul(ds.tdsil); if (!await onayla(`${x.tarih ? new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }) : ''} ${x.n}. ders sınavı takvimden silinsin mi?`)) return; E.sinavlar = E.sinavlar.filter(y => y !== x); degisti = true; ciz(); return; }
       if (ds.tdy) { const [i, v, y] = ds.tdy.split(':'); bul(i).sv[v].yer = y; degisti = true; ciz(); return; }
-      if (ds.tdsve) { const [i, v] = ds.tdsve.split(':'); bul(i).sv[v] = { ad: '', yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; degisti = true; ciz(); const g = document.querySelector(`[data-tdad="${i}:${v}"]`); if (g) g.focus(); return; }
+      if (ds.tdsve) { const [i, v] = ds.tdsve.split(':'); bul(i).sv[v] = { ad: '', yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; degisti = true; secAcik = prgDersler(v).length ? { id: +i, v, ek: false } : null; ciz(); const g = document.querySelector(`[data-tdad="${i}:${v}"]`); if (g) g.focus(); return; }
       if (ds.tdsvs) { const [i, v] = ds.tdsvs.split(':'); delete bul(i).sv[v]; degisti = true; ciz(); return; }
       if (ds.tdsb) { const [i, v, s] = ds.tdsb.split(':'), r = bul(i).sv[v]; r.dahil.has(s) ? r.dahil.delete(s) : r.dahil.add(s); degisti = true; ciz(); return; }
-      if (ds.tdsec) { const [i, v] = ds.tdsec.split(':'), r = bul(i).sv[v]; const m = await girdiAl(`${v}. sınıflarda aynı oturumda yapılacak seçmeli dersi yazın (ör. S. Coğrafya). Sınav dersi "${r.ad || '…'} / yeni ders" olur.`, ''); if (!m || !m.trim()) return; r.ad = r.ad.trim() ? r.ad.trim() + ' / ' + m.trim() : m.trim(); degisti = true; ciz(); return; }
+      if (ds.tdprgk) { secAcik = null; ciz(); return; }
+      if (ds.tdprg) { const [i, v] = ds.tdprg.split(':'); secAcik = secAcik && secAcik.id === +i && secAcik.v === v && !secAcik.ek ? null : { id: +i, v, ek: false }; ciz(); return; }
+      if (ds.tdpd) { const [i, v, ...a] = ds.tdpd.split(':'); prgSec(bul(i), v, a.join(':'), secAcik && secAcik.ek); secAcik = null; degisti = true; ciz(); return; }
+      if (ds.tdsec) { const [i, v] = ds.tdsec.split(':'), r = bul(i).sv[v]; if (r.ad.trim() && prgDersler(v).length && !(secAcik && secAcik.ek && secAcik.id === +i && secAcik.v === v)) { secAcik = { id: +i, v, ek: true }; ciz(); return; } secAcik = null; const m = await girdiAl(`${v}. sınıflarda aynı oturumda yapılacak seçmeli dersi yazın (ör. S. Coğrafya). Sınav dersi "${r.ad || '…'} / yeni ders" olur.`, ''); if (!m || !m.trim()) return; r.ad = r.ad.trim() ? r.ad.trim() + ' / ' + m.trim() : m.trim(); degisti = true; ciz(); return; }
       if (ds.tdfs) { const [i, v, s] = ds.tdfs.split(':'); delete bul(i).sv[v].fark[s]; degisti = true; ciz(); return; }
       if (ds.tdfe) { const [i, v] = ds.tdfe.split(':'); const m = await girdiAl(`Farklı derse giren şubeyi ve dersini yazın (ör. ${v}-I S. Temel Matematik).`, `${v}-`); if (m == null) return;
         const t = /^\s*(\d{1,2})\s*[-/ ]\s*([A-Za-zÇĞİÖŞÜçğıöşü])\s+(.+?)\s*$/.exec(m); if (!t) { uyar('Anlaşılamadı. Önce şubeyi, sonra dersi yazın: ör. 11-I S. Temel Matematik'); return; }
@@ -3917,6 +3942,33 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     for (const k of ['tk-s1', 'tk-s2', 'tk-s3']) { if (document.documentElement.scrollHeight <= window.innerHeight + 1) return; ic.classList.add(k); }
   }
   window.addEventListener('resize', () => { clearTimeout(tkSigdir.z); tkSigdir.z = setTimeout(tkSigdir, 150); });
+  // K-627: sınav takviminin şık PDF'i (yatay A4): gün gün, seviye sütunları, kelebek / sınıfta, şube farkları, senaryo
+  function takvimRapor(tk, saat, dersYaz) {
+    const S = (tk.sinavlar || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
+    const SV = ['9', '10', '11', '12'].filter(v => S.some(x => (x.siniflar || {})[v]));
+    const sbOf = x => ((tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders) || {}).subeler || {};
+    const gunler = [...new Set(S.map(x => x.tarih))];
+    const hucre = (x, v) => { let ad = (x.siniflar || {})[v]; if (!ad) return '<td class="tk-bos">—</td>';
+      const sb_ = sbOf(x), L = Object.entries(sb_).filter(([s]) => seviye(s) === v);
+      if (L.length) { const say = {}; L.forEach(([, d]) => { say[d] = (say[d] || 0) + 1; }); ad = Object.keys(say).sort((a, b) => say[b] - say[a])[0]; }
+      const tum = Object.keys((D.program || {}).siniflar || {}).filter(s => seviye(s) === v).length;
+      const fark = L.filter(([, d]) => d !== ad).sort((a, b) => sinifSira(a[0], b[0])), giren = L.map(z => z[0]).sort(sinifSira);
+      const sinifta = (x.yer || {})[v] === 'sinif', sen = (x.senaryo || {})[v];
+      return `<td><div class="tk-d">${esc(ad)}</div><div class="tk-e">${sinifta ? '<span class="tk-y s">Sınıfta</span>' : '<span class="tk-y k">Kelebek</span>'}${sen ? `<span class="tk-y">${esc(sen)}</span>` : ''}${L.length && tum && giren.length < tum ? `<span class="tk-sb">Şube: ${giren.map(z => esc(z.split("-")[1])).join(", ")}</span>` : ''}</div>${Object.entries(fark.reduce((m, [s, d]) => ((m[d] = m[d] || []).push(s.split('-')[1]), m), {})).map(([d, Ls]) => `<div class="tk-f">${esc(v)}-${esc(Ls.join(', '))}: ${esc(d)}</div>`).join('')}</td>`; };
+    const css = `<style>.tk-t{width:calc(100% - 28mm);margin:5mm 14mm 0;border-collapse:separate;border-spacing:0;font-size:9pt}
+.tk-t th{background:#13305a;color:#fff;padding:2mm 2.5mm;text-align:left;font-size:8.6pt}.tk-t th.sv{border-top:1.4mm solid var(--c)}.tk-t th.sv b{display:inline-block;min-width:6mm;padding:0 1.5mm;border-radius:1.2mm;background:var(--c);color:#0d1726;text-align:center;margin-right:2mm}
+.tk-t td{padding:2mm 2.5mm;border-bottom:.25mm solid #e3e9f1;vertical-align:top}.tk-t tr{page-break-inside:avoid}
+.tk-t td.g{background:#e6f7fb;color:#0e5a7a;font-weight:800;width:30mm;border-right:.6mm solid #22b8d6}.tk-t td.g span{display:block;font-weight:600;color:#5b6b82;font-size:8pt}
+.tk-t td.n{width:22mm;font-weight:700;color:#13305a}.tk-t td.n small{display:block;font-weight:500;color:#5b6b82;font-size:8pt}
+.tk-d{font-weight:700;color:#14213d}.tk-e{margin-top:1mm;display:flex;gap:1.2mm;flex-wrap:wrap;align-items:center}.tk-y{font-size:7.4pt;border-radius:1mm;padding:.2mm 1.4mm;background:#eef3f8;color:#334155;font-weight:700}
+.tk-y.k{background:#dff8fd;color:#0e7490}.tk-y.s{background:#fff1e0;color:#c2410c}.tk-sb{font-size:7.4pt;color:#5b6b82}.tk-f{font-size:7.8pt;color:#7c3aed;margin-top:.6mm}.tk-bos{color:#cbd5e1;text-align:center}
+.tk-not{margin:4mm 14mm 0;font-size:8.2pt;color:#5b6b82}</style>`;
+    const govde = raporBant(esc(tk.ad || 'Ortak Yazılı Sınav Takvimi'), `Sınav Takvimi · ${gunler.length} gün · ${S.length} oturum`) + css
+      + `<table class="tk-t"><thead><tr><th>Tarih</th><th>Oturum</th>${SV.map(v => `<th class="sv" style="--c:${SEVIYE_RENK[v]}"><b>${v}</b>${v}. Sınıflar</th>`).join('')}</tr></thead><tbody>${gunler.map(t => { const G = S.filter(x => x.tarih === t), d = new Date(t + 'T12:00:00');
+        return G.map((x, i) => `<tr>${i ? '' : `<td class="g" rowspan="${G.length}">${esc(d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}<span>${esc(d.toLocaleDateString(tr, { weekday: 'long' }))}</span></td>`}<td class="n">${esc(dersYaz(x))}<small>${esc(saat(x))}</small></td>${SV.map(v => hucre(x, v)).join('')}</tr>`).join(''); }).join('') || `<tr><td colspan="${SV.length + 2}">Takvimde sınav yok.</td></tr>`}</tbody></table>
+      <div class="tk-not"><b>Kelebek:</b> öğrenciler Kelebek Sistemi'yle salonlara dağıtılır. <b>Sınıfta:</b> öğrenci kendi sınıfında sınava girer. Mor satırlar şubesi farklı derse giren sınıflardır.</div>`;
+    raporYazdir(govde, (tk.ad || 'Sınav takvimi'), true);
+  }
   async function takvim() {
     await Promise.all([programYukle(), ogrencileriYukle()]);
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').in('anahtar', ['sinav_takvimi', 'mazeret_sinavlari']);
@@ -3992,8 +4044,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`;
       tkSigdir();
     };
-    $('#icerik').innerHTML = `<div class="ust"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span>${yonetir ? '<button class="birincil" id="tkDuzenle" style="margin-left:auto">Takvimi düzenle</button>' : ''}</div><div id="tkIc"></div>`;
+    $('#icerik').innerHTML = `<div class="ust"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span><button class="ikincil" id="tkYazdir" style="margin-left:auto">🖨 Takvim · PDF</button>${yonetir ? '<button class="birincil" id="tkDuzenle">Takvimi düzenle</button>' : ''}</div><div id="tkIc"></div>`;
     if ($('#tkDuzenle')) $('#tkDuzenle').onclick = () => takvimDuzenle(tk);   // K-624
+    $('#tkYazdir').onclick = () => takvimRapor(tk, saat, dersYaz);   // K-627
     $('#tkIc').onclick = async ev => {
       const pd = ev.target.closest('[data-pdf]'); if (pd) { gelmeyenRapor(pd.dataset.pdf); return; }
       const g = ev.target.closest('[data-gel]'); if (g) { acik = acik === g.dataset.gel ? null : g.dataset.gel; ciz(); return; }
