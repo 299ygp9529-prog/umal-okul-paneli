@@ -1280,3 +1280,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .nt-sat input { flex: none; width: 74px; text-align: center; font-weight: 800; font-size: 16px; padding: 7px 4px; }
 .nt-kayit .durum-etiketi { flex: none; }
 .nt-kayit { flex-wrap: wrap; } .nt-kayit .ana { flex: 1 1 220px; min-width: 0; }
+
+/* K-623: panel başlığı (telefon) — öğrenci sayfasındaki okul adıyla aynı yazı karakterleri */
+@font-face { font-family: 'UMAL Marcellus'; src: url('fontlar/marcellus.woff') format('woff'); font-display: swap; }
+@font-face { font-family: 'UMAL Cormorant'; src: url('fontlar/cormorant.woff') format('woff'); font-weight: 300 700; font-display: swap; }
+@media (max-width: 760px) {
+  .yan .ust-ad { font-family: 'UMAL Cormorant', Georgia, 'Times New Roman', serif; font-weight: 700; font-size: 30px; line-height: .95; letter-spacing: .01em; color: #f4fdff; white-space: nowrap; }
+  .yan .ust-ad small { font-family: 'UMAL Marcellus', Georgia, serif; font-weight: 400; font-size: 11px; letter-spacing: .2em; color: #7ff6ff; margin-top: 4px; text-transform: uppercase; }
+}
