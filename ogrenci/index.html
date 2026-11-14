@@ -92,7 +92,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .rvana b { display: block; font-size: 15px; } .rvana span { color: var(--soluk); font-size: 13px; }
 /* K-550: açılış karşılaması + sağ üst çıkış */
 .cikis-ust { margin-left: auto; width: 42px; height: 42px; flex: none; border-radius: 13px; display: grid; place-items: center; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.4); color: var(--neonacik); cursor: pointer; padding: 0; }
-.cikis-ust svg { width: 21px; height: 21px; } .cikis-ust:hover { background: rgba(34,232,255,.16); }
+.cikis-ust svg { width: 21px; height: 21px; } .ses-ust .ses-cizgi { display: none; } .ses-ust.kapali { color: var(--soluk); border-color: var(--cizgi); background: transparent; } .ses-ust.kapali .ses-cizgi { display: block; } .cikis-ust:hover { background: rgba(34,232,255,.16); }
 .selam { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center; cursor: pointer; overflow: hidden; background: linear-gradient(150deg, var(--s1, #17345e), #121f36 70%); border-color: var(--s2, rgba(34,232,255,.35));
   transition: opacity .5s ease, max-height .5s ease, margin .5s ease, padding .5s ease; max-height: 260px; }
 .selam h2 { margin: 0; font-size: 25px; line-height: 1.2; } .selam .hv { font-size: 13.5px; color: var(--soluk); margin-top: 3px; }
@@ -257,7 +257,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <g class="rozet"><circle class="halka" cx="332" cy="150" r="26" fill="none" stroke="#22e8ff" stroke-width="3"/><circle cx="332" cy="150" r="24" fill="url(#tkG)"/><path d="M320 150.5l8.5 8.5 15.5-17" fill="none" stroke="#04202a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g>
 </svg></div>
 <main>
-  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small id="ustAlt">Öğrenci</small></div><button class="cikis-ust gizli" id="cikisUst" title="Çıkış" aria-label="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/></svg></button></div>
+  <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small id="ustAlt">Öğrenci</small></div><button class="cikis-ust ses-ust gizli" id="sesUst"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.500 2-6.500Z"/><path d="M10 19.500a2.200 2.200 0 0 0 4 0"/><path class="ses-cizgi" d="M4 4l16 16"/></svg></button><button class="cikis-ust gizli" id="cikisUst" style="margin-left:8px" title="Çıkış" aria-label="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/></svg></button></div>
 
   <nav class="giris-sekme ogr" id="sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
     <a class="gs" href="/" onclick="this.parentNode.classList.remove('ogr');setTimeout(()=>location.href='/',230);return false"><b>Yönetim</b><small>E-posta koduyla</small></a>
@@ -348,6 +348,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 </main>
 <script src="../bicim.js?v=202611143900"></script>
 <script src="sozler.js?v=202611146200"></script>
-<script src="ogrenci.js?v=202611146700"></script>
+<script src="ogrenci.js?v=202611147200"></script>
 </body>
 </html>

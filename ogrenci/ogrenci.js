@@ -94,8 +94,32 @@
     [y, t].forEach(g => g.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); g === y ? t.focus() : kaydet(); } }));
     setTimeout(() => y.focus(), 50);
   }
-  const cikis = () => { const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  // K-617: sayfa açıkken yeni mesaj / duyuru / randevu / acil mesaj gelince kısa uyarı sesi + titreşim. Zil düğmesiyle kapatılır. Tarayıcı sesi ilk dokunuştan sonra açar.
+  const SES = { ctx: null, kapali: false, bilinen: null };
+  try { SES.kapali = localStorage.getItem('umalSes') === '0'; } catch (e) {}
+  const sesHazir = () => { try { if (!SES.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) SES.ctx = new A(); } if (SES.ctx && SES.ctx.state === 'suspended') SES.ctx.resume(); } catch (e) {} };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, sesHazir, { passive: true }));
+  function sesCal(tur) {   // 'acil': üç güçlü vuruş; 'yeni': iki yumuşak çan
+    if (SES.kapali) return;
+    try { navigator.vibrate && navigator.vibrate(tur === 'acil' ? [300, 120, 300, 120, 300] : [120, 60, 120]); } catch (e) {}
+    try { sesHazir(); const c = SES.ctx; if (!c || c.state !== 'running') return;
+      const N = tur === 'acil' ? [[880, 0, .22], [880, .3, .22], [880, .6, .34]] : [[784, 0, .16], [1047, .17, .28]], t0 = c.currentTime + .02;
+      N.forEach(([f, t, d]) => { const o = c.createOscillator(), g = c.createGain(); o.type = tur === 'acil' ? 'square' : 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0, t0 + t); g.gain.linearRampToValueAtTime(tur === 'acil' ? .16 : .22, t0 + t + .015); g.gain.exponentialRampToValueAtTime(.0001, t0 + t + d);
+        o.connect(g); g.connect(c.destination); o.start(t0 + t); o.stop(t0 + t + d + .03); });
+    } catch (e) {}
+  }
+  // yeni gelenleri bul: ilk yüklemede yalnız öğrenilir (ses yok), sonraki yoklamalarda listede olmayan okunmamış kayıt varsa bir kez çalar
+  function sesDenetle() {
+    if (!S.kod) return;
+    const simdi_ = new Set([...RH.mesajlar.filter(m => !m.okundu).map(m => 'm' + m.id), ...DY.L.filter(d => !d.okundu).map(d => 'd' + d.id), ...RV.L.filter(x => x.yeni && x.durum !== 'talep').map(x => 'r' + x.id + x.durum)]);
+    if (SES.bilinen && [...simdi_].some(k => !SES.bilinen.has(k))) sesCal('yeni');
+    SES.bilinen = SES.bilinen ? new Set([...SES.bilinen, ...simdi_]) : simdi_;
+  }
+  function sesDugme() { const b = $('#sesUst'); if (!b) return; b.classList.toggle('gizli', !S.kod); b.classList.toggle('kapali', SES.kapali); b.title = SES.kapali ? 'Uyarı sesi kapalı (açmak için dokun)' : 'Uyarı sesi açık (kapatmak için dokun)'; b.setAttribute('aria-label', b.title); }
+  const cikis = () => { SES.bilinen = null; const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
+  $('#sesUst').onclick = () => { SES.kapali = !SES.kapali; try { localStorage.setItem('umalSes', SES.kapali ? '0' : '1'); } catch (e) {} sesDugme(); if (!SES.kapali) sesCal('yeni'); };
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
   ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { clearTimeout(bosta); if (S.kod && !S.hatirla) bosta = setTimeout(cikis, 15 * 60000); }, { passive: true }));
   // K-576: oturum — aynı sekmede yenilemede kalır (sessionStorage); "açık kalsın" işaretliyse bu cihazda 30 gün (localStorage)
@@ -368,7 +392,7 @@
   const ozel = () => S.sinif === 'ÖZEL';   // K-591: okul dışı özel ders öğrencisi
   const RHAD = () => ozel() ? 'Öğretmen' : 'Rehberlik';
   function ustBilgi() {
-    const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g);
+    const g = !!S.kod; $('#cikisUst').classList.toggle('gizli', !g); sesDugme();
     document.body.classList.toggle('ozel', g && ozel()); if (!ustBilgi.t) ustBilgi.t = document.title; document.title = g && ozel() ? baslik(S.ad) + ' · Çalışma planı' : ustBilgi.t;   // K-598: özel ders öğrencisi — okul adı/logosu yok, yalnız adı
     $('.ust b').textContent = g && ozel() ? baslik(S.ad) : 'Ümraniye Merkez Anadolu Lisesi';
     $('#ustAlt').textContent = g ? (ozel() ? 'Haftalık çalışma planın' : baslik(S.ad) + ' · ' + S.sinif) : 'Öğrenci';
@@ -762,7 +786,7 @@
     el = document.createElement('div'); el.id = 'acilEkran'; el.dataset.id = m.id; el.setAttribute('role', 'alertdialog');
     el.innerHTML = `<div class="acil-ic"><div class="acil-ust"><span class="acil-isik"></span>ACİL DUYURU</div>${m.baslik ? '<h1></h1>' : ''}<p></p><button class="birincil" id="acilOk">Okudum</button><small>Ümraniye Merkez Anadolu Lisesi</small></div>`;
     if (m.baslik) el.querySelector('h1').textContent = m.baslik; el.querySelector('p').textContent = m.metin || '';
-    document.body.appendChild(el); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+    document.body.appendChild(el); sesCal('acil');
     el.querySelector('#acilOk').onclick = () => { const o = acilOkunan(); o.add(m.id); try { localStorage.setItem('umalAcilOk', JSON.stringify([...o].slice(-50))); } catch (e) {} el.remove(); acilGoster(); };
   }
   setInterval(() => { if (!document.hidden) acilYukle(); }, 20000);
@@ -931,6 +955,7 @@
     if (!S.kod || document.hidden || yaziyor()) return;
     canliSay++;
     await rvYukle(false);
+    if (RH.yuklendi) sesDenetle();   // K-617: ilk tur yalnız öğrenir, sonrakilerde yeni gelen için çalar
     if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli')) rehAc();
     if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
@@ -938,6 +963,7 @@
       if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın
       if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       if (await konuYukle() && !$('#s-sinav').classList.contains('gizli')) sinavCiz();   // K-613: öğretmenin yeni yazdığı sınav konuları
+      if (RH.yuklendi) sesDenetle();   // K-617
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
   }, 20000);
