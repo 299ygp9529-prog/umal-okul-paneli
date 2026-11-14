@@ -1241,3 +1241,12 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .rvp.reh { border-left-color: #ff9a3a; background: rgba(255,154,58,.12); border-color: rgba(255,154,58,.5); } .rvp.reh .rvp-n, .rvp.reh b { color: #ffb867; } .rvp.reh.secili { background: rgba(255,154,58,.25); box-shadow: 0 0 0 1px #ff9a3a inset; } .rvp em { font-style: normal; font-size: 11px; font-weight: 800; color: #2a1400; background: #ff9a3a; border-radius: 6px; padding: 2px 7px; }
 .rv-sure .cip { padding: 6px 10px; }
 .yn-cek { display: inline-block; margin-top: 6px; color: #ff9a9a; font-size: 13px; }
+/* K-606: Özel Ders listesi telefonda kart kart */
+@media (max-width: 760px) {
+  .oz-tablo, .oz-tablo tbody { display: block; } .oz-tablo tr:first-child:has(th) { display: none; }
+  .oz-tablo tr { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+  .oz-tablo td { border: 0 !important; padding: 2px 0 !important; font-size: 14px; } .oz-tablo td:first-child { grid-column: 1 / -1; font-size: 17px; padding-bottom: 6px !important; }
+  .oz-tablo td[data-e]::before { content: attr(data-e) ": "; color: var(--soluk); font-size: 12px; }
+  .oz-tablo td.oz-dug { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 8px; white-space: normal; margin-top: 8px; } .oz-tablo .oz-dug button { margin: 0; padding: 10px 6px; font-size: 14px; }
+  .oz-yeni .dugmeler { width: 100%; } .oz-yeni .dugmeler button { flex: 1; } .oz-kod { flex-wrap: wrap; gap: 6px 18px; }
+}
