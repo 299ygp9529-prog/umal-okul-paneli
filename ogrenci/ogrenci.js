@@ -23,11 +23,13 @@
     const no = $('#no').value.trim(); let kod = $('#kod').value.replace(/[^A-Z0-9]/gi, '');
     if (no === '1907' && !kod) kod = '6D97Q6JC';   // K-550: demo hesap (Fahri Fenerli) numarayla girer
     const bilgi = $('#girisBilgi'); bilgi.classList.remove('hata');
+    if (!no || kod.length !== 8) document.documentElement.classList.remove('oturumlu');
     if (!no) { bilgi.textContent = 'Okul numaranı yaz.'; bilgi.classList.add('hata'); return; }
     if (kod.length !== 8) { bilgi.textContent = 'Kod 8 karakter (örnek: K7MP-4XQ2).'; bilgi.classList.add('hata'); return; }
     $('#girisBtn').disabled = true; bilgi.textContent = 'Kontrol ediliyor…';
     const { data, error } = await sb.rpc('umal_ogrenci_giris', { p_no: no, p_kod: kod });
     $('#girisBtn').disabled = false;
+    document.documentElement.classList.remove('oturumlu');   // K-581: yenilemede giriş ekranı görünmesin; sonuç gelince kalkar
     if (error || !data) { bilgi.textContent = 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.'; bilgi.classList.add('hata'); return; }
     if (!data.ok) { const h_ = S.hatirla; oturumSil(); S.hatirla = h_; bilgi.textContent = data.hata || 'Giriş yapılamadı.'; bilgi.classList.add('hata'); return; }
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
@@ -775,10 +777,12 @@
       if (S.kod) { try { sessionStorage.setItem('umalYeniden', JSON.stringify({ no: S.no, kod: S.kod })); } catch (e) {} }   // girişli kalsın
       location.reload();
     }, 60000);
+    let otoGiris = false;
     try { let g = JSON.parse(sessionStorage.getItem('umalYeniden') || 'null'); sessionStorage.removeItem('umalYeniden');
       if (!g) { try { g = JSON.parse(sessionStorage.getItem('umalOturum') || 'null'); } catch (e) {} }
       if (!g) { try { const l = JSON.parse(localStorage.getItem('umalOturum') || 'null'); if (l && Date.now() - (l.t || 0) < 30 * 864e5) { g = l; S.hatirla = true; } } catch (e) {} }
-      if (g && g.no && g.kod) { try { if (sessionStorage.getItem('umalSelam')) S.selamlandi = true; } catch (e) {} $('#no').value = g.no; $('#kod').value = g.kod.length > 4 ? g.kod.slice(0, 4) + '-' + g.kod.slice(4) : g.kod; $('#hatirla').classList.toggle('secili', !!S.hatirla); setTimeout(() => $('#girisBtn').click(), 0); } } catch (e) {}
+      if (g && g.no && g.kod) { otoGiris = true; try { if (sessionStorage.getItem('umalSelam')) S.selamlandi = true; } catch (e) {} $('#no').value = g.no; $('#kod').value = g.kod.length > 4 ? g.kod.slice(0, 4) + '-' + g.kod.slice(4) : g.kod; $('#hatirla').classList.toggle('secili', !!S.hatirla); setTimeout(() => $('#girisBtn').click(), 0); } } catch (e) {}
+    if (!otoGiris) document.documentElement.classList.remove('oturumlu');
   })();
   goster('giris');
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
