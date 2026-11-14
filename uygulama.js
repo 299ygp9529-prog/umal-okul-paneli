@@ -242,7 +242,7 @@
   // ------------------------------------------------------------------ Ortak veri
   async function ogrencileriYukle() {
     if (D.ogrenciler.length) return D.ogrenciler;
-    D.ogrenciler = await hepsi('umal_ogrenciler', 'no,ad,sinif', q => q.order('no'));
+    D.ogrenciler = (await hepsi('umal_ogrenciler', 'no,ad,sinif', q => q.order('no'))).filter(o => !(String(o.no) === '1907' && /FENERL/i.test(o.ad || '')));   // K-610: tanıtım hesabı sınıf öğrencisi sayılmaz (liste, kod, kart, sınav hiçbirinde görünmez)
     return D.ogrenciler;
   }
   async function programYukle() {
