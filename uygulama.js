@@ -156,7 +156,9 @@
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
     { id: 'disiplin', ad: 'Disiplin', roller: ['bas', 'yonetici'], ciz: disiplinBolumu },   // K-538/K-539: disiplin kurulu (katmanlı ana sayfa) (rehberlik/öğretmen göremez)
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
-    { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
+    { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
+    { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
+    { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Soru Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
@@ -2054,6 +2056,91 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     ciz(); yenile(() => canliGuvenli() ? duyurularBolumu(true) : Promise.resolve(), 30);
   }
+  // ------------------------------------------------------------------ K-571: Öğretmenden rehberliğe öğrenci yönlendirme
+  const YN_NEDEN = ['Akademik başarıda düşüş', 'Derse ilgisizlik / dikkat', 'Devamsızlık', 'Davranış sorunu', 'Arkadaş ilişkileri', 'Zorbalık (mağdur ya da uygulayan)', 'Duygusal durum (üzgün, içe kapanık, kaygılı)', 'Aile ile ilgili sorun şüphesi', 'Sağlık', 'Meslek / kariyer', 'İhmal ya da istismar şüphesi', 'Diğer'];
+  const YN_YAPILAN = ['Öğrenciyle konuşuldu', 'Veliyle görüşüldü', 'Sınıf rehber öğretmenine bildirildi', 'İdareye bildirildi', 'Henüz bir şey yapılmadı'];
+  const YN_ACIL = { normal: ['Normal', ''], oncelikli: ['Öncelikli', 'tur'], acil: ['Acil', 'kir'] };
+  const YN_DURUM = { yeni: ['Yeni', 'tur'], inceleniyor: ['İnceleniyor', ''], gorusuldu: ['Öğrenciyle görüşüldü', 'yes'], kapandi: ['Kapandı', 'k'] };
+  let YN_OGR = null;
+  async function yonlendirBolumu() {
+    if (!YN_OGR) { const { data, error } = await sb.rpc('umal_panel_ogrenciler'); if (error) { if (/umal_panel_ogrenciler|function/.test(error.message || '')) { $('#icerik').innerHTML = '<div class="kart">Yönlendirme için Supabase\'de <b>20261114110000_umal_rehberlik_yonlendirme.sql</b> çalıştırılmalı.</div>'; return; } throw error; } YN_OGR = data || []; }
+    const T = { sec: null, nedenler: new Set(), aciliyet: 'normal', aciklama: '', yapilan: new Set(), ara: '' };
+    let benim = [];
+    const yukle = async () => { try { const { data } = await sb.rpc('umal_yonlendirmelerim'); benim = data || []; } catch (e) { benim = []; } };
+    await yukle();
+    const listeHtml = () => benim.length ? benim.map(y => { const [da, ds] = YN_DURUM[y.durum] || [y.durum, '']; const [aa, as] = YN_ACIL[y.aciliyet] || ['', ''];
+        return `<div class="yn-k"><div class="yn-ust"><b>${esc(baslik(y.ad || ''))}</b><span class="soluk kucuk">${esc(y.sinif || '')} · ${esc(y.no)}</span><span class="rv-d ${ds}">${da}</span>${y.aciliyet !== 'normal' ? `<span class="rv-d ${as}">${aa}</span>` : ''}</div>
+          <div class="soluk kucuk">${esc(new Date(y.tarih).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} · ${esc((y.nedenler || []).join(', '))}</div>${y.geri ? `<div class="yn-geri"><b>Rehberlik servisi:</b> ${esc(y.geri)}</div>` : ''}</div>`; }).join('') : '<div class="soluk kucuk">Henüz yönlendirme yapmadınız.</div>';
+    const ciz = () => {
+      const q = T.ara.trim().toLocaleLowerCase(tr), L = !q || T.sec ? [] : YN_OGR.filter(o => o.no === q || (/^\d+$/.test(q) ? String(o.no).startsWith(q) : (o.ad || '').toLocaleLowerCase(tr).includes(q) || o.sinif.toLocaleLowerCase(tr) === q)).slice(0, 12);
+      $('#icerik').innerHTML = `<h1 style="margin-bottom:4px">Rehberliğe Yönlendir</h1><div class="soluk kucuk" style="margin-bottom:14px">Desteğe ihtiyacı olduğunu düşündüğünüz öğrenciyi rehberlik servisine bildirin. Formu yalnız rehberlik servisi ve okul müdürü görür; öğrenci ve velisi görmez.</div>
+        <div class="yn-izgara"><div class="kart yn-form">
+          <label>Öğrenci</label>${T.sec ? `<div class="yn-sec"><b>${esc(baslik(T.sec.ad))}</b><span>${esc(T.sec.sinif)} · ${esc(T.sec.no)}</span><button class="bag" data-yd="degis">Değiştir</button></div>` : `<input id="ynAra" placeholder="Ad, okul numarası ya da sınıf (ör. 10-C)" value="${esc(T.ara)}" autocomplete="off"><div class="rv-secim">${L.map(o => `<button data-yo="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(baslik(o.ad))} <small>· ${esc(o.no)}</small></button>`).join('')}</div>`}
+          <label>Neden (birden çok seçilebilir)</label><div class="cipler">${YN_NEDEN.map(n => `<button class="cip ${T.nedenler.has(n) ? 'secili' : ''} ${/istismar/.test(n) ? 'yn-kritik' : ''}" data-yn="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+          ${T.nedenler.has('İhmal ya da istismar şüphesi') ? '<div class="yn-uyari">İhmal ya da istismar şüphesinde formu beklemeden rehberlik servisine ve okul müdürüne <b>hemen sözlü olarak</b> da bildirin. Öğrenciyle ayrıntılı konuşmayın, soru sormayın; gördüğünüzü ve duyduğunuzu olduğu gibi yazın.</div>' : ''}
+          <label>Aciliyet</label><div class="cipler">${Object.entries(YN_ACIL).map(([k, [a]]) => `<button class="cip ${T.aciliyet === k ? 'secili' : ''} yn-a-${k}" data-ya="${k}">${a}</button>`).join('')}</div>
+          <label>Gözlemleriniz</label><textarea id="ynAcik" rows="5" maxlength="3000" placeholder="Ne zamandan beri, nerede, neyi gözlemlediniz? Yorum değil gözlem yazın.">${esc(T.aciklama)}</textarea>
+          <label>Daha önce neler yapıldı</label><div class="cipler">${YN_YAPILAN.map(n => `<button class="cip ${T.yapilan.has(n) ? 'secili' : ''}" data-yy="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+          <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="ynGonder">Rehberliğe gönder</button></div><div class="kucuk" id="ynBilgi"></div></div>
+          <div class="kart"><h3 style="margin-top:0">Yönlendirmelerim</h3><div class="soluk kucuk" style="margin-bottom:8px">Durumu ve rehberlik servisinin kısa geri bildirimi burada görünür.</div><div class="yn-liste">${listeHtml()}</div></div></div>`;
+      const a = $('#ynAra'); if (a) { a.oninput = () => { T.ara = a.value; const p = a.selectionStart; ciz(); const b = $('#ynAra'); b.focus(); b.setSelectionRange(p, p); }; }
+      $('#ynAcik').oninput = e => { T.aciklama = e.target.value; };
+    };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.yo) { T.sec = YN_OGR.find(o => String(o.no) === b.dataset.yo); T.ara = ''; ciz(); return; }
+      if (b.dataset.yd) { T.sec = null; ciz(); setTimeout(() => $('#ynAra') && $('#ynAra').focus(), 0); return; }
+      if (b.dataset.yn) { T.nedenler.has(b.dataset.yn) ? T.nedenler.delete(b.dataset.yn) : T.nedenler.add(b.dataset.yn); if (b.dataset.yn === 'İhmal ya da istismar şüphesi' && T.nedenler.has(b.dataset.yn)) T.aciliyet = 'acil'; ciz(); return; }
+      if (b.dataset.ya) { T.aciliyet = b.dataset.ya; ciz(); return; }
+      if (b.dataset.yy) { T.yapilan.has(b.dataset.yy) ? T.yapilan.delete(b.dataset.yy) : T.yapilan.add(b.dataset.yy); ciz(); return; }
+      if (b.id === 'ynGonder') { const bil = $('#ynBilgi');
+        if (!T.sec) { bil.textContent = 'Öğrenciyi seçin.'; return; } if (!T.nedenler.size) { bil.textContent = 'En az bir neden seçin.'; return; }
+        b.disabled = true; bil.textContent = 'Gönderiliyor…';
+        const { data, error } = await sb.rpc('umal_yonlendir', { p_no: T.sec.no, p_nedenler: [...T.nedenler], p_aciliyet: T.aciliyet, p_aciklama: T.aciklama.trim(), p_yapilan: [...T.yapilan] });
+        if (error || !data || !data.ok) { bil.textContent = 'Gönderilemedi: ' + (error ? hataYaz(error) : (data && data.hata) || ''); b.disabled = false; return; }
+        Object.assign(T, { sec: null, nedenler: new Set(), aciliyet: 'normal', aciklama: '', yapilan: new Set(), ara: '' }); await yukle(); ciz();
+        $('#ynBilgi').textContent = '✓ Rehberlik servisine iletildi. Durumu sağdaki listeden takip edebilirsiniz.'; }
+    };
+    ciz(); yenile(async () => { if (!canliGuvenli()) return; const e = JSON.stringify(benim); await yukle(); if (e !== JSON.stringify(benim)) { const l = document.querySelector('.yn-liste'); if (l) l.innerHTML = listeHtml(); } }, 60);
+  }
+  // Rehberlik: gelen yönlendirmeler (Rehberlik → Yönlendirmeler sekmesi)
+  const YNR = { L: [], suz: 'acik' };
+  async function yonlendirmelerBolumu(sessiz) {
+    const r = await sb.from('umal_rehberlik_yonlendirme').select('*').order('olusturma', { ascending: false });
+    if (r.error) { if (sessiz) return; if (/umal_rehberlik_yonlendirme/.test(r.error.message || '')) { $('#icerik').innerHTML = rehSekme('yonlendirme') + '<div class="kart">Supabase\'de <b>20261114110000_umal_rehberlik_yonlendirme.sql</b> çalıştırılmalı.</div>'; return; } throw r.error; }
+    const h_ = JSON.stringify(r.data); if (sessiz && h_ === YNR.h) return; YNR.h = h_; YNR.L = r.data || [];
+    await ogrencileriYukle().catch(() => []);
+    const yeniler = YNR.L.filter(y => !y.reh_gordu).map(y => y.id);
+    const SUZ = { acik: ['Açık', y => y.durum !== 'kapandi'], acil: ['Acil / öncelikli', y => y.durum !== 'kapandi' && y.aciliyet !== 'normal'], kapandi: ['Kapananlar', y => y.durum === 'kapandi'], hepsi: ['Tümü', () => true] };
+    const kart = y => { const [aa, as] = YN_ACIL[y.aciliyet] || ['', '']; const once = YNR.L.filter(z => z.no === y.no && z.id !== y.id).length;
+      return `<div class="rv-kart yn-rk ${yeniler.includes(y.id) ? 'yeni' : ''} a-${y.aciliyet}" style="--sv:${y.sinif ? seviyeRenk(y.sinif) : '#2a4468'}">${foto(y.no, y.ad)}<div class="rv-ana">
+        <div class="rv-ust"><b>${esc(baslik(y.ad || ''))}</b><span class="soluk kucuk">${esc(y.sinif || '')} · No ${esc(y.no)}</span>${y.aciliyet !== 'normal' ? `<span class="rv-d ${as}">${aa}</span>` : ''}${yeniler.includes(y.id) ? '<span class="rv-d yeni">YENİ</span>' : ''}</div>
+        <small>${esc(new Date(y.olusturma).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))} · Yönlendiren: <b>${esc(y.yonlendiren_ad || y.yonlendiren)}</b>${once ? ` · bu öğrenci için ${once} yönlendirme daha` : ''}</small>
+        <div class="yn-neden">${(y.nedenler || []).map(n => `<span class="${/istismar/.test(n) ? 'kritik' : ''}">${esc(n)}</span>`).join('')}</div>
+        ${y.aciklama ? `<div class="rv-not"><b>Gözlem:</b> ${esc(y.aciklama)}</div>` : ''}${(y.yapilan || []).length ? `<div class="soluk kucuk" style="margin-top:4px">Yapılanlar: ${esc(y.yapilan.join(', '))}</div>` : ''}
+        ${y.ogretmene_not ? `<div class="rv-not soluk">Öğretmene geri bildirim: ${esc(y.ogretmene_not)}</div>` : ''}
+        <div class="dugmeler"><span class="yn-durum">${Object.entries(YN_DURUM).map(([k, [a]]) => `<button class="cip ${y.durum === k ? 'secili' : ''}" data-ydu="${k}" data-id="${y.id}">${a}</button>`).join('')}</span>
+          <button class="birincil" data-ydavet="${y.id}">Randevuya davet et</button><button class="bag" data-ygeri="${y.id}">Öğretmene geri bildirim</button><button class="bag" data-ynot="${y.id}">Gizli not${y.reh_not ? ' ●' : ''}</button></div></div></div>`; };
+    const ciz = () => {
+      const G = YNR.L.filter(SUZ[YNR.suz][1]);
+      $('#icerik').innerHTML = `${rehSekme('yonlendirme')}<div class="rv-bas"><div><h1 style="margin:0">Yönlendirmeler</h1><div class="soluk kucuk">Öğretmenlerin "Rehberliğe Yönlendir" ile gönderdiği öğrenciler. Öğretmen yalnız durumu ve sizin geri bildiriminizi görür; gizli not yalnız rehberlikte kalır.</div></div></div>
+        <div class="mk-sekme" style="margin-top:12px">${Object.entries(SUZ).map(([k, [a, f]]) => `<button class="cip ${YNR.suz === k ? 'secili' : ''}" data-ysuz="${k}">${a} · ${YNR.L.filter(f).length}</button>`).join('')}</div>
+        <div class="rv-liste" style="margin-top:10px">${G.length ? G.map(kart).join('') : '<div class="kart soluk" style="text-align:center;padding:26px">Bu bölümde yönlendirme yok.</div>'}</div>`;
+      fotolariYukle(G.map(y => y.no));
+    };
+    const yaz = async (id, alan) => { const { error } = await israrla(() => sb.from('umal_rehberlik_yonlendirme').update(Object.assign({ guncel: new Date().toISOString() }, alan)).eq('id', id)); if (error) { alert('Kaydedilemedi: ' + hataYaz(error)); return false; } Object.assign(YNR.L.find(x => x.id === id) || {}, alan); return true; };
+    $('#icerik').onclick = async ev => {
+      const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.ysuz) { YNR.suz = b.dataset.ysuz; ciz(); return; }
+      if (b.dataset.ydu) { if (await yaz(b.dataset.id, { durum: b.dataset.ydu, reh_gordu: true })) ciz(); return; }
+      const y = YNR.L.find(x => x.id === (b.dataset.ydavet || b.dataset.ygeri || b.dataset.ynot)); if (!y) return;
+      if (b.dataset.ydavet) { if (y.durum === 'yeni') await yaz(y.id, { durum: 'inceleniyor', reh_gordu: true }); RV.davet = { no: y.no, ad: y.ad, sinif: y.sinif }; ac('randevu'); return; }
+      if (b.dataset.ygeri) { const m = prompt('Öğretmene kısa geri bildirim (öğretmen görür; ayrıntı yazmayın):', y.ogretmene_not || 'Öğrenciyle görüşüldü, takip ediliyor. Teşekkürler.'); if (m === null) return; if (await yaz(y.id, { ogretmene_not: m.trim() || null })) ciz(); return; }
+      if (b.dataset.ynot) { const m = prompt('Gizli not (yalnız rehberlik görür):', y.reh_not || ''); if (m === null) return; if (await yaz(y.id, { reh_not: m.trim() || null })) ciz(); return; }
+    };
+    ciz(); yenile(() => canliGuvenli() ? yonlendirmelerBolumu(true) : Promise.resolve(), 20);
+    if (yeniler.length) { await sb.from('umal_rehberlik_yonlendirme').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 2000); }
+  }
   async function rehberlik() {
     await anketVerisi();
     const rehForm = a => (a.bolum === 'rehberlik' || (a.tanim.sablon && a.tanim.kimler !== 'ogretmen')) && a.durum !== 'taslak';   // K-559: MEB formları genel yayınlansa da burada
@@ -2402,14 +2489,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let z = $('#mkZarf');
     if (!z) { z = document.createElement('button'); z.id = 'mkZarf'; z.className = 'mk-zarf gizli'; z.title = 'Okunmamış mektuplar / yeni randevu hareketleri'; document.body.appendChild(z); }
     const kontrol = async () => {
-      const [r, rv] = await Promise.all([sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false),
-        sb.from('umal_rehberlik_randevu').select('id').eq('reh_gordu', false).neq('durum', 'bos')]);
+      const [r, rv, yn] = await Promise.all([sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false),
+        sb.from('umal_rehberlik_randevu').select('id').eq('reh_gordu', false).neq('durum', 'bos'), sb.from('umal_rehberlik_yonlendirme').select('id,aciliyet').eq('reh_gordu', false)]);
       if (r.error) return;
-      const n = (r.data || []).length, acil = (r.data || []).some(x => x.acil), nr = rv.error ? 0 : (rv.data || []).length;
+      const n = (r.data || []).length, ny = yn.error ? 0 : (yn.data || []).length, acil = (r.data || []).some(x => x.acil) || (!yn.error && (yn.data || []).some(x => x.aciliyet === 'acil')), nr = (rv.error ? 0 : (rv.data || []).length) + ny; MK.ny = ny;
+      const t3 = document.querySelector('.reh-sekme [data-rs="yonlendirme"]'); if (t3) t3.innerHTML = 'Yönlendirmeler' + (ny ? ` <span class="mk-sayi">${ny}</span>` : '');
       z.innerHTML = ZARF_SVG + `<b>${n + nr}</b>`; z.classList.toggle('gizli', !(n + nr)); z.classList.toggle('acil', acil);
-      z.onclick = () => ac(n ? 'mektup' : 'randevu');
+      z.onclick = () => ac(n ? 'mektup' : ny ? 'yonlendirme' : 'randevu');
       const m = document.querySelector('.menu-oge[data-b="mektup"]'); if (m) m.innerHTML = 'Mektuplar' + (n ? ` <span class="mk-sayi ${acil ? 'acil' : ''}">${n}</span>` : '');
-      MK.nr = nr; const m2 = document.querySelector('.menu-oge[data-b="rehberlik"]'); if (m2) m2.innerHTML = 'Rehberlik' + (nr ? ` <span class="mk-sayi">${nr}</span>` : ''); const t2 = document.querySelector('.reh-sekme [data-rs="randevu"]'); if (t2) t2.innerHTML = 'Randevular' + (nr ? ` <span class="mk-sayi">${nr}</span>` : '');
+      MK.nr = nr - ny; const m2 = document.querySelector('.menu-oge[data-b="rehberlik"]'); if (m2) m2.innerHTML = 'Rehberlik' + (nr ? ` <span class="mk-sayi">${nr}</span>` : ''); const t2 = document.querySelector('.reh-sekme [data-rs="randevu"]'); if (t2) t2.innerHTML = 'Randevular' + (nr - ny ? ` <span class="mk-sayi">${nr - ny}</span>` : '');
     };
     await kontrol(); setInterval(() => { if (!document.hidden) kontrol(); }, 15000);   // K-553: 15 sn
     MK.kontrol = kontrol;
@@ -2482,7 +2570,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return c ? `${c.no}. ders: ${c.ders}${(c.ogretmen || []).length ? ' · ' + c.ogretmen.map(baslik).join(', ') : ''}` : 'ders saati dışında (teneffüs / öğle arası)';
   }
   // K-554: Rehberlik bölümünün üst sekmeleri (Formlar ve anketler / Randevular)
-  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button></div>`;
+  const rehSekme = aktif => `<div class="reh-sekme"><button class="${aktif === 'rehberlik' ? 'secili' : ''}" data-rs="rehberlik">Formlar ve anketler</button><button class="${aktif === 'randevu' ? 'secili' : ''}" data-rs="randevu">Randevular${MK.nr ? ` <span class="mk-sayi">${MK.nr}</span>` : ''}</button><button class="${aktif === 'yonlendirme' ? 'secili' : ''}" data-rs="yonlendirme">Yönlendirmeler${MK.ny ? ` <span class="mk-sayi">${MK.ny}</span>` : ''}</button></div>`;
   document.addEventListener('click', ev => { const b = ev.target.closest('.reh-sekme [data-rs]'); if (b && D.bolum !== b.dataset.rs) ac(b.dataset.rs); });
   const isoGun = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   function takvimSec() {   // K-552: büyük ay takvimi (tarayıcının küçük tarih kutusu yerine); seçim gizli input'a yazılır
@@ -2619,6 +2707,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (i === 'not') { const m = prompt('Gizli not (yalnız rehberlik görür):', x.gizli_not || ''); if (m === null) return; if (await yaz(x.id, { gizli_not: m.trim() || null })) ciz(); }
     };
     ciz(); yenile(() => canliGuvenli() ? randevularBolumu(true) : Promise.resolve(), 15);   // K-553: canlı
+    if (RV.davet && !sessiz) { const x = RV.davet; RV.davet = null; davetFormu(x); }   // K-571: yönlendirmeden davet
     if (yeniler.length) { await sb.from('umal_rehberlik_randevu').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 3000); }   // görüldü (YENİ etiketi bu açılışta kalır)
   }
   // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)
