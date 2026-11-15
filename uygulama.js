@@ -4161,7 +4161,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return G.map((x, i) => `<tr>${i ? '' : `<td class="g" rowspan="${G.length}">${esc(d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}<span>${esc(d.toLocaleDateString(tr, { weekday: 'long' }))}</span></td>`}<td class="n">${esc(dersYaz(x))}<small>${esc(saat(x))}</small></td>${SV.map(v => hucre(x, v)).join('')}</tr>`).join(''); }).join('') || `<tr><td colspan="${SV.length + 2}">Takvimde sınav yok.</td></tr>`}</tbody></table>
       <div class="tk-not"><b>Kelebek:</b> öğrenciler Kelebek Sistemi'yle salonlara dağıtılır. <b>Sınıfta:</b> öğrenci kendi sınıfında sınava girer. Mor satırlar şubesi farklı derse giren sınıflardır.</div>`
       + (tk.bilgi ? `<div class="tk-bilgi"><b>Bilgi notu</b>${esc(tk.bilgi).replace(/\n/g, '<br>')}</div>` : '');
-    raporYazdir(govde, (tk.ad || 'Sınav takvimi'), true);
+    // K-666: takvim çıktısı tek sayfaya sığar (gerekirse orantılı küçültülür)
+    const sig = `<script>(function(){function sig(){var e=document.querySelector('.tk-sig');if(!e)return;e.style.zoom='';var mm=96/25.4,H=210*mm-30*mm,ust=e.getBoundingClientRect().top+(window.scrollY||0),h=e.scrollHeight,k=(H-ust)/h;if(k<1)e.style.zoom=Math.max(.45,k).toFixed(3);}if(document.readyState==='complete')sig();else window.addEventListener('load',sig);window.addEventListener('beforeprint',sig);setTimeout(sig,300);})();<\/script>`;
+    raporYazdir(`<div class="tk-sig">${govde}</div>${sig}`, (tk.ad || 'Sınav takvimi'), true);
   }
   // K-635: Senaryo tablosu (OYSS): ders × seviye senaryoları sınav takviminden; düzenlenir, takvime yazılır, resmî görünümlü PDF
   function senaryoTablosu(tk, yonetir, yeniden) {
