@@ -28,6 +28,9 @@
     .replace(/^seçmeli (?!din dersleri)/, 's. ').replace(/^s\s*\.\s*/, 's. ').replace(/^(t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, '').replace(/^s\. (t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, 's. ')
     .replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce').replace(/\s+/g, ' ').trim()
     .replace(/^s\. (?!(türk dili ve edebiyatı|ingilizce|htde))/, '');   // K-664: "S. Metin Tahlilleri" = "Metin Tahlilleri" (seçmeli olanla zorunlusu ayrı sınav olan TDE ve İngilizce hariç)
+  // K-672: OYSS (Ortak Yazılı Sınav Sistemi) kapsamındaki dersler; senaryo yalnız bunlara yazılır. 12. sınıf OYSS dışında, 11. sınıfta İngilizce yok.
+  const OYSS = new Set(['türk dili ve edebiyatı', 'matematik', 'fizik', 'kimya', 'biyoloji', 'tarih', 'coğrafya', 'din kültürü', 'felsefe', 'ingilizce']);
+  const oyssDers = (a, v) => String(v) !== '12' && String(a || '').split(/\s*\/\s*|\n/).some(x => { const k = dersAnahtar(x.replace(/\s*\([^)]*\)\s*$/, '')); return OYSS.has(k) && !(String(v) === '11' && k === 'ingilizce'); });
   const bugunISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
@@ -3284,14 +3287,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611152320'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611152340'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611151200');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611152320');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611152340');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
@@ -3731,7 +3734,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="td-liste">${E.sinavlar.map(x => { const d = x.tarih ? new Date(x.tarih + 'T12:00:00') : null;
           return `<div class="kart td-sinav" data-tdi="${x.id}"><div class="td-ust"><button class="td-tarih" data-tdtar="${x.id}" title="Takvimden tarih seçin"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><b>${d ? esc(d.toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })) : 'Tarih seçin'}</b><span class="soluk">${d ? esc(d.toLocaleDateString(tr, { weekday: 'long' })) : ''}</span></button>
             <div class="cipler td-ders">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip ${x.n === n ? 'secili' : ''}" data-tdn="${x.id}:${n}">${n}. ders</button>`).join('')}</div><button class="bag" style="color:var(--kirmizi);margin-left:auto" data-tdsil="${x.id}">Sınavı sil</button></div>
-            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi · tıklayın, programdan seçin" maxlength="80" autocomplete="off" data-bicim="yok"><button class="bag td-prgb${secAcik && secAcik.id === x.id && secAcik.v === v && !secAcik.ek ? ' acik' : ''}" data-tdprg="${x.id}:${v}" title="Ders programındaki dersler, öğretmenleri ve şubeleri">Ders programı ▾</button><button class="bag" data-tdsec="${x.id}:${v}" title="Aynı oturuma bir seçmeli ders daha ekle">+ seçmeli</button><input data-tdsen="${x.id}:${v}" value="${esc(r.senaryo || '')}" placeholder="Senaryo (ör. Senaryo 1)" maxlength="40" style="flex:0 1 150px;min-width:110px">
+            ${SV.filter(v => x.sv[v]).map(v => { const r = x.sv[v]; return `<div class="td-sv" style="--sv:${SEVIYE_RENK[v]}"><span class="td-svno">${v}</span><input data-tdad="${x.id}:${v}" value="${esc(r.ad)}" placeholder="Sınav dersi · tıklayın, programdan seçin" maxlength="80" autocomplete="off" data-bicim="yok"><button class="bag td-prgb${secAcik && secAcik.id === x.id && secAcik.v === v && !secAcik.ek ? ' acik' : ''}" data-tdprg="${x.id}:${v}" title="Ders programındaki dersler, öğretmenleri ve şubeleri">Ders programı ▾</button><button class="bag" data-tdsec="${x.id}:${v}" title="Aynı oturuma bir seçmeli ders daha ekle">+ seçmeli</button>${oyssDers(r.ad, v) || (r.senaryo || '').trim() ? `<input data-tdsen="${x.id}:${v}" value="${esc(r.senaryo || '')}" placeholder="OYSS senaryosu (ör. Senaryo 1)" maxlength="40" style="flex:0 1 150px;min-width:110px">` : ''}
               <div class="td-yer"><button class="${r.yer === 'kelebek' ? 'secili' : ''}" data-tdy="${x.id}:${v}:kelebek">Kelebek</button><button class="${r.yer === 'sinif' ? 'secili sinif' : ''}" data-tdy="${x.id}:${v}:sinif">Sınıfta</button></div>
               <div class="td-fark"><span class="soluk kucuk">Giren şubeler (${r.dahil.size}/${sinifSv(v).length}):</span>${sinifSv(v).map(s => `<button class="td-sube ${r.dahil.has(s) ? 'secili' : ''}" data-tdsb="${x.id}:${v}:${esc(s)}" title="${r.dahil.has(s) ? 'Bu şube sınava girmiyor yap' : 'Bu şube de sınava girsin'}">${esc(s.split('-')[1])}</button>`).join('')}
                 ${Object.entries(Object.entries(r.fark).filter(([s]) => r.dahil.has(s)).sort((a, b) => sinifSira(a[0], b[0])).reduce((m, [s, ad]) => ((m[ad] = m[ad] || []).push(s), m), {})).map(([ad, S]) => `<span class="td-fcip">${esc(v)}-${esc(S.map(z => z.split('-')[1]).join(', '))}: ${esc(ad)}<button data-tdfs="${x.id}:${v}:${esc(S.join(','))}" title="Farkı kaldır">✕</button></span>`).join('')}<button class="bag" data-tdfe="${x.id}:${v}">+ Şube farkı</button></div>
@@ -4177,8 +4180,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const R = new Map();   // anahtar → { ad, h: {v: [sinav]} }
     S.forEach(x => SV.forEach(v => { const SBv = Object.entries(sbOf(x)).filter(([s]) => seviye(s) === v).map(z => z[1]), A = new Set((SBv.length ? SBv : [(x.siniflar || {})[v]]).filter(Boolean).flatMap(a => String(a).split(' / ')).map(a => a.trim()));
       A.forEach(a => { const k = anah(a); if (!R.has(k)) R.set(k, { ad: a.replace(/^(s\.|seçmeli)\s+/i, ''), h: {} }); const r = R.get(k); (r.h[v] = r.h[v] || []).includes(x) || r.h[v].push(x); }); }));
-    const satir = [...R.values()];
-    const hucre = (r, v) => { const L = r.h[v]; if (!L) return null; const x = L[0]; return { x, sen: ((x.senaryo || {})[v]) || '' }; };
+    const satir = [...R.values()].filter(r => SV.some(v => r.h[v] && oyssDers(r.ad, v)));   // K-672: yalnız OYSS dersleri
+    const hucre = (r, v) => { const L = r.h[v]; if (!L || !oyssDers(r.ad, v)) return null; const x = L[0]; return { x, sen: ((x.senaryo || {})[v]) || '' }; };
     const yil = (/(\d{4})\s*[-–]\s*(\d{4})/.exec(tk.ad || '') || [, '2026', '2027']).slice(1).join(' - ');
     const donemV = /2\.\s*dönem/i.test(tk.ad || '') ? '2. Dönem' : '1. Dönem', sinavV = /2\.\s*(ortak|yazılı|sınav)/i.test(tk.ad || '') ? '2. Sınav' : '1. Sınav';
     let degisti = false;
