@@ -23,7 +23,10 @@
   const yuzde = (a, b) => b > 0 ? Math.round(a * 100 / b) : 0;
   const virgul = x => x.toFixed(1).replace('.', ',');
   // K-638: aynı dersin farklı yazımları tek anahtar (Din Kültürü = Din Kültürü ve Ahlak Bilgisi, T.C. İnkılap Tarihi = … ve Atatürkçülük)
-  const dersAnahtar = a => String(a || '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim().replace(/^seçmeli (?!din dersleri)/, 's. ').replace(/^s\.(?! )/, 's. ').replace(/^(t\. ?c\.?|tc|türkiye cumhuriyeti) /, '').replace(/ ve ahlak bilgisi$/, '').replace(/ ve atatürkçülük$/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce');   // K-664: "Yabancı Dil" = "İngilizce"; "T.C. İnkılap Tarihi (ve Atatürkçülük)" = "İnkılap Tarihi"
+  // K-664: ders adı anahtarı — büyük/küçük harf, nokta, birleşik nokta (i̇), "Seçmeli"/"S.", "T.C.", "ve Ahlak Bilgisi", "ve Atatürkçülük", "Yabancı Dil" farkları silinir
+  const dersAnahtar = a => String(a || '').normalize('NFC').replace(/̇/g, '').toLocaleLowerCase('tr').replace(/̇/g, '').replace(/[’'`]/g, "'").replace(/\s+/g, ' ').trim()
+    .replace(/^seçmeli (?!din dersleri)/, 's. ').replace(/^s\s*\.\s*/, 's. ').replace(/^(t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, '').replace(/^s\. (t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, 's. ')
+    .replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce').replace(/\s+/g, ' ').trim();
   const bugunISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
@@ -3739,17 +3742,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const bul = id => E.sinavlar.find(x => x.id === +id);
     // K-626 (v37 OYSS): sınav yapılmayan dersler öneride yok; takvimde olan ders o seviyede yeniden önerilmez
     const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama/i;
-    const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr))) P_.add(baslik(h.ders));
+    const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr)) && !GIZLI.test(dersAnahtar(h.ders))) P_.add(baslik(h.ders));
       const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => esAn(v, a))); return [...P_].sort((a, b) => (kul.has(esAn(v, a)) - kul.has(esAn(v, b))) || a.localeCompare(b, tr)); };
     // K-628: ders programı → seviyedeki dersler, öğretmenleri, şubeleri; seçilen ders karta işlenir, sonraki kartlarda çıkmaz
+    const GIZLI = /htde|hedef temelli|rehberlik|müzik/;   // K-664: takvim panelinde hiç görünmez
     const _prg = new Map(), prgDersler = v => _prg.get(v) || _prg.set(v, _prgDersler(v)).get(v), _prgDersler = v => { const M = new Map();
-      for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders) continue;
+      for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || GIZLI.test(dersAnahtar(h.ders))) continue;
         const ad = baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
         if (!m.sube.has(s)) m.sube.set(s, { saat: 0, og: new Set() }); const z = m.sube.get(s); z.saat++; (h.ogretmen || []).forEach(o => z.og.add(baslik(o))); }
       return [...M.values()].sort((a, b) => b.sube.size - a.sube.size || a.ad.localeCompare(b.ad, tr)); };
     // K-664: takvimdeki ad → o seviyedeki programdaki ders (Seçmeli/S., T.C., "ve Ahlak Bilgisi", Yabancı Dil = İngilizce; programda yalnız "S. X" varsa "X" = "S. X" ve tersi)
     const esle = (v, a) => { const P_ = prgDersler(v), k = dersAnahtar(a); if (!k) return null; const b = d => dersAnahtar(d.ad);
-      return P_.find(d => b(d) === k) || P_.find(d => b(d) === (k.startsWith('s. ') ? k.slice(3) : 's. ' + k)) || null; };
+      const alt = k.startsWith('s. ') ? k.slice(3) : 's. ' + k, on = P_.filter(d => b(d).startsWith(k + ' ') || k.startsWith(b(d) + ' '));
+      return P_.find(d => b(d) === k) || P_.find(d => b(d) === alt) || (on.length === 1 ? on[0] : null); };
     const esAn = (v, a) => { const d = esle(v, a); return d ? dersAnahtar(d.ad) : dersAnahtar(a); };
     // takvim açılınca adlar programdaki adlarla aynı yazılır: aynı ders iki kez görünmez
     const adDuz = (v, a) => String(a).split(' / ').map(z => z.trim()).filter(Boolean).map(z => { const d = esle(v, z); return d ? d.ad : z; }).filter((z, i, L) => L.findIndex(y => dersAnahtar(y) === dersAnahtar(z)) === i).join(' / ');
