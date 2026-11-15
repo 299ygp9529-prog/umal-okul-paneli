@@ -26,7 +26,8 @@
   // K-664: ders adı anahtarı — büyük/küçük harf, nokta, birleşik nokta (i̇), "Seçmeli"/"S.", "T.C.", "ve Ahlak Bilgisi", "ve Atatürkçülük", "Yabancı Dil" farkları silinir
   const dersAnahtar = a => String(a || '').normalize('NFC').replace(/̇/g, '').toLocaleLowerCase('tr').replace(/̇/g, '').replace(/[’'`]/g, "'").replace(/\s+/g, ' ').trim()
     .replace(/^seçmeli (?!din dersleri)/, 's. ').replace(/^s\s*\.\s*/, 's. ').replace(/^(t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, '').replace(/^s\. (t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, 's. ')
-    .replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce').replace(/\s+/g, ' ').trim();
+    .replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce').replace(/\s+/g, ' ').trim()
+    .replace(/^s\. (?!(türk dili ve edebiyatı|ingilizce|htde))/, '');   // K-664: "S. Metin Tahlilleri" = "Metin Tahlilleri" (seçmeli olanla zorunlusu ayrı sınav olan TDE ve İngilizce hariç)
   const bugunISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
