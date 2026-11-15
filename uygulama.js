@@ -3280,14 +3280,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151115'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611151150'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611150400');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151115');   // K-625: idari işlemler
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611151150');
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611151150');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant });
@@ -3710,7 +3710,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const SV = ['9', '10', '11', '12'], sinifSv = sv => [...evren].filter(s => seviye(s) === sv).sort(sinifSira);
     const enCok = L => { const say = {}; L.forEach(x => { say[x] = (say[x] || 0) + 1; }); return Object.keys(say).sort((a, b) => say[b] - say[a])[0] || ''; };
     let nid = 1;
-    const E = { ad: tk.ad || '', sinavlar: (tk.sinavlar || []).map(x => {
+    const E = { ad: tk.ad || '', bilgi: tk.bilgi || '', sinavlar: (tk.sinavlar || []).map(x => {
       const sb_ = ((tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders) || {}).subeler || {}, sv = {};
       for (const v of SV) { const subeAd = Object.entries(sb_).filter(([s]) => seviye(s) === v); if (!(v in (x.siniflar || {})) && !subeAd.length) continue;
         const ad = subeAd.length ? enCok(subeAd.map(z => z[1])) : x.siniflar[v], fark = {}; subeAd.forEach(([s, d]) => { if (d !== ad) fark[s] = d; });
@@ -3721,6 +3721,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       E.sinavlar.sort((a, b) => (a.tarih + String(a.n).padStart(2, '0')).localeCompare(b.tarih + String(b.n).padStart(2, '0')));
       $('#icerik').innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="tdGeri">← Sınav takvimi</button><span class="neon-tabela">Takvimi düzenle</span></div>
         <div class="kart"><div class="nt-alan"><span>Takvimin adı</span><input id="tdAd" maxlength="120" value="${esc(E.ad)}" placeholder="Ör. 2026-2027 1. dönem 2. ortak yazılı sınavları" style="width:min(640px,100%)"></div>
+          <div class="nt-alan" style="margin-top:10px"><span>Bilgi notu</span><textarea id="tdBilgiNotu" rows="3" maxlength="1500" placeholder="Takvimin altında görünür. Ör. Sınavlar ders saatinde başlar; öğrenciler 10 dakika önce salonda olmalıdır." style="width:min(640px,100%)">${esc(E.bilgi)}</textarea></div>
           <div class="soluk kucuk" style="margin-top:8px">Her sınavda seviye seviye yer seçin: <b class="neon">Kelebek</b> sınavlar Kelebek Sistemi'nde salonlara dağıtılır; <b class="turuncu">Sınıfta</b> sınavlarda öğrenci kendi sınıfında oturur, kelebeğe girmez. Şubesi farklı derse giren sınıfları (ör. 11-I S. Temel Matematik) "Şube farkı" ile ekleyin.</div></div>
         ${uyarilar()}${SV.map(v => `<datalist id="tdDers${v}">${dersOneri(v).map(d => `<option value="${esc(d)}">`).join('')}</datalist>`).join('')}
         <div class="td-liste">${E.sinavlar.map(x => { const d = x.tarih ? new Date(x.tarih + 'T12:00:00') : null;
@@ -3784,7 +3785,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }
     const kaydet = async () => {
       const bil = $('#tdBilgi'), hata = m => { bil.className = 'kucuk kirmizi'; bil.textContent = m; };
-      E.ad = $('#tdAd').value.trim();
+      E.ad = $('#tdAd').value.trim(); E.bilgi = ($('#tdBilgiNotu') || { value: E.bilgi }).value.trim();
       for (const x of E.sinavlar) {
         if (!x.tarih) return hata('Tarihi boş bir sınav var.');
         if (!Object.keys(x.sv).length) return hata(`${new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${x.n}. ders: hiç seviye eklenmemiş.`);
@@ -3793,7 +3794,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       }
       const cak = E.sinavlar.find((x, i) => E.sinavlar.some((y, j) => j !== i && y.tarih === x.tarih && y.n === x.n));
       if (cak) return hata(`${new Date(cak.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' })} ${cak.n}. derste iki ayrı sınav kartı var; birleştirin.`);
-      const yeni = { ad: E.ad, not: tk.not || '', subeler_not: tk.subeler_not || '', sinavlar: [], subeler: [], duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) };
+      const yeni = { ad: E.ad, bilgi: E.bilgi, not: tk.not || '', subeler_not: tk.subeler_not || '', sinavlar: [], subeler: [], duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) };
       for (const x of E.sinavlar) {
         const ders = x.n + '. Ders', siniflar = {}, yer = {}, sube = {}, senaryo = {};
         for (const [v, r] of Object.entries(x.sv)) { siniflar[v] = r.ad.trim(); yer[v] = r.yer; if ((r.senaryo || '').trim()) senaryo[v] = r.senaryo.trim(); [...r.dahil].forEach(s => { sube[s] = (r.fark[s] || r.ad).trim(); }); }
@@ -4141,11 +4142,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 .tk-t td.n{width:22mm;font-weight:700;color:#13305a}.tk-t td.n small{display:block;font-weight:500;color:#5b6b82;font-size:8pt}
 .tk-d{font-weight:700;color:#14213d}.tk-e{margin-top:1mm;display:flex;gap:1.2mm;flex-wrap:wrap;align-items:center}.tk-y{font-size:7.4pt;border-radius:1mm;padding:.2mm 1.4mm;background:#eef3f8;color:#334155;font-weight:700}
 .tk-y.k{background:#dff8fd;color:#0e7490}.tk-y.s{background:#fff1e0;color:#c2410c}.tk-sb{font-size:7.4pt;color:#5b6b82}.tk-f{font-size:7.8pt;color:#7c3aed;margin-top:.6mm}.tk-bos{color:#cbd5e1;text-align:center}
-.tk-not{margin:4mm 14mm 0;font-size:8.2pt;color:#5b6b82}</style>`;
+.tk-not{margin:4mm 14mm 0;font-size:8.2pt;color:#5b6b82}.tk-bilgi{margin:4mm 14mm 0;padding:2.6mm 3.4mm;border:.35mm solid #22b8d6;border-left:1.4mm solid #22b8d6;border-radius:1.6mm;background:#f2fbfd;font-size:9pt;color:#14213d;line-height:1.45}.tk-bilgi b{display:block;color:#0e5a7a;font-size:8.2pt;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.8mm}</style>`;
     const govde = raporBant(esc(tk.ad || 'Ortak Yazılı Sınav Takvimi'), `Sınav Takvimi · ${gunler.length} gün · ${S.length} oturum`) + css
       + `<table class="tk-t"><thead><tr><th>Tarih</th><th>Oturum</th>${SV.map(v => `<th class="sv" style="--c:${SEVIYE_RENK[v]}"><b>${v}</b>${v}. Sınıflar</th>`).join('')}</tr></thead><tbody>${gunler.map(t => { const G = S.filter(x => x.tarih === t), d = new Date(t + 'T12:00:00');
         return G.map((x, i) => `<tr>${i ? '' : `<td class="g" rowspan="${G.length}">${esc(d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}<span>${esc(d.toLocaleDateString(tr, { weekday: 'long' }))}</span></td>`}<td class="n">${esc(dersYaz(x))}<small>${esc(saat(x))}</small></td>${SV.map(v => hucre(x, v)).join('')}</tr>`).join(''); }).join('') || `<tr><td colspan="${SV.length + 2}">Takvimde sınav yok.</td></tr>`}</tbody></table>
-      <div class="tk-not"><b>Kelebek:</b> öğrenciler Kelebek Sistemi'yle salonlara dağıtılır. <b>Sınıfta:</b> öğrenci kendi sınıfında sınava girer. Mor satırlar şubesi farklı derse giren sınıflardır.</div>`;
+      <div class="tk-not"><b>Kelebek:</b> öğrenciler Kelebek Sistemi'yle salonlara dağıtılır. <b>Sınıfta:</b> öğrenci kendi sınıfında sınava girer. Mor satırlar şubesi farklı derse giren sınıflardır.</div>`
+      + (tk.bilgi ? `<div class="tk-bilgi"><b>Bilgi notu</b>${esc(tk.bilgi).replace(/\n/g, '<br>')}</div>` : '');
     raporYazdir(govde, (tk.ad || 'Sınav takvimi'), true);
   }
   // K-635: Senaryo tablosu (OYSS): ders × seviye senaryoları sınav takviminden; düzenlenir, takvime yazılır, resmî görünümlü PDF
@@ -4267,7 +4269,8 @@ td{border:.3mm solid #c9d3e4;padding:2.4mm 2mm;text-align:center}td:first-child{
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
               <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
               <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${yonetir ? `<button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`;; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
-          ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`;
+          ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`
+        + (tk.bilgi ? `<div class="kart" style="border-left:4px solid var(--neon,#22b8d6)"><b class="neon kucuk" style="letter-spacing:.04em">BİLGİ NOTU</b><div style="margin-top:6px;white-space:pre-line">${esc(tk.bilgi)}</div></div>` : '');
       tkSigdir();
     };
     $('#icerik').innerHTML = `<div class="ust" style="padding-right:72px;flex-wrap:wrap;row-gap:8px"><h1>Sınav takvimi</h1><span class="soluk kucuk" style="align-self:center">${esc(tk.ad || '')}</span><button class="ikincil" id="tkYazdir" style="margin-left:auto">🖨 Takvim · PDF</button>${yonetir ? '<button class="ikincil" id="tkRapor">Raporlu öğrenciler</button><button class="birincil" id="tkDuzenle">Takvimi düzenle</button>' : ''}</div><div class="cipler tk-sekme">${[['takvim', 'Takvim'], ['senaryo', 'Senaryolar'], ...(yonetir ? [['telafi', 'Telafi sınav programı']] : [])].map(([k, a]) => `<button class="cip ${k === 'takvim' ? 'secili' : ''}" data-tksk="${k}">${a}</button>`).join('')}</div><div id="tkIc"></div>`;
