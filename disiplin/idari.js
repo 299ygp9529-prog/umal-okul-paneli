@@ -322,7 +322,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   function tfUyari() { return []; }   // K-636: din dersleri aynı gün kuralı kaldırıldı (idarenin isteği)
   function tfCiz() {
     const P = TF.P, U = tfUyari();
-    kok.innerHTML = bas('Telafi Sınavı', 'Sınav takvimindeki dersleri telafi günlerine aktarın; her güne istediğiniz kadar sınav ekleyip çıkarın, tarihleri ve sınav yerlerini düzenleyip afişini yazdırın.', '<button class="ikincil" data-tf="afis">Afişi önizle / yazdır</button><button class="birincil" data-tf="kaydet">Kaydet</button>') +
+    kok.innerHTML = bas('Telafi Sınavı', 'Sınav takvimindeki dersleri telafi günlerine aktarın; her güne istediğiniz kadar sınav ekleyip çıkarın, tarihleri ve sınav yerlerini düzenleyip afişini yazdırın.', '<button class="ikincil" data-tf="beden">Beden eğitimi sınıflarını sınav yerine yaz</button><button class="ikincil" data-tf="afis">Afişi önizle / yazdır</button><button class="birincil" data-tf="kaydet">Kaydet</button>') +
       `<div class="kart id-form"><label>Eğitim öğretim yılı<input data-tfm="yil" value="${esc(P.yil)}"></label><div><span class="id-et">Dönem</span><div class="cipler">${['1. Dönem', '2. Dönem'].map(d => `<button class="cip ${P.donem === d ? 'secili' : ''}" data-tfdonem="${d}">${d}</button>`).join('')}</div></div>
         <label>Başlık<input data-tfm="baslik" value="${esc(P.baslik)}"></label><div><span class="id-et">Üst bant</span><div class="cipler">${['GÜNCEL', 'TASLAK', 'REVİZE'].map(d => `<button class="cip ${P.durum === d ? 'secili' : ''}" data-tfdurum="${d}">${d}</button>`).join('')}</div></div><label>Okul müdürü<input data-tfm="mudur" value="${esc(P.mudur)}"></label></div>
       <div class="kart"><div class="id-satir" style="align-items:flex-end"><label class="id-et" style="display:flex;flex-direction:column;gap:4px">Telafi haftasının pazartesi tarihi<input type="date" data-tfbas="1" value="${esc(TF.bas)}"></label><label class="id-et" style="display:flex;flex-direction:column;gap:4px">Günde sınav<input type="number" min="1" max="8" data-tfgs="1" value="${TF.gs || 3}" style="width:80px"></label><button class="birincil" data-tf="aktar">Sınav takviminden aktar</button><button class="ikincil" data-tf="gunekle">+ Bir sınav günü ekle</button><button class="ikincil" data-tf="yilac">Seçili yılı / dönemi aç</button></div>
@@ -333,7 +333,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         ${g.slot.map((s, si) => `<div class="id-tfslot"><div class="id-satir"><b>${s.no}. Sınav</b><span class="soluk kucuk">Ders saati</span>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip mini ${s.ders === n ? 'secili' : ''}" data-tfds="${gi}:${si}:${n}">${n}</button>`).join('')}<button class="bag" data-tfprg="${gi}:${si}">Ders programından getir</button><button class="bag" style="color:var(--kirmizi)" data-tfssil="${gi}:${si}">Sınavı sil</button></div>
           <div class="id-tfsv">${SV.map(v => { return `<div style="--sv:${SVR[v]}"><span class="id-svno">${v}</span><textarea rows="${Math.max(2, String(s['s' + v] || '').split('\n').reduce((t, z) => t + Math.max(1, Math.ceil(z.length / 30)), 0))}" data-tfs="${gi}:${si}:s${v}" placeholder="${v}. sınıflar: ders (sınıflar)">${esc(s['s' + v])}</textarea>
             <div class="id-tfders"><button class="bag" data-tfsec="${gi}:${si}:${v}">Ders seç</button></div><input data-tfs="${gi}:${si}:sen${v}" value="${esc(s['sen' + v])}" placeholder="Senaryo (isteğe bağlı)"></div>`; }).join('')}</div>
-          <input data-tfs="${gi}:${si}:yer" value="${esc(s.yer)}" placeholder="Sınav yeri (ör. 9-A sınıfı / Konferans salonu)" style="width:100%;margin-top:6px"></div>`).join('')}</div>`).join('') || '<div class="kart soluk">Henüz sınav günü yok. "Sınav takviminden aktar" ya da "+ Bir sınav günü ekle".</div>'}
+          <input data-tfs="${gi}:${si}:yer" value="${esc(s.yer)}" placeholder="Sınav yeri (ör. 9-A sınıfı / Konferans salonu)" style="width:100%;margin-top:6px">${(() => { const B = tfBedenSiniflar(g.tarih, s.ders); return `<div class="soluk kucuk" style="margin-top:4px">${B.length ? `Bu saatte beden eğitimi dersinde olan (boş) sınıflar: <b>${esc(B.join(', '))}</b>` : 'Bu saatte beden eğitimi dersi olan sınıf yok.'}</div>`; })()}</div>`).join('')}</div>`).join('') || '<div class="kart soluk">Henüz sınav günü yok. "Sınav takviminden aktar" ya da "+ Bir sınav günü ekle".</div>'}
       <div id="idBilgi" class="id-bilgi"></div>`;
   }
   // K-638: bir takvim sınavını seviye seviye, şube şube telafi satırına yazar (her ders kendi şubeleriyle)
@@ -357,9 +357,17 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     const gs = Math.max(1, Math.min(8, +TF.gs || 3)), G = []; let t = TF.bas;
     for (let i = 0; i < Math.ceil(L.length / gs); i++) { while ([0, 6].includes(new Date(t + 'T12:00:00').getDay())) t = gunEkle(t, 1); const n = Math.min(gs, L.length - i * gs); G.push({ tarih: t, slot: Array.from({ length: n }, (_, k) => tfBosSlot(k + 1)) }); t = gunEkle(t, 1); }
     L.forEach((x, i) => tfDoldur(G[Math.floor(i / gs)].slot[i % gs], tk, x));
-    TF.P.gunler = G; TF.degisti = true; tfCiz();
+    TF.P.gunler = G; tfBedenHepsi(); TF.degisti = true; tfCiz();
     bilgi(`${L.length} sınav ${G.length} güne aktarıldı (günde en çok ${gs}). Gün ve sınav ekleyip çıkarabilir, tarihleri ve yerleri düzenleyebilirsiniz.`, 'yesil');
   }
+  // K-649: telafi oturumunun saatinde beden eğitimi dersi olan (boşalan) sınıflar → sınav yeri
+  function tfBedenSiniflar(tarih, saat) { if (!tarih) return []; const gun = (new Date(tarih + 'T12:00:00').getDay() + 6) % 7; if (gun > 4) return [];
+    return siniflar().filter(sn => { const h = (((PRG && PRG.siniflar) || {})[sn] || {})[`${gun}-${saat}`]; return h && h.ders && /beden|spor/.test(norm(h.ders)); }).sort(sinifSira); }
+  function tfBedenYaz(s, tarih) { const S = tfBedenSiniflar(tarih, s.ders); if (!S.length) return 0;
+    const eski = String(s.yer || '').split(',').map(z => z.trim()).filter(Boolean).filter(z => !/^\d+-[A-ZÇĞİÖŞÜ]( sınıfı)?$/.test(z));
+    s.yer = [...S, ...eski].join(', '); return S.length; }
+  function tfBedenHepsi() { let n = 0, o = 0; for (const g of TF.P.gunler) for (const s of g.slot) { const k = tfBedenYaz(s, g.tarih); if (k) { n += k; o++; } }
+    return [n, o]; }
   function tfPrg(gi, si) {
     const g = TF.P.gunler[gi], s = g.slot[si]; if (!g.tarih) { uyar('Önce sınav gününün tarihini seçin.'); return; }
     const gun = (new Date(g.tarih + 'T12:00:00').getDay() + 6) % 7; if (gun > 4) { uyar('Hafta sonu için ders programı yok.'); return; }
@@ -400,6 +408,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
       try { await yaz(`telafi:${P.yil}:${P.donem}`, P); TF.anahtar = `telafi:${P.yil}:${P.donem}`; TF.degisti = false; bilgi('Telafi sınavı programı kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
     if (d.tf === 'afis') { tfAfis(); return true; }
     if (d.tf === 'aktar') { await tfAktar(); return true; }
+    if (d.tf === 'beden') { const [n, o] = tfBedenHepsi(); TF.degisti = true; tfCiz(); if (n) bilgi(`${o} oturumun sınav yerine, o saatte beden eğitimi dersinde olan ${n} sınıf yazıldı. Kontrol edip kaydedin.`, 'yesil'); else uyar('Telafi oturumlarının hiçbirinde beden eğitimi dersi olan sınıf yok.'); return true; }
     if (d.tf === 'eksik') { const tk = TF.tk = await C.takvimAl(), E = tfEksikler(tk); if (!E.length) { tfCiz(); return true; }   // K-638
       const X = [...new Set(E.map(z => z.x))], gs = Math.max(1, Math.min(8, +TF.gs || 3)); let t = P.gunler.map(g => g.tarih).filter(Boolean).sort().pop() || TF.bas; let gun = null;
       X.forEach(x => { if (!gun || gun.slot.length >= gs) { t = gunEkle(t, 1); while ([0, 6].includes(new Date(t + 'T12:00:00').getDay())) t = gunEkle(t, 1); gun = { tarih: t, slot: [] }; P.gunler.push(gun); }
@@ -412,7 +421,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (d.tfgsil) { if (!await onayla('Bu sınav günü silinsin mi?')) return true; P.gunler.splice(+d.tfgsil, 1); TF.degisti = true; tfCiz(); return true; }
     if (d.tfsek) { const g = P.gunler[+d.tfsek], n = g.slot.length + 1; g.slot.push(tfBosSlot(Math.min(n, 8))); g.slot[g.slot.length - 1].no = n; TF.degisti = true; tfCiz(); return true; }   // K-636
     if (d.tfssil) { const [g, s_] = d.tfssil.split(':').map(Number); if (!await onayla('Bu sınav satırı silinsin mi?')) return true; P.gunler[g].slot.splice(s_, 1); P.gunler[g].slot.forEach((z, k) => { z.no = k + 1; }); TF.degisti = true; tfCiz(); return true; }
-    if (d.tfds) { const [g, s, n] = d.tfds.split(':').map(Number); P.gunler[g].slot[s].ders = n; TF.degisti = true; tfCiz(); return true; }
+    if (d.tfds) { const [g, s, n] = d.tfds.split(':').map(Number); P.gunler[g].slot[s].ders = n; tfBedenYaz(P.gunler[g].slot[s], P.gunler[g].tarih); TF.degisti = true; tfCiz(); return true; }
     if (d.tfprg) { const [g, s] = d.tfprg.split(':').map(Number); tfPrg(g, s); return true; }
     if (d.tfsec) { const [g, s, v] = d.tfsec.split(':'); tfDersSec(+g, +s, v); return true; }
     return false;
