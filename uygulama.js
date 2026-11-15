@@ -3748,7 +3748,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-628: ders programı → seviyedeki dersler, öğretmenleri, şubeleri; seçilen ders karta işlenir, sonraki kartlarda çıkmaz
     const GIZLI = /htde|hedef temelli|rehberlik|müzik/;   // K-664: takvim panelinde hiç görünmez
     const _prg = new Map(), prgDersler = v => _prg.get(v) || _prg.set(v, _prgDersler(v)).get(v), _prgDersler = v => { const M = new Map();
-      for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || GIZLI.test(dersAnahtar(h.ders))) continue;
+      for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || GIZLI.test(dersAnahtar(h.ders)) || SINAVSIZ.test(dersAnahtar(h.ders))) continue;   // K-664: sınavı olmayan dersler (beden/spor, müzik, görsel sanatlar, rehberlik…) panelde hiç görünmez
         const ad = /[a-zçğıöşü]/.test(h.ders) ? String(h.ders).replace(/\s+/g, ' ').trim() : baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
         if (!m.sube.has(s)) m.sube.set(s, { saat: 0, og: new Set() }); const z = m.sube.get(s); z.saat++; (h.ogretmen || []).forEach(o => z.og.add(baslik(o))); }
       return [...M.values()].sort((a, b) => b.sube.size - a.sube.size || a.ad.localeCompare(b.ad, tr)); };
