@@ -3284,14 +3284,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611152300'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611152310'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611151200');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611152300');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611152310');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
@@ -3786,7 +3786,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       // ör. 11: S. Matematik (A–H) + S. Temel Matematik (I) → her şube yalnız kendi dersine girer (şube farkı kendiliğinden)
       if (L.length > 1) r.dahil.forEach(z => { const B = L.filter(a => { const d = bul_(a); return !d || d.sube.has(z); }); if (B.length && B.length < L.length) r.fark[z] = B.join(' / '); }); };
     const dinMi = a => /din kültürü|peygamberimizin hayatı|kur.?an.?ı kerim|temel dini bilgiler|seçmeli din/.test(String(a).toLocaleLowerCase(tr));
-    const anahtarAd = a => dersAnahtar(String(a).replace(/^(s\.|seçmeli)\s*/i, ''));
+    const anahtarAd = a => dersAnahtar(a);
     function uyarilar() {
       const O = E.sinavlar.flatMap(x => Object.entries(x.sv).map(([v, r]) => ({ v, t: x.tarih, adlar: [r.ad, ...Object.values(r.fark)].flatMap(a => String(a).split(' / ').map(z => z.trim()).filter(Boolean)) })));
       const din = O.filter(o => o.t && o.adlar.some(dinMi)), dinG = [...new Set(din.map(o => o.t))], L = [];
@@ -3794,6 +3794,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const M = new Map(); O.forEach(o => o.adlar.filter(a => !dinMi(a)).forEach(a => { const k = anahtarAd(a); if (!M.has(k)) M.set(k, { ad: a, g: new Map() }); const m = M.get(k); (m.g.get(o.t) || m.g.set(o.t, new Set()).get(o.t)).add(o.v); }));
       const fark = [...M.values()].filter(m => m.g.size > 1 && new Set([...m.g.values()].flatMap(z => [...z])).size > 1);
       if (fark.length) L.push(`<b>Aynı adlı ders farklı seviyelerde farklı günlerde</b> (mümkünse aynı güne alın): ${fark.slice(0, 8).map(m => `${esc(m.ad)} (${[...m.g.entries()].map(([t, vs]) => `${[...vs].sort((a, b) => a - b).join(', ')}: ${t ? new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' }) : '?'}`).join(' · ')})`).join('; ')}${fark.length > 8 ? ` ve ${fark.length - 8} ders daha` : ''}.`);
+      // K-668: son kontrol — ders programında olup takvime yazılmamış sınavlı dersler (hedef temelli, rehberlik, müzik, beden vb. hiç sayılmaz)
+      const prgEks = SV.map(v => { const K = kullanilan(v, null); const Y = prgDersler(v).filter(d => !d.sinavsiz && !K.has(dersAnahtar(d.ad)));
+        return Y.length ? `<b>${v}. sınıflar:</b> ${Y.map(d => `${esc(d.ad)} <span class="soluk">(${[...d.sube.keys()].sort(sinifSira).map(z => z.split('-')[1]).join(', ')})</span>`).join(', ')}` : ''; }).filter(Boolean);
+      if (Object.keys((D.program || {}).siniflar || {}).length) L.push(prgEks.length ? `<b>Ders programında olup takvimde olmayan dersler</b> (sınavı yapılmayan dersler ve hedef temelli dersler sayılmaz):<br>${prgEks.join('<br>')}` : '<b class="neon">✓ Ders programındaki sınavlı derslerin hepsi takvimde.</b>');
       return L.length ? `<div class="kart td-uyari">${L.map(x => `<div>${x}</div>`).join('')}</div>` : '';
     }
     const kaydet = async () => {
