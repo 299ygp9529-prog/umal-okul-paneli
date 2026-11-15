@@ -316,7 +316,9 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     yil = yil || (TF.P && TF.P.yil) || egitimYili(); donem = donem || (TF.P && TF.P.donem) || '1. Dönem'; TF.anahtar = `telafi:${yil}:${donem}`;
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     try { TF.P = (await oku(TF.anahtar)) || { yil, donem, baslik: 'Telafi Sınavları Takvimi', durum: 'GÜNCEL', mudur: MUDUR, gunler: [] }; } catch (e) { kok.innerHTML = bas('Telafi Sınavı') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
-    if (!TF.bas) TF.bas = sonrakiPzt(); TF.degisti = false; try { TF.tk = await C.takvimAl(); } catch (e) { TF.tk = null; } tfCiz();
+    if (!TF.bas) TF.bas = sonrakiPzt(); TF.degisti = false; try { TF.tk = await C.takvimAl(); } catch (e) { TF.tk = null; }
+    let _bo = 0; for (const g of TF.P.gunler) for (const s_ of g.slot) if (!String(s_.yer || '').trim() && tfBedenYaz(s_, g.tarih)) _bo++;   // K-649: boş sınav yerlerine beden eğitimi sınıfları
+    if (_bo) TF.degisti = true; tfCiz(); if (_bo) bilgi(`${_bo} oturumun boş sınav yerine, o saatte beden eğitimi dersinde olan sınıflar yazıldı. Kontrol edip Kaydet'e basın.`, 'yesil');
     if (!TF.P.gunler.length && geri && geri.otoAktar) { await tfAktar(); bilgi('Sınav takvimindeki sınavlar telafi haftasına aktarıldı. Tarihleri, saatleri ve yerleri düzenleyip kaydedin.', 'yesil'); }   // K-635
   }
   function tfUyari() { return []; }   // K-636: din dersleri aynı gün kuralı kaldırıldı (idarenin isteği)
