@@ -606,7 +606,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   function soGirdi(ev) { const t = ev.target, d = t.dataset; if (d.sog && SO.V) { const [i, a] = d.sog.split(':'); SO.V.ogr.find(o => o.id === i)[a] = t.value; SO.degisti = true; } }
 
   // ================================================================ 5) VELİ TOPLANTISI
-  const VT_ADIM = ['Toplantı planı', 'Öğretmen duyurusu', 'Veli daveti', 'Katılım çizelgesi', 'Toplantı tutanağı', 'Veli görüşmesi ve takip'];
+  const VT_ADIM = ['Toplantı planı', 'Öğretmen duyurusu', 'Veli daveti', 'Katılım çizelgesi', 'Toplantı tutanağı', 'Veli görüşmesi ve takip', 'Sınıf dosyası'];
   const VT_GUNDEM = 'Açılış ve yoklama\nÖğrencilerin akademik gelişimi ve başarı durumu\nDevam-devamsızlık ve okul kuralları\nÖğrenci-veli-öğretmen iş birliği\nRehberlik ve destek ihtiyaçları\nDilek, öneriler ve kapanış';
   const VT = { L: [], M: null, adim: 0, ara: '', degisti: false };
   const vtBos = () => ({ id: 'v' + uid(), yil: egitimYili(), baslik: 'Veli Toplantısı', donem: '1. dönem', sinif: '', tarih: bugun(), saat: '', yer: '', baskan: MUDUR, sayi: '', gundem: VT_GUNDEM, konular: '', kararlar: '', katilim: {}, takip: [], gorusme: { no: '', konu: '', ozet: '', adim: '' } });
@@ -637,11 +637,19 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         <div class="dugmeler" style="justify-content:flex-start"><button class="ikincil" data-vtyaz="gorusme">Bireysel görüşme formunu yazdır</button></div>
         <h3>Takip edilecek işler</h3>${M.takip.map((x, i) => `<div class="id-satir id-takip"><input data-vtt="${i}:is" value="${esc(x.is)}" placeholder="İş / karar"><input data-vtt="${i}:sorumlu" value="${esc(x.sorumlu)}" placeholder="Sorumlu"><input type="date" data-vtt="${i}:tarih" value="${esc(x.tarih)}"><div class="cipler">${['Bekliyor', 'Devam ediyor', 'Tamamlandı'].map(d => `<button class="cip mini ${x.durum === d ? 'secili' : ''}" data-vttd="${i}:${d}">${d}</button>`).join('')}</div><button class="bag" style="color:var(--kirmizi)" data-vttsil="${i}">Sil</button></div>`).join('')}
         <div class="dugmeler" style="justify-content:flex-start"><button class="ikincil" data-vtx="takipekle">+ Takip işi ekle</button>${M.takip.length ? '<button class="ikincil" data-vtyaz="takip">Takip çizelgesini yazdır</button>' : ''}</div>`; }
+    if (a === 6) { const dv = M.devam || {}, n = Object.keys(dv).length, eslesen = O.filter(o => dv[o.no]).length;
+      const sinifL = M.sinif ? [M.sinif] : [...new Set(O.map(o => o.sinif))].sort(sinifSira);
+      ic = `<p>Her sınıf için arka arkaya <b>gündem</b>, <b>katılan veliler</b>, <b>sınıf devamsızlık listesi</b> ve <b>fotoğraflı öğrenci listesi</b> yazdırılır. Katılan veliler 4. adımdaki çizelgeden gelir.</p>
+        <div class="kart" style="margin:8px 0"><b>Devamsızlık listesi (e-Okul Excel)</b><div class="soluk kucuk" style="margin:4px 0 8px">e-Okul'dan aldığınız devamsızlık Excel'ini (.xls, .xlsx, .csv) yükleyin. Öğrenciler okul numarasından eşleştirilir; özürlü / özürsüz sütunları kendiliğinden bulunur.</div>
+          <div class="id-satir"><label class="ikincil" style="cursor:pointer">Dosya seç<input type="file" data-vtdosya="1" accept=".xls,.xlsx,.csv,.html,.htm,.xml" multiple style="display:none"></label>
+          <span class="soluk">${n ? `${n} öğrencinin devamsızlığı yüklü · bu kapsamda ${eslesen} / ${O.length} öğrenci eşleşti` : 'Henüz yüklenmedi'}</span>${n ? '<button class="bag" style="color:var(--kirmizi)" data-vtx="devamsil">Listeyi temizle</button>' : ''}</div></div>
+        <div class="id-satir"><span class="id-et">Sınıflar:</span><span>${esc(sinifL.join(', ') || '—')}</span></div>
+        <div class="dugmeler" style="justify-content:flex-start"><button class="birincil" data-vtx="dosya">🖨 Sınıf dosyalarını yazdır</button><button class="ikincil" data-vtx="dosyafoto">Yalnız fotoğraflı listeler</button></div>`; }
     kok.innerHTML = bas('Veli Toplantısı', 'Plan, duyuru, davet, katılım çizelgesi, tutanak ve takip — okul içi hazırlık belgeleri.', '<button class="ikincil" data-vtx="yeni">+ Yeni toplantı</button><button class="birincil" data-vtx="kaydet">Kaydet</button>') +
       `<div class="kart"><span class="id-et">Kayıtlı toplantılar</span><div class="cipler">${VT.L.map(x => `<button class="cip ${x.id === M.id ? 'secili' : ''}" data-vtac="${x.id}">${esc(tGos(x.tarih))} · ${esc(x.sinif || 'Genel')} · ${esc(x.donem)}</button>`).join('') || '<span class="soluk kucuk">Kayıtlı toplantı yok.</span>'}</div></div>
       <div class="id-adimlar">${VT_ADIM.map((x, i) => `<button class="${a === i ? 'secili' : ''}" data-vtadim="${i}"><span>${i + 1}</span>${x}</button>`).join('')}</div>
       <div class="kart"><div class="id-satir" style="margin-bottom:8px"><b style="font-size:17px">${a + 1}. ${VT_ADIM[a]}</b><span class="durum-etiketi" style="margin-left:auto">${esc(M.yil)} · ${esc(sinifT)}</span></div>${ic}
-        <div class="dugmeler"><button class="ikincil" data-vtadim="${Math.max(0, a - 1)}" ${a === 0 ? 'disabled' : ''}>← Geri</button><button class="birincil" data-vtadim="${Math.min(5, a + 1)}" ${a === 5 ? 'disabled' : ''}>Sonraki adım →</button></div></div>
+        <div class="dugmeler"><button class="ikincil" data-vtadim="${Math.max(0, a - 1)}" ${a === 0 ? 'disabled' : ''}>← Geri</button><button class="birincil" data-vtadim="${Math.min(6, a + 1)}" ${a === 6 ? 'disabled' : ''}>Sonraki adım →</button></div></div>
       ${VT.L.some(x => x.id === M.id) ? '<div class="dugmeler"><button class="bag" style="color:var(--kirmizi)" data-vtx="sil">Bu toplantıyı sil</button></div>' : ''}
       <div class="soluk kucuk">Bu bölüm okul içi hazırlık şablonları üretir; MEB'in her toplantı için zorunlu tuttuğu tek tip bir form seti değildir. Veli telefonu gibi iletişim bilgileri kaydedilmez.</div><div id="idBilgi" class="id-bilgi"></div>`;
   }
@@ -660,11 +668,50 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     }[tur];
     belgeGoster(belgeKabuk(D_[0], D_[1]), D_[0]);
   }
+  // K-667: sınıf dosyası — gündem, katılan veliler, devamsızlık, fotoğraflı liste (sınıf sınıf)
+  function vtSutun(satirlar) {
+    const nz = x => String(x || '').toLocaleLowerCase(tr).replace(/\s+/g, ' ').trim();
+    for (let i = 0; i < Math.min(satirlar.length, 40); i++) { const r = satirlar[i].map(nz), b = re => r.findIndex(c => re.test(c));
+      const no = b(/^(okul ?)?no\.?$|okul numaras|^numara|öğrenci no/), oz = b(/özürsüz|ozursuz/), ol = b(/özürlü|ozurlu|raporlu/);
+      if (no >= 0 && (oz >= 0 || ol >= 0)) return { i, no, oz, ol, top: b(/toplam/), ad: b(/ad/) }; }
+    return null; }
+  function vtDevamOku(satirlar) {
+    const k = vtSutun(satirlar); if (!k) return { n: 0, hata: 'Başlık satırı bulunamadı (Okul No ve Özürlü / Özürsüz sütunları gerekli).' };
+    const sayi = x => { const v = parseFloat(String(x || '').replace(',', '.').replace(/[^0-9.]/g, '')); return isNaN(v) ? 0 : v; }, R = {};
+    for (const r of satirlar.slice(k.i + 1)) { const no = String(r[k.no] || '').replace(/\D/g, ''); if (!no) continue;
+      const ol = k.ol >= 0 ? sayi(r[k.ol]) : 0, oz = k.oz >= 0 ? sayi(r[k.oz]) : 0; R[no] = { ol, oz, top: k.top >= 0 ? sayi(r[k.top]) || ol + oz : ol + oz }; }
+    return { n: Object.keys(R).length, R }; }
+  async function vtDosya(sadeceFoto) {
+    const M = VT.M, O = vtOgr(M), dv = M.devam || {}, S = M.sinif ? [M.sinif] : [...new Set(O.map(o => o.sinif))].sort(sinifSira);
+    if (!O.length) { uyar('Öğrenci listesi boş.'); return; }
+    bilgi('Fotoğraflar yükleniyor…'); try { await C.fotolariYukle(O.map(o => String(o.no))); } catch (e) {} bilgi('');
+    const F = (C.fotolar && C.fotolar()) || {}, zaman = `${tGos(M.tarih)}${M.saat ? ' · ' + esc(M.saat) : ''}${M.yer ? ' · ' + esc(M.yer) : ''}`;
+    const gun = `<ol class="vt-gun">${String(M.gundem || '').split('\n').filter(Boolean).map(x => `<li>${esc(x)}</li>`).join('')}</ol>`;
+    let ilk = true; const sayfa = (s, ad, ic) => { const h = `<section class="vt-s${ilk ? '' : ' vt-yeni'}"><div class="vt-bas"><b>${esc(s)}</b><span>${esc(ad)}</span><small>${esc(M.yil)} · ${esc(M.donem)} · ${zaman}</small></div>${ic}</section>`; ilk = false; return h; };
+    const govde = S.map(s => { const L = O.filter(o => o.sinif === s); let h = '';
+      if (!sadeceFoto) {
+        h += sayfa(s, 'Veli Toplantısı Gündemi', gun + `<div class="vt-not">Sınıf mevcudu: <b>${L.length}</b> · Toplantıya katılan veli: <b>${L.filter(o => vtK(M, o.no).var).length}</b></div>`);
+        const K = L.filter(o => vtK(M, o.no).var);
+        h += sayfa(s, 'Toplantıya Katılan Veliler', `<table class="vt-t"><tr><th>#</th><th>No</th><th>Öğrenci</th><th>Veli adı soyadı</th><th>Yakınlığı</th><th style="width:32mm">İmza</th></tr>${(K.length ? K : L).map((o, i) => { const k = vtK(M, o.no); return `<tr><td>${i + 1}</td><td>${esc(o.no)}</td><td>${esc(C.baslik(o.ad))}</td><td>${esc(k.veli || '')}</td><td>${esc(k.yakin || '')}</td><td></td></tr>`; }).join('')}</table>${K.length ? '' : '<div class="vt-not">Katılım işaretlenmediği için sınıfın tamamı listelendi (imza çizelgesi olarak kullanılabilir).</div>'}`);
+        const dvL = L.map(o => ({ o, d: dv[String(o.no)] })), var_ = dvL.some(x => x.d);
+        h += sayfa(s, 'Sınıf Devamsızlık Listesi', var_ ? `<table class="vt-t"><tr><th>#</th><th>No</th><th>Öğrenci</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th></tr>${dvL.map(({ o, d }, i) => { const z = d || { ol: 0, oz: 0, top: 0 }, uy = z.oz >= 10 || z.top >= 30;
+          return `<tr class="${uy ? 'vt-uy' : ''}"><td>${i + 1}</td><td>${esc(o.no)}</td><td>${esc(C.baslik(o.ad))}</td><td class="c">${String(z.ol).replace('.', ',')}</td><td class="c">${String(z.oz).replace('.', ',')}</td><td class="c"><b>${String(z.top).replace('.', ',')}</b></td></tr>`; }).join('')}</table><div class="vt-not">Vurgulu satırlar: özürsüz devamsızlığı 10 gün ya da toplam devamsızlığı 30 gün ve üzeri olan öğrenciler.</div>` : '<div class="vt-not">Bu sınıf için devamsızlık listesi yüklenmedi.</div>');
+      }
+      h += sayfa(s, 'Fotoğraflı Öğrenci Listesi', `<div class="vt-foto">${L.map(o => `<div><div class="vt-f">${F[String(o.no)] ? `<img src="${F[String(o.no)]}" alt="">` : '<span>👤</span>'}</div><b>${esc(o.no)}</b><span>${esc(C.baslik(o.ad))}</span></div>`).join('')}</div>`);
+      return h; }).join('');
+    const css = `<style>.vt-yeni{break-before:page;page-break-before:always}.vt-bas{display:flex;align-items:baseline;gap:4mm;border-bottom:.6mm solid #13305a;padding:3mm 0 2mm;margin:2mm 0 4mm}.vt-bas b{font-size:18pt;color:#13305a}.vt-bas span{font-size:13pt;font-weight:700}.vt-bas small{margin-left:auto;color:#475569;font-size:9pt}
+.vt-gun{font-size:12.5pt;line-height:1.9;padding-left:7mm}.vt-not{margin:3mm 0;padding:2mm 3mm;border-left:1.4mm solid #0e7490;background:#e3f6fa;font-size:10pt}
+.vt-t{width:100%;border-collapse:collapse;font-size:10pt}.vt-t th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}.vt-t td{border:.3mm solid #8fa3bf;padding:1.4mm 2mm}.vt-t td.c{text-align:center}.vt-t tr.vt-uy td{background:#fee2e2;font-weight:700}
+.vt-foto{display:grid;grid-template-columns:repeat(6,1fr);gap:3mm}.vt-foto>div{display:flex;flex-direction:column;align-items:center;text-align:center;break-inside:avoid;font-size:8.5pt;line-height:1.2}.vt-f{width:24mm;height:30mm;border:.3mm solid #8fa3bf;border-radius:1.5mm;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f1f5f9;margin-bottom:1mm}.vt-f img{width:100%;height:100%;object-fit:cover}.vt-f span{font-size:18pt;opacity:.4}.vt-foto b{font-size:9pt}</style>`;
+    belgeGoster(belgeKabuk(sadeceFoto ? 'Fotoğraflı Öğrenci Listeleri' : 'Veli Toplantısı Sınıf Dosyası', css + govde), sadeceFoto ? 'Fotoğraflı öğrenci listeleri' : 'Veli toplantısı sınıf dosyası');
+  }
   async function vtTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, M = VT.M, k = d.vtx;
     if (k === 'kaydet') { if (!M.tarih) { uyar('Toplantı tarihini seçin.'); return true; } try { await yaz('veli:' + M.id, M); VT.L = [JSON.parse(JSON.stringify(M)), ...VT.L.filter(x => x.id !== M.id)].sort((a, b) => String(b.tarih).localeCompare(String(a.tarih))); VT.degisti = false; vtCiz(); bilgi('Toplantı kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
     if (k === 'yeni') { if (VT.degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return true; VT.M = vtBos(); VT.adim = 0; VT.degisti = false; vtCiz(); return true; }
     if (k === 'sil') { if (!await onayla('Bu toplantı kaydı silinsin mi?')) return true; const { error } = await C.sb.from('umal_idari').delete().eq('anahtar', 'veli:' + M.id); if (error) { uyar('Silinemedi: ' + C.hataYaz(error)); return true; } VT.L = VT.L.filter(x => x.id !== M.id); VT.M = VT.L[0] ? JSON.parse(JSON.stringify(VT.L[0])) : vtBos(); vtCiz(); return true; }
+    if (k === 'dosya' || k === 'dosyafoto') { await vtDosya(k === 'dosyafoto'); return true; }
+    if (k === 'devamsil') { M.devam = {}; VT.degisti = true; vtCiz(); return true; }
     if (k === 'takipekle') { M.takip.push({ is: '', sorumlu: '', tarih: '', durum: 'Bekliyor' }); VT.degisti = true; vtCiz(); return true; }
     if (d.vtac) { if (VT.degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return true; VT.M = JSON.parse(JSON.stringify(VT.L.find(x => x.id === d.vtac))); VT.adim = 0; VT.degisti = false; vtCiz(); return true; }
     if (d.vtadim) { VT.adim = +d.vtadim; vtCiz(); window.scrollTo(0, 0); return true; }
@@ -695,9 +742,13 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     try { [OGR, PRG] = await Promise.all([C.ogrencileriYukle().catch(() => []), C.programYukle().catch(() => null)]); } catch (e) {}
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
-      if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = null; geri.fn(); return; }
+      if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
       ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik }[aktif])(ev);
     };
+    kok.onchange = async ev => { const t = ev.target; if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+      for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
+          const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
+      VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
     kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
