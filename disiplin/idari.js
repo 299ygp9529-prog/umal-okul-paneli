@@ -63,7 +63,7 @@
     .replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce').replace(/\s+/g, ' ').trim()
     .replace(/^s\. (?!(türk dili ve edebiyatı|ingilizce|htde))/, '');
   // sınav yapılmayan / panelde gösterilmeyen dersler (hedef temelli, rehberlik, müzik, beden-spor, görsel sanatlar, proje…)
-  const sinavsizDers = a => /htde|hedef temelli|rehberlik|müzik|beden eğitimi|spor eğitimi|görsel sanatlar|drama|sosyal etkinlik|proje/.test(dersAn(a));
+  const sinavsizDers = a => /htde|hedef temelli|rehberlik|müzik|beden eğitimi|spor eğitimi|görsel sanatlar|drama|sosyal etkinlik/.test(dersAn(a));
   const satirDers = l => String(l).replace(/\s*\([^)]*\)\s*$/, '').trim();
   // seviyenin sınavlı dersleri: aynı ders tek satır (ad: programdaki ilk yazım)
   function telafiDersleri(v) { const M = new Map(); for (const s of siniflar().filter(x => seviye(x) === v)) for (const d of sinifDersleri(s)) { if (sinavsizDers(d)) continue; const k = dersAn(d); if (!M.has(k)) M.set(k, { ad: d, S: new Set() }); M.get(k).S.add(s); }
