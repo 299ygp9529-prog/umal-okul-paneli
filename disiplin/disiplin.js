@@ -441,7 +441,7 @@ p{margin:2mm 0;text-align:justify}.sag{text-align:right}.kucuk{font-size:10pt}@m
     const ay = S.ayar;
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>
 @page{size:A4;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0}body{font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:9pt;color:#000}
-.sf{width:210mm;min-height:296mm;padding:12mm 14mm 10mm;position:relative;display:flex;flex-direction:column}.sf+.sf{page-break-before:always;break-before:page}
+.sf{width:210mm;height:296mm;overflow:hidden;padding:12mm 14mm 10mm;position:relative;display:flex;flex-direction:column}.sf+.sf{page-break-before:always;break-before:page}
 h1{font-size:17pt;text-align:center;margin:0 0 4mm;font-weight:bold}h1.k{font-size:14pt}.b{font-weight:bold}.o{text-align:center}.s{text-align:right}
 p{margin:1.5mm 0;line-height:1.35;text-align:justify}.ac{text-indent:9mm}.olay{font-size:8.6pt;text-transform:uppercase;line-height:1.35}
 .cizgi{flex:1;background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(7.4mm - .3mm),#000 calc(7.4mm - .3mm),#000 7.4mm);min-height:20mm}
@@ -484,7 +484,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
       <div class="k8">Savunmanızı yazmaya buradan başlayınız. Ön sayfa yetmez ise arka sayfaya geçiniz.<br>Savunmanızın sonuna -BU İFADE BANA AİTTİR- yazıp, adınızı ve soyadınızı yazarak imzalayınız.</div>
       <div class="cizgi" style="margin-top:2mm"></div></div>`; }
     if (tur === 'bt_olay') return bt('BİLGİ TOPLAMA FORMU - Olay', `Ödül ve Disiplin Kurulunda görüşülmesi için gönderilen aşağıda açıklaması bulunan olayla ilgili olarak sizden bilgi almamız gerekmektedir. Olayla ilgili bilgi ve görüşlerinizi, adı geçen öğrenciler hakkındaki düşüncelerinizi aşağıya yazmanızı rica ederim.</p><p class="b">OLAY:</p><p class="olay">${olayM}.`,
-      [['Olayla İlgili Bilgilerim:', 88], ['Arkadaşım Hakkındaki Görüşlerim:', 88]]);
+      [['Olayla İlgili Bilgilerim:', 74], ['Arkadaşım Hakkındaki Görüşlerim:', 74]]);
     if (tur === 'bt_ogretmen') return bt('BİLGİ TOPLAMA FORMU - Öğretmen', `${dosyaM} sizden bilgi almamız gerekmektedir. Öğrenci hakkındaki görüşlerinizi (dersinizdeki tutumu, ders dışı faaliyetleri ve arkadaşları ile ilişkileri) aşağıya yazmanızı rica ederim.`,
       [['Öğrenci Hakkındaki Görüşlerim:<br>Dersimdeki Tutumu:', 52], ['Ders Dışı Faaliyetleri:', 52], ['Arkadaşları İle İlişkisi:', 52]], 'Branşınız');
     if (tur === 'bt_rehber') return bt('BİLGİ TOPLAMA FORMU - Sınıf Rehber Öğretmeni', `${dosyaM} sizden bilgi almamız gerekmektedir. Öğrenci hakkındaki görüşlerinizi (kişisel - sosyal) aşağıya yazmanızı rica ederim.`,
