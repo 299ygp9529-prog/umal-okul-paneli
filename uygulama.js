@@ -3748,7 +3748,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const GIZLI = /htde|hedef temelli|rehberlik|müzik/;   // K-664: takvim panelinde hiç görünmez
     const _prg = new Map(), prgDersler = v => _prg.get(v) || _prg.set(v, _prgDersler(v)).get(v), _prgDersler = v => { const M = new Map();
       for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || GIZLI.test(dersAnahtar(h.ders))) continue;
-        const ad = baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
+        const ad = /[a-zçğıöşü]/.test(h.ders) ? String(h.ders).replace(/\s+/g, ' ').trim() : baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
         if (!m.sube.has(s)) m.sube.set(s, { saat: 0, og: new Set() }); const z = m.sube.get(s); z.saat++; (h.ogretmen || []).forEach(o => z.og.add(baslik(o))); }
       return [...M.values()].sort((a, b) => b.sube.size - a.sube.size || a.ad.localeCompare(b.ad, tr)); };
     // K-664: takvimdeki ad → o seviyedeki programdaki ders (Seçmeli/S., T.C., "ve Ahlak Bilgisi", Yabancı Dil = İngilizce; programda yalnız "S. X" varsa "X" = "S. X" ve tersi)
