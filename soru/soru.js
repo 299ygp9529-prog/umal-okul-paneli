@@ -469,7 +469,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   }
 
   // K-510: testi okulun sunucusuna yükle; Öğretmenler odası tahtası PDF Havuzu'na koyar
-  const BRANSLAR = [['Matematik', /matematik|geometri/], ['Fizik', /fizik/], ['Kimya', /kimya/], ['Biyoloji', /biyoloji/], ['Edebiyat', /edebiyat|türk dili|türkçe/], ['Tarih', /tarih|inkılap/], ['Coğrafya', /coğrafya/], ['Felsefe', /felsefe|mantık|psikoloji|sosyoloji/], ['Din Kültürü', /din kültürü/], ['İngilizce', /ingilizce/], ['Almanca', /almanca/]];
+  const BRANSLAR = [['Matematik', /matematik|geometri/], ['Fizik', /fizik/], ['Kimya', /kimya/], ['Biyoloji', /biyoloji/], ['Edebiyat', /edebiyat|türk dili|türkçe/], ['Tarih', /tarih|inkılap/], ['Coğrafya', /coğrafya/], ['Felsefe', /felsefe|mantık|psikoloji|sosyoloji/], ['Din Kültürü', /din kültürü/], ['İngilizce', /ingilizce|yabancı dil/], ['Almanca', /almanca/]];
   async function havuzaGonder(r, b, pb) {
     if (r.havuzda) { pb.textContent = 'Bu test zaten havuza gönderildi.'; return; }
     if (!ayar.hazirlayan) { const a = (prompt('Testler listesinde hazırlayan olarak görünecek adınız:', '') || '').trim(); if (!a) return; ayar.hazirlayan = a; kaydet(); const i = kok.querySelector('[data-a="hazirlayan"]'); if (i) i.value = a; }

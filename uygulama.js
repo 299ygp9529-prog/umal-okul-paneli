@@ -23,7 +23,7 @@
   const yuzde = (a, b) => b > 0 ? Math.round(a * 100 / b) : 0;
   const virgul = x => x.toFixed(1).replace('.', ',');
   // K-638: aynı dersin farklı yazımları tek anahtar (Din Kültürü = Din Kültürü ve Ahlak Bilgisi, T.C. İnkılap Tarihi = … ve Atatürkçülük)
-  const dersAnahtar = a => String(a || '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim().replace(/ ve ahlak bilgisi$/, '').replace(/ ve atatürkçülük$/, '');
+  const dersAnahtar = a => String(a || '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim().replace(/^(t\. ?c\.?|tc|türkiye cumhuriyeti) /, '').replace(/ ve ahlak bilgisi$/, '').replace(/ ve atatürkçülük$/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce');   // K-664: "Yabancı Dil" = "İngilizce"; "T.C. İnkılap Tarihi (ve Atatürkçülük)" = "İnkılap Tarihi"
   const bugunISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
@@ -1505,7 +1505,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     if (/coğrafya/.test(x)) return 'Coğrafya';
     if (/felsefe/.test(x)) return 'Felsefe';
     if (/din|kur'an|peygamber|ahlak|adab/.test(x)) return 'Din Kültürü';
-    if (/ingilizce/.test(x)) return 'İngilizce';
+    if (/ingilizce|yabancı dil/.test(x)) return 'İngilizce';
     if (/beden|spor/.test(x)) return 'Beden Eğitimi';
     if (/müzik|görsel|sanat/.test(x)) return 'Görsel Sanatlar / Müzik';
     if (/bilişim/.test(x)) return 'Bilişim';
@@ -3740,14 +3740,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-626 (v37 OYSS): sınav yapılmayan dersler öneride yok; takvimde olan ders o seviyede yeniden önerilmez
     const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama/i;
     const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr))) P_.add(baslik(h.ders));
-      const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => a.trim().toLocaleLowerCase(tr))); return [...P_].sort((a, b) => (kul.has(a.toLocaleLowerCase(tr)) - kul.has(b.toLocaleLowerCase(tr))) || a.localeCompare(b, tr)); };
+      const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => dersAnahtar(a))); return [...P_].sort((a, b) => (kul.has(dersAnahtar(a)) - kul.has(dersAnahtar(b))) || a.localeCompare(b, tr)); };
     // K-628: ders programı → seviyedeki dersler, öğretmenleri, şubeleri; seçilen ders karta işlenir, sonraki kartlarda çıkmaz
     const prgDersler = v => { const M = new Map();
       for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders) continue;
         const ad = baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
         if (!m.sube.has(s)) m.sube.set(s, { saat: 0, og: new Set() }); const z = m.sube.get(s); z.saat++; (h.ogretmen || []).forEach(o => z.og.add(baslik(o))); }
       return [...M.values()].sort((a, b) => b.sube.size - a.sube.size || a.ad.localeCompare(b.ad, tr)); };
-    const kullanilan = (v, haric) => new Set(E.sinavlar.flatMap(x => x.sv[v] && x !== haric ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => a.trim().toLocaleLowerCase(tr)).filter(Boolean));
+    const kullanilan = (v, haric) => new Set(E.sinavlar.flatMap(x => x.sv[v] && x !== haric ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => dersAnahtar(a)).filter(Boolean));
     // K-630: bütün dersler görünür — takvimde olanlar ve sınav yapılmayanlar ayrı grupta (mevcut takvimden başlayınca liste boş kalmasın)
     function secPanel(x, v) {
       const r = x.sv[v], tum = sinifSv(v).length, bu = new Set(String(r.ad).split(' / ').concat(Object.values(r.fark)).map(a => dersAnahtar(a)).filter(Boolean));
@@ -3755,7 +3755,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const nerede = new Map(); E.sinavlar.forEach(y => { if (y === x || !y.sv[v]) return; const t = `${y.tarih ? new Date(y.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' }) : '?'} ${y.n}. ders`;
         [y.sv[v].ad, ...Object.values(y.sv[v].fark)].flatMap(a => String(a).split(' / ')).map(a => dersAnahtar(a)).filter(Boolean).forEach(k => { (nerede.get(k) || nerede.set(k, new Set()).get(k)).add(t); }); });
       const A = prgDersler(v), k_ = d => dersAnahtar(d.ad);
-      const G = [['Takvime eklenecek dersler', A.filter(d => !d.sinavsiz && !nerede.has(k_(d)))], ['Takvimde olan dersler', A.filter(d => !d.sinavsiz && nerede.has(k_(d)))], ['Genellikle sınav yapılmayan dersler', A.filter(d => d.sinavsiz)]];
+      const G = [['Takvime eklenecek dersler', A.filter(d => !d.sinavsiz && !nerede.has(k_(d)) && !bu.has(k_(d)))], ['Takvimde olan dersler', A.filter(d => !d.sinavsiz && (nerede.has(k_(d)) || bu.has(k_(d))))], ['Genellikle sınav yapılmayan dersler', A.filter(d => d.sinavsiz)]];
       const kart = d => { const S = [...d.sube.keys()].sort(sinifSira), ogM = new Map(); S.forEach(z => d.sube.get(z).og.forEach(o => (ogM.get(o) || ogM.set(o, []).get(o)).push(z.split('-')[1])));
         const og = [...ogM.entries()].sort((a, b) => a[0].localeCompare(b[0], tr)).map(([o, L]) => `${esc(o)}${ogM.size > 1 || L.length < tum ? ` <span class="soluk">(${L.join(', ')})</span>` : ''}`), sec = bu.has(k_(d)), yer = nerede.get(k_(d));
         return `<button class="td-prg-d${sec ? ' secili' : ''}${yer || d.sinavsiz ? ' soluk-d' : ''}" data-tdpd="${x.id}:${v}:${esc(d.ad)}"><span class="td-prg-ad">${esc(d.ad)}${sec ? ' <span class="neon kucuk">· bu kartta</span>' : ''}</span>
