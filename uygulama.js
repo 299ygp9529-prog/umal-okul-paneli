@@ -3559,11 +3559,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const harita = (o, k) => gzPlan(o.kapasite).map(r => r.map((s, j) => j === 2 && !(s && s.n) ? '<i class="b"></i>' : !s ? '<i class="b"></i>' : s.kapi ? '<i class="k"></i>' : `<i class="${s.n === k ? 's' : ''}"></i>`).join('')).join('');
       const goz = new URL('gezi-goz.jpg', location.href).href, abide = new URL('gezi-abide.png', location.href).href;
       const bilet = ({ p, k, o, yer }) => `<div class="t"><div class="bayrak"><b>ÇANAKKALE GEÇİLMEZ</b>${BL_AY}<span>1915</span></div>
-        <div class="ana"><img class="abide" src="${abide}" alt=""><img class="goz" src="${goz}" alt="">${BL_DESEN}<div class="ust"><img src="${logo}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${esc(G.ad || 'Çanakkale Gezisi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>')}</h1></div></div>
+        <div class="ana"><img class="goz" src="${goz}" alt="">${BL_DESEN}<div class="ust"><img src="${logo}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${esc(G.ad || 'Çanakkale Gezisi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>')}</h1></div></div>
           <div class="soz">“Ben size taarruzu emretmiyorum, ölmeyi emrediyorum.”<small>MUSTAFA KEMAL · CONKBAYIRI 1915</small></div>
           <div class="yolcu"><small class="e">YOLCU</small><b>${esc(baslik(p.ad))}</b><span>${p.sinif ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</span></div>
           <div class="bilgi"><div><small class="e">TARİH</small><b>${esc(gzTarih(G.tarih) || '—')}${gunAd ? ' ' + esc(gunAd) : ''}</b></div><div><small class="e">KALKIŞ</small><b>${esc(G.saat || '—')}${G.kalkis ? ' · ' + esc(G.kalkis) : ''}</b></div><div><small class="e">GÜZERGÂH</small><b>İstanbul → Çanakkale</b></div></div></div>
-        <div class="koc"><div class="oto"><small>OTOBÜS</small><b>${o.no}</b></div><div class="kol"><small>KOLTUK</small><b>${k}</b></div><div class="harita">${harita(o, k)}</div><div class="yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(o.plaka || '')}</span></div></div></div>`;
+        <div class="koc"><img class="abide" src="${abide}" alt=""><div class="oto"><small>OTOBÜS</small><b>${o.no}</b></div><div class="kol"><small>KOLTUK</small><b>${k}</b></div><div class="harita">${harita(o, k)}</div><div class="yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(o.plaka || '')}</span></div></div></div>`;
       const yaz = hangi => { const L = sec(hangi); if (!L.length) { uyar('Bu seçimde yerleşmiş kimse yok.'); return; }
         const sayfalar = []; for (let i = 0; i < L.length; i += 4) sayfalar.push(`<div class="bl-sayfa">${L.slice(i, i + 4).map(bilet).join('')}</div>`);
         belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Biletler</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600;700;800&family=Lora:ital,wght@1,400&display=swap" rel="stylesheet"><style>${BL_CSS}</style></head><body>${sayfalar.join('')}</body></html>`, 'Gezi biletleri · ' + L.length + ' bilet'); };
@@ -3615,7 +3615,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   const MENU_IK_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="2.200"/><path d="M3.800 10.500l6 1M20.200 10.500l-6 1M12 14.200V20.500"/></svg>';
   const BL_ABIDE = '<svg class="bl-abide" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 86h100"/><path d="M22 86V78h76v8"/><path d="M34 78V26M48 78V26M72 78V26M86 78V26"/><path d="M28 26h64v-9H28z" fill="currentColor" fill-opacity=".25"/><path d="M60 17V6"/><path d="M60 6c6 0 9 2 14 2v7c-5 0-8-2-14-2" fill="currentColor" fill-opacity=".9" stroke="none"/></svg>';
-  const BL_CSS = `.ana > img.abide{position:absolute;left:4mm;bottom:0;height:62mm;opacity:.22;pointer-events:none;filter:saturate(.7);-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent),linear-gradient(180deg,#000 75%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,#000 55%,transparent),linear-gradient(180deg,#000 75%,transparent);mask-composite:intersect}.ana > img.goz{position:absolute;right:0;top:0;height:100%;width:64%;object-fit:cover;object-position:40% 48%;opacity:.2;filter:saturate(.75) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%);pointer-events:none}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  const BL_CSS = `.koc > img.abide{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:58mm;opacity:.34;pointer-events:none;z-index:0;-webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 35%);mask-image:linear-gradient(180deg,transparent 0%,#000 35%)}.koc > *:not(.abide){position:relative;z-index:1}.ana > img.goz{position:absolute;right:0;top:0;height:100%;width:64%;object-fit:cover;object-position:40% 48%;opacity:.2;filter:saturate(.75) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%);pointer-events:none}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @page{size:A4;margin:8mm}body{margin:0;font-family:Inter,'Segoe UI',Arial,sans-serif}.bl-sayfa{display:flex;flex-direction:column;gap:4mm;page-break-after:always}.bl-sayfa:last-child{page-break-after:auto}
 .t{width:194mm;height:66mm;position:relative;overflow:hidden;border-radius:4mm;border:.3mm solid #ddd;page-break-inside:avoid;display:grid;grid-template-columns:22mm 1fr 52mm;background:#fff;color:#111}
 .bayrak{background:#e30a17;position:relative;display:flex;align-items:center;justify-content:center}
@@ -3624,7 +3624,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 .bayrak b{position:absolute;top:4mm;left:0;right:0;text-align:center;font:700 5.2pt Inter;letter-spacing:.18em;color:#fff;opacity:.85;writing-mode:vertical-rl;transform:rotate(180deg);height:30mm;margin:0 auto}
 .ana{position:relative;padding:5.5mm 7mm 5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#fff 45%,#fbf3ee 100%)}
 .desen{position:absolute;inset:0;pointer-events:none}
-.ana > *:not(.desen):not(.goz):not(.abide){position:relative}
+.ana > *:not(.desen):not(.goz){position:relative}
 .ust{display:flex;align-items:center;gap:3mm}
 .ust img{width:11mm;height:11mm}
 .okul{font:600 6.4pt Inter;letter-spacing:.28em;color:#e30a17}
@@ -3638,13 +3638,13 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
 .bilgi > div{background:rgba(255,255,255,.82);padding:.6mm 1.6mm .8mm;margin:-.6mm -1.6mm;border-radius:1mm}
 .koc{background:#111;color:#fff;padding:5mm;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;gap:2mm;position:relative}
 .koc::before,.koc::after{content:'';position:absolute;left:-3.5mm;width:7mm;height:7mm;border-radius:50%;background:#fff;border:.3mm solid #ddd}
-.koc::before{top:-3.5mm}.koc::after{bottom:-3.5mm}
+.koc::before{top:-3.5mm;z-index:2}.koc::after{bottom:-3.5mm;z-index:2}
 .koc small{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#888}
 .koc .oto b,.koc .kol b{font:800 26pt/1 Inter}
 .koc .kol b{color:#ff3b47}
 .koc .yer{grid-column:1/-1;align-self:end;font:700 7pt Inter;letter-spacing:.12em;white-space:nowrap;border-top:.3mm solid #333;padding-top:2mm;display:flex;justify-content:space-between}
 .harita{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr .5fr 1fr 1fr;gap:.6mm;align-content:center}
-.harita i{height:1.9mm;border-radius:.4mm;background:#333}.harita i.b{background:none}.harita i.s{background:#ff3b47}.harita i.k{background:none;border:.2mm dashed #444}`;
+.harita i{height:1.9mm;border-radius:.4mm;background:rgba(255,255,255,.16)}.harita i.b{background:none}.harita i.s{background:#ff3b47}.harita i.k{background:none;border:.2mm dashed rgba(255,255,255,.3)}`;
   const BL_DESEN = `<svg class="desen" viewBox="0 0 500 293" preserveAspectRatio="xMaxYMax slice">
  <defs>
   
