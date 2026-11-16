@@ -1409,7 +1409,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .tm-ic.tek .tm-oge:first-child { justify-content: center; text-align: center; } }
 /* K-702: Gezi Otobüsleri */
 .gz-alan { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
-.gz-alan label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--soluk, #9fb3cf); }
+.gz-alan > label, .gz-alan-k { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--soluk, #9fb3cf); }
 .gz-alan input, .gz-alan select, .gz-ekle input, .gz-ekle select, #gzAra { background: var(--koyu); color: var(--yazi); border: 1px solid var(--cizgi); border-radius: 10px; padding: 8px 10px; font-size: 14px; min-width: 0; }
 .gz-ozet { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .gz-ozet span { padding: 6px 12px; border-radius: 999px; background: rgba(127, 246, 255, .07); border: 1px solid var(--cizgi); font-size: 13px; } .gz-ozet b { color: var(--neonacik, #7ff6ff); font-size: 15px; }
@@ -1466,3 +1466,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .gz-arka { width: 6px; border-radius: 4px; background: color-mix(in srgb, var(--g) 25%, transparent); }
 }
 @media (max-width: 760px) { .gz-izgara { grid-template-columns: 1fr; } .gz-havuz { position: static; max-height: none; } .gz-liste { max-height: 36vh; } .gz-secim { top: 70px; } .gz-sekmeler { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .gz-ot { flex-direction: column; align-items: flex-start; padding: 6px 6px 9px; gap: 4px; } .gz-ot b { font-size: 11.5px; } }
+.gz-dosya { display: flex; align-items: center; gap: 8px; min-height: 37px; } .gz-dosya label.ikincil { cursor: pointer; padding: 7px 12px; border-radius: 10px; white-space: nowrap; } .gz-dosya small { color: var(--yazi); font-size: 12px; } .gz-dosya a { color: #ff8a8a; }

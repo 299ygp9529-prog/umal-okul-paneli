@@ -3225,9 +3225,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const GZ_TUR = { ogt: 'Öğretmen', bel: 'Belediye personeli', reh: 'Rehber', diger: 'Görevli' };
   const GZ_RENK = ['#22e8ff', '#ffb867', '#5ee08a', '#c99bff', '#ff8a8a', '#ffe14d', '#7fb2ff', '#ff9ad5'];
   const GZ_AYRILAN = 2;   // öğretmen koltukları
-  const GZ_KIZ = new Set(('elif zeynep ecrin defne eylül azra nehir asel zehra meryem ayşe fatma esma nisa nisanur hiranur irem buse büşra beyza berra berfin bengisu ceren cansu damla dilara duru ecem ece eda ela esila eslem esra ezgi feyza gizem gülce hande hatice havin hilal ilayda ipek kübra lara leyla lina mavi melis melisa melike merve mina mira nazlı neslihan nida nil nilsu nisan öykü özge pelin rana rabia rümeysa sare selin sena serra şevval sevval sıla sude sueda sümeyye şeyma tuana tuba yaren yağmur yasemin zeren zümra ada aleyna asya aslı aybüke aynur aysu belinay beren betül cemre dila doğa dilek ebrar elanur enise esin gül gülsüm hafsa hazal helin hira ikra kevser kader lal lavin mehtap melda nur nurselin nursena öznur pınar rukiye saliha selen semanur serap simge şura tuğba türkan yüsra zeliha zerda beyzanur buket esmanur gamze hayrunnisa iclal irmak kumsal sudenaz miray aysel sevgi songül şule tülay begüm bilge çağla çiğdem derin destina dicle efsa elvan feride gökçe gonca hazan hülya ilknur jale lale meltem mihriban nazlıcan nergis nihan nilay ravza ruveyda sevde sinem sudenur sultan şenay tülin ümran yıldız zerrin ayça ayla bahar banu berna cennet duygu ebru emine esengül fadime filiz gülay gülşen hacer handan havva kezban mine müge nermin nesrin perihan reyhan saadet sakine selma semra seval sevim sevda şükran yeliz zübeyde nesibe aylin aysima azize bade beril berrak berrin cansel cemile derya duha eflin eliz elisa gülnur hümeyra işıl kardelen mislina naz nazenin refia selinay sevilay şevin yaprak elçin almina alya asude aysun ayşegül ayşenur bihter büşranur cemile damlanur dilruba dünya ecemnur edanur elifnur emel esila eylem fatmanur feyzanur gülsüm hacer helen hümeyra ilayda irem kübranur lavinya mahra mehlika melike meryemnur minel mira nazife nehir nida nihal nisa nur rüya sahra selda semiha serra şevval tuğçe ümmügülsüm yağmurnur zehranur zeynepnur aya rama lana sara nour rasha hala maya lina ranya rawan alaa yasmin jana judy shahd').split(/\s+/));
-  const GZ_ERKEK = new Set(('ahmet mehmet mustafa ali hüseyin hasan ibrahim ismail yusuf ömer osman murat emre burak can cem efe ege eren emir enes eymen furkan hamza harun kerem kaan kuzey mert muhammed muhammet poyraz rüzgar salih semih serkan sinan taha tuna tuğra uğur umut yasin yiğit yunus zafer abdullah abdurrahman adem alp alperen arda aras atakan atlas ayaz baran barış batuhan batu berat berk berkay bilal bora buğra cihan cemal çağan çağrı doruk doğukan ediz egemen ekrem emin emirhan enver erdem erkan erol eyüp fatih ferhat fırat gökhan gökay halil hakan hakkı hayri ilker ilyas kadir kağan kemal kenan kerim koray kutay levent mahmut mazlum melih metin mirza musa necati nedim nihat oğuz oğuzhan okan onur orhan ozan özgür rauf recep rıdvan sadık samet sarp selim selçuk serhat sercan sedat süleyman şahin şükrü tarık talha tayfun tolga tuğrul turan tunahan utku uygar veli volkan yahya yavuz yılmaz yiğithan yücel zeki ziya abdulkadir abdulsamet bekir burhan cengiz çınar davut dursun ensar ercan ertuğrul gazi göktuğ hamit hikmet hüsnü ilhan irfan kamil kaya mücahit nail necip nuri ramazan rıza sabri said sait şeref taner tamer turgut ümit yakup alihan aliberk arif aslan ata atahan ayberk aybars bahadır batıkan berkan beytullah bünyamin cafer celal ceyhun çağatay demir dorukhan durmuş efekan egehan emircan emre enis erhan erkam eymenhan faruk ferit gökalp görkem hakan halit hamza haydar hızır ishak kayra kerem kutlu mehmetali metehan miraç muhammetali mustafakemal nurettin oğulcan ömerfaruk özkan rasim reşat rüstem sefa semih serdar sinan tahir tamerlan tunç türker umutcan yağız yasir yekta yigit yusufhan zübeyir ward omar ahmad mohammad mohammed muhammad amir yazan karim hani malik samir ammar yamen rami khaled khalid abdulrahman abdulaziz anas bashar mahmoud mansur hadi jamal').split(/\s+/));
-  const GZ_IKI = new Set('deniz umut evren ekin derin rüzgar çağ'.split(' '));
+  const GZ_KIZ = new Set(('elif zeynep ecrin defne eylül azra nehir asel zehra meryem ayşe fatma esma nisa nisanur hiranur irem buse büşra beyza berra berfin bengisu ceren cansu damla dilara duru ecem ece eda ela esila eslem esra ezgi feyza gizem gülce hande hatice havin hilal ilayda ipek kübra lara leyla lina mavi melis melisa melike merve mina mira nazlı neslihan nida nil nilsu nisan öykü özge pelin rana rabia rümeysa sare selin sena serra şevval sevval sıla sude sueda sümeyye şeyma tuana tuba yaren yağmur yasemin zeren zümra ada aleyna asya aslı aybüke aynur aysu belinay beren betül cemre dila doğa dilek ebrar elanur enise esin gül gülsüm hafsa hazal helin hira ikra kevser kader lal lavin mehtap melda nur nurselin nursena öznur pınar rukiye saliha selen semanur serap simge şura tuğba türkan yüsra zeliha zerda beyzanur buket esmanur gamze hayrunnisa iclal ırmak kumsal sudenaz miray aysel sevgi songül şule tülay begüm bilge çağla çiğdem derin destina dicle efsa elvan feride gökçe gonca hazan hülya ilknur jale lale meltem mihriban nazlıcan nergis nihan nilay ravza ruveyda sevde sinem sudenur sultan şenay tülin ümran yıldız zerrin ayça ayla bahar banu berna cennet duygu ebru emine esengül fadime filiz gülay gülşen hacer handan havva kezban mine müge nermin nesrin perihan reyhan saadet sakine selma semra seval sevim sevda şükran yeliz zübeyde nesibe aylin aysima azize bade beril berrak berrin cansel cemile derya duha eflin eliz elisa gülnur hümeyra işıl kardelen mislina naz nazenin refia selinay sevilay şevin yaprak elçin almina alya asude aysun ayşegül ayşenur bihter büşranur cemile damlanur dilruba dünya ecemnur edanur elifnur emel esila eylem fatmanur feyzanur gülsüm hacer helen hümeyra ilayda irem kübranur lavinya mahra mehlika melike meryemnur minel mira nazife nehir nida nihal nisa nur rüya sahra selda semiha serra şevval tuğçe ümmügülsüm yağmurnur zehranur zeynepnur aya rama lana sara nour rasha hala maya lina ranya rawan alaa yasmin jana judy shahd amine berinay diana evin medine mekiye melek melikenur nidanur seda seher selinnur seray süheyla tuğçenaz zebunısa ırmak zozan nazlı elanur sema semanur tuana').split(/\s+/));
+  const GZ_ERKEK = new Set(('ahmet mehmet mustafa ali hüseyin hasan ibrahim ismail yusuf ömer osman murat emre burak can cem efe ege eren emir enes eymen furkan hamza harun kerem kaan kuzey mert muhammed muhammet poyraz rüzgar salih semih serkan sinan taha tuna tuğra uğur umut yasin yiğit yunus zafer abdullah abdurrahman adem alp alperen arda aras atakan atlas ayaz baran barış batuhan batu berat berk berkay bilal bora buğra cihan cemal çağan çağrı doruk doğukan ediz egemen ekrem emin emirhan enver erdem erkan erol eyüp fatih ferhat fırat gökhan gökay halil hakan hakkı hayri ilker ilyas kadir kağan kemal kenan kerim koray kutay levent mahmut mazlum melih metin mirza musa necati nedim nihat oğuz oğuzhan okan onur orhan ozan özgür rauf recep rıdvan sadık samet sarp selim selçuk serhat sercan sedat süleyman şahin şükrü tarık talha tayfun tolga tuğrul turan tunahan utku uygar veli volkan yahya yavuz yılmaz yiğithan yücel zeki ziya abdulkadir abdulsamet bekir burhan cengiz çınar davut dursun ensar ercan ertuğrul gazi göktuğ hamit hikmet hüsnü ilhan irfan kamil kaya mücahit nail necip nuri ramazan rıza sabri said sait şeref taner tamer turgut ümit yakup alihan aliberk arif aslan ata atahan ayberk aybars bahadır batıkan berkan beytullah bünyamin cafer celal ceyhun çağatay demir dorukhan durmuş efekan egehan emircan emre enis erhan erkam eymenhan faruk ferit gökalp görkem hakan halit hamza haydar hızır ishak kayra kerem kutlu mehmetali metehan miraç muhammetali mustafakemal nurettin oğulcan ömerfaruk özkan rasim reşat rüstem sefa semih serdar sinan tahir tamerlan tunç türker umutcan yağız yasir yekta yigit yusufhan zübeyir omar ahmad mohammad mohammed muhammad amir yazan karim hani malik samir ammar yamen rami khaled khalid abdulrahman abdulaziz anas bashar mahmoud mansur hadi jamal akın bedirhan erencem etka yıldıray halim sefa').split(/\s+/));
+  const GZ_IKI = new Set('deniz umut evren ekin derin rüzgar çağ pamir'.split(' '));
   function gzCinsTahmin(ad) {   // soyadı hariç adlara bakar; ilk tanınan ad belirler
     const p = String(ad || '').toLocaleLowerCase('tr').split(/\s+/).filter(Boolean); if (p.length > 1) p.pop();
     for (const w of p) { if (GZ_IKI.has(w)) continue; if (GZ_KIZ.has(w)) return 'K'; if (GZ_ERKEK.has(w)) return 'E'; }
@@ -3253,15 +3253,77 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const gzYerAd = y => ({ cam: 'Cam kenarı', koridor: 'Koridor', orta: 'Orta koltuk' })[y] || '';
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
   const gzTel = v => { let d = String(v || '').replace(/\D/g, ''); if (!d) return ''; if (!d.startsWith('0')) d = '0' + d; d = d.slice(0, 11); return [d.slice(0, 4), d.slice(4, 7), d.slice(7, 9), d.slice(9, 11)].filter(Boolean).join(' '); };
+
+  // K-703: katılımcı listesini PDF'ten (metinli ya da taranmış/ekran görüntüsü) ya da Excel'den okur
+  const gzTcGecerli = t => { t = String(t || ''); if (!/^[1-9]\d{10}$/.test(t)) return false; const d = [...t].map(Number); return ((d[0] + d[2] + d[4] + d[6] + d[8]) * 7 - (d[1] + d[3] + d[5] + d[7])) % 10 === d[9] && d.slice(0, 10).reduce((a, b) => a + b, 0) % 10 === d[10]; };
+  const GZ_SINIF_RE = /^\s*(9|1[0-2])\s*[-–/.]?\s*([A-ZÇĞİÖŞÜ1Iİ])\b/;
+  function gzSatirlardan(satirlar) {   // satirlar: [{metin, sozcukler:[{t,x}]}] sayfa sırasıyla; başlık satırından sütun sınırları
+    const L = []; let sinif = '', sut = null;
+    const nrm = s => s.toLocaleLowerCase('tr').replace(/[^a-zçğıöşü.]/g, '');
+    for (const st of satirlar) {
+      const W = st.sozcukler, m = st.metin.match(/^\s*(9|1[0-2])\s*[-–]\s*([A-ZÇĞİÖŞÜ1Iİ])\s*[-–·•.]?\s*\d+\s*ki/);
+      if (m) { sinif = m[1] + '-' + m[2].replace(/[1İ]/, 'I'); continue; }
+      const h = W.map(w => nrm(w.t));
+      const iNo = h.indexOf('no'), iAd = h.findIndex(x => x === 'ad' || x === 'adı' || x === 'adsoyad'), iTc = h.findIndex(x => /^t\.?c\.?$|kimlik/.test(x)), iDg = h.findIndex(x => x.startsWith('doğum')), iTl = h.findIndex(x => x === 'cep' || x.startsWith('telefon'));
+      if (iNo >= 0 && iAd >= 0 && iTc >= 0) { sut = { no: W[iNo].x, ad: W[iAd].x, tc: W[iTc].x, dg: iDg >= 0 ? W[iDg].x : 1e9, tl: iTl >= 0 ? W[iTl].x : 1e9, sol: Math.max(0, W[iNo].x - (W[iAd].x - W[iNo].x) * .6) }; continue; }
+      if (!sut) continue;
+      const c = { no: [], ad: [], tc: [], dg: [], tl: [] };
+      W.forEach(w => { const x = w.x + (w.g || 0) / 2; if (x < sut.sol) return; const k = x < sut.ad - 4 ? 'no' : x < sut.tc - 4 ? 'ad' : x < sut.dg - 4 ? 'tc' : x < sut.tl - 4 ? 'dg' : 'tl'; c[k].push(w.t); });
+      [...c.tc, ...c.dg].some(t => { const d = t.replace(/\D/g, ''); if (d.length >= 19) { c.tc = [d.slice(0, 11)]; c.dg = [d.slice(11, 19)].concat(c.dg.filter(x => x !== t)); return true; } });
+      const no = c.no.join('').replace(/\D/g, ''), tc = c.tc.join('').replace(/\D/g, ''), ad = c.ad.join(' ').replace(/^[^A-Za-zÇĞİÖŞÜçğıöşü]+|[^A-Za-zÇĞİÖŞÜçğıöşü]+$/g, '').trim();
+      if (!no || !ad || tc.length < 8) continue;
+      L.push({ no: String(+no), ad, sinif, tc, dogum: c.dg.join(' ').trim(), tel: c.tl.join(' ').trim() });
+    }
+    return L;
+  }
+  async function gzBetik(src) { if ([...document.scripts].some(s => s.src === src)) return; await new Promise((ok, red) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => red(new Error(src + ' yüklenemedi')); document.head.appendChild(s); }); }
+  async function gzListeOku(dosya, ilerle) {
+    if (/\.(xlsx)$/i.test(dosya.name) || /\.(csv|txt|tsv)$/i.test(dosya.name)) {
+      const R = /\.xlsx$/i.test(dosya.name) ? await xlsxSatirlar(dosya) : (await dosya.text()).split(/\r?\n/).map(x => x.split(/[;\t,]/));
+      const nrm = s => String(s || '').toLocaleLowerCase('tr');
+      const hi = R.findIndex(r => r.some(x => /^no$|numara/.test(nrm(x).trim())) && r.some(x => /ad/.test(nrm(x))));
+      if (hi < 0) throw new Error('Excel\'de "No" ve "Ad Soyad" başlıkları bulunamadı');
+      const H = R[hi].map(nrm), bul = re => H.findIndex(x => re.test(x));
+      const iNo = bul(/^no$|okul no|numara/), iAd = bul(/ad soyad|adı soyadı|^ad$|^adı$|isim/), iSoy = bul(/^soyad|soyisim/), iSn = bul(/sınıf|şube/), iTc = bul(/kimlik|t\.?c/), iDg = bul(/doğum/), iTl = bul(/telefon|cep/), iCn = bul(/cinsiyet/);
+      let sinif = ''; const L = [];
+      R.slice(hi + 1).forEach(r => { const m = String(r[0] || '').match(/^\s*(9|1[0-2])\s*[-–]\s*([A-ZÇĞİÖŞÜ])\b/); if (m && !String(r[iNo] || '').trim()) { sinif = m[1] + '-' + m[2]; return; }
+        const no = String(r[iNo] || '').replace(/\D/g, ''); const ad = [r[iAd], iSoy >= 0 ? r[iSoy] : ''].join(' ').replace(/\s+/g, ' ').trim(); if (!no || !ad) return;
+        L.push({ no: String(+no), ad, sinif: iSn >= 0 ? String(r[iSn] || '').replace(/\s/g, '').replace('/', '-').toLocaleUpperCase(tr) : sinif, tc: iTc >= 0 ? String(r[iTc] || '').replace(/\D/g, '') : '', dogum: iDg >= 0 ? String(r[iDg] || '') : '', tel: iTl >= 0 ? String(r[iTl] || '') : '', cinsF: iCn >= 0 ? String(r[iCn] || '') : '' }); });
+      return L;
+    }
+    const pdfjs = await import(new URL('soru/pdf.min.mjs', location.href).href); pdfjs.GlobalWorkerOptions.workerSrc = new URL('soru/pdf.worker.min.mjs', location.href).href;
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(await dosya.arrayBuffer()) }).promise, satirlar = [];
+    let worker = null;
+    for (let i = 1; i <= doc.numPages; i++) {
+      ilerle && ilerle(`Sayfa ${i} / ${doc.numPages} okunuyor…`);
+      const pg = await doc.getPage(i), tc = await pg.getTextContent();
+      if (tc.items.filter(x => x.str.trim()).length > 30) {   // metinli PDF
+        const Y = new Map(); tc.items.forEach(it => { if (!it.str.trim()) return; const y = Math.round(it.transform[5] / 3); const k = [...Y.keys()].find(z => Math.abs(z - y) <= 1) ?? y; if (!Y.has(k)) Y.set(k, []); it.str.trim().split(/\s+/).forEach((t, j, a) => Y.get(k).push({ t, x: it.transform[4] + (it.width / Math.max(1, a.length)) * j, g: it.width / Math.max(1, a.length) })); });
+        [...Y.keys()].sort((a, b) => b - a).forEach(k => { const W = Y.get(k).sort((a, b) => a.x - b.x); satirlar.push({ metin: W.map(w => w.t).join(' '), sozcukler: W }); });
+        continue;
+      }
+      if (!worker) { ilerle && ilerle('Yazı tanıma hazırlanıyor (ilk seferde biraz sürer)…'); await gzBetik('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'); worker = await window.Tesseract.createWorker('tur'); }
+      const v = pg.getViewport({ scale: Math.min(3, 2600 / pg.getViewport({ scale: 1 }).width) }), cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height;
+      await pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise;
+      ilerle && ilerle(`Sayfa ${i} / ${doc.numPages} okunuyor (yazı tanıma)…`);
+      const { data } = await worker.recognize(cv);
+      (data.lines || []).forEach(l => { const W = (l.words || []).map(w => ({ t: w.text, x: w.bbox.x0, g: w.bbox.x1 - w.bbox.x0 })).filter(w => w.t.trim()); if (W.length) satirlar.push({ metin: W.map(w => w.t).join(' '), sozcukler: W }); });
+    }
+    if (worker) await worker.terminate();
+    return gzSatirlardan(satirlar);
+  }
   async function geziBolumu() {
     await anketVerisi(); await ogrencileriYukle().catch(() => []);
     let G = null;
     try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'gezi_otobus').maybeSingle(); G = data && data.deger ? JSON.parse(data.deger) : null; } catch (e) { G = null; }
     const varsAnket = (D.anketler.find(a => /çanakkale/i.test(a.tanim.ad || '') && a.durum !== 'taslak') || {}).id || '';
-    if (!G) G = { ad: 'Çanakkale Gezisi', tarih: '', saat: '', kalkis: 'Okul Önü', anket: varsAnket, otobusler: [1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ id: 'o' + i, no: i, kapasite: 46, plaka: '', sofor: '', tel: '' })), gorevli: [], ekOgr: [], cikar: [], cins: {}, yer: {} };
+    if (!G) G = { ad: 'Çanakkale Gezisi', tarih: '', saat: '', kalkis: 'Okul Önü', anket: varsAnket, otobusler: [1, 2, 3, 4, 5, 6].map(i => ({ id: 'o' + i, no: i, kapasite: 42, plaka: '', sofor: '', tel: '' })), gorevli: [], ekOgr: [], cikar: [], cins: {}, yer: {} };
     ['otobusler', 'gorevli', 'ekOgr', 'cikar'].forEach(x => { if (!Array.isArray(G[x])) G[x] = []; });
     if (!G.yer || typeof G.yer !== 'object') G.yer = {}; if (!G.cins || typeof G.cins !== 'object') G.cins = {};
     let sel = null, ara = '', durum = '', zam = null, sekme = 'ogr', aktif = (G.otobusler[0] || {}).id;
+    let LST = { ad: '', liste: [] };   // K-703: PDF/Excel'den okunan katılımcı listesi (ayrı anahtar: kişisel veri)
+    try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'gezi_katilimci').maybeSingle(); if (data && data.deger) LST = JSON.parse(data.deger) || LST; } catch (e) {}
+    const lstKaydet = async () => { const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'gezi_katilimci', deger: JSON.stringify(LST) }, { onConflict: 'anahtar' }); if (error) uyar('Liste kaydedilemedi: ' + hataYaz(error)); };
     const kaydet = () => { durum = 'Kaydediliyor…'; durumYaz(); clearTimeout(zam); zam = setTimeout(async () => {
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'gezi_otobus', deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
       durum = error ? 'Kaydedilemedi: ' + hataYaz(error) : 'Kaydedildi ✓'; durumYaz(); }, 500); };
@@ -3276,6 +3338,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         anketSiniflari(a).forEach(s => katilanlar(a, s).forEach(o => { const c = cevap(a, s, String(o.no)); if (!c || qi < 0 || !secimler((c.c || [])[qi]).includes('Evet')) return;
           const v = i => i >= 0 ? secimler((c.c || [])[i]).join(' ').trim() : '';
           L.push({ no: String(o.no), ad: o.ad, sinif: s, tc: v(qTc), dogum: v(qDt), cinsF: v(qCn), tel: v(qTl) }); })); }
+      (LST.liste || []).forEach(o => { const sn = o.sinif || ((D.ogrenciler || []).find(x => String(x.no) === String(o.no)) || {}).sinif || 'Diğer', var_ = L.find(x => x.no === String(o.no));
+        if (var_) { ['tc', 'dogum', 'tel', 'cinsF'].forEach(k => { if (o[k]) var_[k] = o[k]; }); } else L.push(Object.assign({}, o, { no: String(o.no), sinif: sn })); });
       G.ekOgr.forEach(o => { if (!L.some(x => x.no === String(o.no) && x.sinif === o.sinif)) L.push(o); });
       return L.filter(o => !G.cikar.includes('o:' + o.sinif + ':' + o.no)).sort((x, y) => sinifSira(x.sinif, y.sinif) || (+x.no) - (+y.no));
     };
@@ -3290,25 +3354,35 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const cinsYaz = p => p.tur !== 'ogr' ? '' : `<span class="gz-c ${p.cins === 'K' ? 'k' : p.cins === 'E' ? 'e' : 'b'}" data-cdeg="${esc(p.an)}" title="Cinsiyeti değiştir">${p.cins || '?'}</span>`;
     const temizle = M => { Object.keys(G.yer).forEach(an => { const y = G.yer[an], o = otoBul(y.o); if (!M.has(an) || !o || y.k > o.kapasite) delete G.yer[an]; }); };
     // Otomatik: öğrenciler sınıf sırasıyla otobüsleri sırayla tam doldurur; yan yana iki koltuk aynı cinsiyete; 1–2 öğretmenlere ayrılır
-    const otomatik = M => {
+    const otomatik = (M, sinifBirlikte) => {   // sinifBirlikte: her sınıf tek otobüste (bölünmez; sığmazsa en boş otobüse taşar)
       Object.keys(G.yer).forEach(an => { if (an.startsWith('o:')) delete G.yer[an]; });
       const gorevliler = [...M.values()].filter(p => p.tur !== 'ogr' && !G.yer[p.an]);
       const ogt = gorevliler.filter(p => p.tur === 'ogt'), dig = gorevliler.filter(p => p.tur !== 'ogt');
       const doluMu = (o, k) => Object.values(G.yer).some(y => y.o === o.id && y.k === k);
       ogt.forEach((p, i) => { for (let t = 0; t < G.otobusler.length; t++) { const o = G.otobusler[(Math.floor(i / GZ_AYRILAN) + t) % G.otobusler.length]; const k = [1, 2].find(x => !doluMu(o, x)); if (k) { G.yer[p.an] = { o: o.id, k }; return; } } });
-      const kuyruk = [...M.values()].filter(p => p.tur === 'ogr');
-      const ayir = (cins, sinif) => { let i = kuyruk.findIndex(p => p.cins === cins && p.sinif === sinif); if (i < 0) i = kuyruk.findIndex(p => p.cins === cins); return i < 0 ? null : kuyruk.splice(i, 1)[0]; };
-      G.otobusler.forEach(o => {
-        const P = gzPlan(o.kapasite), gruplar = [];   // yan yana koltuk grupları
-        P.forEach(r => { const sol = [r[0], r[1]].filter(s => s && s.n), sag = [r[3], r[4]].filter(s => s && s.n); if (r[2] && r[2].n) gruplar.push(sol.concat([r[2]], sag)); else { if (sol.length) gruplar.push(sol); if (sag.length) gruplar.push(sag); } });
-        // diğer görevliler (belediye vb.) ayrılan koltuklardan sonraki ilk boş ikiliye
-        if (dig.length) { const g = gruplar.find(g => g.every(s => s.n > GZ_AYRILAN && !doluMu(o, s.n))); if (g) g.forEach(s => { if (dig.length && !doluMu(o, s.n)) G.yer[dig.shift().an] = { o: o.id, k: s.n }; }); }
-        gruplar.forEach(g => {
+      const gruplarOf = o => { const P = gzPlan(o.kapasite), R = [];   // yan yana koltuk grupları
+        P.forEach(r => { const sol = [r[0], r[1]].filter(s => s && s.n), sag = [r[3], r[4]].filter(s => s && s.n); if (r[2] && r[2].n) R.push(sol.concat([r[2]], sag)); else { if (sol.length) R.push(sol); if (sag.length) R.push(sag); } }); return R; };
+      G.otobusler.forEach(o => { if (!dig.length) return; const g = gruplarOf(o).find(g => g.every(s => s.n > GZ_AYRILAN && !doluMu(o, s.n))); if (g) g.forEach(s => { if (dig.length && !doluMu(o, s.n)) G.yer[dig.shift().an] = { o: o.id, k: s.n }; }); });
+      const bosSay = o => { let n = 0; for (let k = GZ_AYRILAN + 1; k <= o.kapasite; k++) if (!doluMu(o, k)) n++; return n; };
+      const yerlestir = (o, kuyruk) => {   // yan yana iki koltuk aynı cinsiyet; önce aynı sınıftan eş aranır
+        const ayir = (cins, sinif) => { let i = kuyruk.findIndex(p => p.cins === cins && p.sinif === sinif); if (i < 0) i = kuyruk.findIndex(p => p.cins === cins); return i < 0 ? null : kuyruk.splice(i, 1)[0]; };
+        gruplarOf(o).forEach(g => {
           const bos = g.filter(s => s.n > GZ_AYRILAN && !doluMu(o, s.n)); if (!bos.length || !kuyruk.length) return;
           const ilk = kuyruk.shift(); G.yer[ilk.an] = { o: o.id, k: bos[0].n };
           for (const s of bos.slice(1)) { const p = ayir(ilk.cins, ilk.sinif); if (!p) break; G.yer[p.an] = { o: o.id, k: s.n }; }
         });
+      };
+      const ogr = [...M.values()].filter(p => p.tur === 'ogr');
+      if (!sinifBirlikte) { const q = ogr.slice(); G.otobusler.forEach(o => yerlestir(o, q)); return; }
+      const S = new Map(); ogr.forEach(p => { if (!S.has(p.sinif)) S.set(p.sinif, []); S.get(p.sinif).push(p); });
+      const kalan = new Map(G.otobusler.map(o => [o.id, bosSay(o) - 2])), Q = new Map(G.otobusler.map(o => [o.id, []]));
+      [...S].sort((a, b) => sinifSira(a[0], b[0])).forEach(([, L]) => {
+        let o = G.otobusler.find(x => kalan.get(x.id) >= L.length) || G.otobusler.slice().sort((a, b) => kalan.get(b.id) - kalan.get(a.id))[0];
+        Q.get(o.id).push(...L); kalan.set(o.id, kalan.get(o.id) - L.length);
       });
+      const tasan = [];
+      G.otobusler.forEach(o => { const q = Q.get(o.id); yerlestir(o, q); tasan.push(...q); });
+      G.otobusler.forEach(o => yerlestir(o, tasan));
     };
     const bilgiSatiri = (o, M) => { const L = Object.keys(G.yer).filter(an => G.yer[an].o === o.id && M.get(an)).map(an => M.get(an)); return { L, k: L.filter(p => p.tur === 'ogr' && p.cins === 'K').length, e: L.filter(p => p.tur === 'ogr' && p.cins === 'E').length, g: L.filter(p => p.tur !== 'ogr').length }; };
     const ciz = () => {
@@ -3330,9 +3404,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const oi = G.otobusler.findIndex(o => o.id === aktif), o = G.otobusler[oi], rk = GZ_RENK[oi % GZ_RENK.length], P = gzPlan(o.kapasite), B = bilgiSatiri(o, M);
       $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Gezi Otobüsleri</h1><span class="soluk" id="gzDurum">${esc(durum)}</span></div>
         <div class="kart gz-bilgi"><div class="gz-alan"><label>Gezi adı<input data-g="ad" value="${esc(G.ad)}"></label><label>Tarih<input type="date" data-g="tarih" value="${esc(G.tarih)}"></label><label>Kalkış saati<input type="time" data-g="saat" value="${esc(G.saat)}"></label><label>Kalkış yeri<input data-g="kalkis" value="${esc(G.kalkis || '')}"></label>
-          <label>Katılım formu<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
-          <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span><span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
-          <div class="dugmeler" style="margin:10px 0 0"><button class="birincil" id="gzOto">⚡ Otomatik yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
+          <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil">📄 ${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
+          <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length ? `<span class="gz-uyari" title="${esc(ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).map(p => baslik(p.ad) + ' (' + p.sinif + ')').join(', '))}"><b>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length}</b> hatalı T.C. no</span>` : ''}${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span><span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
+          <div class="dugmeler" style="margin:10px 0 0"><button class="birincil" id="gzOto" title="Otobüsler sırayla tam dolar; sınıflar sırayla dizilir">⚡ Otomatik yerleştir</button><button class="birincil" id="gzOtoS" title="Her sınıf tek otobüste; boş koltuk kalabilir">🏫 Sınıf sınıf yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
         <div class="gz-sekmeler">${G.otobusler.map((x, i) => { const b = bilgiSatiri(x, M); return `<button class="gz-ot ${x.id === aktif ? 'secili' : ''}" style="--g:${GZ_RENK[i % GZ_RENK.length]}" data-akt="${x.id}"><span class="gz-no">${x.no}</span><span><b>${x.no}. Otobüs</b><small>${b.L.length} / ${x.kapasite}</small></span><i style="--y:${Math.round(100 * b.L.length / x.kapasite)}%"></i></button>`; }).join('')}</div>
         ${selP ? `<div class="gz-secim" style="--c:${renk(selP)}"><b>${esc(baslik(selP.ad))}</b><span>${selP.sinif ? esc(selP.sinif) + ' · No ' + esc(selP.no) : esc(GZ_TUR[selP.tur] || '')}${G.yer[sel] ? ' · ' + (otoBul(G.yer[sel].o) || {}).no + '. otobüs, ' + G.yer[sel].k + ' numara' : ''}</span><small>Bir koltuğa dokunun (başka otobüs için üstten otobüsü seçin): boşsa oraya geçer, doluysa yer değiştirirler.</small><span style="flex:1"></span>${G.yer[sel] ? '<button class="ikincil" id="gzHavuza">Koltuktan kaldır</button>' : ''}<button class="ikincil" id="gzVazgec">Vazgeç</button></div>` : ''}
         <div class="gz-izgara"><div class="kart gz-havuz"><div class="gz-sekme"><button class="${sekme === 'ogr' ? 'secili' : ''}" data-gs="ogr">Bekleyen öğrenci · ${ogrL.filter(p => !G.yer[p.an]).length}</button><button class="${sekme === 'gor' ? 'secili' : ''}" data-gs="gor">Görevliler · ${hepsiP.filter(p => p.tur !== 'ogr').length}</button></div>
@@ -3366,9 +3440,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       });
       if ($('#gzHavuza')) $('#gzHavuza').onclick = () => { delete G.yer[sel]; sel = null; kaydet(); ciz(); };
       if ($('#gzVazgec')) $('#gzVazgec').onclick = () => { sel = null; ciz(); };
-      $('#gzOto').onclick = async () => { if (Object.keys(G.yer).some(an => an.startsWith('o:')) && !await onayla('Öğrenciler baştan yerleştirilsin mi? Elle yaptığınız öğrenci değişiklikleri silinir (görevliler yerinde kalır).')) return; otomatik(M); sel = null; kaydet(); ciz(); };
+      const otoBas = async sb_ => { if (Object.keys(G.yer).some(an => an.startsWith('o:')) && !await onayla('Öğrenciler baştan yerleştirilsin mi? Elle yaptığınız öğrenci değişiklikleri silinir (görevliler yerinde kalır).')) return; otomatik(M, sb_); sel = null; kaydet(); ciz(); };
+      $('#gzOto').onclick = () => otoBas(false); $('#gzOtoS').onclick = () => otoBas(true);
       $('#gzSifir').onclick = async () => { if (!await onayla('Bütün koltuk yerleşimi silinsin mi? Öğrenci ve görevli listesi kalır.')) return; G.yer = {}; sel = null; kaydet(); ciz(); };
-      $('#gzOtoEkle').onclick = () => { const no = Math.max(0, ...G.otobusler.map(x => +x.no || 0)) + 1, id = 'o' + Date.now().toString(36); G.otobusler.push({ id, no, kapasite: 46, plaka: '', sofor: '', tel: '' }); aktif = id; kaydet(); ciz(); };
+      $('#gzOtoEkle').onclick = () => { const no = Math.max(0, ...G.otobusler.map(x => +x.no || 0)) + 1, id = 'o' + Date.now().toString(36); G.otobusler.push({ id, no, kapasite: 42, plaka: '', sofor: '', tel: '' }); aktif = id; kaydet(); ciz(); };
       $('#icerik').querySelectorAll('[data-oayar]').forEach(b => b.onclick = () => otoAyar(otoBul(b.dataset.oayar)));
       if ($('#gzOEkle')) $('#gzOEkle').onclick = () => {
         const v = $('#gzONo').value.trim(); if (!v) return;
@@ -3381,6 +3456,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#gzGeriAl')) $('#gzGeriAl').onclick = () => { G.cikar = []; kaydet(); ciz(); };
       if ($('#gzGTel')) $('#gzGTel').onblur = ev => { ev.target.value = gzTel(ev.target.value) || '05'; };
       if ($('#gzGEkle')) $('#gzGEkle').onclick = () => { const ad = baslik($('#gzGAd').value.replace(/\s+/g, ' ').trim()); if (!ad) return; const tel = gzTel($('#gzGTel').value); G.gorevli.push({ id: Date.now().toString(36), ad, tur: $('#gzGTur').value, tel: tel.length > 4 ? tel : '' }); kaydet(); ciz(); };
+      $('#gzDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const bil = $('#gzDosyaBilgi'), yaz = t => { bil.textContent = t; };
+        try { yaz('Okunuyor…'); const L = await gzListeOku(f, yaz); if (!L.length) { yaz('Listede öğrenci bulunamadı'); uyar('Dosyada No / Ad Soyad / T.C. sütunlu bir liste bulunamadı.'); return; }
+          LST = { ad: f.name.replace(/\.[^.]+$/, ''), liste: L, zaman: Date.now() }; await lstKaydet(); const hat = L.filter(x => x.tc && !gzTcGecerli(x.tc)).length;
+          uyar(`${L.length} öğrenci okundu.${hat ? ` ${hat} öğrencinin T.C. kimlik numarası hatalı görünüyor (listede işaretli).` : ''} Kontrol edip "Otomatik yerleştir"e basabilirsiniz.`); ciz(); }
+        catch (e) { yaz('Okunamadı'); uyar('Dosya okunamadı: ' + (e.message || e)); } };
+      if ($('#gzDosyaSil')) $('#gzDosyaSil').onclick = async ev => { ev.preventDefault(); if (!await onayla('PDF/Excel\'den yüklenen katılımcı listesi kaldırılsın mı?')) return; LST = { ad: '', liste: [] }; await lstKaydet(); ciz(); };
       $('#gzBilet').onclick = () => biletler(M);
       $('#gzListe').onclick = () => listeler(M);
       $('#gzExcel').onclick = () => excel(M);
@@ -3397,19 +3478,23 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // Belediye listesi: her otobüs ayrı sayfa; ilk iki satır görevli öğretmenler (şimdilik boş), sonra öğrenciler koltuk sırasıyla
     const excel = M => {
       const dogumYaz = v => { const t = String(v || '').trim(), m = t.match(/^(\d{1,2})\D+(\d{1,2})\D+(\d{4})$/); if (m) return m[1].padStart(2, '0') + '.' + m[2].padStart(2, '0') + '.' + m[3]; const d = t.replace(/\D/g, ''); if (/^\d{8}$/.test(d)) return /^(19|20)/.test(d) && +d.slice(4, 6) <= 12 && +d.slice(0, 4) > 1900 ? d.slice(6) + '.' + d.slice(4, 6) + '.' + d.slice(0, 4) : d.slice(0, 2) + '.' + d.slice(2, 4) + '.' + d.slice(4); return t; };
+      const kontrol = p => { const N = [], tc = String(p.tc || '').replace(/\D/g, ''), dg = dogumYaz(p.dogum), tl = gzTel(p.tel).replace(/\D/g, '');
+        if (!tc) N.push('T.C. no yok'); else if (!gzTcGecerli(tc)) N.push('T.C. no hatalı');
+        const m = dg.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if (!dg) N.push('doğum tarihi yok'); else if (!m || +m[1] > 31 || +m[2] > 12 || +m[1] < 1 || +m[2] < 1) N.push('doğum tarihi hatalı');
+        if (p.tel && tl.length !== 11) N.push('telefon eksik/hatalı'); if (!p.cins) N.push('cinsiyet?'); return N.join(', '); };
       const sayfalar = G.otobusler.map((o, i) => {
         const L = yolcular(M, o.id), bel = L.filter(x => x.p.tur === 'bel').map(x => x.p);
         const ogt = [1, 2].map(k => { const x = L.find(y => y.k === k && y.p.tur !== 'ogr'); return x ? x.p : null; });
         const ogr = L.filter(x => x.p.tur === 'ogr');
         const ad = p => { const w = baslik(p.ad || '').split(' ').filter(Boolean); return [w.slice(0, -1).join(' ').toLocaleUpperCase(tr), (w[w.length - 1] || '').toLocaleUpperCase(tr)]; };
-        const satir = (sira, x, gorevli) => { if (!x) return { gorevli, h: [sira, gorevli ? (gorevli === 1 ? 1 : 2) : '', '', '', '', '', '', '', '', '', 'Görevli öğretmen', ''] };
+        const satir = (sira, x, gorevli) => { if (!x) return { gorevli, h: [sira, gorevli ? (gorevli === 1 ? 1 : 2) : '', '', '', '', '', '', '', '', '', 'Görevli öğretmen', '', ''] };
           const p = x.p || x, k = x.k, [i_, s_] = ad(p), tc = String(p.tc || '').replace(/\D/g, '');
-          return { gorevli, h: [sira, k || '', gzYerAd(yerOf(o, k)), tc ? (tc.startsWith('99') ? '' : 'TÜRKİYE') : '', tc, '', i_, s_, dogumYaz(p.dogum), p.tur === 'ogr' ? (p.cins === 'K' ? 'KADIN' : p.cins === 'E' ? 'ERKEK' : '') : '', p.sinif || GZ_TUR[p.tur] || '', gzTel(p.tel)] }; };
+          return { gorevli, h: [sira, k || '', gzYerAd(yerOf(o, k)), tc ? (tc.startsWith('99') ? '' : 'TÜRKİYE') : '', tc, '', i_, s_, dogumYaz(p.dogum), p.tur === 'ogr' ? (p.cins === 'K' ? 'KADIN' : p.cins === 'E' ? 'ERKEK' : '') : '', p.sinif || GZ_TUR[p.tur] || '', gzTel(p.tel), kontrol(p)] }; };
         const satirlar = [satir(1, null, 1), satir(2, null, 2)].concat(ogr.map((x, j) => satir(j + 3, x, 0)));
         return { ad: o.no + ' NOLU OTOBÜS', renk: GZ_RENK[i % GZ_RENK.length], baslik: (G.ad || 'Çanakkale Gezisi').toLocaleUpperCase(tr) + ' · ' + o.no + ' NOLU OTOBÜS',
           alt: 'Ümraniye Merkez Anadolu Lisesi' + (G.tarih ? ' · ' + gzTarih(G.tarih) : '') + (G.saat ? ' · Kalkış ' + G.saat : '') + (G.kalkis ? ' · ' + G.kalkis : ''),
           bilgi: [['ARAÇ NUMARASI', o.no + ' NOLU OTOBÜS'], ['ARAÇ PLAKASI', o.plaka || ''], ['ŞOFÖR', o.sofor ? o.sofor.toLocaleUpperCase(tr) + (o.tel ? ' · ' + o.tel : '') : ''], ['BELEDİYE PERSONELİ', bel.map(p => baslik(p.ad).toLocaleUpperCase(tr)).join(', ')], ['BELEDİYE PERSONELİ TEL', bel.map(p => p.tel || '').filter(Boolean).join(', ')]],
-          sutunlar: [['SIRA', 6], ['KOLTUK', 8], ['YER', 12], ['ÜLKE', 11], ['TC / YABANCI KİMLİK NO', 20], ['PASAPORT NO', 13], ['İSİM', 20], ['SOYİSİM', 16], ['DOĞUM TARİHİ', 13], ['CİNSİYET', 10], ['SINIF', 9], ['CEP TELEFONU', 15]],
+          sutunlar: [['SIRA', 6], ['KOLTUK', 8], ['YER', 12], ['ÜLKE', 11], ['TC / YABANCI KİMLİK NO', 20], ['PASAPORT NO', 13], ['İSİM', 20], ['SOYİSİM', 16], ['DOĞUM TARİHİ', 13], ['CİNSİYET', 10], ['SINIF', 9], ['CEP TELEFONU', 15], ['KONTROL', 22]],
           satirlar, not: `Kırmızı işaretli 1. ve 2. satır görevli öğretmenler içindir. ${ogr.length} öğrenci ve 2 görevli öğretmen olmak üzere toplam ${ogr.length + 2} kişi. Listeyi istenen bilgileri doğru ve eksiksiz tamamlayıp ilgili birime ulaştırınız.` };
       });
       pencereAc(`<h2 style="margin-top:0">📊 Belediye listesi (Excel)</h2><p class="soluk kucuk">Her otobüs ayrı sayfa. İlk iki satır görevli öğretmenler için boş bırakılır; öğrenciler koltuk sırasıyla. T.C. kimlik no ve doğum tarihi katılım formundaki cevaplardan gelir.</p><div class="dugmeler" style="flex-wrap:wrap"><button class="birincil" data-xl="*">Tüm otobüsler (tek dosya, ${G.otobusler.length} sayfa)</button>${G.otobusler.map((o, i) => `<button class="ikincil" data-xl="${i}">${o.no}. Otobüs</button>`).join('')}</div>`);
