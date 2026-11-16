@@ -511,7 +511,7 @@ body.rol-ogretmen .saat-kutu { display: none; }
   async function belge(sira, kitapcik) {
     const { PDFDocument, rgb } = window.PDFLib, T = Object.assign({}, ayar), TM = TEMALAR[T.tema] || TEMALAR.klasik, sb = !!TM.sb && String(T.renk).toLowerCase() === '#000000';
     const tekRenk = T.tema === 'dbs' || T.tema === 'tasarruf' || T.tema === 'sb';   // tek renkli temalarda seçilen renk ana renktir
-    const pdf = await PDFDocument.create(); pdf.setTitle(`${T.baslik || ''} ${T.alt || ''}`.trim() || 'Sorular'); pdf.setAuthor('Ümraniye Merkez Anadolu Lisesi'); pdf.setCreator('UMAL Okul Paneli · Soru Hazırla');
+    const pdf = await PDFDocument.create(); pdf.setTitle(`${T.baslik || ''} ${T.alt || ''}`.trim() || 'Sorular'); pdf.setAuthor('Ümraniye Merkez Anadolu Lisesi'); pdf.setCreator('UMAL Okul Paneli · Test Hazırla');
     const yazi = yaziMotoru(pdf);
     const logo = await pdf.embedPng(new Uint8Array(await (await fetch(logoUrl)).arrayBuffer()));
     const VURGU = T.renk, KOYU = sb ? '#000000' : (tekRenk ? T.renk : TM.koyu), GRI = sb ? '#555555' : '#5d6f88', IZGARA = sb ? '#bdbdbd' : acik(VURGU === '#000000' ? '#5d6f88' : VURGU, .78), ACIK = sb ? '#ffffff' : acik(VURGU, .9);
