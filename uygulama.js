@@ -92,9 +92,8 @@
     const { data: rol, error } = await sb.rpc('umal_benim_rolum');
     if (error || !rol) {
       girisGoster();
-      $('#girisBilgi').textContent = error ? 'Sunucuya ulaşılamadı: ' + hataYaz(error) : 'Bu e-postanın panele erişimi yok. Okul yönetiminden eklenmenizi isteyin.';
-      await sb.auth.signOut({ scope: 'local' });
-      return;
+      if (error) { $('#girisBilgi').textContent = 'Sunucuya ulaşılamadı: ' + hataYaz(error); await sb.auth.signOut({ scope: 'local' }); return; }
+      erisimIste(); return;   // K-684: e-posta kodla doğrulandı; adını yazıp erişim ister, idare tek dokunuşla onaylar
     }
     D.rol = rol;
     $('#giris').classList.add('gizli');
@@ -105,6 +104,13 @@
     menuKur();
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
+    if (rol === 'bas') erisimRozet();
+  }
+  // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
+  async function erisimRozet() {
+    try { const { count } = await sb.from('umal_erisim_talep').select('eposta', { count: 'exact', head: true });
+      const m = document.querySelector('.menu-oge[data-b="ogretmenler"] .mad'); if (m) m.innerHTML = 'Öğretmenler' + (count ? ` <span class="mk-sayi">${count}</span>` : ''); } catch (e) {}
+    clearTimeout(erisimRozet.z); erisimRozet.z = setTimeout(erisimRozet, 60000);
   }
   // K-464: DersMap mesaj kaydında veri.tur ister; K-457 komutu yazmıyordu → DersMap paneli "Yüklenemedi". Eski kayıtlar burada tamamlanır.
   async function komutOnar() {
@@ -112,6 +118,29 @@
       const { data } = await sb.from('umal_mesajlar').select('id,veri').eq('tur', 'komut').like('id', 'yk-%');
       for (const r of data || []) if (r.veri && !r.veri.tur) await sb.from('umal_mesajlar').update({ veri: Object.assign({}, r.veri, { tur: 'komut' }) }).eq('id', r.id);
     } catch (e) { console.warn('komut onar', e); }
+  }
+  function erisimIste() {
+    $('#adim1').classList.add('gizli'); $('#adim2').classList.add('gizli');
+    let k = $('#erisimK'); if (!k) { k = document.createElement('div'); k.id = 'erisimK'; $('#girisBilgi').before(k); }
+    k.classList.remove('gizli');
+    k.innerHTML = `<div class="er-bas"><b>Hoş geldiniz!</b><span>${esc(D.eposta)} henüz panele eklenmemiş. Adınızı ve soyadınızı yazıp <b>Erişim İste</b>'ye basın; okul idaresi tek dokunuşla onaylar.</span></div>
+      <label for="erAd">Adınız Soyadınız</label><input id="erAd" maxlength="80" placeholder="Ör. Ayşe Yılmaz" autocomplete="name">
+      <button id="erGonder" class="birincil">Erişim İste</button><button id="erCik" class="ikincil">Başka e-posta</button>`;
+    $('#girisBilgi').textContent = '';
+    const cik = async () => { await sb.auth.signOut({ scope: 'local' }); k.classList.add('gizli'); girisGoster(); };
+    $('#erCik').onclick = cik;
+    $('#erAd').onkeydown = ev => { if (ev.key === 'Enter') $('#erGonder').click(); };
+    $('#erGonder').onclick = async () => {
+      const ad = $('#erAd').value.replace(/\s+/g, ' ').trim(); if (ad.length < 3) { $('#girisBilgi').textContent = 'Adınızı ve soyadınızı yazın.'; return; }
+      $('#erGonder').disabled = true; $('#girisBilgi').textContent = 'Gönderiliyor…';
+      const { data, error } = await sb.rpc('umal_erisim_iste', { p_ad: ad }); $('#erGonder').disabled = false;
+      if (error) { $('#girisBilgi').textContent = /umal_erisim_iste|function/.test(error.message || '') ? 'Erişim isteği şu an alınamıyor; okul idaresine haber verin.' : 'Gönderilemedi: ' + hataYaz(error); return; }
+      if (data && data.zaten) { k.classList.add('gizli'); return basla(); }
+      if (!data || !data.ok) { $('#girisBilgi').textContent = (data && data.hata) || 'Gönderilemedi.'; return; }
+      k.innerHTML = `<div class="er-bas ok"><b>✓ İsteğiniz idareye ulaştı</b><span>Onaylanınca bu adresten aynı şekilde (e-posta koduyla) girebilirsiniz. Bu sayfayı kapatabilirsiniz.</span></div><button id="erTekrar" class="ikincil">Onaylandı mı? Yeniden dene</button>`;
+      $('#erTekrar').onclick = () => { k.classList.add('gizli'); basla(); };
+    };
+    setTimeout(() => $('#erAd') && $('#erAd').focus(), 50);
   }
   function girisGoster() {
     $('#uygulama').classList.add('gizli');
@@ -3012,6 +3041,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const yYukle = async () => { const r = await sb.from('umal_yoneticiler').select('eposta,rol'); yRol = new Map((r.data || []).map(x => [x.eposta, x.rol || 'yonetici'])); };
     const rolu = ep => yRol.get(ep) || 'ogretmen';
     let L = await yukle(); await yYukle();
+    let IST = []; const istYukle = async () => { if (!['bas', 'yonetici'].includes(D.rol)) return; try { const r = await sb.from('umal_erisim_talep').select('*').order('zaman'); IST = r.error ? [] : (r.data || []); } catch (e) { IST = []; } }; await istYukle();   // K-684
     const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
     const rolYaz = async (ep, rol) => {
       if (rol === 'ogretmen') { const { error } = await sb.from('umal_yoneticiler').delete().eq('eposta', ep); return error; }
@@ -3019,12 +3049,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const ciz = () => {
       const T = L.concat(yalnizY());
-      $('#icerik').innerHTML = `<h1>Öğretmenler</h1><div class="og-izgara">
+      $('#icerik').innerHTML = `<h1>Öğretmenler</h1>${IST.length ? `<div class="kart er-liste"><b class="neon">Erişim istekleri · ${IST.length}</b><span class="soluk kucuk"> E-posta koduyla doğrulanmış adresler. Onaylayınca öğretmen olarak eklenir.</span>${IST.map(x => `<div class="er-satir"><div><b>${esc(baslik(x.ad))}</b><small>${esc(x.eposta)} · ${esc(new Date(x.zaman).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small></div><button class="birincil" data-eron="${esc(x.eposta)}">Onayla</button><button class="bag kirmizi" data-erred="${esc(x.eposta)}">Reddet</button></div>`).join('')}${IST.length > 1 ? '<div style="text-align:right;margin-top:8px"><button class="ikincil" data-eron="*">Hepsini onayla</button></div>' : ''}</div>` : ''}<div class="og-izgara">
         <div class="kart"><b class="neon">Kullanıcı ekle</b><div class="og-rol" id="ogRol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip ${yeniRol === k ? 'secili' : ''}" data-yrol="${k}">${a}</button>`).join('')}</div>
           <p class="soluk kucuk">${{ ogretmen: 'Öğretmen: yalnız <b class="neon">Test Hazırla</b> ve <b class="neon">Testler</b>; öğrenci, sınav, anket ve tahta bilgilerine erişemez.', rehberlik: 'Rehberlik: Kim Nerede, Anketler, <b class="neon">Rehberlik</b> (mahrem form cevapları dahil) ve Öğrenci Girişi kodları.', yonetici: 'İdare: Kim Nerede, Tahta Kontrol, Sınav, Nöbet, Anketler, Disiplin; rehberlik cevaplarını görmez.' }[yeniRol]} Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Panele e-postalarına gelen kodla girerler.</p>
           <textarea id="ogEkle" rows="7" style="width:100%" placeholder="Ad Soyad ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
         <div class="kart"><b class="neon">Kullanıcılar · ${T.length}</b><div class="satirlar" style="margin-top:10px">${T.length ? T.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + esc(r.ekleyen) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
           <div class="og-rol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz kullanıcı eklenmedi.</div>'}</div></div></div>`;
+      $('#icerik').querySelectorAll('[data-eron],[data-erred]').forEach(b => b.onclick = async () => {
+        if (b.dataset.erred) { if (!await onayla(b.dataset.erred + ' isteği reddedilsin mi?')) return; await sb.from('umal_erisim_talep').delete().eq('eposta', b.dataset.erred); await istYukle(); ciz(); return; }
+        const sec = b.dataset.eron === '*' ? IST : IST.filter(x => x.eposta === b.dataset.eron); b.disabled = true;
+        const { error } = await israrla(() => sb.from('umal_ogretmenler').upsert(sec.map(x => Object.assign({ eposta: x.eposta, ekleyen: D.eposta }, adVar ? { ad: baslik(x.ad) } : {})), { onConflict: 'eposta' }));
+        if (error) { b.disabled = false; uyar('Eklenemedi: ' + hataYaz(error)); return; }
+        await sb.from('umal_erisim_talep').delete().in('eposta', sec.map(x => x.eposta)); await istYukle(); L = await yukle(); ciz(); });
       $('#ogEkleBtn').onclick = async () => {
         const M = new Map();   // satır satır: "Ad Soyad e-posta" ya da yalnız e-posta (virgül / noktalı virgülle de ayrılabilir)
         $('#ogEkle').value.split(/[\n;]+/).forEach(sat => {

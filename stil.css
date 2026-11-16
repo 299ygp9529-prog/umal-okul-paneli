@@ -1340,3 +1340,9 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .bs-h:hover { border-color: #b06bff; }
 .bs-h.secili { background: linear-gradient(180deg, #c48bff, #9a55f0); border: 1px solid transparent; box-shadow: 0 0 12px rgba(176,107,255,.45); }
 .bs-h.vardi:not(.secili) { border: 1px solid var(--kirmizi); background: rgba(255,59,78,.08); }
+
+/* K-684: erişim isteği */
+#erisimK { display: flex; flex-direction: column; gap: 8px; } #erisimK label { margin-top: 6px; }
+.er-bas { display: flex; flex-direction: column; gap: 4px; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.4); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.45; } .er-bas b { font-size: 15px; color: var(--neon); } .er-bas.ok { background: rgba(47,191,113,.1); border-color: rgba(47,191,113,.5); } .er-bas.ok b { color: var(--yesil); }
+.er-liste { margin-bottom: 14px; border-color: rgba(34,232,255,.5); }
+.er-satir { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--cizgi); margin-top: 8px; } .er-satir > div { flex: 1; display: flex; flex-direction: column; } .er-satir small { color: var(--soluk); }
