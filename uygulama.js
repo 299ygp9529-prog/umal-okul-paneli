@@ -253,9 +253,15 @@
     ogretmenler: '<circle cx="9" cy="8.500" r="3.200"/><path d="M3 19.500c.5-3.300 2.800-5.300 6-5.300s5.500 2 6 5.300"/><path d="M15.500 5.600a3.200 3.200 0 0 1 0 5.800M17.500 14.600c2 .7 3.200 2.400 3.500 4.900"/>',
     print: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/>',
     notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
-    acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>'
+    acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>',
+    // K-697: Rehberlik'in alt bölümleri (telefonda grup içinde ayrı düğme)
+    rehform: '<rect x="5" y="4" width="14" height="17" rx="2.500"/><path d="M9 4V3h6v1M8.500 9.500h7M8.500 13h7M8.500 16.500h4"/>',
+    randevu: '<rect x="3.500" y="5" width="13" height="13" rx="2.500"/><path d="M3.500 9.500h13M7 3v4M13 3v4"/><circle cx="17" cy="17" r="4.300"/><path d="M17 15v2.200l1.400 1"/>',
+    yonlendirme: '<path d="M4 13.500l2.500-7.500h11l2.500 7.500V19a1.500 1.500 0 0 1-1.500 1.500h-13A1.500 1.500 0 0 1 4 19v-5.500Z"/><path d="M4 13.500h4.500l1.500 2.500h4l1.500-2.500H20M12 3v6.500M9.500 7L12 9.500 14.500 7"/>',
+    sorutakip: '<path d="M4 20h16M4 20V4"/><path d="M7 15.500l3.500-4 3 2.500L19 7.500"/><circle cx="19" cy="7.500" r="1.200"/>',
+    calismaplan: '<rect x="4" y="3.500" width="16" height="17" rx="2.500"/><path d="M8 8.500l1.300 1.300L11.500 7.500M8 14l1.300 1.300 2.200-2.300M14 9h3M14 14.500h3"/>'
   };
-  const menuIk = id => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
+  const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
     ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['nobet', 'disiplin', 'ozelders', 'acil']]];
@@ -281,17 +287,24 @@
     if (!telefon()) return;
     const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
     const ad = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mad`); return m ? m.innerHTML : esc((BOLUMLER.find(b => b.id === id) || {}).ad || id); };
-    const sayi = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mk-sayi`); return m ? +m.textContent || 0 : 0; };
-    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id))]).filter(x => x[2].length);
+    const msayi = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mk-sayi`); return m ? +m.textContent || 0 : 0; };
+    // K-697: Rehberlik'in sekmeleri (Formlar, Randevular, Yönlendirmeler, Soru takibi, Çalışma planları) grubun içinde ayrı düğmeler
+    const altVar = id => BOLUMLER.some(b => b.id === id && b.roller.includes(D.rol));
+    const ALT = { rehberlik: ['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan'].filter(altVar) };
+    const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
+    const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
+    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);
     const kalan = [...izin].filter(id => !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     const m = menuSay(), sik = [...izin].filter(id => id !== 'acil' && (m[id] || 0) >= 2).sort((x, y) => m[y] - m[x]).slice(0, 3);
-    const kutu = (id, rk) => `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
+    const altMi = id => ALT.rehberlik.length > 1 && ALT.rehberlik.includes(id), n_ = id => { const n = sayi(id); return n ? `<span class="mk-sayi">${n}</span>` : ''; };
+    const kutu = (id, rk) => altMi(id) ? `<button class="tm-oge ${id === D.bolum ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id, ALT_IK[id])}<span>${esc(ALT_AD[id] || (BOLUMLER.find(b => b.id === id) || {}).ad || id)}</span>${n_(id)}</button>`
+      : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = (sik.length ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
-      + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${gruplar.map(([g, rk, L]) => { const n = L.reduce((a, id) => a + sayi(id), 0), ic = L.includes(sec);
+      + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${gruplar.map(([g, rk, L]) => { const n = L.reduce((a, id) => a + sayi(id), 0), ic = L.includes(sec) || L.includes(D.bolum);
         return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${grupIk(g)}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}</div></div>`;
     document.body.classList.add('tm-acik'); window.scrollTo(0, 0); d.scrollTop = 0; d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
     $('#telGeri').classList.toggle('gizli', !G);
