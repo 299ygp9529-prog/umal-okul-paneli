@@ -256,10 +256,30 @@
     acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>'
   };
   const menuIk = id => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
+  // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
+  const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'nobet', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu', 'notlar']],
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'soru', 'testler']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'yonlendir']], ['İdare', '#ff8a8a', ['disiplin', 'ozelders', 'acil']]];
+  const telefon = () => window.matchMedia('(max-width: 760px)').matches;
+  const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
+  const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
+  const menuSayArt = id => { try { const m = menuSay(); m[id] = (m[id] || 0) + 1; localStorage.setItem(menuSayAnahtar(), JSON.stringify(m)); } catch (e) {} };
+  function tumuAc() {
+    const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
+    const ad = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mad`); return m ? m.innerHTML : esc((BOLUMLER.find(b => b.id === id) || {}).ad || id); };
+    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id))]).filter(x => x[2].length);
+    const kalan = [...izin].filter(id => !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
+    const d = document.createElement('div'); d.className = 'tumu-menu'; d.setAttribute('role', 'dialog');
+    d.innerHTML = `<div class="tm-ust"><b>Tüm Bölümler</b><button class="tm-kapat" aria-label="Kapat">✕</button></div>` + gruplar.map(([g, rk, L]) => `<div class="tm-grup" style="--g:${rk}"><div class="tm-bas">${g}</div><div class="tm-izgara">${L.map(id => `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`).join('')}</div></div>`).join('');
+    document.body.appendChild(d); document.body.classList.add('tm-acik');
+    const kapat = () => { d.remove(); document.body.classList.remove('tm-acik'); };
+    d.onclick = ev => { if (ev.target.closest('.tm-kapat')) return kapat(); const b = ev.target.closest('[data-tb]'); if (b) { kapat(); ac(b.dataset.tb); } };
+  }
   function menuKur() {
     const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
-    $('#menu').innerHTML = izinli.filter(b => !b.ust).map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join('');
-    $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
+    let sira = izinli.filter(b => !b.ust);
+    if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
+    $('#menu').innerHTML = '<button class="menu-oge menu-tumu" data-tumu="1"><span class="mad">☰ Tümü</span></button>' + sira.map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join('');
+    $('#menu').onclick = ev => { if (ev.target.closest('[data-tumu]')) return tumuAc(); const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
     const h0 = ['simdi', 'ogrenci'].includes(location.hash.slice(1)) ? 'harita' : location.hash.slice(1);   // eski "Şimdi ders" bağlantıları
     const ilk = (h0 && izinli.find(b => b.id === h0)) || izinli[0];
     ac(ilk.id);
@@ -268,7 +288,7 @@
   function ac(id) {
     const b = BOLUMLER.find(x => x.id === id && x.roller.includes(D.rol));
     if (!b) return;
-    D.bolum = id; location.hash = id;
+    D.bolum = id; location.hash = id; if (telefon()) menuSayArt(b.ust || id);
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
