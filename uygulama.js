@@ -3287,14 +3287,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611152340'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611160700'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611151200');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611152340');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611160700');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
@@ -3745,11 +3745,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const bul = id => E.sinavlar.find(x => x.id === +id);
     // K-626 (v37 OYSS): sınav yapılmayan dersler öneride yok; takvimde olan ders o seviyede yeniden önerilmez
-    const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama/i;
+    const SINAVSIZ = /beden eğitimi|görsel sanatlar|müzik|rehberlik|spor eğitimi|drama|sosyal etkinlik|proje hazırlama|sanat eğitimi/i;
     const dersOneri = v => { const P_ = new Set(); for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) if (h && h.ders && !SINAVSIZ.test(String(h.ders).toLocaleLowerCase(tr)) && !GIZLI.test(dersAnahtar(h.ders))) P_.add(baslik(h.ders));
       const kul = new Set(E.sinavlar.flatMap(x => x.sv[v] ? [x.sv[v].ad, ...Object.values(x.sv[v].fark)].flatMap(a => String(a).split(' / ')) : []).map(a => esAn(v, a))); return [...P_].sort((a, b) => (kul.has(esAn(v, a)) - kul.has(esAn(v, b))) || a.localeCompare(b, tr)); };
     // K-628: ders programı → seviyedeki dersler, öğretmenleri, şubeleri; seçilen ders karta işlenir, sonraki kartlarda çıkmaz
-    const GIZLI = /htde|hedef temelli|rehberlik|müzik/;   // K-664: takvim panelinde hiç görünmez
+    const GIZLI = /htde|hedef temelli|rehberlik|müzik|sanat eğitimi/;   // K-664: takvim panelinde hiç görünmez
     const _prg = new Map(), prgDersler = v => _prg.get(v) || _prg.set(v, _prgDersler(v)).get(v), _prgDersler = v => { const M = new Map();
       for (const s of sinifSv(v)) for (const h of Object.values(((D.program || {}).siniflar || {})[s] || {})) { if (!h || !h.ders || GIZLI.test(dersAnahtar(h.ders)) || SINAVSIZ.test(dersAnahtar(h.ders))) continue;   // K-664: sınavı olmayan dersler (beden/spor, müzik, görsel sanatlar, rehberlik…) panelde hiç görünmez
         const ad = /[a-zçğıöşü]/.test(h.ders) ? String(h.ders).replace(/\s+/g, ' ').trim() : baslik(h.ders), k = dersAnahtar(ad); if (!M.has(k)) M.set(k, { ad, sube: new Map(), sinavsiz: SINAVSIZ.test(k) }); const m = M.get(k);
