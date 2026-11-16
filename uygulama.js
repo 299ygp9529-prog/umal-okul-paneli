@@ -3265,7 +3265,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (m) { sinif = m[1] + '-' + m[2].replace(/[1İ]/, 'I'); continue; }
       const h = W.map(w => nrm(w.t));
       const iNo = h.indexOf('no'), iAd = h.findIndex(x => x === 'ad' || x === 'adı' || x === 'adsoyad'), iTc = h.findIndex(x => /^t\.?c\.?$|kimlik/.test(x)), iDg = h.findIndex(x => x.startsWith('doğum')), iTl = h.findIndex(x => x === 'cep' || x.startsWith('telefon'));
-      if (iNo >= 0 && iAd >= 0 && iTc >= 0) { sut = { no: W[iNo].x, ad: W[iAd].x, tc: W[iTc].x, dg: iDg >= 0 ? W[iDg].x : 1e9, tl: iTl >= 0 ? W[iTl].x : 1e9, sol: Math.max(0, W[iNo].x - (W[iAd].x - W[iNo].x) * .6) }; continue; }
+      if (iNo >= 0 && iAd >= 0 && iTc >= 0) { sut = { no: W[iNo].x, ad: W[iAd].x, tc: W[iTc].x, dg: iDg >= 0 ? W[iDg].x : 1e9, tl: iTl >= 0 ? W[iTl].x : 1e9, sol: Math.max(0, W[iNo].x - (W[iAd].x - W[iNo].x) * .15) }; continue; }
       if (!sut) continue;
       const c = { no: [], ad: [], tc: [], dg: [], tl: [] };
       W.forEach(w => { const x = w.x + (w.g || 0) / 2; if (x < sut.sol) return; const k = x < sut.ad - 4 ? 'no' : x < sut.tc - 4 ? 'ad' : x < sut.dg - 4 ? 'tc' : x < sut.tl - 4 ? 'dg' : 'tl'; c[k].push(w.t); });
@@ -3457,7 +3457,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#gzGTel')) $('#gzGTel').onblur = ev => { ev.target.value = gzTel(ev.target.value) || '05'; };
       if ($('#gzGEkle')) $('#gzGEkle').onclick = () => { const ad = baslik($('#gzGAd').value.replace(/\s+/g, ' ').trim()); if (!ad) return; const tel = gzTel($('#gzGTel').value); G.gorevli.push({ id: Date.now().toString(36), ad, tur: $('#gzGTur').value, tel: tel.length > 4 ? tel : '' }); kaydet(); ciz(); };
       $('#gzDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const bil = $('#gzDosyaBilgi'), yaz = t => { bil.textContent = t; };
-        try { yaz('Okunuyor…'); const L = await gzListeOku(f, yaz); if (!L.length) { yaz('Listede öğrenci bulunamadı'); uyar('Dosyada No / Ad Soyad / T.C. sütunlu bir liste bulunamadı.'); return; }
+        try { yaz('Okunuyor…'); const L = await gzListeOku(f, yaz); const adK = x => String(x || '').toLocaleUpperCase(tr).replace(/[^A-ZÇĞİÖŞÜ]/g, ''), OG = D.ogrenciler || [];
+          L.forEach(o => { if (OG.some(x => String(x.no) === o.no && (!o.sinif || x.sinif === o.sinif))) return; const m = OG.find(x => adK(x.ad) === adK(o.ad) && (!o.sinif || x.sinif === o.sinif)); if (m) { o.no = String(m.no); o.sinif = o.sinif || m.sinif; } });   // yazı tanımada yanlış okunan numara: okul listesinden adla düzelt
+          if (!L.length) { yaz('Listede öğrenci bulunamadı'); uyar('Dosyada No / Ad Soyad / T.C. sütunlu bir liste bulunamadı.'); return; }
           LST = { ad: f.name.replace(/\.[^.]+$/, ''), liste: L, zaman: Date.now() }; await lstKaydet(); const hat = L.filter(x => x.tc && !gzTcGecerli(x.tc)).length;
           uyar(`${L.length} öğrenci okundu.${hat ? ` ${hat} öğrencinin T.C. kimlik numarası hatalı görünüyor (listede işaretli).` : ''} Kontrol edip "Otomatik yerleştir"e basabilirsiniz.`); ciz(); }
         catch (e) { yaz('Okunamadı'); uyar('Dosya okunamadı: ' + (e.message || e)); } };
