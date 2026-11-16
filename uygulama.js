@@ -264,7 +264,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['nobet', 'disiplin', 'ozelders', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['nobet', 'disiplin', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -294,7 +294,7 @@
     const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
     const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);
-    const kalan = [...izin].filter(id => !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
+    const kalan = [...izin].filter(id => id !== 'ozelders' && !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     const m = menuSay(), sik = [...izin].filter(id => id !== 'acil' && (m[id] || 0) >= 2).sort((x, y) => m[y] - m[x]).slice(0, 3);
     const altMi = id => ALT.rehberlik.length > 1 && ALT.rehberlik.includes(id), n_ = id => { const n = sayi(id); return n ? `<span class="mk-sayi">${n}</span>` : ''; };
     const kutu = (id, rk) => altMi(id) ? `<button class="tm-oge ${id === D.bolum ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id, ALT_IK[id])}<span>${esc(ALT_AD[id] || (BOLUMLER.find(b => b.id === id) || {}).ad || id)}</span>${n_(id)}</button>`
@@ -305,7 +305,7 @@
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = (sik.length ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
       + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${gruplar.map(([g, rk, L]) => { const n = L.reduce((a, id) => a + sayi(id), 0), ic = L.includes(sec) || L.includes(D.bolum);
-        return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${grupIk(g)}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}</div></div>`;
+        return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${grupIk(g)}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}${izin.has('ozelders') ? `<button class="tm-gk tm-genis ${D.bolum === 'ozelders' ? 'secili' : ''}" style="--g:#ffd166" data-tb="ozelders">${menuIk('ozelders')}<span class="tm-gad">${ad('ozelders')}</span><small>Okul dışı özel ders öğrencileri</small>${sayi('ozelders') ? `<span class="mk-sayi">${sayi('ozelders')}</span>` : ''}</button>` : ''}</div></div>`;   // K-698: Özel Ders ana ekranda, en altta tam genişlik
     document.body.classList.add('tm-acik'); window.scrollTo(0, 0); d.scrollTop = 0; d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
     $('#telGeri').classList.toggle('gizli', !G);
     const h = G ? '#bolumler-' + grup : '#bolumler'; if (gecmis !== false && location.hash !== h) history.pushState(null, '', h);

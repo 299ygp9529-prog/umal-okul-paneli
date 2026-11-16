@@ -1390,3 +1390,9 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .og-zum { order: -1; } .zm-izgara { grid-template-columns: 1fr 1fr; } .zm-k { padding: 12px 38px 12px 12px; } .zm-k b { font-size: 14px; } }
 /* K-697: telefonda Rehberlik sekmeleri ana ekrandaki Rehberlik grubunda; sayfa üstündeki sekme şeridi gizli */
 @media (max-width: 760px) { .reh-sekme { display: none !important; } }
+/* K-698: Özel Ders ana ekranın en altında tam genişlik kart */
+@media (max-width: 760px) {
+  .tm-gk.tm-genis { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; column-gap: 14px; align-items: center; min-height: 84px; }
+  .tm-gk.tm-genis .mi { grid-row: 1 / 3; }
+  .tm-gk.tm-genis .tm-gad { align-self: end; } .tm-gk.tm-genis small { align-self: start; }
+}
