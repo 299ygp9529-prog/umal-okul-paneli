@@ -3554,7 +3554,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return L;
       };
       const gunAd = G.tarih ? new Date(G.tarih + 'T12:00').toLocaleDateString(tr, { weekday: 'long' }) : '';
-      // K-711: Al Bayrak bileti — Çanakkale desenli (Conkbayırı sırtında ilerleyen Mehmetçikler, mermi taşıyan er, Şehitler Abidesi, Boğaz dalgaları)
+      // K-711: Al Bayrak bileti — Çanakkale desenli (Conkbayırı sırtları, bayrak, Şehitler Abidesi, Boğaz dalgaları)
       const logo = new URL('okul-logo.png', location.href).href;
       const harita = (o, k) => gzPlan(o.kapasite).map(r => r.map((s, j) => j === 2 && !(s && s.n) ? '<i class="b"></i>' : !s ? '<i class="b"></i>' : s.kapi ? '<i class="k"></i>' : `<i class="${s.n === k ? 's' : ''}"></i>`).join('')).join('');
       const bilet = ({ p, k, o, yer }) => `<div class="t"><div class="bayrak"><b>ÇANAKKALE GEÇİLMEZ</b>${BL_AY}<span>1915</span></div>
@@ -3646,16 +3646,8 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
 .harita i{height:1.9mm;border-radius:.4mm;background:#333}.harita i.b{background:none}.harita i.s{background:#ff3b47}.harita i.k{background:none;border:.2mm dashed #444}`;
   const BL_DESEN = `<svg class="desen" viewBox="0 0 500 293" preserveAspectRatio="xMaxYMax slice">
  <defs>
-  <g id="asker"><!-- kabalaklı, süngülü tüfekli, ileri atılan asker -->
-   <ellipse cx="0" cy="-30" rx="3.1" ry="2.3"/><path d="M-3 -29.5q3-2.5 6 0v1.2h-6z"/><circle cx=".2" cy="-26.6" r="2.3"/>
-   <path d="M-2.6 -24l4.4-.4 2.6 9.4-2 .6-1.6-4-1 4.6 4.8 9.6-2.4 1.2-5.2-8.6-2.6 8.6-2.6-.6 2.4-11.2z"/>
-   <path d="M1 -21.5l12 -9.5 .6.8-12 9.6z"/><path d="M13 -31l3.4-2.8.4.5-3.4 2.9z"/>
-  </g>
-  <g id="seyit"><!-- sırtında top mermisi taşıyan er -->
-   <circle cx="0" cy="-27" r="2.4"/><path d="M-3 -29q3-3 6 0v1h-6z"/>
-   <path d="M-3 -24.5q3.5-1.5 6.5 1l1.2 9-2 .4-.6-3-1.6 3.6 3.2 11.4-2.6.6-3.6-9.6-1.8 9.8-2.6-.4 2.2-13z"/>
-   <rect x="-6.5" y="-36" width="5.6" height="17" rx="2.8" transform="rotate(-24 -3.7 -27.5)"/>
-  </g>
+  
+  
   <g id="abide"><!-- Şehitler Abidesi: basamaklı kaide, dört ayak, kare tabla -->
    <path d="M-30 0h60v-3h-60zM-25 -3h50v-3.5h-50zM-20 -6.5h40v-3.5h-40z"/>
    <path d="M-17 -10v-34h7v34zM-6 -10v-34h4.5v34zM1.5 -10v-34h4.5v34zM10 -10v-34h7v34z"/>
@@ -3668,11 +3660,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
  <path d="M0 262 C40 252 80 250 120 252 C170 254 200 236 240 230 C280 224 300 214 335 206 C370 198 392 186 420 190 C450 194 470 210 500 206 V293 H0z" fill="#e30a17" fill-opacity=".07"/>
  <path d="M0 274 C60 266 110 270 160 268 C210 266 250 254 300 252 C350 250 400 240 440 244 C465 246 485 250 500 248 V293 H0z" fill="#7a1b1b" fill-opacity=".08"/>
  <g fill="none" stroke="#1f3b6e" stroke-opacity=".13" stroke-width="1.2"><path d="M0 280c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/><path d="M-18 288c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/></g>
- <g fill="#5a1414" fill-opacity=".27">
-  <use href="#seyit" transform="translate(258 240) scale(1.3)"/>
-  <use href="#asker" transform="translate(286 233) scale(1.2)"/><use href="#asker" transform="translate(312 225) scale(1.15)"/><use href="#asker" transform="translate(338 216) scale(1.25)"/>
-  <use href="#asker" transform="translate(362 209) scale(1.12)"/><use href="#asker" transform="translate(386 201) scale(1.2)"/>
- </g>
+ 
  <g transform="translate(408 146)"><rect x="0" y="0" width="1.3" height="42" fill="#7a1b1b" fill-opacity=".35"/><g transform="translate(1.3 0)"><rect width="22" height="14.6" fill="#e30a17" fill-opacity=".55"/><circle cx="7.9" cy="7.3" r="4.4" fill="#fff"/><circle cx="9.1" cy="7.3" r="3.5" fill="#f08a91"/><path fill="#fff" d="M13.7 7.3l-3.5-1.15 2.2 3V5.45l-2.2 3z"/></g></g>
  <g fill="#5a1414" fill-opacity=".22"><use href="#abide" transform="translate(452 246) scale(1.3)"/></g>
 </svg>`;
