@@ -3260,14 +3260,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const GZ_SINIF_RE = /^\s*(9|1[0-2])\s*[-–/.]?\s*([A-ZÇĞİÖŞÜ1Iİ])\b/;
   function gzSatirlardan(satirlar) {   // satirlar: [{metin, sozcukler:[{t,x}]}] sayfa sırasıyla; başlık satırından sütun sınırları
     const L = []; let sinif = '', sut = null;
-    const nrm = s => s.toLocaleLowerCase('tr').replace(/[^a-zçğıöşü.]/g, '');
+    const nrm = s => s.toLocaleLowerCase('tr').replace(/[^a-zçğıöşü.]/g, '').replace(/^\.+|\.+$/g, '').replace(/^(no|ad)\.$/, '$1');
     for (const st of satirlar) {
       const W = st.sozcukler, m = st.metin.match(/^\s*(9|1[0-2])\s*[-–]\s*([A-ZÇĞİÖŞÜ1Iİ])\s*[-–·•.]?\s*\d+\s*ki/);
       if (m) { sinif = m[1] + '-' + m[2].replace(/[1İ]/, 'I'); continue; }
       const h = W.map(w => nrm(w.t));
-      const iNo = h.indexOf('no'), iAd = h.findIndex(x => x === 'ad' || x === 'adı' || x === 'adsoyad'), iTc = h.findIndex(x => /^t\.?c\.?$|kimlik/.test(x)), iDg = h.findIndex(x => x.startsWith('doğum')), iTl = h.findIndex(x => x === 'cep' || x.startsWith('telefon'));
+      const iNo = h.findIndex(x => x === 'no' || x === 'numara' || x === 'okulno'), iAd = h.findIndex(x => /^ad(ı)?(soyad(ı)?)?$/.test(x)), iTc = h.findIndex(x => /^t\.?c\.?$|kimlik/.test(x)), iDg = h.findIndex(x => x.startsWith('doğum')), iTl = h.findIndex(x => x === 'cep' || x.startsWith('telefon'));
       if (iNo >= 0 && iAd >= 0 && iTc >= 0) { sut = { no: W[iNo].x, ad: W[iAd].x, tc: W[iTc].x, dg: iDg >= 0 ? W[iDg].x : 1e9, tl: iTl >= 0 ? W[iTl].x : 1e9, sol: Math.max(0, W[iNo].x - (W[iAd].x - W[iNo].x) * .15) }; continue; }
-      if (!sut) continue;
+      if (!sut) {   // başlık okunamadıysa satırı kalıptan çöz: [sıra] no Ad Soyad TC doğum telefon
+        const r = st.metin.replace(/[|]/g, ' ').match(/(\d{1,5})\s+([A-Za-zÇĞİÖŞÜçğıöşüâîû][^\d]*?)\s+(\d{8,12})\s*(\d{1,2}[.\/-]?\d{1,2}[.\/-]?\d{2,4})?\s*(.*)$/);
+        if (r) L.push({ no: String(+r[1]), ad: r[2].trim(), sinif, tc: r[3], dogum: r[4] || '', tel: (r[5] || '').trim() });
+        continue;
+      }
       const c = { no: [], ad: [], tc: [], dg: [], tl: [] };
       W.forEach(w => { const x = w.x + (w.g || 0) / 2; if (x < sut.sol) return; const k = x < sut.ad - 4 ? 'no' : x < sut.tc - 4 ? 'ad' : x < sut.dg - 4 ? 'tc' : x < sut.tl - 4 ? 'dg' : 'tl'; c[k].push(w.t); });
       [...c.tc, ...c.dg].some(t => { const d = t.replace(/\D/g, ''); if (d.length >= 19) { c.tc = [d.slice(0, 11)]; c.dg = [d.slice(11, 19)].concat(c.dg.filter(x => x !== t)); return true; } });
@@ -3303,12 +3307,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         [...Y.keys()].sort((a, b) => b - a).forEach(k => { const W = Y.get(k).sort((a, b) => a.x - b.x); satirlar.push({ metin: W.map(w => w.t).join(' '), sozcukler: W }); });
         continue;
       }
-      if (!worker) { ilerle && ilerle('Yazı tanıma hazırlanıyor (ilk seferde biraz sürer)…'); await gzBetik('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'); worker = await window.Tesseract.createWorker('tur'); }
+      if (!worker) { ilerle && ilerle('Yazı tanıma hazırlanıyor (ilk seferde biraz sürer)…'); await gzBetik('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'); worker = await window.Tesseract.createWorker('tur'); await worker.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' }); }
       const v = pg.getViewport({ scale: Math.min(3, 2600 / pg.getViewport({ scale: 1 }).width) }), cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height;
       await pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise;
       ilerle && ilerle(`Sayfa ${i} / ${doc.numPages} okunuyor (yazı tanıma)…`);
       const { data } = await worker.recognize(cv);
-      (data.lines || []).forEach(l => { const W = (l.words || []).map(w => ({ t: w.text, x: w.bbox.x0, g: w.bbox.x1 - w.bbox.x0 })).filter(w => w.t.trim()); if (W.length) satirlar.push({ metin: W.map(w => w.t).join(' '), sozcukler: W }); });
+      // sözcükleri satırlara y konumundan topla (tablo sütunlara bölünse de satır bozulmasın)
+      const Wd = (data.words || (data.lines || []).flatMap(l => l.words || [])).filter(w => w.text && w.text.trim()).map(w => ({ t: w.text, x: w.bbox.x0, g: w.bbox.x1 - w.bbox.x0, y: (w.bbox.y0 + w.bbox.y1) / 2, h: w.bbox.y1 - w.bbox.y0 })).sort((a, b) => a.y - b.y);
+      const gr = []; Wd.forEach(w => { const s_ = gr[gr.length - 1]; if (s_ && Math.abs(s_.y - w.y) < Math.max(6, w.h * .6)) { s_.W.push(w); s_.y = (s_.y * (s_.W.length - 1) + w.y) / s_.W.length; } else gr.push({ y: w.y, W: [w] }); });
+      gr.forEach(s_ => { const W = s_.W.sort((a, b) => a.x - b.x); satirlar.push({ metin: W.map(w => w.t).join(' '), sozcukler: W }); });
     }
     if (worker) await worker.terminate();
     return gzSatirlardan(satirlar);
