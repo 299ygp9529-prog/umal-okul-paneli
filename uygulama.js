@@ -2216,45 +2216,62 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     if (yeniler.length) { await sb.from('umal_rehberlik_yonlendirme').update({ reh_gordu: true }).in('id', yeniler); if (MK.kontrol) setTimeout(MK.kontrol, 2000); }
   }
   // ------------------------------------------------------------------ K-574: Sınav konuları (öğretmen yazar, öğrenci Sınavlarım'da görür)
-  const KN = { gecmis: false, sv: '' };
+  // K-679: konular sınav takvimine bağlı değil — ders programındaki her sınavlı dersin her dönem 2 yazılısı var (1./2. dönem × 1./2. sınav); şimdiden yazılabilir.
+  const KN_SINAVSIZ = /htde|hedef temelli|rehberlik|müzik|beden eğitimi|spor eğitimi|görsel sanatlar|sanat eğitimi|drama|sosyal etkinlik|proje hazırlama/;
+  const knYil = (d = new Date()) => d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;   // eğitim yılı (Ağustos'tan itibaren yeni yıl)
+  const knTkDonem = tk => { const a = String((tk && tk.ad) || '').toLocaleLowerCase('tr'), d = a.match(/(\d)\.\s*dönem/), n = a.match(/dönem\s*(\d)\./);
+    if (d && n) return [d[1], n[1]]; const t = ((tk && tk.sinavlar) || [])[0]; if (!t) return null; const m = +t.tarih.slice(5, 7); return [m >= 8 || m <= 1 ? '1' : '2', d || n ? (n || d)[1] : '1']; };
+  const KN = { donem: null, no: '1', sv: '', benim: null };
   async function sinavKonulari() {
     const [tk, kr, ad] = await Promise.all([takvimAl(),
-      sb.from('umal_sinav_konu').select('*'), sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle()]);
+      sb.from('umal_sinav_konu').select('*'), sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle(), programYukle()]);
     if (kr.error && /umal_sinav_konu/.test(kr.error.message || '')) { $('#icerik').innerHTML = '<div class="kart">Supabase\'de <b>20261114130000_umal_sinav_konu.sql</b> çalıştırılmalı.</div>'; return; }
     if (kr.error) throw kr.error;
-    const K = new Map((kr.data || []).map(x => [x.anahtar, x])), benimAd = (ad.data && ad.data.ad) || '';
-    // sınav × seviye × ad (şube dersi farklıysa ayrı satır)
-    const S_ = [];
-    for (const x of (tk && tk.sinavlar) || []) {
-      const sb_ = ((tk.subeler || []).find(y => y.tarih === x.tarih && y.ders === x.ders) || {}).subeler || {};
-      for (const [sv, a] of Object.entries(x.siniflar || {})) {
-        const adlar = new Map(); Object.entries(sb_).filter(([s]) => s.split('-')[0] === sv).forEach(([s, d]) => { (adlar.get(d) || adlar.set(d, []).get(d)).push(s); });
-        if (!adlar.size) adlar.set(a, []);
-        for (const [d, ss] of adlar) S_.push({ tarih: x.tarih, ders: x.ders, sv, ad: d, siniflar: ss, anahtar: [x.tarih, x.ders, sv, d].join('|') });
-      }
-    }
-    S_.sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders) || (+a.sv) - (+b.sv) || a.ad.localeCompare(b.ad, tr));
-    const bugun = bugunISO();
+    const K = new Map((kr.data || []).map(x => [x.anahtar, x])), benimAd = (ad.data && ad.data.ad) || '', yil = knYil();
+    const bA = s_ => String(s_ || '').toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), ben = bA(benimAd);
+    // ders programı → seviye × ders (sınavsız dersler hariç), şubeler ve öğretmenler
+    const DR = new Map();
+    for (const [sinif, gun] of Object.entries((D.program || {}).siniflar || {})) { const sv = sinif.split('-')[0];
+      for (const h of Object.values(gun || {})) { if (!h || !h.ders) continue;
+        for (const parca of String(h.ders).split(/\s*\/\s*/)) { const adx = /[a-zçğıöşü]/.test(parca) ? parca.replace(/\s+/g, ' ').trim() : baslik(parca), k = dersAnahtar(adx);
+          if (!k || KN_SINAVSIZ.test(k)) continue; const id = sv + '|' + k;
+          if (!DR.has(id)) DR.set(id, { sv, k, ad: adx, subeler: new Set(), og: new Set() }); const r = DR.get(id); r.subeler.add(sinif); (h.ogretmen || []).forEach(o => r.og.add(o)); } } }
+    const L = [...DR.values()].sort((a, b) => (+a.sv) - (+b.sv) || b.subeler.size - a.subeler.size || a.ad.localeCompare(b.ad, tr));
+    const benimMi = r => !!ben && [...r.og].some(o => bA(o) === ben);
+    if (KN.benim === null) KN.benim = L.some(benimMi);
+    const tkD = knTkDonem(tk); if (!KN.donem) { KN.donem = tkD ? tkD[0] : (new Date().getMonth() >= 1 && new Date().getMonth() < 7 ? '2' : '1'); KN.no = tkD && tkD[0] === KN.donem ? tkD[1] : '1'; }
+    // eski (takvime bağlı) kayıtlar: o takvimin dönem/sınavına aynı ders için ön dolgu
+    const ESKI = new Map(); for (const x of kr.data || []) if (!String(x.anahtar).startsWith('D|') && x.konular) ESKI.set(x.seviye + '|' + dersAnahtar(x.ad), x);
+    const anahtar = r => ['D', yil, KN.donem, KN.no, r.sv, r.k].join('|');
+    const kayit = r => K.get(anahtar(r)) || (tkD && tkD[0] === KN.donem && tkD[1] === KN.no ? ESKI.get(r.sv + '|' + r.k) : null) || {};
+    const tkTarih = r => { if (!tkD || tkD[0] !== KN.donem || tkD[1] !== KN.no) return '';
+      for (const x of (tk && tk.sinavlar) || []) { const a = (x.siniflar || {})[r.sv]; if (a && String(a).split(/\s*\/\s*/).some(z => dersAnahtar(z) === r.k)) return new Date(x.tarih + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }); }
+      for (const y of (tk && tk.subeler) || []) for (const a of Object.values(y.subeler || {})) if (String(a).split(/\s*\/\s*/).some(z => dersAnahtar(z) === r.k) && [...r.subeler].some(s_ => (y.subeler || {})[s_])) return new Date(y.tarih + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' });
+      return ''; };
     const ciz = () => {
-      const G = S_.filter(x => (KN.gecmis || x.tarih >= bugun) && (!KN.sv || x.sv === KN.sv)), dolu = S_.filter(x => (K.get(x.anahtar) || {}).konular).length;
-      let gun = '';
-      $('#icerik').innerHTML = `<h1 style="margin-bottom:4px">Sınav Konuları</h1><div class="soluk kucuk" style="margin-bottom:12px">${esc((tk && tk.ad) || 'Ortak yazılı sınavlar')} · ${S_.length} sınav, <span id="knDolu">${dolu}</span> tanesinin konusu yazıldı. Yazdığınız konular öğrencilerin panelinde, Sınavlarım'da o sınavın altında görünür.</div>
-        <div class="cipler"><button class="cip ${!KN.sv ? 'secili' : ''}" data-kv="">Bütün seviyeler</button>${['9', '10', '11', '12'].map(v => `<button class="cip ${KN.sv === v ? 'secili' : ''}" data-kv="${v}" style="border-color:${SEVIYE_RENK[v]}">${v}. sınıflar</button>`).join('')}<button class="cip ${KN.gecmis ? 'secili' : ''}" data-kg="1">Geçmiş sınavları göster</button></div>
-        <div class="kn-liste">${G.length ? G.map(x => { const k = K.get(x.anahtar) || {}, d = new Date(x.tarih + 'T12:00'), h = d.toLocaleDateString(tr, { weekday: 'long', day: 'numeric', month: 'long' }); const bas_ = h !== gun ? `<div class="rv-gun">${esc(h)}</div>` : ''; gun = h;
-          return `${bas_}<div class="kn-kart ${k.konular ? 'dolu' : ''}" style="--sv:${SEVIYE_RENK[x.sv] || '#22e8ff'}"><div class="kn-ust"><span class="kn-sv">${x.sv}</span><b>${esc(x.ad)}</b><span class="soluk kucuk">${esc(x.ders)}${x.siniflar.length ? ' · ' + esc(x.siniflar.join(', ')) : ''}</span>${k.konular ? `<span class="soluk kucuk" style="margin-left:auto">${esc(k.ekleyen_ad || k.ekleyen || '')} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'short' }))}</span>` : '<span class="kn-yok">konu yazılmadı</span>'}</div>
-            <textarea rows="${k.konular ? Math.min(8, 2 + (k.konular.match(/\n/g) || []).length) : 2}" maxlength="2000" data-ka="${esc(x.anahtar)}" placeholder="Konuları yazın (her satıra bir konu). ör.&#10;Hücre ve organeller&#10;Canlıların sınıflandırılması">${esc(k.konular || '')}</textarea>
-            <div class="kn-alt"><span class="kucuk soluk" data-kb="${esc(x.anahtar)}"></span><button class="birincil" data-kk="${esc(x.anahtar)}">Kaydet</button></div></div>`; }).join('') : '<div class="kart soluk">Gösterilecek sınav yok.</div>'}</div>`;
+      const G = L.filter(r => (!KN.sv || r.sv === KN.sv) && (!KN.benim || benimMi(r))), dolu = L.filter(r => kayit(r).konular).length;
+      let sv_ = '';
+      $('#icerik').innerHTML = `<h1 style="margin-bottom:4px">Sınav Konuları</h1><div class="soluk kucuk" style="margin-bottom:12px">${yil}-${yil + 1} eğitim yılı · her dersin her dönem 2 yazılısı var; konuları sınav takvimi açıklanmadan da şimdiden yazabilirsiniz. Seçili sınavda ${L.length} dersin <span id="knDolu">${dolu}</span> tanesinin konusu yazıldı. Yazılan konular öğrencilerin panelinde, Sınavlarım'da o sınavın altında görünür.</div>
+        <div class="cipler">${['1', '2'].map(d => `<button class="cip ${KN.donem === d ? 'secili' : ''}" data-kd="${d}">${d}. Dönem</button>`).join('')}<span style="width:14px"></span>${['1', '2'].map(n => `<button class="cip ${KN.no === n ? 'secili' : ''}" data-kn="${n}">${n}. Sınav</button>`).join('')}</div>
+        <div class="cipler">${L.some(benimMi) ? `<button class="cip ${KN.benim ? 'secili' : ''}" data-kb2="1">Benim derslerim</button>` : ''}<button class="cip ${!KN.sv ? 'secili' : ''}" data-kv="">Bütün seviyeler</button>${['9', '10', '11', '12'].map(v => `<button class="cip ${KN.sv === v ? 'secili' : ''}" data-kv="${v}" style="border-color:${SEVIYE_RENK[v]}">${v}. sınıflar</button>`).join('')}</div>
+        <div class="kn-liste">${G.length ? G.map(r => { const k = kayit(r), id = esc(r.sv + '|' + r.k), tar = tkTarih(r), bas_ = r.sv !== sv_ ? `<div class="rv-gun" style="color:${SEVIYE_RENK[r.sv]}">${r.sv}. sınıflar</div>` : ''; sv_ = r.sv;
+          const sb_ = [...r.subeler].sort(sinifSira).map(s_ => s_.split('-')[1]).join(', ');
+          return `${bas_}<div class="kn-kart ${k.konular ? 'dolu' : ''}" style="--sv:${SEVIYE_RENK[r.sv] || '#22e8ff'}"><div class="kn-ust"><span class="kn-sv">${r.sv}</span><b>${esc(r.ad)}</b><span class="soluk kucuk">${KN.donem}. Dönem ${KN.no}. Sınav · ${esc(sb_)}${tar ? ' · ' + esc(tar) : ''}</span>${k.konular ? `<span class="soluk kucuk" style="margin-left:auto">${esc(k.ekleyen_ad || k.ekleyen || '')} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'short' }))}</span>` : '<span class="kn-yok">konu yazılmadı</span>'}</div>
+            <textarea rows="${k.konular ? Math.min(8, 2 + (k.konular.match(/\n/g) || []).length) : 2}" maxlength="2000" data-ka="${id}" placeholder="Konuları yazın (her satıra bir konu). ör.&#10;Hücre ve organeller&#10;Canlıların sınıflandırılması">${esc(k.konular || '')}</textarea>
+            <div class="kn-alt"><span class="kucuk soluk" data-kbl="${id}"></span><button class="birincil" data-kk="${id}">Kaydet</button></div></div>`; }).join('') : `<div class="kart soluk">${L.length ? 'Bu seçimde ders yok.' : 'Ders programı yüklenmemiş; Ders Programı bölümünden yükleyin.'}</div>`}</div>`;
     };
     $('#icerik').onclick = async ev => {
       const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.kd) { KN.donem = b.dataset.kd; ciz(); return; }
+      if (b.dataset.kn) { KN.no = b.dataset.kn; ciz(); return; }
+      if (b.dataset.kb2) { KN.benim = !KN.benim; ciz(); return; }
       if (b.dataset.kv != null) { KN.sv = b.dataset.kv; ciz(); return; }
-      if (b.dataset.kg) { KN.gecmis = !KN.gecmis; ciz(); return; }
-      if (b.dataset.kk) { const x = S_.find(y => y.anahtar === b.dataset.kk), t = document.querySelector(`textarea[data-ka="${CSS.escape(x.anahtar)}"]`), bil = document.querySelector(`[data-kb="${CSS.escape(x.anahtar)}"]`);
+      if (b.dataset.kk) { const r = DR.get(b.dataset.kk), t = document.querySelector(`textarea[data-ka="${CSS.escape(b.dataset.kk)}"]`), bil = document.querySelector(`[data-kbl="${CSS.escape(b.dataset.kk)}"]`);
         b.disabled = true; bil.textContent = 'Kaydediliyor…';
-        const satir = { anahtar: x.anahtar, tarih: x.tarih, ders: x.ders, seviye: x.sv, ad: x.ad, konular: t.value.trim(), ekleyen: D.eposta, ekleyen_ad: benimAd || null, guncel: new Date().toISOString() };
+        const satir = { anahtar: anahtar(r), tarih: KN.donem === '1' ? `${yil}-09-01` : `${yil + 1}-02-01`, ders: `${KN.donem}. Dönem ${KN.no}. Sınav`, seviye: r.sv, ad: r.ad, konular: t.value.trim(), ekleyen: D.eposta, ekleyen_ad: benimAd || null, guncel: new Date().toISOString() };
         const { error } = await israrla(() => sb.from('umal_sinav_konu').upsert(satir));
         b.disabled = false; if (error) { bil.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; }
-        K.set(x.anahtar, satir); bil.textContent = '✓ Kaydedildi; öğrencilerin panelinde görünür.'; if ($('#knDolu')) $('#knDolu').textContent = S_.filter(z => (K.get(z.anahtar) || {}).konular).length; const kk = t.closest('.kn-kart'); kk.classList.toggle('dolu', !!satir.konular); const y_ = kk.querySelector('.kn-yok, .kn-ust > .soluk.kucuk:last-child'); if (y_) { y_.className = 'soluk kucuk'; y_.style.marginLeft = 'auto'; y_.textContent = satir.konular ? (benimAd || 'Siz') + ' · şimdi' : 'konu yazılmadı'; } }
+        K.set(satir.anahtar, satir); bil.textContent = satir.konular ? '✓ Kaydedildi; öğrencilerin panelinde görünür.' : '✓ Kaydedildi.'; if ($('#knDolu')) $('#knDolu').textContent = L.filter(z => kayit(z).konular).length; const kk = t.closest('.kn-kart'); kk.classList.toggle('dolu', !!satir.konular); const y_ = kk.querySelector('.kn-yok, .kn-ust > .soluk.kucuk:last-child'); if (y_) { y_.className = satir.konular ? 'soluk kucuk' : 'kn-yok'; y_.style.marginLeft = satir.konular ? 'auto' : ''; y_.textContent = satir.konular ? (benimAd || 'Siz') + ' · şimdi' : 'konu yazılmadı'; } }
     };
     ciz();
   }
