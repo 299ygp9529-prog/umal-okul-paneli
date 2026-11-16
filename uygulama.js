@@ -3818,6 +3818,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     ciz();
   }
   window.UmalAyTakvimi = ayTakvimi;
+  // K-682: her takvim dönem/sınav anahtarıyla da saklanır (öğrenci 1. ve 2. sınavları ayrı görür): sinav_takvimi:yıl:dönem:sınav
+  function tkAnahtar(tk) { const a = String((tk && tk.ad) || '').toLocaleLowerCase(tr), d = a.match(/(\d)\.\s*dönem/), n = a.match(/dönem\s*(\d)\./), t0 = ((tk && tk.sinavlar) || []).map(x => x.tarih).sort()[0];
+    if (!t0) return null; const dt = new Date(t0 + 'T12:00'), m = dt.getMonth(), yil = m >= 7 ? dt.getFullYear() : dt.getFullYear() - 1;
+    const dn = d ? d[1] : (m >= 7 || m === 0 ? '1' : '2'), no = n ? n[1] : ((m >= 10 && dt.getDate() > 20) || m === 11 || m === 0 || (m >= 4 && m <= 5) ? '2' : '1'); return `sinav_takvimi:${yil}:${dn}:${no}`; }
+  async function tkArsivYaz(tk) { const k = tkAnahtar(tk); if (!k) return; try { await sb.from('umal_ayarlar').upsert({ anahtar: k, deger: JSON.stringify(tk) }, { onConflict: 'anahtar' }); } catch (e) {} }
   async function takvimAl() {   // panelde düzenlenen takvim (umal_ayarlar) → yoksa sinav-takvimi.json
     try { const { data, error } = await sb.rpc('umal_sinav_takvimi_al'); if (!error && data && Array.isArray(data.sinavlar)) return data; } catch (e) {}
     try { const r = await fetch('sinav-takvimi.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-store' }); if (r.ok) return await r.json(); } catch (e) {}
@@ -3937,6 +3942,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       bil.className = 'kucuk soluk'; bil.textContent = 'Kaydediliyor…';
       const { error } = await israrla(() => sb.from('umal_ayarlar').upsert({ anahtar: 'sinav_takvimi', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' }));
       if (error) return hata('Kaydedilemedi: ' + hataYaz(error));
+      tkArsivYaz(yeni);
       degisti = false; await takvim();
       const u = document.querySelector('#icerik .ust'); if (u) u.insertAdjacentHTML('beforeend', '<span class="yeşil kucuk" style="align-self:center">✓ Takvim kaydedildi; Kelebek, Sınav Konuları ve öğrenci paneli bu takvimi kullanır.</span>');
     };
@@ -4314,7 +4320,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     if ($('#snKaydet')) $('#snKaydet').onclick = async () => { const bl = $('#snBilgi'); bl.className = 'kucuk soluk'; bl.textContent = 'Kaydediliyor…';
       const yeni = Object.assign({}, tk, { duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) });
       const { error } = await israrla(() => sb.from('umal_ayarlar').upsert({ anahtar: 'sinav_takvimi', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' }));
-      if (error) { bl.className = 'kucuk kirmizi'; bl.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; } degisti = false; bl.className = 'kucuk yeşil'; bl.textContent = '✓ Kaydedildi; öğrenci paneli de bu senaryoları gösterir.'; };
+      if (error) { bl.className = 'kucuk kirmizi'; bl.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; } tkArsivYaz(yeni); degisti = false; bl.className = 'kucuk yeşil'; bl.textContent = '✓ Kaydedildi; öğrenci paneli de bu senaryoları gösterir.'; };
     $('#snPdf').onclick = () => {
       const logo = new URL('okul-logo.png', location.href).href, y = $('#snYil').value.trim(), dn = $('#snDonem').value, sn = $('#snSinav').value;
       const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Senaryolar</title><style>@page{size:A4;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -4404,7 +4410,7 @@ td{border:.3mm solid #c9d3e4;padding:2.4mm 2mm;text-align:center}td:first-child{
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
               <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
-              <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${yonetir ? `<button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`;; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
+              <button class="tk-gel ${G.length ? 'var' : ''}" data-gel="${esc(m.asil)}">${G.length} öğrenci</button>${(m.ek || []).length ? `<span class="tk-gel var" title="${esc((m.ek || []).map(n => { const o = D.ogrenciler.find(x => x.no === n); return o ? baslik(o.ad) + ' (' + o.sinif + ')' : n; }).join(', '))}">+${m.ek.length} tanımlı</span>` : ''}${yonetir ? `<button class="bag" data-mzogr="${esc(m.id)}" title="Bu mazeret sınavını belirli öğrencilere tanımla">+ Öğrenci</button><button class="bag kirmizi" data-mzsil="${esc(m.id)}" title="Sil">✕</button>` : ''}</div>${acik === m.asil ? liste(m.asil) : ''}`; }).join('')}</div>` : '<div class="soluk">Henüz mazeret sınavı eklenmedi.</div>'}
           ${yonetir ? '<div class="soluk kucuk" style="margin-top:10px">Eklemek için Tamamlananlar\'da gelmeyeni olan sınavın yanındaki "+ Mazeret" düğmesine dokunun.</div>' : ''}</div>`
         + (tk.bilgi ? `<div class="kart" style="border-left:4px solid var(--neon,#22b8d6)"><b class="neon kucuk" style="letter-spacing:.04em">BİLGİ NOTU</b><div style="margin-top:6px;white-space:pre-line">${esc(tk.bilgi)}</div></div>` : '');
       tkSigdir();
@@ -4432,6 +4438,11 @@ td{border:.3mm solid #c9d3e4;padding:2.4mm 2mm;text-align:center}td:first-child{
           mazeret.push({ id: Date.now().toString(36), asil: k, tarih: t, saat: $('#mzSaat').value.trim(), yer: $('#mzYer').value.trim(), kim: D.eposta, zaman: Math.floor(Date.now() / 1000) });
           $('#pencere').classList.add('gizli'); await kaydetMazeret(); ciz(); };
         return; }
+      const mo = ev.target.closest('[data-mzogr]'); if (mo) { const m = mazeret.find(z => z.id === mo.dataset.mzogr); if (!m) return;   // K-682: öğrenciye özel mazeret sınavı (yoklamada gelmeyen olmasa da)
+        const v = await girdiAl('Bu mazeret sınavına girecek öğrencilerin okul numaraları (virgülle). Çıkarmak için numarayı silin:', (m.ek || []).join(', ')); if (v === null) return;
+        const L = [...new Set(v.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean))], yok = L.filter(n => !D.ogrenciler.some(o => o.no === n));
+        if (yok.length && !await onayla('Bu numaralar öğrenci listesinde yok: ' + yok.join(', ') + '. Yine de kaydedilsin mi?')) return;
+        m.ek = L; await kaydetMazeret(); ciz(); return; }
       const s = ev.target.closest('[data-mzsil]'); if (s && await onayla('Bu mazeret sınavı silinsin mi?')) { mazeret = mazeret.filter(m => m.id !== s.dataset.mzsil); await kaydetMazeret(); ciz(); }
     };
     $('#tkIc').onclick = tkTik;
