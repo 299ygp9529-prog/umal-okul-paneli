@@ -4348,7 +4348,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const zb = r => tk.zumre[anah(r.ad)] || '';
     const SEC = ['1. senaryo', '2. senaryo', '3. senaryo', '4. senaryo', '5. senaryo', '6. senaryo', 'Merkezi sınav', 'Okul geneli'];
     $('#tkIc').innerHTML = `<div class="kart"><div class="sn-ust"><div><b style="font-size:16px">Türkiye Geneli Sınavlarda Uygulanacak Senaryolar</b><div class="soluk kucuk">Satırlar sınav takvimindeki derslerden gelir. ${yonetir ? 'Hücreye yazın ya da listeden seçin; aynı oturumdaki dersler aynı senaryoyu paylaşır.' : ''}</div></div>
-        <div class="dugmeler" style="margin:0">${yonetir ? '<span class="kucuk" id="snBilgi"></span><button class="ikincil" id="snKaydet">Kaydet</button>' : ''}<button class="birincil" id="snPdf">🖨 Senaryolar · PDF</button></div></div>
+        <div class="dugmeler" style="margin:0">${yonetir ? '<span class="kucuk" id="snBilgi"></span><button class="ikincil" id="snKaydet">Kaydet</button>' : ''}<button class="birincil" id="snPdf">🖨 PDF · İdare (imzalı)</button><button class="ikincil" id="snPdfO">🖨 PDF · Öğrenciler için</button></div></div>
       <div class="sn-ayar"><label>Eğitim öğretim yılı<input id="snYil" value="${esc(yil)}"></label><label>Dönem<select id="snDonem">${['1. Dönem', '2. Dönem'].map(d => `<option ${d === donemV ? 'selected' : ''}>${d}</option>`).join('')}</select></label><label>Sınav<select id="snSinav">${['1. Sınav', '2. Sınav', '3. Sınav'].map(d => `<option ${d === sinavV ? 'selected' : ''}>${d}</option>`).join('')}</select></label></div>
       <datalist id="snListe">${SEC.map(z => `<option value="${z}">`).join('')}</datalist>
       <div style="overflow:auto"><table class="sn-tablo"><thead><tr><th>Ders adı</th>${SV.map(v => `<th style="--sv:${SEVIYE_RENK[v]}">${v}. sınıf</th>`).join('')}<th>Zümre başkanı</th></tr></thead><tbody>
@@ -4366,7 +4366,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const yeni = Object.assign({}, tk, { duzenleyen: D.eposta, duzenleme: Math.floor(Date.now() / 1000) });
       const { error } = await israrla(() => sb.from('umal_ayarlar').upsert({ anahtar: 'sinav_takvimi', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' }));
       if (error) { bl.className = 'kucuk kirmizi'; bl.textContent = 'Kaydedilemedi: ' + hataYaz(error); return; } tkArsivYaz(yeni); sb.from('umal_ayarlar').upsert({ anahtar: 'zumre_baskanlari', deger: JSON.stringify(tk.zumre || {}) }, { onConflict: 'anahtar' }).then(() => {}); degisti = false; bl.className = 'kucuk yeşil'; bl.textContent = '✓ Kaydedildi; öğrenci paneli de bu senaryoları gösterir.'; };
-    $('#snPdf').onclick = () => {
+    const snPdf = imzali => {
       const logo = new URL('okul-logo.png', location.href).href, y = $('#snYil').value.trim(), dn = $('#snDonem').value, sn = $('#snSinav').value;
       const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Senaryolar</title><style>@page{size:A4;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html,body{margin:0;background:#fff}body{font-family:Georgia,'Times New Roman',serif;color:#1d2a44}.sayfa{position:relative;min-height:297mm;padding:16mm 14mm 14mm;overflow:hidden;border:2.2mm solid #fff;outline:.5mm solid #2c3e66;outline-offset:-6mm}
@@ -4382,9 +4382,10 @@ td{border:.3mm solid #c9d3e4;padding:1.9mm 2mm;text-align:center}td:first-child{
 <div class="bant"><span class="c">${esc(dn)}</span><span class="c">${esc(sn)}</span><div class="b">Türkiye Geneli Sınavlarda Uygulanacak Senaryolar</div></div>
 <table><thead><tr><th>DERS ADI</th>${SV.map(v => `<th>${v}. SINIF</th>`).join('')}</tr></thead><tbody>${satir.map(r => `<tr><td>${esc(r.ad.toLocaleUpperCase(tr))}</td>${SV.map(v => { const h = hucre(r, v); return h && h.sen ? `<td>${esc(h.sen)}</td>` : '<td class="bos">—</td>'; }).join('')}</tr>`).join('')}</tbody></table>
 <div class="not">Senaryolar Ortak Yazılı Sınav Sistemi (OYSS) kılavuzuna göre belirlenmiştir.</div>
-${satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><div class="ig">${satir.map(r => `<div class="ik"><small>${esc(r.ad.toLocaleUpperCase(tr))}</small><b>${esc(zb(r))}</b><i>İmza</i></div>`).join('')}</div></div>` : ''}</div></body></html>`;
-      belgeOnizle(belge, 'Senaryolar');
+${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><div class="ig">${satir.map(r => `<div class="ik"><small>${esc(r.ad.toLocaleUpperCase(tr))}</small><b>${esc(zb(r))}</b><i>İmza</i></div>`).join('')}</div></div>` : ''}</div></body></html>`;
+      belgeOnizle(belge, imzali ? 'Senaryolar (imzalı)' : 'Senaryolar');
     };
+    $('#snPdf').onclick = () => snPdf(true); $('#snPdfO').onclick = () => snPdf(false);   // K-686: öğrenciye asılan çıktıda imza alanı yok
     return () => degisti;
   }
   async function takvim() {
