@@ -1,0 +1,76 @@
+// Atlas · Ders Dosyaları Drive köprüsü (K-716)
+// Atlas'ın Google hesabında script.google.com → Yeni proje → bu kodu yapıştırın → Dağıt → Yeni dağıtım →
+// Tür: Web uygulaması · Çalıştıran: Ben · Erişim: Herkes. Çıkan adresi Atlas panelinde Ders Dosyaları › Ayarlar'a yapıştırın.
+// Dosyalar bu hesabın Drive'ında "Ders Dosyaları" klasörüne gider. Yüklemeyi yalnız Atlas paneline giriş yapmış
+// öğretmen / idare yapabilir (oturum Supabase'de doğrulanır). Okuma yalnız bu klasördeki dosyalar içindir.
+
+var SUPA = 'https://ceqdghykweubeaokwadt.supabase.co';
+var ANAHTAR = 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ';   // panelin açık istemci anahtarı (gizli değil)
+var KLASOR_ADI = 'Ders Dosyaları';
+var EN_BUYUK = 25 * 1024 * 1024;
+
+function cikti_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+function kok_() {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty('kok');
+  if (id) { try { var f = DriveApp.getFolderById(id); if (!f.isTrashed()) return f; } catch (e) {} }
+  var it = DriveApp.getFoldersByName(KLASOR_ADI), k = it.hasNext() ? it.next() : DriveApp.createFolder(KLASOR_ADI);
+  p.setProperty('kok', k.getId()); return k;
+}
+function altKlasor_(ad) {
+  var k = kok_(), it = k.getFoldersByName(ad); return it.hasNext() ? it.next() : k.createFolder(ad);
+}
+function bizim_(dosya) {
+  var kok = kok_().getId(), it = dosya.getParents();
+  while (it.hasNext()) { var p = it.next(); if (p.getId() === kok) return true; var u = p.getParents(); while (u.hasNext()) if (u.next().getId() === kok) return true; }
+  return false;
+}
+function kim_(jwt) {
+  if (!jwt) throw new Error('Oturum yok');
+  var r = UrlFetchApp.fetch(SUPA + '/auth/v1/user', { headers: { apikey: ANAHTAR, Authorization: 'Bearer ' + jwt }, muteHttpExceptions: true });
+  if (r.getResponseCode() !== 200) throw new Error('Oturum geçersiz, panele yeniden girin');
+  var eposta = String(JSON.parse(r.getContentText()).email || '').toLowerCase();
+  var r2 = UrlFetchApp.fetch(SUPA + '/rest/v1/rpc/umal_benim_rolum', { method: 'post', contentType: 'application/json', payload: '{}', headers: { apikey: ANAHTAR, Authorization: 'Bearer ' + jwt }, muteHttpExceptions: true });
+  var rol = r2.getResponseCode() === 200 ? JSON.parse(r2.getContentText()) : null;
+  if (['bas', 'yonetici', 'ogretmen', 'rehberlik'].indexOf(rol) < 0) throw new Error('Bu işlem için yetkiniz yok');
+  return { eposta: eposta, rol: rol };
+}
+
+function doPost(e) {
+  try {
+    var q = JSON.parse(e.postData.contents), k = kim_(q.jwt);
+    if (q.op === 'yukle') {
+      var veri = Utilities.base64Decode(q.veri);
+      if (veri.length > EN_BUYUK) throw new Error('Dosya 25 MB\'tan büyük');
+      var ay = Utilities.formatDate(new Date(), 'Europe/Istanbul', 'yyyy-MM');
+      var f = altKlasor_(ay).createFile(Utilities.newBlob(veri, q.mime || 'application/octet-stream', String(q.ad || 'dosya').slice(0, 150)));
+      f.setDescription('atlas:' + k.eposta);
+      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      return cikti_({ ok: true, id: f.getId(), boyut: veri.length });
+    }
+    if (q.op === 'sil') {
+      var s = DriveApp.getFileById(q.id);
+      if (!bizim_(s)) throw new Error('Bu dosya Ders Dosyaları klasöründe değil');
+      var sahip = String(s.getDescription() || '').replace('atlas:', '');
+      if (sahip !== k.eposta && ['bas', 'yonetici'].indexOf(k.rol) < 0) throw new Error('Yalnız yükleyen ya da idare silebilir');
+      s.setTrashed(true); return cikti_({ ok: true });
+    }
+    if (q.op === 'kota') {
+      return cikti_({ ok: true, kullanilan: DriveApp.getStorageUsed(), sinir: DriveApp.getStorageLimit() });
+    }
+    throw new Error('Bilinmeyen işlem');
+  } catch (err) { return cikti_({ ok: false, hata: String(err && err.message || err) }); }
+}
+
+// Öğrenci ve panel dosyayı buradan okur (yalnız Ders Dosyaları klasöründekiler).
+function doGet(e) {
+  try {
+    var id = e && e.parameter && e.parameter.id;
+    if (!id) return cikti_({ ok: true, atlas: 'ders-dosyalari' });
+    var f = DriveApp.getFileById(id);
+    if (!bizim_(f)) throw new Error('Dosya bulunamadı');
+    var b = f.getBlob(), v = b.getBytes();
+    if (v.length > EN_BUYUK) throw new Error('Dosya çok büyük');
+    return cikti_({ ok: true, ad: f.getName(), mime: b.getContentType(), veri: Utilities.base64Encode(v) });
+  } catch (err) { return cikti_({ ok: false, hata: String(err && err.message || err) }); }
+}
