@@ -66,7 +66,7 @@
   const OYSS = new Set(['türk dili ve edebiyatı', 'matematik', 'fizik', 'kimya', 'biyoloji', 'tarih', 'coğrafya', 'din kültürü', 'felsefe', 'ingilizce']);
   const oyssDers = (a, v) => String(v) !== '12' && String(a || '').split(/\s*\/\s*|\n/).some(x => { const k = dersAn(x.replace(/\s*\([^)]*\)\s*$/, '')); return OYSS.has(k) && !(String(v) === '11' && k === 'ingilizce'); });
   // sınav yapılmayan / panelde gösterilmeyen dersler (hedef temelli, rehberlik, müzik, beden-spor, görsel sanatlar, proje…)
-  const sinavsizDers = a => /htde|hedef temelli|rehberlik|müzik|beden eğitimi|spor eğitimi|görsel sanatlar|drama|sosyal etkinlik|sanat eğitimi/.test(dersAn(a));
+  const sinavsizDers = a => /htde|hedef temelli|rehberlik|müzik|beden eğitimi|spor eğitimi|görsel sanatlar|drama|sosyal etkinlik/.test(dersAn(a));
   const satirDers = l => String(l).replace(/\s*\([^)]*\)\s*$/, '').trim();
   // seviyenin sınavlı dersleri: aynı ders tek satır (ad: programdaki ilk yazım)
   function telafiDersleri(v) { const M = new Map(); for (const s of siniflar().filter(x => seviye(x) === v)) for (const d of sinifDersleri(s)) { if (sinavsizDers(d)) continue; const k = dersAn(d); if (!M.has(k)) M.set(k, { ad: d, S: new Set() }); M.get(k).S.add(s); }
