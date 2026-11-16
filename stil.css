@@ -1405,3 +1405,5 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .tm-ic.tek .tm-oge:first-child { grid-column: 1 / -1; flex-direction: row; justify-content: flex-start; gap: 16px; padding: 16px 20px; min-height: 96px; font-size: 16px; text-align: left; }
   .tm-ic .tm-oge.secili { border-color: var(--g); }
 }
+/* K-701: geniş üst kutuda simge + yazı ortada */
+@media (max-width: 760px) { .tm-ic.tek .tm-oge:first-child { justify-content: center; text-align: center; } }
