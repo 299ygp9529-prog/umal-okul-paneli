@@ -3557,9 +3557,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       // K-711: Al Bayrak bileti — Çanakkale desenli (Conkbayırı sırtları, bayrak, Şehitler Abidesi, Boğaz dalgaları)
       const logo = new URL('okul-logo.png', location.href).href;
       const harita = (o, k) => gzPlan(o.kapasite).map(r => r.map((s, j) => j === 2 && !(s && s.n) ? '<i class="b"></i>' : !s ? '<i class="b"></i>' : s.kapi ? '<i class="k"></i>' : `<i class="${s.n === k ? 's' : ''}"></i>`).join('')).join('');
-      const goz = new URL('gezi-goz.jpg', location.href).href;
+      const goz = new URL('gezi-goz.jpg', location.href).href, abide = new URL('gezi-abide.png', location.href).href;
       const bilet = ({ p, k, o, yer }) => `<div class="t"><div class="bayrak"><b>ÇANAKKALE GEÇİLMEZ</b>${BL_AY}<span>1915</span></div>
-        <div class="ana"><img class="goz" src="${goz}" alt="">${BL_DESEN}<div class="ust"><img src="${logo}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${esc(G.ad || 'Çanakkale Gezisi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>')}</h1></div></div>
+        <div class="ana"><img class="goz" src="${goz}" alt="">${BL_DESEN}<img class="abide" src="${abide}" alt=""><div class="ust"><img src="${logo}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${esc(G.ad || 'Çanakkale Gezisi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>')}</h1></div></div>
           <div class="soz">“Ben size taarruzu emretmiyorum, ölmeyi emrediyorum.”<small>MUSTAFA KEMAL · CONKBAYIRI 1915</small></div>
           <div class="yolcu"><small class="e">YOLCU</small><b>${esc(baslik(p.ad))}</b><span>${p.sinif ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</span></div>
           <div class="bilgi"><div><small class="e">TARİH</small><b>${esc(gzTarih(G.tarih) || '—')}${gunAd ? ' ' + esc(gunAd) : ''}</b></div><div><small class="e">KALKIŞ</small><b>${esc(G.saat || '—')}${G.kalkis ? ' · ' + esc(G.kalkis) : ''}</b></div><div><small class="e">GÜZERGÂH</small><b>İstanbul → Çanakkale</b></div></div></div>
@@ -3615,7 +3615,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   const MENU_IK_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="2.200"/><path d="M3.800 10.500l6 1M20.200 10.500l-6 1M12 14.200V20.500"/></svg>';
   const BL_ABIDE = '<svg class="bl-abide" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 86h100"/><path d="M22 86V78h76v8"/><path d="M34 78V26M48 78V26M72 78V26M86 78V26"/><path d="M28 26h64v-9H28z" fill="currentColor" fill-opacity=".25"/><path d="M60 17V6"/><path d="M60 6c6 0 9 2 14 2v7c-5 0-8-2-14-2" fill="currentColor" fill-opacity=".9" stroke="none"/></svg>';
-  const BL_CSS = `.ana > img.goz{position:absolute;right:0;top:0;height:100%;width:64%;object-fit:cover;object-position:40% 48%;opacity:.2;filter:saturate(.75) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%);pointer-events:none}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  const BL_CSS = `.ana > img.abide{position:absolute;right:2.5mm;bottom:0;height:47mm;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent);filter:drop-shadow(0 1mm 2mm rgba(0,0,0,.18))}.ana > img.goz{position:absolute;right:0;top:0;height:100%;width:64%;object-fit:cover;object-position:40% 48%;opacity:.2;filter:saturate(.75) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%);pointer-events:none}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @page{size:A4;margin:8mm}body{margin:0;font-family:Inter,'Segoe UI',Arial,sans-serif}.bl-sayfa{display:flex;flex-direction:column;gap:4mm;page-break-after:always}.bl-sayfa:last-child{page-break-after:auto}
 .t{width:194mm;height:66mm;position:relative;overflow:hidden;border-radius:4mm;border:.3mm solid #ddd;page-break-inside:avoid;display:grid;grid-template-columns:22mm 1fr 52mm;background:#fff;color:#111}
 .bayrak{background:#e30a17;position:relative;display:flex;align-items:center;justify-content:center}
@@ -3624,7 +3624,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 .bayrak b{position:absolute;top:4mm;left:0;right:0;text-align:center;font:700 5.2pt Inter;letter-spacing:.18em;color:#fff;opacity:.85;writing-mode:vertical-rl;transform:rotate(180deg);height:30mm;margin:0 auto}
 .ana{position:relative;padding:5.5mm 7mm 5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#fff 45%,#fbf3ee 100%)}
 .desen{position:absolute;inset:0;pointer-events:none}
-.ana > *:not(.desen):not(.goz){position:relative}
+.ana > *:not(.desen):not(.goz):not(.abide){position:relative}
 .ust{display:flex;align-items:center;gap:3mm}
 .ust img{width:11mm;height:11mm}
 .okul{font:600 6.4pt Inter;letter-spacing:.28em;color:#e30a17}
@@ -3662,8 +3662,8 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
  <path d="M0 274 C60 266 110 270 160 268 C210 266 250 254 300 252 C350 250 400 240 440 244 C465 246 485 250 500 248 V293 H0z" fill="#7a1b1b" fill-opacity=".08"/>
  <g fill="none" stroke="#1f3b6e" stroke-opacity=".13" stroke-width="1.2"><path d="M0 280c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/><path d="M-18 288c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/></g>
  
- <g transform="translate(408 146)"><rect x="0" y="0" width="1.3" height="42" fill="#7a1b1b" fill-opacity=".35"/><g transform="translate(1.3 0)"><rect width="22" height="14.6" fill="#e30a17" fill-opacity=".55"/><circle cx="7.9" cy="7.3" r="4.4" fill="#fff"/><circle cx="9.1" cy="7.3" r="3.5" fill="#f08a91"/><path fill="#fff" d="M13.7 7.3l-3.5-1.15 2.2 3V5.45l-2.2 3z"/></g></g>
- <g fill="#5a1414" fill-opacity=".22"><use href="#abide" transform="translate(452 246) scale(1.3)"/></g>
+
+
 </svg>`;
   const BL_AY = '<svg viewBox="0 0 60 40"><circle cx="22" cy="20" r="12" fill="#fff"/><circle cx="25.2" cy="20" r="9.6" fill="#e30a17"/><path fill="#fff" d="M37.5 20l-9.7-3.15 6 8.25V14.9l-6 8.25z"/></svg>';
   const YL_CSS = `@page { size: A4; margin: 12mm; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #10203a; }
