@@ -257,14 +257,24 @@
   };
   const menuIk = id => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
-  const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'nobet', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu', 'notlar']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'soru', 'testler']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'yonlendir']], ['İdare', '#ff8a8a', ['disiplin', 'ozelders', 'acil']]];
+  const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['nobet', 'disiplin', 'ozelders', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
   const menuSayArt = id => { try { const m = menuSay(); m[id] = (m[id] || 0) + 1; localStorage.setItem(menuSayAnahtar(), JSON.stringify(m)); } catch (e) {} };
   // K-693: telefonda bölüm ekranı ana sayfa gibi; bölümdeyken "‹ Geri" ile bölümlere dönülür (telefondaki gibi), üst şerit yok
-  const GRUP_IK = { Okul: 'harita', 'Sınav': 'sinav', 'Öğrenci': 'giriskod', Rehberlik: 'rehberlik', 'İdare': 'disiplin', 'Diğer': 'print' };
+  // K-695: grup kartlarına adıyla uyumlu çift tonlu simgeler (okul binası, sınav kâğıdı, mezuniyet kepi, pusula, kurum sütunları)
+  const GRUP_SVG = {
+    Okul: '<path d="M2.5 21h19"/><path d="M5 21V10.5l7-4.300 7 4.300V21" fill="currentColor" fill-opacity=".2"/><path d="M12 6.200V2.500l3.600 1.300L12 5.100"/><path d="M10 21v-4.500a2 2 0 0 1 4 0V21"/><circle cx="12" cy="11.300" r="1.600"/><path d="M7.300 14h1.600M15.100 14h1.600M7.300 17.200h1.600M15.100 17.200h1.600"/>',
+    'Sınav': '<path d="M6.500 3h8l4.500 4.500V20a1.500 1.500 0 0 1-1.500 1.500h-11A1.500 1.500 0 0 1 5 20V4.500A1.500 1.500 0 0 1 6.500 3Z" fill="currentColor" fill-opacity=".2"/><path d="M14.500 3v4.500H19"/><path d="M7.800 16.500l2-5.500 2 5.500M8.500 14.800h2.600"/><path d="M15.500 12v3.600M13.700 13.800h3.600"/>',
+    'Öğrenci': '<path d="M2.500 8L12 4l9.500 4-9.500 4-9.500-4Z" fill="currentColor" fill-opacity=".25"/><path d="M6.500 10.200v3.600c1.500 1.200 3.300 1.800 5.500 1.800s4-.6 5.500-1.800v-3.600"/><path d="M21.500 8v5"/><path d="M5.500 21.200c.8-2.600 3.300-4 6.500-4s5.700 1.400 6.500 4"/>',
+    'Öğretmen': '<rect x="2.500" y="3.500" width="19" height="12.500" rx="1.800" fill="currentColor" fill-opacity=".2"/><path d="M6 8h6.500M6 11.200h4M8 21l2.500-5M16 21l-2.500-5"/><path d="M15.500 7l2.200 2.200-3.500 3.500H12v-2.200L15.500 7Z"/>',
+    Rehberlik: '<circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity=".14"/><path d="M16 8l-2.400 5.600L8 16l2.400-5.600L16 8Z" fill="currentColor" fill-opacity=".45"/><path d="M12 3v1.800M12 19.200V21M3 12h1.800M19.200 12H21"/>',
+    'İdare': '<path d="M2.500 9.300L12 4l9.500 5.300H2.500Z" fill="currentColor" fill-opacity=".25"/><path d="M5.500 11.300v6.200M9.800 11.300v6.200M14.200 11.300v6.200M18.500 11.300v6.200M3.500 19.500h17M2.500 21.500h19"/>',
+    'Diğer': '<rect x="4" y="4" width="7" height="7" rx="2" fill="currentColor" fill-opacity=".2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2" fill="currentColor" fill-opacity=".2"/>'
+  };
+  const grupIk = g => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round">${GRUP_SVG[g] || GRUP_SVG['Diğer']}</svg></i>`;
   const grupKod = g => g.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z]/g, '');
   // K-694: ana ekranda Sık Kullanılanlar açık, gruplar kapalı kart; gruba dokununca içi açılır, "‹ Geri" ana ekrana döner
   function tumuAc(gecmis, grup) {
@@ -282,7 +292,7 @@
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = (sik.length ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
       + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${gruplar.map(([g, rk, L]) => { const n = L.reduce((a, id) => a + sayi(id), 0), ic = L.includes(sec);
-        return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${menuIk(GRUP_IK[g] || L[0])}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}</div></div>`;
+        return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${grupIk(g)}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}</div></div>`;
     document.body.classList.add('tm-acik'); window.scrollTo(0, 0); d.scrollTop = 0; d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
     $('#telGeri').classList.toggle('gizli', !G);
     const h = G ? '#bolumler-' + grup : '#bolumler'; if (gecmis !== false && location.hash !== h) history.pushState(null, '', h);
@@ -3086,6 +3096,28 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const yYukle = async () => { const r = await sb.from('umal_yoneticiler').select('eposta,rol'); yRol = new Map((r.data || []).map(x => [x.eposta, x.rol || 'yonetici'])); };
     const rolu = ep => yRol.get(ep) || 'ogretmen';
     let L = await yukle(); await yYukle();
+    // K-696: zümreler — branş ders programından (en çok girdiği ders) çıkarılır; elle düzeltme umal_ayarlar 'zumre_elle'
+    const ZKURAL = [[/Görsel Sanat/, 'Görsel Sanatlar', 1], [/Matematik/, 'Matematik', 1], [/Türk Dili|Edebiyat|Metin Tahlil/, 'Türk Dili ve Edebiyatı', 1], [/Din Kültürü|Kur'an|Peygamber|Dini/, 'Din Kültürü ve Ahlak Bilgisi', 1],
+      [/Tarih/, 'Tarih', 1], [/Coğrafya/, 'Coğrafya', 1], [/Felsefe/, 'Felsefe', 1], [/Fizik/, 'Fizik', 1], [/Astronomi/, 'Fizik', .3], [/Kimya/, 'Kimya', 1], [/Biyoloji/, 'Biyoloji', 1], [/İngilizce/, 'İngilizce', 1],
+      [/Beden|Spor/, 'Beden Eğitimi', 1], [/Müzik/, 'Müzik', 1], [/Bilişim/, 'Bilişim Teknolojileri', 1], [/Sanat Eğitimi/, 'Görsel Sanatlar', .2], [/Klasik Ahlak/, 'Türk Dili ve Edebiyatı', .2]];
+    const ZRENK = ['#22e8ff', '#ffb867', '#5ee08a', '#c99bff', '#ff8a8a', '#ffe14d', '#7fb2ff', '#ff9ad5', '#66f0c8', '#f7a66b', '#b6e35a', '#9fb3cf', '#e79bff', '#6fd3ff', '#ffc2a8', '#a8c8ff'];
+    const zAnah = a => String(a || '').toLocaleUpperCase(tr).replace(/[^A-ZÇĞİÖŞÜ]/g, '');
+    const PZ = new Map();   // ad anahtarı → { ad, zumre }
+    try {
+      const P = await programYukle(), sk = new Map();
+      Object.values(P.siniflar || {}).forEach(sn => Object.values(sn || {}).forEach(c => { if (!c || !c.ders) return; (c.ogretmen || []).forEach((o, i) => {
+        let z = null, w = 0;
+        if (/Görsel Sanatlar\s*\/\s*Müzik/.test(c.ders)) { z = i === 0 ? 'Görsel Sanatlar' : 'Müzik'; w = 1; }
+        else { const k = ZKURAL.find(r => r[0].test(c.ders)); if (k) { z = k[1]; w = k[2]; } }
+        const a = zAnah(o); if (!a) return; if (!sk.has(a)) sk.set(a, { ad: o, s: {} });
+        if (z) sk.get(a).s[z] = (sk.get(a).s[z] || 0) + w;
+      }); }));
+      sk.forEach((v, a) => { const e = Object.entries(v.s).sort((x, y) => y[1] - x[1])[0]; PZ.set(a, { ad: v.ad, zumre: e ? e[0] : '' }); });
+    } catch (e) {}
+    let ZE = {}; const zeYukle = async () => { try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'zumre_elle').maybeSingle(); ZE = data && data.deger ? JSON.parse(data.deger) || {} : {}; } catch (e) { ZE = {}; } }; await zeYukle();
+    const BELIRSIZ = 'Branşı belirsiz';
+    const zumresi = r => ZE[r.eposta] || ((PZ.get(zAnah(r.ad)) || {}).zumre) || BELIRSIZ;
+    let zSec = null;   // açık zümre (null: zümre kartları)
     let IST = []; const istYukle = async () => { if (!['bas', 'yonetici'].includes(D.rol)) return; try { const r = await sb.from('umal_erisim_talep').select('*').order('zaman'); IST = r.error ? [] : (r.data || []); } catch (e) { IST = []; } }; await istYukle();   // K-684
     const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
     const rolYaz = async (ep, rol) => {
@@ -3094,12 +3126,23 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const ciz = () => {
       const T = L.concat(yalnizY());
+      const ZM = new Map(), hesapli = new Set(T.map(r => zAnah(r.ad)).filter(Boolean));
+      T.forEach(r => { const z = zumresi(r); if (!ZM.has(z)) ZM.set(z, [[], []]); ZM.get(z)[0].push(r); });
+      PZ.forEach((v, a) => { if (hesapli.has(a) || !v.zumre) return; if (!ZM.has(v.zumre)) ZM.set(v.zumre, [[], []]); ZM.get(v.zumre)[1].push(v); });
+      const ZL = [...ZM].map(([z, [H, P]]) => [z, H, P.sort((x, y) => x.ad.localeCompare(y.ad, tr))]).sort((x, y) => (x[0] === BELIRSIZ) - (y[0] === BELIRSIZ) || x[0].localeCompare(y[0], tr));
+      const ZADLAR = [...new Set(ZKURAL.map(r => r[1]).concat(Object.values(ZE)))].sort((a, b) => a.localeCompare(b, tr));
+      const zRenk = z => z === BELIRSIZ ? '#9fb3cf' : ZRENK[Math.max(0, ZADLAR.indexOf(z)) % ZRENK.length];
+      if (zSec && zSec !== '*' && !ZM.has(zSec)) zSec = null;
+      const G = zSec === '*' ? T : zSec ? ZM.get(zSec)[0] : [], GP = zSec && zSec !== '*' ? ZM.get(zSec)[1] : [];
       $('#icerik').innerHTML = `<h1>Öğretmenler</h1>${IST.length ? `<div class="kart er-liste"><b class="neon">Erişim istekleri · ${IST.length}</b><span class="soluk kucuk"> E-posta koduyla doğrulanmış adresler. Onaylayınca öğretmen olarak eklenir.</span>${IST.map(x => `<div class="er-satir"><div><b>${esc(baslik(x.ad))}</b><small>${esc(x.eposta)} · ${esc(new Date(x.zaman).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small></div><button class="birincil" data-eron="${esc(x.eposta)}">Onayla</button><button class="bag kirmizi" data-erred="${esc(x.eposta)}">Reddet</button></div>`).join('')}${IST.length > 1 ? '<div style="text-align:right;margin-top:8px"><button class="ikincil" data-eron="*">Hepsini onayla</button></div>' : ''}</div>` : ''}<div class="og-izgara">
         <div class="kart"><b class="neon">Kullanıcı ekle</b><div class="og-rol" id="ogRol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip ${yeniRol === k ? 'secili' : ''}" data-yrol="${k}">${a}</button>`).join('')}</div>
           <p class="soluk kucuk">${{ ogretmen: 'Öğretmen: yalnız <b class="neon">Test Hazırla</b> ve <b class="neon">Testler</b>; öğrenci, sınav, anket ve tahta bilgilerine erişemez.', rehberlik: 'Rehberlik: Kim Nerede, Anketler, <b class="neon">Rehberlik</b> (mahrem form cevapları dahil) ve Öğrenci Girişi kodları.', yonetici: 'İdare: Kim Nerede, Tahta Kontrol, Sınav, Nöbet, Anketler, Disiplin; rehberlik cevaplarını görmez.' }[yeniRol]} Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Panele e-postalarına gelen kodla girerler.</p>
           <textarea id="ogEkle" rows="7" style="width:100%" placeholder="Ad Soyad ornek@okul.k12.tr"></textarea><button class="birincil" id="ogEkleBtn" style="width:100%;margin-top:10px">Ekle</button><div class="kucuk soluk" id="ogBilgi" style="margin-top:8px"></div></div>
-        <div class="kart"><b class="neon">Kullanıcılar · ${T.length}</b><div class="satirlar" style="margin-top:10px">${T.length ? T.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + esc(r.ekleyen) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
-          <div class="og-rol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Henüz kullanıcı eklenmedi.</div>'}</div></div></div>`;
+        <div class="kart og-zum">${zSec === null ? `<b class="neon">Zümreler · ${T.length} kullanıcı</b><span class="soluk kucuk"> Branş, ders programında en çok girdiği dersten bulunur; satırdan elle değiştirilebilir.</span>
+          <div class="zm-izgara">${ZL.map(([z, H, P]) => `<button class="zm-k" style="--g:${zRenk(z)}" data-zsec="${esc(z)}"><b>${esc(z)}</b><small>${H.length} kullanıcı${P.length ? ' · ' + P.length + ' panelde yok' : ''}</small><span class="zm-s">${H.length + P.length}</span></button>`).join('')}<button class="zm-k zm-tum" style="--g:#9fb3cf" data-zsec="*"><b>Tüm kullanıcılar</b><small>${T.length} kişi</small><span class="zm-s">${T.length}</span></button></div>`
+          : `<div class="zm-ust"><button class="ikincil" data-zsec="">‹ Zümreler</button><b class="neon" style="--g:${zRenk(zSec)}">${zSec === '*' ? 'Tüm kullanıcılar' : esc(zSec)} · ${G.length}</b></div>
+          <div class="satirlar" style="margin-top:10px">${G.length ? G.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + esc(r.ekleyen) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
+          <div class="og-rol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(PZ.get(zAnah(r.ad)) || {}).zumre ? ' (' + esc(PZ.get(zAnah(r.ad)).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
       $('#icerik').querySelectorAll('[data-eron],[data-erred]').forEach(b => b.onclick = async () => {
         if (b.dataset.erred) { if (!await onayla(b.dataset.erred + ' isteği reddedilsin mi?')) return; await sb.from('umal_erisim_talep').delete().eq('eposta', b.dataset.erred); await istYukle(); ciz(); return; }
         const sec = b.dataset.eron === '*' ? IST : IST.filter(x => x.eposta === b.dataset.eron); b.disabled = true;
@@ -3142,6 +3185,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const e2 = yRol.has(b.dataset.sil) ? (await sb.from('umal_yoneticiler').delete().eq('eposta', b.dataset.sil)).error : null;
         if (error || e2) { uyar('Kaldırılamadı: ' + hataYaz(error || e2)); return; }
         L = await yukle(); await yYukle(); ciz();
+      });
+      $('#icerik').querySelectorAll('[data-zsec]').forEach(b => b.onclick = () => { zSec = b.dataset.zsec || null; ciz(); if (telefon()) window.scrollTo(0, 0); });
+      $('#icerik').querySelectorAll('[data-zum]').forEach(sl => sl.onchange = async () => {
+        const yeni = Object.assign({}, ZE); if (sl.value) yeni[sl.dataset.zum] = sl.value; else delete yeni[sl.dataset.zum];
+        sl.disabled = true; const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'zumre_elle', deger: JSON.stringify(yeni) }, { onConflict: 'anahtar' }); sl.disabled = false;
+        if (error) { uyar('Zümre kaydedilemedi: ' + hataYaz(error)); return; }
+        ZE = yeni; ciz();
       });
       $('#ogRol').onclick = ev => { const b = ev.target.closest('[data-yrol]'); if (!b) return; const v = $('#ogEkle').value; yeniRol = b.dataset.yrol; ciz(); $('#ogEkle').value = v; };
       $('#icerik').querySelectorAll('[data-rolde]').forEach(b => b.onclick = async () => {

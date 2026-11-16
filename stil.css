@@ -1371,3 +1371,20 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .tm-gk.secili { box-shadow: 0 0 14px color-mix(in srgb, var(--g) 40%, transparent); }
   .tm-gk .mk-sayi { position: absolute; top: 10px; right: 10px; margin: 0; }
 }
+/* K-696: Öğretmenler — zümre kartları */
+.zm-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+.zm-k { position: relative; text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 14px 44px 14px 14px; border-radius: 14px; cursor: pointer; color: var(--yazi);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--g) 16%, transparent), color-mix(in srgb, var(--g) 4%, transparent)); border: 1px solid color-mix(in srgb, var(--g) 45%, transparent); }
+.zm-k:hover { border-color: var(--g); }
+.zm-k b { font-size: 15px; } .zm-k small { color: var(--soluk, #9fb3cf); font-size: 12px; }
+.zm-s { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--g); background: color-mix(in srgb, var(--g) 18%, transparent); }
+.zm-tum { border-style: dashed; }
+.zm-ust { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.zm-ust b { color: var(--g); }
+.zm-yok { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.zm-yok b { width: 100%; }
+.zm-yok span { padding: 4px 10px; border-radius: 999px; border: 1px dashed var(--cizgi); font-size: 12.5px; color: var(--soluk, #9fb3cf); }
+.og-zs { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.og-zs select { background: var(--koyu); color: var(--yazi); border: 1px solid var(--cizgi); border-radius: 8px; padding: 3px 6px; font-size: 12.5px; max-width: 220px; }
+.og-zet { display: inline-block; align-self: flex-start; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; color: var(--g); background: color-mix(in srgb, var(--g) 16%, transparent); }
+@media (max-width: 760px) { .og-zum { order: -1; } .zm-izgara { grid-template-columns: 1fr 1fr; } .zm-k { padding: 12px 38px 12px 12px; } .zm-k b { font-size: 14px; } }
