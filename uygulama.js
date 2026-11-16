@@ -264,24 +264,36 @@
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
   const menuSayArt = id => { try { const m = menuSay(); m[id] = (m[id] || 0) + 1; localStorage.setItem(menuSayAnahtar(), JSON.stringify(m)); } catch (e) {} };
   // K-693: telefonda bölüm ekranı ana sayfa gibi; bölümdeyken "‹ Geri" ile bölümlere dönülür (telefondaki gibi), üst şerit yok
-  function tumuAc(gecmis) {
+  const GRUP_IK = { Okul: 'harita', 'Sınav': 'sinav', 'Öğrenci': 'giriskod', Rehberlik: 'rehberlik', 'İdare': 'disiplin', 'Diğer': 'print' };
+  const grupKod = g => g.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z]/g, '');
+  // K-694: ana ekranda Sık Kullanılanlar açık, gruplar kapalı kart; gruba dokununca içi açılır, "‹ Geri" ana ekrana döner
+  function tumuAc(gecmis, grup) {
     if (!telefon()) return;
     const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
     const ad = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mad`); return m ? m.innerHTML : esc((BOLUMLER.find(b => b.id === id) || {}).ad || id); };
+    const sayi = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mk-sayi`); return m ? +m.textContent || 0 : 0; };
     const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id))]).filter(x => x[2].length);
     const kalan = [...izin].filter(id => !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     const m = menuSay(), sik = [...izin].filter(id => id !== 'acil' && (m[id] || 0) >= 2).sort((x, y) => m[y] - m[x]).slice(0, 3);
-    if (sik.length && izin.size > 6) gruplar.unshift(['Sık Kullanılanlar', '#22e8ff', sik]);
+    const kutu = (id, rk) => `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
+    const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
-    d.innerHTML = gruplar.map(([g, rk, L]) => `<div class="tm-grup" style="--g:${rk}"><div class="tm-bas">${g}</div><div class="tm-izgara">${L.map(id => `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`).join('')}</div></div>`).join('');
-    document.body.classList.add('tm-acik'); $('#telGeri').classList.add('gizli'); window.scrollTo(0, 0); d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
-    if (gecmis !== false && location.hash !== '#bolumler') history.pushState(null, '', '#bolumler');
-    d.onclick = ev => { const b = ev.target.closest('[data-tb]'); if (b) { tumuKapat(); D._gridden = true; ac(b.dataset.tb); } };
+    if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
+    else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
+    else d.innerHTML = (sik.length ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
+      + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${gruplar.map(([g, rk, L]) => { const n = L.reduce((a, id) => a + sayi(id), 0), ic = L.includes(sec);
+        return `<button class="tm-gk ${ic ? 'secili' : ''}" style="--g:${rk}" data-tg="${grupKod(g)}">${menuIk(GRUP_IK[g] || L[0])}<span class="tm-gad">${g}</span><small>${L.length} bölüm</small>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; }).join('')}</div></div>`;
+    document.body.classList.add('tm-acik'); window.scrollTo(0, 0); d.scrollTop = 0; d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
+    $('#telGeri').classList.toggle('gizli', !G);
+    const h = G ? '#bolumler-' + grup : '#bolumler'; if (gecmis !== false && location.hash !== h) history.pushState(null, '', h);
+    d.onclick = ev => { const g = ev.target.closest('[data-tg]'); if (g) return tumuAc(true, g.dataset.tg); const b = ev.target.closest('[data-tb]'); if (b) { tumuKapat(); D._gridden = true; ac(b.dataset.tb); } };
   }
   function tumuKapat() { const d = document.querySelector('.tumu-menu'); if (d) d.remove(); document.body.classList.remove('tm-acik'); if (telefon()) $('#telGeri').classList.remove('gizli'); }
   window.addEventListener('hashchange', () => { if (!telefon() || !D.rol) return; const h = location.hash.slice(1);
     if (h === 'bolumler') return tumuAc(false);
+    if (h.startsWith('bolumler-')) return tumuAc(false, h.slice(9));
     if (document.querySelector('.tumu-menu') && h) { tumuKapat(); if (h !== D.bolum) ac(h); } });
+  setInterval(() => { if (document.body.classList.contains('tm-acik') && !document.hidden) { const h = location.hash.slice(1), st = (document.querySelector('.tumu-menu') || {}).scrollTop; tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); const d = document.querySelector('.tumu-menu'); if (d && st) d.scrollTop = st; } }, 15000);   // bildirim sayıları güncel kalsın
   window.matchMedia('(max-width: 760px)').addEventListener('change', e => { if (!e.matches) { tumuKapat(); $('#telGeri').classList.add('gizli'); } else if (!document.querySelector('.tumu-menu')) $('#telGeri').classList.remove('gizli'); });
   function menuKur() {
     const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
@@ -289,7 +301,8 @@
     if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
     $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join('');
     $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
-    $('#telGeri').onclick = () => { if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); };
+    $('#telGeri').onclick = () => { const h = location.hash.slice(1); if (h.startsWith('bolumler-')) return history.back();
+      if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); };
     const h0 = ['simdi', 'ogrenci'].includes(location.hash.slice(1)) ? 'harita' : location.hash.slice(1);   // eski "Şimdi ders" bağlantıları
     const ilk = (h0 && izinli.find(b => b.id === h0)) || izinli[0];
     if (telefon() && (!h0 || h0 === 'bolumler' || !izinli.find(b => b.id === h0))) { tumuAc(false); if (location.hash !== '#bolumler') history.replaceState(null, '', '#bolumler'); return; }   // K-693: telefonda açılış bölümler ekranı
