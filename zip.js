@@ -55,6 +55,64 @@
     ]);
   }
 
+
+  // K-702: biçimli çok sayfalı liste (gezi otobüs listeleri): [{ ad, baslik, alt, bilgi:[[etiket,değer]], sutunlar:[[ad,genişlik]], satirlar:[{gorevli, h:[...]}], not }]
+  function liste(sayfalar) {
+    const ic = (ref, v, st) => v === '' || v == null ? `<c r="${ref}" s="${st}"/>` : (typeof v === 'number' ? `<c r="${ref}" s="${st}"><v>${v}</v></c>` : `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xml(v)}</t></is></c>`);
+    const adlar = [], dosyalar = [];
+    sayfalar.forEach((S, si) => {
+      const n = S.sutunlar.length, son = sutun(n - 1);
+      let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="' + (4 + Math.ceil(S.bilgi.length / 2) + 1) + '" topLeftCell="A' + (6 + Math.ceil(S.bilgi.length / 2)) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + S.sutunlar.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c[1]}" customWidth="1"/>`).join('') + '</cols><sheetData>';
+      const birlesik = []; let r = 1;
+      x += `<row r="${r}" ht="30" customHeight="1">${ic('A' + r, S.baslik, 1)}${S.sutunlar.slice(1).map((c, i) => ic(sutun(i + 1) + r, '', 1)).join('')}</row>`; birlesik.push(`A${r}:${son}${r}`); r++;
+      x += `<row r="${r}" ht="18" customHeight="1">${ic('A' + r, S.alt, 2)}${S.sutunlar.slice(1).map((c, i) => ic(sutun(i + 1) + r, '', 2)).join('')}</row>`; birlesik.push(`A${r}:${son}${r}`); r++;
+      r++;
+      // bilgi kutuları: satır başına 2 çift (etiket 2 sütun, değer 3 sütun)
+      const yarim = Math.floor(n / 2);
+      for (let i = 0; i < S.bilgi.length; i += 2) {
+        let h = '';
+        [S.bilgi[i], S.bilgi[i + 1]].forEach((b, j) => { if (!b) return; const a0 = j * yarim, e1 = a0 + 2, d0 = a0 + 3, d1 = j ? n - 1 : yarim - 1;
+          h += ic(sutun(a0) + r, b[0], 3) + ic(sutun(e1) + r, '', 3); for (let c = d0; c <= d1; c++) h += ic(sutun(c) + r, c === d0 ? b[1] : '', 4);
+          birlesik.push(`${sutun(a0)}${r}:${sutun(e1)}${r}`); if (d1 > d0) birlesik.push(`${sutun(d0)}${r}:${sutun(d1)}${r}`); });
+        x += `<row r="${r}" ht="20" customHeight="1">${h}</row>`; r++;
+      }
+      r++;
+      x += `<row r="${r}" ht="30" customHeight="1">${S.sutunlar.map((c, i) => ic(sutun(i) + r, c[0], 5)).join('')}</row>`; r++;
+      S.satirlar.forEach((s_, k) => { const st = s_.gorevli ? 7 : (k % 2 ? 8 : 6);
+        x += `<row r="${r}" ht="19" customHeight="1">${s_.h.map((v, i) => ic(sutun(i) + r, v, i < 4 ? st + 3 : st)).join('')}</row>`; r++; });
+      r++;
+      x += `<row r="${r}" ht="44" customHeight="1">${ic('A' + r, S.not, 12)}${S.sutunlar.slice(1).map((c, i) => ic(sutun(i + 1) + r, '', 12)).join('')}</row>`; birlesik.push(`A${r}:${son}${r}`);
+      x += `</sheetData><mergeCells count="${birlesik.length}">${birlesik.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+      adlar.push(xml(String(S.ad).replace(/[\[\]*?\/\\:]/g, ' ').slice(0, 31)));
+      dosyalar.push([`xl/worksheets/sheet${si + 1}.xml`, x]);
+    });
+    const kenar = '<left style="thin"><color rgb="FFC4CEDB"/></left><right style="thin"><color rgb="FFC4CEDB"/></right><top style="thin"><color rgb="FFC4CEDB"/></top><bottom style="thin"><color rgb="FFC4CEDB"/></bottom><diagonal/>';
+    const stil = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      + '<fonts count="7"><font><sz val="10"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FFE8C66B"/><name val="Calibri"/></font><font><b/><sz val="9"/><color rgb="FF4A5A70"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFB00020"/><name val="Calibri"/></font><font><i/><sz val="9"/><color rgb="FF8A1C1C"/><name val="Calibri"/></font></fonts>'
+      + '<fills count="8"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0D2747"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEEF2F7"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF13335C"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFE1E1"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF7F9FC"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF6DC"/></patternFill></fill></fills>'
+      + `<borders count="2"><border/><border>${kenar}</border></borders><cellStyleXfs count="1"><xf/></cellStyleXfs>`
+      + '<cellXfs count="13"><xf/>'
+      + '<xf fontId="1" fillId="2" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'   // 1 başlık
+      + '<xf fontId="2" fillId="2" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'   // 2 alt başlık
+      + '<xf fontId="3" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" indent="1"/></xf>'   // 3 bilgi etiketi
+      + '<xf fontId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" indent="1"/></xf>'   // 4 bilgi değeri
+      + '<xf fontId="4" fillId="4" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>'   // 5 sütun başlığı
+      + '<xf fontId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'   // 6 hücre
+      + '<xf fontId="5" fillId="5" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'   // 7 görevli
+      + '<xf fontId="0" fillId="6" borderId="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'   // 8 hücre (zebra)
+      + '<xf fontId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'   // 9 hücre orta
+      + '<xf fontId="5" fillId="5" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'   // 10 görevli orta
+      + '<xf fontId="0" fillId="6" borderId="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'   // 11 zebra orta
+      + '<xf fontId="6" fillId="7" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>'   // 12 not
+      + '</cellXfs></styleSheet>';
+    return zip([
+      ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + sayfalar.map((S, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+      ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+      ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${adlar.map((a, i) => `<sheet name="${a}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+      ['xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${adlar.map((a, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${adlar.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+      ['xl/styles.xml', stil]
+    ].concat(dosyalar));
+  }
   // MEB Sınıf Risk Haritası: şablonun kendisi (UmalRiskHaritasiSablon.json), satır satır doldurulur.
   function riskHaritasi(sablon, sinif, satirlar) {   // satirlar: [{no, ad, sutunlar: Set|null}]
     const b64 = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
@@ -99,5 +157,5 @@
     return String(s || '').split(/\s+/).map(w => w ? w[0] + w.slice(1).toLocaleLowerCase('tr-TR') : w).join(' ');
   }
 
-  window.UmalZip = { zip, xlsx, riskHaritasi, baslik };
+  window.UmalZip = { zip, xlsx, riskHaritasi, baslik, liste };
 })();
