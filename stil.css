@@ -1477,3 +1477,67 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .gz-geziler { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 12px; }
 .gz-gz { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--cizgi); background: transparent; color: var(--yazi); font-weight: 600; font-size: 13.5px; cursor: pointer; }
 .gz-gz.secili { background: var(--neon); color: #04121f; border-color: var(--neon); } .gz-gz.yeni { border-style: dashed; color: var(--neonacik, #7ff6ff); }
+/* K-716: Ders Dosyaları */
+.dd-liste { display: flex; flex-direction: column; gap: 8px; }
+.dd-satir { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 13px; padding: 10px 14px; color: var(--yazi); cursor: pointer; }
+.dd-satir:hover { border-color: rgba(34,232,255,.6); }
+.dd-tur { flex: none; width: 46px; height: 50px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 800; color: #fff; background: #3b6fb0; text-transform: none; }
+.dd-tur.dd-pdf { background: #d9473d; } .dd-tur.dd-link { background: #2f8f6a; } .dd-tur.dd-test { background: #8a5cd6; } .dd-tur.dd-resim { background: #2f7fc4; }
+.dd-ana { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .dd-ana b { font-size: 15px; } .dd-ana small { color: var(--soluk); }
+.dd-say { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 58px; } .dd-say b { font-size: 17px; } .dd-say small { color: var(--soluk); font-size: 11.5px; }
+.dd-say.uyari b, .dd-say.uyari small { color: #ffb867; }
+.dd-al { flex: none; color: var(--neon); font-weight: 700; font-size: 13px; border: 1px solid rgba(34,232,255,.6); border-radius: 10px; padding: 7px 12px; }
+.dd-kurulum { border-color: rgba(255,184,103,.6); margin-bottom: 10px; }
+.dd-gonder { display: flex; gap: 18px; align-items: flex-start; }
+.dd-form { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.dd-onizleme { flex: 0 0 300px; position: sticky; top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.dd-okart { display: flex; flex-direction: column; gap: 8px; } .dd-okart p { margin: 0; color: var(--soluk); white-space: pre-line; }
+.dd-oust { display: flex; justify-content: space-between; align-items: center; } .dd-oust small { color: var(--soluk); }
+.dd-yeni { background: var(--neon); color: var(--zemin); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 8px; }
+.dd-kaynak { display: flex; gap: 6px; }
+.dd-alan { display: flex; flex-direction: column; gap: 6px; } .dd-alan > span { color: var(--soluk); font-size: 13px; font-weight: 600; }
+.dd-alan .cipler { margin: 0; }
+.dd-birak { border: 2px dashed var(--cizgi); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: var(--koyu); }
+.dd-birak small { color: var(--soluk); } .dd-birak.ustte { border-color: var(--neon); background: rgba(34,232,255,.06); }
+.dd-dosyalar { display: flex; flex-direction: column; gap: 6px; } .dd-dosyalar:empty { display: none; }
+.dd-dosya { display: flex; align-items: center; gap: 10px; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 8px 12px; }
+.dd-dosya span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .dd-dosya small { color: var(--soluk); }
+.dd-diger { display: contents; } .dd-diger summary { list-style: none; cursor: pointer; } .dd-diger summary::-webkit-details-marker { display: none; } .dd-diger[open] summary { border-color: var(--neon); }
+.dd-diger > .cipler { flex-basis: 100%; }
+.dd-fazla { border: 1px solid var(--cizgi); border-radius: 12px; padding: 4px 14px; background: var(--koyu); }
+.dd-fazla > summary { cursor: pointer; padding: 10px 0; color: var(--neon); font-weight: 700; }
+.dd-fazla[open] > summary { border-bottom: 1px solid var(--cizgi); margin-bottom: 6px; }
+.dd-fgrup { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-bottom: 1px solid rgba(42,68,104,.5); } .dd-fgrup > b { color: #ffb867; font-size: 13px; }
+.dd-fgrup small { font-size: 12px; }
+.dd-ikili { display: flex; gap: 8px; flex-wrap: wrap; } .dd-ikili > * { flex: 1 1 200px; min-width: 0; }
+.dd-isaret { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; } .dd-isaret input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--neon); flex: none; }
+.dd-isaret span { display: flex; flex-direction: column; } .dd-isaret small { color: var(--soluk); }
+.dd-ogrsec { max-height: 240px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; padding: 6px; background: var(--zemin); border-radius: 10px; }
+.dd-ogrsec label { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.dd-testler { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow: auto; }
+.dd-test { text-align: left; background: var(--koyu); border: 1px solid var(--cizgi); border-radius: 10px; padding: 8px 12px; color: var(--yazi); display: flex; flex-direction: column; } .dd-test small { color: var(--soluk); } .dd-test:hover { border-color: var(--neon); }
+.dd-sayilar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+.dd-sayilar > div { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 13px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.dd-sayilar small { color: var(--soluk); } .dd-sayilar b { font-size: 26px; } .dd-sayilar b span { font-size: 14px; color: var(--soluk); font-weight: 500; margin-left: 4px; }
+.dd-sayilar > .uyari { border-color: rgba(255,184,103,.7); } .dd-sayilar > .uyari b, .dd-sayilar > .uyari small { color: #ffb867; }
+.dd-takip { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; } .dd-takip > .kart { flex: 1 1 420px; min-width: 0; }
+.dd-kbas { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.dd-ogrler { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+.dd-ogr { display: flex; align-items: center; gap: 8px; background: var(--koyu); border-radius: 9px; padding: 7px 10px; font-size: 13px; }
+.dd-ogr span { color: var(--soluk); width: 40px; flex: none; } .dd-ogr b { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .dd-ogr em { font-style: normal; font-weight: 700; font-size: 12px; }
+.dd-ogr em.neon { color: var(--neon); } .dd-ogr em.turuncu { color: #ffb867; } .dd-ogr em.soluk { color: var(--soluk); }
+.dd-sgrup { border-top: 1px solid rgba(42,68,104,.6); padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+.dd-sbas { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; } .dd-sbas .turuncu { color: #ffb867; font-size: 12.5px; }
+.dd-soru { background: var(--koyu); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.dd-cevap { color: var(--neonacik); border-left: 2px solid var(--neon); padding-left: 10px; white-space: pre-line; }
+.dd-cyaz { display: flex; flex-direction: column; gap: 6px; } .dd-cyaz textarea { resize: vertical; } .dd-cyaz button { align-self: flex-end; }
+.dd-analiz { display: flex; gap: 4px; align-items: flex-end; height: 120px; padding-bottom: 18px; overflow-x: auto; }
+.dd-analiz > div { flex: 0 1 34px; min-width: 16px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; } .dd-analiz i { display: block; width: 100%; border-radius: 4px 4px 0 0; }
+.dd-analiz small { position: absolute; bottom: -17px; font-size: 10.5px; color: var(--soluk); }
+.dd-kota { height: 10px; border-radius: 5px; background: var(--koyu); overflow: hidden; margin-bottom: 8px; } .dd-kota i { display: block; height: 100%; background: var(--neon); }
+.dd-eski { display: flex; gap: 8px; align-items: center; padding: 4px 0; }
+.dd-ana .turuncu, .dd-okart .turuncu, .sinav-ust .turuncu { color: #ffb867; } .dd-okart .neon { color: var(--neon); }
+@media (max-width: 760px) {
+  .dd-gonder { flex-direction: column; } .dd-onizleme { position: static; flex-basis: auto; width: 100%; }
+  .dd-satir { flex-wrap: wrap; } .dd-satir .dd-ana { flex-basis: calc(100% - 60px); } .dd-say { min-width: 52px; }
+}

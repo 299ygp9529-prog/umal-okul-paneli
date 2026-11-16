@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -57,7 +57,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-609: okulun verdiği kod geçicidir; ilk girişte öğrenci kendi şifresini belirler (unutana yeni kod verilir)
   async function sifreDenetle() {
@@ -241,6 +241,7 @@
     yer: '<path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
     soru: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     not: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.5-5.5Z"/><path d="M13.5 3.5V9H19M8.5 13.5h7M8.5 17h4.5"/>',
+    dosya: '<path d="M3.5 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 10.5v5M9.5 13l2.5-2.5 2.5 2.5"/>',
     zarf: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.5 7 8.5 6.5L20.5 7"/>' };
   const svg = (k, renk = 'currentColor', w = 1.8) => `<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="${renk}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IK[k]}</svg>`;
   const ZARF = `<span class="zarf" title="Okunmamış">${svg('zarf', '#1a0d00', 2)}</span>`;
@@ -324,7 +325,7 @@
     const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru" class="genis"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><span><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.gun.size} gün çalıştın` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></span>${st && st.n ? `<span class="so-mini"><b>${st.n.toLocaleString(tr)}</b><small>soru · net ${sayi1(st.net)}</small></span>` : ''}</button>`; })() : '';
     if (ozel()) { if (sessiz === true) { if (!$('#s-plan').classList.contains('gizli') && PL.veri) plCiz(); return; } plAc(); return; }   // K-598: özel ders öğrencisi doğrudan çalışma planına
     const noK = NO.L.length ? (() => { const y = noYeni(), n = y[0] || NO.L[0]; return `<button data-git="notlar" class="genis no-ana ${y.length ? 'yeni' : ''}">${y.length ? ZARF : ''}<i class="ik" style="--c:#3ef08a">${svg('not')}</i><span><b>Notlarım</b><small>${y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(n.sinav)}</small></span><span class="so-mini"><b style="color:${noRenk(n.not)}">${esc(noYaz(n.not))}</b><small>${esc(n.ders)}</small></span></button>`; })() : '';
-    $('#kutular').innerHTML = gzKutu() + noK + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
+    $('#kutular').innerHTML = gzKutu() + ddKutu() + noK + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
@@ -336,7 +337,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
@@ -443,6 +444,7 @@
     const gor = new Set(); return out.filter(x => { const k = x.tarih + x.saat + x.ad; if (gor.has(k)) return false; gor.add(k); return true; }).sort((a, b) => (a.tarih + a.saat).localeCompare(b.tarih + b.saat));
   }
   function sinavCiz() {
+    setTimeout(ddSinavCiz, 0);   // K-716
     const yil = egYil(), dn = buDonem(), T = S.tkler || (S.takvim && tkSinif(S.takvim) ? new Map([[tkSinif(S.takvim), S.takvim]]) : new Map()), tk1 = T.get(`${yil}|${dn}|1`), tk2 = T.get(`${yil}|${dn}|2`), MZ = mazeretlerim();
     if (!S.snSek) { const k1 = tk1 ? sinavlarim(tk1) : [], k2 = tk2 ? sinavlarim(tk2) : []; S.snSek = MZ.some(x => x.tarih >= iso(simdi())) ? 'm' : k1.some(x => !bitti(x)) ? '1' : k2.length ? '2' : (window.UmalSenaryo && window.UmalSenaryo.hedef().no === '2' ? '2' : '1'); }
     const sek = S.snSek, sekB = `<div class="sn-sekme">${[['1', `1. Sınavlar`], ['2', `2. Sınavlar`], ['m', 'Mazeret Sınavları']].map(([k, a]) => `<button class="${sek === k ? 'secili' : ''}" data-snsek="${k}">${a}${k === 'm' && MZ.filter(x => x.tarih >= iso(simdi())).length ? ` <i>${MZ.filter(x => x.tarih >= iso(simdi())).length}</i>` : ''}</button>`).join('')}</div>`;
@@ -802,6 +804,7 @@
   }
   async function plAc() {
     goster('s-plan'); window.scrollTo(0, 0);
+    ddPlanCiz();   // K-716
     if (RH.plan && RH.plan.yayin) { try { localStorage.setItem(rpGorKey(), RH.plan.yayin); } catch (e) {} }
     if (!PL.hafta) PL.hafta = pzt(simdi());
     if (!PL.veri) { $('#plGunler').innerHTML = '<div class="kart soluk">Yükleniyor…</div>'; if (!(await plYukle())) { $('#plGunler').innerHTML = '<div class="kart soluk">Plan yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
@@ -1107,6 +1110,141 @@
     const w = window.open('', '_blank'); if (!w) { uyar('Raporu açmak için açılır pencerelere izin ver.'); return; } w.document.open(); w.document.write(html); w.document.close();
   }
 
+  // ---- K-716: Ders Dosyaları — öğretmenin gönderdiği dosya / link / test; dosyalar Atlas Drive köprüsünden okunur, açılan bu cihazda saklanır
+  const DD = { L: [], url: '', sec: null, suz: '', gun: '', test: {} };
+  const ddGorKey = () => 'ddGordu:' + S.no;
+  const ddGorulen = () => { try { return new Set(JSON.parse(localStorage.getItem(ddGorKey()) || '[]')); } catch (e) { return new Set(); } };
+  const ddGordum = id => { try { const g = ddGorulen(); g.add(id); localStorage.setItem(ddGorKey(), JSON.stringify([...g].slice(-400))); } catch (e) {} };
+  const ddYeni = () => { const g = ddGorulen(); return DD.L.filter(d => !g.has(d.id)); };
+  const ddHatir = () => DD.L.filter(d => d.ben && d.ben.hatirlat && !d.ben.acti);
+  async function ddYukle() {
+    if (!S.kod || ozel()) return false; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_dd', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok) return false; const e = JSON.stringify(DD.L); DD.L = data.dosyalar || []; DD.url = data.url || ''; return e !== JSON.stringify(DD.L);
+  }
+  function ddYaklasan() {   // önümüzdeki 3 günün sınavları ve o derse bağlı dosyalar
+    const s = simdi(), L = [];
+    for (const x of sinavlarim()) { if (bitti(x)) continue; const g = (new Date(x.tarih + 'T12:00') - s) / 864e5; if (g > 3.5) continue;
+      const adlar = String(x.ad || '').split(/\s*\/\s*/).map(knDA), D_ = DD.L.filter(d => d.sinav && adlar.some(a => a && (knDA(d.ders) === a || a.startsWith(knDA(d.ders)) || knDA(d.ders).startsWith(a))));
+      if (D_.length) L.push({ x, D: D_, acilmamis: D_.filter(d => !(d.ben && d.ben.acti)).length }); }
+    return L;
+  }
+  function ddKutu() {
+    if (!DD.L.length) return ''; const y = ddYeni(), h = ddHatir(), yk = ddYaklasan(), zarf = y.length || h.length;
+    const alt = h.length ? 'Öğretmenin hatırlattı: ' + h[0].baslik : y.length ? (y.length > 1 ? y.length + ' yeni dosya' : 'Yeni: ' + y[0].baslik) : yk.length ? `Sınava ${Math.max(0, Math.ceil((new Date(yk[0].x.tarih + 'T12:00') - simdi()) / 864e5))} gün: ${yk[0].D.length} dosya` : DD.L[0].ders + ' · ' + DD.L[0].baslik;
+    return `<button data-git="dd" class="genis no-ana ${zarf ? 'yeni' : ''}">${zarf ? ZARF : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><span><b>Ders Dosyaları</b><small>${esc(alt.length > 44 ? alt.slice(0, 43) + '…' : alt)}</small></span>${y.length ? `<span class="so-mini"><b style="color:#7fb2ff">${y.length}</b><small>yeni</small></span>` : ''}</button>`;
+  }
+  // önbellek (IndexedDB): bir kez açılan dosya yeniden indirilmez, internetsiz de açılır
+  const ddDb = () => new Promise((ok, red) => { try { const r = indexedDB.open('atlas-dd', 1); r.onupgradeneeded = () => r.result.createObjectStore('d'); r.onsuccess = () => ok(r.result); r.onerror = () => red(r.error); } catch (e) { red(e); } });
+  async function ddOnbellek(k, blob) { try { const db = await ddDb(); return await new Promise(ok => { const t = db.transaction('d', blob ? 'readwrite' : 'readonly'), st = t.objectStore('d'), q = blob ? st.put(blob, k) : st.get(k); q.onsuccess = () => ok(blob || q.result || null); q.onerror = () => ok(null); }); } catch (e) { return null; } }
+  async function ddBlob(f) {
+    const k = f.id || f.url; const o = await ddOnbellek(k); if (o) return o;
+    let blob;
+    if (f.url) blob = await (await fetch(f.url)).blob();
+    else { if (!DD.url) throw new Error('Drive bağlantısı yok'); const j = await (await fetch(DD.url + '?id=' + encodeURIComponent(f.id))).json(); if (!j.ok) throw new Error(j.hata || 'Açılamadı');
+      const h = atob(j.veri), u = new Uint8Array(h.length); for (let i = 0; i < h.length; i++) u[i] = h.charCodeAt(i); blob = new Blob([u], { type: j.mime || f.mime || 'application/octet-stream' }); }
+    if (blob.size < 30 * 1048576) await ddOnbellek(k, blob); return blob;
+  }
+  let ddPdf = null;
+  async function ddGoster(el, f) {
+    el.innerHTML = '<div class="dd-yuk">Açılıyor…</div>';
+    try {
+      const blob = await ddBlob(f), mime = blob.type || f.mime || '', u = URL.createObjectURL(blob);
+      if (/pdf/.test(mime) || /\.pdf$/i.test(f.ad || '')) {
+        if (!ddPdf) { ddPdf = await import(new URL('../soru/pdf.min.mjs', location.href).href); ddPdf.GlobalWorkerOptions.workerSrc = new URL('../soru/pdf.worker.min.mjs', location.href).href; }
+        const doc = await ddPdf.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise; el.innerHTML = `<div class="dd-sayfalar"></div><a class="dd-indir" href="${u}" download="${esc(f.ad || 'dosya.pdf')}">PDF'i indir · ${doc.numPages} sayfa</a>`;
+        const kap = el.querySelector('.dd-sayfalar'), gen = Math.max(300, kap.clientWidth || 340), dpr = Math.min(2, window.devicePixelRatio || 1);
+        for (let i = 1; i <= Math.min(doc.numPages, 60); i++) { const p = await doc.getPage(i), v0 = p.getViewport({ scale: 1 }), v = p.getViewport({ scale: gen / v0.width * dpr });
+          const cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height; cv.style.width = '100%'; kap.appendChild(cv); await p.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise; }
+      } else if (/^image\//.test(mime)) el.innerHTML = `<img class="dd-resim" src="${u}" alt="${esc(f.ad || '')}">`;
+      else if (/^audio\//.test(mime)) el.innerHTML = `<audio controls src="${u}" style="width:100%"></audio>`;
+      else el.innerHTML = `<a class="dd-indir buyuk" href="${u}" download="${esc(f.ad || 'dosya')}">${esc(f.ad || 'Dosya')} · indir ve aç</a>`;
+    } catch (e) { el.innerHTML = `<div class="dd-yuk hata">Açılamadı: ${esc(e.message || e)}. İnternet bağlantını kontrol edip yeniden dene.</div>`; }
+  }
+  async function ddIsle(id, islem, deger) {
+    try { const { data } = await sb.rpc('umal_ogrenci_dd_isle', { p_no: S.no, p_kod: S.kod, p_id: id, p_islem: islem, p_deger: deger == null ? '' : String(deger) }); return data || { ok: false, hata: 'Bağlantı yok' }; } catch (e) { return { ok: false, hata: 'Bağlantı yok' }; }
+  }
+  function ddEtiket(d) {
+    const b = d.ben || {}, g = ddGorulen();
+    if (!g.has(d.id)) return ['YENİ', 'yeni'];
+    if (b.hatirlat && !b.acti) return ['Hatırlatıldı', 'tur'];
+    if (b.test_puan) return [`Test ${b.test_puan.d}/${b.test_puan.n}`, 'ok'];
+    if (b.calistim) return ['Çalıştım', 'ok'];
+    if (d.cevap && !d.cevap.acik) return ['Kilitli ek', 'tur'];
+    return b.acti ? ['Açtın', ''] : ['', ''];
+  }
+  const ddTur = d => d.tur === 'link' ? ['LİNK', '#2f8f6a'] : d.tur === 'test' ? ['TEST', '#8a5cd6'] : /pdf/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['PDF', '#d9473d'] : /^image/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['RESİM', '#2f7fc4'] : ['DOSYA', '#3b6fb0'];
+  function ddKart(d) { const [e, c] = ddEtiket(d), [t, r] = ddTur(d), z = new Date(d.zaman);
+    return `<button class="dd-k ${c === 'yeni' ? 'yeni' : ''}" data-ddac="${d.id}"><span class="dd-t" style="background:${r}">${t}</span><span class="dd-m"><b>${esc(d.baslik)}</b><small>${esc(d.ders)} · ${z.getDate()} ${AY[z.getMonth()]}${d.ses ? ' · sesli' : ''}${d.sinav && d.sinav.konu ? ' · sınav konusu' : ''}</small></span>${e ? `<span class="dd-e ${c}">${esc(e)}</span>` : ''}</button>`; }
+  function ddListeCiz() {
+    const yk = ddYaklasan(), dersler = [...new Set(DD.L.map(d => d.ders))].sort((a, b) => a.localeCompare(b, tr));
+    let L = DD.L.filter(d => !DD.suz || d.ders === DD.suz); if (DD.gun) L = L.filter(d => iso(new Date(d.zaman)) === DD.gun);
+    $('#ddBaslik').textContent = 'Ders Dosyaları'; $('#ddGeri').textContent = '← Ana sayfa';
+    $('#ddIc').innerHTML = (yk.map(y => `<div class="dd-uyari"><b>Sınava ${Math.max(0, Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5)) || 'bugün'}${Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5) > 0 ? ' gün kaldı' : ''} · ${esc(y.x.ad)}</b><span>Bu sınavın konularına bağlı ${y.D.length} dosya var${y.acilmamis ? `, ${y.acilmamis} tanesini henüz açmadın` : ''}.</span></div>`).join(''))
+      + `<div class="dd-suz">${dersler.length > 1 ? `<button class="${!DD.suz ? 'secili' : ''}" data-ddsuz="">Hepsi</button>${dersler.map(x => `<button class="${DD.suz === x ? 'secili' : ''}" data-ddsuz="${esc(x)}">${esc(x)}</button>`).join('')}` : ''}</div>
+      <label class="dd-gun"><span>Okula gelemediğin bir gün mü var? O gün gönderilenler:</span><input type="date" id="ddGun" value="${esc(DD.gun)}" max="${iso(simdi())}">${DD.gun ? '<button class="bag" id="ddGunSil">Tümünü göster</button>' : ''}</label>
+      <div class="dd-l">${L.length ? L.map(ddKart).join('') : `<div class="kart soluk" style="text-align:center">${DD.gun ? 'O gün gönderilen dosya yok.' : 'Henüz dosya yok.'}</div>`}</div>
+      <div class="not">Açtığın dosyalar bu telefonda saklanır; internet olmasa da yeniden açılır.</div>`;
+  }
+  function ddDetayCiz() {
+    const d = DD.L.find(x => x.id === DD.sec); if (!d) { DD.sec = null; return ddListeCiz(); }
+    const b = d.ben || {}, A = d.ayar || {}, z = new Date(d.zaman), T = DD.test[d.id] || (DD.test[d.id] = []);
+    $('#ddBaslik').textContent = d.ders; $('#ddGeri').textContent = '← Ders Dosyaları';
+    const sorular = (d.sorular || []), benim = sorular.filter(s => s.benim), acik = sorular.filter(s => !s.benim);
+    const test = d.test ? (b.test_cevap ? (() => { const a = b.test_anahtar || '', c = b.test_cevap || '';
+        return `<div class="kart dd-testk"><h2>Test sonucun</h2><div class="dd-puan"><div><b>${b.test_puan.d}</b><small>doğru</small></div><div><b>${b.test_puan.y}</b><small>yanlış</small></div><div><b>${b.test_puan.b}</b><small>boş</small></div></div>
+          <div class="dd-tablo">${[...a].map((x, i) => `<span class="${c[i] === x ? 'd' : (!c[i] || c[i] === '-' || c[i] === ' ') ? 'b' : 'y'}"><small>${i + 1}</small>${esc(c[i] && c[i] !== '-' ? c[i] : '–')}${c[i] !== x ? `<em>${x}</em>` : ''}</span>`).join('')}</div></div>`; })()
+      : `<div class="kart dd-testk"><h2>Cevaplarını işaretle · ${d.test.n} soru</h2><div class="dd-sik">${Array.from({ length: d.test.n }, (_, i) => `<div><small>${i + 1}</small>${'ABCDE'.split('').map(h => `<button class="${T[i] === h ? 'secili' : ''}" data-sik="${i}|${h}">${h}</button>`).join('')}</div>`).join('')}</div><button class="birincil" id="ddTestGonder" style="width:100%;margin-top:10px">Gönder · ${T.filter(Boolean).length}/${d.test.n} işaretli</button><div class="not">Bir kez gönderilir; sonucu ve doğru cevapları hemen görürsün.</div></div>`) : '';
+    $('#ddIc').innerHTML = `<div class="kart dd-bas"><div class="soluk kucuk">${esc(d.ogretmen || 'Öğretmenin')} · ${z.getDate()} ${AY[z.getMonth()]} ${String(z.getHours()).padStart(2, '0')}.${String(z.getMinutes()).padStart(2, '0')}</div><h2>${esc(d.baslik)}</h2>${d.aciklama ? `<p>${esc(d.aciklama)}</p>` : ''}${d.sinav && d.sinav.konu ? `<div class="dd-konu">Sınavda çıkacak: ${esc(d.sinav.konu)}</div>` : ''}</div>
+      ${d.ses ? `<div class="kart dd-ses"><b>Öğretmeninin sesli açıklaması${d.ses.sure ? ' · ' + d.ses.sure + ' sn' : ''}</b><div data-ddses></div></div>` : ''}
+      ${d.link ? `<a class="birincil dd-link" href="${esc(d.link)}" target="_blank" rel="noopener">Linki aç</a>` : ''}
+      ${(d.dosyalar || []).map((f, i) => `<div class="dd-dosya" data-dddosya="${i}"></div>`).join('')}
+      ${test}
+      ${d.cevap ? (d.cevap.acik ? `<div class="kart"><b>${esc(d.cevap.ad || 'Ek')}</b><div class="dd-dosya" data-ddcevap></div></div>` : `<div class="kart dd-kilit">🔒 Kilitli ek · ${(t => `${t.getDate()} ${AY[t.getMonth()]} ${String(t.getHours()).padStart(2, '0')}.${String(t.getMinutes()).padStart(2, '0')}`)(new Date(d.cevap.acilis))} sonra açılacak</div>`) : ''}
+      ${A.tepki === false ? '' : `<div class="dd-tepki"><button class="${b.tepki === 'anladim' ? 'secili' : ''}" data-tepki="anladim">Anladım</button><button class="tek ${b.tepki === 'tekrar' ? 'secili' : ''}" data-tepki="tekrar">Tekrar anlatılsın</button></div>`}
+      ${A.calistim === false ? '' : `<label class="dd-cal"><input type="checkbox" id="ddCal" ${b.calistim ? 'checked' : ''}> Çalıştım${d.sinav ? ' — çalışma haritamda işaretli' : ''}</label>`}
+      ${A.soru === false ? '' : `<div class="kart dd-sor"><h2>Öğretmenine sor <small class="soluk">· sınıf görmez</small></h2><div class="dd-sor-g"><input id="ddSoruNo" maxlength="20" placeholder="Soru no" inputmode="numeric"><textarea id="ddSoruMetin" rows="2" maxlength="600" placeholder="Nerede takıldın?"></textarea></div><button class="ikincil" id="ddSoruGonder">Gönder</button><div class="kucuk" id="ddSoruBilgi"></div>
+        ${benim.map(s => `<div class="dd-s"><small>${s.soru_no ? 'Soru ' + esc(s.soru_no) + ' · ' : ''}sen</small><div>${esc(s.metin)}</div>${s.cevap ? `<div class="dd-cv">${esc(s.cevap)}</div>` : '<small class="soluk">Cevap bekleniyor</small>'}</div>`).join('')}
+        ${acik.length ? `<h2 style="margin-top:12px">Sınıfa açılan cevaplar</h2>${acik.map(s => `<div class="dd-s"><small>${s.soru_no ? 'Soru ' + esc(s.soru_no) : 'Soru'}</small><div>${esc(s.metin)}</div><div class="dd-cv">${esc(s.cevap)}</div></div>`).join('')}` : ''}</div>`}`;
+    (d.dosyalar || []).forEach((f, i) => ddGoster(document.querySelector(`[data-dddosya="${i}"]`), f));
+    if (d.cevap && d.cevap.acik) ddGoster(document.querySelector('[data-ddcevap]'), d.cevap);
+    if (d.ses) ddGoster(document.querySelector('[data-ddses]'), Object.assign({ ad: 'ses' }, d.ses));
+  }
+  async function ddAc(id) {
+    if (id) { DD.sec = id; const d = DD.L.find(x => x.id === id); ddGordum(id); if (d && !(d.ben && d.ben.acti)) { d.ben = Object.assign({}, d.ben, { acti: new Date().toISOString() }); ddIsle(id, 'acti'); } ddDetayCiz(); }
+    else { DD.sec = null; ddListeCiz(); ddYukle().then(c => { if (c && !$('#s-dd').classList.contains('gizli') && !DD.sec) ddListeCiz(); }); }
+    goster('s-dd'); window.scrollTo(0, 0);
+  }
+  $('#ddGeri').onclick = () => { if (DD.sec) { DD.sec = null; ddListeCiz(); window.scrollTo(0, 0); } else anaCiz(); };
+  $('#s-dd').addEventListener('change', async ev => { const t = ev.target;
+    if (t.id === 'ddGun') { DD.gun = t.value; ddListeCiz(); return; }
+    if (t.id === 'ddCal') { const d = DD.L.find(x => x.id === DD.sec); const r = await ddIsle(d.id, 'calistim', t.checked ? 1 : 0); if (r.ok) d.ben = Object.assign({}, d.ben, { calistim: t.checked ? new Date().toISOString() : null }); else t.checked = !t.checked; } });
+  $('#s-dd').addEventListener('click', async ev => { const b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.ddac) return ddAc(b.dataset.ddac);
+    if (b.dataset.ddsuz != null) { DD.suz = b.dataset.ddsuz; ddListeCiz(); return; }
+    if (b.id === 'ddGunSil') { DD.gun = ''; ddListeCiz(); return; }
+    const d = DD.L.find(x => x.id === DD.sec); if (!d) return;
+    if (b.dataset.tepki) { const yeni = (d.ben && d.ben.tepki) === b.dataset.tepki ? '' : b.dataset.tepki; const r = await ddIsle(d.id, 'tepki', yeni); if (r.ok) { d.ben = Object.assign({}, d.ben, { tepki: yeni || null }); b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('secili', x.dataset.tepki === yeni)); } return; }
+    if (b.dataset.sik) { const [i, h] = b.dataset.sik.split('|'), T = DD.test[d.id]; T[+i] = T[+i] === h ? '' : h; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('secili', x.dataset.sik === i + '|' + T[+i])); const g = $('#ddTestGonder'); if (g) g.textContent = `Gönder · ${T.filter(Boolean).length}/${d.test.n} işaretli`; return; }
+    if (b.id === 'ddTestGonder') { const T = DD.test[d.id], n = d.test.n; if (T.filter(Boolean).length < n && !await sorKutu({ m: `${n - T.filter(Boolean).length} soruyu boş bıraktın. Yine de gönderilsin mi?` })) return;
+      b.disabled = true; const c = Array.from({ length: n }, (_, i) => T[i] || '-').join(''), r = await ddIsle(d.id, 'test', c);
+      if (!r.ok) { b.disabled = false; sorKutu({ m: r.hata || 'Gönderilemedi', tek: true }); return; }
+      d.ben = Object.assign({}, d.ben, { test_cevap: c, test_puan: r.puan, test_anahtar: r.anahtar, acti: (d.ben && d.ben.acti) || new Date().toISOString() }); ddDetayCiz(); return; }
+    if (b.id === 'ddSoruGonder') { const m = $('#ddSoruMetin').value.trim(), bil = $('#ddSoruBilgi'); if (!m) { bil.textContent = 'Sorunu yaz.'; return; }
+      b.disabled = true; const r = await ddIsle(d.id, 'soru', JSON.stringify({ soru_no: $('#ddSoruNo').value.trim(), metin: m })); b.disabled = false;
+      if (!r.ok) { bil.textContent = r.hata || 'Gönderilemedi'; return; }
+      await ddYukle(); ddDetayCiz(); }
+  });
+  function ddSinavCiz() {   // Sınavlarım: seçili sınav sekmesine bağlı dosyalar
+    const el = $('#snDd'); if (!el) return; const sek = S.snSek, dn = buDonem();
+    const L = sek === 'm' ? [] : DD.L.filter(d => d.sinav && String(d.sinav.donem) === dn && String(d.sinav.no) === sek);
+    el.innerHTML = L.length ? `<div class="kart dd-snk"><h2>Bu sınavlara bağlı ders dosyaları</h2><div class="dd-l">${L.map(ddKart).join('')}</div></div>` : '';
+  }
+  $('#snDd') && $('#snDd').addEventListener('click', ev => { const b = ev.target.closest('[data-ddac]'); if (b) ddAc(b.dataset.ddac); });
+  function ddPlanCiz() {   // Çalışma planım: rehberlikten gelen dosyalar
+    const el = $('#plDd'); if (!el) return; const L = DD.L.filter(d => knDA(d.ders) === 'rehberlik');
+    el.innerHTML = L.length ? `<div class="kart dd-snk"><h2>Rehberlikten dosyalar</h2><div class="dd-l">${L.slice(0, 6).map(ddKart).join('')}</div></div>` : '';
+  }
+  $('#plDd') && $('#plDd').addEventListener('click', ev => { const b = ev.target.closest('[data-ddac]'); if (b) ddAc(b.dataset.ddac); });
   // ---- K-553: canlı yenileme (öğrenci yazmıyorken) + yeni sürümde kendiliğinden yenilenme
   const yaziyor = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   let canliSay = 0;
@@ -1125,6 +1263,7 @@
       { const once = JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]); await sinavlarYukle();   // K-691: idarenin yeni/düzeltilen takvimi, mazeret ve telafi programı sayfa yenilemeden düşsün
         if (JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]) !== once && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }
       if (await noYukle() && !$('#liste').classList.contains('gizli')) anaCiz(true);   // K-619
+      if (await ddYukle()) { if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-dd').classList.contains('gizli') && !DD.sec) ddListeCiz(); }   // K-716
       if (await gzYukle()) { if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-gezi').classList.contains('gizli')) gzCiz(); }   // K-708: idare koltuğu değiştirirse anında
       if (RH.yuklendi) sesDenetle();   // K-617
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}

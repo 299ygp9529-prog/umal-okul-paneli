@@ -254,6 +254,38 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gz-h-sira i.ben { background: #e8c66b; color: #0d2747; font-weight: 900; font-size: 12px; border-color: #fff; box-shadow: 0 0 0 2px #e8c66b88, 0 0 16px #e8c66b88; }
 .gz-h-arka { text-align: center; font-size: 10px; letter-spacing: .2em; color: #9fb3cf; }
 .izg button.genis.gz-ana { position: relative; }
+/* K-716: Ders Dosyaları */
+.dd-l { display: flex; flex-direction: column; gap: 8px; }
+.dd-k { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: rgba(19,35,58,.92); border: 1px solid #2a4468; border-radius: 14px; padding: 11px 13px; color: #fff; cursor: pointer; }
+.dd-k.yeni { border-color: #7fb2ff; box-shadow: 0 0 12px rgba(127,178,255,.25); }
+.dd-t { flex: none; width: 42px; height: 48px; border-radius: 8px; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; }
+.dd-m { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .dd-m b { font-size: 15px; line-height: 1.3; } .dd-m small { color: #9fb3cf; }
+.dd-e { flex: none; font-size: 11.5px; font-weight: 800; color: #9fb3cf; } .dd-e.yeni { color: #0d1726; background: #7fb2ff; padding: 3px 8px; border-radius: 8px; } .dd-e.tur { color: #ffb867; } .dd-e.ok { color: #22e8ff; }
+.dd-uyari { background: rgba(255,154,58,.10); border: 1px solid rgba(255,154,58,.6); border-radius: 14px; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; } .dd-uyari b { color: #ffb867; font-size: 13.5px; }
+.dd-suz { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; } .dd-suz:empty { display: none; }
+.dd-suz button { flex: none; background: transparent; border: 1px solid #2a4468; color: #9fb3cf; border-radius: 18px; padding: 7px 13px; font-weight: 600; } .dd-suz button.secili { background: #22e8ff; color: #0d1726; border-color: #22e8ff; }
+.dd-gun { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: #9fb3cf; margin-bottom: 12px; } .dd-gun input { padding: 6px 8px; }
+.dd-bas h2 { margin: 4px 0 6px; color: #fff; font-size: 18px; } .dd-bas p { margin: 0; color: #c9d6e8; white-space: pre-line; } .dd-konu { margin-top: 8px; color: #ffb867; font-size: 13px; font-weight: 600; }
+.dd-dosya { margin: 10px 0; } .dd-sayfalar { display: flex; flex-direction: column; gap: 8px; } .dd-sayfalar canvas { border-radius: 10px; background: #fff; }
+.dd-resim { width: 100%; border-radius: 12px; display: block; }
+.dd-yuk { background: rgba(19,35,58,.9); border: 1px dashed #2a4468; border-radius: 12px; padding: 24px; text-align: center; color: #9fb3cf; } .dd-yuk.hata { color: #ffb867; }
+.dd-indir { display: block; text-align: center; color: #22e8ff; font-weight: 700; padding: 10px; } .dd-indir.buyuk { border: 1px solid rgba(34,232,255,.6); border-radius: 12px; }
+.dd-link { display: block; text-align: center; text-decoration: none; margin: 10px 0; padding: 13px; }
+.dd-ses { margin: 10px 0; } .dd-ses .dd-dosya, .dd-ses [data-ddses] { margin: 8px 0 0; }
+.dd-kilit { color: #ffb867; font-weight: 600; margin: 10px 0; }
+.dd-tepki { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.dd-tepki button { padding: 13px; border-radius: 12px; font-weight: 800; border: 1px solid #22e8ff; background: transparent; color: #22e8ff; } .dd-tepki button.secili { background: #22e8ff; color: #0d1726; }
+.dd-tepki button.tek { border-color: #ffb867; color: #ffb867; } .dd-tepki button.tek.secili { background: #ffb867; color: #1a0d00; }
+.dd-cal { display: flex; gap: 10px; align-items: center; margin: 6px 0 12px; font-weight: 600; } .dd-cal input { width: 20px; height: 20px; accent-color: #ffb867; }
+.dd-sor h2 { margin-top: 0; } .dd-sor-g { display: flex; gap: 8px; } .dd-sor-g input { width: 80px; flex: none; } .dd-sor-g textarea { flex: 1; min-width: 0; }
+.dd-sor > button { margin-top: 8px; } .dd-s { background: rgba(13,23,38,.7); border-radius: 10px; padding: 9px 11px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; } .dd-s > small { color: #9fb3cf; }
+.dd-cv { color: #7ff6ff; border-left: 2px solid #22e8ff; padding-left: 9px; white-space: pre-line; }
+.dd-testk h2 { margin-top: 0; } .dd-sik { display: flex; flex-direction: column; gap: 6px; } .dd-sik > div { display: flex; align-items: center; gap: 6px; } .dd-sik small { width: 26px; color: #9fb3cf; font-weight: 700; }
+.dd-sik button { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid #2a4468; background: transparent; color: #fff; font-weight: 700; } .dd-sik button.secili { background: #22e8ff; color: #0d1726; border-color: #22e8ff; }
+.dd-puan { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-bottom: 10px; } .dd-puan b { display: block; font-size: 26px; } .dd-puan small { color: #9fb3cf; } .dd-puan > div:first-child b { color: #22e8ff; } .dd-puan > div:nth-child(2) b { color: #ff9a3a; }
+.dd-tablo { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; } .dd-tablo span { background: rgba(13,23,38,.8); border-radius: 8px; padding: 5px; text-align: center; font-weight: 800; position: relative; }
+.dd-tablo span small { display: block; color: #9fb3cf; font-weight: 600; font-size: 10.5px; } .dd-tablo span.d { color: #22e8ff; } .dd-tablo span.y { color: #ff9a3a; } .dd-tablo span.b { color: #9fb3cf; } .dd-tablo em { font-style: normal; color: #3ef08a; margin-left: 4px; font-size: 12px; }
+.dd-snk { margin-top: 12px; } .dd-snk h2 { margin-top: 0; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -322,16 +354,17 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="soz" id="gununSozu"></div>
   </section>
 
-  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div></section>
+  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div><div id="snDd"></div></section>
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Ana sayfa</button><h1 id="ddBaslik">Ders Dosyaları</h1></div><div id="ddIc"></div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
   <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Çalışma planım</h1></div>
     <div id="ozMesaj"></div><div id="rplan"></div>
     <div class="kart pl-ust"><div class="pl-hafta"><button class="ikincil" id="plOnce" aria-label="Önceki hafta">‹</button><div><b id="plBaslik"></b><small id="plAlt"></small></div><button class="ikincil" id="plSonra" aria-label="Sonraki hafta">›</button></div>
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
-    <div id="plSinav"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
+    <div id="plSinav"></div><div id="plDd"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
   </section>
   <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
     <button class="mk-kutu so-izin" id="soIzin" type="button"><i></i><span>Rehberlik servisi haftalık soru özetimi görebilsin <small class="soluk" style="display:block;font-size:12.5px">Rehber öğretmenin sana daha iyi destek olabilir. İstediğin zaman kapatabilirsin.</small></span></button>
@@ -386,6 +419,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
-<script src="ogrenci.js?v=202611162345"></script>
+<script src="ogrenci.js?v=202611170300"></script>
 </body>
 </html>
