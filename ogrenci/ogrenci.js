@@ -249,7 +249,7 @@
   const zil = (gun, n) => (gun === 4 ? ZIL.c : ZIL.n)[n - 1] || ['', ''];   // gun: 0 = Pazartesi
   const GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'], AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
   const AYK = ['OCA', 'ŞUB', 'MAR', 'NİS', 'MAY', 'HAZ', 'TEM', 'AĞU', 'EYL', 'EKİ', 'KAS', 'ARA'];
-  const hoca = s => String(s || '').split(/\s+/).map(w => w.length > 1 && w === w.toLocaleUpperCase(tr) && /\p{L}/u.test(w) ? w[0] + w.slice(1).toLocaleLowerCase(tr) : w).join(' ');
+  const hoca = s => /@/.test(String(s || '')) ? 'Rehberlik öğretmeni' : String(s || '').split(/\s+/).map(w => w.length > 1 && w === w.toLocaleUpperCase(tr) && /\p{L}/u.test(w) ? w[0] + w.slice(1).toLocaleLowerCase(tr) : w).join(' ');
   const RENK = [['Matematik', '#22e8ff'], ['Fizik', '#5aa8ff'], ['Kimya', '#3ef08a'], ['Biyoloji', '#7bd88f'], ['İngilizce', '#ff9a3a'], ['Yabancı', '#ff9a3a'], ['Edebiyat', '#ff6b8a'], ['Türk Dili', '#ff6b8a'], ['Müzik', '#d68cff'], ['Görsel', '#d68cff'], ['Din', '#ffd166'], ['Kur', '#ffd166'], ['Peygamber', '#ffd166'], ['Ahlak', '#ffd166'], ['Tarih', '#ffb26b'], ['İnkılap', '#ffb26b'], ['Coğrafya', '#f4a261'], ['Felsefe', '#c3a6ff'], ['Rehberlik', '#b06bff'], ['Beden', '#3ef08a'], ['Spor', '#3ef08a']];
   const dersRenk = d => (RENK.find(([k]) => String(d).includes(k)) || [0, '#7ff6ff'])[1];
   const simdi = () => new Date();
@@ -335,8 +335,23 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
+  // K-680: Çalışma Haritası — zümrenin seçtiği senaryodan yaklaşan yazılının tema/konu/soru dağılımı
+  async function haritaCiz() {
+    const SEN = window.UmalSenaryo, el = $('#snHarita'); if (!SEN || !el) return;
+    const h = SEN.hedef(), sv = S.sinif.split('-')[0];
+    try { S.sen = await SEN.veri(sb, h); } catch (e) { return; }
+    const benim = new Set(Object.values(S.program || {}).filter(c => c && c.ders).flatMap(c => String(c.ders).split(/\s*\/\s*/)).map(SEN.dersAnahtar));
+    const L = [...S.sen.tablo.entries()].filter(([k]) => k.split('|')[0] === sv).map(([k, t]) => ({ k: k.split('|')[1], t })).filter(x => !benim.size || [...benim].some(b => b === x.k || b.startsWith(x.k)));
+    if (!L.length) { el.innerHTML = ''; return; }
+    const sec = x => +((S.sen.secim.get(sv + '|' + x.k) || {}).s || 0) || null;
+    L.sort((a, b) => (sec(b) ? 1 : 0) - (sec(a) ? 1 : 0) || (a.t.ulke ? 1 : 0) - (b.t.ulke ? 1 : 0));
+    const top = L.reduce((a, x) => a + (sec(x) ? x.t.top[sec(x) - 1] : 0), 0), secili = L.filter(sec).length;
+    el.innerHTML = `<div class="sn-ogr-bas"><h2>🗺️ Çalışma Haritam · ${h.donem}. Dönem ${h.no}. Yazılı</h2><p>Öğretmenlerin seçtiği senaryoya göre her dersten <b>hangi konudan kaç soru</b> çıkacağı burada. Çalıştığın konuyu işaretle; ilerlemen bu cihazda saklanır.</p><div class="sn-say-ic"><span>${L.length} ders</span><span>${secili} dersin senaryosu belli</span>${top ? `<span>${top} soru</span>` : ''}</div></div>
+      <div class="sn-izgara">${L.map(x => SEN.harita(x.t, sec(x), { ad: SEN.DERS_AD[x.k] || x.k, anahtar: [h.yil, h.donem, h.no, sv, x.k].join('|'), renk: dersRenk(SEN.DERS_AD[x.k] || x.k) })).join('')}</div>`;
+    if (!el.dataset.bagli) { SEN.haritaBagla(el); el.dataset.bagli = '1'; }
+  }
   function sinavCiz() {
     const SV = sinavlarim(), b = iso(simdi()), d0 = simdi(); d0.setHours(0, 0, 0, 0);
     const hs = new Date(d0); hs.setDate(hs.getDate() - gunIdx(hs));   // bu haftanın pazartesisi
