@@ -3487,25 +3487,21 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!tc) N.push('T.C. no yok'); else if (!gzTcGecerli(tc)) N.push('T.C. no hatalı');
         const m = dg.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if (!dg) N.push('doğum tarihi yok'); else if (!m || +m[1] > 31 || +m[2] > 12 || +m[1] < 1 || +m[2] < 1) N.push('doğum tarihi hatalı');
         if (p.tel && tl.length !== 11) N.push('telefon eksik/hatalı'); if (!p.cins) N.push('cinsiyet?'); return N.join(', '); };
-      const sayfalar = G.otobusler.map((o, i) => {
-        const L = yolcular(M, o.id), bel = L.filter(x => x.p.tur === 'bel').map(x => x.p);
-        const ogt = [1, 2].map(k => { const x = L.find(y => y.k === k && y.p.tur !== 'ogr'); return x ? x.p : null; });
-        const ogr = L.filter(x => x.p.tur === 'ogr');
+      const sayfalar = G.otobusler.map((o, i) => {   // K-705: belediyenin biçimi; PASAPORT_NO sütununa öğrencinin telefonu yazılır (idare isteği)
+        const L = yolcular(M, o.id), bel = L.filter(x => x.p.tur === 'bel').map(x => x.p), ogr = L.filter(x => x.p.tur === 'ogr');
         const ad = p => { const w = baslik(p.ad || '').split(' ').filter(Boolean); return [w.slice(0, -1).join(' ').toLocaleUpperCase(tr), (w[w.length - 1] || '').toLocaleUpperCase(tr)]; };
-        const satir = (sira, x, gorevli) => { if (!x) return { gorevli, h: [sira, gorevli ? (gorevli === 1 ? 1 : 2) : '', '', '', '', '', '', '', '', '', 'Görevli öğretmen', '', ''] };
-          const p = x.p || x, k = x.k, [i_, s_] = ad(p), tc = String(p.tc || '').replace(/\D/g, '');
-          return { gorevli, h: [sira, k || '', gzYerAd(yerOf(o, k)), tc ? (tc.startsWith('99') ? '' : 'TÜRKİYE') : '', tc, '', i_, s_, dogumYaz(p.dogum), p.tur === 'ogr' ? (p.cins === 'K' ? 'KADIN' : p.cins === 'E' ? 'ERKEK' : '') : '', p.sinif || GZ_TUR[p.tur] || '', gzTel(p.tel), kontrol(p)] }; };
-        const satirlar = [satir(1, null, 1), satir(2, null, 2)].concat(ogr.map((x, j) => satir(j + 3, x, 0)));
-        return { ad: o.no + ' NOLU OTOBÜS', renk: GZ_RENK[i % GZ_RENK.length], baslik: (G.ad || 'Çanakkale Gezisi').toLocaleUpperCase(tr) + ' · ' + o.no + ' NOLU OTOBÜS',
-          alt: 'Ümraniye Merkez Anadolu Lisesi' + (G.tarih ? ' · ' + gzTarih(G.tarih) : '') + (G.saat ? ' · Kalkış ' + G.saat : '') + (G.kalkis ? ' · ' + G.kalkis : ''),
-          bilgi: [['ARAÇ NUMARASI', o.no + ' NOLU OTOBÜS'], ['ARAÇ PLAKASI', o.plaka || ''], ['ŞOFÖR', o.sofor ? o.sofor.toLocaleUpperCase(tr) + (o.tel ? ' · ' + o.tel : '') : ''], ['BELEDİYE PERSONELİ', bel.map(p => baslik(p.ad).toLocaleUpperCase(tr)).join(', ')], ['BELEDİYE PERSONELİ TEL', bel.map(p => p.tel || '').filter(Boolean).join(', ')]],
-          sutunlar: [['SIRA', 6], ['KOLTUK', 8], ['YER', 12], ['ÜLKE', 11], ['TC / YABANCI KİMLİK NO', 20], ['PASAPORT NO', 13], ['İSİM', 20], ['SOYİSİM', 16], ['DOĞUM TARİHİ', 13], ['CİNSİYET', 10], ['SINIF', 9], ['CEP TELEFONU', 15], ['KONTROL', 22]],
-          satirlar, not: `Kırmızı işaretli 1. ve 2. satır görevli öğretmenler içindir. ${ogr.length} öğrenci ve 2 görevli öğretmen olmak üzere toplam ${ogr.length + 2} kişi. Listeyi istenen bilgileri doğru ve eksiksiz tamamlayıp ilgili birime ulaştırınız.` };
+        const satirlar = [{ gorevli: 1, h: [1, '', '', 'TEL:', '', '', '', ''] }, { gorevli: 1, h: [2, '', '', 'TEL:', '', '', '', ''] }];
+        ogr.forEach(({ p }, j) => { const [i_, s_] = ad(p), tc = String(p.tc || '').replace(/\D/g, ''), dg = dogumYaz(p.dogum), m = dg.match(/^(\d{2})\.(\d{2})\.(\d{4})$/), tel = gzTel(p.tel), hat = [];
+          if (!tc || !gzTcGecerli(tc)) hat.push(2); if (p.tel && tel.replace(/\D/g, '').length !== 11) hat.push(3); if (!m || +m[1] > 31 || +m[2] > 12 || !+m[1] || !+m[2]) hat.push(6); if (!p.cins) hat.push(7);
+          satirlar.push({ h: [j + 3, tc ? (tc.startsWith('99') ? '' : 'TÜRKİYE') : '', tc, tel, i_, s_, dg, p.cins === 'K' ? 'KADIN' : p.cins === 'E' ? 'ERKEK' : ''], hatali: hat }); });
+        for (let k = satirlar.length; k < o.kapasite; k++) satirlar.push({ h: [k + 1, '', '', '', '', '', '', ''] });
+        return { ad: o.no + ' NOLU OTOBÜS', baslik: (G.ad || 'Çanakkale Gezisi').toLocaleUpperCase(tr), bel: bel.map(p => baslik(p.ad).toLocaleUpperCase(tr)).join(', '), belTel: bel.map(p => p.tel || '').filter(Boolean).join(', '), arac: o.no + ' NOLU OTOBÜS', plaka: o.plaka || '', satirlar,
+          not: `NOT: KIRMIZI İŞARETLİ 1. VE 2. SATIR GÖREVLİ ÖĞRETMENLER İÇİN AYRILMIŞTIR. ${ogr.length} ÖĞRENCİ VE 2 GÖREVLİ ÖĞRETMEN OLMAK ÜZERE TOPLAM ${ogr.length + 2} KİŞİLİK LİSTE SİZİNLE PAYLAŞILMIŞTIR. LİSTEYİ YUKARIDA İSTENEN BİLGİLERİ DOĞRU VE EKSİKSİZ BİR ŞEKİLDE TAMAMLAYIP İLGİLİ BİRİME ULAŞTIRINIZ.` };
       });
-      pencereAc(`<h2 style="margin-top:0">📊 Belediye listesi (Excel)</h2><p class="soluk kucuk">Her otobüs ayrı sayfa. İlk iki satır görevli öğretmenler için boş bırakılır; öğrenciler koltuk sırasıyla. T.C. kimlik no ve doğum tarihi katılım formundaki cevaplardan gelir.</p><div class="dugmeler" style="flex-wrap:wrap"><button class="birincil" data-xl="*">Tüm otobüsler (tek dosya, ${G.otobusler.length} sayfa)</button>${G.otobusler.map((o, i) => `<button class="ikincil" data-xl="${i}">${o.no}. Otobüs</button>`).join('')}</div>`);
+      pencereAc(`<h2 style="margin-top:0">📊 Belediye listesi (Excel)</h2><p class="soluk kucuk">Belediyenin istediği biçim; her otobüs ayrı sayfa. İlk iki satır görevli öğretmenler için kırmızı ve boş; öğrenciler koltuk sırasıyla. PASAPORT_NO sütununa öğrencinin telefonu yazılır. Hatalı ya da eksik bilgiler sarı işaretlidir.</p><div class="dugmeler" style="flex-wrap:wrap"><button class="birincil" data-xl="*">Tüm otobüsler (tek dosya, ${G.otobusler.length} sayfa)</button>${G.otobusler.map((o, i) => `<button class="ikincil" data-xl="${i}">${o.no}. Otobüs</button>`).join('')}</div>`);
       $('#pencere').querySelectorAll('[data-xl]').forEach(b => b.onclick = () => {
         const S = b.dataset.xl === '*' ? sayfalar : [sayfalar[+b.dataset.xl]];
-        indir(UmalZip.liste(S), `${G.ad || 'Çanakkale Gezisi'} - ${b.dataset.xl === '*' ? 'Otobüs Listeleri' : S[0].ad}.xlsx`);
+        indir(UmalZip.belediye(S), `${G.ad || 'Çanakkale Gezisi'} - ${b.dataset.xl === '*' ? 'Otobüs Listeleri' : S[0].ad}.xlsx`);
       });
     };
     const biletler = M => {
