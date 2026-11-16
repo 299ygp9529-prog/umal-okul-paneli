@@ -4812,7 +4812,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const TURLER = [['rapor', 'Raporlu', ['S', 'SY', 'R', 'RY']], ['izin', 'İzinli', ['İ', 'I', 'İY']], ['ozursuz', 'Özürsüz', ['D', 'G', 'Z', 'ZY']], ['diger', 'Diğer (faaliyet, özürlü…)', ['F', 'N', 'Ö', 'ÖY']]];
     let secTur = new Set(['rapor']);
     const isGunuSonra = (t, n) => { let d = new Date(t + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-    const coz = L => { const K = new Map(), bilinmeyen = []; let tarihli = 0, kodlu = false;
+    const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false;
       const bi = L.findIndex(r => r.some(c => /öğr\.?\s*no|okul\s*no|öğrenci\s*no/i.test(c)) && r.some(c => /tarih/i.test(c)));
       const B = bi >= 0 ? L[bi].map(c => String(c || '').toLocaleLowerCase(tr)) : null, sut = re => B ? B.findIndex(c => re.test(c)) : -1;
       const cNo = sut(/öğr\.?\s*no|okul\s*no|öğrenci\s*no/), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün sayı/), cN = sut(/neden|tür/);
@@ -4829,19 +4829,23 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           if (o && !T.length) T = H.map(seri).filter(Boolean); if (!T.length) continue; }
         tarihli++;
         if (!o) { bilinmeyen.push(H.slice(0, 4).join(' · ')); continue; }
-        if (neden) { const tur = TURLER.find(([, , K_]) => K_.includes(neden)); if (tur && !secTur.has(tur[0])) continue; if (!tur && !secTur.has('diger')) continue; }
+        if (neden) { const tur = TURLER.find(([, , K_]) => K_.includes(neden)); if ((tur && !secTur.has(tur[0])) || (!tur && !secTur.has('diger'))) { (turDisi[neden] = (turDisi[neden] || 0) + 1); continue; } }
         const S_ = T.slice().sort(); (K.get(o.no) || K.set(o.no, { o, A: [] }).get(o.no)).A.push([S_[0], S_[S_.length - 1], yarim, neden]); }
-      return { K, bilinmeyen, tarihli, kodlu }; };
+      return { K, bilinmeyen, tarihli, kodlu, turDisi }; };
     const gunY = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' }), kisaT = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'short' });
     const karsilastir = () => {
       const L = satirlar.length ? satirlar : $('#rpYapistir').value.split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : /[;,](?=(?:[^"]*"[^"]*")*[^"]*$)/).map(z => z.replace(/^"|"$/g, '')));
-      const { K, bilinmeyen, tarihli, kodlu } = coz(L), S = (tk.subeler || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true })), E = [];
+      const { K, bilinmeyen, tarihli, kodlu, turDisi } = coz(L), S = (tk.subeler || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true })), E = [];
+      const sinavGunleri = new Set(S.map(x => x.tarih)), subesiz = new Map();   // K-713: tanı — sınav günü raporlu ama sınıfı o günün sınav listesinde yok
+      for (const { o, A } of K.values()) for (const t of sinavGunleri) if (A.some(([b, e]) => t >= b && t <= e) && !S.some(x => x.tarih === t && (x.subeler || {})[o.sinif])) subesiz.set(o.no + '|' + t, { o, t });
       for (const { o, A } of K.values()) for (const x of S) { const ders = (x.subeler || {})[o.sinif]; if (!ders) continue; const a = A.filter(([b, e]) => x.tarih >= b && x.tarih <= e).sort((p, q) => p[2] - q[2])[0]; if (!a) continue;
         E.push({ o, x, ders, a, yer: tkYer(tk, x.tarih, x.ders, seviye(o.sinif)) }); }
       E.sort((p, q) => (p.x.tarih + p.x.ders).localeCompare(q.x.tarih + q.x.ders, tr, { numeric: true }) || sinifSira(p.o.sinif, q.o.sinif) || p.o.ad.localeCompare(q.o.ad, tr));
       const ogrS = new Set(E.map(z => z.o.no)).size;
       $('#rpSonuc').innerHTML = (kodlu ? `<div class="cipler" style="margin-top:12px"><span class="soluk kucuk" style="align-self:center">Devamsızlık türü:</span>${TURLER.map(([k, a]) => `<button class="cip ${secTur.has(k) ? 'secili' : ''}" data-rptur="${k}">${a}</button>`).join('')}</div>` : '') + `<div class="tk-ozet" style="margin-top:12px"><div><span class="soluk">Seçilen türde öğrenci</span><b>${K.size}</b><span class="soluk">${tarihli} tarihli satır okundu</span></div><div><span class="soluk">Sınav gününde raporlu</span><b class="turuncu">${ogrS}</b><span class="soluk">öğrenci</span></div><div><span class="soluk">Kaçırılan sınav</span><b class="turuncu">${E.length}</b><span class="soluk">ders</span></div></div>
-        ${bilinmeyen.length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Okulda bulunamayan ${bilinmeyen.length} satır:</b> ${bilinmeyen.slice(0, 6).map(esc).join(' · ')}${bilinmeyen.length > 6 ? ' …' : ''}</div>` : ''}
+        ${bilinmeyen.length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Okulda bulunamayan ${bilinmeyen.length} satır</b> (numarası ya da adı panelin öğrenci listesinde yok): ${bilinmeyen.slice(0, 40).map(esc).join(' · ')}${bilinmeyen.length > 40 ? ' …' : ''}</div>` : ''}
+        ${Object.keys(turDisi).length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Seçili devamsızlık türünde olmadığı için alınmayan satırlar:</b> ${Object.entries(turDisi).map(([k, n]) => `${esc(NEDEN[k] || k)} (${esc(k)}) · ${n}`).join(' · ')} — yukarıdaki tür düğmelerinden ekleyebilirsiniz.</div>` : ''}
+        ${subesiz.size ? `<div class="kart td-uyari" style="margin-top:10px"><b>Sınav günü raporlu ama sınıfının o gün takvimde sınavı yok · ${subesiz.size}:</b> ${[...subesiz.values()].slice(0, 40).map(z => esc(baslik(z.o.ad)) + ' (' + esc(z.o.sinif) + ', ' + esc(kisaT(z.t)) + ')').join(' · ')}${subesiz.size > 40 ? ' …' : ''}<br><span class="soluk kucuk">Takvimde bu şubelerin o günkü sınavı eksik olabilir; takvimi düzenleyip şubeyi ekleyince listeye girerler.</span></div>` : ''}
         ${E.length ? `<div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><button class="ikincil" id="rpPdf">🖨 Liste · PDF</button></div>
         <div style="margin-top:8px;max-height:46vh;overflow:auto"><table class="st-tablo"><thead><tr><th>Sınav</th><th>Öğrenci</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${E.map(z => `<tr><td>${esc(gunY(z.x.tarih))} · ${esc(dersYaz(z.x))}</td><td><b>${esc(baslik(z.o.ad))}</b> <span class="soluk">${esc(z.o.no)}</span></td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}${z.yer === 'sinif' ? ' <span class="soluk">(sınıfta)</span>' : ''}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}${z.a[3] ? ` <span class="soluk">· ${esc(NEDEN[z.a[3]] || z.a[3])}</span>` : z.a[2] ? ' <span class="soluk">· yarım gün</span>' : ''}</td></tr>`).join('')}</tbody></table></div>${E.some(z => z.a[2]) ? '<div class="soluk kucuk" style="margin-top:6px">Yarım gün devamsızlıkta e-Okul hangi yarının olduğunu göstermez; sınav saatini öğrenciyle teyit edin.</div>' : ''}`
         : `<div class="soluk" style="margin-top:12px">${K.size ? 'Raporlu öğrencilerin hiçbiri sınav gününde raporlu görünmüyor.' : 'Listeden öğrenci tanınamadı. Satırlarda okul numarası ve tarih olduğundan emin olun.'}</div>`}`;
