@@ -6,10 +6,10 @@
   const tr = 'tr-TR';
   const KOK = (() => { const s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^/]*$/, '') : 'senaryo/'; })();
   const RENK = ['#22e8ff', '#b06bff', '#3ef08a', '#ff9a3a', '#ff5fa2', '#ffd23f', '#5b8cff', '#ff6b5b'];
-  const DERS_AD = { 'türk dili ve edebiyatı': 'Türk Dili ve Edebiyatı', matematik: 'Matematik', fizik: 'Fizik', kimya: 'Kimya', biyoloji: 'Biyoloji', tarih: 'Tarih', 'coğrafya': 'Coğrafya', 'din kültürü': 'Din Kültürü ve Ahlak Bilgisi', felsefe: 'Felsefe', ingilizce: 'İngilizce' };
+  const DERS_AD = { 'türk dili ve edebiyatı': 'Türk Dili ve Edebiyatı', matematik: 'Matematik', fizik: 'Fizik', kimya: 'Kimya', biyoloji: 'Biyoloji', tarih: 'Tarih', 'coğrafya': 'Coğrafya', 'din kültürü': 'Din Kültürü ve Ahlak Bilgisi', felsefe: 'Felsefe', ingilizce: 'İngilizce', 'inkılap tarihi': 'T.C. İnkılap Tarihi ve Atatürkçülük' };
   const ONEK = { MAT: 'matematik', 'FİZ': 'fizik', FIZ: 'fizik', 'KİM': 'kimya', KIM: 'kimya', 'BİY': 'biyoloji', BIY: 'biyoloji', TAR: 'tarih', 'COĞ': 'coğrafya', COG: 'coğrafya', DKAB: 'din kültürü', FEL: 'felsefe', ENG: 'ingilizce', TDE: 'türk dili ve edebiyatı' };
   const dersAnahtar = a => String(a || '').normalize('NFC').replace(/̇/g, '').toLocaleLowerCase(tr).replace(/̇/g, '').replace(/[’'`]/g, "'").replace(/\s+/g, ' ').trim()
-    .replace(/ ve ahlak bilgisi\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce');
+    .replace(/^s\s*\.\s*/, '').replace(/^(t\s*\.\s*c\s*\.?|tc|türkiye cumhuriyeti)\s+/, '').replace(/ ve ahlak bilgisi\b/, '').replace(/ ve atatürkçülük\b/, '').replace(/^(birinci |1\. )?yabancı dil( \(?ingilizce\)?)?$/, 'ingilizce');
   const yilOf = (d = new Date()) => d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
   // Yaklaşan yazılı (takvim yoksa tarihe göre): Ağu–15 Kas → 1/1 · 16 Kas–Ocak → 1/2 · Şub–10 Nis → 2/1 · sonrası 2/2
   function hedef(d = new Date()) {
