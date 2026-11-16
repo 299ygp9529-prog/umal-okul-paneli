@@ -1473,3 +1473,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .gz-es { font-size: 13px; color: var(--yazi); } .gz-esr { position: absolute; right: 60px; top: 50%; transform: translateY(-50%); font-size: 13px; }
 .gz-kes { position: absolute; top: 1px; right: 3px; font-style: normal; font-size: 10px; } .gz-kes.ayri { filter: drop-shadow(0 0 3px #ff5a5a); }
 .gz-kisi { padding-right: 82px; }
+/* K-715: geziler */
+.gz-geziler { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 12px; }
+.gz-gz { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--cizgi); background: transparent; color: var(--yazi); font-weight: 600; font-size: 13.5px; cursor: pointer; }
+.gz-gz.secili { background: var(--neon); color: #04121f; border-color: var(--neon); } .gz-gz.yeni { border-style: dashed; color: var(--neonacik, #7ff6ff); }

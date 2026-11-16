@@ -336,14 +336,15 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
-  const GZ = { d: null, j: '' };
+  const GZ = { L: [], i: 0, j: '' };
+  Object.defineProperty(GZ, 'd', { get() { return this.L[this.i] || null; } });
   async function gzYukle() {
     try { const { data, error } = await sb.rpc('umal_ogrenci_gezi', { p_no: S.no, p_kod: S.kod }); if (error || !data || !data.ok) return false;
-      const j = JSON.stringify(data.gezi || null); if (j === GZ.j) return false; GZ.j = j; GZ.d = data.gezi || null; return true; } catch (e) { return false; }
+      const L = Array.isArray(data.geziler) ? data.geziler : data.gezi ? [data.gezi] : [], j = JSON.stringify(L); if (j === GZ.j) return false; GZ.j = j; GZ.L = L; if (GZ.i >= L.length) GZ.i = 0; return true; } catch (e) { return false; }
   }
   function gzPlan(N) {   // panelle aynı 2+2 düzen
     N = Math.max(1, Math.min(80, +N || 46)); let R = null, gap = 0, son = 4;
@@ -357,15 +358,15 @@
   }
   const gzYerAd = y => ({ cam: 'Cam kenarı', koridor: 'Koridor', orta: 'Orta koltuk' })[y] || '';
   const gzYer = d => d && d.otobus && d.koltuk ? (gzPlan(d.otobus.kapasite).flat().find(s => s && s.n === d.koltuk) || {}).yer : '';
-  const gzAnah = () => 'gezi_gordu:' + S.no;
-  const gzYeni = () => { if (!GZ.d || !GZ.d.koltuk) return false; try { return localStorage.getItem(gzAnah()) !== GZ.d.otobus.no + ':' + GZ.d.koltuk; } catch (e) { return false; } };
+  const gzAnah = d => 'gezi_gordu:' + S.no + ':' + (d.anahtar || '');
+  const gzYeni = d => { if (!d || !d.koltuk) return false; try { return localStorage.getItem(gzAnah(d)) !== d.otobus.no + ':' + d.koltuk; } catch (e) { return false; } };
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
-  function gzKutu() {
-    const d = GZ.d; if (!d) return '';
+  function gzKutu() { return GZ.L.map((d, i) => gzKutu1(d, i)).join(''); }
+  function gzKutu1(d, i) {
     const alt = d.koltuk ? `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}` : 'Koltuğun yakında belli olacak';
-    return `<button data-git="gezi" class="genis no-ana gz-ana ${gzYeni() ? 'yeni' : ''}">${gzYeni() ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.koltuk}</b><small>${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
+    return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''}">${gzYeni(d) ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.koltuk}</b><small>${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
   }
-  function gzAc() { gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); if (GZ.d && GZ.d.koltuk) { try { localStorage.setItem(gzAnah(), GZ.d.otobus.no + ':' + GZ.d.koltuk); } catch (e) {} } }
+  function gzAc(i) { if (i != null) GZ.i = i; gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); const d = GZ.d; if (d && d.koltuk) { try { localStorage.setItem(gzAnah(d), d.otobus.no + ':' + d.koltuk); } catch (e) {} } }
   function gzCiz() {
     const d = GZ.d, el = $('#gzIc'); if (!el) return;
     $('#gzBaslik').textContent = (d && d.ad) || 'Gezi';
