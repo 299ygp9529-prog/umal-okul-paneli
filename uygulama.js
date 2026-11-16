@@ -3554,13 +3554,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return L;
       };
       const gunAd = G.tarih ? new Date(G.tarih + 'T12:00').toLocaleDateString(tr, { weekday: 'long' }) : '';
-      const bilet = ({ p, k, o, i, yer }) => `<div class="bl" style="--g:${GZ_RENK[i % GZ_RENK.length]}"><div class="bl-ana"><div class="bl-ust"><div class="bl-sol"><img src="${new URL('okul-logo.png', location.href).href}" alt=""><div><div class="bl-k">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><div class="bl-ad">${esc(G.ad || 'Çanakkale Gezisi')}</div><div class="bl-alt">Şehitler diyarına saygı yolculuğu</div></div></div>${BL_ABIDE}</div>
-          <div class="bl-yolcu"><span>YOLCU</span><b>${esc(baslik(p.ad))}</b><i>${p.sinif ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</i></div>
-          <div class="bl-satir"><div><span>TARİH</span><b>${esc(gzTarih(G.tarih) || '—')}${gunAd ? ' ' + esc(gunAd) : ''}</b></div><div><span>KALKIŞ</span><b>${esc(G.saat || '—')}${G.kalkis ? ' · ' + esc(G.kalkis) : ''}</b></div><div><span>GÜZERGÂH</span><b>İstanbul → Çanakkale</b></div></div></div>
-          <div class="bl-koc"><div class="bl-oto"><span>OTOBÜS</span><b>${o.no}</b></div><div class="bl-kol"><span>KOLTUK</span><b>${k}</b></div><div class="bl-yer">${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</div>${o.plaka ? `<div class="bl-pl">${esc(o.plaka)}</div>` : ''}</div></div>`;
+      // K-711: Al Bayrak bileti — Çanakkale desenli (Conkbayırı sırtında ilerleyen Mehmetçikler, mermi taşıyan er, Şehitler Abidesi, Boğaz dalgaları)
+      const logo = new URL('okul-logo.png', location.href).href;
+      const harita = (o, k) => gzPlan(o.kapasite).map(r => r.map((s, j) => j === 2 && !(s && s.n) ? '<i class="b"></i>' : !s ? '<i class="b"></i>' : s.kapi ? '<i class="k"></i>' : `<i class="${s.n === k ? 's' : ''}"></i>`).join('')).join('');
+      const bilet = ({ p, k, o, yer }) => `<div class="t"><div class="bayrak"><b>ÇANAKKALE GEÇİLMEZ</b>${BL_AY}<span>1915</span></div>
+        <div class="ana">${BL_DESEN}<div class="ust"><img src="${logo}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${esc(G.ad || 'Çanakkale Gezisi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>')}</h1></div></div>
+          <div class="soz">“Ben size taarruzu emretmiyorum, ölmeyi emrediyorum.”<small>MUSTAFA KEMAL · CONKBAYIRI 1915</small></div>
+          <div class="yolcu"><small class="e">YOLCU</small><b>${esc(baslik(p.ad))}</b><span>${p.sinif ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</span></div>
+          <div class="bilgi"><div><small class="e">TARİH</small><b>${esc(gzTarih(G.tarih) || '—')}${gunAd ? ' ' + esc(gunAd) : ''}</b></div><div><small class="e">KALKIŞ</small><b>${esc(G.saat || '—')}${G.kalkis ? ' · ' + esc(G.kalkis) : ''}</b></div><div><small class="e">GÜZERGÂH</small><b>İstanbul → Çanakkale</b></div></div></div>
+        <div class="koc"><div class="oto"><small>OTOBÜS</small><b>${o.no}</b></div><div class="kol"><small>KOLTUK</small><b>${k}</b></div><div class="harita">${harita(o, k)}</div><div class="yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(o.plaka || '')}</span></div></div></div>`;
       const yaz = hangi => { const L = sec(hangi); if (!L.length) { uyar('Bu seçimde yerleşmiş kimse yok.'); return; }
         const sayfalar = []; for (let i = 0; i < L.length; i += 4) sayfalar.push(`<div class="bl-sayfa">${L.slice(i, i + 4).map(bilet).join('')}</div>`);
-        belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Biletler</title><style>${BL_CSS}</style></head><body>${sayfalar.join('')}</body></html>`, 'Gezi biletleri · ' + L.length + ' bilet'); };
+        belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Biletler</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;600;700;800&family=Lora:ital,wght@1,400&display=swap" rel="stylesheet"><style>${BL_CSS}</style></head><body>${sayfalar.join('')}</body></html>`, 'Gezi biletleri · ' + L.length + ' bilet'); };
       const siniflar = [...new Set([...M.values()].filter(p => p.tur === 'ogr' && G.yer[p.an]).map(p => p.sinif))].sort(sinifSira);
       pencereAc(`<h2 style="margin-top:0">🎫 Biletler</h2><p class="soluk kucuk">Her A4 sayfaya 4 bilet. Dağıtmak için sınıf sınıf da basabilirsiniz.</p><div class="dugmeler" style="flex-wrap:wrap"><button class="birincil" data-bl="*">Hepsi</button>${G.otobusler.map(o => `<button class="ikincil" data-bl="${o.id}">${o.no}. Otobüs</button>`).join('')}</div>${siniflar.length ? `<b class="kucuk soluk">Sınıfa göre</b><div class="dugmeler" style="flex-wrap:wrap">${siniflar.map(s => `<button class="ikincil" data-bl="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}`);
       $('#pencere').querySelectorAll('[data-bl]').forEach(b => b.onclick = () => yaz(b.dataset.bl));
@@ -3609,21 +3614,69 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   const MENU_IK_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="2.200"/><path d="M3.800 10.500l6 1M20.200 10.500l-6 1M12 14.200V20.500"/></svg>';
   const BL_ABIDE = '<svg class="bl-abide" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 86h100"/><path d="M22 86V78h76v8"/><path d="M34 78V26M48 78V26M72 78V26M86 78V26"/><path d="M28 26h64v-9H28z" fill="currentColor" fill-opacity=".25"/><path d="M60 17V6"/><path d="M60 6c6 0 9 2 14 2v7c-5 0-8-2-14-2" fill="currentColor" fill-opacity=".9" stroke="none"/></svg>';
-  const BL_CSS = `@page { size: A4; margin: 10mm; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #10203a; }
-    .bl-sayfa { display: flex; flex-direction: column; gap: 6mm; page-break-after: always; } .bl-sayfa:last-child { page-break-after: auto; }
-    .bl { display: grid; grid-template-columns: 1fr 46mm; height: 64mm; border-radius: 5mm; overflow: hidden; border: 1px solid #c9b27a; background: #fffdf6; page-break-inside: avoid; }
-    .bl-ana { position: relative; padding: 5mm 7mm; background: linear-gradient(120deg, #0d2747 0%, #13335c 58%, #1a3f6e 100%); color: #fff; display: flex; flex-direction: column; justify-content: space-between; }
-    .bl-ana::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2.2mm; background: linear-gradient(90deg, #c8102e 0 50%, #e8c66b 50% 100%); }
-    .bl-ust { display: flex; justify-content: space-between; align-items: flex-start; gap: 6mm; } .bl-sol { display: flex; gap: 3.5mm; align-items: center; } .bl-sol img { width: 14mm; height: 14mm; border-radius: 50%; background: #fff; }
-    .bl-k { font-size: 7.5pt; letter-spacing: .14em; color: #e8c66b; font-weight: 700; } .bl-ad { font-size: 18pt; font-weight: 800; letter-spacing: .02em; margin-top: .5mm; } .bl-alt { font-size: 8.5pt; color: #b9c8de; font-style: italic; }
-    .bl-abide { width: 25mm; color: #e8c66b; flex: none; opacity: .95; }
-    .bl-yolcu span, .bl-satir span, .bl-koc span { display: block; font-size: 6.5pt; letter-spacing: .16em; color: #9fb3cf; font-weight: 700; }
-    .bl-yolcu b { display: block; font-size: 15pt; } .bl-yolcu i { font-style: normal; color: #e8c66b; font-size: 9.5pt; font-weight: 600; }
-    .bl-satir { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 4mm; margin-bottom: 2mm; } .bl-satir b { font-size: 8.5pt; }
-    .bl-koc { position: relative; border-left: 2px dashed #c9b27a; padding: 5mm 4mm; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; text-align: center; background: #fffdf6; }
-    .bl-koc::before, .bl-koc::after { content: ''; position: absolute; left: -4mm; width: 7mm; height: 7mm; border-radius: 50%; background: #fff; border: 1px solid #c9b27a; } .bl-koc::before { top: -4mm; } .bl-koc::after { bottom: -4mm; }
-    .bl-koc span { color: #6b7a90; } .bl-oto b { font-size: 22pt; color: #0d2747; line-height: 1; } .bl-kol b { display: inline-grid; place-items: center; min-width: 17mm; height: 15mm; padding: 0 2mm; border-radius: 3mm; background: var(--g); color: #0d2747; font-size: 22pt; line-height: 1; border: 1.5px solid #0d2747; }
-    .bl-yer { font-size: 8pt; font-weight: 800; letter-spacing: .08em; color: #c8102e; } .bl-pl { font-size: 7.5pt; color: #6b7a90; letter-spacing: .06em; }`;
+  const BL_CSS = `*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@page{size:A4;margin:8mm}body{margin:0;font-family:Inter,'Segoe UI',Arial,sans-serif}.bl-sayfa{display:flex;flex-direction:column;gap:4mm;page-break-after:always}.bl-sayfa:last-child{page-break-after:auto}
+.t{width:194mm;height:66mm;position:relative;overflow:hidden;border-radius:4mm;border:.3mm solid #ddd;page-break-inside:avoid;display:grid;grid-template-columns:22mm 1fr 52mm;background:#fff;color:#111}
+.bayrak{background:#e30a17;position:relative;display:flex;align-items:center;justify-content:center}
+.bayrak svg{width:15mm}
+.bayrak span{position:absolute;bottom:4mm;left:0;right:0;text-align:center;font:700 6pt Inter;letter-spacing:.3em;color:#fff;opacity:.9}
+.bayrak b{position:absolute;top:4mm;left:0;right:0;text-align:center;font:700 5.2pt Inter;letter-spacing:.18em;color:#fff;opacity:.85;writing-mode:vertical-rl;transform:rotate(180deg);height:30mm;margin:0 auto}
+.ana{position:relative;padding:5.5mm 7mm 5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#fff 45%,#fbf3ee 100%)}
+.desen{position:absolute;inset:0;pointer-events:none}
+.ana > *:not(.desen){position:relative}
+.ust{display:flex;align-items:center;gap:3mm}
+.ust img{width:11mm;height:11mm}
+.okul{font:600 6.4pt Inter;letter-spacing:.28em;color:#e30a17}
+h1{margin:.5mm 0 0;font:800 23pt/1 Inter;letter-spacing:-.01em}
+h1 em{font-style:normal;font-weight:300;color:#777}
+.ana > .soz{font:italic 8pt/1.3 Lora,serif;color:#5b2a2a;margin-top:-1mm}
+.soz small{display:block;font:600 5.4pt Inter;letter-spacing:.16em;color:#a33;margin-top:.6mm;font-style:normal}
+.yolcu b{font:700 15pt Inter} .yolcu span{display:block;font:500 8.5pt Inter;color:#666}
+small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
+.bilgi{display:flex;gap:6mm}.bilgi b{font:600 8.6pt Inter}
+.bilgi > div{background:rgba(255,255,255,.82);padding:.6mm 1.6mm .8mm;margin:-.6mm -1.6mm;border-radius:1mm}
+.koc{background:#111;color:#fff;padding:5mm;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;gap:2mm;position:relative}
+.koc::before,.koc::after{content:'';position:absolute;left:-3.5mm;width:7mm;height:7mm;border-radius:50%;background:#fff;border:.3mm solid #ddd}
+.koc::before{top:-3.5mm}.koc::after{bottom:-3.5mm}
+.koc small{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#888}
+.koc .oto b,.koc .kol b{font:800 26pt/1 Inter}
+.koc .kol b{color:#ff3b47}
+.koc .yer{grid-column:1/-1;align-self:end;font:700 7pt Inter;letter-spacing:.12em;white-space:nowrap;border-top:.3mm solid #333;padding-top:2mm;display:flex;justify-content:space-between}
+.harita{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr .5fr 1fr 1fr;gap:.6mm;align-content:center}
+.harita i{height:1.9mm;border-radius:.4mm;background:#333}.harita i.b{background:none}.harita i.s{background:#ff3b47}.harita i.k{background:none;border:.2mm dashed #444}`;
+  const BL_DESEN = `<svg class="desen" viewBox="0 0 500 293" preserveAspectRatio="xMaxYMax slice">
+ <defs>
+  <g id="asker"><!-- kabalaklı, süngülü tüfekli, ileri atılan asker -->
+   <ellipse cx="0" cy="-30" rx="3.1" ry="2.3"/><path d="M-3 -29.5q3-2.5 6 0v1.2h-6z"/><circle cx=".2" cy="-26.6" r="2.3"/>
+   <path d="M-2.6 -24l4.4-.4 2.6 9.4-2 .6-1.6-4-1 4.6 4.8 9.6-2.4 1.2-5.2-8.6-2.6 8.6-2.6-.6 2.4-11.2z"/>
+   <path d="M1 -21.5l12 -9.5 .6.8-12 9.6z"/><path d="M13 -31l3.4-2.8.4.5-3.4 2.9z"/>
+  </g>
+  <g id="seyit"><!-- sırtında top mermisi taşıyan er -->
+   <circle cx="0" cy="-27" r="2.4"/><path d="M-3 -29q3-3 6 0v1h-6z"/>
+   <path d="M-3 -24.5q3.5-1.5 6.5 1l1.2 9-2 .4-.6-3-1.6 3.6 3.2 11.4-2.6.6-3.6-9.6-1.8 9.8-2.6-.4 2.2-13z"/>
+   <rect x="-6.5" y="-36" width="5.6" height="17" rx="2.8" transform="rotate(-24 -3.7 -27.5)"/>
+  </g>
+  <g id="abide"><!-- Şehitler Abidesi: basamaklı kaide, dört ayak, kare tabla -->
+   <path d="M-30 0h60v-3h-60zM-25 -3h50v-3.5h-50zM-20 -6.5h40v-3.5h-40z"/>
+   <path d="M-17 -10v-34h7v34zM-6 -10v-34h4.5v34zM1.5 -10v-34h4.5v34zM10 -10v-34h7v34z"/>
+   <path d="M-21 -44h42v-9h-42zM-19 -53h38v-2.2h-38z"/>
+  </g>
+  <pattern id="kontur" width="90" height="60" patternUnits="userSpaceOnUse"><path d="M0 30c15-8 30-8 45 0s30 8 45 0M0 50c15-6 30-6 45 0s30 6 45 0M0 10c15-6 30-6 45 0s30 6 45 0" fill="none" stroke="#e30a17" stroke-opacity=".05" stroke-width="1"/></pattern>
+ </defs>
+ <rect width="500" height="293" fill="url(#kontur)"/>
+ <circle cx="430" cy="190" r="78" fill="#e30a17" fill-opacity=".05"/>
+ <path d="M0 262 C40 252 80 250 120 252 C170 254 200 236 240 230 C280 224 300 214 335 206 C370 198 392 186 420 190 C450 194 470 210 500 206 V293 H0z" fill="#e30a17" fill-opacity=".07"/>
+ <path d="M0 274 C60 266 110 270 160 268 C210 266 250 254 300 252 C350 250 400 240 440 244 C465 246 485 250 500 248 V293 H0z" fill="#7a1b1b" fill-opacity=".08"/>
+ <g fill="none" stroke="#1f3b6e" stroke-opacity=".13" stroke-width="1.2"><path d="M0 280c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/><path d="M-18 288c12-4 24-4 36 0s24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0 24 4 36 0 24-4 36 0"/></g>
+ <g fill="#5a1414" fill-opacity=".27">
+  <use href="#seyit" transform="translate(258 240) scale(1.3)"/>
+  <use href="#asker" transform="translate(286 233) scale(1.2)"/><use href="#asker" transform="translate(312 225) scale(1.15)"/><use href="#asker" transform="translate(338 216) scale(1.25)"/>
+  <use href="#asker" transform="translate(362 209) scale(1.12)"/><use href="#asker" transform="translate(386 201) scale(1.2)"/>
+ </g>
+ <g transform="translate(408 146)"><rect x="0" y="0" width="1.3" height="42" fill="#7a1b1b" fill-opacity=".35"/><g transform="translate(1.3 0)"><rect width="22" height="14.6" fill="#e30a17" fill-opacity=".55"/><circle cx="7.9" cy="7.3" r="4.4" fill="#fff"/><circle cx="9.1" cy="7.3" r="3.5" fill="#f08a91"/><path fill="#fff" d="M13.7 7.3l-3.5-1.15 2.2 3V5.45l-2.2 3z"/></g></g>
+ <g fill="#5a1414" fill-opacity=".22"><use href="#abide" transform="translate(452 246) scale(1.3)"/></g>
+</svg>`;
+  const BL_AY = '<svg viewBox="0 0 60 40"><circle cx="22" cy="20" r="12" fill="#fff"/><circle cx="25.2" cy="20" r="9.6" fill="#e30a17"/><path fill="#fff" d="M37.5 20l-9.7-3.15 6 8.25V14.9l-6 8.25z"/></svg>';
   const YL_CSS = `@page { size: A4; margin: 12mm; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #10203a; }
     .yl-sayfa { page-break-after: always; } .yl-sayfa:last-child { page-break-after: auto; }
     .yl-bas { display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #0d2747; padding-bottom: 8px; margin-bottom: 8px; } .yl-bas img { width: 46px; height: 46px; } .yl-bas > b { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: #0d2747; color: #fff; font-size: 22px; }
