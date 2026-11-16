@@ -343,11 +343,11 @@
     const h = SEN.hedef(), sv = S.sinif.split('-')[0];
     try { S.sen = await SEN.veri(sb, h); } catch (e) { return; }
     const benim = new Set(Object.values(S.program || {}).filter(c => c && c.ders).flatMap(c => String(c.ders).split(/\s*\/\s*/)).map(SEN.dersAnahtar));
-    const L = [...S.sen.tablo.entries()].filter(([k]) => k.split('|')[0] === sv).map(([k, t]) => ({ k: k.split('|')[1], t })).filter(x => !benim.size || [...benim].some(b => b === x.k || b.startsWith(x.k)));
+    const L = [...S.sen.tablo.entries()].filter(([k]) => k.split('|')[0] === sv).map(([k, t]) => ({ k: k.split('|')[1], t })).filter(x => !benim.size || [...benim].some(b => b === x.k || b.startsWith(x.k))).filter(x => Array.isArray(x.t.top) && x.t.top.length);   // K-691: dağılımı henüz yayımlanmamış (ülke geneli) tablo haritayı bozmasın
     if (!L.length) { el.innerHTML = ''; return; }
     const sec = x => +((S.sen.secim.get(sv + '|' + x.k) || {}).s || 0) || null;
     L.sort((a, b) => (sec(b) ? 1 : 0) - (sec(a) ? 1 : 0) || (a.t.ulke ? 1 : 0) - (b.t.ulke ? 1 : 0));
-    const top = L.reduce((a, x) => a + (sec(x) ? x.t.top[sec(x) - 1] : 0), 0), secili = L.filter(sec).length;
+    const top = L.reduce((a, x) => a + (sec(x) ? (+((x.t.top || [])[sec(x) - 1]) || 0) : 0), 0), secili = L.filter(sec).length;
     el.innerHTML = `<div class="sn-ogr-bas"><h2>🗺️ Çalışma Haritam · ${h.donem}. Dönem ${h.no}. Yazılı</h2><p>Öğretmenlerin seçtiği senaryoya göre her dersten <b>hangi konudan kaç soru</b> çıkacağı burada. Çalıştığın konuyu işaretle; ilerlemen bu cihazda saklanır.</p><div class="sn-say-ic"><span>${L.length} ders</span><span>${secili} dersin senaryosu belli</span>${top ? `<span>${top} soru</span>` : ''}</div></div>
       <div class="sn-izgara">${L.map(x => SEN.harita(x.t, sec(x), { ad: SEN.DERS_AD[x.k] || x.k, anahtar: [h.yil, h.donem, h.no, sv, x.k].join('|'), renk: dersRenk(SEN.DERS_AD[x.k] || x.k) })).join('')}</div>`;
     if (!el.dataset.bagli) { SEN.haritaBagla(el); el.dataset.bagli = '1'; }
@@ -390,7 +390,8 @@
   }
   function telafiSubem() {   // K-690: okulun telafi programında öğrencinin şubesine düşen bütün sınavlar (herkese yayın)
     const M = S.mz; if (!M) return []; const sv = S.sinif.split('-')[0], out = [];
-    for (const P of M.telafi || []) for (const g of (P && P.gunler) || []) for (const sl of g.slot || []) for (const l of String(sl['s' + sv] || '').split('\n').filter(Boolean)) {
+    const bugun_ = new Date(Date.now() - 21 * 864e5).toISOString().slice(0, 10);   // K-691: yalnız güncel program (son 3 haftadan sonrası)
+    for (const P of (M.telafi || []).filter(P => ((P && P.gunler) || []).some(g => g.tarih && g.tarih >= bugun_))) for (const g of (P && P.gunler) || []) for (const sl of g.slot || []) for (const l of String(sl['s' + sv] || '').split('\n').filter(Boolean)) {
       const dad = l.replace(/\s*\([^)]*\)\s*$/, '').trim(), sb_ = (l.match(/\(([^)]*)\)\s*$/) || [])[1];
       if (sb_ && !sb_.split(/\s*,\s*/).some(z => z === S.sinif || z === S.sinif.split('-')[1])) continue;
       if (!g.tarih || !dad) continue;
@@ -1078,6 +1079,8 @@
       if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın
       if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       if (await konuYukle() && !$('#s-sinav').classList.contains('gizli')) sinavCiz();   // K-613: öğretmenin yeni yazdığı sınav konuları
+      { const once = JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]); await sinavlarYukle();   // K-691: idarenin yeni/düzeltilen takvimi, mazeret ve telafi programı sayfa yenilemeden düşsün
+        if (JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]) !== once && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }
       if (await noYukle() && !$('#liste').classList.contains('gizli')) anaCiz(true);   // K-619
       if (RH.yuklendi) sesDenetle();   // K-617
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
