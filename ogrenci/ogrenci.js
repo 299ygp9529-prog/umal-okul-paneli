@@ -384,9 +384,19 @@
       if (sb_ && !sb_.split(/\s*,\s*/).some(z => z === S.sinif || z === S.sinif.split('-')[1])) continue;
       const k = knDA(dad); if (![...kac].some(x => x === k || x.includes(k) || k.includes(x))) continue;
       if (g.tarih && out.some(o => o.tarih === g.tarih && knDA(o.ad) === k)) continue;
-      const [bs, bt] = g.tarih ? zil(gunIdx(new Date(g.tarih + 'T12:00')), +sl.ders || +sl.no || 1) : ['', ''];
+      const [bs, bt] = (g.tarih ? zil(gunIdx(new Date(g.tarih + 'T12:00')), +sl.ders || +sl.no || 1) : null) || ['', ''];
       out.push({ tur: 'telafi', tarih: g.tarih, saat: bs ? `${+sl.ders || sl.no}. ders · ${bs.replace(':', '.')}–${bt.replace(':', '.')}` : '', yer: sl.yer || '', ad: dad, not: P.bilgi || '' }); }
     return out.filter(x => x.tarih).sort((a, b) => (a.tarih + a.saat).localeCompare(b.tarih + b.saat));
+  }
+  function telafiSubem() {   // K-690: okulun telafi programında öğrencinin şubesine düşen bütün sınavlar (herkese yayın)
+    const M = S.mz; if (!M) return []; const sv = S.sinif.split('-')[0], out = [];
+    for (const P of M.telafi || []) for (const g of (P && P.gunler) || []) for (const sl of g.slot || []) for (const l of String(sl['s' + sv] || '').split('\n').filter(Boolean)) {
+      const dad = l.replace(/\s*\([^)]*\)\s*$/, '').trim(), sb_ = (l.match(/\(([^)]*)\)\s*$/) || [])[1];
+      if (sb_ && !sb_.split(/\s*,\s*/).some(z => z === S.sinif || z === S.sinif.split('-')[1])) continue;
+      if (!g.tarih || !dad) continue;
+      const [bs, bt] = zil(gunIdx(new Date(g.tarih + 'T12:00')), +sl.ders || +sl.no || 1) || [];
+      out.push({ tarih: g.tarih, saat: bs ? `${+sl.ders || sl.no}. ders · ${bs.replace(':', '.')}–${bt.replace(':', '.')}` : `${+sl.ders || sl.no}. ders`, yer: sl.yer || '', ad: dad, sinav: sl.sinav || sl.ad || '' }); }
+    const gor = new Set(); return out.filter(x => { const k = x.tarih + x.saat + x.ad; if (gor.has(k)) return false; gor.add(k); return true; }).sort((a, b) => (a.tarih + a.saat).localeCompare(b.tarih + b.saat));
   }
   function sinavCiz() {
     const yil = egYil(), dn = buDonem(), T = S.tkler || (S.takvim && tkSinif(S.takvim) ? new Map([[tkSinif(S.takvim), S.takvim]]) : new Map()), tk1 = T.get(`${yil}|${dn}|1`), tk2 = T.get(`${yil}|${dn}|2`), MZ = mazeretlerim();
@@ -402,6 +412,9 @@
             <div class="n" style="color:#ffb867">${x.tur === 'telafi' ? 'Telafi sınavı' : 'Mazeret sınavı'}${x.ben ? ' · idare senin için tanımladı' : x.asil ? ' · asıl sınava girmedin (' + esc(new Date(x.asil + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })) + ')' : ''}</div>
             ${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Yer: ${esc(x.yer)}</div>` : ''}${x.not ? `<div class="n">${esc(x.not)}</div>` : ''}</div><span class="rozet">${bt ? 'bitti' : gk === 0 ? 'bugün' : gk === 1 ? 'yarın' : gk + ' gün kaldı'}</span></div>`; }).join('')
           : `<div class="kart"><b>Mazeret sınavın yok.</b><div class="soluk kucuk" style="margin-top:4px">${gel.length ? 'Girmediğin sınav için mazeret takvimi henüz hazırlanmadı; idare açıklayınca burada görünür.' : 'Bütün sınavlara girmiş görünüyorsun. Bir sınava giremezsen mazeret sınavın burada görünür.'}</div></div>`)
+        + (() => { const TP = telafiSubem(); if (!TP.length) return ''; const ben = new Set(MZ.filter(x => x.tur === 'telafi').map(x => x.tarih + '|' + knDA(x.ad)));
+            return `<div class="hafta">ŞUBENİN TELAFİ SINAV PROGRAMI</div><div class="soluk kucuk" style="margin:-2px 0 8px">Telafi sınavına yalnız girmediğin sınavların dersinden girersin.</div>` + TP.map(x => { const d = new Date(x.tarih + 'T12:00'), bt = x.tarih < bugun, sen = ben.has(x.tarih + '|' + knDA(x.ad));
+              return `<div class="sv ${bt ? 'bitti' : ''}" style="${sen ? '' : 'opacity:.82'}"><div class="t"><b>${d.getDate()}</b><span>${AYK[d.getMonth()]}</span></div><div><h3>${esc(x.ad)}</h3><div class="s">${GUN[gunIdx(d)]}${x.saat ? ' · ' + esc(x.saat) : ''}</div>${x.yer ? `<div class="y">${svg('yer', '#ffb867')} Yer: ${esc(x.yer)}</div>` : ''}${sen ? '<div class="n" style="color:#ffb867">Bu sınava girmen gerekiyor</div>' : ''}</div>${sen ? '<span class="rozet">senin</span>' : ''}</div>`; }).join(''); })()
         + (gel.length ? `<div class="hafta">GİRMEDİĞİN SINAVLAR</div>${gel.slice().sort((a, b) => String(a.tarih).localeCompare(String(b.tarih))).map(g => `<div class="sn-gel"><b>${esc(new Date(g.tarih + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }))}</b><span>${esc(g.ad || '')}</span><small>${esc(/ders/i.test(String(g.ders)) ? g.ders : parseInt(g.ders, 10) + '. ders')}</small></div>`).join('')}<div class="soluk kucuk" style="margin-top:6px">Raporun ya da mazeretin varsa okul idaresine bildir.</div>` : ''));
       return;
     }
