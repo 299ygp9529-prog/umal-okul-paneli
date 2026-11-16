@@ -3327,7 +3327,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const varsAnket = (D.anketler.find(a => /çanakkale/i.test(a.tanim.ad || '') && a.durum !== 'taslak') || {}).id || '';
     if (!G) G = { ad: 'Çanakkale Gezisi', tarih: '', saat: '', kalkis: 'Okul Önü', anket: varsAnket, otobusler: [1, 2, 3, 4, 5, 6].map(i => ({ id: 'o' + i, no: i, kapasite: 42, plaka: '', sofor: '', tel: '' })), gorevli: [], ekOgr: [], cikar: [], cins: {}, yer: {} };
     ['otobusler', 'gorevli', 'ekOgr', 'cikar'].forEach(x => { if (!Array.isArray(G[x])) G[x] = []; });
-    if (!G.yer || typeof G.yer !== 'object') G.yer = {}; if (!G.cins || typeof G.cins !== 'object') G.cins = {};
+    if (!G.yer || typeof G.yer !== 'object') G.yer = {}; if (!G.cins || typeof G.cins !== 'object') G.cins = {}; if (!Array.isArray(G.esler)) G.esler = [];   // K-710: yan yana oturacak arkadaş çiftleri
     let sel = null, ara = '', durum = '', zam = null, sekme = 'ogr', aktif = (G.otobusler[0] || {}).id;
     let LST = { ad: '', liste: [] };   // K-703: PDF/Excel'den okunan katılımcı listesi (ayrı anahtar: kişisel veri)
     try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'gezi_katilimci').maybeSingle(); if (data && data.deger) LST = JSON.parse(data.deger) || LST; } catch (e) {}
@@ -3356,6 +3356,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       katilanOgr().forEach(o => { const an = 'o:' + o.sinif + ':' + o.no; M.set(an, Object.assign({ an, tur: 'ogr' }, o)); });
       M.forEach(p => { p.cins = cinsi(p); }); return M; };
     const otoBul = id => G.otobusler.find(o => o.id === id);
+    const esOf = an => { const e = G.esler.find(x => x[0] === an || x[1] === an); return e ? (e[0] === an ? e[1] : e[0]) : null; };
+    const yanyana = (a, b) => { const ya = G.yer[a], yb = G.yer[b]; if (!ya || !yb || ya.o !== yb.o) return false; const o = otoBul(ya.o); if (!o) return false;
+      return gzPlan(o.kapasite).some(r => { const ns = r.map(s => s && s.n); const ia = ns.indexOf(ya.k), ib = ns.indexOf(yb.k); if (ia < 0 || ib < 0) return false; const lo = Math.min(ia, ib), hi = Math.max(ia, ib); return (lo === 0 && hi === 1) || (lo === 3 && hi === 4) || (r[2] && r[2].n && ((lo === 1 && hi === 2) || (lo === 2 && hi === 3))); }); };
+    let esMod = false;   // seçili öğrenci için arkadaş seçiliyor
     const koltukta = (oid, k) => Object.keys(G.yer).find(an => G.yer[an].o === oid && G.yer[an].k === k);
     const kisaAd = ad => { const p = baslik(ad || '').split(' ').filter(Boolean); return p.length > 1 ? p[0] + ' ' + p[p.length - 1][0] + '.' : (p[0] || ''); };
     const renk = p => p.tur === 'ogr' ? (p.cins === 'K' ? '#ff8fc8' : p.cins === 'E' ? '#5cb8ff' : '#ffe14d') : p.tur === 'ogt' ? '#ffd166' : p.tur === 'bel' ? '#5ee08a' : '#c99bff';
@@ -3374,11 +3378,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const bel = dig.filter(p => p.tur === 'bel'), reh = dig.filter(p => p.tur !== 'bel'); koy(bel, 3); koy(reh, 4); koy(bel, 4); koy(reh, 3);
       const bosSay = o => { let n = 0; for (let k = GZ_AYRILAN + 1; k <= o.kapasite; k++) if (!doluMu(o, k)) n++; return n; };
       const yerlestir = (o, kuyruk) => {   // yan yana iki koltuk aynı cinsiyet; önce aynı sınıftan eş aranır
-        const ayir = (cins, sinif) => { let i = kuyruk.findIndex(p => p.cins === cins && p.sinif === sinif); if (i < 0) i = kuyruk.findIndex(p => p.cins === cins); return i < 0 ? null : kuyruk.splice(i, 1)[0]; };
+        const esli = p => !!esOf(p.an);
+        const ayir = (cins, sinif) => { let i = kuyruk.findIndex(p => p.cins === cins && p.sinif === sinif && !esli(p)); if (i < 0) i = kuyruk.findIndex(p => p.cins === cins && !esli(p)); return i < 0 ? null : kuyruk.splice(i, 1)[0]; };
         gruplarOf(o).forEach(g => {
           const bos = g.filter(s => s.n > GZ_AYRILAN && !doluMu(o, s.n)); if (!bos.length || !kuyruk.length) return;
-          const ilk = kuyruk.shift(); G.yer[ilk.an] = { o: o.id, k: bos[0].n };
-          for (const s of bos.slice(1)) { const p = ayir(ilk.cins, ilk.sinif); if (!p) break; G.yer[p.an] = { o: o.id, k: s.n }; }
+          let ii = 0; if (bos.length < 2) { ii = kuyruk.findIndex(p => !esli(p)); if (ii < 0) return; }
+          const ilk = kuyruk.splice(ii, 1)[0]; G.yer[ilk.an] = { o: o.id, k: bos[0].n };
+          let kalan = bos.slice(1);
+          const es = esOf(ilk.an), ei = es ? kuyruk.findIndex(p => p.an === es) : -1;
+          if (ei >= 0 && kalan.length) { G.yer[kuyruk.splice(ei, 1)[0].an] = { o: o.id, k: kalan[0].n }; kalan = kalan.slice(1); }
+          for (const s of kalan) { const p = ayir(ilk.cins, ilk.sinif); if (!p) break; G.yer[p.an] = { o: o.id, k: s.n }; }
         });
       };
       const ogr = [...M.values()].filter(p => p.tur === 'ogr');
@@ -3389,17 +3398,30 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         let o = G.otobusler.find(x => kalan.get(x.id) >= L.length) || G.otobusler.slice().sort((a, b) => kalan.get(b.id) - kalan.get(a.id))[0];
         Q.get(o.id).push(...L); kalan.set(o.id, kalan.get(o.id) - L.length);
       });
+      G.esler.forEach(([a, b]) => { const qa = [...Q.values()].find(q => q.some(p => p.an === a)), qb = [...Q.values()].find(q => q.some(p => p.an === b)); if (qa && qb && qa !== qb) { const i = qb.findIndex(p => p.an === b); qa.push(qb.splice(i, 1)[0]); } });   // arkadaşlar aynı otobüste
       const tasan = [];
       G.otobusler.forEach(o => { const q = Q.get(o.id); yerlestir(o, q); tasan.push(...q); });
       G.otobusler.forEach(o => yerlestir(o, tasan));
     };
     const bilgiSatiri = (o, M) => { const L = Object.keys(G.yer).filter(an => G.yer[an].o === o.id && M.get(an)).map(an => M.get(an)); return { L, k: L.filter(p => p.tur === 'ogr' && p.cins === 'K').length, e: L.filter(p => p.tur === 'ogr' && p.cins === 'E').length, g: L.filter(p => p.tur !== 'ogr').length }; };
+    const komsuKoltuk = (oid, k) => { const o = otoBul(oid); if (!o) return null; for (const r of gzPlan(o.kapasite)) { const ns = r.map(s => s && s.n); const i = ns.indexOf(k); if (i < 0) continue;
+        const ad = i === 0 ? [1] : i === 1 ? [0, 2] : i === 3 ? [4, 2] : i === 4 ? [3] : [1, 3]; for (const j of ad) if (ns[j] && ns[j] > GZ_AYRILAN) return ns[j]; } return null; };
+    const esiYanina = (a, b) => {   // b'yi a'nın yanındaki koltuğa al; oradaki kişi b'nin eski yerine geçer
+      const ya = G.yer[a]; if (!ya || yanyana(a, b)) return; const kk = komsuKoltuk(ya.o, ya.k); if (!kk) return;
+      const x = koltukta(ya.o, kk), once = G.yer[b]; G.yer[b] = { o: ya.o, k: kk }; if (x && x !== b) { if (once) G.yer[x] = once; else delete G.yer[x]; } };
+    const esDuzelt = () => G.esler.forEach(([a, b]) => { if (G.yer[a] && !yanyana(a, b)) esiYanina(a, b); else if (G.yer[b] && !G.yer[a]) esiYanina(b, a); });
+    const esYap = (a, b) => {
+      const M = kisiler(), pa = M.get(a), pb = M.get(b); if (!pa || !pb || pb.tur !== 'ogr') return;
+      if (pa.cins && pb.cins && pa.cins !== pb.cins) { uyar('Kız ve erkek öğrenci yan yana oturtulmuyor. Aynı cinsiyetten bir arkadaş seçin.'); return; }
+      G.esler = G.esler.filter(e => !e.includes(a) && !e.includes(b)); G.esler.push([a, b]);
+      if (G.yer[a]) esiYanina(a, b); else if (G.yer[b]) esiYanina(b, a);
+      esMod = false; kaydet(); ciz(); };
     const ciz = () => {
-      const M = kisiler(); temizle(M);
+      const M = kisiler(); temizle(M); G.esler = G.esler.filter(([a, b]) => M.has(a) && M.has(b));
       if (!otoBul(aktif)) aktif = (G.otobusler[0] || {}).id;
       const hepsiP = [...M.values()], ogrL = hepsiP.filter(p => p.tur === 'ogr'), yerlesen = hepsiP.filter(p => G.yer[p.an]).length, kap = G.otobusler.reduce((t, o) => t + (+o.kapasite || 0) - GZ_AYRILAN, 0);
       const q = ara.toLocaleLowerCase(tr), belirsiz = ogrL.filter(p => !p.cins).length;
-      const havuz = hepsiP.filter(p => !G.yer[p.an] && (sekme === 'ogr' ? p.tur === 'ogr' : p.tur !== 'ogr') && (!q || (p.ad + ' ' + (p.sinif || '') + ' ' + (p.no || '')).toLocaleLowerCase(tr).includes(q)));
+      const havuz = hepsiP.filter(p => (!G.yer[p.an] || (esMod && p.an !== sel)) && (sekme === 'ogr' ? p.tur === 'ogr' : p.tur !== 'ogr') && (!q || (p.ad + ' ' + (p.sinif || '') + ' ' + (p.no || '')).toLocaleLowerCase(tr).includes(q)));
       const selP = sel && M.get(sel);
       // yan yana karışık (kız–erkek) oturan var mı?
       const karisik = new Set();
@@ -3408,19 +3430,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!s) return '<span class="gz-bosluk"></span>';
         if (s.kapi) return '<span class="gz-kapi"></span>';
         const an = koltukta(o.id, s.n), p = an && M.get(an), ayr = s.n <= GZ_AYRILAN;
-        return `<button class="gz-k ${p ? 'dolu' : ''} ${ayr ? 'ayrilan' : ''} ${an && an === sel ? 'secili' : ''} ${karisik.has(o.id + ':' + s.n) ? 'karisik' : ''} gz-${s.yer}" data-ko="${o.id}" data-kn="${s.n}" title="${s.n} · ${gzYerAd(s.yer)}${p ? ' · ' + esc(baslik(p.ad)) + (p.sinif ? ' (' + esc(p.sinif) + ')' : ' · ' + esc(GZ_TUR[p.tur] || '')) : ayr ? ' · ' + GZ_AYRILAN_AD[s.n - 1].toLocaleLowerCase(tr) + ' koltuğu' : ''}" ${p ? `style="--c:${renk(p)}"` : ''}><i>${s.n}</i>${p ? `<b>${esc(kisaAd(p.ad))}</b><small>${esc(p.sinif || GZ_TUR[p.tur] || '')}</small>` : ayr ? `<small class="gz-og">${GZ_AYRILAN_AD[s.n - 1]}</small>` : ''}</button>`;
+        return `<button class="gz-k ${p ? 'dolu' : ''} ${ayr ? 'ayrilan' : ''} ${an && an === sel ? 'secili' : ''} ${karisik.has(o.id + ':' + s.n) ? 'karisik' : ''} gz-${s.yer}" data-ko="${o.id}" data-kn="${s.n}" title="${s.n} · ${gzYerAd(s.yer)}${p ? ' · ' + esc(baslik(p.ad)) + (p.sinif ? ' (' + esc(p.sinif) + ')' : ' · ' + esc(GZ_TUR[p.tur] || '')) : ayr ? ' · ' + GZ_AYRILAN_AD[s.n - 1].toLocaleLowerCase(tr) + ' koltuğu' : ''}" ${p ? `style="--c:${renk(p)}"` : ''}><i>${s.n}</i>${p && esOf(an) ? `<em class="gz-kes ${yanyana(an, esOf(an)) ? '' : 'ayri'}" title="Arkadaşı: ${esc(baslik((M.get(esOf(an)) || {}).ad || ''))}">🤝</em>` : ''}${p ? `<b>${esc(kisaAd(p.ad))}</b><small>${esc(p.sinif || GZ_TUR[p.tur] || '')}</small>` : ayr ? `<small class="gz-og">${GZ_AYRILAN_AD[s.n - 1]}</small>` : ''}</button>`;
       };
       const oi = G.otobusler.findIndex(o => o.id === aktif), o = G.otobusler[oi], rk = GZ_RENK[oi % GZ_RENK.length], P = gzPlan(o.kapasite), B = bilgiSatiri(o, M);
       $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Gezi Otobüsleri</h1><span class="soluk" id="gzDurum">${esc(durum)}</span></div>
         <div class="kart gz-bilgi"><div class="gz-alan"><label>Gezi adı<input data-g="ad" value="${esc(G.ad)}"></label><label>Tarih<input type="date" data-g="tarih" value="${esc(G.tarih)}"></label><label>Kalkış saati<input type="time" data-g="saat" value="${esc(G.saat)}"></label><label>Kalkış yeri<input data-g="kalkis" value="${esc(G.kalkis || '')}"></label>
           <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil">📄 ${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
-          <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length ? `<span class="gz-uyari" title="${esc(ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).map(p => baslik(p.ad) + ' (' + p.sinif + ')').join(', '))}"><b>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length}</b> hatalı T.C. no</span>` : ''}${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span><span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
+          <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length ? `<span class="gz-uyari" title="${esc(ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).map(p => baslik(p.ad) + ' (' + p.sinif + ')').join(', '))}"><b>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length}</b> hatalı T.C. no</span>` : ''}${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span>${G.esler.length ? `<span>🤝 <b>${G.esler.length}</b> arkadaş çifti</span>` : ''}${(n => n ? `<span class="gz-uyari" id="gzEsDuzelt" title="Dokunun: ayrı düşen arkadaşlar yan yana alınır"><b>${n}</b> arkadaş çifti ayrı düştü — düzelt</span>` : '')(G.esler.filter(([a, b]) => G.yer[a] && G.yer[b] && !yanyana(a, b)).length)}<span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
           <div class="dugmeler" style="margin:10px 0 0"><button class="birincil" id="gzOto" title="Otobüsler sırayla tam dolar; sınıflar sırayla dizilir">⚡ Otomatik yerleştir</button><button class="birincil" id="gzOtoS" title="Her sınıf tek otobüste; boş koltuk kalabilir">🏫 Sınıf sınıf yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="${G.yayin ? 'birincil' : 'ikincil'}" id="gzYayin" title="Öğrenci panelinde her öğrenci yalnız kendi otobüsünü ve koltuğunu görür">${G.yayin ? '📣 Öğrencilerde yayında ✓' : '📣 Öğrencilere yayınla'}</button><button class="ikincil" id="gzPlan">🚌 Oturma planı</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="ikincil" id="gzOtoCikar" ${G.otobusler.length > 1 ? '' : 'disabled'}>− Otobüs</button><span class="gz-tumkap">Hepsi <input type="number" min="10" max="80" id="gzTumKap" value="${G.otobusler[0] ? G.otobusler[0].kapasite : 42}"> kişilik <button class="ikincil kucuk" id="gzTumKapB">Uygula</button></span><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
         <div class="gz-sekmeler">${G.otobusler.map((x, i) => { const b = bilgiSatiri(x, M); return `<button class="gz-ot ${x.id === aktif ? 'secili' : ''}" style="--g:${GZ_RENK[i % GZ_RENK.length]}" data-akt="${x.id}"><span class="gz-no">${x.no}</span><span><b>${x.no}. Otobüs</b><small>${b.L.length} / ${x.kapasite}</small></span><i style="--y:${Math.round(100 * b.L.length / x.kapasite)}%"></i></button>`; }).join('')}</div>
-        ${selP ? `<div class="gz-secim" style="--c:${renk(selP)}"><b>${esc(baslik(selP.ad))}</b><span>${selP.sinif ? esc(selP.sinif) + ' · No ' + esc(selP.no) : esc(GZ_TUR[selP.tur] || '')}${G.yer[sel] ? ' · ' + (otoBul(G.yer[sel].o) || {}).no + '. otobüs, ' + G.yer[sel].k + ' numara' : ''}</span><small>Bir koltuğa dokunun (başka otobüs için üstten otobüsü seçin): boşsa oraya geçer, doluysa yer değiştirirler.</small><span style="flex:1"></span>${G.yer[sel] ? '<button class="ikincil" id="gzHavuza">Koltuktan kaldır</button>' : ''}<button class="ikincil" id="gzVazgec">Vazgeç</button></div>` : ''}
+        ${selP ? `<div class="gz-secim" style="--c:${renk(selP)}"><b>${esc(baslik(selP.ad))}</b><span>${selP.sinif ? esc(selP.sinif) + ' · No ' + esc(selP.no) : esc(GZ_TUR[selP.tur] || '')}${G.yer[sel] ? ' · ' + (otoBul(G.yer[sel].o) || {}).no + '. otobüs, ' + G.yer[sel].k + ' numara' : ''}</span><small>Bir koltuğa dokunun (başka otobüs için üstten otobüsü seçin): boşsa oraya geçer, doluysa yer değiştirirler.</small><span style="flex:1"></span>${selP.tur === 'ogr' ? (esOf(sel) && M.get(esOf(sel)) ? `<span class="gz-es">🤝 ${esc(baslik(M.get(esOf(sel)).ad))} ile yan yana${G.yer[sel] && G.yer[esOf(sel)] && !yanyana(sel, esOf(sel)) ? ' <b class="kirmizi-yazi">(şu an ayrı)</b>' : ''}</span><button class="ikincil" id="gzEsAyir">Eşi ayır</button>` : `<button class="${esMod ? 'birincil' : 'ikincil'}" id="gzEsSec">${esMod ? '🤝 Şimdi arkadaşına dokun…' : '🤝 Yanına arkadaşını seç'}</button>`) : ''}${G.yer[sel] ? '<button class="ikincil" id="gzHavuza">Koltuktan kaldır</button>' : ''}<button class="ikincil" id="gzVazgec">Vazgeç</button></div>` : ''}
         <div class="gz-izgara"><div class="kart gz-havuz"><div class="gz-sekme"><button class="${sekme === 'ogr' ? 'secili' : ''}" data-gs="ogr">Bekleyen öğrenci · ${ogrL.filter(p => !G.yer[p.an]).length}</button><button class="${sekme === 'gor' ? 'secili' : ''}" data-gs="gor">Görevliler · ${hepsiP.filter(p => p.tur !== 'ogr').length}</button></div>
           <input id="gzAra" placeholder="Ara: ad, sınıf, no" value="${esc(ara)}">
-          <div class="gz-liste">${(sekme === 'gor' ? hepsiP.filter(p => p.tur !== 'ogr') : havuz).map(p => `<div class="gz-kisi ${p.an === sel ? 'secili' : ''} ${G.yer[p.an] ? 'yerli' : ''}" data-kisi="${esc(p.an)}" style="--c:${renk(p)}"><b>${esc(baslik(p.ad))}</b><small>${p.sinif ? esc(p.sinif) + ' · ' + esc(p.no) : esc(GZ_TUR[p.tur] || '')}${G.yer[p.an] ? ' · ' + (otoBul(G.yer[p.an].o) || {}).no + '. otobüs, ' + G.yer[p.an].k : ''}</small>${cinsYaz(p)}${p.tur === 'ogr' ? `<span class="gz-x" data-cikar="${esc(p.an)}" title="Geziden çıkar">×</span>` : `<span class="gz-x" data-gsil="${esc(p.an)}" title="Sil">×</span>`}</div>`).join('') || `<div class="soluk kucuk">${sekme === 'ogr' ? (G.anket ? 'Bekleyen öğrenci yok — hepsi yerleşti.' : 'Yukarıdan katılım formunu seçin ya da aşağıdan öğrenci ekleyin.') : 'Görevli eklenmedi.'}</div>`}</div>
+          <div class="gz-liste">${(sekme === 'gor' ? hepsiP.filter(p => p.tur !== 'ogr') : havuz).map(p => `<div class="gz-kisi ${p.an === sel ? 'secili' : ''} ${G.yer[p.an] ? 'yerli' : ''}" data-kisi="${esc(p.an)}" style="--c:${renk(p)}"><b>${esc(baslik(p.ad))}</b><small>${p.sinif ? esc(p.sinif) + ' · ' + esc(p.no) : esc(GZ_TUR[p.tur] || '')}${G.yer[p.an] ? ' · ' + (otoBul(G.yer[p.an].o) || {}).no + '. otobüs, ' + G.yer[p.an].k : ''}</small>${cinsYaz(p)}${esOf(p.an) && M.get(esOf(p.an)) ? `<span class="gz-esr" title="Yan yana: ${esc(baslik(M.get(esOf(p.an)).ad))}">🤝</span>` : ''}${p.tur === 'ogr' ? `<span class="gz-x" data-cikar="${esc(p.an)}" title="Geziden çıkar">×</span>` : `<span class="gz-x" data-gsil="${esc(p.an)}" title="Sil">×</span>`}</div>`).join('') || `<div class="soluk kucuk">${sekme === 'ogr' ? (G.anket ? 'Bekleyen öğrenci yok — hepsi yerleşti.' : 'Yukarıdan katılım formunu seçin ya da aşağıdan öğrenci ekleyin.') : 'Görevli eklenmedi.'}</div>`}</div>
           ${sekme === 'ogr' ? `<div class="gz-ekle"><input id="gzONo" placeholder="Öğrenci ekle: no ya da ad" list="gzOL"><datalist id="gzOL">${(D.ogrenciler || []).slice(0, 3000).map(o_ => `<option value="${esc(o_.no)} · ${esc(o_.ad)} · ${esc(o_.sinif)}">`).join('')}</datalist><button class="ikincil" id="gzOEkle">Ekle</button></div>${G.cikar.length ? `<button class="bag kucuk" id="gzGeriAl">Çıkarılan ${G.cikar.length} öğrenciyi geri al</button>` : ''}`
             : `<div class="gz-ekle gz-gekle"><input id="gzGAd" placeholder="Ad Soyad"><select id="gzGTur">${Object.entries(GZ_TUR).map(([k, a]) => `<option value="${k}">${a}</option>`).join('')}</select><input id="gzGTel" placeholder="Telefon" value="05" inputmode="tel"><button class="ikincil" id="gzGEkle">Ekle</button></div>`}</div>
           <div class="gz-oto" style="--g:${rk}"><div class="gz-oto-bas"><span class="gz-no">${o.no}</span><div><b>${o.no}. Otobüs</b><small>${B.L.length} / ${o.kapasite} dolu · <span class="gz-pk">${B.k} kız</span> · <span class="gz-pe">${B.e} erkek</span>${B.g ? ' · ' + B.g + ' görevli' : ''}${o.plaka ? ' · ' + esc(o.plaka) : ''}${o.sofor ? ' · Şoför ' + esc(o.sofor) : ''}</small></div><label class="gz-kap" title="Bu otobüsün koltuk sayısı (şoför hariç)">Kapasite<input type="number" min="10" max="80" id="gzKap" value="${o.kapasite}"></label><button class="ikincil" data-oayar="${o.id}">Otobüs bilgileri</button></div>
@@ -3438,17 +3460,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (t.cdeg) { const p = M.get(t.cdeg); G.cins[t.cdeg] = p.cins === 'K' ? 'E' : 'K'; kaydet(); ciz(); return; }
         if (t.cikar) { G.cikar.push(t.cikar); delete G.yer[t.cikar]; if (sel === t.cikar) sel = null; kaydet(); ciz(); return; }
         if (t.gsil) { const id = t.gsil.slice(2); G.gorevli = G.gorevli.filter(g => g.id !== id); delete G.yer[t.gsil]; if (sel === t.gsil) sel = null; kaydet(); ciz(); return; }
-        sel = sel === b.dataset.kisi ? null : b.dataset.kisi; if (sel && G.yer[sel]) aktif = G.yer[sel].o; ciz(); });
+        if (esMod && sel) { esYap(sel, b.dataset.kisi); return; }
+        sel = sel === b.dataset.kisi ? null : b.dataset.kisi; esMod = false; if (sel && G.yer[sel]) aktif = G.yer[sel].o; ciz(); });
       $('#icerik').querySelectorAll('[data-ko]').forEach(b => b.onclick = () => {
         const oid = b.dataset.ko, k = +b.dataset.kn, an = koltukta(oid, k);
+        if (esMod && sel && an && an !== sel) { esYap(sel, an); return; }
         if (!sel) { if (an) { sel = an; ciz(); } return; }
-        if (an === sel) { sel = null; ciz(); return; }
+        if (an === sel) { sel = null; esMod = false; ciz(); return; }
         const once = G.yer[sel]; G.yer[sel] = { o: oid, k };
         if (an) { if (once) G.yer[an] = once; else delete G.yer[an]; }
         sel = null; kaydet(); ciz();
       });
       if ($('#gzHavuza')) $('#gzHavuza').onclick = () => { delete G.yer[sel]; sel = null; kaydet(); ciz(); };
-      if ($('#gzVazgec')) $('#gzVazgec').onclick = () => { sel = null; ciz(); };
+      if ($('#gzVazgec')) $('#gzVazgec').onclick = () => { sel = null; esMod = false; ciz(); };
+      if ($('#gzEsSec')) $('#gzEsSec').onclick = () => { esMod = !esMod; sekme = 'ogr'; ciz(); };
+      if ($('#gzEsAyir')) $('#gzEsAyir').onclick = () => { G.esler = G.esler.filter(e => !e.includes(sel)); kaydet(); ciz(); };
+      if ($('#gzEsDuzelt')) $('#gzEsDuzelt').onclick = () => { esDuzelt(); kaydet(); ciz(); };
       const otoBas = async sb_ => { if (Object.keys(G.yer).some(an => an.startsWith('o:')) && !await onayla('Öğrenciler baştan yerleştirilsin mi? Elle yaptığınız öğrenci değişiklikleri silinir (görevliler yerinde kalır).')) return; otomatik(M, sb_); sel = null; kaydet(); ciz(); };
       $('#gzOto').onclick = () => otoBas(false); $('#gzOtoS').onclick = () => otoBas(true);
       $('#gzSifir').onclick = async () => { if (!await onayla('Bütün koltuk yerleşimi silinsin mi? Öğrenci ve görevli listesi kalır.')) return; G.yer = {}; sel = null; kaydet(); ciz(); };

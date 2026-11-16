@@ -1459,7 +1459,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .gz-govde { flex-direction: row; align-items: stretch; border-radius: 46px 16px 16px 46px; padding: 12px 14px 12px 12px; gap: 6px; }
   .gz-on { flex-direction: column-reverse; justify-content: space-between; border-bottom: 0; border-right: 2px dashed color-mix(in srgb, var(--g) 30%, transparent); padding: 6px 10px 6px 4px; margin: 0 4px 0 0; }
   .gz-onkapi { writing-mode: vertical-rl; transform: rotate(180deg); padding: 8px 3px; }
-  .gz-sofor { flex-direction: column; } .gz-sira { flex: 1; grid-template-columns: none; grid-template-rows: 54px 54px 40px 54px 54px; min-width: 0; }
+  .gz-sofor { flex-direction: column; } .gz-sira { flex: 1; grid-template-columns: none; grid-template-rows: 54px 54px 40px 54px 54px; min-width: 0; align-content: center; height: max-content; align-self: center; }
   .gz-sira > :nth-child(1) { grid-row: 5; } .gz-sira > :nth-child(2) { grid-row: 4; } .gz-sira > :nth-child(3) { grid-row: 3; } .gz-sira > :nth-child(4) { grid-row: 2; } .gz-sira > :nth-child(5) { grid-row: 1; }
   .gz-k { min-height: 0; padding-top: 13px; } .gz-kapi { min-height: 0; } .gz-sira > .gz-k.gz-orta { padding-top: 10px; } .gz-k.gz-cam::after { top: auto; bottom: 0 !important; left: 4px !important; right: 4px !important; width: auto; height: 3px; }
   .gz-sira > .gz-k.gz-cam:last-child::after { top: 0; bottom: auto !important; }
@@ -1469,3 +1469,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .gz-dosya { display: flex; align-items: center; gap: 8px; min-height: 37px; } .gz-dosya label.ikincil { cursor: pointer; padding: 7px 12px; border-radius: 10px; white-space: nowrap; } .gz-dosya small { color: var(--yazi); font-size: 12px; } .gz-dosya a { color: #ff8a8a; }
 .gz-kap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--soluk, #9fb3cf); } .gz-kap input, .gz-tumkap input { width: 62px; background: var(--koyu); color: var(--yazi); border: 1px solid var(--cizgi); border-radius: 8px; padding: 6px 8px; font-size: 14px; font-weight: 700; text-align: center; }
 .gz-tumkap { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--soluk, #9fb3cf); padding: 0 6px; }
+/* K-710: arkadaş çiftleri */
+.gz-es { font-size: 13px; color: var(--yazi); } .gz-esr { position: absolute; right: 60px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+.gz-kes { position: absolute; top: 1px; right: 3px; font-style: normal; font-size: 10px; } .gz-kes.ayri { filter: drop-shadow(0 0 3px #ff5a5a); }
+.gz-kisi { padding-right: 82px; }
