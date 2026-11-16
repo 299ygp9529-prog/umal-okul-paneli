@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   let C = null, kok = null;   // C: panelden gelen yardımcılar
-  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027', ekran: 'idari', ogrSec: null, tut: {} };
+  const S = { L: [], ayar: {}, secili: null, suz: 'acik', ara: '', yil: '2026-2027', ekran: 'idari', ogrSec: null, tut: {}, kart: {} };
   const DOS = () => S.L.filter(r => !r.veri.tur);   // kurul dosyaları (yazılı uyarı ve puan iadesi ayrı satırlar)
   const tr = 'tr';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -75,6 +75,7 @@
     S.L = d.data || []; S.ayar = (a.data && a.data.veri) || {};
     const t = await C.sb.from('umal_disiplin_ayar').select('id,veri').in('id', ['tutanak-' + (S.ayar.yil || S.yil) + '-bas', 'tutanak-' + (S.ayar.yil || S.yil) + '-son']);
     S.tut = {}; (t.data || []).forEach(x => { S.tut[x.id.endsWith('-bas') ? 'bas' : 'son'] = x.veri; });
+    try { const k = await C.sb.from('umal_disiplin_ayar').select('veri').eq('id', 'ogr-kart').maybeSingle(); S.kart = (k.data && k.data.veri) || {}; } catch (e) { S.kart = {}; }   // K-714: öğrenci bilgi kartları
   }
   async function kaydet(r) {
     r.durum = durumKod(r.veri);
@@ -312,7 +313,7 @@
     }
     if (k === 'onay') { const y = yap((a.kurul || {}).yaptirim); ic = `<div class="kucuk soluk">${esc(y ? y.ad : '')} kararını onaylayan: <b class="neon">${esc(y ? y.onay : '')}</b></div><label>Onay tarihi</label><input type="date" id="f_tarih" value="${esc(x.tarih || b)}">`; }
     if (k === 'teblig') ic = `<div class="ds-iki"><div><label>Tebliğ tarihi</label><input type="date" id="f_tarih" value="${esc(x.tarih || b)}"></div><div><label>Tebliğ edilen</label><input id="f_kime" value="${esc(x.kime || 'Veli')}"></div></div>
-      <label>Tebliğ şekli</label><input id="f_sekil" value="${esc(x.sekil || 'Elden imza karşılığı')}"><div class="ds-iki"><div><label>Öğrencinin doğum tarihi / yeri</label><input id="f_dogum" value="${esc(x.dogum || '')}" placeholder="ör. 01.01.2009 / Ümraniye"></div><div><label>Yazı sayısı (veli bildirimi)</label><input id="f_sayi" value="${esc(x.sayi || '')}" placeholder="isteğe bağlı"></div></div><div class="ds-iki"><div><label>Velinin adı soyadı</label><input id="f_veli" value="${esc(x.veli || '')}"></div><div><label>Velinin adresi (ilçe)</label><input id="f_vadres" value="${esc(x.adres || '')}"></div></div><div class="kucuk soluk" style="margin-top:8px">İtiraz süresi tebliğden itibaren 5 iş günü: son gün ${tGoster(isGunuEkle(x.tarih || b, 5))}.</div>`;
+      <label>Tebliğ şekli</label><input id="f_sekil" value="${esc(x.sekil || 'Elden imza karşılığı')}"><div class="ds-iki"><div><label>Öğrencinin doğum tarihi / yeri</label><input id="f_dogum" value="${esc(x.dogum || kartDogum(r.ogr_no))}" placeholder="ör. 01.01.2009 / Ümraniye"></div><div><label>Yazı sayısı (veli bildirimi)</label><input id="f_sayi" value="${esc(x.sayi || '')}" placeholder="isteğe bağlı"></div></div><div class="ds-iki"><div><label>Velinin adı soyadı</label><input id="f_veli" value="${esc(x.veli || (S.kart[r.ogr_no] || {}).veli || '')}"></div><div><label>Velinin adresi (ilçe)</label><input id="f_vadres" value="${esc(x.adres || (S.kart[r.ogr_no] || {}).adres || '')}"></div></div><div class="kucuk soluk" style="margin-top:8px">İtiraz süresi tebliğden itibaren 5 iş günü: son gün ${tGoster(isGunuEkle(x.tarih || b, 5))}.</div>`;
     if (k === 'kesin') { const y = yap((a.kurul || {}).yaptirim), son = a.teblig && a.teblig.tarih ? isGunuEkle(a.teblig.tarih, 5) : null;
       ic = `${son && b <= son ? `<div class="ds-madde" style="margin-top:0"><b>İtiraz süresi henüz bitmedi</b> (son gün ${tGoster(son)}). İtiraz yapıldıysa sonucunu yazın.</div>` : ''}
       <div class="ds-iki"><div><label>Kesinleşme tarihi</label><input type="date" id="f_tarih" value="${esc(x.tarih || (son && son > b ? son : b))}"></div><div><label>İtiraz</label><select id="f_itiraz"><option value="">İtiraz edilmedi</option>${['İtiraz reddedildi, karar onandı', 'İtiraz kabul edildi, karar kaldırıldı', 'İtiraz kabul edildi, ceza değiştirildi'].map(o => `<option ${x.itiraz === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div></div>
@@ -533,7 +534,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
   }
   // ---------------------------------------------------------------- K-604: ana sayfa — çizgi ikonlar, "sıradaki işler" (tek dokunuş), hızlı öğrenci arama
   const IK = {
-    genel: 'M3 21h18M5 21V9.5L12 4l7 5.5V21M9.5 21v-5h5v5M9 11.5h.01M15 11.5h.01', ogrenciler: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5',
+    genel: 'M3 21h18M5 21V9.5L12 4l7 5.5V21M9.5 21v-5h5v5M9 11.5h.01M15 11.5h.01', kartlar: 'M3 5.5h18v13H3zM8 10.5a2 2 0 1 0 0-.01M5 16c.5-1.7 1.6-2.6 3-2.6s2.5.9 3 2.6M14 9.5h4.5M14 12.5h4.5M14 15.5h3', ogrenciler: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5',
     olay: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11.5v6M9 14.5h6', olayaEkle: 'M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2.5 20.5c1.1-3.4 3.9-5.5 7.5-5.5 1.6 0 3 .4 4.2 1.1M18 14v6M15 17h6',
     uyari: 'M4 5h16v11H9.5L4 20zM12 8v4M12 14.2v.1', dosyalar: 'M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM8 13h8M8 16h5',
     cagri: 'M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0', formlar: 'M9 4h6v3H9zM7 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-1M8.5 11h7M8.5 14.5h7M8.5 18h4',
@@ -551,7 +552,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
   const olayOgr = r => S.L.filter(x => !x.veri.tur && (x.veri.olay_id || x.id) === (r.veri.olay_id || r.id));
   const KATMAN = [
     ['GİRİŞLER', [['olay', 'Olay Girişi', 'yeni olay, dosya açılır'], ['uyari', 'Yazılı Uyarı', 'ilk kez kınama yerine'], ['dosyalar', 'Disiplin Dosyaları', 'adım adım takip'],
-      ['olayaEkle', 'Olaya Öğrenci Ekle', 'var olan olaya'], ['ogrenciler', 'Öğrenciler', 'disiplin geçmişi ve puan'], ['genel', 'Genel Bilgiler', 'okul, müdür, kurul üyeleri']]],
+      ['olayaEkle', 'Olaya Öğrenci Ekle', 'var olan olaya'], ['ogrenciler', 'Öğrenciler', 'disiplin geçmişi ve puan'], ['kartlar', 'Öğrenci Bilgi Kartları', 'Excel\'den toplu yükleme'], ['genel', 'Genel Bilgiler', 'okul, müdür, kurul üyeleri']]],
     ['KARAR', [['cagri', 'Çağrı Pusulaları', 'kurul üyelerine'], ['formlar', 'Tutanak ve Formlar', 'tutanak, savunma'], ['karar', 'Karar', 'kurul kararı · EK-1'],
       ['teblig', 'Ceza Tebligatı', 'tebliğ / tebellüğ'], ['tutanaklar', 'Sene Başı / Sene Sonu Tutanakları', 'kurul toplantı tutanakları']]],
     ['DİĞER', [['iade', 'Davranış Puanı İade Girişi', 'puan geri kazanımı'], ['iadeCiz', 'Davranış Puanı İade Çizelgesi', 'yazdırılabilir'], ['istatistik', 'İstatistik (Ceza / Olay)', 'sınıf, madde, ay'],
@@ -566,7 +567,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
       <div class="ia-izgara">${IDARI.map(([k, ad, alt]) => `<button data-ekran="${k}" class="ia-kart"><i>${ikon(k === 'ana' ? 'disiplinPanel' : k, 30)}</i><span><b>${ad}</b><small>${alt}</small></span>${k === 'ana' && (acik || isS) ? `<u>${acik} açık dosya${isS ? ' · ' + isS + ' iş' : ''}</u>` : ''}<em>›</em></button>`).join('')}</div>`;
   }
   function ciz() {
-    const E = { idari: cizIdari, ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
+    const E = { idari: cizIdari, ana: cizAna, dosyalar: cizDosyalar, ogrenciler: cizOgrenciler, kartlar: cizKartlar, olayaEkle: cizOlayaEkle, uyari: cizUyari, cagri: () => cizBelgeListe('cagri'), formlar: () => cizBelgeListe('formlar'),
       karar: () => cizBelgeListe('karar'), teblig: () => cizBelgeListe('teblig'), dizi: () => cizBelgeListe('dizi'), tutanaklar: cizTutanaklar, iade: cizIade, iadeCiz: cizIadeCiz, istatistik: cizIstatistik, cezaAlan: cizCezaAlan };
     if (S.ekran === 'genel') { S.ekran = 'ana'; ayarFormu(); }
     if (S.ekran === 'olay') { S.ekran = 'ana'; yeniOlay(null); }
@@ -665,6 +666,73 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
     aramaBagla();
   }
   function aramaBagla() { const ar = kok.querySelector('#dsAra'); if (ar) ar.oninput = () => { S.ara = ar.value; const c = ar.selectionStart; ciz(); const i = kok.querySelector('#dsAra'); i.focus(); i.setSelectionRange(c, c); }; }
+
+  // ---- K-714: Öğrenci bilgi kartları — e-Okul'dan alınan Excel'le toplu yükleme (veli, telefon, adres, doğum bilgisi); tebliğ formu bunlardan dolar
+  const KART_ALAN = [['veli', 'Veli adı soyadı'], ['yakinlik', 'Yakınlık'], ['veliTel', 'Veli telefonu'], ['ogrTel', 'Öğrenci telefonu'], ['anne', 'Anne adı'], ['baba', 'Baba adı'], ['dogum', 'Doğum tarihi'], ['dogumYeri', 'Doğum yeri'], ['adres', 'Adres']];
+  const kartDogum = no => { const k = S.kart[no] || {}; return [k.dogum, k.dogumYeri].filter(Boolean).join(' / '); };
+  const kartTel = v => { let d = String(v || '').replace(/\D/g, ''); if (!d) return ''; if (d.length === 10 && d[0] === '5') d = '0' + d; if (d.startsWith('90') && d.length === 12) d = '0' + d.slice(2); if (d.length !== 11) return String(v).trim(); return [d.slice(0, 4), d.slice(4, 7), d.slice(7, 9), d.slice(9)].join(' '); };
+  const kartTarih = v => { const t = String(v || '').trim(); if (/^\d{5}(\.\d+)?$/.test(t) && +t > 20000 && +t < 60000) { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(+t) * 864e5); return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`; }
+    let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[3]}.${m[2]}.${m[1]}`; if (/^\d{8}$/.test(t)) return /^(19|20)\d{2}(0[1-9]|1[0-2])/.test(t) ? `${t.slice(6)}.${t.slice(4, 6)}.${t.slice(0, 4)}` : `${t.slice(0, 2)}.${t.slice(2, 4)}.${t.slice(4)}`; m = t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/); if (m) return `${m[1].padStart(2, '0')}.${m[2].padStart(2, '0')}.${m[3]}`; return t; };
+  const buyukBas = s => String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase(tr).replace(/(^|[\s(\-/.,])([^\s(\-/.,])/g, (a, b, c) => b + c.toLocaleUpperCase(tr));
+  function kartCoz(R) {   // başlık satırını bul, sütunları adından tanı (sıra önemsiz)
+    const n = x => String(x || '').toLocaleLowerCase(tr).replace(/\s+/g, ' ').trim();
+    const hi = R.findIndex(r => r.some(c => /(^|\s)(no|numara|numarası)$|okul no|öğr(enci)?\.? ?no/.test(n(c))) && r.some(c => /ad/.test(n(c))));
+    if (hi < 0) return { hata: 'Başlık satırı bulunamadı: listede "Okul No" ve "Adı Soyadı" sütunları olmalı.' };
+    const H = R[hi].map(n), bul = (re, haric) => H.findIndex((c, i) => re.test(c) && !(haric || []).includes(i)), ogrBul = re => H.findIndex(c => re.test(c) && !/veli|anne|baba/.test(c));
+    const c = {}; c.no = bul(/okul no|öğr(enci)?\.? ?no|^no$|^numara/); c.adsoyad = ogrBul(/ad[ıi]? ?soyad|ad soyad/); c.ad = c.adsoyad >= 0 ? -1 : ogrBul(/^ad[ıi]?$|öğrenci ad[ıi]$/); c.soyad = c.adsoyad >= 0 ? -1 : ogrBul(/^soyad[ıi]?$/);
+    c.sinif = bul(/sınıf|şube/); c.dogum = bul(/doğum tarih/); c.dogumYeri = bul(/doğum yer/); c.anne = bul(/^anne|anne ad/); c.baba = bul(/^baba|baba ad/);
+    c.veli = bul(/veli(nin)? ?(ad[ıi]?)? ?soyad|^veli$|veli ad/); c.yakinlik = bul(/yakınlık|veli.*derece/); c.veliTel = bul(/veli.*(tel|cep|gsm)|(tel|cep|gsm).*veli/); c.ogrTel = bul(/öğr.*(tel|cep|gsm)/, [c.veliTel]);
+    if (c.veliTel < 0 && c.ogrTel < 0) c.veliTel = bul(/telefon|cep|gsm/); c.adres = bul(/adres/);
+    if (c.no < 0) return { hata: '"Okul No" sütunu bulunamadı.' };
+    const L = [];
+    R.slice(hi + 1).forEach(r => { const g = k => c[k] >= 0 ? String(r[c[k]] ?? '').trim() : ''; const no = g('no').replace(/\D/g, ''); if (!no) return;
+      const ad = g('adsoyad') || [g('ad'), g('soyad')].filter(Boolean).join(' ');
+      const k = { veli: buyukBas(g('veli')), yakinlik: buyukBas(g('yakinlik')), veliTel: kartTel(g('veliTel')), ogrTel: kartTel(g('ogrTel')), anne: buyukBas(g('anne')), baba: buyukBas(g('baba')), dogum: kartTarih(g('dogum')), dogumYeri: buyukBas(g('dogumYeri')), adres: buyukBas(g('adres')) };
+      Object.keys(k).forEach(x => { if (!k[x]) delete k[x]; });
+      L.push({ no: String(+no), ad: buyukBas(ad), sinif: g('sinif').replace(/[^0-9A-Za-zÇĞİÖŞÜçğıöşü]/g, '').replace(/^(\d+)(\D)/, '$1-$2').toLocaleUpperCase(tr), k }); });
+    return { L, sut: Object.entries(c).filter(([, v]) => v >= 0).map(([k]) => k) };
+  }
+  function cizKartlar() {
+    const okul = new Map((C.ogrenciler ? C.ogrenciler() || [] : []).map(o => [String(o.no), o]));
+    const q = S.ara.toLocaleLowerCase(tr), nolar = Object.keys(S.kart);
+    const ad = no => (S.kart[no] || {}).ad || (okul.get(no) || {}).ad || '';
+    const G = nolar.map(no => ({ no, ad: ad(no), sinif: (S.kart[no] || {}).sinif || (okul.get(no) || {}).sinif || '', k: S.kart[no] }))
+      .filter(x => !q || [x.ad, x.no, x.sinif, x.k.veli].join(' ').toLocaleLowerCase(tr).includes(q)).sort((a, b) => String(a.sinif).localeCompare(String(b.sinif), tr, { numeric: true }) || String(a.ad).localeCompare(String(b.ad), tr));
+    kok.innerHTML = `${geriBas('Öğrenci bilgi kartları', `<span style="display:flex;gap:8px;align-items:center;margin-right:56px"><label class="birincil" style="cursor:pointer">📥 Excel'den toplu yükle<input type="file" id="kartDosya" accept=".xlsx,.xls,.csv,.txt,.html,.htm,.xml" hidden></label>${nolar.length ? '<button class="bag kirmizi" id="kartSil">Tümünü sil</button>' : ''}</span>`)}
+      <p class="soluk kucuk" style="margin-top:8px">e-Okul'dan aldığınız öğrenci / veli listesini (.xlsx, .xls) yükleyin. Sütun sırası önemli değil; <b>Okul No</b> ile eşleştirilir. Tanınan sütunlar: adı soyadı, sınıfı, doğum tarihi ve yeri, anne ve baba adı, veli adı soyadı, yakınlık, veli ve öğrenci telefonu, adres. Aynı öğrenci yeniden yüklenirse bilgileri güncellenir. Tebliğ formunda veli, adres ve doğum bilgisi buradan kendiliğinden dolar.</p>
+      <div id="kartOnizle"></div>
+      <div class="ds-ara" style="margin-top:10px"><input id="dsAra" placeholder="Öğrenci adı, no, sınıf ya da veli" value="${esc(S.ara)}"></div>
+      ${G.length ? `<div style="overflow:auto;margin-top:8px"><table class="ds-tablo"><tr><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Veli</th><th>Veli telefonu</th><th>Doğum</th><th>Adres</th><th></th></tr>${G.slice(0, 400).map(x => `<tr><td>${esc(x.no)}</td><td><b>${esc(C.baslik(x.ad))}</b></td><td style="white-space:nowrap">${esc(x.sinif)}</td><td>${esc(x.k.veli || '')}${x.k.yakinlik ? ` <span class="soluk">(${esc(x.k.yakinlik)})</span>` : ''}</td><td style="white-space:nowrap">${esc(x.k.veliTel || '')}</td><td>${esc(kartDogum(x.no))}</td><td class="kucuk">${esc(x.k.adres || '')}</td><td><button class="bag" data-kartdz="${esc(x.no)}">Düzenle</button></td></tr>`).join('')}</table></div>${G.length > 400 ? `<div class="soluk kucuk">İlk 400 kayıt gösteriliyor; aramayla daraltın.</div>` : ''}`
+        : `<div class="kart soluk" style="margin-top:10px">${nolar.length ? 'Aramaya uyan kart yok.' : 'Henüz bilgi kartı yok. Yukarıdan Excel yükleyin.'}</div>`}`;
+    aramaBagla();
+    const kaydetK = async () => { const { error } = await C.israrla(() => C.sb.from('umal_disiplin_ayar').upsert({ id: 'ogr-kart', veri: S.kart, guncel: new Date().toISOString() }, { onConflict: 'id' })); if (error) { window.UmalSor.uyar('Kaydedilemedi: ' + C.hataYaz(error)); return false; } return true; };
+    kok.querySelector('#kartDosya').onchange = async ev => {
+      const f = ev.target.files[0]; if (!f) return; const on = kok.querySelector('#kartOnizle'); on.innerHTML = '<div class="soluk">Okunuyor…</div>';
+      let R; try { R = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, ''))); }
+      catch (e) { on.innerHTML = `<div class="kart td-uyari">Dosya okunamadı: ${esc(e.message || e)}</div>`; return; }
+      const r = kartCoz(R); if (r.hata) { on.innerHTML = `<div class="kart td-uyari">${esc(r.hata)}</div>`; return; }
+      const ADL = { no: 'Okul no', adsoyad: 'Adı soyadı', ad: 'Adı', soyad: 'Soyadı', sinif: 'Sınıf', dogum: 'Doğum tarihi', dogumYeri: 'Doğum yeri', anne: 'Anne adı', baba: 'Baba adı', veli: 'Veli', yakinlik: 'Yakınlık', veliTel: 'Veli telefonu', ogrTel: 'Öğrenci telefonu', adres: 'Adres' };
+      const yeni = r.L.filter(x => !S.kart[x.no]).length, okuldaYok = r.L.filter(x => okul.size && !okul.has(x.no)).length;
+      on.innerHTML = `<div class="kart" style="margin-top:10px"><b>${r.L.length} öğrenci okundu</b> · ${yeni} yeni, ${r.L.length - yeni} güncellenecek${okuldaYok ? ` · <span class="kirmizi-yazi">${okuldaYok} numara okul listesinde yok</span>` : ''}
+        <div class="kucuk soluk" style="margin-top:4px">Tanınan sütunlar: ${r.sut.map(k => esc(ADL[k] || k)).join(', ')}</div>
+        <div style="overflow:auto;margin-top:8px"><table class="ds-tablo"><tr><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Veli</th><th>Telefon</th><th>Doğum</th></tr>${r.L.slice(0, 5).map(x => `<tr><td>${esc(x.no)}</td><td>${esc(x.ad)}</td><td>${esc(x.sinif)}</td><td>${esc(x.k.veli || '')}</td><td>${esc(x.k.veliTel || '')}</td><td>${esc([x.k.dogum, x.k.dogumYeri].filter(Boolean).join(' / '))}</td></tr>`).join('')}</table></div>
+        <div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><button class="birincil" id="kartKaydet">${r.L.length} kartı kaydet</button><button class="ikincil" id="kartVaz">Vazgeç</button></div></div>`;
+      on.querySelector('#kartVaz').onclick = () => { on.innerHTML = ''; };
+      on.querySelector('#kartKaydet').onclick = async () => { const once = JSON.stringify(S.kart);
+        r.L.forEach(x => { const o = okul.get(x.no); S.kart[x.no] = Object.assign({}, S.kart[x.no] || {}, x.k, { ad: x.ad || (o || {}).ad || '', sinif: x.sinif || (o || {}).sinif || '' }); });
+        if (await kaydetK()) { window.UmalSor.uyar(`${r.L.length} öğrencinin bilgi kartı kaydedildi.`); ciz(); } else S.kart = JSON.parse(once); };
+    };
+    const sil = kok.querySelector('#kartSil'); if (sil) sil.onclick = async () => { if (!await window.UmalSor.onayla(`${nolar.length} öğrencinin bilgi kartı silinsin mi? Disiplin dosyaları etkilenmez.`)) return; const once = S.kart; S.kart = {}; if (await kaydetK()) ciz(); else S.kart = once; };
+    kok.querySelectorAll('[data-kartdz]').forEach(b => b.onclick = () => { const no = b.dataset.kartdz, k = S.kart[no] || {};
+      C.pencereAc(`<h2 style="margin-top:0">${esc(C.baslik(ad(no)))} · No ${esc(no)}</h2><div class="ds-form">${KART_ALAN.map(([a, e]) => `<label>${e}</label>${a === 'adres' ? `<textarea id="kk_${a}" rows="2">${esc(k[a] || '')}</textarea>` : `<input id="kk_${a}" value="${esc(k[a] || '')}">`}`).join('')}
+        <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="kkKaydet">Kaydet</button><button class="bag kirmizi" id="kkSil">Kartı sil</button></div></div>`);
+      const g = a => document.getElementById('kk_' + a).value;
+      document.getElementById('kkKaydet').onclick = async () => { const once = JSON.stringify(S.kart); const y = Object.assign({}, k);
+        KART_ALAN.forEach(([a]) => { let v = g(a).trim(); if (a === 'veliTel' || a === 'ogrTel') v = kartTel(v); else if (a === 'dogum') v = kartTarih(v); else v = buyukBas(v); if (v) y[a] = v; else delete y[a]; });
+        S.kart[no] = y; if (await kaydetK()) { C.pencereKapat(); ciz(); } else S.kart = JSON.parse(once); };
+      document.getElementById('kkSil').onclick = async () => { const once = JSON.stringify(S.kart); delete S.kart[no]; if (await kaydetK()) { C.pencereKapat(); ciz(); } else S.kart = JSON.parse(once); };
+    });
+  }
   // ---- Olaya öğrenci ekle
   function cizOlayaEkle() {
     const ana = DOS().filter(r => !r.veri.olay_id || r.veri.olay_id === r.id);

@@ -3998,7 +3998,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   // ------------------------------------------------------------------ K-538: Disiplin (ayrı dosya; ilk açılışta yüklenir)
   // K-635: idari modülü (telafi vb.) başka bölümden açmak için ortak bağlam
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
-    pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
+    pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
     if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611160900'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
@@ -4006,11 +4006,11 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611151200');
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611162330');
     if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611160900');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
-      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, xlsxSatirlar, xlsSatirlar });
+      pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   }
   async function soruHazirla() {
     await soruYukle();
