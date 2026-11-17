@@ -319,7 +319,7 @@
     } else bk.classList.add('gizli');
     const BD = bugunDersleri();
     $('#bugunDersler').innerHTML = BD.map(x => `<div class="${x.d === 'bit' ? 'bit' : x.d ? 'sr' : ''}">${x.n}. Ders${x.d === 'simdi' ? ' · şimdi' : x.d === 'sira' ? ' · sıradaki' : ''}<b>${esc(x.ders)}</b></div>`).join('');
-    $('#dersKart').classList.toggle('gizli', !BD.length);
+    $('#dersKart').classList.add('gizli');   // K-716ay: ana ekranda bugünkü ders şeridi gösterilmiyor
     const acikForm = S.formlar.filter(f => !f.doldu).length;
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.n.toLocaleString(tr)} soru · net ${sayi1(st.net)}` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></button>`; })() : '';
