@@ -302,6 +302,9 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gz-lej { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 12px; font-size: 11px; color: #9fb3cf; } .gz-lej span { display: flex; align-items: center; gap: 6px; }
 .gz-lej i { width: 14px; height: 12px; border-radius: 3px; border: 1px solid #ffffff2a; background: rgba(127,246,255,.06); } .gz-lej .l-cam { box-shadow: inset 3px 0 0 #7fdcff; } .gz-lej .l-kapi { border-style: dashed; border-color: #e8c66b77; background: repeating-linear-gradient(45deg, #e8c66b22 0 3px, transparent 3px 6px); }
 .izg button.genis.gz-ana { position: relative; }
+/* K-716bx: gezi bilgilerim */
+.izg button.genis.gb-ana { border-color: #ffb86799; background: linear-gradient(120deg, rgba(255,184,103,.12), transparent 70%); }
+.gb-kart { display: flex; flex-direction: column; gap: 12px; } .gb-kart p { margin: 0; line-height: 1.5; } .gb-kart label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #9fb3cf; } .gb-kart input { font-size: 18px; padding: 12px 14px; border-radius: 12px; border: 1px solid #ffffff22; background: rgba(4,12,24,.6); color: #fff; } .gb-kart .birincil { min-height: 50px; font-size: 17px; }
 /* K-716bp: gezi başkanı */
 .bk-gezi { color: #e8c66b; font-weight: 700; letter-spacing: .04em; margin: -4px 0 10px; }
 .izg button.genis.bsk-ana { border-color: #ffd16677; background: linear-gradient(120deg, rgba(255,209,102,.12), transparent 70%); }
@@ -420,6 +423,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
   <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
   <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Geri</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
@@ -483,6 +487,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611171440"></script>
+<script src="ogrenci.js?v=202611171500"></script>
 </body>
 </html>

@@ -3643,10 +3643,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const lstKaydet = async () => { const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: GZ_LST, deger: JSON.stringify(LST) }, { onConflict: 'anahtar' }); if (error) uyar('Liste kaydedilemedi: ' + hataYaz(error)); };
     const kaydet = () => { if (G.yayin) { G.yayinZaman = Date.now(); try { G.katilan = [...kisiler().values()].filter(p => p.tur === 'ogr').map(p => String(p.no)); } catch (e) {} } durum = 'Kaydediliyor…'; durumYaz(); clearTimeout(zam); zam = setTimeout(async () => {
       try { const { data: sv } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', GZ_ANAH).maybeSingle(); const S_ = sv && sv.deger ? JSON.parse(sv.deger) : null;   // K-716bp: gezi başkanı telefondan yer değiştirdiyse onun yerleşimi korunur
-        if (S_ && (+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; } } catch (e) {}
+        sunucuAl(S_); } catch (e) {}
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: GZ_ANAH, deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
       if (!error && (GZ_K.ad !== G.ad)) { GZ_K.ad = G.ad; await sb.from('umal_ayarlar').upsert({ anahtar: 'gezi_liste', deger: JSON.stringify(GL) }, { onConflict: 'anahtar' }); }
       durum = error ? 'Kaydedilemedi: ' + hataYaz(error) : 'Kaydedildi ✓'; durumYaz(); }, 500); };
+    const sunucuAl = S_ => {   // K-716bx: başkanın yerleşimi (yerZaman) ve öğrencilerin girdiği bilgiler (kayıt başına z) sunucudan alınır; panelde sonradan düzeltilen korunur
+      let d_ = false; if (!S_) return d_;
+      if ((+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; d_ = true; }
+      Object.entries(S_.bilgi || {}).forEach(([an, b]) => { const y = G.bilgi[an]; if (b && (+b.z || 0) > (+(y && y.z) || 0)) { G.bilgi[an] = b; d_ = true; } });
+      if ((+S_.bilgiZaman || 0) > (+G.bilgiZaman || 0)) G.bilgiZaman = S_.bilgiZaman; return d_; };
     const zamBekliyor = () => durum === 'Kaydediliyor…';
     const durumYaz = () => { const e = $('#gzDurum'); if (e) e.textContent = durum; };
     // katılımcılar: seçili formda 1. "Evet/Hayır" sorusuna "Evet" diyenler + elle eklenenler − çıkarılanlar
@@ -3823,8 +3828,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       });
       if ($('#gzHavuza')) $('#gzHavuza').onclick = () => { delete G.yer[sel]; sel = null; kaydet(); ciz(); };
       $('#gzKayit').onclick = () => kayitMasasi();
-      yenile(async () => { if (!G.baskan.aktif || zamBekliyor()) return; const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', GZ_ANAH).maybeSingle(); const S_ = data && data.deger ? JSON.parse(data.deger) : null;   // K-716bp: başkanın değişiklikleri yenilemeden düşer
-        if (S_ && (+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; if ($('#pencere').classList.contains('gizli') && !sel) ciz(); } }, 15);
+      yenile(async () => { if (zamBekliyor()) return; const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', GZ_ANAH).maybeSingle(); const S_ = data && data.deger ? JSON.parse(data.deger) : null;   // K-716bp/bx: başkanın yer değişikliği ve öğrencinin girdiği bilgi yenilemeden düşer
+        if (sunucuAl(S_) && $('#pencere').classList.contains('gizli') && !sel) ciz(); }, 15);
       bskBagla();
       const gkUygula = () => { const q = gkAra.toLocaleLowerCase(tr); $('#icerik').querySelectorAll('.gk-s').forEach(b => { b.style.display = !q || b.dataset.ara.includes(q) ? '' : 'none'; }); };
       $('#gkAra').oninput = ev => { gkAra = ev.target.value.trim(); gkUygula(); }; gkUygula();
@@ -3907,7 +3912,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const y = G.yer[an], o = y && otoBul(y.o), od = G.odeme[an], E = gzEksik(p), SAAT = z => new Date(z).toLocaleDateString(tr, { day: '2-digit', month: '2-digit', year: 'numeric' });
       pencereAc(`<div class="gb-kart"><div class="gb-ust">${foto(String(p.no), p.ad)}<div><h2>${esc(baslik(p.ad))}</h2><div class="gb-alt">${esc(p.sinif)} · No ${esc(p.no)}${o ? ` · ${o.no}. otobüs, ${y.k} numara` : ' · koltuk yok'}${p.kaynak === 'form' ? ' · tahtadan kayıt' : ''}</div></div></div>
         ${G.ucretsiz ? '' : `<div class="gb-bolum"><div class="gb-bas">Ödeme</div><div class="gb-ode"><button class="gb-o ${od ? 'secili yesil' : ''}" id="gbOdedi">${KY_IK.tamam}<span>Ödedi${od ? `<small>${SAAT(od)}</small>` : ''}</span></button><button class="gb-o ${od ? '' : 'secili turuncu'}" id="gbOdemedi">${KY_IK.para}<span>Ödemedi</span></button></div></div>`}
-        <div class="gb-bolum"><div class="gb-bas">Kimlik ve iletişim <span class="${E.length ? 'gb-eksik' : 'gb-tamam'}">${E.length ? 'Eksik: ' + esc(E.join(', ')) : 'Tamam ✓'}</span></div>
+        <div class="gb-bolum"><div class="gb-bas">Kimlik ve iletişim <span class="${E.length ? 'gb-eksik' : 'gb-tamam'}">${E.length ? 'Eksik: ' + esc(E.join(', ')) : 'Tamam ✓'}</span>${(G.bilgi[an] || {}).kim === 'ogrenci' ? `<span class="gb-ogr">Öğrenci kendisi girdi · ${new Date(+G.bilgi[an].z).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>` : ''}</div>
           <div class="gb-alanlar"><label>T.C. kimlik no<input id="gbTc" inputmode="numeric" maxlength="11" value="${esc(String(p.tc || '').replace(/\D/g, ''))}"></label><label>Doğum tarihi<input id="gbDg" inputmode="numeric" placeholder="gg.aa.yyyy" value="${esc(gzDogum(p.dogum))}"></label><label>Telefon (öğrenci ya da veli)<input id="gbTl" inputmode="tel" value="${esc(gzTel(p.tel) || '05')}"></label><label>Cinsiyet<select id="gbCn"><option value="">—</option><option value="K" ${p.cins === 'K' ? 'selected' : ''}>Kız</option><option value="E" ${p.cins === 'E' ? 'selected' : ''}>Erkek</option></select></label></div></div>
         <div class="gb-dug"><button class="birincil" id="gbKay">Kaydet</button><button class="bag kirmizi" id="gbVaz">Geziden vazgeçti</button></div></div>`);
       $('#pencere .pencere-ic').classList.add('gb-pencere'); fotolariYukle([String(p.no)]).catch(() => {});
@@ -3921,7 +3926,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (tc && !gzTcGecerli(tc)) { uyar('T.C. kimlik numarası hatalı görünüyor; kontrol edin.'); return; }
         if (dg && (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12)) { uyar('Doğum tarihini gg.aa.yyyy biçiminde yazın (ör. 15.03.2011).'); return; }
         if (tl.replace(/\D/g, '').length > 2 && tl.replace(/\D/g, '').length !== 11) { uyar('Telefon numarası eksik görünüyor (0555 333 33 82 gibi 11 hane).'); return; }
-        G.bilgi[an] = { tc, dogum: dg, tel: tl.replace(/\D/g, '').length === 11 ? tl : '' }; if ($('#gbCn').value) G.cins[an] = $('#gbCn').value;
+        G.bilgi[an] = { tc, dogum: dg, tel: tl.replace(/\D/g, '').length === 11 ? tl : '', z: Date.now(), kim: 'idare' }; if ($('#gbCn').value) G.cins[an] = $('#gbCn').value;
         $('#pencere').classList.add('gizli'); kaydet(); ciz(); if (sonra) sonra(); };
     };
     // K-716bf: hatalı T.C. / cinsiyeti belirsiz rozetine dokununca o öğrencilerin listesi; düzeltilen listeden düşer
