@@ -84,6 +84,7 @@
       C.sb.from('umal_ayarlar').select('deger').eq('anahtar', 'dd_drive_url').maybeSingle()]);
     if (a.error) throw a.error;
     S.L = a.data || []; S.OG = b.data || []; S.SO = c.data || []; S.url = (u && u.data && u.data.deger) || '';
+    if (!S.url) { try { const { data } = await C.sb.rpc('umal_dd_ayar'); if (data) { S.url = data.url || ''; S.ksLink = data.kisayol || ''; } } catch (e) {} }   // K-716p: öğretmen umal_ayarlar'ı okuyamaz
   }
   async function benimBilgim() {
     try { const { data } = await C.sb.from('umal_ogretmenler').select('ad').eq('eposta', C.eposta).maybeSingle(); S.ad = (data && data.ad) || ''; } catch (e) {}
@@ -406,7 +407,7 @@
     const el = $('#ddKsAnahtar');
     try { const { data, error } = await C.sb.rpc('umal_dd_kisayol_al', { p_yenile: !!yenile }); if (error) throw error; el.value = data; }
     catch (e) { el.value = ''; el.placeholder = /umal_dd_kisayol/.test(C.hataYaz(e)) ? 'Önce Supabase\'de 20261117050000_umal_dd_kisayol.sql çalıştırılmalı' : 'Alınamadı: ' + C.hataYaz(e); }
-    let link = ''; try { const { data } = await C.sb.from('umal_ayarlar').select('deger').eq('anahtar', 'dd_kisayol_link').maybeSingle(); link = (data && data.deger) || ''; } catch (e) {}
+    let link = ''; try { const { data } = await C.sb.from('umal_ayarlar').select('deger').eq('anahtar', 'dd_kisayol_link').maybeSingle(); link = (data && data.deger) || ''; } catch (e) {} if (!link) { try { const { data } = await C.sb.rpc('umal_dd_ayar'); link = (data && data.kisayol) || ''; } catch (e) {} }
     $('#ddKsLink').innerHTML = (link ? `<a class="birincil" href="${esc(link)}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Kısayolu iPhone'a ekle</a><div class="soluk kucuk" style="margin-top:6px">Bu bağlantıyı iPhone'da açın → <b>Kısayol Ekle</b>. Anahtar sorulunca yukarıda kopyaladığınız anahtarı yapıştırın.</div>` : '<div class="soluk kucuk">Kısayol bağlantısı henüz eklenmedi. Baş yönetici iCloud bağlantısını aşağıya girince burada görünür.</div>')
       + (C.rol === 'bas' ? `<div class="dd-ikili" style="margin-top:10px"><input id="ddKsLinkGir" placeholder="https://www.icloud.com/shortcuts/…" value="${esc(link)}"><button class="ikincil" id="ddKsLinkKaydet" style="flex:0 0 auto">Kaydet</button></div>` : '');
     kok.onclick = async ev => { const b = ev.target.closest('button'); if (!b) return;
