@@ -3143,7 +3143,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     } catch (e) {}
     let ZE = {}; const zeYukle = async () => { try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'zumre_elle').maybeSingle(); ZE = data && data.deger ? JSON.parse(data.deger) || {} : {}; } catch (e) { ZE = {}; } }; await zeYukle();
     const BELIRSIZ = 'Branşı belirsiz';
-    const zumresi = r => ZE[r.eposta] || ((PZ.get(zAnah(r.ad)) || {}).zumre) || BELIRSIZ;
+    const zumresi = r => { const ro = typeof rolu === 'function' ? rolu(r.eposta) : ''; if (ro === 'rehberlik') return 'Rehberlik'; if (ro === 'yonetici') return 'İdare'; return ZE[r.eposta] || ((PZ.get(zAnah(r.ad)) || {}).zumre) || BELIRSIZ; };   // K-716aj: rehberlik ve idare kendi klasöründe
     let zSec = null;   // açık zümre (null: zümre kartları)
     let IST = []; const istYukle = async () => { if (!['bas', 'yonetici'].includes(D.rol)) return; try { const r = await sb.from('umal_erisim_talep').select('*').order('zaman'); IST = r.error ? [] : (r.data || []); } catch (e) { IST = []; } }; await istYukle();   // K-684
     const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
