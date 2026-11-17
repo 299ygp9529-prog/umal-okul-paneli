@@ -1541,3 +1541,6 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .dd-gonder { flex-direction: column; } .dd-onizleme { position: static; flex-basis: auto; width: 100%; }
   .dd-satir { flex-wrap: wrap; } .dd-satir .dd-ana { flex-basis: calc(100% - 60px); } .dd-say { min-width: 52px; }
 }
+/* K-716c: Ders Dosyaları başlık + düğmeler (telefonda düğmeler başlığın altında, sola yaslı) */
+.dd-ust { align-items: flex-start; margin-bottom: 12px; } .dd-ust > div:first-child { min-width: 0; flex: 1 1 320px; } .dd-ust > .dugmeler { flex-wrap: wrap; }
+@media (max-width: 760px) { .dd-ust { margin-right: 0; gap: 10px; } .dd-ust > .dugmeler { width: 100%; justify-content: flex-start; } .dd-ust h1 { font-size: 24px; } }
