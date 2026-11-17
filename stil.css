@@ -1569,3 +1569,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .dd-sgrp > summary b { color: var(--sv); font-size: 15px; } .dd-sgrp > summary span { color: var(--soluk); font-size: 13px; margin-left: auto; }
 .dd-sgrp > summary i { position: absolute; left: 12px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--sv); max-width: calc(100% - 24px); }
 .dd-sgrp > .dd-ogrler { padding: 0 10px 10px; }
+/* K-716v: telefonda Çıkış da "‹ Geri" gibi yuvarlak çerçeveli düğme */
+@media (max-width: 760px) {
+  #cikis { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; background: #13243d; border: 1px solid rgba(34,232,255,.55); color: var(--neon); font-weight: 800; font-size: 15px; text-decoration: none; }
+}
