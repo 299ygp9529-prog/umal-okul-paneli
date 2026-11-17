@@ -399,7 +399,7 @@
       await gzYukle(); bskCiz(); });
   }
   function gzKutu1(d, i) {
-    const alt = d.koltuk ? (d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`) : 'Koltuğun yakında belli olacak';
+    const alt = d.koltuk ? (d.gun && d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`) : 'Koltuğun yakında belli olacak';
     return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''}">${gzYeni(d) ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.koltuk}</b><small>${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
   }
   function gzAc(i) { if (i != null) GZ.i = i; gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); const d = GZ.d; if (d && d.koltuk) { try { localStorage.setItem(gzAnah(d), d.otobus.no + ':' + d.koltuk); } catch (e) {} } }
@@ -418,9 +418,9 @@
         <div class="gzt-ust"><img src="../okul-logo.png" alt=""><div><div class="gzt-okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h2>${gAd}</h2></div></div>
         ${canak ? '<div class="gzt-soz">“Ben size taarruzu emretmiyorum, ölmeyi emrediyorum.”<small>MUSTAFA KEMAL · CONKBAYIRI 1915</small></div>' : ''}
         <div class="gzt-yolcu"><small>YOLCU</small><b>${esc(adB)}</b><span>${esc(S.sinif || '')}${S.no ? ' · No ' + esc(S.no) : ''}</span></div>
-        <div class="gzt-bilgi">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}${gzr ? `<div><small>GÜZERGÂH</small><b>${esc(gzr)}</b></div>` : ''}</div></div>
+        <div class="gzt-bilgi">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}${gzr ? `<div><small>GÜZERGÂH</small><b>${esc(gzr)}</b></div>` : ''}${d.otobus.plaka ? `<div><small>PLAKA</small><b>${esc(d.otobus.plaka)}</b></div>` : ''}${d.otobus.sofor || d.otobus.tel ? `<div><small>ŞOFÖR</small><b>${esc(d.otobus.sofor || '')}${d.otobus.tel ? `${d.otobus.sofor ? ' · ' : ''}<a href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}">${esc(d.otobus.tel)}</a>` : ''}</b></div>` : ''}</div></div>
       <div class="gzt-koc">${canak ? '<img class="gzt-abide" src="../gezi-abide-bilet.png" alt="">' : ''}<div><small>OTOBÜS</small><b>${d.otobus.no}</b></div><div class="gzt-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div><div class="gzt-yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(d.otobus.plaka || '')}</span></div></div></div>
-      ${d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
+      ${d.gun && d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
       <div class="gz-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${P.map(r => `<div class="gz-h-sira">${r.map(s => !s ? '<i></i>' : s.kapi ? '<i class="kapi"></i>' : `<i class="k ${s.n === d.koltuk ? 'ben' : ''} ${s.yer === 'cam' ? 'cam' : ''}">${s.n === d.koltuk ? 'SEN' : s.n}</i>`).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur. Değişiklik olursa burada hemen görünür.</p>`;
   }
