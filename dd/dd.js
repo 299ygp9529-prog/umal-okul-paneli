@@ -11,6 +11,10 @@
   const sinifSira = (a, b) => a.localeCompare(b, tr, { numeric: true });
   const tarihYaz = t => new Date(t).toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ' + new Date(t).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
   const boyutYaz = b => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  // seçimin kısa adı: tam seviyeler "12. sınıflar", kalanlar tek tek (ör. "10. sınıflar, 12-A, 12-B")
+  const secimOzet = (sec, tum) => { if (tum.length && tum.every(x => sec.includes(x))) return 'bütün okul'; const P = [];
+    [...new Set(tum.map(x => x.split('-')[0]))].forEach(v => { const L = tum.filter(x => x.split('-')[0] === v), S_ = L.filter(x => sec.includes(x)); if (!S_.length) return; if (S_.length === L.length) P.push(v + '. sınıflar'); else P.push(...S_); });
+    return P.length > 4 ? P.slice(0, 3).join(', ') + ` +${P.length - 3}` : P.join(', '); };
   const SV_RENK = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
   const ytId = u => (String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
   const idare = () => ['bas', 'yonetici'].includes(C.rol);
@@ -191,7 +195,7 @@
               ${isaret('zumre', 'Zümreyle paylaş', 'Zümredeki öğretmenler kendi sınıflarına gönderebilir')}</div>
             <button class="bag" id="ddVars">Bu seçenekleri varsayılanım yap</button>
           </details>
-          <div class="dugmeler" style="margin-top:14px"><span class="kucuk" id="ddBilgi" style="margin-right:auto"></span><button class="birincil" id="ddGonder">Gönder${T.siniflar.length ? ` · ${T.ogrenciler.length ? '' : T.siniflar.length + ' sınıf, '}${n} öğrenci` : ''}</button></div>
+          <div class="dugmeler" style="margin-top:14px"><span class="kucuk" id="ddBilgi" style="margin-right:auto"></span><button class="birincil" id="ddGonder" style="text-transform:none">Gönder${T.siniflar.length ? ` · ${T.ogrenciler.length ? '' : secimOzet(T.siniflar, tum) + ' · '}${n} öğrenci` : ''}</button></div>
         </div>
         <div class="dd-onizleme">${onizleme()}</div>
       </div>`;

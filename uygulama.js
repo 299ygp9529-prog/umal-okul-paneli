@@ -4027,7 +4027,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
-    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170500'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170510'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
     let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
     window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
