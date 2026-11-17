@@ -3579,7 +3579,12 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!o.no || !o.ad) { if (o.ad || o.no) yok.push(o); return; }
       const an = o.no + '|' + (o.sinif || ''), v = G.get(an); if (v) ['tc', 'dogum', 'tel', 'cinsF'].forEach(k => { if (!v[k] && o[k]) v[k] = o[k]; }); else G.set(an, o);   // aynı öğrenci iki kez yazılmışsa tek satır
     });
-    return { liste: [...G.values()], yok };
+    // K-716bv: aynı adda birden çok öğrenci varsa listenin çoğunluğunun sınıf düzeyindeki (ör. hepsi 12. sınıfsa 12-B'deki) öğrenci alınır
+    const say = {}; G.forEach(o => { const d_ = String(o.sinif || '').split('-')[0]; if (d_) say[d_] = (say[d_] || 0) + 1; });
+    const top = Object.values(say).reduce((a, b) => a + b, 0), [duz, n] = Object.entries(say).sort((a, b) => b[1] - a[1])[0] || [];
+    const kalan = []; if (duz && n >= top * 0.8 && n >= 5) yok.forEach(o => { const A = dz.aday(o.ad).filter(x => String(x.sinif).split('-')[0] === duz && !G.has(String(x.no) + '|' + x.sinif));
+      if (A.length === 1) { o.ad = A[0].ad; o.no = String(A[0].no); o.sinif = A[0].sinif; G.set(o.no + '|' + o.sinif, o); } else kalan.push(o); }); else kalan.push(...yok);
+    return { liste: [...G.values()], yok: kalan };
   }
   async function gzListeOku(dosya, ilerle) {
     const imza = new Uint8Array(await dosya.slice(0, 4).arrayBuffer()), zipMi = imza[0] === 0x50 && imza[1] === 0x4B, oleMi = imza[0] === 0xD0 && imza[1] === 0xCF, pdfMi = imza[0] === 0x25 && imza[1] === 0x50 && imza[2] === 0x44 && imza[3] === 0x46;
