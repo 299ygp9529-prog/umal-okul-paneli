@@ -1591,3 +1591,39 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ps-ad>div{display:flex;gap:8px;margin-top:8px}
 .ps-ad input{flex:1;min-width:0;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:16px}
 .ps-ad button{padding:9px 14px;border-radius:10px;border:0;background:#22e8ff;color:#06121f;font:inherit;font-weight:700;cursor:pointer}
+
+/* K-716aq: hareketli hava */
+.ps-ic { position: relative; overflow: hidden; } .ps-ic > :not(.ps-fx) { position: relative; z-index: 1; }
+.ps-ic .hi svg * { transform-box: fill-box; transform-origin: center; }
+.ps-ic .hi { filter: drop-shadow(0 0 10px var(--s2, rgba(255,209,102,.4))); }
+.a-don { animation: psDon 14s linear infinite; transform-origin: 50% 50%; } .ps-ic .hi svg .a-don { transform-box: view-box; transform-origin: 12px 12px; }
+.ps-ic .hi svg g.a-don:has(circle[cx="8.5"]) { transform-origin: 8.5px 8px; }
+.a-nabiz { animation: psNabiz 2.6s ease-in-out infinite; }
+.a-kay { animation: psKay 4s ease-in-out infinite; } .a-kay.k2 { animation-duration: 3s; opacity: .7; }
+.a-damla { animation: psDamla 1s linear infinite; } .a-damla.d2 { animation-delay: .33s; } .a-damla.d3 { animation-delay: .66s; }
+.a-tane { animation: psTane 3s ease-in-out infinite; } .a-tane.d2 { animation-delay: 1s; } .a-tane.d3 { animation-delay: 2s; }
+.a-sis { animation: psSis 5s ease-in-out infinite; } .a-sis.s2 { animation-direction: alternate-reverse; animation-duration: 6s; }
+.a-cak { animation: psCak 3.2s steps(1) infinite; }
+.a-salin { animation: psSalin 6s ease-in-out infinite; } .a-yildiz { animation: psYildiz 2.4s ease-in-out infinite; } .a-yildiz.y2 { animation-delay: 1.2s; }
+@keyframes psDon { to { transform: rotate(360deg); } }
+@keyframes psNabiz { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes psKay { 0%,100% { transform: translateX(-1.2px); } 50% { transform: translateX(1.2px); } }
+@keyframes psDamla { 0% { transform: translateY(-3px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(4px); opacity: 0; } }
+@keyframes psTane { 0% { transform: translateY(-2px) rotate(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(3px) rotate(90deg); opacity: 0; } }
+@keyframes psSis { 0%,100% { transform: translateX(-2px); opacity: .5; } 50% { transform: translateX(2px); opacity: 1; } }
+@keyframes psCak { 0%,100% { opacity: .25; } 8% { opacity: 1; } 12% { opacity: .3; } 16% { opacity: 1; } 40% { opacity: .25; } }
+@keyframes psSalin { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes psYildiz { 0%,100% { opacity: .2; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.1); } }
+.ps-fx { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.ps-fx i { position: absolute; display: block; }
+.fx-yagmur i, .fx-simsek i { width: 1.5px; height: 16px; background: linear-gradient(transparent, var(--s3, #5aa8ff)); transform: rotate(12deg); animation: psYag linear infinite; }
+.fx-kar i { width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: psKar linear infinite; }
+.fx-ay i { width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: psYildiz ease-in-out infinite; }
+.fx-gunes::before, .fx-parcali::before { content: ''; position: absolute; width: 220px; height: 220px; right: -60px; top: -80px; border-radius: 50%; background: radial-gradient(var(--s2, rgba(255,209,102,.45)), transparent 65%); animation: psNabiz 4s ease-in-out infinite; }
+.fx-bulut::before, .fx-sis::before { content: ''; position: absolute; inset: -20% -50%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: psSisB 7s ease-in-out infinite; }
+.fx-simsek::after { content: ''; position: absolute; inset: 0; background: rgba(255,240,200,.18); opacity: 0; animation: psFlas 3.2s steps(1) infinite; }
+@keyframes psYag { from { transform: translate(0, 0) rotate(12deg); } to { transform: translate(-40px, 320px) rotate(12deg); } }
+@keyframes psKar { from { transform: translate(0, 0); } 50% { transform: translate(12px, 160px); } to { transform: translate(-6px, 330px); } }
+@keyframes psSisB { 0%,100% { transform: translateX(-30%); } 50% { transform: translateX(30%); } }
+@keyframes psFlas { 0%,100% { opacity: 0; } 8% { opacity: 1; } 12% { opacity: 0; } 16% { opacity: .7; } 20% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ps-ic *, .ps-ic *::before, .ps-ic *::after { animation: none !important; } }

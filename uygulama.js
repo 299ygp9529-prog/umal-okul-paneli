@@ -109,11 +109,20 @@
     bulut: ['Hava kapalı {ad}. Sınıflar aydınlık, tahtalar açık.'], yagmur: ['Yağmur yağıyor {ad}. Teneffüslerde koridorlar kalabalık olabilir.', 'Yağmurlu bir gün {ad}; bahçe nöbetçileri içeride kalabilir.'],
     kar: ['Kar yağıyor {ad}. Okul girişindeki kaygan zemine dikkat.'], sis: ['Sis var {ad}; servisler gecikebilir.'], simsek: ['Fırtına var {ad}; gerekirse tek dokunuşla bütün tahtalara duyuru gönderebilirsiniz.'],
     ayaz: ['Hava {derece}°C {ad}. Kaloriferler ve kantinde sıcak çay önemli bugün.'], sicak: ['Hava {derece}°C {ad}. Sınıfların havalandırılması iyi olur.'] };
-  const PS_HI = { gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
-    ay: '<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7Z"/>', bulut: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
-    parcali: '<circle cx="8.5" cy="8" r="3"/><path d="M9 19.5h8.5a3.4 3.4 0 0 0 .5-6.75 4.7 4.7 0 0 0-9 .8 3 3 0 0 0 0 5.95Z"/>', yagmur: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/>',
-    kar: '<path d="M7 13.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 4.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17v4M6.3 18l3.4 2M16 17v4M14.3 18l3.4 2"/>', sis: '<path d="M3.5 15h17M5.5 18.5h13M8 22h8M7 11.5h10"/>',
-    simsek: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
+  const PS_HI = { gunes: '<circle class="a-nabiz" cx="12" cy="12" r="4.2"/><g class="a-don"><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></g>',
+    ay: '<path class="a-salin" d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7Z"/><path class="a-yildiz" d="M18 3.2v2.2M16.9 4.3h2.2"/><path class="a-yildiz y2" d="M21.4 8.2v1.4M20.7 8.9h1.4"/>',
+    bulut: '<path class="a-kay" d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-kay k2" d="M3.2 8.2h3.6M2.2 11h2.4"/>',
+    parcali: '<g class="a-don"><circle class="a-nabiz" cx="8.5" cy="8" r="3"/><path d="M8.5 2.6v1.1M3.1 8h1.1M4.7 4.2l.8.8M12.3 4.2l-.8.8"/></g><path class="a-kay" d="M9 19.5h8.5a3.4 3.4 0 0 0 .5-6.75 4.7 4.7 0 0 0-9 .8 3 3 0 0 0 0 5.95Z"/>',
+    yagmur: '<path class="a-kay" d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-damla" d="M8 17.5l-1 2.5"/><path class="a-damla d2" d="M12 17.5l-1 2.5"/><path class="a-damla d3" d="M16 17.5l-1 2.5"/>',
+    kar: '<path class="a-kay" d="M7 13.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 4.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-tane" d="M8 17v4M6.3 18l3.4 2M6.3 20l3.4-2"/><path class="a-tane d2" d="M16 17v4M14.3 18l3.4 2M14.3 20l3.4-2"/><path class="a-tane d3" d="M12 18.5v3M10.7 19.2l2.6 1.6M10.7 20.8l2.6-1.6"/>',
+    sis: '<path class="a-sis" d="M7 11.5h10"/><path class="a-sis s2" d="M3.5 15h17"/><path class="a-sis" d="M5.5 18.5h13"/><path class="a-sis s2" d="M8 22h8"/>',
+    simsek: '<path class="a-kay" d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-cak" d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
+  function psFx(tur) {   // kartın arka planında hafif hava efekti
+    const n = { yagmur: 22, simsek: 18, kar: 26, gunes: 0, ay: 14, parcali: 0, bulut: 0, sis: 0 }[tur] || 0, R = () => Math.random();
+    let h = '';
+    for (let i = 0; i < n; i++) h += `<i style="left:${(R() * 100).toFixed(1)}%;top:${tur === 'ay' ? (R() * 100).toFixed(1) + '%' : '-20px'};animation-delay:${(-R() * 3).toFixed(2)}s;animation-duration:${(tur === 'kar' ? 4 + R() * 3 : tur === 'ay' ? 2 + R() * 3 : .7 + R() * .5).toFixed(2)}s;opacity:${(.25 + R() * .5).toFixed(2)}"></i>`;
+    return `<div class="ps-fx fx-${tur}" aria-hidden="true">${h}</div>`;
+  }
   const PS_RENK = { gunes: ['#1d3c66', 'rgba(255,209,102,.45)', '#ffd166'], ay: ['#1a2a55', 'rgba(176,107,255,.45)', '#d4b0ff'], parcali: ['#1b375f', 'rgba(127,246,255,.4)', '#7ff6ff'],
     bulut: ['#1d2c45', 'rgba(160,180,210,.4)', '#b8c7dd'], yagmur: ['#14304f', 'rgba(90,168,255,.5)', '#5aa8ff'], kar: ['#1f3a5c', 'rgba(220,240,255,.6)', '#e8f6ff'],
     sis: ['#22304a', 'rgba(170,185,205,.4)', '#c3cfdf'], simsek: ['#2a2350', 'rgba(255,209,102,.5)', '#ffd166'] };
@@ -175,7 +184,7 @@
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
-    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
+    el.innerHTML = `<div class="ps-ic">${psFx(tur)}<div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
     if (!adSor) { el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000); return; }
