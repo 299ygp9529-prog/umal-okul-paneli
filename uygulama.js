@@ -3570,7 +3570,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const varsAnket = canak ? (D.anketler.find(a => /çanakkale/i.test(a.tanim.ad || '') && a.durum !== 'taslak') || {}).id || '' : '';
     if (!G) G = { ad: GZ_K.ad || 'Gezi', tarih: '', saat: '', kalkis: 'Okul Önü', guzergah: canak ? 'İstanbul → Çanakkale' : '', anket: varsAnket, otobusler: [1, 2, 3, 4, 5, 6].map(i => ({ id: 'o' + i, no: i, kapasite: 42, plaka: '', sofor: '', tel: '' })), gorevli: [], ekOgr: [], cikar: [], cins: {}, yer: {} };
     ['otobusler', 'gorevli', 'ekOgr', 'cikar'].forEach(x => { if (!Array.isArray(G[x])) G[x] = []; });
-    if (!G.yer || typeof G.yer !== 'object') G.yer = {}; if (!G.bilgi || typeof G.bilgi !== 'object') G.bilgi = {}; if (!G.kapali || typeof G.kapali !== 'object') G.kapali = {};   // K-716be: kapatılan (boş bırakılacak) koltuklar { otobüsId: [koltuk no] }   // K-716bd: elle girilen T.C. / doğum / telefon (formu doldurmayanlar için)
+    if (!G.yer || typeof G.yer !== 'object') G.yer = {}; if (!G.bilgi || typeof G.bilgi !== 'object') G.bilgi = {}; if (!G.kapali || typeof G.kapali !== 'object') G.kapali = {}; if (!G.kayit || typeof G.kayit !== 'object') G.kayit = {}; if (!G.odeme || typeof G.odeme !== 'object') G.odeme = {};   // K-716bg: kayıt masası — kayit { an: { d: 'k' kayıtlı | 'y' yedek | 'v' vazgeçti, z, iade } }, odeme { an: zaman }   // K-716be: kapatılan (boş bırakılacak) koltuklar { otobüsId: [koltuk no] }   // K-716bd: elle girilen T.C. / doğum / telefon (formu doldurmayanlar için)
     if (!G.cins || typeof G.cins !== 'object') G.cins = {}; if (!Array.isArray(G.esler)) G.esler = []; GZ_AYRILAN = G.ayrilan === 4 ? 4 : 2;   // K-710: yan yana oturacak arkadaş çiftleri
     let sel = null, ara = '', durum = '', zam = null, sekme = 'ogr', aktif = (G.otobusler[0] || {}).id;
     let LST = { ad: '', liste: [] };   // K-703: PDF/Excel'den okunan katılımcı listesi (ayrı anahtar: kişisel veri)
@@ -3594,7 +3594,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       (LST.liste || []).forEach(o => { const sn = o.sinif || ((D.ogrenciler || []).find(x => String(x.no) === String(o.no)) || {}).sinif || 'Diğer', var_ = L.find(x => x.no === String(o.no));
         if (var_) { ['tc', 'dogum', 'tel', 'cinsF'].forEach(k => { if (o[k]) var_[k] = o[k]; }); } else L.push(Object.assign({}, o, { no: String(o.no), sinif: sn })); });
       G.ekOgr.forEach(o => { if (!L.some(x => x.no === String(o.no) && x.sinif === o.sinif)) L.push(o); });
-      return L.filter(o => !G.cikar.includes('o:' + o.sinif + ':' + o.no)).map(o => { const b = G.bilgi['o:' + o.sinif + ':' + o.no]; if (!b) return o; const y = Object.assign({}, o); ['tc', 'dogum', 'tel'].forEach(k => { if (b[k]) y[k] = b[k]; }); return y; }).sort((x, y) => sinifSira(x.sinif, y.sinif) || (+x.no) - (+y.no));
+      return L.filter(o => { const an = 'o:' + o.sinif + ':' + o.no, k = G.kayit[an]; return !G.cikar.includes(an) && !(k && (k.d === 'y' || k.d === 'v')); }).map(o => { const b = G.bilgi['o:' + o.sinif + ':' + o.no]; if (!b) return o; const y = Object.assign({}, o); ['tc', 'dogum', 'tel'].forEach(k => { if (b[k]) y[k] = b[k]; }); return y; }).sort((x, y) => sinifSira(x.sinif, y.sinif) || (+x.no) - (+y.no));
     };
     const cinsi = p => G.cins[p.an] || (/^k/i.test(p.cinsF || '') ? 'K' : /^e/i.test(p.cinsF || '') ? 'E' : gzCinsTahmin(p.ad));
     const kisiler = () => { const M = new Map(); G.gorevli.forEach(g => M.set('g:' + g.id, { an: 'g:' + g.id, ad: g.ad, tur: g.tur, tel: g.tel }));
@@ -3685,7 +3685,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <div class="kart gz-bilgi"><div class="gz-alan"><label>Gezi adı<input data-g="ad" value="${esc(G.ad)}"></label><label>Tarih<input type="date" data-g="tarih" value="${esc(G.tarih)}"></label><label>Kalkış saati<input type="time" data-g="saat" value="${esc(G.saat)}"></label><label>Kalkış yeri<input data-g="kalkis" value="${esc(G.kalkis || '')}"></label><label>Güzergâh (bilette)<input data-g="guzergah" value="${esc(G.guzergah == null ? (canak ? 'İstanbul → Çanakkale' : '') : G.guzergah)}" placeholder="İstanbul → …"></label><label>Önde ayrılan koltuk<select id="gzAyr"><option value="2" ${GZ_AYRILAN === 2 ? 'selected' : ''}>2 · öğretmenler</option><option value="4" ${GZ_AYRILAN === 4 ? 'selected' : ''}>4 · öğretmen, belediye, rehber</option></select></label>
           <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil">📄 ${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.xls,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
           <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length ? `<span class="gz-uyari" id="gzHatTc" title="Dokunun: hatalı T.C. numaraları listelenir"><b>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length}</b> hatalı T.C. no</span>` : ''}${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz" title="Dokunun: cinsiyeti belirsiz öğrenciler listelenir"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span>${G.esler.length ? `<span>🤝 <b>${G.esler.length}</b> arkadaş çifti</span>` : ''}${(n => n ? `<span class="gz-uyari" id="gzEsDuzelt" title="Dokunun: ayrı düşen arkadaşlar yan yana alınır"><b>${n}</b> arkadaş çifti ayrı düştü — düzelt</span>` : '')(G.esler.filter(([a, b]) => G.yer[a] && G.yer[b] && !yanyana(a, b)).length)}<span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
-          <div class="dugmeler gz-dug" style="margin:10px 0 0"><button class="birincil" id="gzOto" title="Otobüsler sırayla tam dolar; sınıflar sırayla dizilir">⚡ Otomatik yerleştir</button><button class="birincil" id="gzOtoS" title="Her sınıf tek otobüste; boş koltuk kalabilir">🏫 Sınıf sınıf yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="${G.yayin ? 'birincil' : 'ikincil'}" id="gzYayin" title="Öğrenci panelinde her öğrenci yalnız kendi otobüsünü ve koltuğunu görür">${G.yayin ? '📣 Öğrencilerde yayında ✓' : '📣 Öğrencilere yayınla'}</button><button class="ikincil" id="gzPlan">🚌 Oturma planı</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="${kapatMod ? 'birincil' : 'ikincil'}" id="gzKapat" title="Açıkken dokunduğunuz koltuk kapanır ya da yeniden açılır; kapalı koltuğa kimse yerleştirilmez">${kapatMod ? '🔒 Kapatmayı bitir' : '🔒 Koltuk kapat'}</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="ikincil" id="gzOtoCikar" ${G.otobusler.length > 1 ? '' : 'disabled'}>− Otobüs</button><span class="gz-tumkap">Hepsi <input type="number" min="10" max="80" id="gzTumKap" value="${G.otobusler[0] ? G.otobusler[0].kapasite : 42}"> kişilik <button class="ikincil kucuk" id="gzTumKapB">Uygula</button></span><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
+          <div class="dugmeler gz-dug" style="margin:10px 0 0"><button class="birincil" id="gzKayit" title="Numara yaz, Enter: geziye kayıt; ödeme, yedek, vazgeçen">📝 Kayıt · ${ogrL.length + hepsiP.filter(p => p.tur === 'ogt').length}${G.kontenjan ? ' / ' + G.kontenjan : ''}</button><button class="birincil" id="gzOto" title="Otobüsler sırayla tam dolar; sınıflar sırayla dizilir">⚡ Otomatik yerleştir</button><button class="birincil" id="gzOtoS" title="Her sınıf tek otobüste; boş koltuk kalabilir">🏫 Sınıf sınıf yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="${G.yayin ? 'birincil' : 'ikincil'}" id="gzYayin" title="Öğrenci panelinde her öğrenci yalnız kendi otobüsünü ve koltuğunu görür">${G.yayin ? '📣 Öğrencilerde yayında ✓' : '📣 Öğrencilere yayınla'}</button><button class="ikincil" id="gzPlan">🚌 Oturma planı</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="${kapatMod ? 'birincil' : 'ikincil'}" id="gzKapat" title="Açıkken dokunduğunuz koltuk kapanır ya da yeniden açılır; kapalı koltuğa kimse yerleştirilmez">${kapatMod ? '🔒 Kapatmayı bitir' : '🔒 Koltuk kapat'}</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="ikincil" id="gzOtoCikar" ${G.otobusler.length > 1 ? '' : 'disabled'}>− Otobüs</button><span class="gz-tumkap">Hepsi <input type="number" min="10" max="80" id="gzTumKap" value="${G.otobusler[0] ? G.otobusler[0].kapasite : 42}"> kişilik <button class="ikincil kucuk" id="gzTumKapB">Uygula</button></span><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
         <div class="gz-sekmeler">${G.otobusler.map((x, i) => { const b = bilgiSatiri(x, M); return `<button class="gz-ot ${x.id === aktif ? 'secili' : ''}" style="--g:${GZ_RENK[i % GZ_RENK.length]}" data-akt="${x.id}"><span class="gz-no">${x.no}</span><span><b>${x.no}. Otobüs</b><small>${b.L.length} / ${x.kapasite}</small></span><i style="--y:${Math.round(100 * b.L.length / x.kapasite)}%"></i></button>`; }).join('')}</div>
         ${selP ? `<div class="gz-secim" style="--c:${renk(selP)}"><b>${esc(baslik(selP.ad))}</b><span>${selP.sinif ? esc(selP.sinif) + ' · No ' + esc(selP.no) : esc(GZ_TUR[selP.tur] || '')}${G.yer[sel] ? ' · ' + (otoBul(G.yer[sel].o) || {}).no + '. otobüs, ' + G.yer[sel].k + ' numara' : ''}</span><small>Bir koltuğa dokunun (başka otobüs için üstten otobüsü seçin): boşsa oraya geçer, doluysa yer değiştirirler.</small><span style="flex:1"></span>${selP.tur === 'ogr' ? (esOf(sel) && M.get(esOf(sel)) ? `<span class="gz-es">🤝 ${esc(baslik(M.get(esOf(sel)).ad))} ile yan yana${G.yer[sel] && G.yer[esOf(sel)] && !yanyana(sel, esOf(sel)) ? ' <b class="kirmizi-yazi">(şu an ayrı)</b>' : ''}</span><button class="ikincil" id="gzEsAyir">Eşi ayır</button>` : `<button class="${esMod ? 'birincil' : 'ikincil'}" id="gzEsSec">${esMod ? '🤝 Şimdi arkadaşına dokun…' : '🤝 Yanına arkadaşını seç'}</button>`) : ''}${selP.tur === 'ogr' ? `<button class="ikincil" id="gzBilgi">🪪 Bilgiler${!selP.tc || !selP.dogum || !selP.tel ? ' <b class="kirmizi-yazi">· eksik</b>' : ''}</button>` : ''}${G.yer[sel] ? '<button class="ikincil" id="gzHavuza">Koltuktan kaldır</button>' : ''}<button class="ikincil" id="gzVazgec">Vazgeç</button></div>` : ''}
         <div class="gz-izgara"><div class="kart gz-havuz"><div class="gz-sekme"><button class="${sekme === 'ogr' ? 'secili' : ''}" data-gs="ogr">Bekleyen öğrenci · ${ogrL.filter(p => !G.yer[p.an]).length}</button><button class="${sekme === 'gor' ? 'secili' : ''}" data-gs="gor">Görevliler · ${hepsiP.filter(p => p.tur !== 'ogr').length}</button></div>
@@ -3719,7 +3719,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').querySelectorAll('[data-kisi]').forEach(b => b.onclick = ev => {
         const t = ev.target.dataset;
         if (t.cdeg) { const p = M.get(t.cdeg); G.cins[t.cdeg] = p.cins === 'K' ? 'E' : 'K'; kaydet(); ciz(); return; }
-        if (t.cikar) { G.cikar.push(t.cikar); delete G.yer[t.cikar]; if (sel === t.cikar) sel = null; kaydet(); ciz(); return; }
+        if (t.cikar) { G.cikar.push(t.cikar); G.kayit[t.cikar] = Object.assign({}, G.kayit[t.cikar], { d: 'v', vz: Date.now() }); delete G.yer[t.cikar]; if (sel === t.cikar) sel = null; kaydet(); ciz(); return; }
         if (t.gsil) { const id = t.gsil.slice(2); G.gorevli = G.gorevli.filter(g => g.id !== id); delete G.yer[t.gsil]; if (sel === t.gsil) sel = null; kaydet(); ciz(); return; }
         if (esMod && sel) { esYap(sel, b.dataset.kisi); return; }
         sel = sel === b.dataset.kisi ? null : b.dataset.kisi; esMod = false; if (sel && G.yer[sel]) aktif = G.yer[sel].o; ciz(); });
@@ -3735,6 +3735,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         sel = null; kaydet(); ciz();
       });
       if ($('#gzHavuza')) $('#gzHavuza').onclick = () => { delete G.yer[sel]; sel = null; kaydet(); ciz(); };
+      $('#gzKayit').onclick = () => kayitMasasi();
       $('#gzKapat').onclick = () => { kapatMod = !kapatMod; sel = null; esMod = false; ciz(); };
       if ($('#gzVazgec')) $('#gzVazgec').onclick = () => { sel = null; esMod = false; ciz(); };
       if ($('#gzBilgi')) $('#gzBilgi').onclick = () => bilgiDuzenle(sel);
@@ -3798,6 +3799,97 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       pencereAc(`<h2 style="margin-top:0">${tur === 'tc' ? '⚠ Hatalı T.C. numaraları' : '⚠ Cinsiyeti belirsiz öğrenciler'} · ${L.length}</h2><p class="soluk kucuk">${tur === 'tc' ? 'Öğrenciye dokunun, doğru numarayı yazıp kaydedin.' : 'Her öğrenci için Kız ya da Erkek seçin.'}</p><div class="gz-sorunlar">${L.map(p => `<div class="gz-sorun"><div><b>${esc(baslik(p.ad))}</b><small>${esc(p.sinif)} · No ${esc(p.no)}${tur === 'tc' ? ' · T.C. ' + esc(p.tc) : ''}</small></div>${tur === 'tc' ? `<button class="ikincil" data-sduz="${esc(p.an)}">Düzelt</button>` : `<button class="ikincil" data-scins="K" data-san="${esc(p.an)}">Kız</button><button class="ikincil" data-scins="E" data-san="${esc(p.an)}">Erkek</button>`}</div>`).join('')}</div>`);
       $('#pencere').querySelectorAll('[data-sduz]').forEach(b => b.onclick = () => bilgiDuzenle(b.dataset.sduz, () => sorunListe(tur)));
       $('#pencere').querySelectorAll('[data-scins]').forEach(b => b.onclick = () => { G.cins[b.dataset.san] = b.dataset.scins; kaydet(); ciz(); sorunListe(tur); });
+    };
+    // K-716bg: Kayıt masası — numara yaz + Enter: geziye kayıt; kontenjan (öğretmenler dahil), ödedi/ödemedi, yedek, vazgeçen (iade), öğretmen kaydı
+    const kayitMasasi = async () => {
+      await programYukle().catch(() => {});
+      const OGT = ogretmenListesi(), SAAT = z => z ? new Date(z).toLocaleDateString(tr, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+      let sekmeK = 'k', araK = '', sonMesaj = '', yalnizOdemeyen = false;
+      const anOf = o => 'o:' + o.sinif + ':' + o.no;
+      const katilan = () => { const M = kisiler(); return { M, ogr: [...M.values()].filter(p => p.tur === 'ogr'), ogt: [...M.values()].filter(p => p.tur === 'ogt') }; };
+      const dolu = () => { const k = katilan(); return k.ogr.length + k.ogt.length; };
+      const kayitliMi = an => kisiler().has(an);
+      const ekOgrKoy = o => { if (!G.ekOgr.some(x => String(x.no) === String(o.no) && x.sinif === o.sinif)) G.ekOgr.push({ no: String(o.no), ad: o.ad, sinif: o.sinif }); };
+      const kayda = async (o, yedekOlur) => {   // öğrenciyi kayda (ya da kontenjan doluysa yedeğe) alır
+        const an = anOf(o);
+        if (kayitliMi(an)) { sonMesaj = `ℹ ${baslik(o.ad)} zaten kayıtlı.`; return; }
+        const n = dolu(), K = +G.kontenjan || 0;
+        if (yedekOlur !== false && K && n >= K) {
+          if (!await onayla(`Kontenjan dolu (${n} / ${K}). ${baslik(o.ad)} yedek listesine alınsın mı?`)) { sonMesaj = ''; return; }
+          ekOgrKoy(o); G.kayit[an] = { d: 'y', z: Date.now() }; sonMesaj = `⏳ ${baslik(o.ad)} (${o.sinif}) yedek listesine alındı.`; kaydet(); return; }
+        ekOgrKoy(o); G.cikar = G.cikar.filter(x => x !== an); G.kayit[an] = Object.assign({}, G.kayit[an], { d: 'k', z: (G.kayit[an] && G.kayit[an].z) || Date.now() });
+        sonMesaj = `✓ ${baslik(o.ad)} · ${o.sinif} · No ${o.no} geziye kaydedildi.`; kaydet();
+      };
+      const kaydet_ = async () => {
+        const g = $('#kyNo'), v = g.value.trim(); if (!v) return;
+        const no = (v.match(/^\d+/) || [])[0], L = D.ogrenciler || [], ad = v.replace(/^\d+\s*·?\s*/, '').split(' · ')[0].trim();
+        const o = (no && L.find(x => String(x.no) === no)) || (!no && L.find(x => gzAdK(x.ad) === gzAdK(ad)));
+        if (o) { g.value = ''; await kayda(o); fotolariYukle([String(o.no)]).catch(() => {}); ciz_(); return; }
+        const t = !no && OGT.find(x => gzAdK(x) === gzAdK(v.replace(/^öğretmen\s*·\s*/i, '')));
+        if (t) { g.value = ''; if (G.gorevli.some(x => gzAdK(x.ad) === gzAdK(t))) { sonMesaj = `ℹ ${baslik(t)} zaten kayıtlı.`; ciz_(); return; }
+          const K = +G.kontenjan || 0; if (K && dolu() >= K && !await onayla(`Kontenjan dolu (${dolu()} / ${K}). Öğretmen yine de eklensin mi?`)) return;
+          G.gorevli.push({ id: Date.now().toString(36), ad: baslik(t), tur: 'ogt', tel: '' }); sonMesaj = `✓ ${baslik(t)} (öğretmen) geziye kaydedildi.`; kaydet(); ciz_(); return; }
+        sonMesaj = no ? `✗ ${no} numaralı öğrenci okulda bulunamadı.` : `✗ "${v}" bulunamadı. Numara ya da listeden ad seçin.`; ciz_(); g.select();
+      };
+      const satir = (p, ek) => `<div class="ky-satir">${p.tur === 'ogr' ? foto(String(p.no), p.ad) : '<div class="foto">👩‍🏫</div>'}<div class="ky-ad"><b>${esc(baslik(p.ad))}</b><small>${p.tur === 'ogr' ? esc(p.sinif) + ' · No ' + esc(p.no) : 'Öğretmen'}${ek || ''}</small></div>`;
+      const ciz_ = () => {
+        const { ogr, ogt } = katilan(), K = +G.kontenjan || 0, n = ogr.length + ogt.length, ucret = +G.ucret || 0;
+        const odeyen = ogr.filter(p => G.odeme[p.an]).length, Y = Object.keys(G.kayit).filter(an => G.kayit[an].d === 'y'), V = Object.keys(G.kayit).filter(an => G.kayit[an].d === 'v');
+        const ogrBul = an => { const [, sn, no] = an.split(':'); return (D.ogrenciler || []).find(x => String(x.no) === no && x.sinif === sn) || G.ekOgr.find(x => String(x.no) === no && x.sinif === sn) || { no, sinif: sn, ad: 'No ' + no }; };
+        const q = araK.toLocaleLowerCase(tr), uy = p => !q || (p.ad + ' ' + (p.sinif || '') + ' ' + (p.no || '')).toLocaleLowerCase(tr).includes(q);
+        let liste = '';
+        if (sekmeK === 'k') {
+          const L = ogr.filter(uy).filter(p => !yalnizOdemeyen || !G.odeme[p.an]).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
+          liste = (ogt.filter(uy).map(p => satir(p) + `<button class="bag kirmizi kucuk" data-kogt="${esc(p.an)}">Çıkar</button></div>`).join(''))
+            + L.map(p => satir(p, G.odeme[p.an] ? ' · ödedi ' + SAAT(G.odeme[p.an]) : '') + `<button class="ky-ode ${G.odeme[p.an] ? 'odedi' : ''}" data-kode="${esc(p.an)}">${G.odeme[p.an] ? '✓ Ödedi' : 'Ödemedi'}</button><button class="ikincil kucuk" data-kbil="${esc(p.an)}" title="T.C., doğum, telefon">🪪${!p.tc || !p.dogum || !p.tel ? '<b class="kirmizi-yazi">!</b>' : ''}</button><button class="bag kirmizi kucuk" data-kvaz="${esc(p.an)}">Vazgeçti</button></div>`).join('')
+            || '<div class="soluk kucuk">Henüz kayıt yok. Numarayı yazıp Enter\'a basın.</div>';
+        } else if (sekmeK === 'y') {
+          liste = Y.map(an => ({ an, o: ogrBul(an), z: G.kayit[an].z })).filter(x => uy(x.o)).sort((a, b) => a.z - b.z).map((x, i) => satir(Object.assign({ tur: 'ogr' }, x.o), ` · ${i + 1}. sırada · ${SAAT(x.z)}`) + `<button class="birincil kucuk" data-kal="${esc(x.an)}">Kayda al</button><button class="bag kirmizi kucuk" data-kvaz="${esc(x.an)}">Vazgeçti</button></div>`).join('') || '<div class="soluk kucuk">Yedek listesi boş.</div>';
+        } else {
+          liste = V.map(an => ({ an, o: ogrBul(an), k: G.kayit[an] })).filter(x => uy(x.o)).sort((a, b) => (b.k.vz || 0) - (a.k.vz || 0)).map(x => satir(Object.assign({ tur: 'ogr' }, x.o), (x.k.vz ? ' · vazgeçti ' + SAAT(x.k.vz) : '') + (G.odeme[x.an] ? ' · ödemişti' : '')) + (G.odeme[x.an] ? `<button class="ky-ode ${x.k.iade ? 'odedi' : ''}" data-kiade="${esc(x.an)}">${x.k.iade ? '✓ İade edildi' : 'İade edilmedi'}</button>` : '') + `<button class="ikincil kucuk" data-kgeri="${esc(x.an)}">Geri al</button></div>`).join('') || '<div class="soluk kucuk">Vazgeçen yok.</div>';
+        }
+        $('#kyOzet').innerHTML = `<span class="${K && n > K ? 'kirmizi-yazi' : ''}"><b>${n}</b>${K ? ' / ' + K : ''} kişi</span><span><b>${ogr.length}</b> öğrenci · <b>${ogt.length}</b> öğretmen</span><span class="ky-yesil"><b>${odeyen}</b> ödedi</span><span class="ky-turuncu"><b>${ogr.length - odeyen}</b> ödemedi</span>${ucret ? `<span>Tahsilat <b>${(odeyen * ucret).toLocaleString(tr)} ₺</b></span>` : ''}${K ? `<span>Boş yer <b>${Math.max(0, K - n)}</b></span>` : ''}`;
+        $('#kyMesaj').textContent = sonMesaj; $('#kyMesaj').className = 'ky-mesaj ' + (/^✓/.test(sonMesaj) ? 'iyi' : /^✗/.test(sonMesaj) ? 'kotu' : '');
+        $('#kySekme').innerHTML = [['k', `Kayıtlı · ${n}`], ['y', `Yedek · ${Y.length}`], ['v', `Vazgeçen · ${V.length}`]].map(([k, a]) => `<button class="${sekmeK === k ? 'secili' : ''}" data-ksek="${k}">${a}</button>`).join('') + (sekmeK === 'k' ? `<label class="ky-filtre"><input type="checkbox" id="kyOdemeyen" ${yalnizOdemeyen ? 'checked' : ''}> Yalnız ödemeyenler</label>` : '');
+        $('#kyListe').innerHTML = liste; ciz();   // arkadaki otobüs ekranı da güncel kalsın
+        fotolariYukle(ogr.map(p => String(p.no))).catch(() => {});
+      };
+      pencereAc(`<h2 style="margin-top:0">📝 Kayıt · ${esc(G.ad || 'Gezi')}</h2>
+        <div class="gz-alan ky-iki"><label>Kontenjan (öğretmen dahil)<input id="kyKon" type="number" min="1" inputmode="numeric" value="${esc(G.kontenjan || '')}" placeholder="ör. 45"></label><label>Gezi ücreti (₺)<input id="kyUc" type="number" min="0" inputmode="numeric" value="${esc(G.ucret || '')}" placeholder="ör. 1500"></label></div>
+        <div class="ky-giris"><input id="kyNo" list="kyOL" placeholder="No ya da öğretmen adı" autocomplete="off" enterkeyhint="done"><datalist id="kyOL">${OGT.map(t => `<option value="Öğretmen · ${esc(baslik(t))}">`).join('')}${(D.ogrenciler || []).slice(0, 3000).map(o => `<option value="${esc(o.no)} · ${esc(o.ad)} · ${esc(o.sinif)}">`).join('')}</datalist><button class="birincil" id="kyEkle">Kaydet</button></div>
+        <div id="kyMesaj" class="ky-mesaj"></div><div class="gz-ozet ky-ozet" id="kyOzet"></div>
+        <div class="gz-sekme ky-sekme" id="kySekme"></div><input id="kyAra" placeholder="Listede ara: ad, sınıf, no" class="ky-ara"><div id="kyListe" class="ky-liste"></div>
+        <div class="dugmeler"><button class="ikincil" id="kyYaz">🖨 Kayıt ve ödeme listesi</button></div>`);
+      $('#pencere .pencere-ic').classList.add('genis');
+      ciz_(); setTimeout(() => { const g = $('#kyNo'); if (g && !telefon()) g.focus(); }, 60);
+      $('#kyNo').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); kaydet_(); } };
+      $('#kyNo').onchange = ev => { if (/ · /.test(ev.target.value)) kaydet_(); };   // listeden seçince de kaydeder
+      $('#kyEkle').onclick = kaydet_;
+      $('#kyKon').oninput = ev => { G.kontenjan = Math.max(0, +ev.target.value || 0) || ''; kaydet(); ciz_(); };
+      $('#kyUc').oninput = ev => { G.ucret = Math.max(0, +ev.target.value || 0) || ''; kaydet(); ciz_(); };
+      $('#kyAra').oninput = ev => { araK = ev.target.value.trim(); ciz_(); };
+      $('#pencereIcerik').onclick = async ev => { if (!$('#kyNo')) return; const b = ev.target.closest('button,input[type=checkbox]'); if (!b) return; const t = b.dataset;
+        if (b.id === 'kyOdemeyen') { yalnizOdemeyen = b.checked; ciz_(); return; }
+        if (t.ksek) { sekmeK = t.ksek; ciz_(); return; }
+        if (t.kode) { if (G.odeme[t.kode]) delete G.odeme[t.kode]; else G.odeme[t.kode] = Date.now(); kaydet(); ciz_(); return; }
+        if (t.kiade) { const k = G.kayit[t.kiade]; k.iade = !k.iade; kaydet(); ciz_(); return; }
+        if (t.kbil) { bilgiDuzenle(t.kbil, () => kayitMasasi()); return; }
+        if (t.kogt) { const id = t.kogt.slice(2); G.gorevli = G.gorevli.filter(g => g.id !== id); delete G.yer[t.kogt]; kaydet(); ciz_(); return; }
+        if (t.kvaz) { const p = kisiler().get(t.kvaz) || {}, ad_ = baslik(p.ad || ''); if (!await onayla(`${ad_ || 'Öğrenci'} geziden vazgeçti olarak işaretlensin mi? Koltuğu boşalır.`)) return;
+          G.kayit[t.kvaz] = Object.assign({}, G.kayit[t.kvaz], { d: 'v', vz: Date.now() }); delete G.yer[t.kvaz]; kaydet();
+          const Y = Object.keys(G.kayit).filter(an => G.kayit[an].d === 'y').sort((a, b) => G.kayit[a].z - G.kayit[b].z);
+          if (Y.length) { const [, sn, no] = Y[0].split(':'), o = (D.ogrenciler || []).find(x => String(x.no) === no && x.sinif === sn) || { no, sinif: sn, ad: 'No ' + no };
+            if (await onayla(`Bir yer boşaldı. Sıradaki yedek ${baslik(o.ad)} (${sn}) kayda alınsın mı?`)) { G.kayit[Y[0]].d = 'k'; G.cikar = G.cikar.filter(x => x !== Y[0]); kaydet(); sonMesaj = `✓ ${baslik(o.ad)} yedekten kayda alındı.`; } }
+          ciz_(); return; }
+        if (t.kal || t.kgeri) { const an = t.kal || t.kgeri, [, sn, no] = an.split(':'), o = (D.ogrenciler || []).find(x => String(x.no) === no && x.sinif === sn) || G.ekOgr.find(x => String(x.no) === no && x.sinif === sn);
+          const K = +G.kontenjan || 0; if (K && dolu() >= K && !await onayla(`Kontenjan dolu (${dolu()} / ${K}). Yine de kayda alınsın mı?`)) return;
+          G.kayit[an] = Object.assign({}, G.kayit[an], { d: 'k' }); G.cikar = G.cikar.filter(x => x !== an); if (o) ekOgrKoy(o); sonMesaj = `✓ ${o ? baslik(o.ad) : 'Öğrenci'} kayda alındı.`; kaydet(); ciz_(); return; }
+        if (b.id === 'kyYaz') { const { ogr, ogt } = katilan(), S = {}; ogr.forEach(p => { (S[p.sinif] = S[p.sinif] || []).push(p); });
+          const odeyen = ogr.filter(p => G.odeme[p.an]).length, ucret = +G.ucret || 0;
+          const govde = raporBant(esc(G.ad || 'Gezi') + ' · Kayıt ve Ödeme Listesi', `${ogr.length} öğrenci · ${ogt.length} öğretmen${G.kontenjan ? ' · kontenjan ' + G.kontenjan : ''} · ${odeyen} ödedi · ${ogr.length - odeyen} ödemedi${ucret ? ' · tahsilat ' + (odeyen * ucret).toLocaleString(tr) + ' ₺' : ''}`)
+            + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Ödeme</th><th>İmza</th></tr></thead><tbody>${Object.keys(S).sort(sinifSira).map(sn => `<tr class="sube"><td colspan="6">${esc(sn)} <span>· ${S[sn].length} öğrenci · ${S[sn].filter(p => G.odeme[p.an]).length} ödedi</span></td></tr>` + S[sn].sort((a, b) => (+a.no) - (+b.no)).map((p, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(p.no)}</td><td class="ad">${esc(baslik(p.ad))}</td><td>${esc(p.sinif)}</td><td>${G.odeme[p.an] ? 'Ödedi · ' + SAAT(G.odeme[p.an]) : '<b>Ödemedi</b>'}</td><td></td></tr>`).join('')).join('')}${ogt.length ? `<tr class="sube"><td colspan="6">Öğretmenler <span>· ${ogt.length}</span></td></tr>` + ogt.map((p, j) => `<tr><td class="s">${j + 1}</td><td></td><td class="ad">${esc(baslik(p.ad))}</td><td>Öğretmen</td><td></td><td></td></tr>`).join('') : ''}</tbody></table>`;
+          raporYazdir(govde, (G.ad || 'Gezi') + ' - kayıt ve ödeme listesi'); return; }
+      };
     };
     const otoAyar = o => {
       pencereAc(`<h2 style="margin-top:0">${o.no}. Otobüs</h2><div class="gz-alan"><label>Otobüs no<input id="oaNo" type="number" min="1" value="${esc(o.no)}"></label><label>Kapasite (şoför hariç koltuk)<input id="oaKap" type="number" min="10" max="80" value="${esc(o.kapasite)}"></label><label>Plaka<input id="oaPl" value="${esc(o.plaka)}" placeholder="34 ABC 123"></label><label>Şoför<input id="oaSf" value="${esc(o.sofor)}" placeholder="Ad Soyad"></label><label>Şoför telefonu<input id="oaTel" value="${esc(o.tel || '05')}" inputmode="tel"></label></div>
