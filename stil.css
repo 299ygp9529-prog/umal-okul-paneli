@@ -1561,3 +1561,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .dd-scip.benim { border-color: color-mix(in srgb, var(--sv) 70%, transparent); }
 .dd-scip.secili { background: var(--sv); border-color: var(--sv); color: #0d1726; box-shadow: 0 0 10px color-mix(in srgb, var(--sv) 45%, transparent); }
 @media (max-width: 760px) { .dd-seviyeler { grid-template-columns: 1fr; } }
+/* K-716l: takipte öğrenciler sınıf sınıf */
+.dd-sgrp { border: 1px solid color-mix(in srgb, var(--sv) 40%, transparent); border-radius: 12px; margin-bottom: 8px; background: color-mix(in srgb, var(--sv) 5%, transparent); }
+.dd-sgrp > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; position: relative; flex-wrap: wrap; }
+.dd-sgrp > summary::-webkit-details-marker { display: none; }
+.dd-sgrp > summary::before { content: '▸'; color: var(--sv); transition: transform .15s; } .dd-sgrp[open] > summary::before { transform: rotate(90deg); }
+.dd-sgrp > summary b { color: var(--sv); font-size: 15px; } .dd-sgrp > summary span { color: var(--soluk); font-size: 13px; margin-left: auto; }
+.dd-sgrp > summary i { position: absolute; left: 12px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--sv); max-width: calc(100% - 24px); }
+.dd-sgrp > .dd-ogrler { padding: 0 10px 10px; }
