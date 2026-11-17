@@ -1618,9 +1618,9 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ps-fx i { position: absolute; display: block; }
 .fx-yagmur .dm, .fx-simsek .dm { top: -40px; border-radius: 2px; transform: rotate(14deg); animation: psYag linear infinite; }
 .dm.uz { width: 1px; height: 18px; background: linear-gradient(transparent, rgba(190,220,255,.8)); filter: blur(.4px); }
-.dm.yk { width: 2px; height: 34px; background: linear-gradient(transparent, var(--s3, #5aa8ff) 60%, #fff); box-shadow: 0 0 6px var(--s3, #5aa8ff), 0 0 16px var(--s3, #5aa8ff); }
-.fx-yagmur .sc, .fx-simsek .sc { bottom: 6px; width: 18px; height: 5px; margin-left: -9px; border-radius: 50%; border: 1.5px solid var(--s3, #5aa8ff); box-shadow: 0 0 8px var(--s3, #5aa8ff); opacity: 0; animation: psSicra ease-out infinite; }
-.ps-fx .zemin { position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(transparent, color-mix(in srgb, var(--s3, #5aa8ff) 14%, transparent)); }
+.dm.yk { width: 1.4px; height: 22px; background: linear-gradient(transparent, rgba(205,228,255,.95)); box-shadow: 0 0 4px rgba(170,210,255,.6); }
+.fx-yagmur .sc, .fx-simsek .sc { bottom: 6px; width: 18px; height: 5px; margin-left: -9px; border-radius: 50%; border: 1px solid rgba(205,228,255,.8); box-shadow: 0 0 5px rgba(170,210,255,.5); opacity: 0; animation: psSicra ease-out infinite; }
+.ps-fx .zemin { position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(transparent, rgba(150,190,240,.1)); }
 .fx-simsek .cak { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; overflow: visible; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px var(--s3, #ffd166)) drop-shadow(0 0 16px var(--s3, #ffd166)); }
 .fx-simsek .cak path { fill: none; stroke: #fffbe8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .fx-simsek .cak .c1 { stroke-width: 3; } .fx-simsek .cak .c2 { stroke-width: 1.6; opacity: .85; }
