@@ -214,7 +214,7 @@
     { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'ogretmen'], ciz: sinavKonulari },   // K-574
-    { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
+    { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
     { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
