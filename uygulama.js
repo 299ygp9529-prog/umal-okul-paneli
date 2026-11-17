@@ -3117,7 +3117,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-541: rol seçimi — Rehberlik / Yönetici (idare) umal_yoneticiler'e yazılır (DersMap'teki Yöneticiler ile aynı tablo)
     const ROL_AD = { ogretmen: 'Öğretmen', rehberlik: 'Rehberlik', yonetici: 'İdare' };
     let yRol = new Map(), yeniRol = 'ogretmen';
-    const yYukle = async () => { const r = await sb.from('umal_yoneticiler').select('eposta,rol'); yRol = new Map((r.data || []).map(x => [x.eposta, x.rol || 'yonetici'])); };
+    const yYukle = async () => { let L_ = null; try { const { data, error } = await sb.rpc('umal_roller_al'); if (!error && Array.isArray(data)) L_ = data; } catch (e) {} if (!L_) { const r = await sb.from('umal_yoneticiler').select('eposta,rol'); L_ = r.data || []; } yRol = new Map(L_.map(x => [x.eposta, x.rol || 'yonetici'])); };   // K-716r
     const rolu = ep => yRol.get(ep) || 'ogretmen';
     let L = await yukle(); await yYukle();
     // K-696: zümreler — branş ders programından (en çok girdiği ders) çıkarılır; elle düzeltme umal_ayarlar 'zumre_elle'
@@ -3145,6 +3145,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let IST = []; const istYukle = async () => { if (!['bas', 'yonetici'].includes(D.rol)) return; try { const r = await sb.from('umal_erisim_talep').select('*').order('zaman'); IST = r.error ? [] : (r.data || []); } catch (e) { IST = []; } }; await istYukle();   // K-684
     const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
     const rolYaz = async (ep, rol) => {
+      { const { error } = await sb.rpc('umal_rol_yaz', { p_eposta: ep, p_rol: rol }); if (!error) return null; if (!/umal_rol_yaz/.test(hataYaz(error))) return error; }   // K-716r
       if (rol === 'ogretmen') { const { error } = await sb.from('umal_yoneticiler').delete().eq('eposta', ep); return error; }
       const { error } = await sb.from('umal_yoneticiler').upsert({ eposta: ep, rol }, { onConflict: 'eposta' }); return error;
     };
@@ -3206,7 +3207,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
         if (!await onayla(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
         const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
-        const e2 = yRol.has(b.dataset.sil) ? (await sb.from('umal_yoneticiler').delete().eq('eposta', b.dataset.sil)).error : null;
+        const e2 = yRol.has(b.dataset.sil) ? await rolYaz(b.dataset.sil, 'ogretmen') : null;
         if (error || e2) { uyar('Kaldırılamadı: ' + hataYaz(error || e2)); return; }
         L = await yukle(); await yYukle(); ciz();
       });
@@ -4032,7 +4033,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
-    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170840'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170850'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
     let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
     window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
