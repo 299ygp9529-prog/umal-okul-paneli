@@ -1546,3 +1546,4 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .dd-ust { margin-right: 0; gap: 10px; } .dd-ust > .dugmeler { width: 100%; justify-content: flex-start; } .dd-ust h1 { font-size: 24px; } }
 /* K-716d: Ders Dosyaları ve Özel Ders ana ekranın altında, alt alta tam genişlik */
 @media (max-width: 760px) { .tm-alt { grid-column: 1 / -1; display: grid; gap: inherit; row-gap: 12px; } }
+@media (max-width: 760px) { .tm-alt.iki { grid-template-columns: 1fr 1fr; column-gap: 12px; } }
