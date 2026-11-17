@@ -3637,7 +3637,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         });
       };
       const ogr = [...M.values()].filter(p => p.tur === 'ogr');
-      if (!sinifBirlikte) { const q = ogr.slice(); G.otobusler.forEach(o => yerlestir(o, q)); return; }
+      const artanKoy = () => {   // K-716bh: kız-erkek kuralı yüzünden açıkta kalan (tek sayıda kalan) öğrenciler kalan boş koltuklara; önce yanı boş koltuklar. Karışık oturanlar ekranda işaretli, elle düzeltilir
+        const A = ogr.filter(p => !G.yer[p.an]); if (!A.length) return;
+        for (const yaniBos of [true, false]) G.otobusler.forEach(o => { for (let k = GZ_AYRILAN + 1; k <= o.kapasite && A.length; k++) { if (doluMu(o, k)) continue; const y = komsuKoltuk(o.id, k); if (yaniBos && y && doluMu(o, y)) continue; G.yer[A.shift().an] = { o: o.id, k }; } });
+      };
+      if (!sinifBirlikte) { const q = ogr.slice(); G.otobusler.forEach(o => yerlestir(o, q)); artanKoy(); return; }
       const S = new Map(); ogr.forEach(p => { if (!S.has(p.sinif)) S.set(p.sinif, []); S.get(p.sinif).push(p); });
       const kalan = new Map(G.otobusler.map(o => [o.id, bosSay(o) - 2])), Q = new Map(G.otobusler.map(o => [o.id, []]));
       [...S].sort((a, b) => sinifSira(a[0], b[0])).forEach(([, L]) => {
@@ -3647,7 +3651,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       G.esler.forEach(([a, b]) => { const qa = [...Q.values()].find(q => q.some(p => p.an === a)), qb = [...Q.values()].find(q => q.some(p => p.an === b)); if (qa && qb && qa !== qb) { const i = qb.findIndex(p => p.an === b); qa.push(qb.splice(i, 1)[0]); } });   // arkadaşlar aynı otobüste
       const tasan = [];
       G.otobusler.forEach(o => { const q = Q.get(o.id); yerlestir(o, q); tasan.push(...q); });
-      G.otobusler.forEach(o => yerlestir(o, tasan));
+      G.otobusler.forEach(o => yerlestir(o, tasan)); artanKoy();
     };
     const bilgiSatiri = (o, M) => { const L = Object.keys(G.yer).filter(an => G.yer[an].o === o.id && M.get(an)).map(an => M.get(an)); return { L, k: L.filter(p => p.tur === 'ogr' && p.cins === 'K').length, e: L.filter(p => p.tur === 'ogr' && p.cins === 'E').length, g: L.filter(p => p.tur !== 'ogr').length }; };
     const komsuKoltuk = (oid, k) => { const o = otoBul(oid); if (!o) return null; for (const r of gzPlan(o.kapasite)) { const ns = r.map(s => s && s.n); const i = ns.indexOf(k); if (i < 0) continue;
