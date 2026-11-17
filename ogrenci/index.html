@@ -118,6 +118,10 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .izg button:nth-child(2n)::after { animation-delay: -2.3s; } .izg button:nth-child(3n)::after { animation-delay: -4.6s; }
 .izg button:disabled::after { animation: none; opacity: .4; }
 @media (prefers-reduced-motion: reduce) { .izg button::after { animation: none; } }
+.gz-ara { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: #fff; background: linear-gradient(150deg, rgba(62,240,138,.18), rgba(18,33,58,.9)); border: 1.5px solid rgba(62,240,138,.6); box-shadow: 0 0 18px rgba(62,240,138,.25); }
+.gz-ara i { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #3ef08a; color: #06121f; animation: gzAra 1.8s ease-in-out infinite; } .gz-ara i svg { width: 24px; height: 24px; }
+.gz-ara span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .gz-ara small { color: #b9f7d2; font-size: 12px; } .gz-ara b { font-size: 16px; } .gz-ara em { font-style: normal; font-size: 18px; font-weight: 700; color: #3ef08a; letter-spacing: .5px; }
+@keyframes gzAra { 0%, 100% { box-shadow: 0 0 0 0 rgba(62,240,138,.6); } 50% { box-shadow: 0 0 0 10px rgba(62,240,138,0); } }
 .selam.kapan { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
 @media (prefers-reduced-motion: reduce) { .selam { transition: none; } }
 /* K-555: MEB formları */
@@ -434,6 +438,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
-<script src="ogrenci.js?v=202611171042"></script>
+<script src="ogrenci.js?v=202611171110"></script>
 </body>
 </html>

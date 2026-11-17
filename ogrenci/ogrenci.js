@@ -230,6 +230,7 @@
   };
   // ---- K-548: ana sayfa (kutucuklar), Sınavlarım, Ders programım
   const IK = {
+    telefon: '<path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
     otobus: '<rect x="4" y="3.5" width="16" height="15" rx="3"/><path d="M4 11h16M8 3.5v7.5M16 3.5v7.5"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M6.5 18.5V21M17.5 18.5V21"/>',
     sinav: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="m9 14.5 2 2 4-4"/>',
     ders: '<rect x="3.5" y="4" width="17" height="16.5" rx="3"/><path d="M3.5 9h17M3.5 14h17M9.5 9v11.5M15 9v11.5"/>',
@@ -364,7 +365,7 @@
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
   function gzKutu() { return GZ.L.map((d, i) => gzKutu1(d, i)).join(''); }
   function gzKutu1(d, i) {
-    const alt = d.koltuk ? `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}` : 'Koltuğun yakında belli olacak';
+    const alt = d.koltuk ? (d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`) : 'Koltuğun yakında belli olacak';
     return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''}">${gzYeni(d) ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.koltuk}</b><small>${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
   }
   function gzAc(i) { if (i != null) GZ.i = i; gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); const d = GZ.d; if (d && d.koltuk) { try { localStorage.setItem(gzAnah(d), d.otobus.no + ':' + d.koltuk); } catch (e) {} } }
@@ -378,6 +379,7 @@
     el.innerHTML = `<div class="gz-bilet"><div class="gz-b-sol"><small>YOLCU</small><b>${esc(S.ad || '')}</b><span>${esc(S.sinif || '')}</span>
         <div class="gz-b-alt">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}</div></div>
       <div class="gz-b-sag"><div><small>OTOBÜS</small><b>${d.otobus.no}</b></div><div class="gz-b-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div><em>${esc(gzYerAd(yer))}</em>${d.otobus.plaka ? `<small>${esc(d.otobus.plaka)}</small>` : ''}</div></div>
+      ${d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
       <div class="gz-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${P.map(r => `<div class="gz-h-sira">${r.map(s => !s ? '<i></i>' : s.kapi ? '<i class="kapi"></i>' : `<i class="k ${s.n === d.koltuk ? 'ben' : ''} ${s.yer === 'cam' ? 'cam' : ''}">${s.n === d.koltuk ? 'SEN' : s.n}</i>`).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur. Değişiklik olursa burada hemen görünür.</p>`;
   }

@@ -1667,3 +1667,11 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 body.kurucu .tm-gk::after, body.kurucu .tm-oge::after { background: conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166); animation-duration: 6s; }
 body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,.12); }
 @media (prefers-reduced-motion: reduce) { .ps-ic .ps-halka, .tm-gk::after, .tm-oge::after { animation: none; } }
+
+/* K-716az: otobüs başlığı telefonda düzgün */
+.gz-oto-bas { flex-wrap: wrap; } .gz-oto-bas > .gz-ob-bilgi { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.gz-ob-bilgi b { font-size: 17px; } .gz-ob-say { display: flex; flex-wrap: wrap; gap: 2px 10px; } .gz-ob-say > span { white-space: nowrap; }
+.gz-ob-say > span + span::before { content: '·'; margin-right: 10px; color: var(--soluk, #9fb3cf); }
+.gz-ob-ek { display: flex; flex-wrap: wrap; gap: 6px; } .gz-cip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12px; background: color-mix(in srgb, var(--g) 12%, transparent); border: 1px solid color-mix(in srgb, var(--g) 35%, transparent); color: #dbe7f7; white-space: nowrap; }
+.gz-oto-bas > .gz-ob-sag { flex: 0 0 auto; display: flex; flex-direction: row; align-items: center; gap: 8px; margin-left: auto; } .gz-ob-sag .gz-kap { margin: 0; }
+@media (max-width: 700px) { .gz-oto-bas > .gz-ob-sag { width: 100%; } .gz-ob-sag .ikincil { flex: 1; margin: 0; } }
