@@ -1745,3 +1745,8 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
   .gz-dug .gz-tumkap button { margin: 0; }
   .gz-dug #gzSifir { order: 11; grid-column: 1 / -1; min-height: 0; padding: 6px; background: none; border: 0; }
 }
+
+/* K-716bg: KURUCU — okulun akademik yazı karakteri (Marcellus), büyük harf, altın */
+.kurucu-yazi { font-family: 'UMAL Marcellus', 'Marcellus', Georgia, serif !important; font-weight: 400; text-transform: uppercase; letter-spacing: .22em; color: #e8c66b !important; text-shadow: 0 0 8px rgba(232,198,107,.55); }
+#rolEtiket:has(.kurucu-yazi) { background: rgba(232,198,107,.1); border-color: rgba(232,198,107,.55); box-shadow: 0 0 12px rgba(232,198,107,.25); }
+.kurucu-rozet { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px; font-size: 12px; background: rgba(232,198,107,.1); border: 1px solid rgba(232,198,107,.55); box-shadow: 0 0 12px rgba(232,198,107,.2); }
