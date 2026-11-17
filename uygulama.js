@@ -3661,6 +3661,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       katilanOgr().forEach(o => { const an = 'o:' + o.sinif + ':' + o.no; M.set(an, Object.assign({ an, tur: 'ogr' }, o)); });
       M.forEach(p => { p.cins = cinsi(p); }); return M; };
     const otoBul = id => G.otobusler.find(o => o.id === id);
+    const otoNumarala = () => { G.otobusler.sort((a, b) => (+a.no || 0) - (+b.no || 0)).forEach((o, i) => { o.no = i + 1; }); };   // K-716bt: otobüs silinince kalanlar 1, 2, 3… diye yeniden numaralanır
+    if (G.otobusler.map(o => +o.no || 0).sort((a, b) => a - b).some((v, i) => v !== i + 1)) { otoNumarala(); setTimeout(() => kaydet(), 0); }   // boşluklu numaralar (ör. yalnız 5. otobüs kaldıysa) düzeltilir
     const esOf = an => { const e = G.esler.find(x => x[0] === an || x[1] === an); return e ? (e[0] === an ? e[1] : e[0]) : null; };
     const yanyana = (a, b) => { const ya = G.yer[a], yb = G.yer[b]; if (!ya || !yb || ya.o !== yb.o) return false; const o = otoBul(ya.o); if (!o) return false;
       return gzPlan(o.kapasite).some(r => { const ns = r.map(s => s && s.n); const ia = ns.indexOf(ya.k), ib = ns.indexOf(yb.k); if (ia < 0 || ib < 0) return false; const lo = Math.min(ia, ib), hi = Math.max(ia, ib); return (lo === 0 && hi === 1) || (lo === 3 && hi === 4) || (r[2] && r[2].n && ((lo === 1 && hi === 2) || (lo === 2 && hi === 3))); }); };
@@ -3796,7 +3798,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (t.gsil) { const id = t.gsil.slice(2); G.gorevli = G.gorevli.filter(g => g.id !== id); delete G.yer[t.gsil]; if (sel === t.gsil) sel = null; kaydet(); ciz(); return; }
         if (esMod && sel) { esYap(sel, b.dataset.kisi); return; }
         sel = sel === b.dataset.kisi ? null : b.dataset.kisi; esMod = false; if (sel && G.yer[sel]) aktif = G.yer[sel].o; ciz(); });
-      $('#icerik').querySelectorAll('[data-ko]').forEach(b => b.onclick = () => {
+      $('#icerik').querySelectorAll('[data-ko]').forEach(b => b.onclick = async () => {
         const oid = b.dataset.ko, k = +b.dataset.kn, an = koltukta(oid, k);
         if (kapatMod) { const L = G.kapali[oid] || (G.kapali[oid] = []), i = L.indexOf(k); if (i >= 0) L.splice(i, 1); else { L.push(k); if (an) { delete G.yer[an]; if (sel === an) sel = null; } } kaydet(); ciz(); return; }   // K-716be: koltuk kapat/aç; kapanan koltuktaki kişi bekleyenlere döner
         if (!sel && !an && k <= GZ_AYRILAN) { onSec(k); return; }   // K-716bn
@@ -3804,7 +3806,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (esMod && sel && an && an !== sel) { esYap(sel, an); return; }
         if (!sel) { if (an) { sel = an; ciz(); } return; }
         if (an === sel) { sel = null; esMod = false; ciz(); return; }
-        const once = G.yer[sel]; G.yer[sel] = { o: oid, k };
+        const once = G.yer[sel];
+        { const uyar_ = (kisi, o_, k_, haric) => { const y = komsuKoltuk(o_, k_); if (!y) return false; const kom = koltukta(o_, y); if (!kom || haric.includes(kom)) return false; const a = M.get(kisi), c = M.get(kom); return !!(a && c && a.tur === 'ogr' && c.tur === 'ogr' && a.cins && c.cins && a.cins !== c.cins); };   // K-716bs: elle yerleştirmede kız-erkek yan yana gelecekse sor
+          if ((uyar_(sel, oid, k, [an]) || (an && once && uyar_(an, once.o, once.k, [sel]))) && !await onayla('Kız ve erkek öğrenci yan yana oturacak. Yine de yerleştirilsin mi?')) return; }
+        G.yer[sel] = { o: oid, k };
         if (an) { if (once) G.yer[an] = once; else delete G.yer[an]; }
         sel = null; kaydet(); ciz();
       });
@@ -3831,7 +3836,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#gzKap').onchange = ev => kapAyarla([o], ev.target.value);
       $('#gzTumKapB').onclick = () => kapAyarla(G.otobusler, $('#gzTumKap').value);
       $('#gzOtoCikar').onclick = async () => { if (G.otobusler.length < 2) return; const x = otoBul(aktif) || G.otobusler[G.otobusler.length - 1], n = Object.values(G.yer).filter(y => y.o === x.id).length;
-        if (!await onayla(`${x.no}. otobüs çıkarılsın mı?${n ? ` İçindeki ${n} kişi bekleyenlere döner.` : ''}`)) return; G.otobusler = G.otobusler.filter(y => y !== x); aktif = (G.otobusler[0] || {}).id; sel = null; kaydet(); ciz(); };
+        if (!await onayla(`${x.no}. otobüs çıkarılsın mı?${n ? ` İçindeki ${n} kişi bekleyenlere döner.` : ''}`)) return; G.otobusler = G.otobusler.filter(y => y !== x); otoNumarala(); aktif = (G.otobusler[0] || {}).id; sel = null; kaydet(); ciz(); };
       $('#gzOtoEkle').onclick = () => { const no = Math.max(0, ...G.otobusler.map(x => +x.no || 0)) + 1, id = 'o' + Date.now().toString(36); G.otobusler.push({ id, no, kapasite: 42, plaka: '', sofor: '', tel: '' }); aktif = id; kaydet(); ciz(); };
       $('#icerik').querySelectorAll('[data-oayar]').forEach(b => b.onclick = () => otoAyar(otoBul(b.dataset.oayar)));
       if ($('#gzONo')) { oneriBagla($('#gzONo'), null, () => $('#gzOEkle').click()); $('#gzONo').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#gzOEkle').click(); } }; }   // K-716bk
@@ -4028,7 +4033,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <p class="soluk kucuk">Kapasite değişince koltuk düzeni yeniden çizilir; yeni kapasiteyi aşan koltuklardaki kişiler bekleyenlere döner. Öndeki ${GZ_AYRILAN} koltuk görevlilere ayrılır (${GZ_AYRILAN_AD.slice(0, GZ_AYRILAN).map((a, i) => (i + 1) + ' ' + a.toLocaleLowerCase(tr)).join(', ')}); gezi bilgilerindeki "Önde ayrılan koltuk"tan değiştirilir.</p><div class="dugmeler"><button class="birincil" id="oaKay">Kaydet</button>${G.otobusler.length > 1 ? '<button class="bag kirmizi" id="oaSil">Otobüsü sil</button>' : ''}</div>`);
       $('#oaTel').onblur = ev => { ev.target.value = gzTel(ev.target.value) || '05'; };
       $('#oaKay').onclick = () => { o.no = +$('#oaNo').value || o.no; o.kapasite = Math.max(10, Math.min(80, +$('#oaKap').value || 46)); o.plaka = $('#oaPl').value.trim().toLocaleUpperCase(tr); o.sofor = $('#oaSf').value.trim().replace(/\s+/g, ' ').split(' ').map(w => w ? w.charAt(0).toLocaleUpperCase('tr') + w.slice(1).toLocaleLowerCase('tr') : w).join(' '); const t = gzTel($('#oaTel').value); o.tel = t.length > 4 ? t : ''; G.otobusler.sort((a, b) => a.no - b.no); $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
-      if ($('#oaSil')) $('#oaSil').onclick = async () => { if (!await onayla(o.no + '. otobüs silinsin mi? İçindekiler bekleyenlere döner.')) return; G.otobusler = G.otobusler.filter(x => x !== o); $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
+      if ($('#oaSil')) $('#oaSil').onclick = async () => { if (!await onayla(o.no + '. otobüs silinsin mi? İçindekiler bekleyenlere döner.')) return; G.otobusler = G.otobusler.filter(x => x !== o); otoNumarala(); $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
     };
     const yolcular = (M, oid) => Object.keys(G.yer).filter(an => G.yer[an].o === oid && M.get(an)).map(an => ({ p: M.get(an), k: G.yer[an].k })).sort((a, b) => a.k - b.k);
     const yerOf = (o, k) => (gzPlan(o.kapasite).flat().find(s => s && s.n === k) || {}).yer;
