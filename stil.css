@@ -1616,9 +1616,9 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @keyframes psYildiz { 0%,100% { opacity: .2; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.1); } }
 .ps-fx { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
 .ps-fx i { position: absolute; display: block; }
-.fx-yagmur i, .fx-simsek i { width: 1.5px; height: 16px; background: linear-gradient(transparent, var(--s3, #5aa8ff)); transform: rotate(12deg); animation: psYag linear infinite; }
-.fx-kar i { width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: psKar linear infinite; }
-.fx-ay i { width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: psYildiz ease-in-out infinite; }
+.fx-yagmur i, .fx-simsek i { width: 2px; height: 26px; border-radius: 2px; background: linear-gradient(transparent, var(--s3, #5aa8ff) 70%, #fff); box-shadow: 0 0 6px var(--s3, #5aa8ff), 0 0 14px var(--s3, #5aa8ff); transform: rotate(12deg); animation: psYag linear infinite; }
+.fx-kar i { width: 5px; height: 5px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #fff, 0 0 12px #bfe6ff; animation: psKar linear infinite; }
+.fx-ay i { width: 2.5px; height: 2.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #fff, 0 0 10px var(--s3, #d4b0ff); animation: psYildiz ease-in-out infinite; }
 .fx-gunes::before, .fx-parcali::before { content: ''; position: absolute; width: 220px; height: 220px; right: -60px; top: -80px; border-radius: 50%; background: radial-gradient(var(--s2, rgba(255,209,102,.45)), transparent 65%); animation: psNabiz 4s ease-in-out infinite; }
 .fx-bulut::before, .fx-sis::before { content: ''; position: absolute; inset: -20% -50%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: psSisB 7s ease-in-out infinite; }
 .fx-simsek::after { content: ''; position: absolute; inset: 0; background: rgba(255,240,200,.18); opacity: 0; animation: psFlas 3.2s steps(1) infinite; }

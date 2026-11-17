@@ -118,9 +118,9 @@
     sis: '<path class="a-sis" d="M7 11.5h10"/><path class="a-sis s2" d="M3.5 15h17"/><path class="a-sis" d="M5.5 18.5h13"/><path class="a-sis s2" d="M8 22h8"/>',
     simsek: '<path class="a-kay" d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-cak" d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
   function psFx(tur) {   // kartın arka planında hafif hava efekti
-    const n = { yagmur: 22, simsek: 18, kar: 26, gunes: 0, ay: 14, parcali: 0, bulut: 0, sis: 0 }[tur] || 0, R = () => Math.random();
+    const n = { yagmur: 26, simsek: 22, kar: 28, gunes: 0, ay: 14, parcali: 0, bulut: 0, sis: 0 }[tur] || 0, R = () => Math.random();
     let h = '';
-    for (let i = 0; i < n; i++) h += `<i style="left:${(R() * 100).toFixed(1)}%;top:${tur === 'ay' ? (R() * 100).toFixed(1) + '%' : '-20px'};animation-delay:${(-R() * 3).toFixed(2)}s;animation-duration:${(tur === 'kar' ? 4 + R() * 3 : tur === 'ay' ? 2 + R() * 3 : .7 + R() * .5).toFixed(2)}s;opacity:${(.25 + R() * .5).toFixed(2)}"></i>`;
+    for (let i = 0; i < n; i++) h += `<i style="left:${(R() * 100).toFixed(1)}%;top:${tur === 'ay' ? (R() * 100).toFixed(1) + '%' : '-20px'};animation-delay:${(-R() * 3).toFixed(2)}s;animation-duration:${(tur === 'kar' ? 4 + R() * 3 : tur === 'ay' ? 2 + R() * 3 : .7 + R() * .5).toFixed(2)}s;opacity:${(.55 + R() * .45).toFixed(2)}"></i>`;
     return `<div class="ps-fx fx-${tur}" aria-hidden="true">${h}</div>`;
   }
   const PS_RENK = { gunes: ['#1d3c66', 'rgba(255,209,102,.45)', '#ffd166'], ay: ['#1a2a55', 'rgba(176,107,255,.45)', '#d4b0ff'], parcali: ['#1b375f', 'rgba(127,246,255,.4)', '#7ff6ff'],
