@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -338,7 +338,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
@@ -346,7 +346,8 @@
   Object.defineProperty(GZ, 'd', { get() { return this.L[this.i] || null; } });
   async function gzYukle() {
     try { const { data, error } = await sb.rpc('umal_ogrenci_gezi', { p_no: S.no, p_kod: S.kod }); if (error || !data || !data.ok) return false;
-      const L = Array.isArray(data.geziler) ? data.geziler : data.gezi ? [data.gezi] : [], j = JSON.stringify(L); if (j === GZ.j) return false; GZ.j = j; GZ.L = L; if (GZ.i >= L.length) GZ.i = 0; return true; } catch (e) { return false; }
+      let B = []; try { const r = await sb.rpc('umal_gezi_baskan_veri', { p_no: S.no, p_kod: S.kod }); if (r.data && r.data.ok) B = r.data.geziler || []; } catch (e) {}   // K-716bp: gezi başkanı
+      const L = Array.isArray(data.geziler) ? data.geziler : data.gezi ? [data.gezi] : [], j = JSON.stringify([L, B]); if (j === GZ.j) return false; GZ.j = j; GZ.L = L; GZ.B = B; if (GZ.i >= L.length) GZ.i = 0; return true; } catch (e) { return false; }
   }
   function gzPlan(N) {   // panelle aynı 2+2 düzen
     N = Math.max(1, Math.min(80, +N || 46)); let R = null, gap = 0, son = 4;
@@ -363,7 +364,40 @@
   const gzAnah = d => 'gezi_gordu:' + S.no + ':' + (d.anahtar || '');
   const gzYeni = d => { if (!d || !d.koltuk) return false; try { return localStorage.getItem(gzAnah(d)) !== d.otobus.no + ':' + d.koltuk; } catch (e) { return false; } };
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
-  function gzKutu() { return GZ.L.map((d, i) => gzKutu1(d, i)).join(''); }
+  function gzKutu() { return (GZ.B || []).map((d, i) => `<button data-git="bsk" data-bsk="${i}" class="genis no-ana gz-ana bsk-ana"><i class="ik" style="--c:#ffd166">${BSK_IK}</i><span><b>Gezi Başkanı · ${esc(d.ad || 'Gezi')}</b><small>Otobüslerdeki yerleri düzenle</small></span></button>`).join('') + GZ.L.map((d, i) => gzKutu1(d, i)).join(''); }
+  // K-716bp: Gezi başkanı — öğretmenin seçtiği öğrenci tüm otobüslerde öğrencilerin yerini değiştirir (görevli, öndeki ve kapalı koltuklar hariç)
+  const BSK_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.2 7.6 12 12 5l4.4 7 4.1-3.8-1.6 10.3H5.1z" fill="currentColor" fill-opacity=".22"/><path d="M5.6 20.6h12.8"/><circle cx="12" cy="14.4" r="1.3"/></svg>';
+  const BK = { i: 0, o: null, sel: null, ara: '', mesaj: '', mesajTur: '' };
+  function bskAc(i) { if (i != null) { BK.i = i; BK.o = null; BK.sel = null; BK.ara = ''; BK.mesaj = ''; } bskCiz(); goster('s-bsk'); window.scrollTo(0, 0); }
+  function bskCiz() {
+    const d = (GZ.B || [])[BK.i], el = $('#bskIc'); if (!el) return;
+    $('#bskBaslik').textContent = 'Gezi Başkanı';
+    if (!d) { el.innerHTML = '<div class="kart soluk">Gezi başkanlığın şu an kapalı. Öğretmenin açınca buradan düzenleyebilirsin.</div>'; return; }
+    const O = d.otobusler || []; if (!BK.o || !O.some(o => o.id === BK.o)) BK.o = (O[0] || {}).id;
+    const o = O.find(x => x.id === BK.o) || {}, Y = d.yolcular || [], kim = k => Y.find(y => y.o === o.id && y.k === k), kapali = new Set(((d.kapali || {})[o.id]) || []), ayr = +d.ayrilan || 2;
+    const sec = BK.sel && Y.find(y => y.an === BK.sel), kisa = ad => { const p = baslik(ad || '').split(' ').filter(Boolean); return p.length > 1 ? p[0] + ' ' + p[p.length - 1][0] + '.' : (p[0] || ''); };
+    const q = BK.ara.toLocaleLowerCase(tr), bul = q ? Y.filter(y => !y.gorevli && (y.ad + ' ' + y.sinif + ' ' + y.no).toLocaleLowerCase(tr).includes(q)).slice(0, 6) : [];
+    const koltuk = s => { if (!s) return '<i></i>'; if (s.kapi) return '<i class="kapi"></i>'; const y = kim(s.n), kilit = s.n <= ayr || kapali.has(s.n) || (y && y.gorevli);
+      return `<button class="bk-k ${y ? 'dolu' : ''} ${kilit ? 'kilit' : ''} ${y && y.an === BK.sel ? 'sec' : ''}" data-bk="${s.n}" ${kilit && !(y && !y.gorevli) ? 'disabled' : ''}><em>${s.n}</em>${y ? `<b>${esc(kisa(y.ad))}</b><small>${esc(y.gorevli ? 'Görevli' : y.sinif)}</small>` : kapali.has(s.n) ? '<small>Kapalı</small>' : s.n <= ayr ? '<small>Görevli</small>' : ''}</button>`; };
+    el.innerHTML = `<div class="bk-gezi">${esc(d.ad || 'Gezi')}</div>${BK.mesaj ? `<div class="bk-mesaj ${BK.mesajTur}">${esc(BK.mesaj)}</div>` : ''}
+      <div class="kart bk-yardim">${sec ? `<b>${esc(baslik(sec.ad))}</b> seçildi (${esc((O.find(x => x.id === sec.o) || {}).no)}. otobüs, ${sec.k} numara). Şimdi gideceği koltuğa dokun; dolu koltuksa ikisi yer değiştirir. <button class="ikincil kucuk" id="bkVaz">Vazgeç</button>` : 'Yerini değiştireceğin öğrenciye dokun ya da adını ara, sonra gideceği koltuğa dokun. Başka otobüse almak için üstten otobüsü seç.'}</div>
+      <input id="bkAra" class="bk-ara" placeholder="Öğrenci ara: ad, sınıf, no" value="${esc(BK.ara)}" autocomplete="off">
+      ${bul.length ? `<div class="bk-bul">${bul.map(y => `<button data-bksec="${esc(y.an)}"><b>${esc(baslik(y.ad))}</b><small>${esc(y.sinif)} · ${esc((O.find(x => x.id === y.o) || {}).no)}. otobüs ${y.k}</small></button>`).join('')}</div>` : ''}
+      <div class="bk-oto">${O.map(x => `<button class="${x.id === o.id ? 'secili' : ''}" data-bko="${esc(x.id)}">${esc(x.no)}. Otobüs</button>`).join('')}</div>
+      <div class="gz-harita bk-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${gzPlan(o.kapasite).map(r => `<div class="gz-h-sira">${r.map(koltuk).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>`;
+    $('#bkAra').oninput = ev => { BK.ara = ev.target.value; const p = ev.target.selectionStart; bskCiz(); const g = $('#bkAra'); g.focus(); g.setSelectionRange(p, p); };
+    el.querySelectorAll('[data-bksec]').forEach(b => b.onclick = () => { const y = Y.find(z => z.an === b.dataset.bksec); BK.sel = y.an; BK.o = y.o; BK.ara = ''; BK.mesaj = ''; bskCiz(); });
+    el.querySelectorAll('[data-bko]').forEach(b => b.onclick = () => { BK.o = b.dataset.bko; bskCiz(); });
+    if ($('#bkVaz')) $('#bkVaz').onclick = () => { BK.sel = null; bskCiz(); };
+    el.querySelectorAll('[data-bk]').forEach(b => b.onclick = async () => { const k = +b.dataset.bk, y = kim(k);
+      if (!BK.sel) { if (y && !y.gorevli) { BK.sel = y.an; BK.mesaj = ''; bskCiz(); } return; }
+      if (y && y.an === BK.sel) { BK.sel = null; bskCiz(); return; }
+      b.disabled = true; let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_baskan_degistir', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar, p_an: BK.sel, p_o: o.id, p_k: k })); } catch (e) {}
+      const ad = baslik((Y.find(z => z.an === BK.sel) || {}).ad || '');
+      if (r && r.ok) { BK.mesaj = `${ad} ${o.no}. otobüs ${k} numaraya alındı${y ? ', ' + baslik(y.ad) + ' onun eski yerine geçti' : ''}.`; BK.mesajTur = 'iyi'; BK.sel = null; }
+      else { BK.mesaj = (r && r.hata) || 'Olmadı, internet bağlantını kontrol edip yeniden dene.'; BK.mesajTur = 'kotu'; }
+      await gzYukle(); bskCiz(); });
+  }
   function gzKutu1(d, i) {
     const alt = d.koltuk ? (d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`) : 'Koltuğun yakında belli olacak';
     return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''}">${gzYeni(d) ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.koltuk}</b><small>${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
@@ -1269,7 +1303,7 @@
         if (JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]) !== once && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }
       if (await noYukle() && !$('#liste').classList.contains('gizli')) anaCiz(true);   // K-619
       if (await ddYukle()) { if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-dd').classList.contains('gizli') && !DD.sec) ddListeCiz(); }   // K-716
-      if (await gzYukle()) { if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-gezi').classList.contains('gizli')) gzCiz(); }   // K-708: idare koltuğu değiştirirse anında
+      if (await gzYukle()) { if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-gezi').classList.contains('gizli')) gzCiz(); if (!$('#s-bsk').classList.contains('gizli') && !BK.sel && document.activeElement !== $('#bkAra')) bskCiz(); }   // K-708: idare koltuğu değiştirirse anında
       if (RH.yuklendi) sesDenetle();   // K-617
       try { const { data } = await sb.rpc('umal_ogrenci_giris', { p_no: S.no, p_kod: S.kod }); if (data && data.ok && data.formlar) { S.formlar = data.formlar; if (!$('#liste').classList.contains('gizli')) anaCiz(true); if (!$('#s-anket').classList.contains('gizli')) listeCiz(); } } catch (e) {}
     }
