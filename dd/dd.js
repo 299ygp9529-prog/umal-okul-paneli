@@ -15,6 +15,9 @@
   const secimOzet = (sec, tum) => { if (tum.length && tum.every(x => sec.includes(x))) return 'bütün okul'; const P = [];
     [...new Set(tum.map(x => x.split('-')[0]))].forEach(v => { const L = tum.filter(x => x.split('-')[0] === v), S_ = L.filter(x => sec.includes(x)); if (!S_.length) return; if (S_.length === L.length) P.push(v + '. sınıflar'); else P.push(...S_); });
     return P.length > 4 ? P.slice(0, 3).join(', ') + ` +${P.length - 3}` : P.join(', '); };
+  // PDF eklenince "Yazı" boşsa standart ödev yazısı (öğretmen değiştirebilir)
+  const STANDART_YAZI = 'Konuyu pekiştirmek amacıyla hazırlanan ekteki çalışma sorularını bir sonraki dersimize kadar çözünüz. Çözemediğiniz soruları, soru numarasıyla birlikte buradan iletebilirsiniz.';
+  const standartYaz = T => { if (!T.aciklama.trim() && [...T.dosyalar.map(f => f.type), ...T.mevcut.map(f => f.mime)].some(m => /pdf/.test(m || ''))) T.aciklama = STANDART_YAZI; };
   const SV_RENK = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
   const ytId = u => (String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
   const idare = () => ['bas', 'yonetici'].includes(C.rol);
@@ -107,7 +110,7 @@
     await benimBilgim();
     S.ekran = 'liste';
     if (C.gelen && C.gelen.tur === 'gelenhata') { ciz(); C.uyar('Kısayoldan gelen dosya yüklenemedi: ' + C.gelen.v); return; }
-    if (C.gelen && C.gelen.tur === 'gelen') { try { const g = JSON.parse(C.gelen.v); if (g && g.id) { S.T = yeniTaslak(); S.T.mevcut = [{ id: g.id, ad: g.ad, mime: g.mime, boyut: g.boyut }]; S.T.baslik = String(g.ad || '').replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); S.T.kisayol = true; S.ekran = 'yeni'; } } catch (e) {} }
+    if (C.gelen && C.gelen.tur === 'gelen') { try { const g = JSON.parse(C.gelen.v); if (g && g.id) { S.T = yeniTaslak(); S.T.mevcut = [{ id: g.id, ad: g.ad, mime: g.mime, boyut: g.boyut }]; S.T.baslik = String(g.ad || '').replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); S.T.kisayol = true; standartYaz(S.T); S.ekran = 'yeni'; } } catch (e) {} }
     ciz();
   }
   function ciz() { ({ liste: listeCiz, yeni: yeniCiz, takip: takipCiz, ayar: ayarCiz, kisayol: kisayolCiz })[S.ekran](); }
@@ -212,7 +215,7 @@
     const L = (data || []); if (!L.length) { el.innerHTML = '<span class="soluk kucuk">Testlerde kayıt yok. Test Hazırla\'dan test hazırlayın.</span>'; return; }
     el.innerHTML = L.map(r => `<button class="dd-test" data-test="${r.id}"><b>${esc(r.ad)}</b><small>${esc([r.sinif, r.brans, r.soru_sayisi ? r.soru_sayisi + ' soru' : '', r.eposta === C.eposta ? 'benim' : r.hazirlayan].filter(Boolean).join(' · '))}</small></button>`).join('');
     el.onclick = ev => { const b = ev.target.closest('[data-test]'); if (!b) return; const r = L.find(x => x.id === b.dataset.test);
-      oku(); T.mevcut.push({ url: `${C.URL_}/storage/v1/object/public/umal-testler/${encodeURIComponent(r.yol)}`, ad: r.ad + '.pdf', mime: 'application/pdf' }); if (!T.baslik) T.baslik = r.ad; if (!T.ders && r.brans) T.ders = r.brans; T.testAcik = false; yeniCiz(); };
+      oku(); T.mevcut.push({ url: `${C.URL_}/storage/v1/object/public/umal-testler/${encodeURIComponent(r.yol)}`, ad: r.ad + '.pdf', mime: 'application/pdf' }); if (!T.baslik) T.baslik = r.ad; if (!T.ders && r.brans) T.ders = r.brans; T.testAcik = false; standartYaz(T); yeniCiz(); };
   }
   function oku() { const T = S.T; const g = id => $(id);
     if (g('#ddBaslik')) T.baslik = g('#ddBaslik').value; if (g('#ddDers')) T.ders = g('#ddDers').value; if (g('#ddNot')) T.aciklama = g('#ddNot').value;
@@ -228,7 +231,7 @@
     kok.oninput = ev => { if (['ddBaslik', 'ddNot', 'ddDers', 'ddKonu', 'ddAnahtar'].includes(ev.target.id)) { oku(); const p = kok.querySelector('.dd-onizleme'); if (p) p.innerHTML = onizleme(); } };
     kok.onkeydown = ev => { if (ev.target.id === 'ddLink' && ev.key === 'Enter') { ev.preventDefault(); const b = $('#ddLinkEkle'); if (b) b.click(); } };
     kok.onchange = ev => { const t = ev.target;
-      if (t.id === 'ddDosya') { oku(); [...t.files].forEach(f => { if (f.size > 25 * 1048576) C.uyar(f.name + ' 25 MB\'tan büyük, eklenmedi.'); else T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); return; }
+      if (t.id === 'ddDosya') { oku(); [...t.files].forEach(f => { if (f.size > 25 * 1048576) C.uyar(f.name + ' 25 MB\'tan büyük, eklenmedi.'); else T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); standartYaz(T); yeniCiz(); return; }
       if (t.id === 'ddCevap') { if (t.files[0]) T.cevap = t.files[0]; oku(); yeniCiz(); return; }
       if (t.id === 'ddGorunme') { $('#ddGorZaman').disabled = t.value !== 'z'; }
       if (t.id === 'ddCevapAc') { $('#ddCevapZaman').disabled = t.value !== 'z'; }
@@ -236,7 +239,7 @@
       if (t.dataset.ogr) { const no = t.dataset.ogr; T.ogrenciler = t.checked ? [...new Set([...T.ogrenciler, no])] : T.ogrenciler.filter(x => x !== no); oku(); const b = $('#ddGonder'); if (b) b.textContent = `Gönder · ${T.ogrenciler.length} öğrenci`; return; }
       oku(); };
     const birak = $('#ddBirak'); if (birak) { birak.ondragover = e => { e.preventDefault(); birak.classList.add('ustte'); }; birak.ondragleave = () => birak.classList.remove('ustte');
-      birak.ondrop = e => { e.preventDefault(); birak.classList.remove('ustte'); oku(); [...e.dataTransfer.files].forEach(f => { if (f.size <= 25 * 1048576) T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); }; }
+      birak.ondrop = e => { e.preventDefault(); birak.classList.remove('ustte'); oku(); [...e.dataTransfer.files].forEach(f => { if (f.size <= 25 * 1048576) T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); standartYaz(T); yeniCiz(); }; }
     kok.onclick = async ev => { const t = ev.target, b = t.closest('button'); if (!b) return;
       if (b.id === 'ddGeri') { if ((T.dosyalar.length || T.baslik) && !await C.onayla('Gönderilmemiş dosya silinsin mi?')) return; S.ekran = 'liste'; ciz(); return; }
       if (b.id === 'ddTestAc') { oku(); T.testAcik = !T.testAcik; yeniCiz(); return; }
