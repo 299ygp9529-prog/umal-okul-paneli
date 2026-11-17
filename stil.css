@@ -1586,3 +1586,8 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ps-ozet li { padding-left: 16px; position: relative; } .ps-ozet li::before { content: ''; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--neon); }
 .ps-ozet li.sinav::before { background: #ffb867; } .ps-ozet li.erisim::before { background: #ff8a8a; } .ps-ozet li.dd::before { background: #7fb2ff; } .ps-ozet b { color: #fff; }
 .ps-ozet li.yon::before { background: #b06bff; }
+
+.ps-ad{grid-column:1/-1;min-width:0;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);font-size:.92rem;color:#c9d3e6}
+.ps-ad>div{display:flex;gap:8px;margin-top:8px}
+.ps-ad input{flex:1;min-width:0;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:16px}
+.ps-ad button{padding:9px 14px;border-radius:10px;border:0;background:#22e8ff;color:#06121f;font:inherit;font-weight:700;cursor:pointer}

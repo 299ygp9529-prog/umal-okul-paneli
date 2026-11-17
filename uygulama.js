@@ -127,9 +127,12 @@
     if (panelSelam.oldu) return; panelSelam.oldu = true;   // her açılışta bir kez (sayfa içi gezinmede tekrar etmez)
     await kisiAdlariYukle().catch(() => {});
     let tam = KISI.get(String(D.eposta).toLowerCase()) || '';
+    if (!tam) try { const r = await sb.rpc('umal_adim'); const a = !r.error && r.data; if (typeof a === 'string' && a.length > 1 && !/@/.test(a) && !['bas', 'yonetici', 'ogretmen', 'rehberlik'].includes(a)) tam = a; } catch (e) {}
     if (!tam) try { const r = await sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle(); tam = (r.data && r.data.ad) || ''; } catch (e) {}
     if (!tam) try { const u = (await sb.auth.getUser()).data.user, m = (u && u.user_metadata) || {}; tam = m.full_name || m.name || ''; } catch (e) {}
     if (!tam) try { const r = await sb.from('umal_erisim_talep').select('ad').eq('eposta', D.eposta).limit(1).maybeSingle(); tam = (r.data && r.data.ad) || ''; } catch (e) {}
+    if (!tam) try { tam = localStorage.getItem('umalAd:' + String(D.eposta).toLowerCase()) || ''; } catch (e) {}
+    const adSor = !tam;
     const ilk = tam ? baslik(String(tam)).split(' ')[0] : '', hitap = ilk ? ilk + ' Hocam' : 'Hocam';
     const s = new Date(), h = s.getHours(), gi = (s.getDay() + 6) % 7;
     const sel = h >= 5 && h < 11 ? 'Günaydın' : h >= 11 && h < 17 ? 'İyi günler' : h >= 17 && h < 22 ? 'İyi akşamlar' : 'İyi geceler';
@@ -172,10 +175,20 @@
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
-    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}</div>`;
+    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
-    el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000);
+    if (!adSor) { el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000); return; }
+    el.onclick = kapat; el.querySelector('.ps-ad').onclick = e => e.stopPropagation();
+    const kaydet = async () => {
+      const a = baslik($('#psAd').value.replace(/\s+/g, ' ').trim()); if (a.length < 2) { $('#psAd').focus(); return; }
+      try { localStorage.setItem('umalAd:' + String(D.eposta).toLowerCase(), a); } catch (e) {}
+      KISI.set(String(D.eposta).toLowerCase(), a);
+      try { await sb.rpc('umal_adim_yaz', { p_ad: a }); } catch (e) {}
+      el.querySelector('h2').textContent = `${sel}, ${a.split(' ')[0]} Hocam`;
+      el.querySelector('.ps-ad').innerHTML = '<span>Kaydedildi, teşekkürler.</span>'; setTimeout(kapat, 2500);
+    };
+    $('#psAdK').onclick = kaydet; $('#psAd').onkeydown = e => { if (e.key === 'Enter') kaydet(); };
   }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
