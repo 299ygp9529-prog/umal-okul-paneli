@@ -585,7 +585,7 @@
     if (h >= 0 && h < 5) soz = esc(`Bu saatte uyanık mısın ${ad}? Uyku da dersin bir parçası, yarın görüşürüz.`);
     const [r1, r2, r3] = RENKS[tur];
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
-    el.innerHTML = `<div><h2>${sel}, ${esc(ad)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${HAD[tur]}` : `${GUN[g]} · ${s.getDate()} ${AY[s.getMonth()]}`}</div></div><i class="hi">${`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${HI[tur]}</svg>`}</i><div class="sz">${soz}</div>`;
+    el.innerHTML = `<b class="halka"></b><div><h2>${sel}, ${esc(ad)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${HAD[tur]}` : `${GUN[g]} · ${s.getDate()} ${AY[s.getMonth()]}`}</div></div><i class="hi">${`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${HI[tur]}</svg>`}</i><div class="sz">${soz}</div>`;
     el.classList.remove('gizli', 'kapan');
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.classList.add('gizli'), 600); };
     el.onclick = kapat; clearTimeout(S.selamT); S.selamT = setTimeout(kapat, bugunSv ? 15000 : 9000);

@@ -1644,7 +1644,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (prefers-reduced-motion: reduce) { .ps-ic *, .ps-ic *::before, .ps-ic *::after { animation: none !important; } }
 
 /* K-716av: kurucu (baş yönetici) karşılaması */
-.ps-kurucu .ps-ic { border-color: transparent; background: linear-gradient(150deg, var(--s1, #17345e), #121f36 72%) padding-box, conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166) border-box; border: 1.5px solid transparent; animation: psCerceve 6s linear infinite; box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(255,209,102,.35); }
+.ps-kurucu .ps-ic { --halka: conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(255,209,102,.35); }
 @property --psA { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes psCerceve { to { --psA: 360deg; } }
 .ps-kur { color: #ffd166; text-shadow: 0 0 8px rgba(255,209,102,.8); letter-spacing: inherit; }
@@ -1652,3 +1652,14 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @keyframes psParilti { 0% { background-position: 120% 0; } 60%, 100% { background-position: -120% 0; } }
 .ps-ozet li.nabiz::before { background: #ffd166; box-shadow: 0 0 8px #ffd166; animation: psNabiz 1.6s ease-in-out infinite; }
 .ps-ozet li.nabiz { color: #fff3c4; }
+
+/* K-716aw: dönen çerçeve herkese (renkli); altın yalnız kurucuya */
+.ps-ic { --halka: conic-gradient(from var(--psA, 0deg), #22e8ff, #b06bff, #3ef08a, #22e8ff, #0b4f6c, #22e8ff); border-color: transparent; }
+.ps-ic .ps-halka { position: absolute; inset: 0; z-index: 2 !important; border-radius: inherit; padding: 1.5px; background: var(--halka); pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 6s linear infinite; }
+.ps-ic .ps-halka { position: absolute !important; }
+body.kurucu .tm-gk::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 6s linear infinite; }
+body.kurucu .tm-gk { border-color: transparent; box-shadow: 0 0 14px rgba(255,209,102,.12); }
+@media (prefers-reduced-motion: reduce) { .ps-ic .ps-halka, body.kurucu .tm-gk::after { animation: none; } }

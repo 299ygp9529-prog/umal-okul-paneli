@@ -216,7 +216,7 @@
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`; el.classList.toggle('ps-kurucu', D.rol === 'bas');
-    el.innerHTML = `<div class="ps-ic">${psFx(tur)}<div><div class="ps-atlas">ATLAS${D.rol === 'bas' ? ' <span class="ps-kur">· KURUCU</span>' : ''}</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
+    el.innerHTML = `<div class="ps-ic"><b class="ps-halka"></b>${psFx(tur)}<div><div class="ps-atlas">ATLAS${D.rol === 'bas' ? ' <span class="ps-kur">· KURUCU</span>' : ''}</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
     if (tur === 'simsek') psSimsek(el);
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
@@ -242,7 +242,7 @@
       if (error) { $('#girisBilgi').textContent = 'Sunucuya ulaşılamadı: ' + hataYaz(error); await sb.auth.signOut({ scope: 'local' }); return; }
       erisimIste(); return;   // K-684: e-posta kodla doğrulandı; adını yazıp erişim ister, idare tek dokunuşla onaylar
     }
-    D.rol = rol;
+    D.rol = rol; document.body.classList.toggle('kurucu', rol === 'bas');
     $('#giris').classList.add('gizli');
     $('#uygulama').classList.remove('gizli');
     $('#kim').textContent = D.eposta;
