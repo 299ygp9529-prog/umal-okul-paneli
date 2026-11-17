@@ -103,6 +103,9 @@
     bulut: ['Hava kapalı {ad}. Rehberlik odası bugün de sıcacık olsun.'], yagmur: ['Yağmur yağıyor {ad}. Bir fincan çay ve iyi bir sohbet havası.', 'Yağmurlu bir gün {ad}; mektup kutusu doluyor olabilir.'],
     kar: ['Kar yağıyor {ad}. Yollarda dikkatli olun.'], sis: ['Sis var {ad}; yolda dikkatli olun.'], simsek: ['Fırtına var {ad}; bazı öğrenciler için de öyle, iyi ki varsınız.'],
     ayaz: ['Hava {derece}°C {ad}. Sıcak bir çay eşliğinde iyi görüşmeler.'], sicak: ['Hava {derece}°C {ad}. Bol su için, görüşmeler uzun sürebilir.'] };
+  const PS_SOZ_BAS = ['Atlas sizin eseriniz {ad}; ben yalnızca nöbetteyim.', 'Okul bugün de kurduğunuz düzenle uyanıyor {ad}.',
+    'Her duyuru, her test, her dosya sizin açtığınız yoldan geçiyor {ad}.', 'Haftalardır verdiğiniz emek bugün de okulun her köşesinde çalışıyor {ad}.',
+    'Atlas\'ın her ekranında bir kararınız var {ad}. İyi ki varsınız.', 'Bir okulu tek ekosistemde buluşturdunuz {ad}; bugün de emrinizdeyim.'];
   const PS_SOZ_IDARE = {
     gunes: ['Hava güneşli {ad}. Bahçe nöbetleri bugün keyifli geçer.', 'Güzel bir gün {ad}; okulun nabzı Atlas\'ta, gözünüz rahat olsun.'],
     ay: ['Gökyüzü açık {ad}. Yarının programı Atlas\'ta hazır bekliyor.'], parcali: ['Parçalı bulutlu {ad}; okulda her şey yolunda görünüyor.'],
@@ -170,7 +173,8 @@
     const k = hv ? hv.k : -1, gun = hv ? hv.gun : (h >= 7 && h < 18);
     const tur = !hv ? (gun ? 'parcali' : 'ay') : k === 0 ? (gun ? 'gunes' : 'ay') : k <= 2 ? (gun ? 'parcali' : 'ay') : k === 3 ? 'bulut' : k === 45 || k === 48 ? 'sis' : (k >= 71 && k <= 77) || k === 85 || k === 86 ? 'kar' : k >= 95 ? 'simsek' : (k >= 51 && k <= 67) || (k >= 80 && k <= 82) ? 'yagmur' : 'bulut';
     const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = (D.rol === 'yonetici' && PS_SOZ_IDARE[an]) || (D.rol === 'rehberlik' && PS_SOZ_REH[an]) || PS_SOZ[an];
-    let soz = esc(L[Math.floor(Math.random() * L.length)].replace(/\{ad\}/g, hitap).replace(/\{derece\}/g, hv ? hv.d : ''));
+    const L2 = D.rol === 'bas' && Math.random() < .6 ? PS_SOZ_BAS : L;
+    let soz = esc(L2[Math.floor(Math.random() * L2.length)].replace(/\{ad\}/g, hitap).replace(/\{derece\}/g, hv ? hv.d : ''));
     // bugünkü dersler (ders programında adı geçiyorsa)
     try { if (tam && gi < 5) { const P = await programYukle(), ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), D_ = [];
       Object.entries(P.siniflar || {}).forEach(([sn, H]) => Object.entries(H || {}).forEach(([key, c]) => { const [g_, n] = key.split('-').map(Number); if (g_ !== gi || !c) return;
@@ -189,6 +193,13 @@
         else if (gi < 5) M.push(['sinav', 'Bugün takvimde sınav yok.']); } catch (e) {}
       try { const { count } = await sb.from('umal_erisim_talep').select('*', { count: 'exact', head: true }); if (count) M.push(['erisim', `<b>${count} erişim isteği</b> onayınızı bekliyor.`]); } catch (e) {}
       try { const bas_ = new Date(s); bas_.setHours(0, 0, 0, 0); const { count } = await sb.from('umal_dd').select('*', { count: 'exact', head: true }).gte('olusturma', bas_.toISOString()); if (count) M.push(['dd', `Öğretmenler bugün Atlas Sınıf'ta <b>${count} paylaşım</b> yaptı.`]); } catch (e) {}
+      if (D.rol === 'bas') try {   // K-716av: kurucuya Atlas'ın haftalık nabzı
+        const hf = new Date(s.getTime() - 7 * 864e5).toISOString(), say = q => q.then(r => r.count || 0).catch(() => 0);
+        const [p_, a_, o_] = await Promise.all([say(sb.from('umal_dd').select('*', { count: 'exact', head: true }).gte('olusturma', hf)),
+          say(sb.from('umal_dd_ogr').select('*', { count: 'exact', head: true }).gte('acti', hf)), say(sb.from('umal_ogretmenler').select('*', { count: 'exact', head: true }))]);
+        const P_ = [p_ && `<b>${p_} paylaşım</b>`, a_ && `öğrenciler <b>${a_} kez</b> açtı`, o_ && `<b>${o_} öğretmen</b> Atlas'ta`].filter(Boolean);
+        if (P_.length) M.push(['nabiz', `Atlas'ın bu haftaki nabzı: ${P_.join(' · ')}.`]);
+      } catch (e) {}
       if (M.length) ozet = `<ul class="ps-ozet">${M.map(([k, t]) => `<li class="${k}">${t}</li>`).join('')}</ul>`; }
     if (D.rol === 'rehberlik' && !(h >= 0 && h < 5)) { const M = [];   // K-716am: rehberliğin bugünü
       try { const g0 = new Date(s); g0.setHours(0, 0, 0, 0); const g1 = new Date(g0.getTime() + 864e5);
@@ -204,12 +215,12 @@
       if (M.length) ozet = `<ul class="ps-ozet">${M.map(([k, t]) => `<li class="${k}">${t}</li>`).join('')}</ul>`; }
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
-    el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
-    el.innerHTML = `<div class="ps-ic">${psFx(tur)}<div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
+    el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`; el.classList.toggle('ps-kurucu', D.rol === 'bas');
+    el.innerHTML = `<div class="ps-ic">${psFx(tur)}<div><div class="ps-atlas">ATLAS${D.rol === 'bas' ? ' <span class="ps-kur">· KURUCU</span>' : ''}</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
     if (tur === 'simsek') psSimsek(el);
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
-    if (!adSor) { el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000); return; }
+    if (!adSor) { el.onclick = kapat; setTimeout(kapat, D.rol === 'bas' ? 16000 : ozet ? 14000 : 9000); return; }
     el.onclick = kapat; el.querySelector('.ps-ad').onclick = e => e.stopPropagation();
     const kaydet = async () => {
       const a = baslik($('#psAd').value.replace(/\s+/g, ' ').trim()); if (a.length < 2) { $('#psAd').focus(); return; }
