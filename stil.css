@@ -1658,8 +1658,12 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ps-ic .ps-halka { position: absolute; inset: 0; z-index: 2 !important; border-radius: inherit; padding: 1.5px; background: var(--halka); pointer-events: none;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 6s linear infinite; }
 .ps-ic .ps-halka { position: absolute !important; }
-body.kurucu .tm-gk::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
-  background: conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 6s linear infinite; }
-body.kurucu .tm-gk { border-color: transparent; box-shadow: 0 0 14px rgba(255,209,102,.12); }
-@media (prefers-reduced-motion: reduce) { .ps-ic .ps-halka, body.kurucu .tm-gk::after { animation: none; } }
+/* K-716ax: tüm kutularda (iç kutular dahil) dönen çerçeve; kutunun kendi renginde, kurucuda altın */
+.tm-gk, .tm-oge { border-color: transparent !important; }
+.tm-gk::after, .tm-oge::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 1;
+  background: conic-gradient(from var(--psA, 0deg), var(--g, #22e8ff), color-mix(in srgb, var(--g, #22e8ff) 35%, #fff), color-mix(in srgb, var(--g, #22e8ff) 25%, transparent), var(--g, #22e8ff), color-mix(in srgb, var(--g, #22e8ff) 15%, transparent), var(--g, #22e8ff));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 7s linear infinite; }
+.tm-oge:nth-child(2n)::after, .tm-gk:nth-child(2n)::after { animation-delay: -2.3s; } .tm-oge:nth-child(3n)::after, .tm-gk:nth-child(3n)::after { animation-delay: -4.6s; }
+body.kurucu .tm-gk::after, body.kurucu .tm-oge::after { background: conic-gradient(from var(--psA, 0deg), #ffd166, #fff3c4, #c9962b, #ffd166, #7a5a14, #ffd166); animation-duration: 6s; }
+body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,.12); }
+@media (prefers-reduced-motion: reduce) { .ps-ic .ps-halka, .tm-gk::after, .tm-oge::after { animation: none; } }
