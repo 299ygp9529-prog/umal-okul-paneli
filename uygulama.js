@@ -34,6 +34,8 @@
   const bugunISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
+  // K-716f: iPhone "Atlas'a gönder" kısayolundan gelen dosya → Ders Dosyaları › Yeni paylaşım
+  try { const m = location.hash.match(/^#(gelen|gelenhata)=(.+)$/); if (m) { sessionStorage.setItem('atlasGelen', JSON.stringify({ tur: m[1], v: decodeURIComponent(m[2]) })); history.replaceState(null, '', '#dosyalar'); } } catch (e) {}
   const D = { rol: null, eposta: '', bolum: null, ogrenciler: [], fotolar: {}, istenenFoto: new Set(), program: null, anketler: [], cevaplar: {}, durumlar: {}, tahtalar: [], planlar: [] };
 
   // K-681: kişiler e-postayla değil adıyla görünür (Öğretmenler listesindeki ad; yoksa görevi)
@@ -4025,9 +4027,10 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
-    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170345'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170430'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
-    window.UmalDD.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
+    let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
+    window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
   }
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });

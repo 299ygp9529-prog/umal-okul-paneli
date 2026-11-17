@@ -100,9 +100,12 @@
       kok.innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(C.hataYaz(e))}</div>`; return;
     }
     await benimBilgim();
-    S.ekran = 'liste'; ciz();
+    S.ekran = 'liste';
+    if (C.gelen && C.gelen.tur === 'gelenhata') { ciz(); C.uyar('Kısayoldan gelen dosya yüklenemedi: ' + C.gelen.v); return; }
+    if (C.gelen && C.gelen.tur === 'gelen') { try { const g = JSON.parse(C.gelen.v); if (g && g.id) { S.T = yeniTaslak(); S.T.mevcut = [{ id: g.id, ad: g.ad, mime: g.mime, boyut: g.boyut }]; S.T.baslik = String(g.ad || '').replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); S.T.kisayol = true; S.ekran = 'yeni'; } } catch (e) {} }
+    ciz();
   }
-  function ciz() { ({ liste: listeCiz, yeni: yeniCiz, takip: takipCiz, ayar: ayarCiz })[S.ekran](); }
+  function ciz() { ({ liste: listeCiz, yeni: yeniCiz, takip: takipCiz, ayar: ayarCiz, kisayol: kisayolCiz })[S.ekran](); }
 
   // ---------------------------------------------------------------- liste
   function ozet(d) {
@@ -122,7 +125,7 @@
     const L = S.sekme === 'ben' ? ben : S.sekme === 'zumre' ? zum : S.L;
     const sekme = (v, ad, n) => `<button class="cip ${S.sekme === v ? 'secili' : ''}" data-sekme="${v}">${ad}${n != null ? ` <small>${n}</small>` : ''}</button>`;
     kok.innerHTML = `<div class="rv-bas dd-ust"><div><h1 style="margin:0">Ders Dosyaları</h1><div class="soluk kucuk">Sınıflarınıza duyuru, dosya, link, video ya da test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
-      <div class="dugmeler" style="margin:0">${idare() ? '<button class="ikincil" id="ddAyar">Depolama · Ayarlar</button>' : ''}<button class="birincil" id="ddYeni"${S.url ? '' : ' disabled'}>+ Yeni paylaşım</button></div></div>
+      <div class="dugmeler" style="margin:0"><button class="ikincil" id="ddKisayol">iPhone kısayolu</button>${idare() ? '<button class="ikincil" id="ddAyar">Depolama · Ayarlar</button>' : ''}<button class="birincil" id="ddYeni"${S.url ? '' : ' disabled'}>+ Yeni paylaşım</button></div></div>
       ${S.url ? '' : `<div class="kart dd-kurulum"><b>Drive bağlantısı henüz kurulmadı.</b><div class="soluk kucuk">${C.rol === 'bas' ? 'Depolama · Ayarlar\'dan Atlas Drive köprüsünün adresini girin.' : 'Kurulum baş yönetici tarafından yapılacak.'}</div></div>`}
       <div class="cipler">${sekme('ben', 'Gönderdiklerim', ben.length)}${sekme('zumre', 'Zümre paylaşımları', zum.length)}${idare() ? sekme('hepsi', 'Okulun tümü', S.L.length) : ''}</div>
       <div class="dd-liste">${L.length ? L.map(d => satir(d, S.sekme === 'zumre')).join('') : `<div class="kart soluk" style="text-align:center">${S.sekme === 'zumre' ? 'Zümrenizden paylaşılan dosya yok. Bir öğretmen gönderirken "Zümreyle paylaş"ı işaretleyince burada görünür.' : 'Henüz dosya göndermediniz.'}</div>`}</div>`;
@@ -133,6 +136,7 @@
         S.sec = d.id; S.tsinif = ''; S.ekran = 'takip'; ciz(); return; }
       if (ev.target.id === 'ddYeni') { S.T = yeniTaslak(); S.ekran = 'yeni'; ciz(); }
       if (ev.target.id === 'ddAyar') { S.ekran = 'ayar'; ciz(); }
+      if (ev.target.id === 'ddKisayol') { S.ekran = 'kisayol'; ciz(); }
     };
   }
 
@@ -147,7 +151,7 @@
       ...T.mevcut.map((f, i) => `<div class="dd-dosya"><span>${esc(f.ad)}</span><small>${f.url ? 'test' : f.boyut ? boyutYaz(f.boyut) : 'zümreden'}</small><button class="bag" data-mevcutsil="${i}">Kaldır</button></div>`),
       ...T.dosyalar.map((f, i) => `<div class="dd-dosya"><span>${esc(f.name)}</span><small>${boyutYaz(f.size)}</small><button class="bag" data-dosyasil="${i}">Kaldır</button></div>`)].join('');
     const ogrSec = T.ogrSecAcik ? `<div class="dd-ogrsec">${T.siniflar.length ? O.filter(o => T.siniflar.includes(o.sinif)).map(o => `<label><input type="checkbox" data-ogr="${esc(o.no)}" ${T.ogrenciler.includes(String(o.no)) ? 'checked' : ''}>${esc(o.sinif)} · ${esc(o.no)} ${esc(C.baslik(o.ad))}</label>`).join('') : '<span class="soluk kucuk">Önce sınıf seçin.</span>'}</div>` : '';
-    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button>${T.kaynak ? '<span class="neon-tabela">Zümreden</span>' : ''}</div>
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button>${T.kaynak ? '<span class="neon-tabela">Zümreden</span>' : ''}${T.kisayol ? '<span class="neon-tabela">iPhone\'dan geldi</span>' : ''}</div>
       <div class="dd-gonder">
         <div class="kart dd-form">
           <label class="dd-alan"><span>Başlık</span><input id="ddBaslik" maxlength="160" value="${esc(T.baslik)}" placeholder="Ör. Parabol çalışma kâğıdı · Veli toplantısı"></label>
@@ -370,6 +374,29 @@
     if (S.url) { try { const k = await kopru({ op: 'kota' }), y = k.sinir ? Math.round(k.kullanilan * 100 / k.sinir) : 0, dd = S.L.reduce((s, d) => s + (d.dosyalar || []).reduce((a, f) => a + (+f.boyut || 0), 0), 0);
       const el = $('#ddKota'); if (el) el.innerHTML = `<div class="dd-kota"><i style="width:${y}%"></i></div><b>${boyutYaz(k.kullanilan)}</b> / ${boyutYaz(k.sinir)} dolu (%${y}) · Ders Dosyaları yaklaşık ${boyutYaz(dd)} · ${S.L.length} kayıt`; }
       catch (e) { const el = $('#ddKota'); if (el) el.textContent = 'Okunamadı: ' + C.hataYaz(e); } }
+  }
+
+  // ---------------------------------------------------------------- iPhone kısayolu
+  async function kisayolCiz(yenile) {
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button></div><h1>iPhone kısayolu: "Atlas'a gönder"</h1>
+      <div class="kart dd-ks"><p class="soluk" style="margin-top:0">Kurduktan sonra iPhone'da bir PDF, fotoğraf ya da videoyu seçip <b>Paylaş → Atlas'a gönder</b>'e dokunursunuz. Dosya Atlas'ın Drive'ına yüklenir ve panel <b>Yeni paylaşım</b> ekranında, dosya ekli olarak açılır; sınıfı seçip gönderirsiniz.</p>
+        <h2>1 · Kişisel kısayol anahtarınız</h2><div class="dd-ikili"><input id="ddKsAnahtar" readonly value="Alınıyor…"><button class="birincil" id="ddKsKopya" style="flex:0 0 auto">Kopyala</button></div>
+        <div class="soluk kucuk" style="margin-top:6px">Bu anahtar yalnız sizin. Başkasıyla paylaşmayın; paylaştıysanız <button class="bag" id="ddKsYenile">yeni anahtar alın</button> (eski kısayol çalışmaz, yenisini yapıştırırsınız).</div>
+        <h2>2 · Kısayolu ekleyin</h2><div id="ddKsLink"></div>
+        <h2>3 · Kullanın</h2><ol class="dd-ks-adim"><li>Dosyalar, Fotoğraflar ya da Mail'de dosyayı açın, <b>Paylaş</b> düğmesine dokunun.</li><li>Listede <b>Atlas'a gönder</b>'i seçin (görünmüyorsa listenin sonundaki <b>Eylemleri Düzenle</b>'den ekleyin).</li><li>İlk seferde "izin verilsin mi" sorusuna <b>Her Zaman İzin Ver</b> deyin.</li><li>Panel açılınca sınıfı seçip <b>Gönder</b>'e basın.</li></ol></div>`;
+    const el = $('#ddKsAnahtar');
+    try { const { data, error } = await C.sb.rpc('umal_dd_kisayol_al', { p_yenile: !!yenile }); if (error) throw error; el.value = data; }
+    catch (e) { el.value = ''; el.placeholder = /umal_dd_kisayol/.test(C.hataYaz(e)) ? 'Önce Supabase\'de 20261117050000_umal_dd_kisayol.sql çalıştırılmalı' : 'Alınamadı: ' + C.hataYaz(e); }
+    let link = ''; try { const { data } = await C.sb.from('umal_ayarlar').select('deger').eq('anahtar', 'dd_kisayol_link').maybeSingle(); link = (data && data.deger) || ''; } catch (e) {}
+    $('#ddKsLink').innerHTML = (link ? `<a class="birincil" href="${esc(link)}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Kısayolu iPhone'a ekle</a><div class="soluk kucuk" style="margin-top:6px">Bu bağlantıyı iPhone'da açın → <b>Kısayol Ekle</b>. Anahtar sorulunca yukarıda kopyaladığınız anahtarı yapıştırın.</div>` : '<div class="soluk kucuk">Kısayol bağlantısı henüz eklenmedi. Baş yönetici iCloud bağlantısını aşağıya girince burada görünür.</div>')
+      + (C.rol === 'bas' ? `<div class="dd-ikili" style="margin-top:10px"><input id="ddKsLinkGir" placeholder="https://www.icloud.com/shortcuts/…" value="${esc(link)}"><button class="ikincil" id="ddKsLinkKaydet" style="flex:0 0 auto">Kaydet</button></div>` : '');
+    kok.onclick = async ev => { const b = ev.target.closest('button'); if (!b) return;
+      if (b.id === 'ddGeri') { S.ekran = 'liste'; ciz(); return; }
+      if (b.id === 'ddKsKopya') { try { await navigator.clipboard.writeText(el.value); b.textContent = 'Kopyalandı ✓'; } catch (e) { el.select(); document.execCommand('copy'); b.textContent = 'Kopyalandı ✓'; } return; }
+      if (b.id === 'ddKsYenile') { if (await C.onayla('Yeni anahtar alınsın mı? Eski anahtarla kurulmuş kısayol çalışmayı bırakır.')) kisayolCiz(true); return; }
+      if (b.id === 'ddKsLinkKaydet') { const v = $('#ddKsLinkGir').value.trim(); if (v && !/^https:\/\/(www\.)?icloud\.com\/shortcuts\/\w+/.test(v)) return C.uyar('Bağlantı https://www.icloud.com/shortcuts/… biçiminde olmalı.');
+        const { error } = await C.sb.from('umal_ayarlar').upsert({ anahtar: 'dd_kisayol_link', deger: v }, { onConflict: 'anahtar' }); if (error) return C.uyar(C.hataYaz(error)); kisayolCiz(); }
+    };
   }
 
   window.UmalDD = { ac };
