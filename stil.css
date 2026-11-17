@@ -1582,3 +1582,6 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .ps-ic .hi { width: 58px; height: 58px; grid-row: 1; grid-column: 2; color: var(--s3, #ffd166); } .ps-ic .hi svg { width: 100%; height: 100%; }
 .ps-ic .sz { grid-column: 1 / -1; margin: 6px 0 0; font-size: 15px; line-height: 1.5; color: #e8f4ff; } .ps-ic .sz b { color: var(--s3, #ffd166); }
 @media (prefers-reduced-motion: reduce) { .ps-selam { transition: none; } }
+.ps-ozet { grid-column: 1 / -1; list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid rgba(255,255,255,.12); display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #dbe7f7; }
+.ps-ozet li { padding-left: 16px; position: relative; } .ps-ozet li::before { content: ''; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--neon); }
+.ps-ozet li.sinav::before { background: #ffb867; } .ps-ozet li.erisim::before { background: #ff8a8a; } .ps-ozet li.dd::before { background: #7fb2ff; } .ps-ozet b { color: #fff; }

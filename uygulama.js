@@ -97,6 +97,12 @@
     kar: ['Kar yağıyor {ad}. Yollar kaygan olabilir, dikkatli gelin.', 'Karlı bir gün {ad}; teneffüslerde koridorlar hareketli olabilir.'],
     sis: ['Sis var {ad}; yolda dikkatli olun.'], simsek: ['Fırtına var {ad}; tahtalar yerinde, Atlas nöbette.'],
     ayaz: ['Hava {derece}°C {ad}. Sıcak bir çay ve iyi dersler.'], sicak: ['Hava {derece}°C {ad}. Bol su için, sınıflar sıcak olabilir.'] };
+  const PS_SOZ_IDARE = {
+    gunes: ['Hava güneşli {ad}. Bahçe nöbetleri bugün keyifli geçer.', 'Güzel bir gün {ad}; okulun nabzı Atlas\'ta, gözünüz rahat olsun.'],
+    ay: ['Gökyüzü açık {ad}. Yarının programı Atlas\'ta hazır bekliyor.'], parcali: ['Parçalı bulutlu {ad}; okulda her şey yolunda görünüyor.'],
+    bulut: ['Hava kapalı {ad}. Sınıflar aydınlık, tahtalar açık.'], yagmur: ['Yağmur yağıyor {ad}. Teneffüslerde koridorlar kalabalık olabilir.', 'Yağmurlu bir gün {ad}; bahçe nöbetçileri içeride kalabilir.'],
+    kar: ['Kar yağıyor {ad}. Okul girişindeki kaygan zemine dikkat.'], sis: ['Sis var {ad}; servisler gecikebilir.'], simsek: ['Fırtına var {ad}; gerekirse tek dokunuşla bütün tahtalara duyuru gönderebilirsiniz.'],
+    ayaz: ['Hava {derece}°C {ad}. Kaloriferler ve kantinde sıcak çay önemli bugün.'], sicak: ['Hava {derece}°C {ad}. Sınıfların havalandırılması iyi olur.'] };
   const PS_HI = { gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
     ay: '<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7Z"/>', bulut: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
     parcali: '<circle cx="8.5" cy="8" r="3"/><path d="M9 19.5h8.5a3.4 3.4 0 0 0 .5-6.75 4.7 4.7 0 0 0-9 .8 3 3 0 0 0 0 5.95Z"/>', yagmur: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/>',
@@ -120,7 +126,7 @@
     const hv = await Promise.race([psHava(), new Promise(r => setTimeout(() => r(null), 2500))]);
     const k = hv ? hv.k : -1, gun = hv ? hv.gun : (h >= 7 && h < 18);
     const tur = !hv ? (gun ? 'parcali' : 'ay') : k === 0 ? (gun ? 'gunes' : 'ay') : k <= 2 ? (gun ? 'parcali' : 'ay') : k === 3 ? 'bulut' : k === 45 || k === 48 ? 'sis' : (k >= 71 && k <= 77) || k === 85 || k === 86 ? 'kar' : k >= 95 ? 'simsek' : (k >= 51 && k <= 67) || (k >= 80 && k <= 82) ? 'yagmur' : 'bulut';
-    const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = PS_SOZ[an];
+    const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = (D.rol === 'yonetici' && PS_SOZ_IDARE[an]) || PS_SOZ[an];
     let soz = esc(L[Math.floor(Math.random() * L.length)].replace(/\{ad\}/g, hitap).replace(/\{derece\}/g, hv ? hv.d : ''));
     // bugünkü dersler (ders programında adı geçiyorsa)
     try { if (tam && gi < 5) { const P = await programYukle(), ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), D_ = [];
@@ -130,13 +136,24 @@
       if (D_.length && h < 16) soz += ` Bugün <b>${D_.length} dersiniz</b> var; ilki <b>${D_[0][0]}. saat ${esc(D_[0][1])}</b>.`; } } catch (e) {}
     if (gi === 0 && h < 12) soz += ' Haftaya güzel bir başlangıç!'; else if (gi === 4 && h >= 12) soz += ' Hafta sonu kapıda.';
     if (h >= 0 && h < 5) soz = esc(`Bu saatte hâlâ çalışıyorsunuz ${hitap}. Biraz dinlenin, yarın görüşürüz.`);
+    // idare ve baş yönetici: okulun bugünü — sınavlar, bekleyen erişim istekleri, Atlas Sınıf
+    let ozet = '';
+    if (['yonetici', 'bas'].includes(D.rol) && !(h >= 0 && h < 5)) { const M = [];
+      try { const tk = await Promise.race([takvimAl(), new Promise(r => setTimeout(() => r(null), 2500))]), bug = new Date(s.getTime() - s.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+        const B = ((tk && tk.sinavlar) || []).filter(x => x.tarih === bug).sort((x, y) => String(x.ders).localeCompare(String(y.ders), 'tr', { numeric: true }));
+        if (B.length) { const n = B.reduce((t, x) => t + Object.keys(x.siniflar || {}).length, 0), x = B[0], ilk = Object.entries(x.siniflar || {}).slice(0, 2).map(([v, a]) => `${v}'ler ${a}`).join(', ');
+          M.push(['sinav', `Bugün <b>${n} sınav</b> var; ilki <b>${esc(x.ders)}</b>: ${esc(ilk)}.`]); }
+        else if (gi < 5) M.push(['sinav', 'Bugün takvimde sınav yok.']); } catch (e) {}
+      try { const { count } = await sb.from('umal_erisim_talep').select('*', { count: 'exact', head: true }); if (count) M.push(['erisim', `<b>${count} erişim isteği</b> onayınızı bekliyor.`]); } catch (e) {}
+      try { const bas_ = new Date(s); bas_.setHours(0, 0, 0, 0); const { count } = await sb.from('umal_dd').select('*', { count: 'exact', head: true }).gte('olusturma', bas_.toISOString()); if (count) M.push(['dd', `Öğretmenler bugün Atlas Sınıf'ta <b>${count} paylaşım</b> yaptı.`]); } catch (e) {}
+      if (M.length) ozet = `<ul class="ps-ozet">${M.map(([k, t]) => `<li class="${k}">${t}</li>`).join('')}</ul>`; }
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
-    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p></div>`;
+    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
-    el.onclick = kapat; setTimeout(kapat, 9000);
+    el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000);
   }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
