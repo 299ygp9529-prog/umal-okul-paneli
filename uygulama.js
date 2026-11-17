@@ -211,7 +211,7 @@
     { id: 'sinav', ad: 'Sınav merkezi', roller: ['bas', 'yonetici'], ciz: sinav },
     { id: 'takvim', ad: 'Sınav takvimi', roller: ['bas', 'yonetici', 'ogretmen'], ciz: takvim },   // K-615: öğretmen yalnız görür   // K-379
     { id: 'kelebek', ad: 'Kelebek Sistemi', roller: ['bas', 'yonetici'], ciz: kelebek },   // K-380
-    { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici', 'rehberlik'], ciz: nobet },   // K-381
+    { id: 'nobet', ad: 'Nöbet', roller: ['bas', 'yonetici'], ciz: nobet },   // K-381
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'ogretmen'], ciz: sinavKonulari },   // K-574
     { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
