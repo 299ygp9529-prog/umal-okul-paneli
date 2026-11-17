@@ -359,6 +359,17 @@
     sira.push(son === 5 ? [k('cam'), k('koridor'), k('orta'), k('koridor'), k('cam')] : [k('cam'), k('koridor'), null, k('koridor'), k('cam')]);
     return sira;
   }
+  // K-716be: karizmatik otobüs krokisi — ön cam, direksiyon, kapı, yan camlar, tekerler, koridor; sütun başlıkları cam/koridor
+  const GZ_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M3.8 10.5h6M14.2 10.5h6M12 14.2v6.2"/></svg>';
+  const GZ_KAPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M12 3v18M10 12h.01M14 12h.01"/></svg>';
+  function gzOtobus(P, hucre, ek) {
+    const sira = r => `<div class="gz-h-sira">${r.map((s, j) => !s ? (j === 2 ? '<i class="kor"></i>' : '<i></i>') : s.kapi ? `<i class="kapi">${j === 3 ? '<span>KAPI</span>' : ''}</i>` : hucre(s, j)).join('')}</div>`;
+    return `<div class="gz-harita ${ek || ''}"><b class="tk t1"></b><b class="tk t2"></b><b class="tk t3"></b><b class="tk t4"></b>
+      <div class="gz-h-on"><span class="gz-h-sf">${GZ_DIREKSIYON}Şoför</span><span class="gz-h-ok">ÖN</span><span class="gz-h-kp">${GZ_KAPI}Ön kapı</span></div>
+      <div class="gz-h-bas"><span>Cam</span><span>Koridor</span><span></span><span>Koridor</span><span>Cam</span></div>
+      ${P.map(sira).join('')}<div class="gz-h-arka">ARKA</div></div>
+      <div class="gz-lej"><span><i class="l-cam"></i>Cam kenarı</span><span><i class="l-kor"></i>Koridor</span><span><i class="l-kapi"></i>Orta kapı</span></div>`;
+  }
   const gzYerAd = y => ({ cam: 'Cam kenarı', koridor: 'Koridor', orta: 'Orta koltuk' })[y] || '';
   const gzYer = d => d && d.otobus && d.koltuk ? (gzPlan(d.otobus.kapasite).flat().find(s => s && s.n === d.koltuk) || {}).yer : '';
   const gzAnah = d => 'gezi_gordu:' + S.no + ':' + (d.anahtar || '');
@@ -377,14 +388,14 @@
     const o = O.find(x => x.id === BK.o) || {}, Y = d.yolcular || [], kim = k => Y.find(y => y.o === o.id && y.k === k), kapali = new Set(((d.kapali || {})[o.id]) || []), ayr = +d.ayrilan || 2;
     const sec = BK.sel && Y.find(y => y.an === BK.sel), kisa = ad => { const p = baslik(ad || '').split(' ').filter(Boolean); return p.length > 1 ? p[0] + ' ' + p[p.length - 1][0] + '.' : (p[0] || ''); };
     const q = BK.ara.toLocaleLowerCase(tr), bul = q ? Y.filter(y => !y.gorevli && (y.ad + ' ' + y.sinif + ' ' + y.no).toLocaleLowerCase(tr).includes(q)).slice(0, 6) : [];
-    const koltuk = s => { if (!s) return '<i></i>'; if (s.kapi) return '<i class="kapi"></i>'; const y = kim(s.n), kilit = s.n <= ayr || kapali.has(s.n) || (y && y.gorevli);
-      return `<button class="bk-k ${y ? 'dolu' : ''} ${kilit ? 'kilit' : ''} ${y && y.an === BK.sel ? 'sec' : ''}" data-bk="${s.n}" ${kilit && !(y && !y.gorevli) ? 'disabled' : ''}><em>${s.n}</em>${y ? `<b>${esc(kisa(y.ad))}</b><small>${esc(y.gorevli ? 'Görevli' : y.sinif)}</small>` : kapali.has(s.n) ? '<small>Kapalı</small>' : s.n <= ayr ? '<small>Görevli</small>' : ''}</button>`; };
+    const koltuk = (s, j) => { if (!s) return '<i></i>'; if (s.kapi) return '<i class="kapi"></i>'; const y = kim(s.n), kilit = s.n <= ayr || kapali.has(s.n) || (y && y.gorevli);
+      return `<button class="bk-k y-${s.yer} ${j < 2 ? 'sol' : 'sag'} ${y ? 'dolu' : ''} ${kilit ? 'kilit' : ''} ${y && y.an === BK.sel ? 'sec' : ''}" data-bk="${s.n}" ${kilit && !(y && !y.gorevli) ? 'disabled' : ''}><em>${s.n}</em>${y ? `<b>${esc(kisa(y.ad))}</b><small>${esc(y.gorevli ? 'Görevli' : y.sinif)}</small>` : kapali.has(s.n) ? '<small>Kapalı</small>' : s.n <= ayr ? '<small>Görevli</small>' : ''}</button>`; };
     el.innerHTML = `<div class="bk-gezi">${esc(d.ad || 'Gezi')}</div>${BK.mesaj ? `<div class="bk-mesaj ${BK.mesajTur}">${esc(BK.mesaj)}</div>` : ''}
       <div class="kart bk-yardim">${sec ? `<b>${esc(baslik(sec.ad))}</b> seçildi (${esc((O.find(x => x.id === sec.o) || {}).no)}. otobüs, ${sec.k} numara). Şimdi gideceği koltuğa dokun; dolu koltuksa ikisi yer değiştirir. <button class="ikincil kucuk" id="bkVaz">Vazgeç</button>` : 'Yerini değiştireceğin öğrenciye dokun ya da adını ara, sonra gideceği koltuğa dokun. Başka otobüse almak için üstten otobüsü seç.'}</div>
       <input id="bkAra" class="bk-ara" placeholder="Öğrenci ara: ad, sınıf, no" value="${esc(BK.ara)}" autocomplete="off">
       ${bul.length ? `<div class="bk-bul">${bul.map(y => `<button data-bksec="${esc(y.an)}"><b>${esc(baslik(y.ad))}</b><small>${esc(y.sinif)} · ${esc((O.find(x => x.id === y.o) || {}).no)}. otobüs ${y.k}</small></button>`).join('')}</div>` : ''}
       <div class="bk-oto">${O.map(x => `<button class="${x.id === o.id ? 'secili' : ''}" data-bko="${esc(x.id)}">${esc(x.no)}. Otobüs</button>`).join('')}</div>
-      <div class="gz-harita bk-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${gzPlan(o.kapasite).map(r => `<div class="gz-h-sira">${r.map(koltuk).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>`;
+      ${gzOtobus(gzPlan(o.kapasite), (x, j) => koltuk(x, j), 'bk-harita')}`;
     $('#bkAra').oninput = ev => { BK.ara = ev.target.value; const p = ev.target.selectionStart; bskCiz(); const g = $('#bkAra'); g.focus(); g.setSelectionRange(p, p); };
     el.querySelectorAll('[data-bksec]').forEach(b => b.onclick = () => { const y = Y.find(z => z.an === b.dataset.bksec); BK.sel = y.an; BK.o = y.o; BK.ara = ''; BK.mesaj = ''; bskCiz(); });
     el.querySelectorAll('[data-bko]').forEach(b => b.onclick = () => { BK.o = b.dataset.bko; bskCiz(); });
@@ -421,7 +432,7 @@
         <div class="gzt-bilgi">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}${gzr ? `<div><small>GÜZERGÂH</small><b>${esc(gzr)}</b></div>` : ''}${d.otobus.plaka ? `<div><small>PLAKA</small><b>${esc(d.otobus.plaka)}</b></div>` : ''}${d.otobus.sofor || d.otobus.tel ? `<div><small>ŞOFÖR</small><b>${esc(d.otobus.sofor || '')}${d.otobus.tel ? `${d.otobus.sofor ? ' · ' : ''}<a href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}">${esc(d.otobus.tel)}</a>` : ''}</b></div>` : ''}</div></div>
       <div class="gzt-koc">${canak ? '<img class="gzt-abide" src="../gezi-abide-bilet.png" alt="">' : ''}<div><small>OTOBÜS</small><b>${d.otobus.no}</b></div><div class="gzt-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div><div class="gzt-yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(d.otobus.plaka || '')}</span></div></div></div>
       ${d.gun && d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
-      <div class="gz-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${P.map(r => `<div class="gz-h-sira">${r.map(s => !s ? '<i></i>' : s.kapi ? '<i class="kapi"></i>' : `<i class="k ${s.n === d.koltuk ? 'ben' : ''} ${s.yer === 'cam' ? 'cam' : ''}">${s.n === d.koltuk ? 'SEN' : s.n}</i>`).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>
+      ${gzOtobus(P, (x, j) => `<i class="k ${x.n === d.koltuk ? 'ben' : ''} y-${x.yer} ${j < 2 ? 'sol' : 'sag'}">${x.n === d.koltuk ? 'SEN' : x.n}</i>`)}
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur. Değişiklik olursa burada hemen görünür.</p>`;
   }
   // K-680: Çalışma Haritası — zümrenin seçtiği senaryodan yaklaşan yazılının tema/konu/soru dağılımı
