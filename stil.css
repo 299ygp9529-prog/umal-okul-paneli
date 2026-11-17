@@ -1449,6 +1449,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .gz-sira > .gz-k.gz-cam:first-child::after { left: 0; } .gz-sira > .gz-k.gz-cam:last-child::after { right: 0; }
 .gz-k b { font-size: 10.5px; line-height: 1.1; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .gz-k small { font-size: 9.5px; color: var(--soluk, #9fb3cf); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gz-k.dolu { background: color-mix(in srgb, var(--c) 20%, #0c1729); border-color: color-mix(in srgb, var(--c) 70%, transparent); } .gz-k.dolu b { color: #fff; }
+.gz-k.kapali { background: repeating-linear-gradient(135deg, #0c1729 0 6px, #16233a 6px 12px); border-style: dashed; border-color: #ff8a8a77; } .gz-k.kapali small { color: #ff8a8a; }   /* K-716be */
 .gz-k.ayrilan:not(.dolu) { border-style: dashed; border-color: #ffd16688; } .gz-k .gz-og { color: #ffd166; }
 .gz-k.karisik { box-shadow: 0 0 0 2px #ff5a5a; }
 .gz-k.secili { outline: 2px solid #fff; outline-offset: 1px; } .gz-k:hover { border-color: var(--g); }
