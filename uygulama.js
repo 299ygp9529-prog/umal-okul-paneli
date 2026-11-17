@@ -97,6 +97,12 @@
     kar: ['Kar yağıyor {ad}. Yollar kaygan olabilir, dikkatli gelin.', 'Karlı bir gün {ad}; teneffüslerde koridorlar hareketli olabilir.'],
     sis: ['Sis var {ad}; yolda dikkatli olun.'], simsek: ['Fırtına var {ad}; tahtalar yerinde, Atlas nöbette.'],
     ayaz: ['Hava {derece}°C {ad}. Sıcak bir çay ve iyi dersler.'], sicak: ['Hava {derece}°C {ad}. Bol su için, sınıflar sıcak olabilir.'] };
+  const PS_SOZ_REH = {
+    gunes: ['Hava güneşli {ad}. Güzel bir gün, güzel sohbetlere vesile olsun.', 'Güneş açtı {ad}; kapınızı çalan her öğrenciye iyi gelecek bir gün.'],
+    ay: ['Gökyüzü açık {ad}. Biraz dinlenin; öğrencilerin size dinlenmiş hâlinizle ihtiyacı var.'], parcali: ['Parçalı bulutlu {ad}; bazı öğrencilerin içi de böyle, iyi ki varsınız.'],
+    bulut: ['Hava kapalı {ad}. Rehberlik odası bugün de sıcacık olsun.'], yagmur: ['Yağmur yağıyor {ad}. Bir fincan çay ve iyi bir sohbet havası.', 'Yağmurlu bir gün {ad}; mektup kutusu doluyor olabilir.'],
+    kar: ['Kar yağıyor {ad}. Yollarda dikkatli olun.'], sis: ['Sis var {ad}; yolda dikkatli olun.'], simsek: ['Fırtına var {ad}; bazı öğrenciler için de öyle, iyi ki varsınız.'],
+    ayaz: ['Hava {derece}°C {ad}. Sıcak bir çay eşliğinde iyi görüşmeler.'], sicak: ['Hava {derece}°C {ad}. Bol su için, görüşmeler uzun sürebilir.'] };
   const PS_SOZ_IDARE = {
     gunes: ['Hava güneşli {ad}. Bahçe nöbetleri bugün keyifli geçer.', 'Güzel bir gün {ad}; okulun nabzı Atlas\'ta, gözünüz rahat olsun.'],
     ay: ['Gökyüzü açık {ad}. Yarının programı Atlas\'ta hazır bekliyor.'], parcali: ['Parçalı bulutlu {ad}; okulda her şey yolunda görünüyor.'],
@@ -126,7 +132,7 @@
     const hv = await Promise.race([psHava(), new Promise(r => setTimeout(() => r(null), 2500))]);
     const k = hv ? hv.k : -1, gun = hv ? hv.gun : (h >= 7 && h < 18);
     const tur = !hv ? (gun ? 'parcali' : 'ay') : k === 0 ? (gun ? 'gunes' : 'ay') : k <= 2 ? (gun ? 'parcali' : 'ay') : k === 3 ? 'bulut' : k === 45 || k === 48 ? 'sis' : (k >= 71 && k <= 77) || k === 85 || k === 86 ? 'kar' : k >= 95 ? 'simsek' : (k >= 51 && k <= 67) || (k >= 80 && k <= 82) ? 'yagmur' : 'bulut';
-    const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = (D.rol === 'yonetici' && PS_SOZ_IDARE[an]) || PS_SOZ[an];
+    const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = (D.rol === 'yonetici' && PS_SOZ_IDARE[an]) || (D.rol === 'rehberlik' && PS_SOZ_REH[an]) || PS_SOZ[an];
     let soz = esc(L[Math.floor(Math.random() * L.length)].replace(/\{ad\}/g, hitap).replace(/\{derece\}/g, hv ? hv.d : ''));
     // bugünkü dersler (ders programında adı geçiyorsa)
     try { if (tam && gi < 5) { const P = await programYukle(), ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), D_ = [];
@@ -146,6 +152,18 @@
         else if (gi < 5) M.push(['sinav', 'Bugün takvimde sınav yok.']); } catch (e) {}
       try { const { count } = await sb.from('umal_erisim_talep').select('*', { count: 'exact', head: true }); if (count) M.push(['erisim', `<b>${count} erişim isteği</b> onayınızı bekliyor.`]); } catch (e) {}
       try { const bas_ = new Date(s); bas_.setHours(0, 0, 0, 0); const { count } = await sb.from('umal_dd').select('*', { count: 'exact', head: true }).gte('olusturma', bas_.toISOString()); if (count) M.push(['dd', `Öğretmenler bugün Atlas Sınıf'ta <b>${count} paylaşım</b> yaptı.`]); } catch (e) {}
+      if (M.length) ozet = `<ul class="ps-ozet">${M.map(([k, t]) => `<li class="${k}">${t}</li>`).join('')}</ul>`; }
+    if (D.rol === 'rehberlik' && !(h >= 0 && h < 5)) { const M = [];   // K-716am: rehberliğin bugünü
+      try { const g0 = new Date(s); g0.setHours(0, 0, 0, 0); const g1 = new Date(g0.getTime() + 864e5);
+        const [mk, rv, yn, bg] = await Promise.all([sb.from('umal_rehberlik_mektup').select('id,acil').is('okundu', null).eq('arsiv', false),
+          sb.from('umal_rehberlik_randevu').select('id').eq('reh_gordu', false).neq('durum', 'bos'), sb.from('umal_rehberlik_yonlendirme').select('id,aciliyet').eq('reh_gordu', false),
+          sb.from('umal_rehberlik_randevu').select('zaman,ad,sinif').eq('durum', 'onay').gte('zaman', g0.toISOString()).lt('zaman', g1.toISOString()).order('zaman')]);
+        const B = (bg.data || []).filter(x => new Date(x.zaman) >= s);
+        if (B.length) M.push(['sinav', `Bugün <b>${B.length} görüşmeniz</b> var; sıradaki <b>${new Date(B[0].zaman).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')}</b>${B[0].sinif ? ' · ' + esc(B[0].sinif) : ''}.`]);
+        const nm = (mk.data || []).length, am = (mk.data || []).filter(x => x.acil).length; if (nm) M.push(['erisim', `<b>${nm} okunmamış mektup</b>${am ? ` (${am} tanesi acil)` : ''} sizi bekliyor.`]);
+        const nr = (rv.data || []).length; if (nr) M.push(['dd', `<b>${nr} randevu</b> hareketi var.`]);
+        const ny = (yn.data || []).length, ay_ = (yn.data || []).filter(x => x.aciliyet === 'acil').length; if (ny) M.push(['yon', `Öğretmenlerden <b>${ny} yeni yönlendirme</b>${ay_ ? ` (${ay_} acil)` : ''}.`]);
+        if (!M.length) M.push(['dd', 'Bekleyen mektup, randevu ya da yönlendirme yok.']); } catch (e) {}
       if (M.length) ozet = `<ul class="ps-ozet">${M.map(([k, t]) => `<li class="${k}">${t}</li>`).join('')}</ul>`; }
     const [r1, r2, r3] = PS_RENK[tur];
     let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
