@@ -3441,20 +3441,99 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return L;
   }
   async function gzBetik(src) { if ([...document.scripts].some(s => s.src === src)) return; await new Promise((ok, red) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => red(new Error(src + ' yüklenemedi')); document.head.appendChild(s); }); }
-  async function gzListeOku(dosya, ilerle) {
-    if (/\.(xlsx)$/i.test(dosya.name) || /\.(csv|txt|tsv)$/i.test(dosya.name)) {
-      const R = /\.xlsx$/i.test(dosya.name) ? await xlsxSatirlar(dosya) : (await dosya.text()).split(/\r?\n/).map(x => x.split(/[;\t,]/));
-      const nrm = s => String(s || '').toLocaleLowerCase('tr');
-      const hi = R.findIndex(r => r.some(x => /^no$|numara/.test(nrm(x).trim())) && r.some(x => /ad/.test(nrm(x))));
-      if (hi < 0) throw new Error('Excel\'de "No" ve "Ad Soyad" başlıkları bulunamadı');
-      const H = R[hi].map(nrm), bul = re => H.findIndex(x => re.test(x));
-      const iNo = bul(/^no$|okul no|numara/), iAd = bul(/ad soyad|adı soyadı|^ad$|^adı$|isim/), iSoy = bul(/^soyad|soyisim/), iSn = bul(/sınıf|şube/), iTc = bul(/kimlik|t\.?c/), iDg = bul(/doğum/), iTl = bul(/telefon|cep/), iCn = bul(/cinsiyet/);
-      let sinif = ''; const L = [];
-      R.slice(hi + 1).forEach(r => { const m = String(r[0] || '').match(/^\s*(9|1[0-2])\s*[-–]\s*([A-ZÇĞİÖŞÜ])\b/); if (m && !String(r[iNo] || '').trim()) { sinif = m[1] + '-' + m[2]; return; }
-        const no = String(r[iNo] || '').replace(/\D/g, ''); const ad = [r[iAd], iSoy >= 0 ? r[iSoy] : ''].join(' ').replace(/\s+/g, ' ').trim(); if (!no || !ad) return;
-        L.push({ no: String(+no), ad, sinif: iSn >= 0 ? String(r[iSn] || '').replace(/\s/g, '').replace('/', '-').toLocaleUpperCase(tr) : sinif, tc: iTc >= 0 ? String(r[iTc] || '').replace(/\D/g, '') : '', dogum: iDg >= 0 ? String(r[iDg] || '') : '', tel: iTl >= 0 ? String(r[iTl] || '') : '', cinsF: iCn >= 0 ? String(r[iCn] || '') : '' }); });
-      return L;
+  // K-716bc: Excel/CSV katılımcı listesi her biçimde okunur. Başlık adları esnek: No / Okul No / Öğrenci No · Ad Soyad / Adı Soyadı / İsim + Soyisim · T.C. · doğum · telefon · cinsiyet · sınıf / şube;
+  // belediye biçimi (ISIM, SOYISIM, TC/YABANCI_KIMLIK_NO, PASAPORT_NO = telefon) ve çok sayfalı dosyalar dahil. Numara sütunu yoksa ya da sıra numarasıysa öğrenci okul listesinden adıyla bulunur;
+  // başlık satırı hiç yoksa her satır okul listesindeki ad soyadla tanınır, kalan bilgiler hücrenin içeriğinden alınır.
+  const gzSade = s => String(s == null ? '' : s).normalize('NFC').replace(/[İIı]/g, 'i').toLowerCase().replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/â/g, 'a').replace(/î/g, 'i').replace(/û/g, 'u').replace(/[^a-z0-9]+/g, ' ').trim();
+  const gzSutTur = h => !h ? '' : /kimlik|tckn|\bt ?c\b/.test(h) ? 'tc' : /pasaport/.test(h) ? 'pas' : /dogum|^d ?tarih/.test(h) && !/yer/.test(h) ? 'dg' : /telefon|gsm|iletisim|\bcep\b|\btel\b/.test(h) ? 'tl' : /cinsiyet/.test(h) ? 'cn'
+    : /^((ogrenci|yolcu|katilimci)(nin|nun)? )?soy ?(ad|adi|isim|ismi)\b/.test(h) ? 'soy' : /^((ogrenci|yolcu|katilimci)(nin|nun)? )?(ad|adi|isim|ismi)\b|^(adsoyad|adisoyadi|isimsoyisim)$|^(ogrenci|yolcu|katilimci)$/.test(h) ? 'ad'
+    : /sinif/.test(h) && !/ogretmen/.test(h) ? 'sn' : /^sube/.test(h) ? 'sb' : /^sira\b|^s ?no?$/.test(h) ? 'sira' : /^(no|numara|numarasi)$|\b(okul|ogrenci|ogr) ?(no|numara|numarasi)\b/.test(h) ? 'no' : '';
+  const gzBaslik = r => {   // satır başlık satırıysa sütun yerleri ({no, ad, soy, sn, sb, tc, dg, tl, cn, pas}; yoksa -1), değilse null
+    const H = r.map(gzSade), T = H.map(gzSutTur), bul = (t, yeg) => { const I = []; T.forEach((x, i) => { if (x === t) I.push(i); }); const y = yeg ? I.find(i => yeg.test(H[i])) : undefined; return y != null ? y : I.length ? I[0] : -1; };
+    const S = { no: bul('no', /okul|ogr/), ad: bul('ad'), soy: bul('soy'), sn: bul('sn'), sb: bul('sb'), tc: bul('tc'), dg: bul('dg'), tl: bul('tl', /ogr/), cn: bul('cn'), pas: bul('pas') };
+    if (S.ad < 0 && S.soy < 0 && S.no < 0) return null;
+    const tani = T.filter(Boolean); if (new Set(tani).size < 2 && tani.length < r.filter(Boolean).length) return null;   // tek tanınan hücre: satırın tamamı başlık değilse başlık sayılmaz
+    return S; };
+  const gzSinifAl = s => { const m = String(s == null ? '' : s).toLocaleUpperCase('tr').match(/(?:^|[^0-9])(9|1[0-2])\s*(?:\.\s*SINIF)?[\s\-–\/.]*([A-ZÇĞİÖŞÜ])(?![A-ZÇĞİÖŞÜ0-9])/); return m ? m[1] + '-' + m[2] : ''; };   // "9-A", "9/A", "9 A", "9. Sınıf / A Şubesi" → "9-A"
+  const gzSinifBasi = s => { const m = String(s == null ? '' : s).toLocaleUpperCase('tr').match(/^\s*(9|1[0-2])\s*[-–\/.]?\s*([A-ZÇĞİÖŞÜ])(?![A-ZÇĞİÖŞÜ0-9])/); return m ? m[1] + '-' + m[2] : ''; };   // sınıf başlığı satırı: "9-A · 23 kişi"
+  const gzSayi = v => String(v == null ? '' : v).trim().replace(/[.,]0+$/, '').replace(/\D/g, '');
+  const gzDogum = v => { v = String(v == null ? '' : v).trim(); let m;
+    if (/^\d{5}([.,]\d+)?$/.test(v) && parseFloat(v) > 10000 && parseFloat(v) < 60000) { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(parseFloat(v)) * 864e5); return String(d.getUTCDate()).padStart(2, '0') + '.' + String(d.getUTCMonth() + 1).padStart(2, '0') + '.' + d.getUTCFullYear(); }   // Excel'in tarih sayısı
+    if ((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return m[3].padStart(2, '0') + '.' + m[2].padStart(2, '0') + '.' + m[1];
+    return v; };
+  const gzAdK = x => String(x == null ? '' : x).normalize('NFC').toLocaleUpperCase('tr').replace(/Â/g, 'A').replace(/Î/g, 'İ').replace(/Û/g, 'U').replace(/[^A-ZÇĞİÖŞÜ]/g, '');
+  const gzDuz = k => k.replace(/Ç/g, 'C').replace(/Ğ/g, 'G').replace(/İ/g, 'I').replace(/Ö/g, 'O').replace(/Ş/g, 'S').replace(/Ü/g, 'U');   // ALI = ALİ, CINAR = ÇINAR (büyük harfle noktasız yazılmış adlar)
+  const gzAdDizin = OG => {   // okul listesi ad dizini: önce birebir, yoksa Türkçe harf farkı gözetmeden
+    const T = new Map(), Z = new Map(), ekle = (M, k, o) => { if (!M.has(k)) M.set(k, []); M.get(k).push(o); };
+    (OG || []).forEach(o => { const k = gzAdK(o.ad); if (k) { ekle(T, k, o); ekle(Z, gzDuz(k), o); } });
+    const aday = ad => { const k = gzAdK(ad); return k.length < 4 ? [] : T.get(k) || Z.get(gzDuz(k)) || []; };
+    return { aday, bul: (ad, sinif, no) => { let A = aday(ad); if (sinif) A = A.filter(x => x.sinif === sinif); if (A.length > 1) { const b = A.filter(x => String(x.no) === String(no)); if (b.length) A = b; } return A.length === 1 ? A[0] : null; } };
+  };
+  function gzTablodan(sayfalar, OG) {   // sayfalar: [[satır = hücre dizisi]] → [{no, ad, sinif, tc, dogum, tel, cinsF}]; numarası belli olmayanlarda no boş kalır (gzEslestir adıyla bulur)
+    OG = OG || []; const dz = gzAdDizin(OG), noKim = new Map(OG.map(o => [String(o.no), o])), siniflar = new Set(OG.map(o => o.sinif)), snOk = sn => sn && (!siniflar.size || siniflar.has(sn)) ? sn : '';
+    const adMi = x => !!x && x.length <= 60 && !/\d/.test(x) && /[A-Za-zÇĞİÖŞÜçğıöşüâîû]{2}/.test(x) && !/^(toplam|genel toplam|not|imza|aciklama|tel|belediye personeli|okul muduru|mudur|sinif ogretmeni|rehber ogretmen|gorevli ogretmen|sorumlu ogretmen|ogretmen)\b/.test(gzSade(x));
+    const telAl = v => { const d = String(v == null ? '' : v).trim().replace(/[.,]0+$/, '').replace(/\D/g, ''); return /^905\d{9}$/.test(d) ? '0' + d.slice(2) : /^0?5\d{9}$/.test(d) ? d : ''; };
+    const cinsAl = v => { const c = gzSade(v); return /^(k|kiz|kadin|bayan)$/.test(c) ? 'K' : /^(e|erkek|bay)$/.test(c) ? 'E' : ''; };
+    const noAl = v => /^\d{1,6}([.,]0+)?$/.test(v) ? String(+gzSayi(v)) : '';
+    const L = [], kalan = [], okunan = []; let ilk = '';
+    for (const R0 of sayfalar || []) {
+      const R = (R0 || []).map(r => (r || []).map(x => String(x == null ? '' : x).replace(/^\s*"|"\s*$/g, '').replace(/\s+/g, ' ').trim())).filter(r => r.some(Boolean));
+      if (!ilk && R.length) ilk = R[0].filter(Boolean).join(' | ').slice(0, 140);
+      const bi = R.findIndex(r => gzBaslik(r)); if (bi < 0) { R.forEach(r => kalan.push(r)); continue; }   // başlıksız sayfa (kapak, not ya da başlıksız liste): başlıklı sayfalardan kimse çıkmazsa aşağıda içerikten denenir
+      let S = null, sinif = bi > 0 ? snOk(gzSinifBasi(R[bi - 1].find(Boolean))) : '', blok = [];   // başlığın hemen üstündeki satır sınıf adıysa (9-A) ilk bölümün sınıfı odur
+      const blokBitir = () => {   // "No" sütunu okul numarası değil de sıra numarasıysa (numaranın sahibi başka, ad okul listesinde başka numarayla duruyor) numaralar atılır
+        const N = blok.filter(o => o.no && o.ad); let uy = 0, ters = 0;
+        N.forEach(o => { const x = noKim.get(o.no), m = dz.bul(o.ad, o.sinif, o.no); if (x && gzDuz(gzAdK(x.ad)) === gzDuz(gzAdK(o.ad))) uy++; else if (m && String(m.no) !== o.no) ters++; });
+        if (ters >= 2 && ters > uy * 3 && ters * 2 >= N.length) blok.forEach(o => { if (o.ad) o.no = ''; });
+        blok.forEach(o => L.push(o)); blok = []; };
+      for (const r of R.slice(bi)) {
+        const s = gzBaslik(r); if (s) { blokBitir(); S = s; continue; }
+        okunan.push(r);
+        const g = i => i >= 0 ? (r[i] || '') : '', ad = [g(S.ad), S.soy !== S.ad ? g(S.soy) : ''].join(' ').replace(/\s+/g, ' ').trim(), no = noAl(g(S.no));
+        if (!adMi(ad) && !(no && !ad && S.ad < 0 && S.soy < 0)) { if (!no) { const sn = gzSinifBasi(r.find(Boolean)); if (sn) sinif = snOk(sn); } continue; }   // ad yok: sınıf başlığı (9-A · 23 kişi), not ya da boş satır
+        const tl = g(S.tl), tel = telAl(tl) || telAl(g(S.pas));
+        blok.push({ no, ad, sinif: (S.sn >= 0 || S.sb >= 0 ? gzSinifAl([g(S.sn), S.sb !== S.sn ? g(S.sb) : ''].join(' ')) : '') || sinif, tc: gzSayi(g(S.tc)), dogum: gzDogum(g(S.dg)), tel: tel ? gzTel(tel) : tl.replace(/[.,]0+$/, ''), cinsF: cinsAl(g(S.cn)) || g(S.cn) });
+      }
+      blokBitir();
     }
+    // Başlıklı sayfalardan kimse çıkmadıysa (başlık yok ya da tanınmadı) satırlar içerikten okunur: öğrenci okul listesindeki ad soyadıyla tanınır
+    if (!L.length && OG.length) { okunan.forEach(r => kalan.push(r)); let sinif = '';
+      for (const r of kalan) {
+        if (r.filter(Boolean).length <= 2) { const sn = gzSinifBasi(r.find(Boolean)); if (sn) { sinif = snOk(sn); continue; } }
+        const nolar = r.map(noAl); let o = null, ai = -1, aj = -1;
+        for (let i = 0; i < r.length && !o; i++) { if (!adMi(r[i])) continue; const j = adMi(r[i + 1]) ? i + 1 : -1;
+          for (const [a, y] of [[j < 0 ? '' : r[i] + ' ' + r[j], j], [j < 0 ? '' : r[j] + ' ' + r[i], j], [r[i], -1]]) { if (!a) continue; let A = dz.aday(a);
+            if (A.length > 1) { const b = A.filter(x => nolar.includes(String(x.no))); if (b.length) A = b; }
+            if (A.length > 1) { const sn = snOk(r.map(x => x.length <= 14 ? gzSinifAl(x) : '').find(Boolean)) || sinif, b = A.filter(x => x.sinif === sn); if (b.length) A = b; }
+            if (A.length === 1) { o = A[0]; ai = i; aj = y; break; } } }
+        if (!o) { const a = r.find(x => adMi(x) && /\S\s+\S/.test(x)); if (a && r.some(x => /^\d[\d\s.\/-]{7,}$/.test(x))) L.push({ no: '', ad: a, sinif: '', tc: '', dogum: '', tel: '', cinsF: '' }); continue; }   // kişi satırı ama okul listesinde yok: bildirilir
+        const k = { no: String(o.no), ad: o.ad, sinif: o.sinif, tc: '', dogum: '', tel: '', cinsF: '' };
+        r.forEach((x, i) => { if (!x || i === ai || i === aj) return; const harf = /[A-Za-zÇĞİÖŞÜçğıöşü]/.test(x), d = gzSayi(x);
+          if (!harf && /^[1-9]\d{10}$/.test(d) && (!k.tc || (gzTcGecerli(d) && !gzTcGecerli(k.tc)))) k.tc = d;
+          else if (!harf && !k.tel && telAl(x)) k.tel = gzTel(telAl(x));
+          else if (!k.dogum && (/^\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4}$/.test(x) || /^\d{4}-\d{1,2}-\d{1,2}/.test(x) || (/^\d{5}([.,]0+)?$/.test(x) && +d > 32000 && +d < 43000 && d !== k.no))) k.dogum = gzDogum(x);
+          else if (!k.cinsF && cinsAl(x)) k.cinsF = cinsAl(x); });
+        L.push(k);
+      }
+    }
+    L.ilk = ilk; return L;
+  }
+  function gzEslestir(T, OG) {   // okunan listeyi okul listesiyle eşleştirir: numara okul listesindeyse kalır; yoksa (yazı tanıma hatası, numarasız liste) öğrenci adıyla bulunur. Numarası bulunamayanlar "yok"a ayrılır
+    OG = OG || []; const dz = gzAdDizin(OG), G = new Map(), yok = [];
+    (T || []).forEach(o => {
+      const x = o.no ? OG.find(z => String(z.no) === o.no && (!o.sinif || z.sinif === o.sinif)) : null, y = x || !o.no ? null : OG.find(z => String(z.no) === o.no && gzDuz(gzAdK(z.ad)) === gzDuz(gzAdK(o.ad)));
+      if (x) { if (!o.ad) o.ad = x.ad; o.sinif = o.sinif || x.sinif; }
+      else if (y) o.sinif = y.sinif;   // numara da ad da aynı öğrenci, yalnız sınıfı farklı yazılmış: okul listesindeki sınıfı geçerli
+      else { const m = dz.bul(o.ad, o.sinif, o.no); if (m) { if (gzAdK(m.ad) !== gzAdK(o.ad)) o.ad = m.ad; o.no = String(m.no); o.sinif = o.sinif || m.sinif; } }
+      if (!o.no || !o.ad) { if (o.ad || o.no) yok.push(o); return; }
+      const an = o.no + '|' + (o.sinif || ''), v = G.get(an); if (v) ['tc', 'dogum', 'tel', 'cinsF'].forEach(k => { if (!v[k] && o[k]) v[k] = o[k]; }); else G.set(an, o);   // aynı öğrenci iki kez yazılmışsa tek satır
+    });
+    return { liste: [...G.values()], yok };
+  }
+  async function gzListeOku(dosya, ilerle) {
+    const imza = new Uint8Array(await dosya.slice(0, 4).arrayBuffer()), zipMi = imza[0] === 0x50 && imza[1] === 0x4B, oleMi = imza[0] === 0xD0 && imza[1] === 0xCF, pdfMi = imza[0] === 0x25 && imza[1] === 0x50 && imza[2] === 0x44 && imza[3] === 0x46;
+    if (zipMi || oleMi || (!pdfMi && /\.(xlsx?|csv|txt|tsv|html?|xml)$/i.test(dosya.name)))   // dosya türü içeriğinden: .xlsx · eski .xls · e-Okul'un HTML/XML tablosu · csv / metin
+      return gzTablodan(zipMi ? await xlsxSatirlar(dosya, true) : [await xlsSatirlar(dosya)], D.ogrenciler || []);
     const pdfjs = await import(new URL('soru/pdf.min.mjs', location.href).href); pdfjs.GlobalWorkerOptions.workerSrc = new URL('soru/pdf.worker.min.mjs', location.href).href;
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await dosya.arrayBuffer()) }).promise, satirlar = [];
     let worker = null;
@@ -3601,7 +3680,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Gezi Otobüsleri</h1><span class="soluk" id="gzDurum">${esc(durum)}</span></div>
         <div class="gz-geziler">${GL.map(x => `<button class="gz-gz ${x.a === GZ_ANAH ? 'secili' : ''}" data-gezi="${esc(x.a)}">${x.tema === 'canakkale' ? '🇹🇷 ' : '🚌 '}${esc(x.ad)}</button>`).join('')}<button class="gz-gz yeni" id="gzYeniGezi">+ Yeni gezi</button>${GL.length > 1 && GZ_ANAH !== 'gezi_otobus' ? '<button class="bag kirmizi kucuk" id="gzGeziSil">Bu geziyi sil</button>' : ''}</div>
         <div class="kart gz-bilgi"><div class="gz-alan"><label>Gezi adı<input data-g="ad" value="${esc(G.ad)}"></label><label>Tarih<input type="date" data-g="tarih" value="${esc(G.tarih)}"></label><label>Kalkış saati<input type="time" data-g="saat" value="${esc(G.saat)}"></label><label>Kalkış yeri<input data-g="kalkis" value="${esc(G.kalkis || '')}"></label><label>Güzergâh (bilette)<input data-g="guzergah" value="${esc(G.guzergah == null ? (canak ? 'İstanbul → Çanakkale' : '') : G.guzergah)}" placeholder="İstanbul → …"></label><label>Önde ayrılan koltuk<select id="gzAyr"><option value="2" ${GZ_AYRILAN === 2 ? 'selected' : ''}>2 · öğretmenler</option><option value="4" ${GZ_AYRILAN === 4 ? 'selected' : ''}>4 · öğretmen, belediye, rehber</option></select></label>
-          <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil">📄 ${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
+          <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil">📄 ${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.xls,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
           <div class="gz-ozet"><span><b>${ogrL.length}</b> öğrenci</span><span><b class="gz-pk">${ogrL.filter(p => p.cins === 'K').length}</b> kız</span><span><b class="gz-pe">${ogrL.filter(p => p.cins === 'E').length}</b> erkek</span>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length ? `<span class="gz-uyari" title="${esc(ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).map(p => baslik(p.ad) + ' (' + p.sinif + ')').join(', '))}"><b>${ogrL.filter(p => p.tc && !gzTcGecerli(p.tc)).length}</b> hatalı T.C. no</span>` : ''}${belirsiz ? `<span class="gz-uyari" id="gzBelirsiz"><b>${belirsiz}</b> cinsiyeti belirsiz — düzeltin</span>` : ''}<span><b>${yerlesen}</b> / ${hepsiP.length} yerleşti</span>${G.esler.length ? `<span>🤝 <b>${G.esler.length}</b> arkadaş çifti</span>` : ''}${(n => n ? `<span class="gz-uyari" id="gzEsDuzelt" title="Dokunun: ayrı düşen arkadaşlar yan yana alınır"><b>${n}</b> arkadaş çifti ayrı düştü — düzelt</span>` : '')(G.esler.filter(([a, b]) => G.yer[a] && G.yer[b] && !yanyana(a, b)).length)}<span class="${kap < ogrL.length ? 'kirmizi-yazi' : ''}"><b>${kap}</b> öğrenci koltuğu</span>${karisik.size ? `<span class="gz-uyari"><b>${karisik.size / 2}</b> yerde kız–erkek yan yana</span>` : ''}</div>
           <div class="dugmeler gz-dug" style="margin:10px 0 0"><button class="birincil" id="gzOto" title="Otobüsler sırayla tam dolar; sınıflar sırayla dizilir">⚡ Otomatik yerleştir</button><button class="birincil" id="gzOtoS" title="Her sınıf tek otobüste; boş koltuk kalabilir">🏫 Sınıf sınıf yerleştir</button><button class="ikincil" id="gzExcel">📊 Belediye listesi (Excel)</button><button class="${G.yayin ? 'birincil' : 'ikincil'}" id="gzYayin" title="Öğrenci panelinde her öğrenci yalnız kendi otobüsünü ve koltuğunu görür">${G.yayin ? '📣 Öğrencilerde yayında ✓' : '📣 Öğrencilere yayınla'}</button><button class="ikincil" id="gzPlan">🚌 Oturma planı</button><button class="ikincil" id="gzBilet">🎫 Biletler</button><button class="ikincil" id="gzListe">🖨 Yolcu listeleri</button><button class="ikincil" id="gzOtoEkle">+ Otobüs</button><button class="ikincil" id="gzOtoCikar" ${G.otobusler.length > 1 ? '' : 'disabled'}>− Otobüs</button><span class="gz-tumkap">Hepsi <input type="number" min="10" max="80" id="gzTumKap" value="${G.otobusler[0] ? G.otobusler[0].kapasite : 42}"> kişilik <button class="ikincil kucuk" id="gzTumKapB">Uygula</button></span><button class="bag kirmizi" id="gzSifir">Yerleşimi sıfırla</button></div></div>
         <div class="gz-sekmeler">${G.otobusler.map((x, i) => { const b = bilgiSatiri(x, M); return `<button class="gz-ot ${x.id === aktif ? 'secili' : ''}" style="--g:${GZ_RENK[i % GZ_RENK.length]}" data-akt="${x.id}"><span class="gz-no">${x.no}</span><span><b>${x.no}. Otobüs</b><small>${b.L.length} / ${x.kapasite}</small></span><i style="--y:${Math.round(100 * b.L.length / x.kapasite)}%"></i></button>`; }).join('')}</div>
@@ -3675,12 +3754,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#gzGeriAl')) $('#gzGeriAl').onclick = () => { G.cikar = []; kaydet(); ciz(); };
       if ($('#gzGTel')) $('#gzGTel').onblur = ev => { ev.target.value = gzTel(ev.target.value) || '05'; };
       if ($('#gzGEkle')) $('#gzGEkle').onclick = () => { const ad = baslik($('#gzGAd').value.replace(/\s+/g, ' ').trim()); if (!ad) return; const tel = gzTel($('#gzGTel').value); G.gorevli.push({ id: Date.now().toString(36), ad, tur: $('#gzGTur').value, tel: tel.length > 4 ? tel : '' }); kaydet(); ciz(); };
-      $('#gzDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const bil = $('#gzDosyaBilgi'), yaz = t => { bil.textContent = t; };
-        try { yaz('Okunuyor…'); const L = await gzListeOku(f, yaz); const adK = x => String(x || '').toLocaleUpperCase(tr).replace(/[^A-ZÇĞİÖŞÜ]/g, ''), OG = D.ogrenciler || [];
-          L.forEach(o => { if (OG.some(x => String(x.no) === o.no && (!o.sinif || x.sinif === o.sinif))) return; const m = OG.find(x => adK(x.ad) === adK(o.ad) && (!o.sinif || x.sinif === o.sinif)); if (m) { o.no = String(m.no); o.sinif = o.sinif || m.sinif; } });   // yazı tanımada yanlış okunan numara: okul listesinden adla düzelt
-          if (!L.length) { yaz('Listede öğrenci bulunamadı'); uyar('Dosyada No / Ad Soyad / T.C. sütunlu bir liste bulunamadı.'); return; }
+      $('#gzDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; ev.target.value = ''; const bil = $('#gzDosyaBilgi'), yaz = t => { bil.textContent = t; };   // değer sıfırlanır: aynı dosya yeniden seçilebilsin
+        try { yaz('Okunuyor…'); const T = await gzListeOku(f, yaz), { liste: L, yok } = gzEslestir(T, D.ogrenciler || []);   // okul listesiyle eşleştirme: yanlış okunan ya da hiç yazılmamış numara öğrencinin adından bulunur
+          const yokYaz = yok.slice(0, 5).map(x => x.ad || 'No ' + x.no).join(', ') + (yok.length > 5 ? ' …' : '');
+          if (!L.length) { yaz('Listede öğrenci bulunamadı');
+            uyar(yok.length ? `Dosyadaki ${yok.length} kişi okul listesinde bulunamadı: ${yokYaz}. Listede okul numarası yoksa ad soyadlar okul listesindekiyle aynı yazılmalıdır.` : T.ilk === undefined ? 'Dosyada No / Ad Soyad / T.C. sütunlu bir liste bulunamadı.' : T.ilk ? `Dosyada öğrenci listesi bulunamadı. Okunan ilk satır: “${T.ilk}”. Listede "Ad Soyad" ya da "No" sütunu olmalıdır.` : 'Dosyada okunabilir bir liste bulunamadı; dosya boş görünüyor.'); return; }
           LST = { ad: f.name.replace(/\.[^.]+$/, ''), liste: L, zaman: Date.now() }; await lstKaydet(); const hat = L.filter(x => x.tc && !gzTcGecerli(x.tc)).length;
-          uyar(`${L.length} öğrenci okundu.${hat ? ` ${hat} öğrencinin T.C. kimlik numarası hatalı görünüyor (listede işaretli).` : ''} Kontrol edip "Otomatik yerleştir"e basabilirsiniz.`); ciz(); }
+          uyar(`${L.length} öğrenci okundu.${hat ? ` ${hat} öğrencinin T.C. kimlik numarası hatalı görünüyor (listede işaretli).` : ''}${yok.length ? ` ${yok.length} kişi eklenmedi (okul listesinde bulunamadı ya da aynı adda birden çok öğrenci var): ${yokYaz}.` : ''} Kontrol edip "Otomatik yerleştir"e basabilirsiniz.`); ciz(); }
         catch (e) { yaz('Okunamadı'); uyar('Dosya okunamadı: ' + (e.message || e)); } };
       if ($('#gzDosyaSil')) $('#gzDosyaSil').onclick = async ev => { ev.preventDefault(); if (!await onayla('PDF/Excel\'den yüklenen katılımcı listesi kaldırılsın mı?')) return; LST = { ad: '', liste: [] }; await lstKaydet(); ciz(); };
       $('#gzYayin').onclick = async () => { if (G.yayin) { if (!await onayla('Öğrenci panelindeki koltuk bilgisi kaldırılsın mı?')) return; G.yayin = false; }
@@ -4914,22 +4994,34 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   }
   window.addEventListener('resize', () => { clearTimeout(tkSigdir.z); tkSigdir.z = setTimeout(tkSigdir, 150); });
   // K-633: e-Okul raporlu öğrenci listesi × sınav takvimi. Liste yalnız bu tarayıcıda işlenir, hiçbir yere kaydedilmez (sağlık verisi).
-  async function xlsxSatirlar(dosya) {   // en hafif .xlsx okuyucu: ilk sayfa, paylaşılan metinler (DecompressionStream)
+  async function xlsxSatirlar(dosya, hepsi) {   // en hafif .xlsx okuyucu: ilk sayfa, paylaşılan metinler (DecompressionStream). hepsi: bütün sayfalar, her biri ayrı dizi — [[satırlar], [satırlar], …]
     const B = new Uint8Array(await dosya.arrayBuffer()), dv = new DataView(B.buffer), dec = new TextDecoder();
     let e = B.length - 22; while (e > 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0 || dv.getUint32(e, true) !== 0x06054b50) throw new Error('Excel dosyası açılamadı (dosya bozuk ya da .xlsx değil)');
     const n = dv.getUint16(e + 10, true); let o = dv.getUint32(e + 16, true); const F = {};
     for (let i = 0; i < n; i++) { const yon = dv.getUint16(o + 10, true), bs = dv.getUint32(o + 20, true), al = dv.getUint16(o + 28, true), el = dv.getUint16(o + 30, true), cl = dv.getUint16(o + 32, true), lo = dv.getUint32(o + 42, true);
       F[dec.decode(B.subarray(o + 46, o + 46 + al))] = { yon, bs, lo }; o += 46 + al + el + cl; }
     const oku = async ad => { const f = F[ad]; if (!f) return ''; const h = f.lo, ba = h + 30 + dv.getUint16(h + 26, true) + dv.getUint16(h + 28, true), ham = B.subarray(ba, ba + f.bs);
       if (f.yon === 0) return dec.decode(ham); return await new Response(new Blob([ham]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text(); };
     const X = t => new DOMParser().parseFromString(t, 'application/xml');
-    const ss = [...X(await oku('xl/sharedStrings.xml')).getElementsByTagName('si')].map(si => [...si.getElementsByTagName('t')].map(t => t.textContent).join(''));
-    const sayfa = Object.keys(F).filter(k => /^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort()[0]; if (!sayfa) return [];
+    // K-716bc: her Excel üreticisinin dosyası okunur — ad alanı önekli etiketler (x:row), farklı adlandırılmış sayfa / metin dosyaları, konumu yazılmamış hücreler, 1.2E10 biçimli büyük sayılar
+    const etk = (d, ad) => [...d.getElementsByTagNameNS('*', ad)], dosyaBul = re => Object.keys(F).find(k => re.test(k));
+    const ss = etk(X(await oku(dosyaBul(/^xl\/sharedstrings\.xml$/i))), 'si').map(si => etk(si, 't').map(t => t.textContent).join(''));
+    let sayfalar = Object.keys(F).filter(k => /^xl\/worksheets\/[^\/]+\.xml$/i.test(k)).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+    try {   // sayfa sırası çalışma kitabından (sekme sırası); okunamazsa dosya adı sırası
+      const hedef = {}; etk(X(await oku(dosyaBul(/^xl\/_rels\/workbook\.xml\.rels$/i))), 'Relationship').forEach(r => { const t = String(r.getAttribute('Target') || '').replace(/^\.\//, ''); hedef[r.getAttribute('Id')] = (t.startsWith('/') ? t.slice(1) : 'xl/' + t).toLowerCase(); });
+      const kimlik = s => { const a = Array.from(s.attributes).find(z => z.localName === 'id' && /relationships/i.test(z.namespaceURI || '')); return a ? a.value : s.getAttribute('r:id'); };
+      const sira = etk(X(await oku(dosyaBul(/^xl\/workbook\.xml$/i))), 'sheet').map(s => sayfalar.find(k => k.toLowerCase() === hedef[kimlik(s)])).filter(Boolean);
+      if (sira.length) sayfalar = sira;
+    } catch (z) {}
+    if (!sayfalar.length) return [];
     const kolon = r => { let c = 0; for (const ch of r.replace(/\d+$/, '')) c = c * 26 + ch.charCodeAt(0) - 64; return c - 1; };
-    return [...X(await oku(sayfa)).getElementsByTagName('row')].map(row => { const S = []; [...row.getElementsByTagName('c')].forEach(c => { const v = (c.getElementsByTagName('v')[0] || {}).textContent, t = c.getAttribute('t');
-      let d = t === 's' ? ss[+v] : t === 'inlineStr' ? [...c.getElementsByTagName('t')].map(z => z.textContent).join('') : v;
-
-      S[kolon(c.getAttribute('r') || 'A')] = d == null ? '' : String(d); }); return [...S].map(z => z || ''); });
+    const satirlar = async sayfa => etk(X(await oku(sayfa)), 'row').map(row => { const S = []; let k = 0; etk(row, 'c').forEach(c => { const v = (etk(c, 'v')[0] || {}).textContent, t = c.getAttribute('t'), r = c.getAttribute('r');
+      let d = t === 's' ? ss[+v] : t === 'inlineStr' ? etk(c, 't').map(z => z.textContent).join('') : v;
+      if (d != null && t !== 's' && t !== 'inlineStr' && t !== 'str' && /^-?\d+(\.\d+)?E[+-]?\d+$/i.test(d) && isFinite(+d)) d = String(+d);
+      if (r) k = kolon(r); S[k++] = d == null ? '' : String(d); }); return [...S].map(z => z || ''); });
+    if (!hepsi) return satirlar(sayfalar[0]);
+    const T = []; for (const s of sayfalar) T.push(await satirlar(s)); return T;
   }
   // K-640: eski .xls (BIFF8, OLE) ve e-Okul'un "Excel'e aktar" HTML/XML tabloları
   async function xlsSatirlar(dosya) {
