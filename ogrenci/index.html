@@ -69,7 +69,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .mk-kutu i { width: 22px; height: 22px; flex: none; border-radius: 6px; border: 2px solid var(--soluk); display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 13px; }
 .mk-kutu.secili i { background: var(--neon); border-color: var(--neon); color: var(--zemin); } .mk-kutu.secili i::after { content: '✓'; }
 .mk-gecmis div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 9px 0; border-top: 1px solid var(--cizgi); } .mk-gecmis .ok { color: var(--yesil); font-weight: 700; white-space: nowrap; } .mk-gecmis .bk { color: var(--soluk); white-space: nowrap; }
-.ust2 { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-bottom: 12px; } .ust2 h1 { margin: 0; font-size: 22px; text-align: center; white-space: nowrap; } .ust2 > :first-child { justify-self: start; } .ust2 > :nth-child(3) { justify-self: end; }   /* K-573: başlık ortada */ .ust2 .geri { padding: 7px 12px; font-size: 14px; }
+.ust2 { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-bottom: 12px; } .ust2 h1 { margin: 0; font-size: 22px; text-align: center; white-space: nowrap; } .ust2 .geri { white-space: nowrap; justify-self: start; } .ust2 h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .ust2 > :first-child { justify-self: start; } .ust2 > :nth-child(3) { justify-self: end; }   /* K-573: başlık ortada */ .ust2 .geri { padding: 7px 12px; font-size: 14px; }
 .bugun { background: linear-gradient(160deg, #16325a, #13233a 60%); border-color: rgba(34,232,255,.35); }
 .say { display: flex; gap: 8px; margin: 12px 0 4px; } .say div { flex: 1; background: rgba(34,232,255,.1); border: 1px solid rgba(34,232,255,.35); border-radius: 12px; text-align: center; padding: 8px 0; }
 .say b { display: block; font-size: 26px; color: var(--neonacik); line-height: 1.1; } .say span { font-size: 11.5px; color: var(--soluk); }
@@ -122,6 +122,24 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .gz-ara i { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #3ef08a; color: #06121f; animation: gzAra 1.8s ease-in-out infinite; } .gz-ara i svg { width: 24px; height: 24px; }
 .gz-ara span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .gz-ara small { color: #b9f7d2; font-size: 12px; } .gz-ara b { font-size: 16px; } .gz-ara em { font-style: normal; font-size: 18px; font-weight: 700; color: #3ef08a; letter-spacing: .5px; }
 @keyframes gzAra { 0%, 100% { box-shadow: 0 0 0 0 rgba(62,240,138,.6); } 50% { box-shadow: 0 0 0 10px rgba(62,240,138,0); } }
+.gzt { position: relative; margin: 0 0 16px; border-radius: 18px; overflow: hidden; background: #fff; color: #111; box-shadow: 0 14px 40px rgba(0,0,0,.45); font-family: Inter, -apple-system, 'Segoe UI', Arial, sans-serif; }
+.gzt-bayrak { position: relative; height: 54px; background: #e30a17; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 16px; }
+.gzt-bayrak svg { width: 46px; flex: none; position: absolute; left: 14px; } .gzt-bayrak b { font-size: 10.5px; font-weight: 700; letter-spacing: .2em; color: #fff; opacity: .92; text-align: center; padding: 0 54px; }
+.gzt-bayrak span { position: absolute; right: 16px; font-size: 10px; font-weight: 700; letter-spacing: .3em; color: #fff; opacity: .9; }
+.gzt-ana { position: relative; overflow: hidden; padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #fff 0%, #fff 45%, #fbf3ee 100%); }
+.gzt-ana > svg.gzt-desen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; } .gzt-ana > *:not(.gzt-desen):not(.gzt-goz) { position: relative; }
+.gzt-goz { position: absolute; right: 0; top: 0; height: 100%; width: auto; opacity: .9; pointer-events: none; }
+.gzt-ust { display: flex; align-items: center; gap: 12px; } .gzt-ust img { width: 44px; height: 44px; } .gzt-okul { font-size: 9px; font-weight: 600; letter-spacing: .22em; color: #e30a17; }
+.gzt-ust h2 { margin: 3px 0 0; font-size: 27px; line-height: 1.05; font-weight: 800; letter-spacing: -.01em; color: #111; } .gzt-ust h2 em { font-style: normal; font-weight: 300; color: #777; }
+.gzt-soz { font: italic 13px/1.35 Georgia, serif; color: #5b2a2a; } .gzt-soz small { display: block; margin-top: 3px; font: 600 8.5px Inter, sans-serif; letter-spacing: .16em; color: #a33; }
+.gzt small { display: block; font-size: 9px; font-weight: 600; letter-spacing: .24em; color: #999; }
+.gzt-yolcu b { display: block; font-size: 23px; font-weight: 700; line-height: 1.15; } .gzt-yolcu span { font-size: 13.5px; font-weight: 500; color: #666; }
+.gzt-bilgi { display: flex; flex-wrap: wrap; gap: 10px 22px; } .gzt-bilgi b { font-size: 14px; font-weight: 600; } .gzt-bilgi > div { background: rgba(255,255,255,.82); padding: 2px 6px 3px; margin: -2px -6px; border-radius: 4px; }
+.gzt-koc { position: relative; background: #111; color: #fff; padding: 20px 22px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px dashed rgba(255,255,255,.18); }
+.gzt-koc::before, .gzt-koc::after { content: ''; position: absolute; top: -13px; width: 26px; height: 26px; border-radius: 50%; background: var(--zemin, #0b1220); z-index: 2; } .gzt-koc::before { left: -13px; } .gzt-koc::after { right: -13px; }
+.gzt-koc > *:not(.gzt-abide) { position: relative; z-index: 1; } .gzt-abide { position: absolute; right: 8px; bottom: 0; height: 120%; opacity: .5; pointer-events: none; }
+.gzt-koc small { color: #888; } .gzt-koc b { display: block; font-size: 44px; font-weight: 800; line-height: 1; margin-top: 4px; } .gzt-kol b { color: #ff3b47; }
+.gzt-yer { grid-column: 1 / -1; display: flex; justify-content: space-between; border-top: 1px solid #333; padding-top: 10px; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; }
 .selam.kapan { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
 @media (prefers-reduced-motion: reduce) { .selam { transition: none; } }
 /* K-555: MEB formları */
@@ -385,20 +403,20 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="soz" id="gununSozu"></div>
   </section>
 
-  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div><div id="snDd"></div></section>
-  <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
-  <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
-  <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
-  <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
-  <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Ana sayfa</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
-  <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
-  <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Çalışma planım</h1></div>
+  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div><div id="snDd"></div></section>
+  <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
+  <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
+  <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
+  <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Geri</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
+  <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
+  <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Çalışma planım</h1></div>
     <div id="ozMesaj"></div><div id="rplan"></div>
     <div class="kart pl-ust"><div class="pl-hafta"><button class="ikincil" id="plOnce" aria-label="Önceki hafta">‹</button><div><b id="plBaslik"></b><small id="plAlt"></small></div><button class="ikincil" id="plSonra" aria-label="Sonraki hafta">›</button></div>
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
     <div id="plSinav"></div><div id="plDd"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
   </section>
-  <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
+  <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
     <button class="mk-kutu so-izin" id="soIzin" type="button"><i></i><span>Rehberlik servisi haftalık soru özetimi görebilsin <small class="soluk" style="display:block;font-size:12.5px">Rehber öğretmenin sana daha iyi destek olabilir. İstediğin zaman kapatabilirsin.</small></span></button>
     <div class="so-donem" id="soDonem"></div>
     <div class="so-kartlar" id="soKartlar"></div>
@@ -410,10 +428,10 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="kart" id="soKayitKart"><h2>Kayıtlar</h2><div id="soKayit"></div></div>
     <div class="not">Kayıtlarını yalnız sen görürsün; en üstteki izni verirsen rehberlik servisi de özetini görür. Net = doğru − yanlış ÷ 4 (YKS hesabı).</div>
   </section>
-  <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Anketler</h1></div>
+  <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Anketler</h1></div>
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
   </section>
-  <section id="s-reh" class="gizli"><div class="ust2"><button class="ikincil geri" id="rhGeri">← Ana sayfa</button><h1 id="rhBaslik">Rehberlik</h1></div>
+  <section id="s-reh" class="gizli"><div class="ust2"><button class="ikincil geri" id="rhGeri">← Geri</button><h1 id="rhBaslik">Rehberlik</h1></div>
     <div id="rhMesajlar"></div>
     <div class="izg" id="rhKutular"></div>
     <div id="rhMektup" class="gizli">
@@ -451,6 +469,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
-<script src="ogrenci.js?v=202611171310"></script>
+<script src="../gezi-bilet.js?v=202611171320"></script>
+<script src="ogrenci.js?v=202611171335"></script>
 </body>
 </html>

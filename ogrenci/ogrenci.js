@@ -410,9 +410,16 @@
     const tarih = d.tarih ? gzTarih(d.tarih) + ' ' + new Date(d.tarih + 'T12:00').toLocaleDateString(tr, { weekday: 'long' }) : '';
     if (!d.koltuk) { el.innerHTML = `<div class="kart"><b>Koltuğun henüz belirlenmedi.</b><p class="soluk">İdare yerleşimi tamamlayınca otobüsün ve koltuğun burada görünecek.</p>${tarih ? `<p>📅 ${esc(tarih)}${d.saat ? ' · ' + esc(d.saat) : ''}</p>` : ''}</div>`; return; }
     const P = gzPlan(d.otobus.kapasite), yer = gzYer(d);
-    el.innerHTML = `<div class="gz-bilet"><div class="gz-b-sol"><small>YOLCU</small><b>${esc(S.ad || '')}</b><span>${esc(S.sinif || '')}</span>
-        <div class="gz-b-alt">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}</div></div>
-      <div class="gz-b-sag"><div><small>OTOBÜS</small><b>${d.otobus.no}</b></div><div class="gz-b-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div><em>${esc(gzYerAd(yer))}</em>${d.otobus.plaka ? `<small>${esc(d.otobus.plaka)}</small>` : ''}</div></div>
+    const B = window.UmalBilet || { desen: '', ay: '' }, canak = d.tema === 'canakkale', yil = (d.tarih || '').slice(0, 4);
+    const gzr = d.guzergah != null ? d.guzergah : (canak ? 'İstanbul → Çanakkale' : ''), adB = String(S.ad || '').toLocaleLowerCase(tr).replace(/(^|\s)(\S)/g, (m, a, c) => a + c.toLocaleUpperCase(tr));
+    const gAd = esc(d.ad || 'Gezi').replace(/^(\S+)\s+(.+)$/, '$1 <em>$2</em>');
+    el.innerHTML = `<div class="gzt ${canak ? 'canak' : ''}"><div class="gzt-bayrak">${B.ay}<b>${canak ? 'ÇANAKKALE GEÇİLMEZ' : esc((d.ad || 'Gezi').toLocaleUpperCase(tr))}</b><span>${canak ? '1915' : esc(yil)}</span></div>
+      <div class="gzt-ana">${canak ? '<img class="gzt-goz" src="../gezi-goz-bilet.png" alt="">' : ''}${B.desen}
+        <div class="gzt-ust"><img src="../okul-logo.png" alt=""><div><div class="gzt-okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h2>${gAd}</h2></div></div>
+        ${canak ? '<div class="gzt-soz">“Ben size taarruzu emretmiyorum, ölmeyi emrediyorum.”<small>MUSTAFA KEMAL · CONKBAYIRI 1915</small></div>' : ''}
+        <div class="gzt-yolcu"><small>YOLCU</small><b>${esc(adB)}</b><span>${esc(S.sinif || '')}${S.no ? ' · No ' + esc(S.no) : ''}</span></div>
+        <div class="gzt-bilgi">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}${gzr ? `<div><small>GÜZERGÂH</small><b>${esc(gzr)}</b></div>` : ''}</div></div>
+      <div class="gzt-koc">${canak ? '<img class="gzt-abide" src="../gezi-abide-bilet.png" alt="">' : ''}<div><small>OTOBÜS</small><b>${d.otobus.no}</b></div><div class="gzt-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div><div class="gzt-yer"><span>${esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(d.otobus.plaka || '')}</span></div></div></div>
       ${d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
       <div class="gz-harita"><div class="gz-h-on"><span>Şoför</span><span>Ön kapı</span></div>${P.map(r => `<div class="gz-h-sira">${r.map(s => !s ? '<i></i>' : s.kapi ? '<i class="kapi"></i>' : `<i class="k ${s.n === d.koltuk ? 'ben' : ''} ${s.yer === 'cam' ? 'cam' : ''}">${s.n === d.koltuk ? 'SEN' : s.n}</i>`).join('')}</div>`).join('')}<div class="gz-h-arka">Arka</div></div>
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur. Değişiklik olursa burada hemen görünür.</p>`;
@@ -660,7 +667,7 @@
       + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
     $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
-    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').textContent = '← Ana sayfa'; $('#rhKutular').classList.toggle('gizli', ozel());
+    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').textContent = '← Geri'; $('#rhKutular').classList.toggle('gizli', ozel());
     const yeniM = new Set(RH.mesajlar.filter(m => !m.okundu).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeniM]); rhMesajCiz(RH.yeniGor); $('#rhMesajlar').classList.remove('gizli');
     if (yeniM.size) rhYukle(true).then(() => rhMesajCiz(RH.yeniGor));   // okundu (zarf gider; bu ekranda YENİ etiketi kalır)
     goster('s-reh'); window.scrollTo(0, 0);
@@ -1217,7 +1224,7 @@
   function ddListeCiz() {
     const yk = ddYaklasan(), dersler = [...new Set(DD.L.map(d => d.ders))].sort((a, b) => a.localeCompare(b, tr));
     let L = DD.L.filter(d => !DD.suz || d.ders === DD.suz); if (DD.gun) L = L.filter(d => iso(new Date(d.zaman)) === DD.gun);
-    $('#ddBaslik').textContent = 'Atlas Sınıf'; $('#ddGeri').textContent = '← Ana sayfa';
+    $('#ddBaslik').textContent = 'Atlas Sınıf'; $('#ddGeri').textContent = '← Geri';
     $('#ddIc').innerHTML = (yk.map(y => `<div class="dd-uyari"><b>Sınava ${Math.max(0, Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5)) || 'bugün'}${Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5) > 0 ? ' gün kaldı' : ''} · ${esc(y.x.ad)}</b><span>Bu sınavın konularına bağlı ${y.D.length} dosya var${y.acilmamis ? `, ${y.acilmamis} tanesini henüz açmadın` : ''}.</span></div>`).join(''))
       + `<div class="dd-suz">${dersler.length > 1 ? `<button class="${!DD.suz ? 'secili' : ''}" data-ddsuz="">Hepsi</button>${dersler.map(x => `<button class="${DD.suz === x ? 'secili' : ''}" data-ddsuz="${esc(x)}">${esc(x)}</button>`).join('')}` : ''}</div>
       <label class="dd-gun"><span>Okula gelemediğin bir gün mü var? O gün gönderilenler:</span><input type="date" id="ddGun" value="${esc(DD.gun)}" max="${iso(simdi())}">${DD.gun ? '<button class="bag" id="ddGunSil">Tümünü göster</button>' : ''}</label>
