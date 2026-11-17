@@ -1549,3 +1549,15 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 @media (max-width: 760px) { .tm-alt.iki { grid-template-columns: 1fr 1fr; column-gap: 12px; } }
 .dd-ks h2 { margin: 16px 0 8px; } .dd-ks-adim { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--soluk); } .dd-ks-adim b { color: var(--yazi); }
 .dd-ks #ddKsAnahtar { font-family: ui-monospace, Menlo, monospace; letter-spacing: .02em; }
+/* K-716g: sınıf seçimi seviye seviye renkli kutular */
+.dd-hizli { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dd-seviyeler { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.dd-seviye { border: 1px solid color-mix(in srgb, var(--sv) 45%, transparent); background: color-mix(in srgb, var(--sv) 7%, var(--koyu)); border-radius: 13px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.dd-sv-bas { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .dd-sv-bas b { color: var(--sv); font-size: 14px; }
+.dd-sv-tum { background: transparent; border: 1px solid color-mix(in srgb, var(--sv) 60%, transparent); color: var(--sv); border-radius: 16px; padding: 4px 11px; font-size: 12.5px; font-weight: 700; }
+.dd-sv-tum.secili { background: var(--sv); color: #0d1726; }
+.dd-sv-cip { display: flex; flex-wrap: wrap; gap: 6px; }
+.dd-scip { min-width: 54px; background: var(--kart); border: 1px solid var(--cizgi); color: var(--yazi); border-radius: 10px; padding: 7px 10px; font-weight: 700; font-size: 13.5px; }
+.dd-scip.benim { border-color: color-mix(in srgb, var(--sv) 70%, transparent); }
+.dd-scip.secili { background: var(--sv); border-color: var(--sv); color: #0d1726; box-shadow: 0 0 10px color-mix(in srgb, var(--sv) 45%, transparent); }
+@media (max-width: 760px) { .dd-seviyeler { grid-template-columns: 1fr; } }

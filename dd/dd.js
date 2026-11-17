@@ -11,6 +11,7 @@
   const sinifSira = (a, b) => a.localeCompare(b, tr, { numeric: true });
   const tarihYaz = t => new Date(t).toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ' + new Date(t).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
   const boyutYaz = b => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  const SV_RENK = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
   const ytId = u => (String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
   const idare = () => ['bas', 'yonetici'].includes(C.rol);
   const VARS_ANAH = () => 'atlasDdVarsayilan:' + C.eposta;
@@ -156,7 +157,11 @@
         <div class="kart dd-form">
           <label class="dd-alan"><span>Başlık</span><input id="ddBaslik" maxlength="160" value="${esc(T.baslik)}" placeholder="Ör. Parabol çalışma kâğıdı · Veli toplantısı"></label>
           <label class="dd-alan"><span>Ders</span><input id="ddDers" maxlength="80" list="ddDersler" placeholder="Ör. Matematik · boş kalırsa Genel" value="${esc(T.ders)}"><datalist id="ddDersler">${S.dersler.map(d => `<option value="${esc(d)}">`).join('')}</datalist></label>
-          <div class="dd-alan"><span>Sınıflar</span><div class="cipler">${benim.map(cip).join('')}${!benim.length ? diger.map(cip).join('') : diger.length ? `<details class="dd-diger"${diger.some(x => T.siniflar.includes(x)) ? ' open' : ''}><summary class="cip">Diğer sınıflar</summary><div class="cipler">${diger.map(cip).join('')}</div></details>` : ''}</div></div>
+          <div class="dd-alan"><span>Sınıflar${T.siniflar.length ? ` <small class="soluk">· ${T.siniflar.length} sınıf seçili</small>` : ''}</span>
+            <div class="dd-hizli">${benim.length ? `<button class="cip ${benim.every(x => T.siniflar.includes(x)) ? 'secili' : ''}" data-grup="benim">Derslerime girdiğim sınıflar</button>` : ''}<button class="cip ${tum.length && tum.every(x => T.siniflar.includes(x)) ? 'secili' : ''}" data-grup="hepsi">Bütün okul</button>${T.siniflar.length ? '<button class="bag" data-grup="temizle">Seçimi temizle</button>' : ''}</div>
+            <div class="dd-seviyeler">${[...new Set(tum.map(x => x.split('-')[0]))].map(v => { const L = tum.filter(x => x.split('-')[0] === v), hep = L.every(x => T.siniflar.includes(x));
+              return `<div class="dd-seviye" style="--sv:${SV_RENK[v] || '#9fb3cf'}"><div class="dd-sv-bas"><b>${esc(v)}. sınıflar</b><button class="dd-sv-tum ${hep ? 'secili' : ''}" data-grup="sv:${esc(v)}">${hep ? '✓ Tümü seçili' : 'Tümünü seç'}</button></div>
+                <div class="dd-sv-cip">${L.map(x => `<button class="dd-scip ${T.siniflar.includes(x) ? 'secili' : ''}${benim.includes(x) ? ' benim' : ''}" data-sinif="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`; }).join('')}</div></div>
           <label class="dd-alan"><span>Yazı</span><textarea id="ddNot" rows="4" maxlength="2000" placeholder="Duyurunuz ya da öğrencilere notunuz. Yalnız yazı gönderirseniz duyuru olur.">${esc(T.aciklama)}</textarea></label>
           <div class="dd-alan"><span>Ekler <small class="soluk">· isteğe bağlı, istediğiniz kadar</small></span>
             <div class="dd-birak" id="ddBirak"><b>Dosya ya da kısa video ekleyin</b><small>PDF, resim, Word, PowerPoint, video · her biri en çok 25 MB · resimler ve taranmış büyük PDF'ler kendiliğinden küçülür</small>
@@ -233,6 +238,10 @@
       if (b.id === 'ddTestAc') { oku(); T.testAcik = !T.testAcik; yeniCiz(); return; }
       if (b.id === 'ddLinkEkle') { oku(); let l = $('#ddLink').value.trim(); if (l && !/^https?:\/\//i.test(l)) l = 'https://' + l; if (!/^https?:\/\/\S+\.\S+/.test(l)) { C.uyar('Geçerli bir link yazın.'); return; } T.linkler.push(l); yeniCiz(); return; }
       if (b.dataset.linksil != null) { oku(); T.linkler.splice(+b.dataset.linksil, 1); yeniCiz(); return; }
+      if (b.dataset.grup) { oku(); const g = b.dataset.grup, tum_ = [...new Set(C.ogrenciler().map(o => o.sinif))].sort(sinifSira);
+        const L = g === 'hepsi' ? tum_ : g === 'benim' ? S.siniflarim.filter(x => tum_.includes(x)) : g.startsWith('sv:') ? tum_.filter(x => x.split('-')[0] === g.slice(3)) : [];
+        if (g === 'temizle') T.siniflar = []; else if (L.length && L.every(x => T.siniflar.includes(x))) T.siniflar = T.siniflar.filter(x => !L.includes(x)); else T.siniflar = [...new Set([...T.siniflar, ...L])].sort(sinifSira);
+        T.ogrenciler = T.ogrenciler.filter(no => C.ogrenciler().some(o => String(o.no) === no && T.siniflar.includes(o.sinif))); yeniCiz(); return; }
       if (b.dataset.sinif) { oku(); const s = b.dataset.sinif; T.siniflar = T.siniflar.includes(s) ? T.siniflar.filter(x => x !== s) : [...T.siniflar, s]; T.ogrenciler = T.ogrenciler.filter(no => C.ogrenciler().some(o => String(o.no) === no && T.siniflar.includes(o.sinif))); yeniCiz(); return; }
       if (b.id === 'ddSec') { $('#ddDosya').click(); return; }
       if (b.dataset.dosyasil != null) { oku(); T.dosyalar.splice(+b.dataset.dosyasil, 1); yeniCiz(); return; }
