@@ -1131,7 +1131,7 @@
   function ddKutu() {
     if (!DD.L.length) return ''; const y = ddYeni(), h = ddHatir(), yk = ddYaklasan(), zarf = y.length || h.length;
     const alt = h.length ? 'Öğretmenin hatırlattı: ' + h[0].baslik : y.length ? (y.length > 1 ? y.length + ' yeni paylaşım' : (y[0].tur === 'duyuru' ? 'Yeni duyuru: ' : 'Yeni: ') + y[0].baslik) : yk.length ? `Sınava ${Math.max(0, Math.ceil((new Date(yk[0].x.tarih + 'T12:00') - simdi()) / 864e5))} gün: ${yk[0].D.length} dosya` : DD.L[0].ders + ' · ' + DD.L[0].baslik;
-    return `<button data-git="dd" class="genis no-ana ${zarf ? 'yeni' : ''}">${zarf ? ZARF : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><span><b>Ders Dosyaları</b><small>${esc(alt.length > 44 ? alt.slice(0, 43) + '…' : alt)}</small></span>${y.length ? `<span class="so-mini"><b style="color:#7fb2ff">${y.length}</b><small>yeni</small></span>` : ''}</button>`;
+    return `<button data-git="dd" class="genis no-ana ${zarf ? 'yeni' : ''}">${zarf ? ZARF : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><span><b>Ders Dosyaları</b><small class="dd-alt">${esc(alt)}</small></span>${y.length ? `<span class="so-mini"><b style="color:#7fb2ff">${y.length}</b><small>yeni</small></span>` : ''}</button>`;
   }
   // önbellek (IndexedDB): bir kez açılan dosya yeniden indirilmez, internetsiz de açılır
   const ddDb = () => new Promise((ok, red) => { try { const r = indexedDB.open('atlas-dd', 1); r.onupgradeneeded = () => r.result.createObjectStore('d'); r.onsuccess = () => ok(r.result); r.onerror = () => red(r.error); } catch (e) { red(e); } });
