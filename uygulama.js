@@ -117,11 +117,32 @@
     kar: '<path class="a-kay" d="M7 13.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 4.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-tane" d="M8 17v4M6.3 18l3.4 2M6.3 20l3.4-2"/><path class="a-tane d2" d="M16 17v4M14.3 18l3.4 2M14.3 20l3.4-2"/><path class="a-tane d3" d="M12 18.5v3M10.7 19.2l2.6 1.6M10.7 20.8l2.6-1.6"/>',
     sis: '<path class="a-sis" d="M7 11.5h10"/><path class="a-sis s2" d="M3.5 15h17"/><path class="a-sis" d="M5.5 18.5h13"/><path class="a-sis s2" d="M8 22h8"/>',
     simsek: '<path class="a-kay" d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path class="a-cak" d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
-  function psFx(tur) {   // kartın arka planında hafif hava efekti
-    const n = { yagmur: 26, simsek: 22, kar: 28, gunes: 0, ay: 14, parcali: 0, bulut: 0, sis: 0 }[tur] || 0, R = () => Math.random();
+  function psFx(tur) {   // kartın arka planında hava efekti
+    const R = () => Math.random(), f = v => v.toFixed(2);
     let h = '';
-    for (let i = 0; i < n; i++) h += `<i style="left:${(R() * 100).toFixed(1)}%;top:${tur === 'ay' ? (R() * 100).toFixed(1) + '%' : '-20px'};animation-delay:${(-R() * 3).toFixed(2)}s;animation-duration:${(tur === 'kar' ? 4 + R() * 3 : tur === 'ay' ? 2 + R() * 3 : .7 + R() * .5).toFixed(2)}s;opacity:${(.55 + R() * .45).toFixed(2)}"></i>`;
+    if (tur === 'yagmur' || tur === 'simsek') {   // iki katman damla (uzak/yakın) + zemin sıçramaları + alt sis
+      for (let i = 0; i < 34; i++) h += `<i class="dm uz" style="left:${f(R() * 110 - 5)}%;animation-delay:${f(-R() * 2)}s;animation-duration:${f(1.1 + R() * .5)}s;opacity:${f(.3 + R() * .3)}"></i>`;
+      for (let i = 0; i < 16; i++) h += `<i class="dm yk" style="left:${f(R() * 110 - 5)}%;animation-delay:${f(-R() * 2)}s;animation-duration:${f(.55 + R() * .25)}s;opacity:${f(.7 + R() * .3)}"></i>`;
+      for (let i = 0; i < 9; i++) h += `<i class="sc" style="left:${f(4 + R() * 92)}%;animation-delay:${f(-R() * 1.6)}s;animation-duration:${f(1.2 + R() * .6)}s"></i>`;
+      h += '<b class="zemin"></b>';
+      if (tur === 'simsek') h += '<svg class="cak" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="c1"/><path class="c2"/></svg><b class="flas"></b>';
+    } else {
+      const n = { kar: 28, ay: 14 }[tur] || 0;
+      for (let i = 0; i < n; i++) h += `<i style="left:${f(R() * 100)}%;top:${tur === 'ay' ? f(R() * 100) + '%' : '-20px'};animation-delay:${f(-R() * 3)}s;animation-duration:${f(tur === 'kar' ? 4 + R() * 3 : 2 + R() * 3)}s;opacity:${f(.55 + R() * .45)}"></i>`;
+    }
     return `<div class="ps-fx fx-${tur}" aria-hidden="true">${h}</div>`;
+  }
+  function psSimsek(el) {   // her 3-7 sn'de rastgele dallanan bir şimşek çak
+    const svg = el.querySelector('.ps-fx .cak'); if (!svg || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const R = () => Math.random(), yol = (x, y, ad, uz) => { let d = `M${x} ${y}`; for (let i = 0; i < ad; i++) { x += (R() - .5) * 14; y += uz / ad; d += ` L${x.toFixed(1)} ${y.toFixed(1)}`; } return [d, x, y]; };
+    const cak = () => {
+      if (!document.body.contains(el)) return;
+      const x0 = 20 + R() * 60, [d1] = yol(x0, -2, 9, 70 + R() * 30), [d2] = yol(x0 + (R() - .5) * 8, 20 + R() * 15, 5, 25 + R() * 20);
+      svg.querySelector('.c1').setAttribute('d', d1); svg.querySelector('.c2').setAttribute('d', d2);
+      el.classList.remove('cakti'); void el.offsetWidth; el.classList.add('cakti');
+      setTimeout(cak, 3000 + R() * 4000);
+    };
+    setTimeout(cak, 700);
   }
   const PS_RENK = { gunes: ['#1d3c66', 'rgba(255,209,102,.45)', '#ffd166'], ay: ['#1a2a55', 'rgba(176,107,255,.45)', '#d4b0ff'], parcali: ['#1b375f', 'rgba(127,246,255,.4)', '#7ff6ff'],
     bulut: ['#1d2c45', 'rgba(160,180,210,.4)', '#b8c7dd'], yagmur: ['#14304f', 'rgba(90,168,255,.5)', '#5aa8ff'], kar: ['#1f3a5c', 'rgba(220,240,255,.6)', '#e8f6ff'],
@@ -186,6 +207,7 @@
     el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
     el.innerHTML = `<div class="ps-ic">${psFx(tur)}<div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p>${ozet}${adSor ? `<div class="ps-ad"><span>Size adınızla hitap edeyim:</span><div><input id="psAd" placeholder="Adınız Soyadınız" autocomplete="name"><button type="button" id="psAdK">Kaydet</button></div></div>` : ''}</div>`;
     el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
+    if (tur === 'simsek') psSimsek(el);
     const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
     if (!adSor) { el.onclick = kapat; setTimeout(kapat, ozet ? 14000 : 9000); return; }
     el.onclick = kapat; el.querySelector('.ps-ad').onclick = e => e.stopPropagation();
