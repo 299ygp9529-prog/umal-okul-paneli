@@ -101,10 +101,10 @@
 
   // ---------------------------------------------------------------- giriş
   async function ac(el, ctx) {
-    C = ctx; kok = el; kok.innerHTML = '<div class="kart soluk">Ders Dosyaları yükleniyor…</div>';
+    C = ctx; kok = el; kok.innerHTML = '<div class="kart soluk">Atlas Sınıf yükleniyor…</div>';
     await C.ogrencileriYukle().catch(() => []);
     try { await yukle(); } catch (e) {
-      if (/umal_dd/.test(C.hataYaz(e))) { kok.innerHTML = '<div class="kart">Ders Dosyaları için Supabase\'de <b>20261117030000_umal_ders_dosyalari.sql</b> çalıştırılmalı.</div>'; return; }
+      if (/umal_dd/.test(C.hataYaz(e))) { kok.innerHTML = '<div class="kart">Atlas Sınıf için Supabase\'de <b>20261117030000_umal_ders_dosyalari.sql</b> çalıştırılmalı.</div>'; return; }
       kok.innerHTML = `<div class="kart kirmizi">Yüklenemedi: ${esc(C.hataYaz(e))}</div>`; return;
     }
     await benimBilgim();
@@ -132,7 +132,7 @@
     const zum = S.L.filter(d => d.zumre && d.yukleyen !== C.eposta && !d.kaynak && (!zumAnah.size || zumAnah.has(C.dersAnahtar(d.ders))));
     const L = S.sekme === 'ben' ? ben : S.sekme === 'zumre' ? zum : S.L;
     const sekme = (v, ad, n) => `<button class="cip ${S.sekme === v ? 'secili' : ''}" data-sekme="${v}">${ad}${n != null ? ` <small>${n}</small>` : ''}</button>`;
-    kok.innerHTML = `<div class="rv-bas dd-ust"><div><h1 style="margin:0">Ders Dosyaları</h1><div class="soluk kucuk">Sınıflarınıza duyuru, dosya, link, video ya da test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
+    kok.innerHTML = `<div class="rv-bas dd-ust"><div><h1 style="margin:0">Atlas Sınıf</h1><div class="soluk kucuk">Öğrencilere duyuru, dosya, video, test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
       <div class="dugmeler" style="margin:0"><button class="ikincil" id="ddKisayol">iPhone kısayolu</button>${idare() ? '<button class="ikincil" id="ddAyar">Depolama · Ayarlar</button>' : ''}<button class="birincil" id="ddYeni"${S.url ? '' : ' disabled'}>+ Yeni paylaşım</button></div></div>
       ${S.url ? '' : `<div class="kart dd-kurulum"><b>Drive bağlantısı henüz kurulmadı.</b><div class="soluk kucuk">${C.rol === 'bas' ? 'Depolama · Ayarlar\'dan Atlas Drive köprüsünün adresini girin.' : 'Kurulum baş yönetici tarafından yapılacak.'}</div></div>`}
       <div class="cipler">${sekme('ben', 'Gönderdiklerim', ben.length)}${sekme('zumre', 'Zümre paylaşımları', zum.length)}${idare() ? sekme('hepsi', 'Okulun tümü', S.L.length) : ''}</div>
@@ -159,7 +159,7 @@
       ...T.mevcut.map((f, i) => `<div class="dd-dosya"><span>${esc(f.ad)}</span><small>${f.url ? 'test' : f.boyut ? boyutYaz(f.boyut) : 'zümreden'}</small><button class="bag" data-mevcutsil="${i}">Kaldır</button></div>`),
       ...T.dosyalar.map((f, i) => `<div class="dd-dosya"><span>${esc(f.name)}</span><small>${boyutYaz(f.size)}</small><button class="bag" data-dosyasil="${i}">Kaldır</button></div>`)].join('');
     const ogrSec = T.ogrSecAcik ? `<div class="dd-ogrsec">${T.siniflar.length ? O.filter(o => T.siniflar.includes(o.sinif)).map(o => `<label><input type="checkbox" data-ogr="${esc(o.no)}" ${T.ogrenciler.includes(String(o.no)) ? 'checked' : ''}>${esc(o.sinif)} · ${esc(o.no)} ${esc(C.baslik(o.ad))}</label>`).join('') : '<span class="soluk kucuk">Önce sınıf seçin.</span>'}</div>` : '';
-    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button>${T.kaynak ? '<span class="neon-tabela">Zümreden</span>' : ''}${T.kisayol ? '<span class="neon-tabela">iPhone\'dan geldi</span>' : ''}</div>
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Atlas Sınıf</button>${T.kaynak ? '<span class="neon-tabela">Zümreden</span>' : ''}${T.kisayol ? '<span class="neon-tabela">iPhone\'dan geldi</span>' : ''}</div>
       <div class="dd-gonder">
         <div class="kart dd-form">
           <label class="dd-alan"><span>Başlık</span><input id="ddBaslik" maxlength="160" value="${esc(T.baslik)}" placeholder="Ör. Parabol çalışma kâğıdı · Veli toplantısı"></label>
@@ -328,7 +328,7 @@
     const soruAnaliz = d.test ? [...d.test.anahtar].map((a, i) => { const c = testler.filter(g => g.test_cevap[i] === a).length; return { i: i + 1, y: testler.length ? Math.round(c * 100 / testler.length) : 0 }; }) : [];
     const ort = testler.length ? (testler.reduce((s, g) => s + g.test_puan.d, 0) / testler.length).toFixed(1).replace('.', ',') : '–';
     const kilit = d.cevap ? (d.cevap.acilis && new Date(d.cevap.acilis) > new Date() ? `kilitli ek ${tarihYaz(d.cevap.acilis)} tarihinde açılacak` : 'kilitli ek açıldı') : '';
-    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button><span class="soluk">${esc(d.ders)} · ${esc(tarihYaz(d.gorunme || d.olusturma))}${d.gorunme && new Date(d.gorunme) > new Date() ? ' · <b class="turuncu">henüz görünmüyor</b>' : ''}</span></div>
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Atlas Sınıf</button><span class="soluk">${esc(d.ders)} · ${esc(tarihYaz(d.gorunme || d.olusturma))}${d.gorunme && new Date(d.gorunme) > new Date() ? ' · <b class="turuncu">henüz görünmüyor</b>' : ''}</span></div>
       <div class="rv-bas dd-ust"><div><h1 style="margin:0">${esc(d.baslik)}</h1><div class="soluk kucuk">${esc(kim(d))}${d.sinav && d.sinav.konu ? ' · sınav konusu: ' + esc(d.sinav.konu) : ''}${kilit ? ' · ' + esc(kilit) : ''}${d.zumre ? ' · zümreyle paylaşıldı' : ''}${d.ayar && d.ayar.tahta ? ' · tahtada' : ''}</div></div>
         <div class="dugmeler" style="margin:0">${(d.dosyalar || []).map((f, i) => `<button class="ikincil" data-ac="${i}">Aç${d.dosyalar.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}${(d.linkler && d.linkler.length ? d.linkler : d.link ? [d.link] : []).map((l, i, A) => `<a class="ikincil" href="${esc(l)}" target="_blank" rel="noopener">${ytId(l) ? 'Video' : 'Link'}${A.length > 1 ? ' ' + (i + 1) : ''}</a>`).join('')}${d.ses ? '<button class="ikincil" id="ddSesDinle">▶ Sesli açıklama</button>' : ''}${benim ? '<button class="tehlike" id="ddSil">Sil</button>' : ''}</div></div>
       ${d.aciklama ? `<div class="kart soluk" style="white-space:pre-line">${esc(d.aciklama)}</div>` : ''}
@@ -370,7 +370,7 @@
   // ---------------------------------------------------------------- ayarlar / depolama (idare)
   async function ayarCiz() {
     const eski = S.L.filter(d => new Date(d.olusturma) < new Date(Date.now() - 150 * 864e5));
-    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button></div><h1>Depolama · Ayarlar</h1>
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Atlas Sınıf</button></div><h1>Depolama · Ayarlar</h1>
       <div class="kart"><h2 style="margin-top:0">Drive doluluğu</h2><div id="ddKota" class="soluk">${S.url ? 'Okunuyor…' : 'Bağlantı yok.'}</div></div>
       <div class="kart"><h2 style="margin-top:0">Eski dosyalar (5 aydan eski)</h2>${eski.length ? `<div class="soluk kucuk">${eski.length} dosya. Silinince öğrencilerin panelinden kalkar, Drive'da çöp kutusuna gider.</div><div class="dd-liste" style="margin-top:8px">${eski.slice(0, 60).map(d => `<label class="dd-eski"><input type="checkbox" data-eski="${d.id}"> ${esc(d.baslik)} <small class="soluk">· ${esc(d.ders)} · ${esc(kim(d))} · ${esc(new Date(d.olusturma).toLocaleDateString(tr))}</small></label>`).join('')}</div><div class="dugmeler"><button class="tehlike" id="ddEskiSil">Seçilenleri sil</button></div>` : '<div class="soluk kucuk">Eski dosya yok.</div>'}</div>
       ${C.rol === 'bas' ? `<div class="kart"><h2 style="margin-top:0">Atlas Drive köprüsü</h2><div class="soluk kucuk">Atlas'ın Google hesabında yayınlanan Apps Script web uygulamasının adresi (…/exec).</div>
@@ -391,13 +391,13 @@
         ayarCiz(); }
     };
     if (S.url) { try { const k = await kopru({ op: 'kota' }), y = k.sinir ? Math.round(k.kullanilan * 100 / k.sinir) : 0, dd = S.L.reduce((s, d) => s + (d.dosyalar || []).reduce((a, f) => a + (+f.boyut || 0), 0), 0);
-      const el = $('#ddKota'); if (el) el.innerHTML = `<div class="dd-kota"><i style="width:${y}%"></i></div><b>${boyutYaz(k.kullanilan)}</b> / ${boyutYaz(k.sinir)} dolu (%${y}) · Ders Dosyaları yaklaşık ${boyutYaz(dd)} · ${S.L.length} kayıt`; }
+      const el = $('#ddKota'); if (el) el.innerHTML = `<div class="dd-kota"><i style="width:${y}%"></i></div><b>${boyutYaz(k.kullanilan)}</b> / ${boyutYaz(k.sinir)} dolu (%${y}) · Atlas Sınıf dosyaları yaklaşık ${boyutYaz(dd)} · ${S.L.length} kayıt`; }
       catch (e) { const el = $('#ddKota'); if (el) el.textContent = 'Okunamadı: ' + C.hataYaz(e); } }
   }
 
   // ---------------------------------------------------------------- iPhone kısayolu
   async function kisayolCiz(yenile) {
-    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button></div><h1>iPhone kısayolu: "Atlas'a gönder"</h1>
+    kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Atlas Sınıf</button></div><h1>iPhone kısayolu: "Atlas'a gönder"</h1>
       <div class="kart dd-ks"><p class="soluk" style="margin-top:0">Kurduktan sonra iPhone'da bir PDF, fotoğraf ya da videoyu seçip <b>Paylaş → Atlas'a gönder</b>'e dokunursunuz. Dosya Atlas'ın Drive'ına yüklenir ve panel <b>Yeni paylaşım</b> ekranında, dosya ekli olarak açılır; sınıfı seçip gönderirsiniz.</p>
         <h2>1 · Kişisel kısayol anahtarınız</h2><div class="dd-ikili"><input id="ddKsAnahtar" readonly value="Alınıyor…"><button class="birincil" id="ddKsKopya" style="flex:0 0 auto">Kopyala</button></div>
         <div class="soluk kucuk" style="margin-top:6px">Bu anahtar yalnız sizin. Başkasıyla paylaşmayın; paylaştıysanız <button class="bag" id="ddKsYenile">yeni anahtar alın</button> (eski kısayol çalışmaz, yenisini yapıştırırsınız).</div>

@@ -1131,7 +1131,7 @@
   function ddKutu() {
     if (!DD.L.length) return ''; const y = ddYeni(), h = ddHatir(), yk = ddYaklasan(), zarf = y.length || h.length;
     const alt = h.length ? 'Öğretmenin hatırlattı: ' + h[0].baslik : y.length ? (y.length > 1 ? y.length + ' yeni paylaşım' : (y[0].tur === 'duyuru' ? 'Yeni duyuru: ' : 'Yeni: ') + y[0].baslik) : yk.length ? `Sınava ${Math.max(0, Math.ceil((new Date(yk[0].x.tarih + 'T12:00') - simdi()) / 864e5))} gün: ${yk[0].D.length} dosya` : DD.L[0].ders + ' · ' + DD.L[0].baslik;
-    return `<button data-git="dd" class="dd-kutu">${!y.length && h.length ? ZARF : ''}${y.length ? `<span class="zarf etiket">${y.length} yeni</span>` : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><b>Ders Dosyaları</b><small class="dd-alt">${esc(alt)}</small></button>`;
+    return `<button data-git="dd" class="dd-kutu">${!y.length && h.length ? ZARF : ''}${y.length ? `<span class="zarf etiket">${y.length} yeni</span>` : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><b>Atlas Sınıf</b><small class="dd-alt">${esc(alt)}</small></button>`;
   }
   // önbellek (IndexedDB): bir kez açılan dosya yeniden indirilmez, internetsiz de açılır
   const ddDb = () => new Promise((ok, red) => { try { const r = indexedDB.open('atlas-dd', 1); r.onupgradeneeded = () => r.result.createObjectStore('d'); r.onsuccess = () => ok(r.result); r.onerror = () => red(r.error); } catch (e) { red(e); } });
@@ -1181,7 +1181,7 @@
   function ddListeCiz() {
     const yk = ddYaklasan(), dersler = [...new Set(DD.L.map(d => d.ders))].sort((a, b) => a.localeCompare(b, tr));
     let L = DD.L.filter(d => !DD.suz || d.ders === DD.suz); if (DD.gun) L = L.filter(d => iso(new Date(d.zaman)) === DD.gun);
-    $('#ddBaslik').textContent = 'Ders Dosyaları'; $('#ddGeri').textContent = '← Ana sayfa';
+    $('#ddBaslik').textContent = 'Atlas Sınıf'; $('#ddGeri').textContent = '← Ana sayfa';
     $('#ddIc').innerHTML = (yk.map(y => `<div class="dd-uyari"><b>Sınava ${Math.max(0, Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5)) || 'bugün'}${Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5) > 0 ? ' gün kaldı' : ''} · ${esc(y.x.ad)}</b><span>Bu sınavın konularına bağlı ${y.D.length} dosya var${y.acilmamis ? `, ${y.acilmamis} tanesini henüz açmadın` : ''}.</span></div>`).join(''))
       + `<div class="dd-suz">${dersler.length > 1 ? `<button class="${!DD.suz ? 'secili' : ''}" data-ddsuz="">Hepsi</button>${dersler.map(x => `<button class="${DD.suz === x ? 'secili' : ''}" data-ddsuz="${esc(x)}">${esc(x)}</button>`).join('')}` : ''}</div>
       <label class="dd-gun"><span>Okula gelemediğin bir gün mü var? O gün gönderilenler:</span><input type="date" id="ddGun" value="${esc(DD.gun)}" max="${iso(simdi())}">${DD.gun ? '<button class="bag" id="ddGunSil">Tümünü göster</button>' : ''}</label>
@@ -1191,7 +1191,7 @@
   function ddDetayCiz() {
     const d = DD.L.find(x => x.id === DD.sec); if (!d) { DD.sec = null; return ddListeCiz(); }
     const b = d.ben || {}, A = d.ayar || {}, z = new Date(d.zaman), T = DD.test[d.id] || (DD.test[d.id] = []);
-    $('#ddBaslik').textContent = d.ders; $('#ddGeri').textContent = '← Ders Dosyaları';
+    $('#ddBaslik').textContent = d.ders; $('#ddGeri').textContent = '← Atlas Sınıf';
     const sorular = (d.sorular || []), benim = sorular.filter(s => s.benim), acik = sorular.filter(s => !s.benim);
     const test = d.test ? (b.test_cevap ? (() => { const a = b.test_anahtar || '', c = b.test_cevap || '';
         return `<div class="kart dd-testk"><h2>Test sonucun</h2><div class="dd-puan"><div><b>${b.test_puan.d}</b><small>doğru</small></div><div><b>${b.test_puan.y}</b><small>yanlış</small></div><div><b>${b.test_puan.b}</b><small>boş</small></div></div>
@@ -1240,7 +1240,7 @@
   function ddSinavCiz() {   // Sınavlarım: seçili sınav sekmesine bağlı dosyalar
     const el = $('#snDd'); if (!el) return; const sek = S.snSek, dn = buDonem();
     const L = sek === 'm' ? [] : DD.L.filter(d => d.sinav && String(d.sinav.donem) === dn && String(d.sinav.no) === sek);
-    el.innerHTML = L.length ? `<div class="kart dd-snk"><h2>Bu sınavlara bağlı ders dosyaları</h2><div class="dd-l">${L.map(ddKart).join('')}</div></div>` : '';
+    el.innerHTML = L.length ? `<div class="kart dd-snk"><h2>Atlas Sınıf · bu sınavlara bağlı paylaşımlar</h2><div class="dd-l">${L.map(ddKart).join('')}</div></div>` : '';
   }
   $('#snDd') && $('#snDd').addEventListener('click', ev => { const b = ev.target.closest('[data-ddac]'); if (b) ddAc(b.dataset.ddac); });
   function ddPlanCiz() {   // Çalışma planım: rehberlikten gelen dosyalar
