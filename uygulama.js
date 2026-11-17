@@ -126,7 +126,11 @@
   async function panelSelam() {
     if (panelSelam.oldu) return; panelSelam.oldu = true;   // her açılışta bir kez (sayfa içi gezinmede tekrar etmez)
     await kisiAdlariYukle().catch(() => {});
-    const tam = KISI.get(String(D.eposta).toLowerCase()) || '', ilk = tam ? baslik(tam).split(' ')[0] : '', hitap = ilk ? ilk + ' Hocam' : 'Hocam';
+    let tam = KISI.get(String(D.eposta).toLowerCase()) || '';
+    if (!tam) try { const r = await sb.from('umal_ogretmenler').select('ad').eq('eposta', D.eposta).maybeSingle(); tam = (r.data && r.data.ad) || ''; } catch (e) {}
+    if (!tam) try { const u = (await sb.auth.getUser()).data.user, m = (u && u.user_metadata) || {}; tam = m.full_name || m.name || ''; } catch (e) {}
+    if (!tam) try { const r = await sb.from('umal_erisim_talep').select('ad').eq('eposta', D.eposta).limit(1).maybeSingle(); tam = (r.data && r.data.ad) || ''; } catch (e) {}
+    const ilk = tam ? baslik(String(tam)).split(' ')[0] : '', hitap = ilk ? ilk + ' Hocam' : 'Hocam';
     const s = new Date(), h = s.getHours(), gi = (s.getDay() + 6) % 7;
     const sel = h >= 5 && h < 11 ? 'Günaydın' : h >= 11 && h < 17 ? 'İyi günler' : h >= 17 && h < 22 ? 'İyi akşamlar' : 'İyi geceler';
     const hv = await Promise.race([psHava(), new Promise(r => setTimeout(() => r(null), 2500))]);
