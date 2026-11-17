@@ -124,7 +124,7 @@
       const v = { d: Math.round(j.current.temperature_2m), k: j.current.weather_code, gun: !!j.current.is_day }; try { sessionStorage.setItem('umalHava', JSON.stringify({ t: Date.now(), v })); } catch (e) {} return v; } catch (e) { return null; }
   }
   async function panelSelam() {
-    try { if (sessionStorage.getItem('umalPanelSelam') === D.eposta) return; sessionStorage.setItem('umalPanelSelam', D.eposta); } catch (e) {}
+    if (panelSelam.oldu) return; panelSelam.oldu = true;   // her açılışta bir kez (sayfa içi gezinmede tekrar etmez)
     await kisiAdlariYukle().catch(() => {});
     const tam = KISI.get(String(D.eposta).toLowerCase()) || '', ilk = tam ? baslik(tam).split(' ')[0] : '', hitap = ilk ? ilk + ' Hocam' : 'Hocam';
     const s = new Date(), h = s.getHours(), gi = (s.getDay() + 6) % 7;
@@ -190,7 +190,7 @@
     $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
-    panelSelam();   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
+    panelSelam().catch(e => console.warn('karşılama', e));   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
     if (rol === 'bas') erisimRozet();
