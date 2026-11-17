@@ -1414,8 +1414,20 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .gz-ozet { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .gz-ozet span { padding: 6px 12px; border-radius: 999px; background: rgba(127, 246, 255, .07); border: 1px solid var(--cizgi); font-size: 13px; } .gz-ozet b { color: var(--neonacik, #7ff6ff); font-size: 15px; }
 .gz-ozet .kirmizi-yazi, .gz-ozet .kirmizi-yazi b { color: #ff7a7a; }
+/* K-716bk: fotoğraflı arama önerisi */
+.oneri { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 8px; padding: 6px; border: 1px solid var(--neon); border-radius: 12px; background: #0c1729; max-height: 50vh; overflow: auto; } .oneri.gizli { display: none; }
+.oneri-s { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 0; border-radius: 10px; background: transparent; color: var(--yazi); text-align: left; cursor: pointer; font: inherit; } .oneri-s:hover, .oneri-s:focus { background: #16233a; }
+.oneri-s .foto { width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #13233c; font-size: 13px; } .oneri-s .foto img { width: 100%; height: 100%; object-fit: cover; } .oneri-s .foto.ky-ogt { color: #ffd166; }
+.oneri-s span { display: flex; flex-direction: column; min-width: 0; } .oneri-s small { color: var(--soluk, #9fb3cf); }
 /* K-716bg: gezi kayıt masası */
-.gz-alan.ky-iki { grid-template-columns: 1fr 1fr; }
+.ky-ik { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; } #gzKayit .ky-ik, #kyYaz .ky-ik, #gzKapat .ky-ik { margin-right: 4px; } .gz-k.kapali .ky-ik { width: 11px; height: 11px; }
+.ky-bas { display: flex; align-items: center; gap: 10px; } .ky-bas .ky-ik { width: 26px; height: 26px; color: var(--neon); }
+.ky-mesaj { display: flex; align-items: center; gap: 8px; } .ky-mesaj.yedek, .ky-mesaj.bil { color: #ffb867; }
+.ky-satir .foto.ky-ogt { color: #ffd166; } .ky-satir .foto.ky-ogt .ky-ik { width: 22px; height: 22px; }
+.ky-ode, .ky-bil { display: inline-flex; align-items: center; gap: 5px; }
+.ky-bil { border: 1px solid; background: transparent; border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; white-space: nowrap; } .ky-bil.tamam { color: #5ee08a; border-color: #5ee08a88; } .ky-bil.eksik { color: #ffb867; border-color: #ffb867; background: #ffb86714; }
+.ky-suz { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; } .ky-suz button { flex: none !important; padding: 6px 12px !important; font-weight: 500 !important; }
+.gz-alan.ky-iki { grid-template-columns: 1fr 1fr; } .gz-alan.ky-iki > label { min-width: 0; } .gz-alan.ky-iki input { width: 100%; box-sizing: border-box; }
 .ky-giris { display: flex; gap: 8px; margin: 12px 0 6px; } .ky-giris input { flex: 1; min-width: 0; font-size: 18px; padding: 12px 14px; background: var(--koyu); color: var(--yazi); border: 1px solid var(--cizgi); border-radius: 12px; }
 .ky-mesaj { min-height: 20px; font-size: 14px; margin-bottom: 6px; } .ky-mesaj.iyi { color: #5ee08a; } .ky-mesaj.kotu { color: #ff8a8a; }
 .ky-ozet .ky-yesil b { color: #5ee08a; } .ky-ozet .ky-turuncu b { color: #ffb867; }
