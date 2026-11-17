@@ -87,6 +87,57 @@
   }
 
   // ------------------------------------------------------------------ Giriş
+  // ---- K-716ak: Atlas karşılama — saate, Ümraniye havasına ve bugünkü derslere göre; oturumda bir kez, kendiliğinden kapanır
+  const PS_SOZ = {
+    gunes: ['Hava güneşli {ad}. Sınıflarınız da bugün böyle aydınlık olsun.', 'Güzel bir gün {ad}. Tahtaya yazılan her şey öğrencilerde kalsın.', 'Güneş açtı; teneffüs zili bile daha neşeli çalacak.'],
+    ay: ['Gökyüzü açık {ad}. Yarının derslerine hazırlanmak için sakin bir gece.', 'Bu saatte bile okulu düşünüyorsunuz; öğrencileriniz şanslı.'],
+    parcali: ['Parçalı bulutlu {ad}; derslerinizin güneşli geçmesi dileğiyle.', 'Hava kararsız ama ders planınız net {ad}.'],
+    bulut: ['Hava kapalı, sınıflar aydınlık. İyi dersler {ad}.', 'Gri bir gün {ad}; renkli kalemler hazır olsun.'],
+    yagmur: ['Yağmur yağıyor {ad}. Şemsiyenizi unutmayın, gerisini Atlas\'a bırakın.', 'Yağmurlu hava ders anlatmak için ideal; öğrenciler zaten içeride.'],
+    kar: ['Kar yağıyor {ad}. Yollar kaygan olabilir, dikkatli gelin.', 'Karlı bir gün {ad}; teneffüslerde koridorlar hareketli olabilir.'],
+    sis: ['Sis var {ad}; yolda dikkatli olun.'], simsek: ['Fırtına var {ad}; tahtalar yerinde, Atlas nöbette.'],
+    ayaz: ['Hava {derece}°C {ad}. Sıcak bir çay ve iyi dersler.'], sicak: ['Hava {derece}°C {ad}. Bol su için, sınıflar sıcak olabilir.'] };
+  const PS_HI = { gunes: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
+    ay: '<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.2 6.2 0 0 0 9.7 9.7Z"/>', bulut: '<path d="M7 18.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 9.6a4.45 4.45 0 0 0 0 8.9Z"/>',
+    parcali: '<circle cx="8.5" cy="8" r="3"/><path d="M9 19.5h8.5a3.4 3.4 0 0 0 .5-6.75 4.7 4.7 0 0 0-9 .8 3 3 0 0 0 0 5.95Z"/>', yagmur: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/>',
+    kar: '<path d="M7 13.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 4.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="M8 17v4M6.3 18l3.4 2M16 17v4M14.3 18l3.4 2"/>', sis: '<path d="M3.5 15h17M5.5 18.5h13M8 22h8M7 11.5h10"/>',
+    simsek: '<path d="M7 14.5h10.2a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 7 5.6a4.45 4.45 0 0 0 0 8.9Z"/><path d="m12.5 13-2.5 4.5h3.5L11 22"/>' };
+  const PS_RENK = { gunes: ['#1d3c66', 'rgba(255,209,102,.45)', '#ffd166'], ay: ['#1a2a55', 'rgba(176,107,255,.45)', '#d4b0ff'], parcali: ['#1b375f', 'rgba(127,246,255,.4)', '#7ff6ff'],
+    bulut: ['#1d2c45', 'rgba(160,180,210,.4)', '#b8c7dd'], yagmur: ['#14304f', 'rgba(90,168,255,.5)', '#5aa8ff'], kar: ['#1f3a5c', 'rgba(220,240,255,.6)', '#e8f6ff'],
+    sis: ['#22304a', 'rgba(170,185,205,.4)', '#c3cfdf'], simsek: ['#2a2350', 'rgba(255,209,102,.5)', '#ffd166'] };
+  const PS_HAD = { gunes: 'Güneşli', ay: 'Açık', parcali: 'Parçalı bulutlu', bulut: 'Kapalı', yagmur: 'Yağmurlu', kar: 'Karlı', sis: 'Sisli', simsek: 'Fırtınalı' };
+  async function psHava() {
+    try { const c = JSON.parse(sessionStorage.getItem('umalHava') || 'null'); if (c && Date.now() - c.t < 30 * 6e4) return c.v; } catch (e) {}
+    try { const j = await (await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.03&longitude=29.12&current=temperature_2m,weather_code,is_day&timezone=Europe%2FIstanbul')).json();
+      const v = { d: Math.round(j.current.temperature_2m), k: j.current.weather_code, gun: !!j.current.is_day }; try { sessionStorage.setItem('umalHava', JSON.stringify({ t: Date.now(), v })); } catch (e) {} return v; } catch (e) { return null; }
+  }
+  async function panelSelam() {
+    try { if (sessionStorage.getItem('umalPanelSelam') === D.eposta) return; sessionStorage.setItem('umalPanelSelam', D.eposta); } catch (e) {}
+    await kisiAdlariYukle().catch(() => {});
+    const tam = KISI.get(String(D.eposta).toLowerCase()) || '', ilk = tam ? baslik(tam).split(' ')[0] : '', hitap = ilk ? ilk + ' Hocam' : 'Hocam';
+    const s = new Date(), h = s.getHours(), gi = (s.getDay() + 6) % 7;
+    const sel = h >= 5 && h < 11 ? 'Günaydın' : h >= 11 && h < 17 ? 'İyi günler' : h >= 17 && h < 22 ? 'İyi akşamlar' : 'İyi geceler';
+    const hv = await Promise.race([psHava(), new Promise(r => setTimeout(() => r(null), 2500))]);
+    const k = hv ? hv.k : -1, gun = hv ? hv.gun : (h >= 7 && h < 18);
+    const tur = !hv ? (gun ? 'parcali' : 'ay') : k === 0 ? (gun ? 'gunes' : 'ay') : k <= 2 ? (gun ? 'parcali' : 'ay') : k === 3 ? 'bulut' : k === 45 || k === 48 ? 'sis' : (k >= 71 && k <= 77) || k === 85 || k === 86 ? 'kar' : k >= 95 ? 'simsek' : (k >= 51 && k <= 67) || (k >= 80 && k <= 82) ? 'yagmur' : 'bulut';
+    const an = hv && hv.d <= 3 && tur !== 'kar' ? 'ayaz' : hv && hv.d >= 30 ? 'sicak' : tur, L = PS_SOZ[an];
+    let soz = esc(L[Math.floor(Math.random() * L.length)].replace(/\{ad\}/g, hitap).replace(/\{derece\}/g, hv ? hv.d : ''));
+    // bugünkü dersler (ders programında adı geçiyorsa)
+    try { if (tam && gi < 5) { const P = await programYukle(), ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), D_ = [];
+      Object.entries(P.siniflar || {}).forEach(([sn, H]) => Object.entries(H || {}).forEach(([key, c]) => { const [g_, n] = key.split('-').map(Number); if (g_ !== gi || !c) return;
+        if ([].concat(c.ogretmen || []).some(x => { const o = String(x).toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(); return o === ad || o.includes(ad) || ad.includes(o); })) D_.push([n, sn]); }));
+      D_.sort((a, b) => a[0] - b[0]);
+      if (D_.length && h < 16) soz += ` Bugün <b>${D_.length} dersiniz</b> var; ilki <b>${D_[0][0]}. saat ${esc(D_[0][1])}</b>.`; } } catch (e) {}
+    if (gi === 0 && h < 12) soz += ' Haftaya güzel bir başlangıç!'; else if (gi === 4 && h >= 12) soz += ' Hafta sonu kapıda.';
+    if (h >= 0 && h < 5) soz = esc(`Bu saatte hâlâ çalışıyorsunuz ${hitap}. Biraz dinlenin, yarın görüşürüz.`);
+    const [r1, r2, r3] = PS_RENK[tur];
+    let el = document.getElementById('panelSelam'); if (!el) { el = document.createElement('div'); el.id = 'panelSelam'; el.className = 'ps-selam'; document.body.appendChild(el); }
+    el.style.cssText = `--s1:${r1};--s2:${r2};--s3:${r3}`;
+    el.innerHTML = `<div class="ps-ic"><div><div class="ps-atlas">ATLAS</div><h2>${sel}, ${esc(hitap)}</h2><div class="hv">${hv ? `Ümraniye · ${hv.d}°C · ${PS_HAD[tur]}` : s.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div><i class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${PS_HI[tur]}</svg></i><p class="sz">${soz}</p></div>`;
+    el.classList.remove('kapan'); requestAnimationFrame(() => el.classList.add('acik'));
+    const kapat = () => { el.classList.add('kapan'); setTimeout(() => el.remove(), 600); };
+    el.onclick = kapat; setTimeout(kapat, 9000);
+  }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
@@ -104,6 +155,7 @@
     $('#rolEtiket').textContent = { bas: 'Baş yönetici', yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
+    panelSelam();   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
     if (rol === 'bas') erisimRozet();
