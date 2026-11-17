@@ -229,8 +229,8 @@
     { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik', 'ogretmen'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
-    { id: 'soru', ad: 'Test Hazırla', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
-    { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
+    { id: 'soru', ad: 'Test Hazırla', roller: ['bas', 'yonetici', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
+    { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
     { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas', 'yonetici'], ciz: ogretmenlerBolumu },   // K-716y: idareye tam yetki   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
     { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
