@@ -299,7 +299,7 @@
     const ALT = { rehberlik: ['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan'].filter(altVar) };
     const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
-    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);
+    const gruplar = MENU_GRUP.filter(([g]) => !(D.rol === 'yonetici' && g === 'Öğretmen')).map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
     const kalan = [...izin].filter(id => id !== 'ozelders' && id !== 'dosyalar' && !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     const m = menuSay(), sik = [...izin].filter(id => id !== 'acil' && (m[id] || 0) >= 2).sort((x, y) => m[y] - m[x]).slice(0, 3);
     const altMi = id => ALT.rehberlik.length > 1 && ALT.rehberlik.includes(id), n_ = id => { const n = sayi(id); return n ? `<span class="mk-sayi">${n}</span>` : ''; };
@@ -4033,7 +4033,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
-    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170850'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170900'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
     let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
     window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
