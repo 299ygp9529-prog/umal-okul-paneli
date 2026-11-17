@@ -307,9 +307,11 @@
       : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
+    const OG_ACK = { takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
+      notlar: 'e-Okul notlarını öğrenciye aç', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const L = gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g]));
-      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${izin.has('dosyalar') ? `<button class="tm-gk tm-genis ${D.bolum === 'dosyalar' ? 'secili' : ''}" style="--g:#7fb2ff" data-tb="dosyalar">${menuIk('dosyalar')}<span class="tm-gad">${ad('dosyalar')}</span><small>Öğrencilere duyuru, dosya, video, test gönder</small>${n_('dosyalar')}</button>` : ''}${L.map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-gad">${ad(id)}</span><small>${esc(g)}</small>${n_(id)}</button>`).join('')}</div></div>`;
+      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-bas">Bölümler</div><div class="tm-gruplar">${izin.has('dosyalar') ? `<button class="tm-gk tm-genis ${D.bolum === 'dosyalar' ? 'secili' : ''}" style="--g:#7fb2ff" data-tb="dosyalar">${menuIk('dosyalar')}<span class="tm-gad">${ad('dosyalar')}</span><small>Öğrencilere duyuru, dosya, video, test gönder</small>${n_('dosyalar')}</button>` : ''}${L.map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-gad">${ad(id)}</span><small>${esc(OG_ACK[id] || g)}</small>${n_(id)}</button>`).join('')}</div></div>`;
     } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = (sik.length ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
@@ -4030,7 +4032,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
-    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170830'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611170840'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
     let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
     window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
