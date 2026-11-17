@@ -11,6 +11,7 @@
   const sinifSira = (a, b) => a.localeCompare(b, tr, { numeric: true });
   const tarihYaz = t => new Date(t).toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ' + new Date(t).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
   const boyutYaz = b => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  const ytId = u => (String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
   const idare = () => ['bas', 'yonetici'].includes(C.rol);
   const VARS_ANAH = () => 'atlasDdVarsayilan:' + C.eposta;
   const VARS0 = { soru: true, tepki: true, calistim: true, tahta: true, zumre: false };
@@ -109,26 +110,26 @@
     return { n: H.length, acan, anl: G.filter(g => g.tepki === 'anladim').length, tek: G.filter(g => g.tepki === 'tekrar').length, cal: G.filter(g => g.calistim).length, so: so.length, yeniSoru };
   }
   function satir(d, zumre) {
-    const o = ozet(d), tur = d.tur === 'link' ? 'LİNK' : d.tur === 'test' ? 'TEST' : (((d.dosyalar || [])[0] || {}).mime || '').includes('pdf') ? 'PDF' : (((d.dosyalar || [])[0] || {}).mime || '').startsWith('image') ? 'RESİM' : 'DOSYA';
+    const o = ozet(d), tur = d.tur === 'duyuru' ? 'DUYURU' : (d.dosyalar || []).some(f => /^video\//.test(f.mime || '')) || (d.tur === 'link' && ytId(d.link)) ? 'VİDEO' : d.tur === 'link' ? 'LİNK' : d.tur === 'test' ? 'TEST' : (((d.dosyalar || [])[0] || {}).mime || '').includes('pdf') ? 'PDF' : (((d.dosyalar || [])[0] || {}).mime || '').startsWith('image') ? 'RESİM' : 'DOSYA';
     const bekliyor = d.gorunme && new Date(d.gorunme) > new Date();
-    return `<button class="dd-satir" data-dd="${d.id}"${zumre ? ' data-zum="1"' : ''}><span class="dd-tur dd-${tur.toLowerCase().replace('İ', 'i').replace('ı', 'i')}">${tur}</span>
+    return `<button class="dd-satir" data-dd="${d.id}"${zumre ? ' data-zum="1"' : ''}><span class="dd-tur dd-${tur.toLocaleLowerCase('tr')}">${tur}</span>
       <span class="dd-ana"><b>${esc(d.baslik)}</b><small>${esc(d.ders)} · ${esc((d.ogrenciler || []).length ? d.ogrenciler.length + ' seçili öğrenci' : (d.siniflar || []).join(', '))} · ${esc(tarihYaz(d.gorunme || d.olusturma))}${zumre ? ' · ' + esc(kim(d)) : ''}${bekliyor ? ' · <span class="turuncu">zamanlı</span>' : ''}</small></span>
-      ${zumre ? '<span class="dd-al">Kendi sınıflarıma gönder</span>' : `<span class="dd-say"><b>${o.acan}/${o.n}</b><small>açtı</small></span>${d.ayar && d.ayar.tepki === false ? '' : `<span class="dd-say"><b>${o.anl}</b><small>anladım</small></span><span class="dd-say ${o.tek ? 'uyari' : ''}"><b>${o.tek}</b><small>tekrar</small></span>`}${o.so ? `<span class="dd-say ${o.yeniSoru ? 'uyari' : ''}"><b>${o.so}</b><small>${o.yeniSoru ? o.yeniSoru + ' cevapsız' : 'soru'}</small></span>` : ''}`}</button>`;
+      ${zumre ? '<span class="dd-al">Kendi sınıflarıma gönder</span>' : `<span class="dd-say"><b>${o.acan}/${o.n}</b><small>${d.tur === 'duyuru' ? 'okudu' : 'açtı'}</small></span>${d.ayar && d.ayar.tepki === false ? '' : `<span class="dd-say"><b>${o.anl}</b><small>anladım</small></span><span class="dd-say ${o.tek ? 'uyari' : ''}"><b>${o.tek}</b><small>tekrar</small></span>`}${o.so ? `<span class="dd-say ${o.yeniSoru ? 'uyari' : ''}"><b>${o.so}</b><small>${o.yeniSoru ? o.yeniSoru + ' cevapsız' : 'soru'}</small></span>` : ''}`}</button>`;
   }
   function listeCiz() {
     const ben = S.L.filter(d => d.yukleyen === C.eposta), zumAnah = new Set(S.dersler.map(C.dersAnahtar));
     const zum = S.L.filter(d => d.zumre && d.yukleyen !== C.eposta && !d.kaynak && (!zumAnah.size || zumAnah.has(C.dersAnahtar(d.ders))));
     const L = S.sekme === 'ben' ? ben : S.sekme === 'zumre' ? zum : S.L;
     const sekme = (v, ad, n) => `<button class="cip ${S.sekme === v ? 'secili' : ''}" data-sekme="${v}">${ad}${n != null ? ` <small>${n}</small>` : ''}</button>`;
-    kok.innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Ders Dosyaları</h1><div class="soluk kucuk">Öğrencilere dosya, link ya da test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
-      <div class="dugmeler" style="margin:0">${idare() ? '<button class="ikincil" id="ddAyar">Depolama · Ayarlar</button>' : ''}<button class="birincil" id="ddYeni"${S.url ? '' : ' disabled'}>+ Yeni dosya</button></div></div>
+    kok.innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Ders Dosyaları</h1><div class="soluk kucuk">Sınıflarınıza duyuru, dosya, link, video ya da test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
+      <div class="dugmeler" style="margin:0">${idare() ? '<button class="ikincil" id="ddAyar">Depolama · Ayarlar</button>' : ''}<button class="birincil" id="ddYeni"${S.url ? '' : ' disabled'}>+ Yeni paylaşım</button></div></div>
       ${S.url ? '' : `<div class="kart dd-kurulum"><b>Drive bağlantısı henüz kurulmadı.</b><div class="soluk kucuk">${C.rol === 'bas' ? 'Depolama · Ayarlar\'dan Atlas Drive köprüsünün adresini girin.' : 'Kurulum baş yönetici tarafından yapılacak.'}</div></div>`}
       <div class="cipler">${sekme('ben', 'Gönderdiklerim', ben.length)}${sekme('zumre', 'Zümre paylaşımları', zum.length)}${idare() ? sekme('hepsi', 'Okulun tümü', S.L.length) : ''}</div>
       <div class="dd-liste">${L.length ? L.map(d => satir(d, S.sekme === 'zumre')).join('') : `<div class="kart soluk" style="text-align:center">${S.sekme === 'zumre' ? 'Zümrenizden paylaşılan dosya yok. Bir öğretmen gönderirken "Zümreyle paylaş"ı işaretleyince burada görünür.' : 'Henüz dosya göndermediniz.'}</div>`}</div>`;
     kok.onclick = ev => {
       const sk = ev.target.closest('[data-sekme]'); if (sk) { S.sekme = sk.dataset.sekme; listeCiz(); return; }
       const r = ev.target.closest('[data-dd]'); if (r) { const d = S.L.find(x => x.id === r.dataset.dd); if (!d) return;
-        if (r.dataset.zum) { S.T = yeniTaslak(); Object.assign(S.T, { baslik: d.baslik, ders: d.ders, aciklama: d.aciklama || '', tur: d.tur, mevcut: d.dosyalar || [], link: d.link || '', ses: d.ses, sinav: d.sinav, cevapMevcut: d.cevap, test: d.test ? d.test.anahtar : '', kaynak: d.id }); S.ekran = 'yeni'; ciz(); return; }
+        if (r.dataset.zum) { S.T = yeniTaslak(); Object.assign(S.T, { baslik: d.baslik, ders: d.ders, aciklama: d.aciklama || '', mevcut: d.dosyalar || [], linkler: (d.linkler && d.linkler.length ? d.linkler : d.link ? [d.link] : []).slice(), ses: d.ses, sinav: d.sinav, cevapMevcut: d.cevap, test: d.test ? d.test.anahtar : '', kaynak: d.id }); S.ekran = 'yeni'; ciz(); return; }
         S.sec = d.id; S.tsinif = ''; S.ekran = 'takip'; ciz(); return; }
       if (ev.target.id === 'ddYeni') { S.T = yeniTaslak(); S.ekran = 'yeni'; ciz(); }
       if (ev.target.id === 'ddAyar') { S.ekran = 'ayar'; ciz(); }
@@ -136,29 +137,30 @@
   }
 
   // ---------------------------------------------------------------- gönder
-  function yeniTaslak() { return { baslik: '', ders: S.dersler[0] || '', aciklama: '', siniflar: [], ogrenciler: [], dosyalar: [], mevcut: [], link: '', tur: 'dosya', sinav: null, gorunme: '', cevap: null, cevapMevcut: null, cevapAcilis: 'sinav', cevapZaman: '', test: '', ses: null, sesBlob: null, ayar: varsayilan(), zumre: varsayilan().zumre, acik: false }; }
+  function yeniTaslak() { return { baslik: '', ders: S.dersler[0] || '', aciklama: '', siniflar: [], ogrenciler: [], dosyalar: [], mevcut: [], linkler: [], testAcik: false, sinav: null, gorunme: '', cevap: null, cevapMevcut: null, cevapAcilis: 'sinav', cevapZaman: '', test: '', ses: null, sesBlob: null, ayar: varsayilan(), zumre: varsayilan().zumre, acik: false }; }
   function yeniCiz() {
     const T = S.T, O = C.ogrenciler(), tum = [...new Set(O.map(o => o.sinif))].sort(sinifSira), benim = S.siniflarim.filter(s => tum.includes(s)), diger = tum.filter(s => !benim.includes(s));
     const n = T.ogrenciler.length || O.filter(o => T.siniflar.includes(o.sinif)).length;
     const cip = (s) => `<button class="cip ${T.siniflar.includes(s) ? 'secili' : ''}" data-sinif="${esc(s)}">${esc(s)}</button>`;
     const isaret = (k, ad, alt) => `<label class="dd-isaret"><input type="checkbox" data-ayar="${k}" ${(k === 'zumre' ? T.zumre : T.ayar[k]) ? 'checked' : ''}><span><b>${ad}</b>${alt ? `<small>${alt}</small>` : ''}</span></label>`;
-    const dosyalar = [...T.mevcut.map((f, i) => `<div class="dd-dosya"><span>${esc(f.ad)}</span><small>${f.boyut ? boyutYaz(f.boyut) : 'zümreden'}</small><button class="bag" data-mevcutsil="${i}">Kaldır</button></div>`),
+    const dosyalar = [...T.linkler.map((l, i) => `<div class="dd-dosya"><span>🔗 ${esc(l)}</span><small>${ytId(l) ? 'YouTube videosu' : 'link'}</small><button class="bag" data-linksil="${i}">Kaldır</button></div>`),
+      ...T.mevcut.map((f, i) => `<div class="dd-dosya"><span>${esc(f.ad)}</span><small>${f.url ? 'test' : f.boyut ? boyutYaz(f.boyut) : 'zümreden'}</small><button class="bag" data-mevcutsil="${i}">Kaldır</button></div>`),
       ...T.dosyalar.map((f, i) => `<div class="dd-dosya"><span>${esc(f.name)}</span><small>${boyutYaz(f.size)}</small><button class="bag" data-dosyasil="${i}">Kaldır</button></div>`)].join('');
     const ogrSec = T.ogrSecAcik ? `<div class="dd-ogrsec">${T.siniflar.length ? O.filter(o => T.siniflar.includes(o.sinif)).map(o => `<label><input type="checkbox" data-ogr="${esc(o.no)}" ${T.ogrenciler.includes(String(o.no)) ? 'checked' : ''}>${esc(o.sinif)} · ${esc(o.no)} ${esc(C.baslik(o.ad))}</label>`).join('') : '<span class="soluk kucuk">Önce sınıf seçin.</span>'}</div>` : '';
     kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button>${T.kaynak ? '<span class="neon-tabela">Zümreden</span>' : ''}</div>
       <div class="dd-gonder">
         <div class="kart dd-form">
-          <div class="dd-kaynak">
-            <button class="cip ${T.tur === 'dosya' ? 'secili' : ''}" data-tur="dosya">Dosya</button><button class="cip ${T.tur === 'link' ? 'secili' : ''}" data-tur="link">Link</button><button class="cip ${T.tur === 'test' ? 'secili' : ''}" data-tur="test">Testlerden</button>
-          </div>
-          ${T.tur === 'link' ? `<label class="dd-alan"><span>Link (YouTube, EBA, site)</span><input id="ddLink" type="url" placeholder="https://" value="${esc(T.link)}"></label>`
-            : T.tur === 'test' ? `<div class="dd-alan"><span>Test</span><div id="ddTestler" class="dd-testler">${T.mevcut.length ? '' : '<span class="soluk kucuk">Testler yükleniyor…</span>'}</div></div>`
-            : `<div class="dd-birak" id="ddBirak"><b>Dosyaları seçin ya da buraya bırakın</b><small>PDF, resim, Word, PowerPoint · en çok 25 MB · resimler ve taranmış büyük PDF'ler kendiliğinden küçülür</small><button class="ikincil" id="ddSec">Dosya seç</button><input type="file" id="ddDosya" multiple accept=".pdf,image/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" style="display:none"></div>`}
-          <div class="dd-dosyalar">${dosyalar}</div>
-          <label class="dd-alan"><span>Başlık</span><input id="ddBaslik" maxlength="160" value="${esc(T.baslik)}" placeholder="Ör. Parabol çalışma kâğıdı"></label>
-          <label class="dd-alan"><span>Ders</span><input id="ddDers" maxlength="80" list="ddDersler" value="${esc(T.ders)}"><datalist id="ddDersler">${S.dersler.map(d => `<option value="${esc(d)}">`).join('')}</datalist></label>
+          <label class="dd-alan"><span>Başlık</span><input id="ddBaslik" maxlength="160" value="${esc(T.baslik)}" placeholder="Ör. Parabol çalışma kâğıdı · Veli toplantısı"></label>
+          <label class="dd-alan"><span>Ders</span><input id="ddDers" maxlength="80" list="ddDersler" placeholder="Ör. Matematik · boş kalırsa Genel" value="${esc(T.ders)}"><datalist id="ddDersler">${S.dersler.map(d => `<option value="${esc(d)}">`).join('')}</datalist></label>
           <div class="dd-alan"><span>Sınıflar</span><div class="cipler">${benim.map(cip).join('')}${!benim.length ? diger.map(cip).join('') : diger.length ? `<details class="dd-diger"${diger.some(x => T.siniflar.includes(x)) ? ' open' : ''}><summary class="cip">Diğer sınıflar</summary><div class="cipler">${diger.map(cip).join('')}</div></details>` : ''}</div></div>
-          <label class="dd-alan"><span>Öğrencilere not</span><textarea id="ddNot" rows="3" maxlength="2000" placeholder="Ne yapacaklar, ne zamana kadar?">${esc(T.aciklama)}</textarea></label>
+          <label class="dd-alan"><span>Yazı</span><textarea id="ddNot" rows="4" maxlength="2000" placeholder="Duyurunuz ya da öğrencilere notunuz. Yalnız yazı gönderirseniz duyuru olur.">${esc(T.aciklama)}</textarea></label>
+          <div class="dd-alan"><span>Ekler <small class="soluk">· isteğe bağlı, istediğiniz kadar</small></span>
+            <div class="dd-birak" id="ddBirak"><b>Dosya ya da kısa video ekleyin</b><small>PDF, resim, Word, PowerPoint, video · her biri en çok 25 MB · resimler ve taranmış büyük PDF'ler kendiliğinden küçülür</small>
+              <div class="dugmeler" style="margin:4px 0 0;justify-content:center"><button class="ikincil" id="ddSec">Dosya / video seç</button><button class="ikincil" id="ddTestAc">Testlerden seç</button></div>
+              <input type="file" id="ddDosya" multiple accept=".pdf,image/*,video/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" style="display:none"></div>
+            ${T.testAcik ? `<div id="ddTestler" class="dd-testler"><span class="soluk kucuk">Testler yükleniyor…</span></div>` : ''}
+            <div class="dd-ikili"><input id="ddLink" type="url" placeholder="Link ekle: YouTube, EBA, site (https://…)"><button class="ikincil" id="ddLinkEkle" style="flex:0 0 auto">+ Link</button></div>
+            <div class="dd-dosyalar">${dosyalar}</div></div>
           <details class="dd-fazla" ${T.acik ? 'open' : ''} id="ddFazla"><summary>Daha fazla seçenek</summary>
             <div class="dd-fgrup"><b>Kime</b>
               <label class="dd-isaret"><input type="checkbox" id="ddOgrSec" ${T.ogrSecAcik ? 'checked' : ''}><span><b>Yalnız seçili öğrencilere</b><small>${T.ogrenciler.length ? T.ogrenciler.length + ' öğrenci seçildi' : 'Seçilen sınıflardan öğrenci işaretleyin'}</small></span></label>${ogrSec}</div>
@@ -185,7 +187,7 @@
         <div class="dd-onizleme">${onizleme()}</div>
       </div>`;
     baglaYeni();
-    if (T.tur === 'test') testleriCiz();
+    if (T.testAcik) testleriCiz();
   }
   function onizleme() { const T = S.T; return `<span class="soluk kucuk">Öğrenci böyle görecek</span><div class="kart dd-okart"><div class="dd-oust"><span class="dd-yeni">YENİ</span><small>${esc(T.ders || 'Ders')} · ${T.gorunme ? esc(tarihYaz(T.gorunme)) : 'şimdi'}</small></div><b>${esc(T.baslik || 'Başlık')}</b>${T.aciklama ? `<p>${esc(T.aciklama)}</p>` : ''}${T.sinav && T.sinav.konu ? `<small class="turuncu">Sınavda çıkacak: ${esc(T.sinav.konu)}</small>` : ''}${T.test ? `<small class="neon">Atlas testi · ${T.test.replace(/[^A-E]/g, '').length} soru</small>` : ''}${T.ses || T.sesBlob ? '<small class="soluk">▶ Sesli açıklama</small>' : ''}</div>`; }
   function sesDugmeler() { const T = S.T; if (T && T.kayit) return '<button class="tehlike" id="ddSesDur">■ Durdur</button><span class="soluk kucuk" id="ddSesSure">Kaydediliyor…</span>';
@@ -193,15 +195,14 @@
     return '<button class="ikincil" id="ddSesKaydet">● Kaydet (en çok 90 sn)</button>'; }
   async function testleriCiz() {
     const el = $('#ddTestler'); if (!el) return; const T = S.T;
-    if (T.mevcut.length) { el.innerHTML = `<div class="dd-dosya"><span>${esc(T.mevcut[0].ad)}</span><button class="bag" data-mevcutsil="0">Değiştir</button></div>`; return; }
     const { data } = await C.sb.from('umal_testler').select('id,ad,sinif,brans,hazirlayan,eposta,soru_sayisi,yol').order('olusturma', { ascending: false }).limit(200);
     const L = (data || []); if (!L.length) { el.innerHTML = '<span class="soluk kucuk">Testlerde kayıt yok. Test Hazırla\'dan test hazırlayın.</span>'; return; }
     el.innerHTML = L.map(r => `<button class="dd-test" data-test="${r.id}"><b>${esc(r.ad)}</b><small>${esc([r.sinif, r.brans, r.soru_sayisi ? r.soru_sayisi + ' soru' : '', r.eposta === C.eposta ? 'benim' : r.hazirlayan].filter(Boolean).join(' · '))}</small></button>`).join('');
     el.onclick = ev => { const b = ev.target.closest('[data-test]'); if (!b) return; const r = L.find(x => x.id === b.dataset.test);
-      T.mevcut = [{ url: `${C.URL_}/storage/v1/object/public/umal-testler/${encodeURIComponent(r.yol)}`, ad: r.ad + '.pdf', mime: 'application/pdf' }]; if (!T.baslik) T.baslik = r.ad; if (!T.ders && r.brans) T.ders = r.brans; yeniCiz(); };
+      oku(); T.mevcut.push({ url: `${C.URL_}/storage/v1/object/public/umal-testler/${encodeURIComponent(r.yol)}`, ad: r.ad + '.pdf', mime: 'application/pdf' }); if (!T.baslik) T.baslik = r.ad; if (!T.ders && r.brans) T.ders = r.brans; T.testAcik = false; yeniCiz(); };
   }
   function oku() { const T = S.T; const g = id => $(id);
-    if (g('#ddBaslik')) T.baslik = g('#ddBaslik').value; if (g('#ddDers')) T.ders = g('#ddDers').value; if (g('#ddNot')) T.aciklama = g('#ddNot').value; if (g('#ddLink')) T.link = g('#ddLink').value.trim();
+    if (g('#ddBaslik')) T.baslik = g('#ddBaslik').value; if (g('#ddDers')) T.ders = g('#ddDers').value; if (g('#ddNot')) T.aciklama = g('#ddNot').value;
     if (g('#ddFazla')) T.acik = g('#ddFazla').open;
     if (g('#ddSinav')) { const v = g('#ddSinav').value; T.sinav = v ? { donem: v.split('|')[0], no: v.split('|')[1], konu: g('#ddKonu').value.trim() } : null; }
     if (g('#ddGorunme')) T.gorunme = g('#ddGorunme').value === 'z' ? g('#ddGorZaman').value : '';
@@ -212,8 +213,9 @@
   function baglaYeni() {
     const T = S.T;
     kok.oninput = ev => { if (['ddBaslik', 'ddNot', 'ddDers', 'ddKonu', 'ddAnahtar'].includes(ev.target.id)) { oku(); const p = kok.querySelector('.dd-onizleme'); if (p) p.innerHTML = onizleme(); } };
+    kok.onkeydown = ev => { if (ev.target.id === 'ddLink' && ev.key === 'Enter') { ev.preventDefault(); const b = $('#ddLinkEkle'); if (b) b.click(); } };
     kok.onchange = ev => { const t = ev.target;
-      if (t.id === 'ddDosya') { oku(); [...t.files].forEach(f => { if (f.size > 25 * 1048576) C.uyar(f.name + ' 25 MB\'tan büyük, eklenmedi.'); else T.dosyalar.push(f); }); if (!T.baslik && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); return; }
+      if (t.id === 'ddDosya') { oku(); [...t.files].forEach(f => { if (f.size > 25 * 1048576) C.uyar(f.name + ' 25 MB\'tan büyük, eklenmedi.'); else T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); return; }
       if (t.id === 'ddCevap') { if (t.files[0]) T.cevap = t.files[0]; oku(); yeniCiz(); return; }
       if (t.id === 'ddGorunme') { $('#ddGorZaman').disabled = t.value !== 'z'; }
       if (t.id === 'ddCevapAc') { $('#ddCevapZaman').disabled = t.value !== 'z'; }
@@ -221,10 +223,12 @@
       if (t.dataset.ogr) { const no = t.dataset.ogr; T.ogrenciler = t.checked ? [...new Set([...T.ogrenciler, no])] : T.ogrenciler.filter(x => x !== no); oku(); const b = $('#ddGonder'); if (b) b.textContent = `Gönder · ${T.ogrenciler.length} öğrenci`; return; }
       oku(); };
     const birak = $('#ddBirak'); if (birak) { birak.ondragover = e => { e.preventDefault(); birak.classList.add('ustte'); }; birak.ondragleave = () => birak.classList.remove('ustte');
-      birak.ondrop = e => { e.preventDefault(); birak.classList.remove('ustte'); oku(); [...e.dataTransfer.files].forEach(f => { if (f.size <= 25 * 1048576) T.dosyalar.push(f); }); if (!T.baslik && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); }; }
+      birak.ondrop = e => { e.preventDefault(); birak.classList.remove('ustte'); oku(); [...e.dataTransfer.files].forEach(f => { if (f.size <= 25 * 1048576) T.dosyalar.push(f); }); if (!T.baslik && !T.aciklama.trim() && T.dosyalar[0]) T.baslik = T.dosyalar[0].name.replace(/\.\w+$/, '').replace(/[-_]+/g, ' '); yeniCiz(); }; }
     kok.onclick = async ev => { const t = ev.target, b = t.closest('button'); if (!b) return;
       if (b.id === 'ddGeri') { if ((T.dosyalar.length || T.baslik) && !await C.onayla('Gönderilmemiş dosya silinsin mi?')) return; S.ekran = 'liste'; ciz(); return; }
-      if (b.dataset.tur) { oku(); T.tur = b.dataset.tur; if (T.tur !== 'test' && T.mevcut.some(f => f.url)) T.mevcut = []; yeniCiz(); return; }
+      if (b.id === 'ddTestAc') { oku(); T.testAcik = !T.testAcik; yeniCiz(); return; }
+      if (b.id === 'ddLinkEkle') { oku(); let l = $('#ddLink').value.trim(); if (l && !/^https?:\/\//i.test(l)) l = 'https://' + l; if (!/^https?:\/\/\S+\.\S+/.test(l)) { C.uyar('Geçerli bir link yazın.'); return; } T.linkler.push(l); yeniCiz(); return; }
+      if (b.dataset.linksil != null) { oku(); T.linkler.splice(+b.dataset.linksil, 1); yeniCiz(); return; }
       if (b.dataset.sinif) { oku(); const s = b.dataset.sinif; T.siniflar = T.siniflar.includes(s) ? T.siniflar.filter(x => x !== s) : [...T.siniflar, s]; T.ogrenciler = T.ogrenciler.filter(no => C.ogrenciler().some(o => String(o.no) === no && T.siniflar.includes(o.sinif))); yeniCiz(); return; }
       if (b.id === 'ddSec') { $('#ddDosya').click(); return; }
       if (b.dataset.dosyasil != null) { oku(); T.dosyalar.splice(+b.dataset.dosyasil, 1); yeniCiz(); return; }
@@ -260,10 +264,10 @@
   async function gonder() {
     const T = S.T, bil = $('#ddBilgi'), hata = m => { bil.className = 'kucuk kirmizi'; bil.textContent = m; }, durum = m => { bil.className = 'kucuk soluk'; bil.textContent = m; };
     T.baslik = T.baslik.trim(); T.ders = T.ders.trim();
-    if (T.tur === 'dosya' && !T.dosyalar.length && !T.mevcut.length) return hata('Dosya seçin.');
-    if (T.tur === 'link' && !/^https?:\/\/\S+\.\S+/.test(T.link)) return hata('Geçerli bir link yazın (https:// ile).');
-    if (T.tur === 'test' && !T.mevcut.length) return hata('Testlerden birini seçin.');
-    if (!T.baslik) return hata('Başlık yazın.'); if (!T.ders) return hata('Dersi yazın.');
+    { const l = ($('#ddLink') && $('#ddLink').value.trim()) || ''; if (l) { if (!/^https?:\/\/\S+\.\S+/i.test(l.startsWith('http') ? l : 'https://' + l)) return hata('Link kutusundaki adres geçersiz.'); T.linkler.push(l.startsWith('http') ? l : 'https://' + l); $('#ddLink').value = ''; } }
+    if (!T.aciklama.trim() && !T.dosyalar.length && !T.mevcut.length && !T.linkler.length && !T.sesBlob && !T.ses) return hata('Bir yazı yazın ya da ek ekleyin.');
+    if (!T.baslik) T.baslik = T.aciklama.trim().split('\n')[0].slice(0, 80) || (T.dosyalar[0] && T.dosyalar[0].name.replace(/\.\w+$/, '')) || '';
+    if (!T.baslik) return hata('Başlık yazın.'); if (!T.ders) T.ders = 'Genel';
     if (!T.siniflar.length) return hata('En az bir sınıf seçin.');
     if (T.ogrSecAcik && !T.ogrenciler.length) return hata('Seçili öğrenci yok.');
     const anahtar = T.test.replace(/[^A-E]/g, '');
@@ -274,7 +278,7 @@
       const dosyalar = T.mevcut.slice();
       for (let i = 0; i < T.dosyalar.length; i++) {
         let f = T.dosyalar[i]; durum(`${f.name} hazırlanıyor…`);
-        f = f.type === 'application/pdf' ? await pdfKucult(f, durum) : await resimKucult(f);
+        f = f.type === 'application/pdf' ? await pdfKucult(f, durum) : /^video\//.test(f.type) ? f : await resimKucult(f);
         durum(`Yükleniyor ${i + 1}/${T.dosyalar.length} · ${f.name} (${boyutYaz(f.size)})`);
         dosyalar.push(await driveYukle(f, f.name, f.type));
       }
@@ -284,7 +288,7 @@
         if (T.cevap) { durum('Kilitli ek yükleniyor…'); const c = await driveYukle(await (T.cevap.type === 'application/pdf' ? pdfKucult(T.cevap, durum) : resimKucult(T.cevap)), T.cevap.name, T.cevap.type); cevap = { id: c.id, ad: c.ad, mime: c.mime, acilis }; }
         else cevap = Object.assign({}, T.cevapMevcut, { acilis }); }
       durum('Kaydediliyor…');
-      const kayit = { yukleyen_ad: S.ad || null, ders: T.ders, baslik: T.baslik, aciklama: T.aciklama.trim() || null, tur: T.tur, dosyalar, link: T.tur === 'link' ? T.link : null, ses, siniflar: T.siniflar, ogrenciler: T.ogrenciler,
+      const kayit = { yukleyen_ad: S.ad || null, ders: T.ders, baslik: T.baslik, aciklama: T.aciklama.trim() || null, tur: anahtar && dosyalar.length ? 'test' : dosyalar.length ? 'dosya' : T.linkler.length ? 'link' : 'duyuru', dosyalar, link: T.linkler[0] || null, linkler: T.linkler, ses, siniflar: T.siniflar, ogrenciler: T.ogrenciler,
         sinav: T.sinav, gorunme: T.gorunme ? new Date(T.gorunme).toISOString() : null, cevap, test: anahtar ? { anahtar, n: anahtar.length } : null, ayar: T.ayar, zumre: !!T.zumre, kaynak: T.kaynak || null };
       const { data, error } = await C.sb.from('umal_dd').insert(kayit).select().single(); if (error) throw error;
       S.L.unshift(data); S.T = null; S.sec = data.id; S.ekran = 'takip'; S.sekme = 'ben'; ciz();
@@ -306,10 +310,10 @@
     const kilit = d.cevap ? (d.cevap.acilis && new Date(d.cevap.acilis) > new Date() ? `kilitli ek ${tarihYaz(d.cevap.acilis)} tarihinde açılacak` : 'kilitli ek açıldı') : '';
     kok.innerHTML = `<div class="sinav-ust" style="margin-top:0"><button class="ikincil" id="ddGeri">← Ders Dosyaları</button><span class="soluk">${esc(d.ders)} · ${esc(tarihYaz(d.gorunme || d.olusturma))}${d.gorunme && new Date(d.gorunme) > new Date() ? ' · <b class="turuncu">henüz görünmüyor</b>' : ''}</span></div>
       <div class="rv-bas"><div><h1 style="margin:0">${esc(d.baslik)}</h1><div class="soluk kucuk">${esc(kim(d))}${d.sinav && d.sinav.konu ? ' · sınav konusu: ' + esc(d.sinav.konu) : ''}${kilit ? ' · ' + esc(kilit) : ''}${d.zumre ? ' · zümreyle paylaşıldı' : ''}${d.ayar && d.ayar.tahta ? ' · tahtada' : ''}</div></div>
-        <div class="dugmeler" style="margin:0">${(d.dosyalar || []).map((f, i) => `<button class="ikincil" data-ac="${i}">Aç${d.dosyalar.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}${d.link ? `<a class="ikincil" href="${esc(d.link)}" target="_blank" rel="noopener">Linki aç</a>` : ''}${d.ses ? '<button class="ikincil" id="ddSesDinle">▶ Sesli açıklama</button>' : ''}${benim ? '<button class="tehlike" id="ddSil">Sil</button>' : ''}</div></div>
+        <div class="dugmeler" style="margin:0">${(d.dosyalar || []).map((f, i) => `<button class="ikincil" data-ac="${i}">Aç${d.dosyalar.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}${(d.linkler && d.linkler.length ? d.linkler : d.link ? [d.link] : []).map((l, i, A) => `<a class="ikincil" href="${esc(l)}" target="_blank" rel="noopener">${ytId(l) ? 'Video' : 'Link'}${A.length > 1 ? ' ' + (i + 1) : ''}</a>`).join('')}${d.ses ? '<button class="ikincil" id="ddSesDinle">▶ Sesli açıklama</button>' : ''}${benim ? '<button class="tehlike" id="ddSil">Sil</button>' : ''}</div></div>
       ${d.aciklama ? `<div class="kart soluk" style="white-space:pre-line">${esc(d.aciklama)}</div>` : ''}
       ${sinifL.length > 1 ? `<div class="cipler"><button class="cip ${!S.tsinif ? 'secili' : ''}" data-ts="">Hepsi</button>${sinifL.map(s => `<button class="cip ${S.tsinif === s ? 'secili' : ''}" data-ts="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
-      <div class="dd-sayilar"><div><small>Açtı</small><b>${acan.length}<span>/ ${HS.length}</span></b></div>${d.ayar && d.ayar.tepki === false ? '' : `<div><small>Anladım</small><b>${say(g => g.tepki === 'anladim')}</b></div><div class="${say(g => g.tepki === 'tekrar') ? 'uyari' : ''}"><small>Tekrar anlatılsın</small><b>${say(g => g.tepki === 'tekrar')}</b></div>`}${d.ayar && d.ayar.calistim === false ? '' : `<div><small>Çalıştım</small><b>${say(g => g.calistim)}</b></div>`}${d.test ? `<div><small>Test · ortalama doğru</small><b>${ort}<span>/ ${d.test.n} · ${testler.length} kişi</span></b></div>` : ''}</div>
+      <div class="dd-sayilar"><div><small>${d.tur === 'duyuru' ? 'Okudu' : 'Açtı'}</small><b>${acan.length}<span>/ ${HS.length}</span></b></div>${d.ayar && d.ayar.tepki === false ? '' : `<div><small>Anladım</small><b>${say(g => g.tepki === 'anladim')}</b></div><div class="${say(g => g.tepki === 'tekrar') ? 'uyari' : ''}"><small>Tekrar anlatılsın</small><b>${say(g => g.tepki === 'tekrar')}</b></div>`}${d.ayar && d.ayar.calistim === false ? '' : `<div><small>Çalıştım</small><b>${say(g => g.calistim)}</b></div>`}${d.test ? `<div><small>Test · ortalama doğru</small><b>${ort}<span>/ ${d.test.n} · ${testler.length} kişi</span></b></div>` : ''}</div>
       ${d.test && testler.length ? `<div class="kart"><h2 style="margin-top:0">Soru soru doğru oranı</h2><div class="dd-analiz">${soruAnaliz.map(x => `<div title="Soru ${x.i}: %${x.y}"><i style="height:${Math.max(4, x.y)}%;background:${x.y < 50 ? 'var(--turuncu)' : 'var(--neon)'}"></i><small>${x.i}</small></div>`).join('')}</div><div class="soluk kucuk">Turuncu sütunlar: sınıfın yarısından azının doğru yaptığı sorular.</div></div>` : ''}
       <div class="dd-takip">
         <div class="kart"><div class="dd-kbas"><h2 style="margin:0">Öğrenciler</h2>${benim && acmayan.length ? `<button class="ikincil" id="ddHatirlat">Açmayan ${acmayan.length} kişiye hatırlat</button>` : ''}</div>

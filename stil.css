@@ -1482,7 +1482,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
 .dd-satir { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 13px; padding: 10px 14px; color: var(--yazi); cursor: pointer; }
 .dd-satir:hover { border-color: rgba(34,232,255,.6); }
 .dd-tur { flex: none; width: 46px; height: 50px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 800; color: #fff; background: #3b6fb0; text-transform: none; }
-.dd-tur.dd-pdf { background: #d9473d; } .dd-tur.dd-link { background: #2f8f6a; } .dd-tur.dd-test { background: #8a5cd6; } .dd-tur.dd-resim { background: #2f7fc4; }
+.dd-tur.dd-pdf { background: #d9473d; } .dd-tur.dd-duyuru { background: #e07b2a; } .dd-tur.dd-video { background: #c2185b; } .dd-tur.dd-link { background: #2f8f6a; } .dd-tur.dd-test { background: #8a5cd6; } .dd-tur.dd-resim { background: #2f7fc4; }
 .dd-ana { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .dd-ana b { font-size: 15px; } .dd-ana small { color: var(--soluk); }
 .dd-say { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 58px; } .dd-say b { font-size: 17px; } .dd-say small { color: var(--soluk); font-size: 11.5px; }
 .dd-say.uyari b, .dd-say.uyari small { color: #ffb867; }

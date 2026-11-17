@@ -1130,7 +1130,7 @@
   }
   function ddKutu() {
     if (!DD.L.length) return ''; const y = ddYeni(), h = ddHatir(), yk = ddYaklasan(), zarf = y.length || h.length;
-    const alt = h.length ? 'Öğretmenin hatırlattı: ' + h[0].baslik : y.length ? (y.length > 1 ? y.length + ' yeni dosya' : 'Yeni: ' + y[0].baslik) : yk.length ? `Sınava ${Math.max(0, Math.ceil((new Date(yk[0].x.tarih + 'T12:00') - simdi()) / 864e5))} gün: ${yk[0].D.length} dosya` : DD.L[0].ders + ' · ' + DD.L[0].baslik;
+    const alt = h.length ? 'Öğretmenin hatırlattı: ' + h[0].baslik : y.length ? (y.length > 1 ? y.length + ' yeni paylaşım' : (y[0].tur === 'duyuru' ? 'Yeni duyuru: ' : 'Yeni: ') + y[0].baslik) : yk.length ? `Sınava ${Math.max(0, Math.ceil((new Date(yk[0].x.tarih + 'T12:00') - simdi()) / 864e5))} gün: ${yk[0].D.length} dosya` : DD.L[0].ders + ' · ' + DD.L[0].baslik;
     return `<button data-git="dd" class="genis no-ana ${zarf ? 'yeni' : ''}">${zarf ? ZARF : ''}<i class="ik" style="--c:#7fb2ff">${svg('dosya')}</i><span><b>Ders Dosyaları</b><small>${esc(alt.length > 44 ? alt.slice(0, 43) + '…' : alt)}</small></span>${y.length ? `<span class="so-mini"><b style="color:#7fb2ff">${y.length}</b><small>yeni</small></span>` : ''}</button>`;
   }
   // önbellek (IndexedDB): bir kez açılan dosya yeniden indirilmez, internetsiz de açılır
@@ -1156,6 +1156,7 @@
         for (let i = 1; i <= Math.min(doc.numPages, 60); i++) { const p = await doc.getPage(i), v0 = p.getViewport({ scale: 1 }), v = p.getViewport({ scale: gen / v0.width * dpr });
           const cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height; cv.style.width = '100%'; kap.appendChild(cv); await p.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise; }
       } else if (/^image\//.test(mime)) el.innerHTML = `<img class="dd-resim" src="${u}" alt="${esc(f.ad || '')}">`;
+      else if (/^video\//.test(mime)) el.innerHTML = `<video class="dd-video" controls playsinline preload="metadata" src="${u}"></video>`;
       else if (/^audio\//.test(mime)) el.innerHTML = `<audio controls src="${u}" style="width:100%"></audio>`;
       else el.innerHTML = `<a class="dd-indir buyuk" href="${u}" download="${esc(f.ad || 'dosya')}">${esc(f.ad || 'Dosya')} · indir ve aç</a>`;
     } catch (e) { el.innerHTML = `<div class="dd-yuk hata">Açılamadı: ${esc(e.message || e)}. İnternet bağlantını kontrol edip yeniden dene.</div>`; }
@@ -1172,7 +1173,9 @@
     if (d.cevap && !d.cevap.acik) return ['Kilitli ek', 'tur'];
     return b.acti ? ['Açtın', ''] : ['', ''];
   }
-  const ddTur = d => d.tur === 'link' ? ['LİNK', '#2f8f6a'] : d.tur === 'test' ? ['TEST', '#8a5cd6'] : /pdf/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['PDF', '#d9473d'] : /^image/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['RESİM', '#2f7fc4'] : ['DOSYA', '#3b6fb0'];
+  const ddYt = u => (String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
+  const ddLinkler = d => (d.linkler && d.linkler.length ? d.linkler : d.link ? [d.link] : []);
+  const ddTur = d => d.tur === 'duyuru' ? ['DUYURU', '#e07b2a'] : (d.dosyalar || []).some(f => /^video\//.test(f.mime || '')) || ddLinkler(d).some(ddYt) && !(d.dosyalar || []).length ? ['VİDEO', '#c2185b'] : d.tur === 'link' ? ['LİNK', '#2f8f6a'] : d.tur === 'test' ? ['TEST', '#8a5cd6'] : /pdf/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['PDF', '#d9473d'] : /^image/.test(((d.dosyalar || [])[0] || {}).mime || '') ? ['RESİM', '#2f7fc4'] : ['DOSYA', '#3b6fb0'];
   function ddKart(d) { const [e, c] = ddEtiket(d), [t, r] = ddTur(d), z = new Date(d.zaman);
     return `<button class="dd-k ${c === 'yeni' ? 'yeni' : ''}" data-ddac="${d.id}"><span class="dd-t" style="background:${r}">${t}</span><span class="dd-m"><b>${esc(d.baslik)}</b><small>${esc(d.ders)} · ${z.getDate()} ${AY[z.getMonth()]}${d.ses ? ' · sesli' : ''}${d.sinav && d.sinav.konu ? ' · sınav konusu' : ''}</small></span>${e ? `<span class="dd-e ${c}">${esc(e)}</span>` : ''}</button>`; }
   function ddListeCiz() {
@@ -1196,12 +1199,12 @@
       : `<div class="kart dd-testk"><h2>Cevaplarını işaretle · ${d.test.n} soru</h2><div class="dd-sik">${Array.from({ length: d.test.n }, (_, i) => `<div><small>${i + 1}</small>${'ABCDE'.split('').map(h => `<button class="${T[i] === h ? 'secili' : ''}" data-sik="${i}|${h}">${h}</button>`).join('')}</div>`).join('')}</div><button class="birincil" id="ddTestGonder" style="width:100%;margin-top:10px">Gönder · ${T.filter(Boolean).length}/${d.test.n} işaretli</button><div class="not">Bir kez gönderilir; sonucu ve doğru cevapları hemen görürsün.</div></div>`) : '';
     $('#ddIc').innerHTML = `<div class="kart dd-bas"><div class="soluk kucuk">${esc(d.ogretmen || 'Öğretmenin')} · ${z.getDate()} ${AY[z.getMonth()]} ${String(z.getHours()).padStart(2, '0')}.${String(z.getMinutes()).padStart(2, '0')}</div><h2>${esc(d.baslik)}</h2>${d.aciklama ? `<p>${esc(d.aciklama)}</p>` : ''}${d.sinav && d.sinav.konu ? `<div class="dd-konu">Sınavda çıkacak: ${esc(d.sinav.konu)}</div>` : ''}</div>
       ${d.ses ? `<div class="kart dd-ses"><b>Öğretmeninin sesli açıklaması${d.ses.sure ? ' · ' + d.ses.sure + ' sn' : ''}</b><div data-ddses></div></div>` : ''}
-      ${d.link ? `<a class="birincil dd-link" href="${esc(d.link)}" target="_blank" rel="noopener">Linki aç</a>` : ''}
+      ${ddLinkler(d).map(l => ddYt(l) ? `<div class="dd-yt"><iframe src="https://www.youtube-nocookie.com/embed/${ddYt(l)}" title="Video" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>` : `<a class="birincil dd-link" href="${esc(l)}" target="_blank" rel="noopener">${esc((l.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]) || 'Link')} · aç</a>`).join('')}
       ${(d.dosyalar || []).map((f, i) => `<div class="dd-dosya" data-dddosya="${i}"></div>`).join('')}
       ${test}
       ${d.cevap ? (d.cevap.acik ? `<div class="kart"><b>${esc(d.cevap.ad || 'Ek')}</b><div class="dd-dosya" data-ddcevap></div></div>` : `<div class="kart dd-kilit">🔒 Kilitli ek · ${(t => `${t.getDate()} ${AY[t.getMonth()]} ${String(t.getHours()).padStart(2, '0')}.${String(t.getMinutes()).padStart(2, '0')}`)(new Date(d.cevap.acilis))} sonra açılacak</div>`) : ''}
-      ${A.tepki === false ? '' : `<div class="dd-tepki"><button class="${b.tepki === 'anladim' ? 'secili' : ''}" data-tepki="anladim">Anladım</button><button class="tek ${b.tepki === 'tekrar' ? 'secili' : ''}" data-tepki="tekrar">Tekrar anlatılsın</button></div>`}
-      ${A.calistim === false ? '' : `<label class="dd-cal"><input type="checkbox" id="ddCal" ${b.calistim ? 'checked' : ''}> Çalıştım${d.sinav ? ' — çalışma haritamda işaretli' : ''}</label>`}
+      ${A.tepki === false || d.tur === 'duyuru' ? '' : `<div class="dd-tepki"><button class="${b.tepki === 'anladim' ? 'secili' : ''}" data-tepki="anladim">Anladım</button><button class="tek ${b.tepki === 'tekrar' ? 'secili' : ''}" data-tepki="tekrar">Tekrar anlatılsın</button></div>`}
+      ${A.calistim === false || d.tur === 'duyuru' ? '' : `<label class="dd-cal"><input type="checkbox" id="ddCal" ${b.calistim ? 'checked' : ''}> Çalıştım${d.sinav ? ' — çalışma haritamda işaretli' : ''}</label>`}
       ${A.soru === false ? '' : `<div class="kart dd-sor"><h2>Öğretmenine sor <small class="soluk">· sınıf görmez</small></h2><div class="dd-sor-g"><input id="ddSoruNo" maxlength="20" placeholder="Soru no" inputmode="numeric"><textarea id="ddSoruMetin" rows="2" maxlength="600" placeholder="Nerede takıldın?"></textarea></div><button class="ikincil" id="ddSoruGonder">Gönder</button><div class="kucuk" id="ddSoruBilgi"></div>
         ${benim.map(s => `<div class="dd-s"><small>${s.soru_no ? 'Soru ' + esc(s.soru_no) + ' · ' : ''}sen</small><div>${esc(s.metin)}</div>${s.cevap ? `<div class="dd-cv">${esc(s.cevap)}</div>` : '<small class="soluk">Cevap bekleniyor</small>'}</div>`).join('')}
         ${acik.length ? `<h2 style="margin-top:12px">Sınıfa açılan cevaplar</h2>${acik.map(s => `<div class="dd-s"><small>${s.soru_no ? 'Soru ' + esc(s.soru_no) : 'Soru'}</small><div>${esc(s.metin)}</div><div class="dd-cv">${esc(s.cevap)}</div></div>`).join('')}` : ''}</div>`}`;
