@@ -1750,3 +1750,6 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 .kurucu-yazi { font-family: 'UMAL Marcellus', 'Marcellus', Georgia, serif !important; font-weight: 400; text-transform: uppercase; letter-spacing: .22em; color: #e8c66b !important; text-shadow: 0 0 8px rgba(232,198,107,.55); }
 #rolEtiket:has(.kurucu-yazi) { background: rgba(232,198,107,.1); border-color: rgba(232,198,107,.55); box-shadow: 0 0 12px rgba(232,198,107,.25); }
 .kurucu-rozet { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px; font-size: 12px; background: rgba(232,198,107,.1); border: 1px solid rgba(232,198,107,.55); box-shadow: 0 0 12px rgba(232,198,107,.2); }
+
+/* K-716bj: öğrencinin kendi tamamladığı gezi bilgisi */
+.ky-ogr { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; color: #3ef08a; background: rgba(62,240,138,.12); border: 1px solid rgba(62,240,138,.45); }

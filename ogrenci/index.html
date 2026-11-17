@@ -305,6 +305,20 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gz-lej i { width: 14px; height: 12px; border-radius: 3px; border: 1px solid #ffffff2a; background: rgba(127,246,255,.06); } .gz-lej .l-cam { box-shadow: inset 3px 0 0 #7fdcff; } .gz-lej .l-kapi { border-style: dashed; border-color: #e8c66b77; background: repeating-linear-gradient(45deg, #e8c66b22 0 3px, transparent 3px 6px); }
 .izg button.genis.gz-ana { position: relative; }
 /* K-716bx: gezi bilgilerim */
+.izg button.genis.gb-uyari { position: relative; display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px; border-radius: 18px; border: 1.5px solid #ff3b47; background: linear-gradient(150deg, rgba(255,59,71,.22), rgba(60,10,20,.6)); box-shadow: 0 0 22px rgba(255,59,71,.35); animation: gbNabiz 2.2s ease-in-out infinite; }
+.gb-uyari .gb-u-ik { width: 44px; height: 44px; flex: none; border-radius: 13px; display: grid; place-items: center; background: #ff3b47; color: #fff; box-shadow: 0 0 16px rgba(255,59,71,.7); } .gb-uyari .gb-u-ik svg { width: 24px; height: 24px; }
+.gb-uyari span { flex: 1; min-width: 0; } .gb-uyari b { display: block; font-size: 15px; color: #fff; } .gb-uyari small { display: block; margin-top: 2px; font-size: 12.5px; color: #ffc2c6; line-height: 1.35; }
+.gb-uyari em { font-style: normal; font-weight: 700; font-size: 13px; color: #fff; background: #ff3b47; padding: 8px 12px; border-radius: 12px; white-space: nowrap; }
+.izg button.gb-uyari::after { background: conic-gradient(from var(--psA, 0deg), #ff3b47, #ffc2c6, rgba(255,59,71,.15), #ff3b47, rgba(255,59,71,.2), #ff3b47) !important; }
+@keyframes gbNabiz { 50% { box-shadow: 0 0 30px rgba(255,59,71,.55); } }
+.izg button.gz-ana.gb-eksik { border-color: #ff3b47aa !important; box-shadow: inset 0 0 0 1px #ff3b4755; } .gb-rozet { position: absolute; top: 8px; right: 10px; z-index: 2; font-size: 10.5px; font-weight: 700; color: #fff; background: #ff3b47; padding: 3px 8px; border-radius: 999px; }
+.gb-bas2 h2 { margin: 0 0 2px; } .gb-bas2 { margin-bottom: 12px; }
+.gb-alan .gb-et { display: flex; justify-content: space-between; font-size: 12.5px; color: #9fb3cf; margin-bottom: 6px; } .gb-alan .gb-et b { font-size: 11px; color: #ff6b72; } .gb-alan.ok .gb-et b { color: #3ef08a; }
+.gb-alan input { width: 100%; height: 48px; border-radius: 13px; border: 1.5px solid #ff3b47 !important; box-shadow: 0 0 0 3px rgba(255,59,71,.15); font-size: 16px; } .gb-alan.hatali input { animation: gbSars .3s; }
+.gb-dolu { height: 44px; border-radius: 13px; border: 1.5px solid #3ef08a88; display: flex; align-items: center; padding: 0 14px; color: #b9f7d2; font-size: 14px; }
+@keyframes gbSars { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.gb-kvkk { display: flex; gap: 8px; font-size: 11.5px; color: #6f86a6; line-height: 1.45; } .gb-kvkk svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+@media (prefers-reduced-motion: reduce) { .izg button.genis.gb-uyari { animation: none; } }
 .izg button.genis.gb-ana { border-color: #ffb86799; background: linear-gradient(120deg, rgba(255,184,103,.12), transparent 70%); }
 .gb-kart { display: flex; flex-direction: column; gap: 12px; } .gb-kart p { margin: 0; line-height: 1.5; } .gb-kart label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #9fb3cf; } .gb-kart input { font-size: 18px; padding: 12px 14px; border-radius: 12px; border: 1px solid #ffffff22; background: rgba(4,12,24,.6); color: #fff; } .gb-kart .birincil { min-height: 50px; font-size: 17px; }
 /* K-716bp: gezi başkanı */
@@ -425,7 +439,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
-  <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Ana sayfa</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
+  <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
   <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
   <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Geri</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
   <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
@@ -489,6 +503,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611171505"></script>
+<script src="ogrenci.js?v=202611172100"></script>
 </body>
 </html>

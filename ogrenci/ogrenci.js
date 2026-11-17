@@ -380,7 +380,9 @@
   const gzYeni = d => { if (!d || !d.koltuk) return false; try { return localStorage.getItem(gzAnah(d)) !== d.otobus.no + ':' + d.koltuk; } catch (e) { return false; } };
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
   const GB_AD = { tc: 'T.C. kimlik numarası', dogum: 'doğum tarihi', tel: 'telefon' };
-  function gzKutu() { return (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gz-ana gb-ana yeni">${ZARF}<i class="ik" style="--c:#ffb867">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')} · bilgilerin eksik</b><small>Eksik: ${esc(d.eksik.map(k => GB_AD[k]).join(', '))} — dokun, tamamla</small></span></button>`).join('') + (GZ.B || []).map((d, i) => `<button data-git="bsk" data-bsk="${i}" class="genis no-ana gz-ana bsk-ana"><i class="ik" style="--c:#ffd166">${BSK_IK}</i><span><b>Gezi Başkanı · ${esc(d.ad || 'Gezi')}</b><small>Otobüslerdeki yerleri düzenle</small></span></button>`).join('') + GZ.L.map((d, i) => gzKutu1(d, i)).join(''); }
+  const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'telefon' };
+  const UYARI_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5v4.5M12 16.6h.01"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
+  function gzKutu() { return (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
   // K-716bx: gezi katılımcısı eksik bilgilerini (T.C., doğum tarihi, telefon) kendisi girer; idare panelinde hemen görünür
   let GB = { i: 0, mesaj: '', tur: '' };
   function gbAc(i) { GB = { i: i || 0, mesaj: '', tur: '' }; gbCiz(); goster('s-gbil'); window.scrollTo(0, 0); }
@@ -388,16 +390,26 @@
     const d = (GZ.E || [])[GB.i], el = $('#gbIc'); if (!el) return;
     if (!d) { el.innerHTML = `${GB.mesaj ? `<div class="bk-mesaj ${GB.tur}">${esc(GB.mesaj)}</div>` : ''}<div class="kart">Gezi bilgilerin tamam. Teşekkürler!</div>`; return; }
     const E = new Set(d.eksik);
-    el.innerHTML = `<div class="bk-gezi">${esc(d.ad || 'Gezi')}</div>${GB.mesaj ? `<div class="bk-mesaj ${GB.tur}">${esc(GB.mesaj)}</div>` : ''}
-      <div class="kart gb-kart"><p>Belediye yolcu listesi için şu bilgilerin eksik. Doğru yaz; bilgiler yalnız okul idaresine gider.</p>
-        ${E.has('tc') ? '<label>T.C. kimlik numaran<input id="gbTc" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="11 hane"></label>' : ''}
-        ${E.has('dogum') ? '<label>Doğum tarihin<input id="gbDg" inputmode="numeric" maxlength="10" placeholder="gg.aa.yyyy"></label>' : ''}
-        ${E.has('tel') ? '<label>Telefon (veli ya da senin)<input id="gbTl" inputmode="tel" value="05"></label>' : ''}
-        <button class="birincil" id="gbGonder">Gönder</button></div>`;
+    const alan = (k, et, ic) => `<div class="gb-alan ${E.has(k) ? 'eks' : 'ok'}"><div class="gb-et">${et}<b>${E.has(k) ? 'EKSİK' : 'TAMAM'}</b></div>${E.has(k) ? ic : '<div class="gb-dolu">Kayıtlı</div>'}</div>`;
+    el.innerHTML = `<div class="gb-bas2"><div class="soluk">${esc(d.ad || 'Gezi')}${d.tarih ? ' · ' + esc(gzTarih(d.tarih)) : ''}</div></div>${GB.mesaj ? `<div class="bk-mesaj ${GB.tur}">${esc(GB.mesaj)}</div>` : ''}
+      <div class="kart gb-kart"><p>Belediye ve ulaşım listesi için bu bilgiler gerekiyor. Kırmızı olanları doldurman yeterli.</p>
+        ${alan('tc', 'T.C. kimlik no', '<input id="gbTc" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="11 hane">')}
+        ${alan('dogum', 'Doğum tarihi', '<input id="gbDg" inputmode="numeric" maxlength="10" placeholder="gg.aa.yyyy">')}
+        ${alan('tel', 'Telefon (senin ya da velinin)', '<input id="gbTl" inputmode="tel" value="05">')}
+        <button class="birincil" id="gbGonder">Kaydet</button>
+        <div class="gb-kvkk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Bu bilgileri yalnız okul idaresi ve gezi sorumlusu öğretmenler görür; yalnız gezi listeleri için kullanılır.</span></div></div>`;
     if ($('#gbTc')) $('#gbTc').oninput = ev => { ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 11); };
     if ($('#gbDg')) $('#gbDg').oninput = ev => { const x = ev.target.value.replace(/\D/g, '').slice(0, 8); ev.target.value = [x.slice(0, 2), x.slice(2, 4), x.slice(4)].filter(Boolean).join('.'); };
     if ($('#gbTl')) $('#gbTl').oninput = ev => { let x = ev.target.value.replace(/\D/g, ''); if (!x.startsWith('0')) x = '0' + x; x = x.slice(0, 11); ev.target.value = [x.slice(0, 4), x.slice(4, 7), x.slice(7, 9), x.slice(9, 11)].filter(Boolean).join(' '); };
-    $('#gbGonder').onclick = async () => { const b = $('#gbGonder'); b.disabled = true; let r = null;
+    const tcOk = t => { if (!/^[1-9]\d{10}$/.test(t)) return false; const x = [...t].map(Number); return ((x[0] + x[2] + x[4] + x[6] + x[8]) * 7 - (x[1] + x[3] + x[5] + x[7])) % 10 === x[9] && x.slice(0, 10).reduce((a, c) => a + c, 0) % 10 === x[10]; };
+    const isaret = (id, hata) => { const a = $(id) && $(id).closest('.gb-alan'); if (!a) return; a.classList.toggle('hatali', !!hata); a.querySelector('.gb-et b').textContent = hata || 'EKSİK'; };
+    $('#gbGonder').onclick = async () => {
+      let h = false;
+      if ($('#gbTc')) { const t = $('#gbTc').value; const e = !t ? '' : t.length !== 11 ? 'HATALI · 11 hane olmalı' : !tcOk(t) ? 'HATALI · numarayı kontrol et' : ''; isaret('#gbTc', e); h = h || !!e; }
+      if ($('#gbDg')) { const m = $('#gbDg').value.match(/^(\d{2})\.(\d{2})\.(\d{4})$/), e = !$('#gbDg').value ? '' : !m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12 ? 'HATALI · gg.aa.yyyy' : ''; isaret('#gbDg', e); h = h || !!e; }
+      if ($('#gbTl')) { const n = $('#gbTl').value.replace(/\D/g, '').length, e = n > 2 && n !== 11 ? 'HATALI · 11 hane olmalı' : ''; isaret('#gbTl', e); h = h || !!e; }
+      if (h) return;
+      const b = $('#gbGonder'); b.disabled = true; let r = null;
       try { ({ data: r } = await sb.rpc('umal_gezi_bilgi_yaz', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar, p_tc: $('#gbTc') ? $('#gbTc').value : '', p_dogum: $('#gbDg') ? $('#gbDg').value : '', p_tel: $('#gbTl') && $('#gbTl').value.replace(/\D/g, '').length > 2 ? $('#gbTl').value : '' })); } catch (e) {}
       b.disabled = false;
       if (r && r.ok) { GB.mesaj = 'Bilgilerin kaydedildi, idareye ulaştı.'; GB.tur = 'iyi'; await gzYukle(); GB.i = 0; anaCiz(true); }
@@ -439,7 +451,7 @@
   }
   function gzKutu1(d, i) {
     const alt = d.koltuk ? (d.gun && d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : (d.numarasiz ? `${d.otobus.no}. Otobüs · yerin krokide kırmızı` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`)) : 'Koltuğun yakında belli olacak';
-    return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''}">${gzYeni(d) ? ZARF : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.numarasiz ? gzKonum(d.otobus.kapasite, d.koltuk).sira : d.koltuk}</b><small>${d.numarasiz ? 'sıra · ' : ''}${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
+    return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''} ${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? 'gb-eksik' : ''}">${gzYeni(d) ? ZARF : ''}${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? '<span class="gb-rozet">Bilgi eksik</span>' : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.numarasiz ? gzKonum(d.otobus.kapasite, d.koltuk).sira : d.koltuk}</b><small>${d.numarasiz ? 'sıra · ' : ''}${d.otobus.no}. otobüs</small></span>` : ''}</button>`;
   }
   function gzAc(i) { if (i != null) GZ.i = i; gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); const d = GZ.d; if (d && d.koltuk) { try { localStorage.setItem(gzAnah(d), d.otobus.no + ':' + d.koltuk); } catch (e) {} } }
   function gzCiz() {
