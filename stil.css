@@ -1678,3 +1678,15 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 /* K-716ba: katılımcı listesi satırı telefonda */
 .gz-dosya { flex-wrap: wrap; } .gz-dosya small { flex: 1 1 160px; min-width: 0; line-height: 1.4; }
 @media (max-width: 700px) { .gz-alan > .gz-alan-k, .gz-alan > .gz-alan-k + label { grid-column: 1 / -1; } .gz-dosya { align-items: flex-start; } .gz-dosya small { flex-basis: 100%; } }
+
+/* K-716bb: gezi düğmeleri telefonda düzenli ızgara */
+@media (max-width: 700px) {
+  .gz-dug { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gz-dug > button { margin: 0 !important; width: 100%; min-height: 46px; padding: 10px 8px; font-size: 14px; line-height: 1.2; white-space: normal; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+  .gz-dug #gzOto { order: 1; } .gz-dug #gzOtoS { order: 2; } .gz-dug #gzYayin { order: 3; grid-column: 1 / -1; }
+  .gz-dug #gzPlan { order: 4; } .gz-dug #gzBilet { order: 5; } .gz-dug #gzListe { order: 6; } .gz-dug #gzExcel { order: 7; }
+  .gz-dug #gzOtoEkle { order: 8; } .gz-dug #gzOtoCikar { order: 9; }
+  .gz-dug .gz-tumkap { order: 10; grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 0; margin: 0; }
+  .gz-dug .gz-tumkap button { margin: 0; }
+  .gz-dug #gzSifir { order: 11; grid-column: 1 / -1; min-height: 0; padding: 6px; background: none; border: 0; }
+}
