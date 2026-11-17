@@ -1438,7 +1438,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     $('#rpYazdir').onclick = () => {
       // Telefon/tablette (iOS) çerçeve yazdırılamıyor: PDF dosyası hazırlanır, sonra telefonun paylaş menüsüyle kaydedilir/gönderilir. Masaüstü eskisi gibi.
       const mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || matchMedia('(max-width:760px)').matches;
-      if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'));   // K-391: telefonda PDF dosyası + paylaş
+      if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'), sec && sec.kenar);   // K-391: telefonda PDF dosyası + paylaş
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
     $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec && sec.kenar);   // K-507: her yazdırmanın yanında Gönder   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
@@ -4112,28 +4112,31 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const kol = s => { if (!s) return '<div class="op-bos"></div>'; if (s.kapi) return '<div class="op-kapi"></div>';
           const p = kim(s.n), ayr = s.n <= GZ_AYRILAN;
           return `<div class="op-k ${p ? '' : 'op-yok'} ${s.yer === 'cam' ? 'op-cam' : ''}" style="--r:${p ? (p.tur === 'ogr' ? sRenk(p.sinif) : '#b8860b') : '#c9d2de'}">${G.numarasiz ? '' : `<span class="op-n">${s.n}</span>`}${p ? `<b>${esc(baslik(p.ad))}</b><i>${esc(p.sinif || GZ_TUR[p.tur] || '')}</i>` : `<i>${ayr ? GZ_AYRILAN_AD[s.n - 1] : 'Boş'}</i>`}</div>`; };
-        return `<div class="op-sayfa"><div class="op-bas"><img src="${logo}" alt=""><div><h1>${esc(G.ad || 'Çanakkale Gezisi')} · ${o.no}. Otobüs</h1><p>${esc(gzTarih(G.tarih))}${G.saat ? ' · Kalkış ' + esc(G.saat) : ''}${G.kalkis ? ' · ' + esc(G.kalkis) : ''}${o.plaka ? ' · Plaka ' + esc(o.plaka) : ''}</p></div><span class="op-no">${o.no}</span></div>
-          <div class="op-lej">${Object.keys(say).sort(sinifSira).map(sn => `<span style="--r:${sRenk(sn)}"><i></i>${esc(sn)} · ${say[sn]} öğrenci</span>`).join('')}<span class="op-cl"><i></i>Cam kenarı</span></div>
+        return `<div class="op-sayfa"><div class="op-bas"><img src="${logo}" alt=""><div><small>ÜMRANİYE MERKEZ ANADOLU LİSESİ · OTURMA PLANI</small><h1>${esc(G.ad || 'Çanakkale Gezisi')}</h1><p>${[gzTarih(G.tarih), G.saat ? 'Kalkış ' + G.saat : '', G.kalkis || '', o.plaka ? 'Plaka ' + o.plaka : '', o.sofor ? 'Şoför ' + o.sofor + (o.tel ? ' · ' + o.tel : '') : ''].filter(Boolean).map(esc).join(' · ')}</p></div><span class="op-no"><b>${o.no}</b><small>OTOBÜS</small></span></div>
+          <div class="op-lej">${Object.keys(say).sort(sinifSira).map(sn => `<span style="--r:${sRenk(sn)}"><i></i>${esc(sn)} · ${say[sn]}</span>`).join('')}<span class="op-top">${L.length} / ${o.kapasite} yolcu</span></div>
           <div class="op-oto"><div class="op-on"><div class="op-sofor">Şoför</div><div class="op-onkapi">Ön kapı</div></div>
-          ${P.map(r => `<div class="op-sira">${r.map(kol).join('')}</div>`).join('')}<div class="op-arka">Arka</div></div></div>`; };
-      const css = `@page { size: A4; margin: 8mm; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #10203a; }
-        .op-sayfa { height: 280mm; display: flex; flex-direction: column; page-break-after: always; overflow: hidden; } .op-sayfa:last-child { page-break-after: auto; }
-        .op-bas { display: flex; align-items: center; gap: 4mm; padding-bottom: 2.5mm; border-bottom: 1mm solid #0d2747; } .op-bas img { width: 15mm; height: 15mm; } .op-bas h1 { margin: 0; font-size: 17pt; } .op-bas p { margin: .5mm 0 0; font-size: 9.5pt; color: #4a5a70; }
-        .op-no { margin-left: auto; display: grid; place-items: center; width: 17mm; height: 17mm; border-radius: 4mm; background: #0d2747; color: #fff; font-size: 24pt; font-weight: 800; }
-        .op-lej { display: flex; flex-wrap: wrap; gap: 1.5mm 5mm; margin: 2.5mm 0; font-size: 9pt; font-weight: 600; } .op-lej span { display: flex; align-items: center; gap: 1.5mm; } .op-lej i { width: 4mm; height: 4mm; border-radius: 1mm; background: var(--r); } .op-cl i { width: 1.2mm; height: 4.5mm; background: #0d2747; }
-        .op-oto { flex: 1; display: flex; flex-direction: column; gap: 1.3mm; padding: 4mm 5mm 3mm; border: .8mm solid #0d2747; border-radius: 16mm 16mm 5mm 5mm; background: #f7f9fc; }
-        .op-on { display: flex; justify-content: space-between; align-items: center; padding: 0 1mm 2mm; margin-bottom: 1mm; border-bottom: .4mm dashed #9fb0c6; font-size: 8.5pt; font-weight: 700; color: #4a5a70; }
-        .op-sofor { padding: 1.5mm 4mm; border: .4mm solid #4a5a70; border-radius: 6mm; } .op-onkapi { padding: 1.5mm 3mm; border: .4mm dashed #4a5a70; border-radius: 1.5mm; }
-        .op-sira { flex: 1; display: grid; grid-template-columns: 1fr 1fr 9mm 1fr 1fr; gap: 1.3mm; min-height: 0; }
-        .op-k { position: relative; display: flex; flex-direction: column; justify-content: center; padding: .8mm 1.5mm .8mm 2.6mm; border-radius: 1.6mm; background: #fff; border: .35mm solid var(--r); border-left: 1.8mm solid var(--r); min-width: 0; overflow: hidden; }
-        .op-sira > .op-k:nth-child(3) { padding-left: 1mm; border-left-width: .35mm; }
-        .op-k b { font-size: 10.5pt; line-height: 1.12; } .op-k i { font-style: normal; font-size: 8.5pt; color: var(--r); font-weight: 700; } .op-yok i { color: #8a97a8; }
-        .op-n { position: absolute; top: .6mm; right: 1.2mm; font-size: 8pt; font-weight: 800; color: #6b7a90; }
-        .op-cam.op-k { box-shadow: inset 0 0 0 0 #0d2747; } .op-sira > .op-cam:first-child { border-left-color: var(--r); outline: .6mm solid #0d2747; outline-offset: -.3mm; } .op-sira > .op-cam:last-child { outline: .6mm solid #0d2747; outline-offset: -.3mm; }
-        .op-kapi { border-radius: 1.6mm; border: .35mm dashed #8a97a8; background: repeating-linear-gradient(45deg, #e7ecf3 0 2mm, #fff 2mm 4mm); display: grid; place-items: center; } .op-kapi::after { content: 'Kapı'; font-size: 7pt; color: #6b7a90; font-weight: 700; }
-        .op-sira > .op-kapi + .op-kapi::after { content: ''; }
-        .op-arka { text-align: center; font-size: 7.5pt; color: #6b7a90; font-weight: 700; letter-spacing: .2em; padding-top: 1mm; }`;
-      belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Oturma planı</title><style>${css}</style></head><body>${G.otobusler.map(sayfa).join('')}</body></html>`, 'Oturma planı · ' + G.otobusler.length + ' otobüs');
+          ${P.map(r => `<div class="op-sira">${r.map(kol).join('')}</div>`).join('')}<div class="op-arka">ARKA</div></div><div class="op-ayak"><span>Koyu kenar: cam tarafı · üstteki renk: sınıf${G.numarasiz ? '' : ' · köşedeki sayı: koltuk numarası'}</span><span>Atlas · ${new Date().toLocaleDateString(tr)} · ${i + 1} / ${G.otobusler.length}</span></div></div>`; };
+      // K-716by: A4'e tam oturan, kenarları kesilmeyen oturma planı (sayfa kendi kenar boşluğunu taşır; yazdırmada ve telefondaki PDF'te aynı)
+      const css = `@page { size: A4; margin: 0; } * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } html, body { margin: 0; padding: 0; } body { font-family: 'Segoe UI', Inter, Arial, sans-serif; color: #10203a; background: #fff; }
+        .op-sayfa { width: 210mm; height: 296mm; padding: 9mm 10mm 7mm; display: flex; flex-direction: column; gap: 3mm; page-break-after: always; break-after: page; overflow: hidden; background: #fff; } .op-sayfa:last-child { page-break-after: auto; break-after: auto; }
+        .op-bas { display: flex; align-items: center; gap: 4mm; padding: 3.5mm 4.5mm; border-radius: 4mm; background: linear-gradient(120deg, #0d2747 0%, #1a3f6e 100%); color: #fff; }
+        .op-bas img { width: 14mm; height: 14mm; border-radius: 50%; background: #fff; padding: .6mm; } .op-bas small { display: block; font-size: 7pt; letter-spacing: .22em; color: #e8c66b; font-weight: 700; } .op-bas h1 { margin: .6mm 0 0; font-size: 16pt; line-height: 1.15; } .op-bas p { margin: .8mm 0 0; font-size: 9pt; color: #c9d6ea; }
+        .op-no { margin-left: auto; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 19mm; height: 19mm; border-radius: 4mm; background: #e8c66b; color: #0d2747; } .op-no b { font-size: 24pt; line-height: 1; font-weight: 800; } .op-no small { color: #0d2747; letter-spacing: .12em; font-size: 6pt; margin-top: .6mm; }
+        .op-lej { display: flex; flex-wrap: wrap; gap: 1.6mm 2mm; font-size: 8.5pt; font-weight: 600; } .op-lej span { display: inline-flex; align-items: center; gap: 1.4mm; padding: .9mm 2.4mm; border-radius: 10mm; border: .3mm solid #d5deea; background: #f6f8fb; } .op-lej i { width: 3.2mm; height: 3.2mm; border-radius: 50%; background: var(--r); } .op-lej .op-top { margin-left: auto; background: #0d2747; color: #fff; border-color: #0d2747; }
+        .op-oto { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1.2mm; padding: 3.5mm 5mm 2.5mm; border: .7mm solid #0d2747; border-radius: 18mm 18mm 6mm 6mm; background: linear-gradient(180deg, #eef3f9 0, #f8fafc 12mm, #f8fafc 100%); }
+        .op-on { display: flex; justify-content: space-between; align-items: center; padding: 0 1mm 1.8mm; margin-bottom: .6mm; border-bottom: .4mm dashed #9fb0c6; font-size: 8pt; font-weight: 700; color: #4a5a70; }
+        .op-sofor { padding: 1.2mm 3.5mm; border: .4mm solid #4a5a70; border-radius: 6mm; background: #fff; } .op-onkapi { padding: 1.2mm 3mm; border: .4mm dashed #4a5a70; border-radius: 1.5mm; }
+        .op-sira { flex: 1; display: grid; grid-template-columns: 1fr 1fr 8mm 1fr 1fr; gap: 1.2mm; min-height: 0; }
+        .op-k { position: relative; display: flex; flex-direction: column; justify-content: center; gap: .3mm; padding: .9mm 1.6mm .5mm 2mm; border-radius: 1.8mm; background: #fff; border: .3mm solid #c9d4e2; border-top: 1.4mm solid var(--r); min-width: 0; overflow: hidden; box-shadow: 0 .3mm .8mm rgba(13,39,71,.08); }
+        .op-sira > .op-k:nth-child(3) { padding-left: 1mm; }
+        .op-k b { font-size: 9.6pt; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; } .op-k i { font-style: normal; font-size: 7.6pt; color: var(--r); font-weight: 700; } .op-yok { background: transparent; box-shadow: none; border-style: dashed; } .op-yok i { color: #8a97a8; }
+        .op-n { position: absolute; top: .4mm; right: 1.1mm; font-size: 7pt; font-weight: 800; color: #8a97a8; }
+        .op-sira > .op-cam:first-child { border-left: 1.2mm solid #0d2747; } .op-sira > .op-cam:last-child { border-right: 1.2mm solid #0d2747; }
+        .op-kapi { border-radius: 1.8mm; border: .3mm dashed #8a97a8; background: repeating-linear-gradient(45deg, #e7ecf3 0 2mm, #fff 2mm 4mm); display: grid; place-items: center; } .op-kapi::after { content: 'Kapı'; font-size: 7pt; color: #6b7a90; font-weight: 700; }
+        .op-sira > .op-kapi + .op-kapi::after { content: ''; } .op-bos { min-width: 0; }
+        .op-arka { text-align: center; font-size: 7pt; color: #6b7a90; font-weight: 700; letter-spacing: .3em; padding-top: .6mm; }
+        .op-ayak { display: flex; justify-content: space-between; font-size: 7pt; color: #8a97a8; padding-top: .5mm; border-top: .3mm solid #e1e7ef; }`;
+      belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Oturma planı</title><style>${css}</style></head><body>${G.otobusler.map(sayfa).join('')}</body></html>`, 'Oturma planı · ' + G.otobusler.length + ' otobüs', false, { kenar: [0, 0, 0, 0] });
     };
     const listeler = M => {
       const sayfa = (o, i) => { const L = yolcular(M, o.id);
