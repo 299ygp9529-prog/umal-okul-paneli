@@ -1939,3 +1939,33 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .gk2-seg button.secili { background: rgba(34,232,255,.14); color: #fff; box-shadow: inset 0 0 0 1px rgba(34,232,255,.55); }
 /* K-716cp: yeni şifre alanı — Apple "güçlü parola" önerisi çıkmasın diye düz metin, rakamlar nokta görünür */
 .pin-gizli { -webkit-text-security: disc; text-security: disc; letter-spacing: .25em; }
+/* K-716cr: telafi görevleri ve telefondan yoklama */
+.tk-tf .tk-sinav { flex-wrap: wrap; }
+.tf-gorev { flex-basis: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 8px; margin-top: 6px; border-top: 1px dashed #ffffff1a; }
+.tf-gk { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; } .tf-gk i { font-style: normal; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #8fa6c4; margin-right: 6px; }
+.tf-dr { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; } .tf-dr small { font-size: 11.5px; }
+.ch-tf { font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.ch-tf.ok { color: #3ef08a; border-color: #3ef08a66; background: rgba(62,240,138,.1); } .ch-tf.bek { color: #ffb547; border-color: #ffb54766; background: rgba(255,181,71,.1); } .ch-tf.gec { color: #ff6b72; border-color: #ff6b7266; background: rgba(255,107,114,.1); } .ch-tf.sim { color: #8fa6c4; border-color: #ffffff22; }
+.tk-tf-o.gel { border-color: #3ef08a66; } .tk-tf-o.gelme { border-color: #ff6b7266; opacity: .8; } .tf-ekler { border: 1px dashed #ffb54766; border-radius: 12px; padding: 8px; margin-top: 6px; }
+.tfg-sekme { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 8px; } .tfg-sekme button { flex: 1; min-width: 120px; text-align: left; padding: 9px 11px; border-radius: 12px; border: 1.5px solid #ffffff1f; background: transparent; color: #cfe3f7; font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.tfg-sekme button b { color: #22e8ff; margin-left: 4px; } .tfg-sekme button small { display: block; font-weight: 500; font-size: 11px; color: #8fa6c4; } .tfg-sekme button.secili { border-color: #22e8ff; background: rgba(34,232,255,.08); }
+.tfg-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 46vh; overflow: auto; margin: 8px 0; }
+.tfg-o { display: flex; align-items: center; gap: 8px; text-align: left; padding: 9px 11px; border-radius: 12px; border: 1px solid #ffffff14; background: #0f1b31; color: #e8f1ff; font: inherit; cursor: pointer; } .tfg-o span { flex: 1; } .tfg-o small { display: block; font-size: 11px; color: #3ef08a; } .tfg-o small.m { color: #8fa6c4; }
+.tfg-o i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px solid #ffffff2a; color: #8fa6c4; font-weight: 800; } .tfg-o.secili { border-color: #22e8ff; background: rgba(34,232,255,.1); } .tfg-o.secili i { background: #22e8ff; color: #06121f; border-color: #22e8ff; }
+.tfg-kartlar { display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px; }
+.tfg-kart { border-radius: 18px; padding: 14px; background: linear-gradient(150deg, #16294a, #0f1b31); border: 1px solid #ffffff14; }
+.tfg-kart.simdi { border: 1.5px solid #ffb547; background: linear-gradient(150deg, rgba(255,181,71,.16), #101c33 70%); box-shadow: 0 0 26px rgba(255,181,71,.18); }
+.tfg-ba { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .16em; color: #ffb547; font-weight: 800; } .tfg-nok { width: 9px; height: 9px; border-radius: 50%; background: #ff5a5a; box-shadow: 0 0 10px #ff5a5a; }
+.tfg-kart h3 { margin: 8px 0 4px; font-size: 18px; } .tfg-bt { width: 100%; margin-top: 12px; min-height: 50px; border-radius: 14px; border: 0; background: #ffb547; color: #1b1206; font: inherit; font-weight: 800; font-size: 15.5px; cursor: pointer; }
+.tfg-ust { font-size: 11px; letter-spacing: .14em; color: #8fa6c4; font-weight: 800; margin-bottom: 6px; }
+.tfg-sat { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 9px 2px; border: 0; border-top: 1px solid #ffffff10; background: transparent; color: #e8f1ff; font: inherit; cursor: pointer; } .tfg-sat:first-of-type { border-top: 0; }
+.tfg-sat span { flex: 1; } .tfg-sat b { font-size: 14px; } .tfg-sat small { display: block; color: #8fa6c4; font-size: 12px; } .tfg-sat em { font-style: normal; font-size: 12px; font-weight: 700; color: #ffb547; text-align: right; }
+.tfy-say { display: flex; gap: 8px; margin: 12px 0 8px; } .tfy-say div { flex: 1; border-radius: 13px; padding: 9px 4px; text-align: center; border: 1px solid #ffffff14; background: #0f1b31; } .tfy-say b { display: block; font-size: 20px; } .tfy-say span { font-size: 11px; color: #8fa6c4; }
+.tfy-say .g b { color: #3ef08a; } .tfy-say .y b { color: #ff6b72; } .tfy-say .b b { color: #ffb547; } .tfy-hizli { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.tfy-liste { display: flex; flex-direction: column; gap: 7px; } .tfy-o { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: #0f1b31; border: 1px solid #ffffff10; } .tfy-o.bos { border-color: #ffb54766; }
+.tfy-o .ad { flex: 1; font-weight: 700; font-size: 14.5px; } .tfy-o .ad small { display: block; color: #8fa6c4; font-weight: 500; font-size: 12px; margin-top: 2px; } .tfy-ek { font-size: 10.5px; font-weight: 800; color: #ffb547; border: 1px solid #ffb54766; border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
+.tfy-sec { display: flex; border-radius: 11px; overflow: hidden; border: 1px solid #ffffff22; flex: none; } .tfy-sec button { border: 0; background: transparent; color: #8fa6c4; font: inherit; font-weight: 800; font-size: 13.5px; padding: 10px 12px; cursor: pointer; }
+.tfy-sec button.gel { background: rgba(62,240,138,.2); color: #3ef08a; } .tfy-sec button.gelme { background: rgba(255,107,114,.2); color: #ff6b72; }
+.tfy-ekbt { width: 100%; margin-top: 10px; } .tfy-ekle { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 14px; border: 1.5px dashed #ffb54788; } .tfy-ekle input, .tfy-ekle select { width: 100%; box-sizing: border-box; min-height: 46px; font-size: 16px; }
+.tfy-bul { padding: 8px 10px; border-radius: 10px; background: rgba(62,240,138,.1); color: #b9f7d2; } .tfy-gonder { width: 100%; min-height: 54px; margin-top: 14px; font-size: 16px; } .tfy-gonder:disabled { opacity: .55; }
+.tfy button, .tfg button, .tfg-kart button, .tfg-o, .tf-gorev button { text-transform: none !important; }
