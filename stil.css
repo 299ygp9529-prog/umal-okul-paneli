@@ -2116,3 +2116,9 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .dp-c { min-height: 42px; background: var(--zemin); border: 1px solid var(--cizgi); border-radius: 7px; padding: 4px 6px; font-size: 12px; overflow: hidden; } .dp-c b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dp-c small { display: block; color: var(--soluk); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dp-c hr { border: 0; border-top: 1px dashed #ff8a8a; margin: 2px 0; } .dp-c.yok { opacity: .25; }
 .dp-durum { margin-bottom: 12px; } .dp-durum.uygulandi { border-color: #3ef08a88; } .dp-durum.bekliyor { border-color: #ffd16688; } .dp-durum.uygulanamadi { border-color: #ff8a8a88; } .dp-durum b { display: block; }
 .dp-ipucu em { font-style: normal; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; margin-right: 10px; } .dp-ipucu .dp-h { margin-left: 0; }
+.dp-tur { font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .3px; opacity: .75; margin-left: 2px; }
+.dp-dr.atanmadi .o { border-color: #ff6b6b99; background: #ff6b6b10; }
+.dp-ssec { padding: 6px 8px; font-size: 13px; max-width: 100%; }
+.dp-yy { border: 1px solid var(--cizgi); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; } .dp-yy > b { display: block; margin-bottom: 6px; } .dp-yy > b small { font-weight: 400; color: var(--soluk); margin-left: 6px; }
+.dp-yyr { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; } .dp-yyr span:first-child { font-size: 14px; }
+.dp-sbr { display: grid; grid-template-columns: 1fr auto 34px; gap: 6px; align-items: center; }
