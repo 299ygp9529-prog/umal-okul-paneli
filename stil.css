@@ -1876,3 +1876,8 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 .gk2-kp-kayitli { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } .gk2-kp-kayitli span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 11px; border-radius: 999px; background: rgba(232,198,107,.1); border: 1px solid #e8c66b55; font-size: 13px; } .gk2-kp-kayitli small { color: var(--soluk); font-size: 11px; }
 .gk2-kp-yeni { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; padding: 12px; border-radius: 13px; border: 1.5px dashed #e8c66b88; } .gk2-kp-yeni b { grid-column: 1 / -1; } .gk2-kp-yeni .gk2-bt { grid-column: 1 / -1; min-height: 44px; }
 .gk2-kp .gk2-not { display: block; line-height: 1.5; } .gk2-kp .gk2-not .gk2-bt { margin-top: 8px; }
+/* K-716cd: panel hızı — çerçeveler aynı görünür ama daha az çizilir: saniyede 30 kare, ekran dışındakiler durur, zayıf cihazda sabit */
+.tm-gk::after, .tm-oge::after, .ps-ic .ps-halka { animation-timing-function: steps(200) !important; }
+.ekran-disi::after, .ekran-disi .ps-halka, .ekran-disi *, .ekran-disi { animation-play-state: paused !important; }
+body.hafif .tm-gk::after, body.hafif .tm-oge::after, body.hafif .ps-ic .ps-halka, body.hafif .ps-kurucu .ps-ic::after { animation: none !important; }
+body.hafif .ps-ic .dm, body.hafif .ps-ic .sc, body.hafif .ps-ic .cak, body.hafif .ps-ic .flas { display: none !important; }
