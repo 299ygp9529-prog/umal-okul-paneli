@@ -48,6 +48,8 @@
       if (n) { if (tNob[t] !== g) m += ayar.bosluk * ((son - ilk + 1) - n); if (tMax[t] && n > tMax[t]) m += 15 * (n - tMax[t]); if (tBos[t] === g) m += (tBosKesin[t] ? SERT : 25) * n; }
       if (tNob[t] === g) { if (n < tNobAz[t]) m += 10 * (tNobAz[t] - n); if (n > tNobCok[t]) m += 10 * (n - tNobCok[t]); }
       return m; };
+    const tHer = new Uint8Array(T).fill(ayar.herkesBosGun ? 1 : 0); Object.entries(G.ogretmen || {}).forEach(([ad, k]) => { const t = Ti[ad]; if (t !== undefined && k && k.bosGun && k.bosGun.herhangi) tHer[t] = 1; });
+    const haftaCeza = t => { if (!tHer[t] || tBos[t] >= 0) return 0; const o = oT[t]; for (let g = 0; g < D; g++) { if (g === tNob[t]) continue; let bos = true; for (let i = 0; i < P; i++) if (o[g * P + i]) { bos = false; break; } if (bos) return 0; } return 60; };
     const yakinCeza = u => { if (!ayar.yakin || !G.mevcut) return 0; const e = eski[u.c], b = u.g * P + u.p; let m = 0; for (let i = 0; i < u.uz; i++) if (e[b + i] !== u.k) m += 1; return m; };
     // başlangıç: mevcut programdaki yerine (uyuyorsa), olmazsa en az çakışan yere
     const yerUygun = (u, g, p) => p >= 0 && p + u.uz <= gunSaat[g];
@@ -63,11 +65,11 @@
     const cGun = (u, g) => sinifGun(u.c, g); let toplam = 0;
     for (let c = 0; c < C; c++) for (let g = 0; g < D; g++) toplam += sinifGun(c, g);
     for (let t = 0; t < T; t++) for (let g = 0; g < D; g++) toplam += ogrGun(t, g);
-    for (const u of U) toplam += yakinCeza(u);
+    for (const u of U) toplam += yakinCeza(u); for (let t = 0; t < T; t++) toplam += haftaCeza(t);
     const sinifBirim = Array.from({ length: C }, () => []); U.forEach(u => sinifBirim[u.c].push(u));
     // hareket: birimi aynı sınıfta başka yere taşı; orada aynı uzunlukta tek birim varsa yer değiştir
     const etkiliMaliyet = (us, gunler) => { let m = 0; const cs = new Set(), ts = new Set(); for (const u of us) { cs.add(u.c); for (const t of u.t) ts.add(t); m += yakinCeza(u); }
-      for (const c of cs) for (const g of gunler) m += sinifGun(c, g); for (const t of ts) for (const g of gunler) m += ogrGun(t, g); return m; };
+      for (const c of cs) for (const g of gunler) m += sinifGun(c, g); for (const t of ts) { m += haftaCeza(t); for (const g of gunler) m += ogrGun(t, g); } return m; };
     const bas = Date.now(), sure = Math.max(1, +ayar.sure || 20) * 1000; let adim = 0, T0 = 8, Tc = T0, enIyi = toplam, enIyiYer = U.map(u => [u.g, u.p]);
     while (true) {
       if ((adim & 2047) === 0) { const ge = Date.now() - bas; if (ge > sure) break; Tc = T0 * Math.pow(0.002, ge / sure); if (ilerle && (adim & 65535) === 0) ilerle({ oran: ge / sure, ceza: enIyi }); }
@@ -98,6 +100,7 @@
       if (n && tMax[t] && n > tMax[t]) ihlal.push({ tur: 'gunmax', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${n} ders (en çok ${tMax[t]} istendi)` });
       if (tNob[t] === g && (n < tNobAz[t] || n > tNobCok[t])) ihlal.push({ tur: 'nobet', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: nöbet günü ${gunAd[g]} ${n} ders (${tNobAz[t]}${tNobCok[t] < 99 ? '–' + tNobCok[t] : '+'} istendi)` });
       if (n && tNob[t] !== g && (son - ilk + 1) - n >= (ayar.bosluk >= 12 ? 1 : 3)) ihlal.push({ tur: 'bosluk', sert: 0, kim: ogrAd[t], saat: (son - ilk + 1) - n, yazi: `${ogrAd[t]}: ${gunAd[g]} derslerin arasında ${(son - ilk + 1) - n} saat boşluk` }); }
+    for (let t = 0; t < T; t++) if (haftaCeza(t)) ihlal.push({ tur: 'bosgunyok', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: boş günü yok` });
     for (let c = 0; c < C; c++) for (let g = 0; g < D; g++) { for (let i = 0; i < P; i++) { const s = g * P + i; if (oC[c][s] > 1) ihlal.push({ tur: 'sinif', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders çakışıyor` }); if (oC[c][s] && cKapali[c][s] === 1) ihlal.push({ tur: 'skapali', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders kapalı saatte` }); }
       for (let k = 0; k < K; k++) if (kCD[(c * D + g) * K + k] > ayar.ayniGunMax) ihlal.push({ tur: 'ayni', sert: 0, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${dersAd[k].split('|')[1]} ${gunAd[g]} ${kCD[(c * D + g) * K + k]} kez` }); }
     let degisen = 0; if (G.mevcut) U.forEach(u => { degisen += yakinCeza(u); });
