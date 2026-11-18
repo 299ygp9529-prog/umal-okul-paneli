@@ -529,6 +529,8 @@
   // K-716cd: panel hızı — zayıf cihazda (az bellek/çekirdek, veri tasarrufu, hareket azaltma) çerçeveler sabit; ekran dışındaki kutuların animasyonu durur
   try { const n = navigator, az = (n.deviceMemory && n.deviceMemory <= 3) || (n.connection && n.connection.saveData) || matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (az) document.body.classList.add('hafif'); } catch (e) {}
+  // K-716cz: kare hızı ölçümü — ilk 3 saniyede akıcı değilse (saniyede 40 karenin altı) bütün süs animasyonları kapanır
+  try { let k = 0, t0 = 0; const ol = t => { if (!t0) t0 = t; k++; if (t - t0 < 3000) requestAnimationFrame(ol); else if (!document.hidden && k / ((t - t0) / 1000) < 40) document.body.classList.add('hafif'); }; requestAnimationFrame(ol); } catch (e) {}
   if ('IntersectionObserver' in window) { const io = new IntersectionObserver(G => G.forEach(g => g.target.classList.toggle('ekran-disi', !g.isIntersecting)), { rootMargin: '80px' });
     const izle = () => document.querySelectorAll('.tm-gk:not([data-io]), .tm-oge:not([data-io]), .ps-ic:not([data-io])').forEach(e => { e.dataset.io = '1'; io.observe(e); });
     new MutationObserver(() => { clearTimeout(izle.z); izle.z = setTimeout(izle, 150); }).observe(document.body, { childList: true, subtree: true }); izle(); }

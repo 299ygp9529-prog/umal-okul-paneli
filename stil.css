@@ -2007,3 +2007,14 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .msj-alt .birincil { width: 46px; height: 46px; border-radius: 50%; padding: 0; display: grid; place-items: center; flex: none; }
 .msj-sk.yeni { border-color: #ff8a8a77; } .msj-sk-ust { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; } .msj-sk-ust button { margin-left: auto; text-transform: none !important; }
 .msj-sk-akis { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow: auto; font-size: 13.5px; } .msj-sk-akis > div { padding: 7px 10px; border-radius: 10px; background: #ffffff08; } .msj-sk-akis > div.hedef { border: 1px solid #ff8a8a88; background: rgba(255,138,138,.08); }
+/* K-716cz: telefon menü kutuları — ikon solda, başlık yanında, açıklama altında (öğrenci uygulamasıyla aynı) */
+@media (max-width: 760px) {
+  .tm-gk:not(.tm-genis) { display: grid; grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; row-gap: 6px; align-items: center; align-content: start; min-height: 0; padding: 12px 12px 13px; border-radius: 15px; }
+  .tm-gk:not(.tm-genis) > .mi { width: 34px; height: 34px; border-radius: 10px; margin: 0; grid-column: 1; grid-row: 1; }
+  .tm-gk:not(.tm-genis) > .mi svg { width: 19px; height: 19px; }
+  .tm-gk:not(.tm-genis) > .tm-gad { grid-column: 2; grid-row: 1; font-size: 15px; line-height: 1.2; }
+  .tm-gk:not(.tm-genis):has(> .mk-sayi) > .tm-gad { padding-right: 24px; }
+  .tm-gk:not(.tm-genis) > small { grid-column: 1 / -1; grid-row: 2; font-size: 11.8px; line-height: 1.3; }
+}
+/* K-716cz: telefonda kutu çerçeveleri dönmez (sabit ışıklı çerçeve) — zayıf telefonlar donmasın */
+@media (max-width: 760px) { .tm-gk::after, .tm-oge::after { animation: none !important; } }
