@@ -2019,3 +2019,4 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 /* K-716cz: telefonda kutu çerçeveleri dönmez (sabit ışıklı çerçeve) — zayıf telefonlar donmasın */
 @media (max-width: 760px) { .tm-gk::after, .tm-oge::after { animation: none !important; } }
 @media (max-width: 760px) { .as-tepe { overflow: hidden; background: radial-gradient(circle at 50% 40%, #1d3157, #0b1426); border-color: rgba(34,232,255,.45); box-shadow: 0 0 12px rgba(34,232,255,.25); } .as-tepe img { width: 34px; height: 34px; object-fit: contain; display: block; } }
+@media (max-width: 760px) { .as-tepe svg.as-kafa { width: 35px; height: 35px; color: initial; } }

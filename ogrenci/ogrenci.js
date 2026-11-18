@@ -345,11 +345,20 @@
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
     $('#kutular').insertAdjacentHTML('afterbegin', msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
+    kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
     rvAnaCiz(); dyAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
   }
+  // K-716da: küçük kutular son kullanıma göre sıralanır (geniş uyarı/not kutuları yerinde kalır)
+  const kSonAn = () => 'ogrKutuSon:' + (S.no || '');
+  const kSon = () => { try { return JSON.parse(localStorage.getItem(kSonAn()) || '{}') || {}; } catch (e) { return {}; } };
+  const kAnahtar = e => e.dataset.git || e.getAttribute('href') || '';
+  function kutuSirala() { const k = $('#kutular'); if (!k) return; const t = kSon(), sl = [...k.children].filter(e => !e.classList.contains('genis') && kAnahtar(e));
+    const sr = sl.map((e, i) => [e, i]).sort((a, b) => (t[kAnahtar(b[0])] || 0) - (t[kAnahtar(a[0])] || 0) || a[1] - b[1]).map(x => x[0]);
+    const ph = sl.map(e => { const c = document.createComment(''); e.before(c); return c; }); ph.forEach((c, i) => c.replaceWith(sr[i])); }
+  $('#kutular').addEventListener('click', ev => { const e = ev.target.closest('#kutular > *'); if (!e || e.disabled || e.classList.contains('genis')) return; const a = kAnahtar(e); if (!a) return; try { const t = kSon(); t[a] = Date.now(); localStorage.setItem(kSonAn(), JSON.stringify(t)); } catch (x) {} }, true);
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }

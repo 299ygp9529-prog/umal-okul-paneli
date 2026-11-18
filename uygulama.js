@@ -250,7 +250,7 @@
     document.body.appendChild(b);
     // K-716cf: telefonda yüzen düğme yerine üst çubukta, Çıkış'ın yanında küçük "Atlas" düğmesi
     const u = document.createElement('button'); u.id = 'asUst'; u.className = 'as-tepe'; u.type = 'button'; u.setAttribute('aria-label', "Atlas'a sor");
-    u.innerHTML = '<img src="atlas-kafa.png" alt="" draggable="false"><span>Atlas</span>';   // K-716cz: Atlas'ın kafası
+    u.innerHTML = '<svg class="as-kafa" viewBox="0 -39 293 293" aria-hidden="true"><defs><clipPath id="asKafaK"><rect x="0" y="0" width="293" height="214"/></clipPath><filter id="asKafaP" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g clip-path="url(#asKafaK)"><image href="ogrenci/img/atlas-govde.png" width="384" height="390"/></g><g filter="url(#asKafaP)" fill="none" stroke="#7ff0ff" stroke-width="12" stroke-linecap="round"><path d="M106 136q18-22 36 0"/><path d="M174 136q18-22 36 0"/></g></svg><span>Atlas</span>';   // K-716cz: Atlas'ın kafası
     u.onclick = ac;
     const cik = document.getElementById('cikis'); if (cik) cik.parentNode.insertBefore(u, cik);
   }
@@ -699,7 +699,10 @@
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
-  const menuSayArt = id => { try { const m = menuSay(); m[id] = (m[id] || 0) + 1; localStorage.setItem(menuSayAnahtar(), JSON.stringify(m)); } catch (e) {} };
+  // K-716da: son açılan bölüm en üste — kullanılmayanlar kendiliğinden aşağı kayar (telefon menüsü, her rol)
+  const menuSonAnahtar = () => 'atlasMenuSon:' + (D.eposta || '');
+  const menuSon = () => { try { return JSON.parse(localStorage.getItem(menuSonAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
+  const menuSayArt = (...idler) => { try { const m = menuSay(), t = menuSon(), z = Date.now(); idler.filter(Boolean).forEach(id => { m[id] = (m[id] || 0) + 1; t[id] = z; }); localStorage.setItem(menuSayAnahtar(), JSON.stringify(m)); localStorage.setItem(menuSonAnahtar(), JSON.stringify(t)); } catch (e) {} };
   // K-693: telefonda bölüm ekranı ana sayfa gibi; bölümdeyken "‹ Geri" ile bölümlere dönülür (telefondaki gibi), üst şerit yok
   // K-695: grup kartlarına adıyla uyumlu çift tonlu simgeler (okul binası, sınav kâğıdı, mezuniyet kepi, pusula, kurum sütunları)
   const GRUP_SVG = {
@@ -726,6 +729,9 @@
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
     const gruplar = MENU_GRUP.filter(([g]) => !(D.rol === 'yonetici' && g === 'Öğretmen')).map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
     const kalan = [...izin].filter(id => id !== 'ozelders' && id !== 'dosyalar' && !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
+    { const t = menuSon(), z = id => t[id] || 0, gz = L => Math.max(0, ...L.map(z));   // K-716da: son kullanılan önce (sıralama kararlı: hiç açılmayanlar eski sırasında)
+      gruplar.forEach(g => { g[2] = g[2].map((id, i) => [id, i]).sort((a, b) => z(b[0]) - z(a[0]) || a[1] - b[1]).map(x => x[0]); });
+      const s_ = gruplar.map((g, i) => [g, i]).sort((a, b) => gz(b[0][2]) - gz(a[0][2]) || a[1] - b[1]).map(x => x[0]); gruplar.length = 0; gruplar.push(...s_); }
     const m = menuSay(), sik = [...izin].filter(id => id !== 'acil' && (m[id] || 0) >= 2).sort((x, y) => m[y] - m[x]).slice(0, 3);
     const altMi = id => ALT.rehberlik.length > 1 && ALT.rehberlik.includes(id), n_ = id => { const n = sayi(id); return n ? `<span class="mk-sayi">${n}</span>` : ''; };
     const kutu = (id, rk) => altMi(id) ? `<button class="tm-oge ${id === D.bolum ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id, ALT_IK[id])}<span>${esc(ALT_AD[id] || (BOLUMLER.find(b => b.id === id) || {}).ad || id)}</span>${n_(id)}</button>`
@@ -737,8 +743,9 @@
     const OG_ACK = { cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
-      const L = gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g]));
-      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${izin.has('dosyalar') ? `<button class="tm-gk tm-genis ${D.bolum === 'dosyalar' ? 'secili' : ''}" style="--g:#7fb2ff" data-tb="dosyalar">${menuIk('dosyalar')}<span class="tm-gad">${ad('dosyalar')}</span><small>Öğrencilere duyuru, dosya, video, test gönder</small>${n_('dosyalar')}</button>` : ''}${L.map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-gad">${ad(id)}</span><small>${esc(OG_ACK[id] || g)}</small>${n_(id)}</button>`).join('')}</div></div>`;
+      const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
+      const L = (t => gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g])).concat(izin.has('dosyalar') ? [['dosyalar', '#7fb2ff', '']] : []).sort((a, b) => (t[b[0]] || 0) - (t[a[0]] || 0) || vs(a[0]) - vs(b[0])))(menuSon());   // K-716da
+      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small>${n_(id)}</button>`).join('')}</div></div>`;   // K-716da: Atlas Sınıf da normal kutu
     } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = (sik.length && D.rol !== 'rehberlik' ? `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-bas">Sık Kullanılanlar</div><div class="tm-izgara">${sik.map(id => kutu(id, (gruplar.find(x => x[2].includes(id)) || [, '#22e8ff'])[1])).join('')}</div></div>` : '')
@@ -777,7 +784,7 @@
   function ac(id) {
     const b = BOLUMLER.find(x => x.id === id && x.roller.includes(D.rol));
     if (!b) return;
-    D.bolum = id; location.hash = id; if (telefon()) menuSayArt(b.ust || id);
+    D.bolum = id; location.hash = id; menuSayArt(id, b.ust);
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
