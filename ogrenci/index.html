@@ -368,6 +368,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   .il-katil { display: block; width: calc(100% - 28px); margin: 8px 14px 14px; min-height: 54px; font-size: 16px; box-shadow: 0 0 22px rgba(34,232,255,.35); } .il-k { margin: 0 14px 14px; font-size: 12.5px; color: #e8c66b; }
   .il-durum b { font-size: 15px; } .il-yol { display: flex; gap: 6px; margin-top: 12px; } .il-yol span { flex: 1; height: 6px; border-radius: 9px; background: #ffffff14; } .il-yol span.a { background: #3ef08a; } .il-yol span.b { background: linear-gradient(90deg, #e8c66b, #e8c66b55); }
   .il-yolad { display: flex; justify-content: space-between; font-size: 11px; color: #8fa6c4; margin-top: 6px; } .il-vaz { margin-top: 12px; font-size: 12.5px; }
+  .kod-gec { display: block; margin: 8px 0 0; padding: 4px 0; border: 0; background: none; color: var(--neon, #22e8ff); font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -416,9 +417,10 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <h1>Öğrenci girişi</h1>
     <div class="soluk kucuk">Okulun anketlerini ve rehberlik formlarını buradan doldurursun. Giriş kodun sınıf öğretmeninin dağıttığı fişte yazıyor.</div>
     <label for="no">Okul numaran</label>
-    <input id="no" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Örnek: 1234">
-    <label for="kod">Giriş kodun ya da şifren</label>
-    <input id="kod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX">
+    <input id="no" type="text" inputmode="numeric" autocomplete="username" maxlength="8" placeholder="Örnek: 1234">
+    <label for="kod">Şifren</label>
+    <input id="kod" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" spellcheck="false" maxlength="20" placeholder="Rakamlardan oluşan şifren">
+    <button type="button" class="kod-gec" id="kodGec">İlk girişim: okulun verdiği harfli kodu yazacağım</button>
     <button class="mk-kutu" id="hatirla" type="button"><i></i><span>Bu cihazda oturumum açık kalsın <small class="soluk" style="display:block;font-size:12.5px">Yalnız kendi telefonunda ya da bilgisayarında işaretle.</small></span></button>
     <button id="girisBtn" class="birincil">Giriş</button>
     <div id="girisBilgi" class="bilgi"></div>
@@ -505,6 +507,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611180830"></script>
+<script src="ogrenci.js?v=202611180920"></script>
 </body>
 </html>

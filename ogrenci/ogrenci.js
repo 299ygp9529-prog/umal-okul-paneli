@@ -59,6 +59,11 @@
     sifreDenetle();
     anaCiz(); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
+  // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
+  if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
+    if (harf) { k.setAttribute('inputmode', 'text'); k.removeAttribute('pattern'); k.type = 'text'; k.setAttribute('autocapitalize', 'characters'); k.placeholder = 'XXXX-XXXX'; $('#kodGec').textContent = 'Rakam şifremle gireceğim'; }
+    else { k.setAttribute('inputmode', 'numeric'); k.setAttribute('pattern', '[0-9]*'); k.type = 'password'; k.removeAttribute('autocapitalize'); k.placeholder = 'Rakamlardan oluşan şifren'; $('#kodGec').textContent = 'İlk girişim: okulun verdiği harfli kodu yazacağım'; }
+    k.value = ''; k.blur(); setTimeout(() => k.focus(), 60); };
   // K-609: okulun verdiği kod geçicidir; ilk girişte öğrenci kendi şifresini belirler (unutana yeni kod verilir)
   async function sifreDenetle() {
     if (!S.kod || S.no === '1907' || document.getElementById('sifreEkran')) return;
@@ -67,10 +72,10 @@
     const el = document.createElement('div'); el.id = 'sifreEkran'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     el.innerHTML = `<div class="sf-ic"><div class="sf-ik"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></div>
       <h1>Kendi şifreni belirle</h1><p>Sana verilen kod yalnız ilk giriş içindi. Bundan sonra numaran ve burada belirlediğin şifreyle gireceksin.</p>
-      <label for="sfY">Yeni şifren</label><input id="sfY" type="password" autocomplete="new-password" maxlength="20" spellcheck="false">
-      <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="password" autocomplete="new-password" maxlength="20" spellcheck="false">
+      <label for="sfY">Yeni şifren</label><input id="sfY" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password" maxlength="12" spellcheck="false">
+      <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password" maxlength="12" spellcheck="false">
       <button type="button" class="mk-kutu" id="sfGor"><i></i><span>Şifreyi göster</span></button>
-      <div class="sf-not">6–20 harf ya da rakam. Büyük-küçük harf fark etmez. Unutursan yeni bir kod verilir.</div>
+      <div class="sf-not">6–12 rakam. Doğum tarihin ya da 123456 gibi kolay şifre seçme. Unutursan yeni bir kod verilir.</div>
       <div class="bilgi" id="sfBilgi"></div>
       <button class="birincil" id="sfKaydet">Şifremi kaydet</button><button class="ikincil" id="sfCik">Çıkış</button></div>`;
     document.body.appendChild(el);
@@ -80,8 +85,9 @@
     el.querySelector('#sfCik').onclick = () => { el.remove(); cikis(); };
     const kaydet = async () => {
       const yeni = temiz(y.value); b.classList.remove('hata');
-      if (/[^A-Za-z0-9]/.test(y.value)) return hata('Yalnız harf (ç, ğ, ı, ö, ş, ü hariç) ve rakam kullan; boşluk ve işaret olmaz.');
-      if (yeni.length < 6) return hata('Şifren en az 6 karakter olmalı.');
+      if (/\D/.test(y.value)) return hata('Şifren yalnız rakamlardan oluşsun.');   // K-716bz: rakam şifre
+      if (yeni.length < 6 || yeni.length > 12) return hata('Şifren 6–12 rakam olmalı.');
+      if (/^(\d)\1+$/.test(yeni) || '0123456789012345'.includes(yeni) || '9876543210987654'.includes(yeni)) return hata('Bu şifre çok kolay tahmin edilir; başka rakamlar seç.');
       if (yeni !== temiz(t.value)) return hata('İki şifre birbirini tutmuyor.');
       const dug = el.querySelector('#sfKaydet'); dug.disabled = true; b.textContent = 'Kaydediliyor…';
       let r = null; try { ({ data: r } = await sb.rpc('umal_ogrenci_kod_degistir', { p_no: S.no, p_kod: S.kod, p_yeni: yeni })); } catch (e) {}

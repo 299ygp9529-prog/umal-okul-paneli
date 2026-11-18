@@ -319,12 +319,13 @@
   };
   $('#sifreKaydet').onclick = async () => {
     const p1 = $('#yeniSifre').value, p2 = $('#yeniSifre2').value;
-    if (p1.length < 8) { $('#girisBilgi').textContent = 'Şifre en az 8 karakter olsun.'; return; }
+    if (!/^\d{6,12}$/.test(p1)) { $('#girisBilgi').textContent = 'Şifre 6–12 rakamdan oluşsun.'; return; }   // K-716bz: rakam şifre
+    if (/^(\d)\1+$/.test(p1) || '0123456789012345'.includes(p1) || '9876543210987654'.includes(p1)) { $('#girisBilgi').textContent = 'Bu şifre çok kolay tahmin edilir; başka rakamlar seçin.'; return; }
     if (p1 !== p2) { $('#girisBilgi').textContent = 'İki şifre aynı değil.'; return; }
     $('#sifreKaydet').disabled = true; $('#girisBilgi').textContent = 'Kaydediliyor…';
     const { error } = await sb.auth.updateUser({ password: p1, data: { sifre_var: true } });
     $('#sifreKaydet').disabled = false;
-    if (error && !/different from the old|same password|should be different/i.test(error.message || '')) { $('#girisBilgi').textContent = /weak|pwned|leaked|characters/i.test(error.message || '') ? 'Bu şifre çok kolay ya da sızmış listelerde var; daha güçlü bir şifre seçin.' : 'Şifre kaydedilemedi: ' + hataYaz(error); return; }
+    if (error && !/different from the old|same password|should be different/i.test(error.message || '')) { const en = (String(error.message || '').match(/at least (\d+)/i) || [])[1]; $('#girisBilgi').textContent = en ? `Şifre en az ${en} rakam olmalı.` : /weak|pwned|leaked|characters/i.test(error.message || '') ? 'Bu şifre çok kolay ya da sızmış listelerde var; başka rakamlar seçin.' : 'Şifre kaydedilemedi: ' + hataYaz(error); return; }
     $('#girisBilgi').textContent = ''; $('#adim3').classList.add('gizli'); basla();
   };
   $('#sifreGec').onclick = () => { $('#adim3').classList.add('gizli'); $('#girisBilgi').textContent = ''; basla(); };
