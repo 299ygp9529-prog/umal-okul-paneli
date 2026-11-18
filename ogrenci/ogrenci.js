@@ -72,8 +72,8 @@
     const el = document.createElement('div'); el.id = 'sifreEkran'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     el.innerHTML = `<div class="sf-ic"><div class="sf-ik"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></div>
       <h1>Kendi şifreni belirle</h1><p>Sana verilen kod yalnız ilk giriş içindi. Bundan sonra numaran ve burada belirlediğin şifreyle gireceksin.</p>
-      <label for="sfY">Yeni şifren</label><input id="sfY" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password" maxlength="6" spellcheck="false">
-      <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password" maxlength="6" spellcheck="false">
+      <label for="sfY">Yeni şifren</label><input id="sfY" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" maxlength="6">
+      <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other" maxlength="6" spellcheck="false">
       <button type="button" class="mk-kutu" id="sfGor"><i></i><span>Şifreyi göster</span></button>
       <div class="sf-not">6 haneli bir sayı. Doğum tarihin ya da 123456 gibi kolay şifre seçme. Unutursan yeni bir kod verilir.</div>
       <div class="bilgi" id="sfBilgi"></div>

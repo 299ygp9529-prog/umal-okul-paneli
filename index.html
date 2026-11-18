@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="simge-192.png">
 <link rel="apple-touch-icon" href="simge-192.png">
-<link rel="stylesheet" href="stil.css?v=202611181315">
+<link rel="stylesheet" href="stil.css?v=202611181445">
 <script src="supabase.min.js?v=2.45.4"></script>
 <script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>')</script>
 </head>
@@ -42,9 +42,9 @@
       <div class="sifre-bas"><b>Kendi şifrenizi belirleyin</b><small>Bundan sonra kod beklemeden e-posta ve bu şifreyle girersiniz. Telefonunuz şifreyi hatırlar.</small></div>
       <input id="yeniEposta" name="email" type="email" autocomplete="username" class="gizli-alan" tabindex="-1" aria-hidden="true">
       <label for="yeniSifre">Yeni şifre (6 haneli)</label>
-      <input id="yeniSifre" name="new-password" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Yeni şifre">
+      <input id="yeniSifre" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="Yeni şifre">
       <label for="yeniSifre2">Şifreyi tekrar yazın</label>
-      <input id="yeniSifre2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Yeni şifre (tekrar)">
+      <input id="yeniSifre2" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="Yeni şifre (tekrar)">
       <button id="sifreKaydet" type="submit" class="birincil">Şifreyi kaydet ve gir</button>
       <button id="sifreGec" type="button" class="ikincil">Şimdilik geç</button>
     </form>
