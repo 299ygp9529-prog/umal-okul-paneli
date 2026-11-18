@@ -3013,8 +3013,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       let r = null;
       try {
         const b64 = await new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); });
-        const { data, error } = await sb.functions.invoke('atlas-plan', { body: { pdf: b64 } }); if (error) throw error; r = data;
-      } catch (e) { $('#pencere').classList.add('gizli'); uyar('Program okunamadı: ' + (/Failed to send|not found|404/i.test(String(e && e.message)) ? 'atlas-plan sunucu işlevi henüz kurulmamış.' : hataYaz(e))); return; }
+        const { data, error } = await sb.functions.invoke('atlas-plan', { body: { pdf: b64 } });
+        if (error) { let j = null; try { j = error.context && typeof error.context.json === 'function' ? await error.context.json() : null; } catch (e_) {} if (j && j.hata) { const x = new Error(j.hata + (j.ayrinti ? ' — ' + String(j.ayrinti).slice(0, 160) : '')); x.atlas = true; throw x; } throw error; } r = data;
+      } catch (e) { $('#pencere').classList.add('gizli'); uyar('Program okunamadı: ' + (e && e.atlas ? e.message : /Failed to send|not found|404/i.test(String(e && e.message)) ? 'atlas-plan sunucu işlevi henüz kurulmamış.' : hataYaz(e))); return; }
       if (!r || !r.ok || !(r.gorevler || []).length) { $('#pencere').classList.add('gizli'); uyar((r && r.hata) || 'Programda görev bulunamadı.'); return; }
       const esle = d => RP_DERS.find(x => x.toLocaleLowerCase(tr) === String(d).toLocaleLowerCase(tr)) || d;
       const L = r.gorevler.map(x => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), g: +x.g, ders: esle(x.ders), konu: x.konu || '', soru: +x.soru || 0, kaynak: x.kaynak || '', dk: +x.dk || 45 }));
