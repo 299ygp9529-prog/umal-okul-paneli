@@ -52,19 +52,24 @@
   const siniflar = () => [...new Set(P.dersler.map(d => d.sinif))].sort(sira);
   const gunSaat = () => { const z = (X.program() || {}).zil || {}; const say = a => (a || []).filter(x => parseInt(x.ders, 10) > 0).length || 8; return [0, 1, 2, 3].map(() => say(z.normal)).concat([say(z.cuma || z.normal)]); };
   // ---------- iskelet
+  function etiketle(kok) {   // K-700l: telefonda tablolar kart olur; her hücre sütun adını taşır
+    (kok || document).querySelectorAll('.dp-tbl').forEach(t => { const b = t.querySelector('.dp-tr.bas'); if (!b) return; const A = [...b.children].map(x => x.textContent.trim());
+      t.querySelectorAll('.dp-tr:not(.bas)').forEach(r => [...r.children].forEach((c, i) => { if (A[i] && !c.dataset.l) c.dataset.l = A[i]; })); });
+  }
+  let GOZ = null;
   async function idare(ctx) {
-    X = ctx; const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Ders Programı Hazırla</h1></div><div class="kart soluk">Yükleniyor…</div>';
+    X = ctx; if (!GOZ) { GOZ = new MutationObserver(() => etiketle($('#icerik'))); GOZ.observe($('#icerik'), { childList: true, subtree: true }); } const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Ders Programı Hazırla</h1></div><div class="kart soluk">Yükleniyor…</div>';
     try { await Promise.all([projeYukle(), istekleriYukle()]); } catch (e) { I.innerHTML = `<div class="ust"><h1>Ders Programı Hazırla</h1></div><div class="kart">${esc(e.message)}</div>`; return; }
     ciz();
   }
   async function istekleriYukle() { const { data } = await X.sb.rpc('umal_dp_istekler'); ISTEK = (data && data.ok && data.liste) || []; }
   function ciz() {
     const I = $('#icerik'), bek = ISTEK.filter(i => i.durum === 'bekliyor').length;
-    const sek = [['siniflar', 'Sınıflar'], ['derslist', 'Dersler'], ['kadro', 'Öğretmenler'], ['dersler', 'Sınıfa ders atama'], ['yuk', 'Öğretmene ders atama'],
-      ['kural', 'Sınırlılıklar ve kapalılar' + (bek ? ` <i class="dp-say">${bek}</i>` : '')], ['hazirla', 'Yerleştir'], ['taslak', 'Taslak ve yayın']];
+    const sek = [['siniflar', 'Sınıflar', 'Sınıflar'], ['derslist', 'Dersler', 'Dersler'], ['kadro', 'Öğretmenler', 'Öğretmen'], ['dersler', 'Sınıfa ders atama', 'Sınıfa ders'], ['yuk', 'Öğretmene ders atama', 'Öğretmene ders'],
+      ['kural', 'Sınırlılıklar ve kapalılar', 'Kurallar', bek], ['hazirla', 'Yerleştir', 'Yerleştir'], ['taslak', 'Taslak ve yayın', 'Yayın']];
     if (!sek.some(x => x[0] === SEK)) SEK = 'siniflar';
     I.innerHTML = `<div class="ust"><div><h1>Ders Programı Hazırla</h1><div class="soluk kucuk">Soldan sağa: sınıflar, dersler, öğretmenler, atamalar, kurallar; sonra Atlas yerleştirir, siz inceleyip yayınlarsınız.</div></div></div>
-      <div class="dp-sek">${sek.map(([k, a], i) => `<button class="cip ${SEK === k ? 'secili' : ''}" data-dpsek="${k}"><small class="dp-adim">${i + 1}</small>${a}</button>`).join('')}</div>${SEK === 'kural' ? ksekHtml() : ''}<div id="dpIc"></div>`;
+      <div class="dp-sek">${sek.map(([k, a, ks, n], i) => `<button class="dp-adb ${SEK === k ? 'secili' : ''}" data-dpsek="${k}"><small class="dp-adim">${i + 1}</small><span class="u">${a}</span><span class="k">${ks}</span>${n ? `<i class="dp-say">${n}</i>` : ''}</button>`).join('')}</div>${SEK === 'kural' ? ksekHtml() : ''}<div id="dpIc"></div>`;
     I.querySelectorAll('[data-dpsek]').forEach(b => b.onclick = () => { SEK = b.dataset.dpsek; ciz(); });
     I.querySelectorAll('[data-ks]').forEach(b => b.onclick = () => { KSEK = b.dataset.ks; ciz(); });
     ({ siniflar: sinifCiz, derslist: dersListCiz, kadro: kadroCiz, dersler: dersCiz, yuk: yukCiz, kural: () => ({ kural: ogrCiz, istek: istekCiz, nobet: nobetCiz })[KSEK](), hazirla: hazirlaCiz, taslak: taslakCiz })[SEK]();
@@ -294,7 +299,7 @@
     const E = $('#dpIc'), S = siniflar(), kap = kapasite();
     E.innerHTML = `<div class="kart"><div class="dp-bas"><b>Sınıflar</b><span class="soluk kucuk">${S.length} sınıf · her sınıf haftada ${kap} saat</span>
         <button class="birincil kucuk" id="dpSinifEkle">+ Sınıf ekle</button><button class="ikincil kucuk" id="dpYeniYil">Yeni yıl</button><button class="ikincil kucuk" id="dpSablonlar">Ders şablonları</button><button class="ikincil kucuk" id="dpMevcut">Mevcut programdan yeniden al</button></div>
-      <div class="dp-tbl"><div class="dp-tr bas"><span>Sınıf</span><span>Şablon</span><span>Ders</span><span>Saat</span><span>Öğretmensiz</span><span>Kapalı saat</span><span></span></div>
+      <div class="dp-tbl dp-stbl"><div class="dp-tr bas"><span>Sınıf</span><span>Şablon</span><span>Ders</span><span>Saat</span><span>Öğretmensiz</span><span>Kapalı saat</span><span></span></div>
       ${S.map(s => { const t = sinifTop(s), L = P.dersler.filter(d => d.sinif === s), bos = L.filter(d => !(d.ogr || []).length).length, kp = ((P.sinif[s] || {}).kapali || []).length, sb = sinifTur(s);
         return `<div class="dp-tr"><span><b>${esc(s)}</b>${sb && turAd(sb.tur) ? ` <em class="dp-tur">${turAd(sb.tur)}</em>` : ''}</span><span class="soluk">${esc(sb ? sb.ad.replace(/^\d+\. sınıf\s*·?\s*/, '') || 'Genel' : '—')}</span><span>${L.length}</span>
           <span class="${t !== kap ? 'kotu' : ''}">${t}${t !== kap ? ` / ${kap}` : ''}</span><span class="${bos ? 'kotu' : 'soluk'}">${bos || '—'}</span><span class="soluk">${kp || '—'}</span>
@@ -346,7 +351,7 @@
     E_(`<div class="kart"><div class="dp-bas"><b>Öğretmenler</b><span class="soluk kucuk">${O.length} öğretmen · toplam ${O.reduce((a, o) => a + yuk(o), 0)} saat</span><button class="birincil kucuk" id="dpOEkle">+ Öğretmen ekle</button></div>
       <input class="dp-in" id="dpOAra" placeholder="Öğretmen ara" style="margin-bottom:8px">
       <div class="dp-tbl dp-otbl"><div class="dp-tr bas"><span>Öğretmen</span><span>Branş</span><span>Saat</span><span>Sınır</span><span>Nöbet</span></div>
-      ${O.map(o => { const k = P.kadro[o] || {}, y = yuk(o), ng = NG(o); return `<div class="dp-tr tik" data-ko="${esc(o)}"><span><b>${esc(bas(o))}</b></span><span class="soluk">${esc(k.brans || '—')}</span>
+      ${O.map(o => { const k = P.kadro[o] || {}, y = yuk(o), ng = NG(o); return `<div class="dp-tr dp-tik" data-ko="${esc(o)}"><span><b>${esc(bas(o))}</b></span><span class="soluk">${esc(k.brans || '—')}</span>
         <span class="${y > (k.enCok || 99) ? 'kotu' : y < (k.enAz || 0) ? 'uyar' : ''}">${y}</span><span class="soluk">${k.enAz || 0}–${k.enCok || 30}</span><span class="soluk">${ng >= 0 ? GUN[ng] : '—'}</span></div>`; }).join('')}</div></div>`);
     const E = $('#dpIc');
     E.querySelectorAll('[data-ko]').forEach(b => b.onclick = () => ogretmenFormu(b.dataset.ko, kadroCiz)); $('#dpOEkle').onclick = () => ogretmenFormu(null, kadroCiz);
@@ -650,7 +655,7 @@
   }
   // ---------- K-700i: Günlük görevlendirme (gelmeyen öğretmenin derslerine)
   async function gorev(ctx) {
-    X = ctx; const I = $('#icerik'), prog = (X.program() || {}).siniflar || {}, NG = (X.nobetGunleri && X.nobetGunleri()) || {};
+    X = ctx; if (!GOZ) { GOZ = new MutationObserver(() => etiketle($('#icerik'))); GOZ.observe($('#icerik'), { childList: true, subtree: true }); } const I = $('#icerik'), prog = (X.program() || {}).siniflar || {}, NG = (X.nobetGunleri && X.nobetGunleri()) || {};
     const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     let gun = new Date(); while (gun.getDay() === 0 || gun.getDay() === 6) gun.setDate(gun.getDate() + 1);
     let G = { liste: [], say: {} }, GEL = new Set();
