@@ -2069,3 +2069,6 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .dya-o.y { border-color: rgba(255,107,114,.6); background: rgba(255,107,114,.12); } .dya-o.y em { background: #ff6b72; color: #fff; } .dya-o.y .a { color: #ffc2c5; }
 .dya-alt { position: sticky; bottom: 10px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: rgba(8,16,28,.94); border: 1px solid #23395c; box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(8px); }
 .dya-alt > div { flex: 1; font-size: 14px; color: #9fb3cf; } .dya-alt b { color: #3ef08a; font-size: 18px; } .dya-alt button { text-transform: none; }
+/* K-716dh: sürüklenebilir Atlas düğmesi; yoklama alt çubuğu düğmenin altında kalmasın */
+.as-fab { touch-action: none; user-select: none; -webkit-user-select: none; } .as-fab.suruk { cursor: grabbing; transition: none; opacity: .92; box-shadow: 0 14px 40px rgba(0,0,0,.55); }
+@media (min-width: 761px) { .dya-alt { margin-right: 190px; } }

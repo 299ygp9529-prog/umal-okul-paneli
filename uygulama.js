@@ -246,7 +246,17 @@
         await ogrencileriYukle().catch(() => []);
         window.UmalAsistan.ac({ sb, rol: D.rol, ogrenciler: () => D.ogrenciler || [], esc, baslik, pencereAc, uyar, hataYaz, raporYazdir, raporBant });
       } catch (e) { uyar('Atlas asistanı açılamadı: ' + hataYaz(e)); } };
-    b.onclick = ac;
+    // K-716dh: "Atlas'a sor" sürüklenebilir; bırakılan yer hatırlanır (bir şeyin üstüne gelirse kenara çekilir)
+    let sur = null, surDi = false;
+    const yer = () => { try { const y = JSON.parse(localStorage.getItem('asFabYer') || 'null'); if (y && isFinite(y.x) && isFinite(y.y)) { const x = Math.min(Math.max(8, y.x), innerWidth - b.offsetWidth - 8), yy = Math.min(Math.max(8, y.y), innerHeight - b.offsetHeight - 8); Object.assign(b.style, { left: x + 'px', top: yy + 'px', right: 'auto', bottom: 'auto' }); } } catch (e) {} };
+    b.addEventListener('pointerdown', ev => { const r = b.getBoundingClientRect(); sur = { dx: ev.clientX - r.left, dy: ev.clientY - r.top, x0: ev.clientX, y0: ev.clientY }; surDi = false; b.setPointerCapture(ev.pointerId); });
+    b.addEventListener('pointermove', ev => { if (!sur) return; if (!surDi && Math.hypot(ev.clientX - sur.x0, ev.clientY - sur.y0) < 6) return; surDi = true; b.classList.add('suruk');
+      const x = Math.min(Math.max(8, ev.clientX - sur.dx), innerWidth - b.offsetWidth - 8), y = Math.min(Math.max(8, ev.clientY - sur.dy), innerHeight - b.offsetHeight - 8);
+      Object.assign(b.style, { left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' }); });
+    b.addEventListener('pointerup', () => { if (sur && surDi) { const r = b.getBoundingClientRect(); try { localStorage.setItem('asFabYer', JSON.stringify({ x: r.left, y: r.top })); } catch (e) {} } sur = null; b.classList.remove('suruk'); });
+    b.onclick = ev => { if (surDi) { surDi = false; ev.preventDefault(); return; } ac(); };
+    b.title = "Atlas'a sor · sürükleyerek yerini değiştirebilirsiniz";
+    window.addEventListener('resize', yer); setTimeout(yer, 0);
     document.body.appendChild(b);
     // K-716cf: telefonda yüzen düğme yerine üst çubukta, Çıkış'ın yanında küçük "Atlas" düğmesi
     const u = document.createElement('button'); u.id = 'asUst'; u.className = 'as-tepe'; u.type = 'button'; u.setAttribute('aria-label', "Atlas'a sor");
