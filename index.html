@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="simge-192.png">
 <link rel="apple-touch-icon" href="simge-192.png">
-<link rel="stylesheet" href="stil.css?v=202611180900">
+<link rel="stylesheet" href="stil.css?v=202611180910">
 <script src="supabase.min.js?v=2.45.4"></script>
 <script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>')</script>
 </head>
@@ -20,25 +20,38 @@
     <div class="baslik">Okul Yönetim Paneli</div>
     <div class="alt">Ümraniye Merkez Anadolu Lisesi</div>
     <nav class="giris-sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
-      <a class="gs secili" href="/" aria-current="page"><b>Yönetim</b><small>E-posta koduyla</small></a>
+      <a class="gs secili" href="/" aria-current="page"><b>Yönetim</b><small>E-posta ve şifre</small></a>
       <a class="gs" href="/ogrenci/" onclick="this.parentNode.classList.add('ogr');setTimeout(()=>location.href='/ogrenci/',230);return false"><b>Öğrenci</b><small>Okul no ve giriş kodu</small></a>
     </nav>
-    <div id="adim1">
+    <form id="adim1" onsubmit="return false" autocomplete="on">
       <label for="eposta">E-posta adresiniz</label>
-      <input id="eposta" type="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ornek@okul.k12.tr">
-      <button id="kodGonder" class="birincil">Kod gönder</button>
-    </div>
+      <input id="eposta" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ornek@okul.k12.tr">
+      <label for="sifre">Şifreniz</label>
+      <div class="sifre-kutu"><input id="sifre" name="password" type="password" autocomplete="current-password" placeholder="Şifre"><button type="button" id="sifreGoz" class="sifre-goz" aria-label="Şifreyi göster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <button id="sifreGiris" type="submit" class="birincil">Giriş</button>
+      <button id="kodGonder" type="button" class="ikincil kod-link">İlk giriş ya da şifremi unuttum: e-postama kod gönder</button>
+    </form>
     <div id="adim2" class="gizli">
       <label for="kod">E-postanıza gelen kod</label>
       <input id="kod" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Kod">
-      <label class="hatirla"><input type="checkbox" id="hatirla" checked><span class="kutucuk"></span>Bu cihazda beni hatırla<small>Bir daha kod sorulmaz. Ortak bilgisayarda işareti kaldırın.</small></label>
+      <label class="hatirla"><input type="checkbox" id="hatirla" checked><span class="kutucuk"></span>Bu cihazda beni hatırla<small>Ortak bilgisayarda işareti kaldırın.</small></label>
       <button id="girisYap" class="birincil">Giriş</button>
-      <button id="geri" class="ikincil">Başka e-posta</button>
+      <button id="geri" class="ikincil">Geri</button>
     </div>
+    <form id="adim3" class="gizli" onsubmit="return false" autocomplete="on">
+      <div class="sifre-bas"><b>Kendi şifrenizi belirleyin</b><small>Bundan sonra kod beklemeden e-posta ve bu şifreyle girersiniz. Telefonunuz şifreyi hatırlar.</small></div>
+      <input id="yeniEposta" name="email" type="email" autocomplete="username" class="gizli-alan" tabindex="-1" aria-hidden="true">
+      <label for="yeniSifre">Yeni şifre (en az 8 karakter)</label>
+      <input id="yeniSifre" name="new-password" type="password" autocomplete="new-password" placeholder="Yeni şifre">
+      <label for="yeniSifre2">Şifreyi tekrar yazın</label>
+      <input id="yeniSifre2" type="password" autocomplete="new-password" placeholder="Yeni şifre (tekrar)">
+      <button id="sifreKaydet" type="submit" class="birincil">Şifreyi kaydet ve gir</button>
+      <button id="sifreGec" type="button" class="ikincil">Şimdilik geç</button>
+    </form>
     <div id="girisBilgi" class="bilgi"></div>
     <button id="yukleGiris" class="ikincil yukle gizli">Simge olarak ekle</button>
     <a class="kurlink" href="kur.html">Telefona ya da bilgisayara simge ekle →</a>
-    <div class="not">Şifre yok · Kod e-postanıza gelir · Panelde hesabınız yoksa koddan sonra «Erişim İste» ile isteyin, idare onaylar</div>
+    <div class="not">İlk girişte e-postanıza kod gelir, sonra kendi şifrenizi belirlersiniz · Panelde hesabınız yoksa koddan sonra «Erişim İste» ile isteyin, idare onaylar</div>
   </div>
 </div>
 
@@ -76,7 +89,7 @@
 <script src="bicim.js?v=202611151400"></script>
 <link rel="stylesheet" href="senaryo/senaryo.css?v=202611160830">
 <script src="senaryo/senaryo.js?v=202611160950"></script>
-<script src="uygulama.js?v=202611180900"></script>
+<script src="uygulama.js?v=202611180910"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

@@ -298,8 +298,37 @@
   function girisGoster() {
     $('#uygulama').classList.add('gizli');
     $('#giris').classList.remove('gizli');
-    $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli');
+    $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#adim3').classList.add('gizli');
+    try { const son = localStorage.getItem('atlas-son-eposta'); if (son && !$('#eposta').value) $('#eposta').value = son; } catch (e) {}
   }
+  // K-716by: öğretmen girişi — e-posta + kendi şifresi (telefon hatırlar); ilk girişte ve şifre unutulunca e-posta kodu, ardından şifre belirleme
+  $('#sifreGoz').onclick = () => { const i = $('#sifre'); i.type = i.type === 'password' ? 'text' : 'password'; i.focus(); };
+  $('#sifreGiris').onclick = async () => {
+    const e = $('#eposta').value.trim().toLowerCase(), p = $('#sifre').value;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { $('#girisBilgi').textContent = 'E-posta adresini yazın.'; $('#eposta').focus(); return; }
+    if (!p) { $('#girisBilgi').textContent = 'Şifrenizi yazın. İlk kez giriyorsanız ya da şifreniz yoksa aşağıdan e-postanıza kod isteyin.'; $('#sifre').focus(); return; }
+    $('#sifreGiris').disabled = true; $('#girisBilgi').textContent = 'Giriş yapılıyor…';
+    const { error } = await israrla(() => sb.auth.signInWithPassword({ email: e, password: p }));
+    $('#sifreGiris').disabled = false;
+    if (error) { $('#girisBilgi').textContent = agHatasi(error) ? 'İnternet bağlantısı yok gibi; yeniden deneyin.' : /invalid|credentials/i.test(error.message || '') ? 'E-posta ya da şifre yanlış. Henüz şifre belirlemediyseniz aşağıdan kodla girin.' : 'Giriş olmadı: ' + hataYaz(error); return; }
+    try { localStorage.setItem('atlas-hatirla', '1'); localStorage.setItem('atlas-son-eposta', e); } catch (e_) {}
+    $('#girisBilgi').textContent = ''; basla();
+  };
+  const sifreAdimi = e => {   // kodla girişten sonra: kendi şifresini belirler (ya da geçer)
+    $('#adim2').classList.add('gizli'); $('#adim3').classList.remove('gizli'); $('#yeniEposta').value = e; $('#girisBilgi').textContent = ''; setTimeout(() => $('#yeniSifre').focus(), 50);
+  };
+  $('#sifreKaydet').onclick = async () => {
+    const p1 = $('#yeniSifre').value, p2 = $('#yeniSifre2').value;
+    if (p1.length < 8) { $('#girisBilgi').textContent = 'Şifre en az 8 karakter olsun.'; return; }
+    if (p1 !== p2) { $('#girisBilgi').textContent = 'İki şifre aynı değil.'; return; }
+    $('#sifreKaydet').disabled = true; $('#girisBilgi').textContent = 'Kaydediliyor…';
+    const { error } = await sb.auth.updateUser({ password: p1, data: { sifre_var: true } });
+    $('#sifreKaydet').disabled = false;
+    if (error && !/different from the old|same password|should be different/i.test(error.message || '')) { $('#girisBilgi').textContent = /weak|pwned|leaked|characters/i.test(error.message || '') ? 'Bu şifre çok kolay ya da sızmış listelerde var; daha güçlü bir şifre seçin.' : 'Şifre kaydedilemedi: ' + hataYaz(error); return; }
+    $('#girisBilgi').textContent = ''; $('#adim3').classList.add('gizli'); basla();
+  };
+  $('#sifreGec').onclick = () => { $('#adim3').classList.add('gizli'); $('#girisBilgi').textContent = ''; basla(); };
+  $('#yeniSifre2').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#sifreKaydet').click(); });
   $('#kodGonder').onclick = async () => {
     const e = $('#eposta').value.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { $('#girisBilgi').textContent = 'E-posta adresini yazın.'; return; }
@@ -319,12 +348,13 @@
     if (error && !agHatasi(error)) { const r2 = await sb.auth.verifyOtp({ email: e, token: k, type: 'signup' }).catch(er => ({ error: er })); if (!r2.error) error = null; }   // K-526: ilk girişte "Confirm signup" kodu
     $('#girisYap').disabled = false;
     if (error) { $('#girisBilgi').textContent = 'Kod doğru değil ya da süresi doldu.'; return; }
-    $('#girisBilgi').textContent = '';
-    basla();
+    $('#girisBilgi').textContent = ''; try { localStorage.setItem('atlas-son-eposta', e); } catch (e_) {}
+    sifreAdimi(e);   // K-716by: koddan sonra kendi şifresini belirlesin
   };
   $('#kod').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#girisYap').click(); });
-  $('#eposta').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#kodGonder').click(); });
-  $('#geri').onclick = () => { $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#girisBilgi').textContent = ''; };
+  $('#eposta').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#sifre').focus(); } });
+  $('#sifre').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#sifreGiris').click(); } });
+  $('#geri').onclick = () => { $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#adim3').classList.add('gizli'); $('#girisBilgi').textContent = ''; };
   $('#cikis').onclick = async () => { await sb.auth.signOut({ scope: 'local' }); location.reload(); };
 
   // Masaüstü simgesi: Edge / Chrome "uygulama olarak yükle" (tek tıkla açılır, adres çubuğu yok).
