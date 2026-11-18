@@ -344,8 +344,7 @@
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
-    $('#kutular').insertAdjacentHTML('afterbegin', msKutu());   // K-716cw: Mesajlar
-    $('#kutular').insertAdjacentHTML('beforeend', bdKutu());   // K-716cv: Öneri ve sorun bildir
+    $('#kutular').insertAdjacentHTML('afterbegin', msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
     sozCiz();
     rvAnaCiz(); dyAnaCiz();
     if (sessiz === true) return;
@@ -409,7 +408,7 @@
   async function msYukle() { try { const { data } = await sb.rpc('umal_ogr_sohbetler', { p_no: S.no, p_kod: S.kod }); if (data && data.ok) { MS.L = data.liste || []; MS.O = data.ogretmenler || []; MS.ben = data.ben; return true; } } catch (e) {} return false; }
   const msYeni = () => MS.L.reduce((a, x) => a + (+x.yeni || 0), 0);
   function msKutu() { if (!MS.L.length) return ''; const n = msYeni(), son = MS.L.filter(x => x.son).sort((a, b) => new Date(b.son.zaman) - new Date(a.son.zaman))[0];
-    return `<button data-git="msj" class="genis no-ana ms-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${MS_IK}</i><span><b>Mesajlar</b><small>${n ? n + ' yeni mesaj' : son ? esc(String(son.son.metin).slice(0, 48)) : 'Sınıf grubun ve öğretmenlerin'}</small></span></button>`; }
+    return `<button data-git="msj" class="ms-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${MS_IK}</i><b>Mesajlar</b><small class="ms-son">${n ? n + ' yeni mesaj' : son ? esc(String(son.son.metin).slice(0, 40)) : 'Sınıf grubun'}</small></button>`; }
   const msAv = (kim, ad) => { const no = kim.startsWith('o:') ? kim.slice(2) : ''; return `<span class="ms-av ${no ? '' : 'o'}">${no && MS.foto[no] ? `<img alt="" src="data:image/jpeg;base64,${MS.foto[no]}">` : esc(String(ad || '?').split(/\s+/).map(z => z[0]).slice(0, 2).join('').toLocaleUpperCase(tr))}</span>`; };
   async function msAc() { MS.acik = null; goster('s-msj'); window.scrollTo(0, 0); await msYukle(); msListeCiz(); clearInterval(MS.zam); MS.zam = setInterval(async () => { if ($('#s-msj').classList.contains('gizli')) { clearInterval(MS.zam); return; } if (document.hidden) return; if (MS.acik) await msOku(true); else { await msYukle(); msListeCiz(); } }, 8000); }
   function msListeCiz() { const el = $('#msIc'); if (!el) return; $('#msBaslik').textContent = 'Mesajlar';
@@ -457,7 +456,7 @@
   async function bdYukle(okudu) { try { const { data } = await sb.rpc('umal_ogr_bildirimlerim', { p_no: S.no, p_kod: S.kod, p_okudu: !!okudu }); if (data && data.ok) { BD.L = data.liste || []; BD.P = data.pano || []; return true; } } catch (e) {} return false; }
   const bdYeni = () => BD.L.filter(b => !b.okudu).length;
   function bdKutu() { const n = bdYeni();
-    return `<button data-git="bld" class="genis no-ana bd-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#c99bff">${BD_IK}</i><span><b>Öneri ve sorun bildir</b><small>${n ? (n > 1 ? n + ' bildirimine yanıt geldi' : 'Bildirimine yanıt geldi') : 'Hata, istek, yanlış bilgi · Atlas\'ı birlikte geliştirelim'}</small></span></button>`; }
+    return `<button data-git="bld" class="bd-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#c99bff">${BD_IK}</i><b>Öneri bildir</b><small>${n ? (n > 1 ? n + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri'}</small></button>`; }
   function bdCihaz() { const u = navigator.userAgent; const tel = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? ((u.match(/Android [\d.]+; ([^;)]+)/) || [])[1] || 'Android') : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows' : 'Diğer';
     const os = (u.match(/OS (\d+)_/) || u.match(/Android (\d+)/) || [])[1] || ''; const tr_ = /CriOS|Chrome/.test(u) && !/Edg/.test(u) ? 'Chrome' : /Edg/.test(u) ? 'Edge' : /Firefox|FxiOS/.test(u) ? 'Firefox' : /Safari/.test(u) ? 'Safari' : 'Tarayıcı';
     const sr = ((document.querySelector('script[src*="ogrenci.js"]') || {}).src || '').split('v=')[1] || ''; const uy = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
