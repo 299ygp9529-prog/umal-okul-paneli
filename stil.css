@@ -2026,7 +2026,8 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .as-cevap .katex { font-size: 1.08em; } .as-cevap .katex-display { margin: .6em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
 /* K-716de: telefon ana menüsü — kutular ekranı tam doldurur (az kutuda büyür, çok kutuda kaydırılır) */
 @media (max-width: 760px) {
-  .tumu-menu.tm-dolu { display: flex; flex-direction: column; padding-bottom: 84px; }
+  .tumu-menu.tm-dolu { display: flex; flex-direction: column; padding-bottom: 20px; }
+  .tm-gk.tm-cikti { grid-column: 1 / -1; padding-right: 86px; }
   .tumu-menu.tm-dolu > .tm-grup:last-child { flex: 1 0 auto; display: flex; flex-direction: column; }
   .tumu-menu.tm-dolu > .tm-grup:last-child > .tm-gruplar { flex: 1 0 auto; grid-auto-rows: 1fr; }
   .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) { align-content: center; row-gap: 10px; padding: 14px; }
