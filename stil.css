@@ -1907,7 +1907,15 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .as-tepe { display: none; }
 @media (max-width: 760px) {
   .as-fab { display: none !important; }
-  .as-tepe { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 10px; border-radius: 999px; font: inherit; font-weight: 800; font-size: 15px; color: #fff; cursor: pointer;
-    border: 1px solid rgba(201,155,255,.6); background: linear-gradient(135deg, rgba(122,60,255,.45), rgba(34,232,255,.25)); }
-  .as-tepe svg { width: 18px; height: 18px; color: #22e8ff; }
+  .as-tepe { display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; cursor: pointer; flex: none;
+    border: 1px solid rgba(201,155,255,.6); background: linear-gradient(135deg, rgba(122,60,255,.5), rgba(34,232,255,.25)); box-shadow: 0 0 14px rgba(122,60,255,.35); }
+  .as-tepe span { display: none; }
+  .kullanici { flex-wrap: nowrap; }
+  .as-tepe svg { width: 21px; height: 21px; color: #22e8ff; }
+}
+/* K-716cg: telefonda üst çubuk tek satır — Geri görünürken logo gizlenir, alt yazı sıkılaşır */
+@media (max-width: 760px) {
+  .yan:has(#telGeri:not(.gizli)) > .logo3d { display: none; }
+  .yan .ust-ad small { letter-spacing: .14em; }
+  .kullanici { gap: 8px; }
 }
