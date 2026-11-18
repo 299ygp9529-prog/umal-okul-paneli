@@ -1464,22 +1464,55 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   // K-716bn: okulda yazdır — DersMap'e gitmeden; iş Print programının kuyruğuna gider (umal_yazdirma_isleri). Bütün panel kullanıcıları
   const YZ_SON = 'umalYaziciSon';
-  async function okuldaYazdir(k) {   // k: { ad, dosya?: Blob, uret?: async () => Blob }
-    let L = [], sec = null, kopya = 1, cift = false, sayfa = '', blob = k.dosya || null;   // k.yol: kısayolla önceden yüklenmiş PDF (yazdir/kisayol/...)
+  const YZ_AYAR = 'umalYaziciAyar';
+  const YZ_VARS = { cift: false, kenar: 'uzun', tc: 'tumu', renk: 'renkli', nup: 1, yon: 'otomatik', kagit: 'A4', olcek: 'fit' };
+  function yzSayfaSec(spec, n) {   // "1-3,5" → [0,1,2,4] (sayfa sayısıyla sınırlı)
+    const L = []; String(spec || '').split(',').map(x => x.trim()).filter(Boolean).forEach(p => { const m = p.match(/^(\d+)\s*(?:-\s*(\d+))?$/); if (!m) return; let a = +m[1], b = m[2] ? +m[2] : a; if (a > b) [a, b] = [b, a]; for (let i = Math.max(1, a); i <= Math.min(n, b); i++) L.push(i - 1); });
+    return L;
+  }
+  async function yzKagitBasina(blob, nup, spec, tc) {   // K-716bs: bir kâğıda 2 ya da 4 sayfa (tarayıcıda, pdf-lib ile)
+    await gzBetik('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js');
+    const { PDFDocument } = window.PDFLib, kay = await PDFDocument.load(await blob.arrayBuffer(), { ignoreEncryption: true });
+    const n = kay.getPageCount(); let sec = spec ? yzSayfaSec(spec, n) : [...Array(n).keys()];
+    if (tc === 'tek') sec = sec.filter(i => i % 2 === 0); else if (tc === 'cift') sec = sec.filter(i => i % 2 === 1);
+    if (!sec.length) throw new Error('Seçilen aralıkta sayfa yok');
+    const yeni = await PDFDocument.create(), gom = await yeni.embedPages(sec.map(i => kay.getPage(i)));
+    const [W, H, sut, sat] = nup === 2 ? [841.89, 595.28, 2, 1] : [595.28, 841.89, 2, 2], m = 14, hw = (W - m * (sut + 1)) / sut, hh = (H - m * (sat + 1)) / sat;
+    for (let i = 0; i < gom.length; i += nup) {
+      const sy = yeni.addPage([W, H]);
+      gom.slice(i, i + nup).forEach((e, j) => { const k = Math.min(hw / e.width, hh / e.height), w = e.width * k, h = e.height * k, c = j % sut, r = Math.floor(j / sut);
+        sy.drawPage(e, { x: m + c * (hw + m) + (hw - w) / 2, y: H - (m + r * (hh + m)) - hh + (hh - h) / 2, width: w, height: h }); });
+    }
+    return new Blob([await yeni.save()], { type: 'application/pdf' });
+  }
+  async function okuldaYazdir(k) {   // k: { ad, dosya?: Blob, uret?: async () => Blob, yol?: kısayolla yüklenmiş PDF }
+    let L = [], sec = null, kopya = 1, sayfa = '', blob = k.dosya || null, A = { ...YZ_VARS };
+    try { Object.assign(A, JSON.parse(localStorage.getItem(YZ_AYAR) || '{}')); } catch (e) {}
     try { const r = await sb.rpc('umal_panel_yazicilar'); if (r.error) throw r.error; L = Array.isArray(r.data) ? r.data.filter(y => y && y.yazici) : []; } catch (e) { uyar('Yazıcılar alınamadı: ' + hataYaz(e)); return; }
     if (!L.length) { uyar('Okulda Print kurulu, yazıcısı olan açık bir bilgisayar görünmüyor.'); return; }
     let son = ''; try { son = localStorage.getItem(YZ_SON) || ''; } catch (e) {}
     sec = L.find(y => y.cihaz + '|' + y.yazici === son) || L.find(y => y.acik) || L[0];
+    const seg = (ad, al, S) => `<div class="yz-bas">${ad}</div><div class="yz-sat yz-seg">${S.map(([v, t]) => `<button class="yz-s ${String(A[al]) === String(v) ? 'secili' : ''}" data-a="${al}" data-v="${v}">${t}</button>`).join('')}</div>`;
     const ciz = () => {
-      pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">Okulda yazdır</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(k.ad || 'Belge')}</b><small id="yzHazir">${blob ? 'PDF hazır' : 'PDF hazırlanıyor…'}</small></span></div>
+      const kay = $('#pencereIcerik .yz-pen'), ust = kay ? kay.scrollTop : 0;
+      pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">Okulda yazdır</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(k.ad || 'Belge')}</b><small id="yzHazir">${blob ? 'PDF hazır · ' + Math.max(1, Math.round(blob.size / 1024)) + ' KB' : 'PDF hazırlanıyor…'}</small></span></div>
         <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(y.cihaz_ad)} · ${esc(y.yazici)}</b><small>${y.acik ? (y.hazir ? 'açık' : 'açık · yazdırma programı eksik') : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span></button>`).join('')}</div>
-        <div class="yz-bas">Kopya · Sayfa</div><div class="yz-sat"><div class="yz-kopya"><button data-k="-1">−</button><b>${kopya}</b><button data-k="1">+</button></div><input id="yzSayfa" placeholder="Tümü · ya da 1-3,5" inputmode="numeric" value="${esc(sayfa)}"></div>
-        <div class="yz-bas">Yüz</div><div class="yz-sat"><button class="yz-s ${cift ? '' : 'secili'}" data-c="0">Tek yüz</button><button class="yz-s ${cift ? 'secili' : ''}" data-c="1">Çift yüz</button></div>
+        <div class="yz-bas">Kopya · Sayfa aralığı</div><div class="yz-sat"><div class="yz-kopya"><button data-k="-1">−</button><b>${kopya}</b><button data-k="1">+</button></div><input id="yzSayfa" placeholder="Tümü · ya da 1-3,5" inputmode="numeric" value="${esc(sayfa)}"></div>
+        ${seg('Hangi sayfalar', 'tc', [['tumu', 'Hepsi'], ['tek', 'Tek sayfalar'], ['cift', 'Çift sayfalar']])}
+        ${seg('Renk', 'renk', [['renkli', 'Renkli'], ['siyah', 'Siyah-beyaz']])}
+        ${seg('Yüz', 'cift', [['false', 'Tek yüz'], ['true', 'Çift yüz']])}
+        ${A.cift ? seg('Çevirme', 'kenar', [['uzun', 'Uzun kenar'], ['kisa', 'Kısa kenar']]) : ''}
+        ${seg('Bir kâğıda', 'nup', [[1, '1 sayfa'], [2, '2 sayfa'], [4, '4 sayfa']])}
+        ${seg('Yön', 'yon', [['otomatik', 'Otomatik'], ['dikey', 'Dikey'], ['yatay', 'Yatay']])}
+        ${seg('Kâğıt', 'kagit', [['A4', 'A4'], ['A3', 'A3'], ['A5', 'A5']])}
+        ${seg('Ölçek', 'olcek', [['fit', 'Sayfaya sığdır'], ['noscale', 'Gerçek boyut'], ['shrink', 'Büyükse küçült']])}
+        <div class="yz-ozet">${[kopya > 1 ? kopya + ' kopya' : '', A.renk === 'siyah' ? 'siyah-beyaz' : 'renkli', A.cift ? 'çift yüz' : 'tek yüz', A.nup > 1 ? 'kâğıt başına ' + A.nup + ' sayfa' : '', A.kagit !== 'A4' ? A.kagit : '', A.tc !== 'tumu' ? (A.tc === 'tek' ? 'tek sayfalar' : 'çift sayfalar') : ''].filter(Boolean).join(' · ')}</div>
         <button class="birincil yz-gonder" id="yzGonder">${KY_IK.yazdir}Yazıcıya gönder</button></div>`);
-      const P = $('#pencere');
-      P.querySelectorAll('[data-yi]').forEach(b => b.onclick = () => { sec = L[+b.dataset.yi]; sayfa = $('#yzSayfa').value; ciz(); });
-      P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kopya = Math.max(1, Math.min(100, kopya + +b.dataset.k)); sayfa = $('#yzSayfa').value; ciz(); });
-      P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cift = b.dataset.c === '1'; sayfa = $('#yzSayfa').value; ciz(); });
+      const P = $('#pencere'), yeni = $('#pencereIcerik .yz-pen'); if (yeni && ust) yeni.scrollTop = ust;
+      const tut = () => { sayfa = $('#yzSayfa').value; };
+      P.querySelectorAll('[data-yi]').forEach(b => b.onclick = () => { tut(); sec = L[+b.dataset.yi]; ciz(); });
+      P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { tut(); kopya = Math.max(1, Math.min(100, kopya + +b.dataset.k)); ciz(); });
+      P.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { tut(); const v = b.dataset.v; A[b.dataset.a] = v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? +v : v; try { localStorage.setItem(YZ_AYAR, JSON.stringify(A)); } catch (e) {} ciz(); });
       $('#yzGonder').onclick = gonder;
     };
     const gonder = async () => {
@@ -1488,11 +1521,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       bt.disabled = true; bt.textContent = 'Gönderiliyor…';
       try {
         if (!blob) blob = await hazir;
-        const yol = k.yol || 'yazdir/panel/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.pdf';
-        if (!k.yol) { const up = await sb.storage.from('umal-pdf').upload(yol, blob, { contentType: 'application/pdf', upsert: false }); if (up.error) throw up.error; }
-        const h = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(x => x.toString(16).padStart(2, '0')).join('');
+        let gid = blob, yol = k.yol || null, spec = sayfa || null, tc = A.tc;
+        if (A.nup > 1) { bt.textContent = 'Sayfalar birleştiriliyor…'; gid = await yzKagitBasina(blob, A.nup, spec, tc); yol = null; spec = null; tc = 'tumu'; bt.textContent = 'Gönderiliyor…'; }
+        if (!yol) { yol = 'yazdir/panel/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.pdf'; const up = await sb.storage.from('umal-pdf').upload(yol, gid, { contentType: 'application/pdf', upsert: false }); if (up.error) throw up.error; }
+        const h = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await gid.arrayBuffer()))].map(x => x.toString(16).padStart(2, '0')).join('');
         const ad = String(k.ad || 'Belge').replace(/[\\/:*?"<>|]+/g, ' ').trim().replace(/(\.pdf)?$/i, '.pdf');
-        const r = await sb.rpc('umal_panel_yazdir', { p_cihaz: sec.cihaz, p_yazici: sec.yazici, p_pdf_yol: yol, p_pdf_ad: ad, p_sha256: h, p_boyut: blob.size, p_kopya: kopya, p_cift_yuz: cift, p_sayfalar: sayfa || null });
+        const temel = { p_cihaz: sec.cihaz, p_yazici: sec.yazici, p_pdf_yol: yol, p_pdf_ad: ad, p_sha256: h, p_boyut: gid.size, p_kopya: kopya, p_cift_yuz: !!A.cift, p_sayfalar: spec };
+        let r = await sb.rpc('umal_panel_yazdir', { ...temel, p_olcek: A.olcek, p_renk: A.renk, p_yon: A.nup > 1 ? 'otomatik' : A.yon, p_kagit: A.kagit, p_tek_cift: tc, p_kenar: A.kenar });
+        if (r.error && /PGRST202|could not find|schema cache/i.test((r.error.code || '') + ' ' + (r.error.message || ''))) r = await sb.rpc('umal_panel_yazdir', temel);   // seçenek SQL'i henüz çalışmadıysa
         if (r.error) throw r.error;
         try { localStorage.setItem(YZ_SON, sec.cihaz + '|' + sec.yazici); } catch (e) {}
         $('#pencere').classList.add('gizli');
@@ -1512,14 +1548,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <p class="cok-soluk kucuk" style="margin:10px 0 0">Atlas'taki listeler, biletler ve raporlarda da önizlemenin üstündeki <b>Okulda yazdır</b> düğmesi aynı işi yapar.</p></div>
       <div class="kart"><div class="ust" style="align-items:center"><h3 style="margin:0">Çıktılarım</h3><button class="ikincil" id="ckYenile">Yenile</button></div><div id="ckIsler" class="soluk">Yükleniyor…</div></div>`;
     $('#ckDosya').onchange = ev => { const f = ev.target.files[0]; ev.target.value = ''; if (!f) return; if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { uyar('Yalnız PDF dosyası yazdırılabilir.'); return; } if (f.size > 40 * 1024 * 1024) { uyar('Dosya 40 MB\'tan büyük.'); return; } okuldaYazdir({ ad: f.name, dosya: f }); };
-    const DUR = { bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
+    const DUR = { sirada: ['Sırada', 'bek'], bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
     ciz_cikti = async () => {
       if (D.bolum !== 'cikti' || !$('#ckIsler')) return;
       const r = await sb.rpc('umal_panel_islerim'); const L = !r.error && Array.isArray(r.data) ? r.data : [];
       if (r.error) { $('#ckIsler').textContent = 'Yüklenemedi: ' + hataYaz(r.error); return; }
       $('#ckIsler').classList.toggle('soluk', !L.length);
       $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(i.cihaz_ad)} · ${esc(i.yazici)} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.durum === 'hata' && i.hata ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
-      if (L.some(i => i.durum === 'bekliyor' || i.durum === 'yazdiriliyor')) setTimeout(ciz_cikti, 8000);
+      if (L.some(i => i.durum === 'sirada' || i.durum === 'bekliyor' || i.durum === 'yazdiriliyor')) setTimeout(ciz_cikti, 8000);
     };
     $('#ckYenile').onclick = ciz_cikti; ciz_cikti();
     let bek = null; try { bek = JSON.parse(sessionStorage.getItem('atlasYazdir') || 'null'); sessionStorage.removeItem('atlasYazdir'); } catch (e) {}

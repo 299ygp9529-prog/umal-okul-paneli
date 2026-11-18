@@ -1,7 +1,7 @@
 # UMAL Print - okul bilgisayarindaki yazicilari DersMap ve tahtalara acar, gelen ciktilari yazdirir.
 # Kurulum: panel > Print sekmesi. Dosyalar: C:\ProgramData\UMAL-Print (ayar.json, umal-print.ps1, SumatraPDF.exe, gunluk.txt)
 param([switch]$Kullanici)
-$Surum = '1.1'
+$Surum = '1.2'
 $ErrorActionPreference = 'Stop'
 $Klasor = Join-Path $env:ProgramData 'UMAL-Print'
 $KulKlasor = Join-Path $Klasor 'kullanici'
@@ -205,11 +205,15 @@ function Yazdir($is) {
     if (-not $tamam) { throw ('PDF indirilemedi: ' + $son) }
     $ay = @()
     if ($is.sayfalar) { $ay += [string]$is.sayfalar }
+    $tc = [string]$is.tek_cift; if ($tc -eq 'tek') { $ay += 'odd' } elseif ($tc -eq 'cift') { $ay += 'even' }
     $kopya = 1; try { $kopya = [int]$is.kopya } catch {}
     if ($kopya -gt 1) { $ay += ($kopya.ToString() + 'x') }
-    if ($is.cift_yuz) { $ay += 'duplexlong' } else { $ay += 'simplex' }
+    if ($is.cift_yuz) { if ([string]$is.kenar -eq 'kisa') { $ay += 'duplexshort' } else { $ay += 'duplexlong' } } else { $ay += 'simplex' }
     $olcek = [string]$is.olcek; if (@('fit', 'shrink', 'noscale') -notcontains $olcek) { $olcek = 'fit' }
     $ay += $olcek
+    if ([string]$is.renk -eq 'siyah') { $ay += 'monochrome' } elseif ([string]$is.renk -eq 'renkli') { $ay += 'color' }
+    $yon = [string]$is.yon; if ($yon -eq 'dikey') { $ay += 'portrait' } elseif ($yon -eq 'yatay') { $ay += 'landscape' }
+    $kg = [string]$is.kagit; if (@('A3', 'A5') -contains $kg) { $ay += ('paper=' + $kg) }
     $arg = '-print-to "' + $yaz + '" -print-settings "' + ($ay -join ',') + '" -silent -exit-when-done "' + $dosya + '"'
     # 1) hizmet kendi yazdirir  2) olmazsa oturumu acik kullanicinin hesabinda  3) o da olmazsa yazicinin kendi ayarlariyla
     $kod1 = -9; $kod2 = -9; $kod3 = -9; $yol = ''

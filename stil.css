@@ -1817,3 +1817,7 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 .dd-arac .dd-kare { min-height: 82px; font-size: 13px; gap: 6px; } .dd-arac .dd-kare i { width: 36px; height: 36px; } .dd-arac .dd-kare svg { width: 21px; height: 21px; }
 .dd-arac .dd-yeni { border-color: rgba(34,232,255,.55); background: linear-gradient(150deg, #1b3a5c, #13243f); color: #fff; box-shadow: 0 0 16px rgba(34,232,255,.15); }
 .dd-kare * { pointer-events: none; }
+/* K-716bs: yazdırma seçenekleri */
+.yz-seg .yz-s { min-height: 42px; font-size: 13.5px; padding: 0 6px; line-height: 1.2; }
+.yz-ozet { margin-top: 14px; font-size: 12.5px; color: #e8c66b; text-align: center; }
+.yz-pen { max-height: 78vh; overflow: auto; }
