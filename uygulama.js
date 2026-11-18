@@ -464,6 +464,11 @@
   const DY = { gun: '' };
   async function dersYoklamaBolumu(sessiz) {
     if (!DY.gun) DY.gun = bugunISO();
+    if (sessiz !== true && sessiz !== 'ozet' && DY.gun === bugunISO()) {   // K-690c: şu an dersi varsa doğrudan o sınıfın listesi açılır
+      const { simdi } = await dyDerslerim().catch(() => ({}));
+      if (simdi && D.bolum === 'dersyoklama') return dyAl({ sinif: simdi.sinif, n: simdi.n });
+    }
+    if (sessiz === 'ozet') sessiz = false;
     const I = $('#icerik'); if (sessiz !== true) I.innerHTML = '<div class="ust"><h1>Ders Yoklaması</h1></div><div class="kart soluk">Yükleniyor…</div>';
     const { data, error } = await sb.rpc('umal_ders_yoklama_liste', { p_bas: DY.gun, p_bit: DY.gun });
     if (error || !data || !data.ok) { I.innerHTML = `<div class="ust"><h1>Ders Yoklaması</h1></div><div class="kart">${esc(error ? hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
@@ -503,7 +508,7 @@
   }
   // K-690b: telefondan yoklama — tahta çalışmazsa öğretmen okuyarak alır. Hız: bu dersin sınıfı ders programından kendiliğinden seçilir,
   // herkes "var" başlar (yalnız gelmeyene dokunulur), bugün önceki derste gelmeyenler hazır işaretli gelir, numara yazarak da işaretlenir.
-  async function dyAl(sec) {
+  async function dyDerslerim() {   // ders programından öğretmenin bugünkü dersleri ve şu anki ders
     await Promise.all([programYukle(), ogrencileriYukle().catch(() => []), kisiAdlariYukle().catch(() => {})]);
     const p = D.program || {}, an = new Date(), gun = (an.getDay() + 6) % 7, dk = x => { const [h, m] = String(x).split(':').map(Number); return h * 60 + m; }, t = an.getHours() * 60 + an.getMinutes();
     const nk = x => String(x || '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
@@ -511,9 +516,15 @@
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0);
     const D_ = []; Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) D_.push({ sinif: sf, n, ders: h.ders || '', ogretmen: h.ogretmen || [], bas: z.bas, bit: z.bit }); }));
     D_.sort((a, b) => a.n - b.n);
+    const simdi = D_.find(x => dk(x.bas) - 5 <= t && t < dk(x.bit));   // dersten 5 dk önce de sayılır
+    return { p, gun, dk, t, zil, D_, simdi };
+  }
+  async function dyAl(sec) {
+    clearInterval(yenileZamanlayici);
+    const { p, gun, dk, t, zil, D_ } = await dyDerslerim();
     if (!sec) { const su = D_.find(x => dk(x.bas) <= t && t < dk(x.bit)) || D_.filter(x => dk(x.bas) <= t).pop() || D_[0]; sec = su ? { sinif: su.sinif, n: su.n } : null; }
     const I = $('#icerik');
-    const secim = `<div class="dya-sec">${D_.map(x => `<button class="cip ${sec && sec.sinif === x.sinif && sec.n === x.n ? 'secili' : ''}" data-dyas="${esc(x.sinif)}|${x.n}">${esc(x.sinif)} · ${x.n}. ders</button>`).join('')}<button class="cip" id="dyaBaska">${D_.length ? 'Başka sınıf' : 'Sınıf seç'}</button></div>`;
+    const secim = `<div class="dya-sec">${D_.length ? '<button class="cip" id="dyaDersler">Başka ders</button>' : ''}<button class="cip" id="dyaBaska">${D_.length ? 'Başka sınıf' : 'Sınıf seç'}</button></div>`;
     if (!sec) { I.innerHTML = `<div class="ust"><h1>Yoklama al</h1></div>${secim}<div class="kart soluk">Ders programında bugün size ait ders bulunamadı. Sınıf seçerek alabilirsiniz.</div>`; dyaSecBagla(); return; }
     const sat = D_.find(x => x.sinif === sec.sinif && x.n === sec.n) || { sinif: sec.sinif, n: sec.n, ders: (((p.siniflar || {})[sec.sinif] || {})[`${gun}-${sec.n}`] || {}).ders || '', ogretmen: [] };
     const anahtar = 'ders-' + sec.n, gunIso = bugunISO();
@@ -528,12 +539,12 @@
         if (onceki) { const g = new Set((onceki.gelmeyen || []).map(z => String(z.no))); var_ = new Set(ros.map(o => o.no).filter(n => !g.has(n))); if (g.size) kaynak = `${parseInt(String(onceki.anahtar).replace(/\D/g, ''), 10)}. derste gelmeyen ${g.size} öğrenci gelmedi olarak işaretlendi; geldiyse dokunun.`; } }
     } catch (e) {}
     const ciz = () => { const g = ros.filter(o => !var_.has(o.no));
-      I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div></div>${secim}
+      I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div><button class="ikincil kucuk" id="dyaOzet" style="text-transform:none">Günün yoklamaları</button></div>${secim}
         <div class="kart dya-ipucu">Herkes <b>var</b> başlar. Okurken yalnız gelmeyenin adına dokunun.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>
         <div class="dya-no"><input id="dyaNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Numara yaz"><button class="ikincil" id="dyaHepsi" style="text-transform:none">Herkes var</button></div>
         <div class="dya-liste">${ros.map(o => `<button class="dya-o ${var_.has(o.no) ? 'v' : 'y'}" data-dyao="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${D.fotolar && D.fotolar[o.no] ? `<img alt="" src="${D.fotolar[o.no]}">` : esc(baslik(o.ad).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span><span class="n">${esc(o.no)}</span><span class="a">${esc(baslik(o.ad))}</span><em>${var_.has(o.no) ? 'Var' : 'Gelmedi'}</em></button>`).join('')}</div>
         <div class="dya-alt"><div><b>${ros.length - g.length}</b> var · <b style="color:#ff8a8a">${g.length}</b> gelmedi</div><button class="birincil" id="dyaKaydet" style="text-transform:none">Kaydet ve onayla</button></div>`;
-      dyaSecBagla(); fotolariYukle(ros.map(o => o.no)).catch(() => {});
+      dyaSecBagla(); fotolariYukle(ros.map(o => o.no)).catch(() => {}); $('#dyaOzet').onclick = () => dersYoklamaBolumu('ozet');
       I.querySelectorAll('[data-dyao]').forEach(b => b.onclick = () => { const n = b.dataset.dyao; var_.has(n) ? var_.delete(n) : var_.add(n); b.classList.toggle('v', var_.has(n)); b.classList.toggle('y', !var_.has(n)); b.querySelector('em').textContent = var_.has(n) ? 'Var' : 'Gelmedi'; sayac(); });
       const sayac = () => { const g_ = ros.filter(o => !var_.has(o.no)).length; I.querySelector('.dya-alt > div').innerHTML = `<b>${ros.length - g_}</b> var · <b style="color:#ff8a8a">${g_}</b> gelmedi`; };
       $('#dyaHepsi').onclick = () => { ros.forEach(o => var_.add(o.no)); ciz(); };
@@ -545,7 +556,8 @@
         DY.gun = gunIso; await dersYoklamaBolumu(); uyar(`Yoklama kaydedildi · ${sec.sinif} ${sec.n}. ders`); };
     };
     function dyaSecBagla() {
-      I.querySelectorAll('[data-dyas]').forEach(b => b.onclick = () => { const [sf, n] = b.dataset.dyas.split('|'); dyAl({ sinif: sf, n: +n }); });
+      const dd = $('#dyaDersler'); if (dd) dd.onclick = () => { pencereAc(`<h2 style="margin-top:0">Bugünkü dersleriniz</h2><div class="dya-sec">${D_.map(x => `<button class="cip ${sec && sec.sinif === x.sinif && sec.n === x.n ? 'secili' : ''}" data-dyas="${esc(x.sinif)}|${x.n}">${x.n}. ders · ${esc(x.sinif)}</button>`).join('')}</div>`);
+        document.querySelectorAll('[data-dyas]').forEach(b => b.onclick = () => { const [sf, n] = b.dataset.dyas.split('|'); $('#pencere').classList.add('gizli'); dyAl({ sinif: sf, n: +n }); }); };
       const bk = $('#dyaBaska'); if (bk) bk.onclick = () => { const sfs = [...new Set((D.ogrenciler || []).map(o => o.sinif))].filter(x => /^\d+-/.test(x)).sort(sinifSira), su = zil.find(z => dk(z.bas) <= t && t < dk(z.bit));
         pencereAc(`<h2 style="margin-top:0">Sınıf ve ders saati</h2><div class="dya-sec">${sfs.map(x => `<button class="cip" data-dyasf="${esc(x)}">${esc(x)}</button>`).join('')}</div><div class="soluk kucuk" style="margin:12px 0 6px">Ders saati</div><div class="dya-sec">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<button class="cip ${su && parseInt(su.ders, 10) === n ? 'secili' : ''}" data-dyan="${n}">${n}. ders</button>`).join('')}</div><button class="birincil" id="dyaTamam" style="margin-top:14px;width:100%;text-transform:none">Yoklamayı aç</button>`);
         let sf = null, n = su ? parseInt(su.ders, 10) : null;
