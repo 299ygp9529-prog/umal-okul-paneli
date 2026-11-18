@@ -2024,3 +2024,13 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .tf-gorev.tf-ben { border-top-color: #3ef08a88; background: rgba(62,240,138,.07); border-radius: 10px; padding: 8px 10px; } .tf-benbt { border-color: #3ef08a !important; color: #3ef08a !important; text-transform: none; }
 /* K-716dc: Atlas cevabında matematik */
 .as-cevap .katex { font-size: 1.08em; } .as-cevap .katex-display { margin: .6em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+/* K-716de: telefon ana menüsü — kutular ekranı tam doldurur (az kutuda büyür, çok kutuda kaydırılır) */
+@media (max-width: 760px) {
+  .tumu-menu.tm-dolu { display: flex; flex-direction: column; padding-bottom: 84px; }
+  .tumu-menu.tm-dolu > .tm-grup:last-child { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .tumu-menu.tm-dolu > .tm-grup:last-child > .tm-gruplar { flex: 1 0 auto; grid-auto-rows: 1fr; }
+  .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) { align-content: center; row-gap: 10px; padding: 14px; }
+  .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) > .mi { width: 42px; height: 42px; border-radius: 12px; } .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) > .mi svg { width: 23px; height: 23px; }
+  .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) { grid-template-columns: 42px minmax(0, 1fr); }
+  .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) > .tm-gad { font-size: 17px; } .tumu-menu.tm-dolu .tm-gk:not(.tm-genis) > small { font-size: 12.5px; }
+}
