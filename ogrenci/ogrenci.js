@@ -26,7 +26,13 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  // K-716cy: Geri daima bir önceki ekrana — ekran yığını
+  const EKRANLAR = ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'], YIGIN = []; let geriDonus = false;
+  const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
+  const goster = id => { const o = aktifEkran();
+    if (id === 'liste' || id === 'giris') YIGIN.length = 0;
+    else if (!geriDonus && o && o !== id && o !== 'giris') { const k = YIGIN.indexOf(id); if (k >= 0) YIGIN.length = k; else if (YIGIN[YIGIN.length - 1] !== o) YIGIN.push(o); }
+    EKRANLAR.forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -347,7 +353,10 @@
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
-  document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
+  function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
+    geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
+  document.querySelectorAll('[data-ana]').forEach(b => b.onclick = geriGit);
+  $('#s-msj [data-ana]').onclick = async () => { if (!MS.acik) { geriGit(); return; } MS.acik = null; await msYukle(); msListeCiz(); anaCiz(true); goster('s-msj'); window.scrollTo(0, 0); };   // sohbetteyken Geri → sohbet listesi
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
   const GZ = { L: [], i: 0, j: '' };
@@ -421,13 +430,12 @@
     $('#msBaslik').textContent = grup ? x.sinif + ' sınıf grubu' : baslik(x.ogretmen || 'Öğretmen');
     let gun = ''; const sat = m => { const ben = m.kim === MS.ben, g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }), gs = g !== gun ? (gun = g, `<div class="ms-gun">${esc(g)}</div>`) : '';
       return gs + `<div class="ms-m ${ben ? 'ben' : ''}">${!ben ? msAv(m.kim, m.ad) : ''}<div class="b">${!ben && grup ? `<small class="${m.kim.startsWith('t:') ? 'ogt' : ''}">${esc(baslik(m.ad || ''))}${m.kim.startsWith('t:') ? ' · öğretmen' : ''}</small>` : ''}<span class="t">${esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}</em>${!ben && grup ? `<button class="ms-sk" data-mssk="${m.id}" aria-label="Şikâyet et">Şikâyet et</button>` : ''}</div></div>`; };
-    el.innerHTML = `<div class="ms-ekran"><div class="ms-ust"><button class="ikincil kucuk" id="msListe">‹ Sohbetler</button>${grup ? '' : '<button class="ms-skb" id="msSkBir">Şikâyet et</button>'}</div>
+    el.innerHTML = `<div class="ms-ekran">${grup ? '' : '<div class="ms-ust"><button class="ms-skb" id="msSkBir">Şikâyet et</button></div>'}
       ${grup ? '' : '<div class="ms-kural">Bu konuşma okulun mesajlaşma kurallarına tabidir. Mesajlar silinmez; bir sorun olursa “Şikâyet et”e dokun, konuşma rehberlik servisine gider. Mesajlar 08.00–20.00 arası iletilir.</div>'}
       <div class="ms-akis" id="msAkis">${MS.M.map(sat).join('') || '<div class="soluk kucuk" style="text-align:center;margin-top:24px">Henüz mesaj yok.</div>'}</div>
       ${MS.mesaj ? `<div class="bk-mesaj">${esc(MS.mesaj)}</div>` : ''}
       ${MS.yazabilir ? `<div class="ms-alt"><textarea id="msYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msGonder" aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div>` : '<div class="ms-kapali">Bu grupta şu an yalnız öğretmen yazabiliyor.</div>'}</div>`;
     const ak = $('#msAkis'); ak.scrollTop = ak.scrollHeight;
-    $('#msListe').onclick = async () => { MS.acik = null; await msYukle(); msListeCiz(); anaCiz(true); goster('s-msj'); };
     const y = $('#msYaz'); if (y) { y.oninput = () => { y.style.height = 'auto'; y.style.height = Math.min(130, y.scrollHeight) + 'px'; };
       $('#msGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; $('#msGonder').disabled = true; let d = null;
         try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_yaz', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_metin: t })); } catch (e) {}
@@ -873,7 +881,7 @@
     goster('s-reh'); window.scrollTo(0, 0);
   }
   $('#rhKutular').onclick = ev => { const b = ev.target.closest('[data-rh]'); if (!b) return; b.dataset.rh === 'mektup' ? mkAc() : rvAc(); };
-  $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : anaCiz();
+  $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : geriGit();
   const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMesajlar').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
     $('#rhBaslik').textContent = baslik_; $('#rhGeri').textContent = '← Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
   function mkAc() { altAc('mektup', 'Mektup'); }
@@ -1460,7 +1468,7 @@
     else { DD.sec = null; ddListeCiz(); ddYukle().then(c => { if (c && !$('#s-dd').classList.contains('gizli') && !DD.sec) ddListeCiz(); }); }
     goster('s-dd'); window.scrollTo(0, 0);
   }
-  $('#ddGeri').onclick = () => { if (DD.sec) { DD.sec = null; ddListeCiz(); window.scrollTo(0, 0); } else anaCiz(); };
+  $('#ddGeri').onclick = () => { if (DD.sec) { DD.sec = null; ddListeCiz(); window.scrollTo(0, 0); } else geriGit(); };
   $('#s-dd').addEventListener('change', async ev => { const t = ev.target;
     if (t.id === 'ddGun') { DD.gun = t.value; ddListeCiz(); return; }
     if (t.id === 'ddCal') { const d = DD.L.find(x => x.id === DD.sec); const r = await ddIsle(d.id, 'calistim', t.checked ? 1 : 0); if (r.ok) d.ben = Object.assign({}, d.ben, { calistim: t.checked ? new Date().toISOString() : null }); else t.checked = !t.checked; } });
