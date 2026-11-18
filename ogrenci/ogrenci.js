@@ -61,8 +61,8 @@
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
-    if (harf) { k.setAttribute('inputmode', 'text'); k.removeAttribute('pattern'); k.type = 'text'; k.setAttribute('autocapitalize', 'characters'); k.placeholder = 'XXXX-XXXX'; $('#kodGec').textContent = 'Rakam şifremle gireceğim'; }
-    else { k.setAttribute('inputmode', 'numeric'); k.setAttribute('pattern', '[0-9]*'); k.type = 'password'; k.removeAttribute('autocapitalize'); k.placeholder = '6 haneli şifren'; $('#kodGec').textContent = 'Eski harfli kodum var'; }
+    if (harf) { k.setAttribute('inputmode', 'text'); k.removeAttribute('pattern'); k.type = 'text'; k.classList.remove('pin-gizli'); k.setAttribute('autocapitalize', 'characters'); k.placeholder = 'XXXX-XXXX'; $('#kodGec').textContent = 'Rakam şifremle gireceğim'; }
+    else { k.setAttribute('inputmode', 'numeric'); k.setAttribute('pattern', '[0-9]*'); k.type = 'text'; k.classList.add('pin-gizli'); k.setAttribute('autocapitalize', 'off'); k.placeholder = '6 haneli şifren'; $('#kodGec').textContent = 'Eski harfli kodum var'; }
     k.value = ''; k.blur(); setTimeout(() => k.focus(), 60); };
   // K-609: okulun verdiği kod geçicidir; ilk girişte öğrenci kendi şifresini belirler (unutana yeni kod verilir)
   async function sifreDenetle() {

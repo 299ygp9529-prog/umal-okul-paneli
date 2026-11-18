@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="simge-192.png">
 <link rel="apple-touch-icon" href="simge-192.png">
-<link rel="stylesheet" href="stil.css?v=202611181445">
+<link rel="stylesheet" href="stil.css?v=202611181450">
 <script src="supabase.min.js?v=2.45.4"></script>
 <script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>')</script>
 </head>
@@ -27,7 +27,7 @@
       <label for="eposta">E-posta adresiniz</label>
       <input id="eposta" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ornek@okul.k12.tr">
       <label for="sifre">Şifreniz</label>
-      <div class="sifre-kutu"><input id="sifre" name="password" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" placeholder="6 haneli şifreniz"><button type="button" id="sifreGoz" class="sifre-goz" aria-label="Şifreyi göster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="sifre-kutu"><input id="sifre" name="pin" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="6 haneli şifreniz"><button type="button" id="sifreGoz" class="sifre-goz" aria-label="Şifreyi göster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       <button id="sifreGiris" type="submit" class="birincil">Giriş</button>
       <button id="kodGonder" type="button" class="ikincil kod-link">İlk giriş ya da şifremi unuttum: e-postama kod gönder</button>
     </form>
@@ -38,9 +38,8 @@
       <button id="girisYap" class="birincil">Giriş</button>
       <button id="geri" class="ikincil">Geri</button>
     </div>
-    <form id="adim3" class="gizli" onsubmit="return false" autocomplete="on">
-      <div class="sifre-bas"><b>Kendi şifrenizi belirleyin</b><small>Bundan sonra kod beklemeden e-posta ve bu şifreyle girersiniz. Telefonunuz şifreyi hatırlar.</small></div>
-      <input id="yeniEposta" name="email" type="email" autocomplete="username" class="gizli-alan" tabindex="-1" aria-hidden="true">
+    <form id="adim3" class="gizli" onsubmit="return false" autocomplete="off">
+      <div class="sifre-bas"><b>Kendi şifrenizi belirleyin</b><small>Bundan sonra kod beklemeden e-posta ve bu şifreyle girersiniz. Bu cihazda oturumunuz açık kalır.</small></div>
       <label for="yeniSifre">Yeni şifre (6 haneli)</label>
       <input id="yeniSifre" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="Yeni şifre">
       <label for="yeniSifre2">Şifreyi tekrar yazın</label>
@@ -89,7 +88,7 @@
 <script src="bicim.js?v=202611151400"></script>
 <link rel="stylesheet" href="senaryo/senaryo.css?v=202611160830">
 <script src="senaryo/senaryo.js?v=202611160950"></script>
-<script src="uygulama.js?v=202611181415"></script>
+<script src="uygulama.js?v=202611181450"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

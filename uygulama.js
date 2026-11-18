@@ -327,7 +327,7 @@
     const izle = () => document.querySelectorAll('.tm-gk:not([data-io]), .tm-oge:not([data-io]), .ps-ic:not([data-io])').forEach(e => { e.dataset.io = '1'; io.observe(e); });
     new MutationObserver(() => { clearTimeout(izle.z); izle.z = setTimeout(izle, 150); }).observe(document.body, { childList: true, subtree: true }); izle(); }
   // K-716by: öğretmen girişi — e-posta + kendi şifresi (telefon hatırlar); ilk girişte ve şifre unutulunca e-posta kodu, ardından şifre belirleme
-  $('#sifreGoz').onclick = () => { const i = $('#sifre'); i.type = i.type === 'password' ? 'text' : 'password'; i.focus(); };
+  $('#sifreGoz').onclick = () => { const i = $('#sifre'); i.classList.toggle('pin-gizli'); i.focus(); };   // K-716cp: şifre alanı düz metin + nokta (Apple güçlü parola önerisi çıkmasın)
   $('#sifreGiris').onclick = async () => {
     const e = $('#eposta').value.trim().toLowerCase(), p = $('#sifre').value;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { $('#girisBilgi').textContent = 'E-posta adresini yazın.'; $('#eposta').focus(); return; }
@@ -340,7 +340,7 @@
     $('#girisBilgi').textContent = ''; basla();
   };
   const sifreAdimi = e => {   // kodla girişten sonra: kendi şifresini belirler (ya da geçer)
-    $('#adim2').classList.add('gizli'); $('#adim3').classList.remove('gizli'); $('#yeniEposta').value = e; $('#girisBilgi').textContent = ''; setTimeout(() => $('#yeniSifre').focus(), 50);
+    $('#adim2').classList.add('gizli'); $('#adim3').classList.remove('gizli'); $('#girisBilgi').textContent = ''; setTimeout(() => $('#yeniSifre').focus(), 50);
   };
   $('#sifreKaydet').onclick = async () => {
     const p1 = $('#yeniSifre').value, p2 = $('#yeniSifre2').value;

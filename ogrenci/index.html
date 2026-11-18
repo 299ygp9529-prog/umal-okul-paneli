@@ -422,7 +422,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <label for="no">Okul numaran</label>
     <input id="no" type="text" inputmode="numeric" autocomplete="username" maxlength="8" placeholder="Örnek: 1234">
     <label for="kod">Şifren</label>
-    <input id="kod" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" spellcheck="false" maxlength="20" placeholder="6 haneli şifren">
+    <input id="kod" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" maxlength="20" placeholder="6 haneli şifren">
     <button type="button" class="kod-gec" id="kodGec">Eski harfli kodum var</button>
     <button class="mk-kutu" id="hatirla" type="button"><i></i><span>Bu cihazda oturumum açık kalsın <small class="soluk" style="display:block;font-size:12.5px">Yalnız kendi telefonunda ya da bilgisayarında işaretle.</small></span></button>
     <button id="girisBtn" class="birincil">Giriş</button>
@@ -510,6 +510,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611181445"></script>
+<script src="ogrenci.js?v=202611181450"></script>
 </body>
 </html>
