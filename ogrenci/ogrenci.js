@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -63,7 +63,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); tuYukle(); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -347,7 +347,7 @@
     $('#kutular').insertAdjacentHTML('afterbegin', msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
-    rvAnaCiz(); dyAnaCiz();
+    rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
   }
@@ -963,6 +963,17 @@
     k.classList.remove('gizli');
   }
   $('#duyAnaKart').onclick = () => dyAc();
+  // ---- K-720: öğretmenden tebrik ve uyarılar (veliye de gider)
+  const TU = { L: [] }, tuAn = () => 'gbGor:' + S.no;
+  async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); }
+  function tuAnaCiz() { const k = $('#gbAnaKart'); if (!k) return; if (!TU.L.length) { k.classList.add('gizli'); return; }
+    let gor = 0; try { gor = +localStorage.getItem(tuAn()) || 0; } catch (e) {} const yeni = Math.max(0, TU.L.length - gor), d = TU.L[0], t = TU.L.filter(x => x.tur === 'tebrik').length;
+    k.className = 'kart gbana ' + (d.tur === 'tebrik' ? 'tebrik' : 'uyari');
+    k.innerHTML = `<i class="ik">${d.tur === 'tebrik' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.5l-5.1 2.7 1-5.7-4.1-4 5.7-.8z" fill="currentColor" fill-opacity=".25"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4l9 16H3z" fill="currentColor" fill-opacity=".2"/><path d="M12 10v4M12 17h.01"/></svg>'}</i><div><b>${yeni ? `${yeni} yeni · ` : ''}${d.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'}: ${esc(d.neden)}</b><span>${esc(d.ogretmen || '')} · ${t} tebrik, ${TU.L.length - t} uyarı · hepsi için dokun</span></div>`; }
+  function tuAc() { try { localStorage.setItem(tuAn(), String(TU.L.length)); } catch (e) {}
+    $('#gblListe').innerHTML = TU.L.map(x => `<div class="kart gbs ${x.tur}"><span class="etk">${x.tur === 'tebrik' ? 'TEBRİK' : 'UYARI'}</span><b>${esc(x.neden)}</b>${x.aciklama ? `<div class="soluk">${esc(x.aciklama)}</div>` : ''}<small class="soluk">${esc(x.ogretmen || '')} · ${esc(new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</small></div>`).join('')
+      + '<div class="not">Tebrik ve uyarıları öğretmenlerin gönderir; velin de görür.</div>'; goster('s-gbl'); window.scrollTo(0, 0); tuAnaCiz(); }
+  $('#gbAnaKart').onclick = () => tuAc();
   function dyCiz(yeniler) {
     $('#duyListe').innerHTML = DY.L.length ? DY.L.map(d => `<div class="duy ${d.onemli ? 'onemli' : ''} ${yeniler.has(d.id) ? 'yeni' : ''}"><div class="ust">${d.onemli ? '<span class="etk">ÖNEMLİ</span>' : ''}${yeniler.has(d.id) ? '<span class="etk yeni">YENİ</span>' : ''}<span>${esc(dyTarih(d.tarih))} · ${esc(d.yazan)}</span></div><h3>${esc(d.baslik)}</h3>${d.metin ? `<div class="m">${linkle(d.metin)}</div>` : ''}</div>`).join('')
       : '<div class="kart soluk" style="text-align:center">Şu an sana gönderilmiş bir duyuru yok.</div>';
@@ -1520,7 +1531,7 @@
     if (canliSay % 3 === 0) {   // dakikada bir: formlar, duyurular ve mektup okundu bilgisi
       mektuplarYukle(); await rhYukle(false);
       if (PL.veri && !PL.form && !PL.acik && Date.now() - (PL.sonYaz || 0) > 30000) { const e = JSON.stringify(PL.veri); PL.veri = null; if (!(await plYukle())) PL.veri = JSON.parse(e); }   // K-601: öğretmenin düzenlemesi kendi planına da yansısın
-      if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
+      if (!$('#liste').classList.contains('gizli')) anaCiz(true); rpCiz(); tuYukle(); await dyYukle(); if (!$('#s-duy').classList.contains('gizli')) dyCiz(new Set());
       if (await konuYukle() && !$('#s-sinav').classList.contains('gizli')) sinavCiz();   // K-613: öğretmenin yeni yazdığı sınav konuları
       { const once = JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]); await sinavlarYukle();   // K-691: idarenin yeni/düzeltilen takvimi, mazeret ve telafi programı sayfa yenilemeden düşsün
         if (JSON.stringify([S.mz, S.tkler ? [...S.tkler.entries()] : null]) !== once && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }

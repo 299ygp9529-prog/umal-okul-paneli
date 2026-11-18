@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UMAL Veli</title>
+<meta name="theme-color" content="#0d1726">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="UMAL Veli">
+<link rel="icon" href="../simge-192.png"><link rel="apple-touch-icon" href="../simge-192.png">
+<script src="../supabase.min.js?v=2.45.4"></script>
+<style>
+:root { --zemin:#0d1726; --kart:#13233a; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --kirmizi:#ff6b6b; --yesil:#3ef08a; --turuncu:#ffb867; color-scheme: dark; }
+* { box-sizing: border-box; } html, body { margin: 0; min-height: 100%; background: var(--zemin); color: #fff; font: 16px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
+button, input { font: inherit; } .gizli { display: none !important; }
+main { max-width: 640px; margin: 0 auto; padding: 22px 16px 60px; }
+@font-face { font-family: 'UMAL Marcellus'; src: url('../fontlar/marcellus.woff') format('woff'); font-display: swap; }
+@font-face { font-family: 'UMAL Cormorant'; src: url('../fontlar/cormorant.woff') format('woff'); font-weight: 300 700; font-display: swap; }
+.ust { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; } .ust img { width: 54px; height: 54px; border-radius: 50%; box-shadow: 0 0 16px rgba(34,232,255,.45); }
+.oa1 { display: block; font-family: 'UMAL Marcellus', Georgia, serif; font-size: 11.5px; letter-spacing: .2em; color: var(--neonacik); } .oa2 { display: block; font-family: 'UMAL Cormorant', Georgia, serif; font-weight: 600; font-size: 22px; line-height: 1.05; }
+.ust small { color: var(--soluk); font-size: 13px; } .ust .cik { margin-left: auto; }
+.kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 17px; margin: 0 0 10px; }
+label { display: block; margin: 14px 0 6px; font-weight: 700; font-size: 14px; }
+input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--cizgi); background: #0f1c2e; color: #fff; font-size: 18px; letter-spacing: .06em; }
+.birincil { width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 14px; background: var(--neon); color: #04202a; font-weight: 800; font-size: 16px; cursor: pointer; }
+.ikincil { padding: 8px 12px; border-radius: 11px; border: 1px solid var(--cizgi); background: none; color: var(--neonacik); font-weight: 700; cursor: pointer; }
+.soluk { color: var(--soluk); } .kucuk { font-size: 13px; } .bilgi { min-height: 20px; margin-top: 10px; font-size: 14px; color: var(--soluk); } .bilgi.hata { color: var(--kirmizi); }
+.cocuk { display: flex; align-items: center; gap: 14px; } .cocuk .av { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: #22e8ff22; color: var(--neonacik); font-weight: 800; font-size: 18px; border: 1px solid #22e8ff66; }
+.cocuk b { font-size: 19px; display: block; }
+.ozet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; } .ozet div { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 12px; text-align: center; }
+.ozet b { display: block; font-size: 24px; } .ozet span { font-size: 12px; color: var(--soluk); }
+.sek { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; } .sek button { padding: 10px 6px; border-radius: 12px; border: 1px solid var(--cizgi); background: none; color: var(--soluk); font-weight: 700; font-size: 14px; cursor: pointer; }
+.sek button.secili { background: var(--neon); color: #04202a; border-color: var(--neon); }
+.gun { margin-bottom: 10px; } .gun > b { display: block; font-size: 14px; margin-bottom: 6px; color: var(--neonacik); }
+.sat { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 11px; background: #0f1c2e; border: 1px solid var(--cizgi); margin-bottom: 5px; font-size: 14.5px; }
+.etk { font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 8px; white-space: nowrap; align-self: center; }
+.yok { background: #ff6b6b22; color: var(--kirmizi); } .gec { background: #ffb86722; color: var(--turuncu); } .izin { background: #7fb2ff22; color: #7fb2ff; }
+.gb { padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; border: 1px solid var(--cizgi); background: #0f1c2e; } .gb.tebrik { border-color: #3ef08a66; } .gb.uyari { border-color: #ffb86766; }
+.gb .etk.tebrik { background: #3ef08a22; color: var(--yesil); } .gb .etk.uyari { background: #ffb86722; color: var(--turuncu); } .gb b { display: block; font-size: 16px; margin: 6px 0 2px; }
+.duy b { display: block; margin-bottom: 4px; } .duy { white-space: pre-wrap; }
+.not { font-size: 13px; color: var(--soluk); margin-top: 14px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<main>
+  <div class="ust"><img src="../okul-logo.png" alt=""><div><span class="oa1">ÜMRANİYE MERKEZ</span><span class="oa2">Anadolu Lisesi</span><small>Veli</small></div><button class="ikincil cik gizli" id="cik">Çıkış</button></div>
+  <section id="giris" class="kart">
+    <h1>Veli girişi</h1>
+    <div class="soluk kucuk">Çocuğunuzun okul numarası ve okulun verdiği 6 haneli veli koduyla girin.</div>
+    <label for="no">Öğrenci numarası</label><input id="no" inputmode="numeric" maxlength="8" autocomplete="username" placeholder="Örnek: 1234">
+    <label for="kod">Veli kodu</label><input id="kod" inputmode="numeric" maxlength="7" autocomplete="off" placeholder="6 haneli kod">
+    <button class="birincil" id="girBtn">Giriş</button><div class="bilgi" id="bilgi"></div>
+    <div class="not">Bu cihazda oturum açık kalır; ortak bir cihazdaysanız işiniz bitince Çıkış'a basın. Kodunuzu kaybederseniz okuldan yenisini isteyin. Telefonunuzda ana ekrana eklerseniz uygulama gibi açılır.</div>
+  </section>
+  <section id="ana" class="gizli"></section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const sb = window.supabase.createClient('https://ceqdghykweubeaokwadt.supabase.co', 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ', { auth: { persistSession: false } });
+  const $ = s => document.querySelector(s), tr = 'tr', esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const bas = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
+  const gun = t => new Date(String(t).slice(0, 10) + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' });
+  const DUR = { yok: 'Gelmedi', gec: 'Geç geldi', izin: 'İzinli' };
+  let O = null, V = null, sek = 'devam';
+  try { O = JSON.parse(localStorage.getItem('umalVeli') || 'null'); } catch (e) {}
+  $('#no').oninput = () => { $('#no').value = $('#no').value.replace(/\D/g, '').slice(0, 8); };
+  $('#kod').oninput = () => { $('#kod').value = $('#kod').value.replace(/\D/g, '').slice(0, 6); };
+  [$('#no'), $('#kod')].forEach(e => e.onkeydown = ev => { if (ev.key === 'Enter') $('#girBtn').click(); });
+  async function yukle(no, kod) {
+    const { data, error } = await sb.rpc('umal_veli_ozet', { p_no: no, p_kod: kod });
+    if (error || !data) throw new Error('Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.');
+    if (!data.ok) { const e = new Error(data.hata || 'Giriş yapılamadı.'); e.kod = true; throw e; }
+    return data;
+  }
+  $('#girBtn').onclick = async () => { const no = $('#no').value.trim(), kod = $('#kod').value.trim(), b = $('#bilgi'); b.classList.remove('hata');
+    if (!no || kod.length !== 6) { b.textContent = 'Öğrenci numarasını ve 6 haneli veli kodunu yazın.'; b.classList.add('hata'); return; }
+    $('#girBtn').disabled = true; b.textContent = 'Kontrol ediliyor…';
+    try { V = await yukle(no, kod); O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
+    catch (e) { b.textContent = e.message; b.classList.add('hata'); } finally { $('#girBtn').disabled = false; } };
+  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
+  function ciz() {
+    $('#giris').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
+    const D = V.devam || [], G = V.gb || [], yok = D.filter(x => x.durum === 'yok'), gunler = new Set(yok.map(x => x.tarih)), tb = G.filter(x => x.tur === 'tebrik').length;
+    const bugun = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10), bYok = yok.filter(x => x.tarih === bugun);
+    const grup = {}; D.forEach(x => (grup[x.tarih] = grup[x.tarih] || []).push(x));
+    A.innerHTML = `<div class="kart cocuk"><span class="av">${esc(bas(V.ad).split(' ').map(w => w[0]).join('').slice(0, 2))}</span><div><b>${esc(bas(V.ad))}</b><span class="soluk">${esc(V.sinif)} · No ${esc(O.no)}</span></div></div>
+      ${bYok.length ? `<div class="kart" style="border-color:#ff6b6b88"><b style="color:#ff6b6b">Bugün ${bYok.length} derse girmedi</b><div class="soluk kucuk">${bYok.map(x => esc(String(x.saat || '').replace('.', '') + '. ders ' + (x.ders || ''))).join(' · ')}</div></div>` : ''}
+      <div class="ozet"><div><b style="color:#ff6b6b">${yok.length}</b><span>devamsız ders · 60 gün</span></div><div><b style="color:#3ef08a">${tb}</b><span>tebrik</span></div><div><b style="color:#ffb867">${G.length - tb}</b><span>uyarı</span></div></div>
+      <div class="sek">${[['devam', 'Devamsızlık'], ['gb', 'Tebrik · uyarı'], ['duy', 'Duyurular']].map(([k, a]) => `<button class="${sek === k ? 'secili' : ''}" data-s="${k}">${a}</button>`).join('')}</div>
+      <div class="kart">${sek === 'devam' ? (Object.keys(grup).length ? Object.entries(grup).map(([t, L]) => `<div class="gun"><b>${esc(gun(t))}</b>${L.map(x => `<div class="sat"><span>${esc(String(x.saat || '').replace('.', ''))}. ders${x.ders ? ' · ' + esc(x.ders) : ''}</span><span class="etk ${x.durum}">${DUR[x.durum] || ''}</span></div>`).join('')}</div>`).join('') : '<div class="soluk">Son 60 günde devamsızlık yok.</div>')
+        + `<div class="not">Ders ders yoklamalar Atlas'tan gelir. Resmî devamsızlık ve notlar için e-Okul Veli Bilgilendirme Sistemi'ne bakın. ${gunler.size ? `Devamsız olduğu gün: ${gunler.size}.` : ''}</div>`
+      : sek === 'gb' ? (G.length ? G.map(x => `<div class="gb ${x.tur}"><span class="etk ${x.tur}">${x.tur === 'tebrik' ? 'TEBRİK' : 'UYARI'}</span><b>${esc(x.neden)}</b>${x.aciklama ? `<div class="soluk">${esc(x.aciklama)}</div>` : ''}<div class="soluk kucuk">${esc(bas(x.ogretmen || ''))} · ${esc(gun(x.tarih))}</div></div>`).join('') : '<div class="soluk">Henüz tebrik ya da uyarı yok.</div>')
+      : ((V.duyurular || []).length ? V.duyurular.map(d => `<div class="gb duy"><b>${esc(d.baslik)}</b>${esc(d.metin || '')}<div class="soluk kucuk">${esc(gun(d.tarih))}</div></div>`).join('') : '<div class="soluk">Duyuru yok.</div>')}</div>
+      <div class="not">Son güncelleme: ${new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })} · Sayfa açıkken 5 dakikada bir yenilenir.</div>`;
+    A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; ciz(); });
+  }
+  async function yenile() { if (!O) return; try { V = await yukle(O.no, O.kod); ciz(); } catch (e) { if (e.kod) $('#cik').click(); $('#bilgi').textContent = e.message; } }
+  if (O) { $('#giris').classList.add('gizli'); yenile(); }
+  setInterval(() => { if (!document.hidden) yenile(); }, 300000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) yenile(); });
+})();
+</script>
+</body>
+</html>
