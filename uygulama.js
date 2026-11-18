@@ -184,7 +184,15 @@
       Object.entries(P.siniflar || {}).forEach(([sn, H]) => Object.entries(H || {}).forEach(([key, c]) => { const [g_, n] = key.split('-').map(Number); if (g_ !== gi || !c) return;
         if ([].concat(c.ogretmen || []).some(x => { const o = String(x).toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(); return o === ad || o.includes(ad) || ad.includes(o); })) D_.push([n, sn]); }));
       D_.sort((a, b) => a[0] - b[0]);
-      if (D_.length && h < 16) soz += ` Bugün <b>${D_.length} dersiniz</b> var; ilki <b>${D_[0][0]}. saat ${esc(D_[0][1])}</b>.`; } } catch (e) {}
+      if (D_.length && h < 16) soz += ` Bugün <b>${D_.length} dersiniz</b> var; ilki <b>${D_[0][0]}. saat ${esc(D_[0][1])}</b>.`;
+      try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: bugunISO() }); if ((gv || []).length && h < 17) soz += ` Bugün görevlendirildiniz: <b>${gv.map(x => `${x.saat}. ders ${esc(x.sinif)}`).join(', ')}</b>.`; } catch (e) {}   // K-700i
+    } } catch (e) {}
+    try { if (tam && D.program) {   // K-700j: ders programım değişti mi (bu cihazda son görülene göre)
+      const ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), I = [];
+      Object.entries(D.program.siniflar || {}).forEach(([sn, H]) => Object.entries(H || {}).forEach(([key, c]) => { if (c && [].concat(c.ogretmen || []).some(x => { const o = String(x).toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(); return o === ad || o.includes(ad) || ad.includes(o); })) I.push(key + '|' + sn + '|' + c.ders); }));
+      if (I.length) { const k = 'dpImza:' + D.eposta, yeni = I.sort().join(';'); let eski = null; try { eski = localStorage.getItem(k); } catch (e) {}
+        if (eski && eski !== yeni) { const E = new Set(eski.split(';')), n = I.filter(x => !E.has(x)).length; if (n) soz += ` <b>Ders programınız değişti</b>: ${n} ders saatiniz yeni yerinde.`; }
+        try { localStorage.setItem(k, yeni); } catch (e) {} } } } catch (e) {}
     if (gi === 0 && h < 12) soz += ' Haftaya güzel bir başlangıç!'; else if (gi === 4 && h >= 12) soz += ' Hafta sonu kapıda.';
     if (h >= 0 && h < 5) soz = esc(`Bu saatte hâlâ çalışıyorsunuz ${hitap}. Biraz dinlenin, yarın görüşürüz.`);
     // idare ve baş yönetici: okulun bugünü — sınavlar, bekleyen erişim istekleri, Atlas Sınıf
@@ -1000,7 +1008,7 @@
   async function dpAc(tur) {   // K-700: ders programı hazırlama modülü (ihtiyaç olunca yüklenir)
     try { await programYukle(); const NR = await dpNobet();
       const nobetGunleri = () => { const M = {}; (NR.gunler || []).forEach((G, g) => Object.values(G || {}).forEach(v => (Array.isArray(v) ? v : [v]).forEach(a => { if (a) M[a] = g; }))); return M; };
-      for (const f of ['dersprog.js?v=202611181800']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      for (const f of ['dersprog.js?v=202611182100']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalDP[tur]({ sb, esc, baslik, program: () => D.program, programYenile: () => { D.program = null; programYukle(); }, pencereAc, uyar, onayla, girdiAl, hataYaz, raporYazdir, raporBant, nobetGunleri, rol: D.rol, eposta: D.eposta });
     } catch (e) { uyar('Ders programı açılamadı: ' + hataYaz(e)); } }
   async function programYukle() {

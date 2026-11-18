@@ -2157,3 +2157,6 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .dp-gv-o { display: flex; flex-wrap: wrap; gap: 6px; max-height: 220px; overflow-y: auto; } .dp-gv-o .cip { text-transform: none; } .dp-gv-o small { opacity: .6; }
 .dp-gvt .dp-tr { grid-template-columns: 56px 70px minmax(140px, 1.4fr) minmax(140px, 1.2fr) minmax(170px, 1.4fr); min-width: 600px; }
 .dp-gv-sec { width: 100%; text-align: left; background: #ff6b6b14; border: 1px dashed #ff6b6b88; color: #ff8a8a; border-radius: 8px; padding: 6px 9px; font-weight: 700; } .dp-gv-sec.dolu { background: #3ef08a14; border: 1px solid #3ef08a77; color: var(--yazi); }
+/* K-700j: kilit */
+.dp-c.kilitli { border-color: #ffd166aa; background-image: linear-gradient(135deg, #ffd16622, transparent 55%); position: relative; } .dp-c.kilitli::after { content: ''; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 2px; border: 1.6px solid #ffd166; border-top-width: 3px; }
+.dp-kilbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; padding: 7px 10px; border: 1px solid #ffd16655; background: #ffd16610; border-radius: 10px; font-size: 13px; }
