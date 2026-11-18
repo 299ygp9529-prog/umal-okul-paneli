@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -338,7 +338,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
@@ -349,7 +349,9 @@
       let B = []; try { const r = await sb.rpc('umal_gezi_baskan_veri', { p_no: S.no, p_kod: S.kod }); if (r.data && r.data.ok) B = r.data.geziler || []; } catch (e) {}   // K-716bp: gezi başkanı
       let E = []; try { const r = await sb.rpc('umal_gezi_bilgi_durum', { p_no: S.no, p_kod: S.kod }); if (r.data && r.data.ok) E = (r.data.geziler || []).filter(x => (x.eksik || []).length); } catch (e) {}   // K-716bx: eksik gezi bilgisi
       GZ.E = E;
-      const L = Array.isArray(data.geziler) ? data.geziler : data.gezi ? [data.gezi] : [], j = JSON.stringify([L, B, E]); if (j === GZ.j) return false; GZ.j = j; GZ.L = L; GZ.B = B; if (GZ.i >= L.length) GZ.i = 0; return true; } catch (e) { return false; }
+      let IL = []; try { const r = await sb.rpc('umal_ogrenci_gezi_ilanlar', { p_no: S.no, p_kod: S.kod }); if (r.data && r.data.ok) IL = r.data.ilanlar || []; } catch (e) {}   // K-716bt: gezi ilanı
+      GZ.I = IL;
+      const L = Array.isArray(data.geziler) ? data.geziler : data.gezi ? [data.gezi] : [], j = JSON.stringify([L, B, E, IL]); if (j === GZ.j) return false; GZ.j = j; GZ.L = L; GZ.B = B; if (GZ.i >= L.length) GZ.i = 0; return true; } catch (e) { return false; }
   }
   function gzPlan(N) {   // panelle aynı 2+2 düzen
     N = Math.max(1, Math.min(80, +N || 46)); let R = null, gap = 0, son = 4;
@@ -382,7 +384,41 @@
   const GB_AD = { tc: 'T.C. kimlik numarası', dogum: 'doğum tarihi', tel: 'telefon' };
   const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'telefon' };
   const UYARI_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5v4.5M12 16.6h.01"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
-  function gzKutu() { return (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
+  // K-716bt: Gezi ilanı — "Katılmak istiyorum", başvuru durumu (başvuru → ödeme → izin belgesi → bilet)
+  const IL_DUR = { yok: 'Katılmak için dokun', basvurdu: 'Başvurun alındı · ödeme bekleniyor', odedi: 'Kaydın kesin', yedek: 'Yedek listedesin', vazgecti: 'Vazgeçtin' };
+  const IL_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16" /><path d="M5.5 19.5V9.8L12 5l6.5 4.8v9.7" fill="currentColor" fill-opacity=".2"/><path d="M9.5 19.5v-5h5v5"/><path d="M12 2.5v2.5"/></svg>';
+  const ilGoster = d => d.durum !== 'odedi' || !(GZ.L || []).some(x => x.anahtar === d.anahtar && x.koltuk);
+  function ilKutu() { return (GZ.I || []).map((d, i) => !ilGoster(d) || (d.durum === 'vazgecti' && !d.kayitAcik) || (d.durum === 'yok' && !d.kayitAcik) ? '' : `<button data-git="ilan" data-il="${i}" class="genis no-ana il-ana ${d.durum === 'yok' ? 'yeni' : ''}"><i class="ik" style="--c:#e8c66b">${IL_IK}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${d.tarih ? esc(gzTarih(d.tarih)) + ' · ' : ''}${esc(d.durum === 'basvurdu' && d.ekSure ? 'Ödeme için ek süren: ' + gzTarih(d.ekSure) : IL_DUR[d.durum] || '')}</small></span>${d.durum === 'yok' ? '<em class="il-yeni">Yeni gezi</em>' : ''}</button>`).join(''); }
+  let IL = { i: 0, mesaj: '', tur: '' };
+  function ilAc(i) { IL = { i: i || 0, mesaj: '', tur: '' }; ilCiz(); goster('s-ilan'); window.scrollTo(0, 0); }
+  function ilCiz() {
+    const d = (GZ.I || [])[IL.i], el = $('#ilIc'); if (!el) return;
+    if (!d) { el.innerHTML = '<div class="kart soluk">Bu gezinin ilanı kapandı.</div>'; return; }
+    $('#ilBaslik').textContent = d.ad || 'Gezi';
+    const tl = v => (+v || 0).toLocaleString(tr) + ' ₺', ad = (d.ad || 'Gezi').replace(/\s*gezisi$/i, '');
+    const asama = { yok: 0, vazgecti: 0, yedek: 1, basvurdu: 1, odedi: d.izin ? 3 : 2 }[d.durum] || 0;
+    const sonOd = d.ekSure || d.sonOdeme;
+    el.innerHTML = `${IL.mesaj ? `<div class="bk-mesaj ${IL.tur}">${esc(IL.mesaj)}</div>` : ''}
+      <div class="il-kart"><div class="il-ust" ${d.afis ? `style="background-image:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.55)),url('${esc(d.afis)}')"` : ''}><small>${d.durum === 'yok' ? 'YENİ GEZİ' : 'GEZİ'}</small><b>${esc(ad)}</b></div>
+        <div class="il-bilgi"><div><span>TARİH</span><b>${d.tarih ? esc(gzTarih(d.tarih)) : '—'}</b></div><div><span>ÜCRET</span><b>${d.ucret ? tl(d.ucret) : 'Ücretsiz'}</b></div>
+          <div><span>SON KAYIT</span><b>${d.sonKayit ? esc(gzTarih(d.sonKayit)) : '—'}</b></div><div><span>${d.ekSure ? 'EK SÜREN' : 'SON ÖDEME'}</span><b>${sonOd ? esc(gzTarih(sonOd)) : '—'}</b></div></div>
+        ${d.saat || d.kalkis || d.guzergah ? `<div class="il-satir">${[d.saat ? 'Hareket ' + esc(d.saat) : '', d.donus ? 'dönüş ' + esc(d.donus) : '', d.kalkis ? esc(d.kalkis) : '', d.guzergah ? esc(d.guzergah) : ''].filter(Boolean).join(' · ')}</div>` : ''}
+        ${(d.program || []).filter(x => x.t).length ? `<div class="il-prog">${d.program.filter(x => x.t).map(x => `<div><i>${esc(x.s || '')}</i>${esc(x.t)}</div>`).join('')}</div>` : ''}
+        ${d.aciklama ? `<div class="il-not">${esc(d.aciklama)}</div>` : ''}
+        ${d.durum === 'yok' || d.durum === 'vazgecti' ? (d.kayitAcik ? `<button class="birincil il-katil" id="ilKatil">Katılmak istiyorum</button>${d.kontenjan && d.dolu >= d.kontenjan ? '<div class="il-k">Kontenjan doldu; başvurursan yedek listeye alınırsın.</div>' : ''}` : '<div class="il-k">Son kayıt günü geçti.</div>') : ''}</div>
+      ${d.durum !== 'yok' && d.durum !== 'vazgecti' ? `<div class="kart il-durum"><b>${d.durum === 'yedek' ? 'Yedek listedesin' : d.durum === 'odedi' ? 'Kaydın kesinleşti' : 'Başvurun alındı'}</b>
+        <div class="soluk kucuk">${d.durum === 'yedek' ? 'Yer açılınca gezi sorumlusu öğretmen seni kayda alır.' : d.durum === 'odedi' ? (d.izin ? 'Veli izin belgen de teslim alındı. Koltuğun belli olunca biletin burada görünür.' : 'Veli izin belgesini doldurtup imzalatarak gezi sorumlusu öğretmene ver.') : d.ucret ? `Ücreti ${sonOd ? esc(gzTarih(sonOd)) + ' tarihine kadar ' : ''}gezi sorumlusu öğretmene ver; ödeyince kaydın kesinleşir.` : 'Kaydın alındı.'}</div>
+        <div class="il-yol">${[0, 1, 2, 3].map(k => `<span class="${k < asama ? 'a' : k === asama ? 'b' : ''}"></span>`).join('')}</div><div class="il-yolad"><span>Başvuru</span><span>Ödeme</span><span>İzin belgesi</span><span>Bilet</span></div>
+        ${d.durum !== 'odedi' ? '<button class="ikincil kucuk il-vaz" id="ilVaz">Gezi için başvurumu geri çek</button>' : ''}</div>` : ''}`;
+    const gonder = async istek => { const b = $(istek ? '#ilKatil' : '#ilVaz'); if (b) b.disabled = true; let r = null;
+      try { ({ data: r } = await sb.rpc('umal_ogrenci_gezi_basvur', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar, p_istek: istek })); } catch (e) {}
+      if (r && r.ok) { IL.mesaj = istek ? (r.durum === 'yedek' ? 'Kontenjan dolu olduğu için yedek listeye alındın.' : 'Başvurun alındı! Ücreti zamanında öğretmene vermeyi unutma.') : 'Başvurunu geri çektin.'; IL.tur = 'iyi'; }
+      else { IL.mesaj = (r && r.hata) || 'Olmadı, internet bağlantını kontrol edip yeniden dene.'; IL.tur = 'kotu'; }
+      await gzYukle(); ilCiz(); anaCiz(true); goster('s-ilan'); };
+    if ($('#ilKatil')) $('#ilKatil').onclick = () => gonder(true);
+    if ($('#ilVaz')) $('#ilVaz').onclick = async () => { if (!await onayla('Gezi başvurunu geri çekmek istiyor musun?')) return; gonder(false); };
+  }
+  function gzKutu() { return ilKutu() + (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
   // K-716bx: gezi katılımcısı eksik bilgilerini (T.C., doğum tarihi, telefon) kendisi girer; idare panelinde hemen görünür
   let GB = { i: 0, mesaj: '', tur: '' };
   function gbAc(i) { GB = { i: i || 0, mesaj: '', tur: '' }; gbCiz(); goster('s-gbil'); window.scrollTo(0, 0); }
