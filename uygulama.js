@@ -3012,9 +3012,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       pencereAc('<h2 style="margin-top:0">Program okunuyor…</h2><p class="soluk">Atlas PDF\'i inceleyip görevleri günlere yerleştiriyor. Birkaç saniye sürebilir.</p>');
       let r = null;
       try {
-        const b64 = await new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); });
-        const { data, error } = await sb.functions.invoke('atlas-plan', { body: { pdf: b64 } });
-        if (error) { let j = null; try { j = error.context && typeof error.context.json === 'function' ? await error.context.json() : null; } catch (e_) {} if (j && j.hata) { const x = new Error(j.hata + (j.ayrinti ? ' — ' + String(j.ayrinti).slice(0, 160) : '')); x.atlas = true; throw x; } throw error; } r = data;
+        let metin = '';   // K-716bv: PDF'in metni burada okunur, sunucuya yalnız metin gider (sunucu sınırına takılmaz); metin yoksa (taranmış) PDF'in kendisi gider
+        try { const pj = await import(new URL('soru/pdf.min.mjs', location.href).href); pj.GlobalWorkerOptions.workerSrc = new URL('soru/pdf.worker.min.mjs', location.href).href;
+          const doc = await pj.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise, S = [];
+          for (let i = 1; i <= Math.min(doc.numPages, 12); i++) { const pg = await doc.getPage(i), tc = await pg.getTextContent(), R = new Map();
+            tc.items.forEach(it => { if (!it.str || !it.str.trim()) return; const y = Math.round(it.transform[5] / 3) * 3; if (!R.has(y)) R.set(y, []); R.get(y).push({ x: it.transform[4], w: it.width || 0, t: it.str }); });
+            const satir = [...R.entries()].sort((a, b) => b[0] - a[0]).map(([, L]) => { L.sort((a, b) => a.x - b.x); const P = []; let son = null;   // hücreler: [x] metin — tablo sütunları başlıktaki x'e göre eşleşir
+              L.forEach(k => { if (son == null || k.x - son > 4) P.push({ x: k.x, t: k.t }); else P[P.length - 1].t += (k.x - son > 1 ? ' ' : '') + k.t; son = k.x + k.w; });
+              return P.map(c => `[${Math.round(c.x)}] ${c.t.replace(/\s+/g, ' ').trim()}`).join('  '); }).filter(Boolean);
+            S.push(`--- Sayfa ${i} ---\n` + satir.join('\n')); }
+          metin = S.join('\n\n').slice(0, 19500); } catch (e_) { metin = ''; }
+        let govde;
+        if (metin.replace(/---.*---|\[\d+\]|\s/g, '').length >= 60) govde = { metin };
+        else { if (f.size > 3 * 1024 * 1024) throw Object.assign(new Error('Bu PDF taranmış görünüyor ve büyük (3 MB üstü). Programı yapay zekâdan metin olarak (ya da daha küçük PDF) alıp deneyin.'), { atlas: true });
+          govde = { pdf: await new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); }) }; }
+        const { data, error } = await sb.functions.invoke('atlas-plan', { body: govde });
+        if (error) { let j = null; try { j = error.context && typeof error.context.json === 'function' ? await error.context.json() : null; } catch (e_) {} if (j && j.hata) { const x = new Error(j.hata + (j.ayrinti ? ' — ' + String(j.ayrinti).slice(0, 160) : '')); x.atlas = true; throw x; } const st = error.context && error.context.status; if (st) throw Object.assign(new Error(st === 546 ? 'sunucu sınırı aşıldı (546); PDF çok büyük olabilir' : 'sunucu hatası ' + st), { atlas: true }); throw error; } r = data;
       } catch (e) { $('#pencere').classList.add('gizli'); uyar('Program okunamadı: ' + (e && e.atlas ? e.message : /Failed to send|not found|404/i.test(String(e && e.message)) ? 'atlas-plan sunucu işlevi henüz kurulmamış.' : hataYaz(e))); return; }
       if (!r || !r.ok || !(r.gorevler || []).length) { $('#pencere').classList.add('gizli'); uyar((r && r.hata) || 'Programda görev bulunamadı.'); return; }
       const esle = d => RP_DERS.find(x => x.toLocaleLowerCase(tr) === String(d).toLocaleLowerCase(tr)) || d;
