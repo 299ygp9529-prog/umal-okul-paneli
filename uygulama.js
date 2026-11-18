@@ -319,7 +319,7 @@
   };
   $('#sifreKaydet').onclick = async () => {
     const p1 = $('#yeniSifre').value, p2 = $('#yeniSifre2').value;
-    if (!/^\d{6,12}$/.test(p1)) { $('#girisBilgi').textContent = 'Şifre 6–12 rakamdan oluşsun.'; return; }   // K-716bz: rakam şifre
+    if (!/^\d{6}$/.test(p1)) { $('#girisBilgi').textContent = 'Şifre 6 haneli bir sayı olsun.'; return; }   // K-716bz: rakam şifre
     if (/^(\d)\1+$/.test(p1) || '0123456789012345'.includes(p1) || '9876543210987654'.includes(p1)) { $('#girisBilgi').textContent = 'Bu şifre çok kolay tahmin edilir; başka rakamlar seçin.'; return; }
     if (p1 !== p2) { $('#girisBilgi').textContent = 'İki şifre aynı değil.'; return; }
     $('#sifreKaydet').disabled = true; $('#girisBilgi').textContent = 'Kaydediliyor…';
