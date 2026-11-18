@@ -744,6 +744,7 @@
     { id: 'anket', ad: 'Anketler', roller: ['bas', 'yonetici', 'rehberlik'], ciz: anketler },
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'ogretmen'], ciz: sinavKonulari },   // K-574
     { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
+    { id: 'dersyoklama', ad: 'Ders Yoklaması', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dersYoklamaBolumu() },   // K-690
     { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
     { id: 'rehberlik', ad: 'Rehberlik', roller: ['bas', 'rehberlik'], ciz: rehberlik },
@@ -751,7 +752,6 @@
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
-    { id: 'dersyoklama', ad: 'Ders Yoklaması', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dersYoklamaBolumu() },   // K-690
     { id: 'mesajlar', ad: 'Mesajlar', roller: ['bas'], ciz: () => mesajlarBolumu() },   // K-716cw: sınıf grupları ve birebir (deneme: yalnız Kurucu)
     { id: 'mesajsikayet', ad: 'Mesaj Şikâyetleri', roller: ['bas', 'rehberlik'], ciz: () => mesajSikayetBolumu() },   // K-716cw: grup → Kurucu, birebir → rehberlik
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
@@ -811,7 +811,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['dersyoklama', 'giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -843,7 +843,7 @@
     const ALT = { rehberlik: ['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan'].filter(altVar) };
     const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
-    const gruplar = MENU_GRUP.filter(([g]) => !(D.rol === 'yonetici' && g === 'Öğretmen')).map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id)).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
+    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id) && !(D.rol === 'yonetici' && g === 'Öğretmen' && id !== 'dersyoklama')).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
     const kalan = [...izin].filter(id => id !== 'ozelders' && id !== 'dosyalar' && !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     { const t = menuSon(), z = id => t[id] || 0, gz = L => Math.max(0, ...L.map(z));   // K-716da: son kullanılan önce (sıralama kararlı: hiç açılmayanlar eski sırasında)
       gruplar.forEach(g => { g[2] = g[2].map((id, i) => [id, i]).sort((a, b) => z(b[0]) - z(a[0]) || a[1] - b[1]).map(x => x[0]); });
