@@ -2134,3 +2134,26 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .dp-yd { display: flex; flex-direction: column; text-align: left; background: var(--zemin); border: 1px solid var(--cizgi); border-left: 4px solid var(--r, #ff6b6b); border-radius: 9px; padding: 6px 8px; color: var(--yazi); min-width: 0; } .dp-yd b { font-size: 13px; } .dp-yd span, .dp-yd small { font-size: 11.5px; color: var(--soluk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dp-yd.bos { background: #ff6b6b12; border-color: #ff6b6b77; } .dp-yd.bos small { color: #ff8a8a; }
 .dp-or.secili { border-color: var(--neon); }
 .dp-cik { display: flex; flex-direction: column; gap: 8px; } .dp-cik > div { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; border: 1px solid var(--cizgi); border-radius: 12px; padding: 10px 12px; } .dp-cik b { grid-column: 1 / -1; } .dp-cik button { text-transform: none !important; } .dp-cik .dp-in { min-width: 0; }
+/* K-700h: iş sırasına göre sekmeler, tablolar, ön kontrol, karne, elle düzeltme, nöbet günleri */
+.dp-sek .cip { display: inline-flex; align-items: center; gap: 6px; } .dp-adim { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #ffffff14; font-size: 10.5px; font-weight: 800; } .dp-sek .cip.secili .dp-adim { background: #00000026; }
+.dp-ksek { margin: -4px 0 10px; } .dp-ksek .cip { text-transform: none; }
+.dp-tbl { display: flex; flex-direction: column; gap: 3px; overflow-x: auto; } .dp-tr { display: grid; grid-template-columns: minmax(110px, 1.2fr) minmax(120px, 1.6fr) 60px 70px 90px 90px minmax(230px, auto); gap: 8px; align-items: center; padding: 7px 10px; border-radius: 9px; background: var(--zemin); border: 1px solid var(--cizgi); font-size: 13.5px; min-width: 760px; }
+.dp-tr.bas { background: none; border: 0; color: var(--soluk); font-size: 12px; font-weight: 700; padding-top: 0; padding-bottom: 0; } .dp-tr .kotu { color: #ff8a8a; font-weight: 700; } .dp-tr .uyar { color: #ffd166; font-weight: 700; } .dp-tr .iyi { color: #3ef08a; }
+.dp-tr-dug { display: flex; gap: 5px; justify-content: flex-end; } .dp-tr-dug button { text-transform: none !important; } .dp-tr-dug .dp-sil { width: 34px; }
+.dp-tr.tik { cursor: pointer; } .dp-tr.tik:hover { border-color: var(--neon); }
+.dp-dtbl .dp-tr { grid-template-columns: minmax(200px, 2fr) 90px minmax(150px, 1.4fr) 120px 60px 60px; min-width: 700px; } .dp-dtbl .dp-in { padding: 6px 8px; }
+.dp-otbl .dp-tr { grid-template-columns: minmax(170px, 2fr) minmax(130px, 1.5fr) 60px 70px 100px; min-width: 560px; }
+.dp-karne .dp-tr { grid-template-columns: minmax(150px, 2fr) 50px 90px 60px 80px 60px 70px 60px; min-width: 680px; font-size: 12.5px; padding: 5px 8px; }
+.dp-nob { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; } .dp-nob > div { background: var(--zemin); border: 1px solid var(--cizgi); border-radius: 11px; padding: 8px; display: flex; flex-direction: column; gap: 4px; } .dp-nob b small { color: var(--soluk); font-weight: 400; }
+.dp-nk { background: #ffffff0a; border: 1px solid var(--cizgi); color: var(--yazi); border-radius: 8px; padding: 4px 7px; font-size: 12px; text-align: left; } .dp-nk:hover { border-color: var(--neon); }
+@media (max-width: 760px) { .dp-nob { grid-template-columns: 1fr 1fr; } }
+.dp-kontrol { margin-bottom: 12px; } .dp-kontrol.kotu { border-color: #ff6b6b99; } .dp-kontrol.uyar { border-color: #ffd16677; } .dp-kontrol.iyi { border-color: #3ef08a66; }
+.dp-kl { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; } .dp-kl > div { display: flex; gap: 8px; font-size: 13px; align-items: flex-start; } .dp-kl i { font-style: normal; flex: 0 0 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; }
+.dp-kl .hata i { background: #ff6b6b33; color: #ff8a8a; } .dp-kl .uyari i { background: #ffd16633; color: #ffd166; } .dp-kl .bilgi i { background: #7fb2ff26; color: #7fb2ff; } .dp-kl .bilgi { color: var(--soluk); }
+.dp-calis:disabled { opacity: .55; }
+.dp-tab.duz .dp-c:not(.yok) { cursor: pointer; } .dp-c.secili { border-color: var(--neon); box-shadow: 0 0 0 2px var(--neon) inset; } .dp-c.olur { background: #3ef08a1a; border-color: #3ef08a77; } .dp-c.olmaz { opacity: .45; border-color: #ff6b6b55; }
+.dp-kimler .cip small { opacity: .7; color: #ff8a8a; }
+/* K-700i: günlük görevlendirme */
+.dp-gv-o { display: flex; flex-wrap: wrap; gap: 6px; max-height: 220px; overflow-y: auto; } .dp-gv-o .cip { text-transform: none; } .dp-gv-o small { opacity: .6; }
+.dp-gvt .dp-tr { grid-template-columns: 56px 70px minmax(140px, 1.4fr) minmax(140px, 1.2fr) minmax(170px, 1.4fr); min-width: 600px; }
+.dp-gv-sec { width: 100%; text-align: left; background: #ff6b6b14; border: 1px dashed #ff6b6b88; color: #ff8a8a; border-radius: 8px; padding: 6px 9px; font-weight: 700; } .dp-gv-sec.dolu { background: #3ef08a14; border: 1px solid #3ef08a77; color: var(--yazi); }

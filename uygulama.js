@@ -529,6 +529,7 @@
     let ben = KISI.get(String(D.eposta).toLowerCase()) || ''; if (!ben) try { ben = localStorage.getItem('umalAd:' + String(D.eposta).toLowerCase()) || ''; } catch (e) {}
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0);
     const D_ = []; Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) D_.push({ sinif: sf, n, ders: h.ders || '', ogretmen: h.ogretmen || [], bas: z.bas, bit: z.bit }); }));
+    try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: bugunISO() }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !D_.some(y => y.sinif === x.sinif && y.n === +x.saat)) D_.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', ogretmen: [ben], bas: z.bas, bit: z.bit, gorev: x.asil || true }); }); } catch (e) {}   // K-700i: görevlendirme
     D_.sort((a, b) => a.n - b.n);
     const simdi = D_.find(x => dk(x.bas) - 5 <= t && t < dk(x.bit));   // dersten 5 dk önce de sayılır
     return { p, gun, dk, t, zil, D_, simdi };
@@ -787,6 +788,7 @@
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'ogretmen'], ciz: sinavKonulari },   // K-574
     { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
     { id: 'dersprog', ad: 'Ders Programı Hazırla', roller: ['bas', 'yonetici'], ciz: () => dpAc('idare') },   // K-700
+    { id: 'gorev', ad: 'Günlük Görevlendirme', roller: ['bas', 'yonetici'], ciz: () => dpAc('gorev') },   // K-700i
     { id: 'dpistek', ad: 'Ders Programı İsteğim', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dpAc('ogretmen') },   // K-700
     { id: 'dersyoklama', ad: 'Ders Yoklaması', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dersYoklamaBolumu() },   // K-690
     { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
@@ -839,6 +841,7 @@
     dosyalar: '<path d="M3.500 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.500a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 10.500v5M9.500 13L12 10.500 14.500 13"/>',
     notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
     acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>',
+    gorev: '<circle cx="9" cy="8" r="3.300" fill="currentColor" fill-opacity=".2"/><path d="M3.500 19.500c.6-3.200 2.800-5 5.500-5s4.900 1.800 5.500 5"/><path d="M15.500 11.500l2 2 4-4"/>',
     dersprog: '<rect x="3.500" y="4.500" width="17" height="15" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M3.500 9h17M8.500 9v10.500M14 9v10.500M3.500 14.200h17"/><path d="M8.500 2.800v3.400M15.500 2.800v3.400"/>',
     dpistek: '<rect x="3.500" y="4.500" width="13" height="15" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M3.500 9h13M8 2.800v3.400M12 2.800v3.400"/><path d="M14.500 20l1-3.500 4.700-4.700a1.400 1.400 0 0 1 2 2L17.500 18.500z"/>',
     dersyoklama: '<rect x="4" y="4" width="16" height="17" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M9 3v3M15 3v3M4 9h16"/><path d="m8.500 14.500 2.200 2.200 4.800-4.800"/>',
@@ -857,7 +860,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'dersprog', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -899,9 +902,9 @@
       : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
-    const KISA = { dersyoklama: 'yoklama', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
+    const KISA = { dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
-    const OG_ACK = { dersyoklama: 'Tahtada alınan yoklamalar', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
+    const OG_ACK = { dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
@@ -991,10 +994,14 @@
     D.ogrenciler = (D.rol === 'ogretmen' ? ((await sb.rpc('umal_panel_ogrenciler')).data || []).map(o => ({ no: String(o.no), ad: o.ad, sinif: o.sinif })).sort((a, b) => (+a.no) - (+b.no)) : await hepsi('umal_ogrenciler', 'no,ad,sinif', q => q.order('no'))).filter(o => !(String(o.no) === '1907' && /FENERL/i.test(o.ad || '')));   // K-610: tanıtım hesabı sınıf öğrencisi sayılmaz (liste, kod, kart, sınav hiçbirinde görünmez)
     return D.ogrenciler;
   }
+  async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)
+    try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'nobet').maybeSingle(); const N = data && data.deger ? JSON.parse(data.deger) : {}; nobetKayitliAl(N); return nobetResmi(N); } catch (e) { return NOBET_RESMI; }
+  }
   async function dpAc(tur) {   // K-700: ders programı hazırlama modülü (ihtiyaç olunca yüklenir)
-    try { await programYukle();
-      for (const f of ['dersprog.js?v=202611181645']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
-      window.UmalDP[tur]({ sb, esc, baslik, program: () => D.program, programYenile: () => { D.program = null; programYukle(); }, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant });
+    try { await programYukle(); const NR = await dpNobet();
+      const nobetGunleri = () => { const M = {}; (NR.gunler || []).forEach((G, g) => Object.values(G || {}).forEach(v => (Array.isArray(v) ? v : [v]).forEach(a => { if (a) M[a] = g; }))); return M; };
+      for (const f of ['dersprog.js?v=202611181800']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      window.UmalDP[tur]({ sb, esc, baslik, program: () => D.program, programYenile: () => { D.program = null; programYukle(); }, pencereAc, uyar, onayla, girdiAl, hataYaz, raporYazdir, raporBant, nobetGunleri, rol: D.rol, eposta: D.eposta });
     } catch (e) { uyar('Ders programı açılamadı: ' + hataYaz(e)); } }
   async function programYukle() {
     if (D.program) return D.program;
