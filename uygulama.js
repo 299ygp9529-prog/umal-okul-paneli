@@ -645,6 +645,7 @@
     ac(ilk.id);
   }
   let yenileZamanlayici = null;
+  window.umalTelafiGorevAc = (tarih, ders) => { D._tfGorevAc = tarih + '|' + parseInt(ders, 10); ac('takvim'); };   // K-716cs: telafi programından görevli seçimi
   function ac(id) {
     const b = BOLUMLER.find(x => x.id === id && x.roller.includes(D.rol));
     if (!b) return;
@@ -5146,7 +5147,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611160900'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611181145'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
@@ -5181,7 +5182,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611162330');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611160900');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611181145');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
@@ -6187,6 +6188,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     if (D.rol === 'bas' || D.rol === 'yonetici') {   // görevli atanmış oturumların listesi/saati/yeri değiştiyse öğretmenlere giden özet de güncellenir
       let d_ = false; tfOturum.forEach((x, i) => { const k = tfK(x), o = tfGorev.oturum[k]; if (!o) return; const y = tfOzet(i); if (JSON.stringify(y) !== JSON.stringify(o)) { tfGorev.oturum[k] = y; d_ = true; } });
       if (d_) tfGorevKaydet().catch(() => {}); }
+    if (D._tfGorevAc) { const k_ = D._tfGorevAc; D._tfGorevAc = null; setTimeout(() => { const i = tfOturum.findIndex(x => tfK(x) === k_); if (i >= 0) tfGorevliSec(i); else uyar('Bu telafi oturumu Sınav takviminde bulunamadı; programı kaydettiğinizden emin olun.'); }, 300); }
     const tfDurum = x => { const k = tfK(x), o = tfGorev.oturum[k] || {}, y = tfYk[k];
       if (y && Array.isArray(y.liste)) { const g = y.liste.filter(z => z.d === 'g').length, ek = y.liste.filter(z => z.ek).length, kim = (o.gozcu || []).find(z => String(z.eposta).toLowerCase() === String(y.gonderen || '').toLowerCase());
         return `<span class="ch-tf ok">${g} / ${y.liste.length} geldi</span><small class="soluk">${esc(kim ? baslik(kim.ad) : (y.gonderen || ''))}${y.zaman ? ' · ' + new Date(+y.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : ''}${ek ? ` · <b style="color:#ffb547">${ek} listede yoktu</b>` : ''}</small>`; }
