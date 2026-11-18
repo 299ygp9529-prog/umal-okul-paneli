@@ -443,8 +443,11 @@
         ${alan('tc', 'T.C. kimlik no', '<input id="gbTc" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="11 hane">')}
         ${alan('dogum', 'Doğum tarihi', '<input id="gbDg" inputmode="numeric" maxlength="10" placeholder="gg.aa.yyyy">')}
         ${alan('tel', 'Telefon (senin ya da velinin)', '<input id="gbTl" inputmode="tel" value="05">')}
+        ${E.has('cins') ? alan('cins', 'Cinsiyet (otobüste oturma düzeni için)', '<div class="gb-cins" id="gbCn"><button type="button" data-cn="K">Kız</button><button type="button" data-cn="E">Erkek</button></div>') : ''}
         <button class="birincil" id="gbGonder">Kaydet</button>
         <div class="gb-kvkk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Bu bilgileri yalnız okul idaresi ve gezi sorumlusu öğretmenler görür; yalnız gezi listeleri için kullanılır.</span></div></div>`;
+    let gbCins = '';   // K-716co
+    if ($('#gbCn')) $('#gbCn').onclick = ev => { const b = ev.target.closest('[data-cn]'); if (!b) return; gbCins = b.dataset.cn; $('#gbCn').querySelectorAll('[data-cn]').forEach(x => x.classList.toggle('secili', x === b)); };
     if ($('#gbTc')) $('#gbTc').oninput = ev => { ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 11); };
     if ($('#gbDg')) $('#gbDg').oninput = ev => { const x = ev.target.value.replace(/\D/g, '').slice(0, 8); ev.target.value = [x.slice(0, 2), x.slice(2, 4), x.slice(4)].filter(Boolean).join('.'); };
     if ($('#gbTl')) $('#gbTl').oninput = ev => { let x = ev.target.value.replace(/\D/g, ''); if (!x.startsWith('0')) x = '0' + x; x = x.slice(0, 11); ev.target.value = [x.slice(0, 4), x.slice(4, 7), x.slice(7, 9), x.slice(9, 11)].filter(Boolean).join(' '); };
@@ -457,7 +460,7 @@
       if ($('#gbTl')) { const n = $('#gbTl').value.replace(/\D/g, '').length, e = n > 2 && n !== 11 ? 'HATALI · 11 hane olmalı' : ''; isaret('#gbTl', e); h = h || !!e; }
       if (h) return;
       const b = $('#gbGonder'); b.disabled = true; let r = null;
-      try { ({ data: r } = await sb.rpc('umal_gezi_bilgi_yaz', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar, p_tc: $('#gbTc') ? $('#gbTc').value : '', p_dogum: $('#gbDg') ? $('#gbDg').value : '', p_tel: $('#gbTl') && $('#gbTl').value.replace(/\D/g, '').length > 2 ? $('#gbTl').value : '' })); } catch (e) {}
+      try { ({ data: r } = await sb.rpc('umal_gezi_bilgi_yaz', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar, p_tc: $('#gbTc') ? $('#gbTc').value : '', p_dogum: $('#gbDg') ? $('#gbDg').value : '', p_tel: $('#gbTl') && $('#gbTl').value.replace(/\D/g, '').length > 2 ? $('#gbTl').value : '', ...(gbCins ? { p_cins: gbCins } : {}) })); } catch (e) {}
       b.disabled = false;
       if (r && r.ok) { GB.mesaj = 'Bilgilerin kaydedildi, idareye ulaştı.'; GB.tur = 'iyi'; await gzYukle(); GB.i = 0; anaCiz(true); }
       else { GB.mesaj = (r && r.hata) || 'Olmadı, internet bağlantını kontrol edip yeniden dene.'; GB.tur = 'kotu'; }
