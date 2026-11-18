@@ -1919,3 +1919,8 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
   .yan .ust-ad small { letter-spacing: .14em; }
   .kullanici { gap: 8px; }
 }
+/* K-716ch: gezi ilan formu telefonda taşmasın */
+.gk2-form > label { min-width: 0; } .gk2-form input, .gk2-form textarea, .gk2-form select { width: 100%; min-width: 0; box-sizing: border-box; }
+@media (max-width: 760px) { .gk2-form input[type="date"], .gk2-form input[type="time"] { -webkit-appearance: none; appearance: none; } }
+.gk2-pr { min-width: 0; } .gk2-pr input { min-width: 0; box-sizing: border-box; }
+@media (max-width: 760px) { .gk2-pr { grid-template-columns: 112px minmax(0, 1fr) auto !important; } .gk2-pr input[type="time"] { width: 112px; } }
