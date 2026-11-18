@@ -391,7 +391,7 @@
   // K-716cw: Mesajlar — sınıf grupları ve birebir (deneme: yalnız Kurucu). İdare göremez; şikâyet: grup → Kurucu, birebir → rehberlik.
   const MSJ = { L: [], ben: '', acik: null, M: [], yazabilir: true, engelli: [], uye: 0, sik: 0, zam: null };
   const MSJ_SINIF = ['9-D', '12-A', '11-E'];   // Kurucunun sınıfları (deneme)
-  const msjAvatar = (no, ad) => `<span class="msj-av" data-foto="${esc(no)}">${D.fotolar && D.fotolar[no] ? `<img alt="" src="${D.fotolar[no]}">` : esc(String(baslik(ad || '?')).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span>`;
+  const msjAvatar = (no, ad) => `<span class="msj-av" data-foto="${esc(no)}">${D.fotolar && D.fotolar[no] ? `<img alt="" src="${D.fotolar[no]}">` : esc(String(baslik(ad || '?')).split(' ').map(z => z[0]).slice(0, 3).join(''))}</span>`;
   const msjSaat = t => { const d = new Date(t), b = new Date(); return d.toDateString() === b.toDateString() ? d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(tr, { day: 'numeric', month: 'short' }); };
   async function msjRozet() { try { const { data } = await sb.rpc('umal_sohbet_listem'); if (!data || !data.ok) return; MSJ.L = data.liste || []; MSJ.ben = data.ben; MSJ.sik = data.kurucu_sikayet || 0;
     const n = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), m = document.querySelector('#menu .menu-oge[data-b="mesajlar"]'); if (m) { let k = m.querySelector('.mk-sayi'); if (!n) { if (k) k.remove(); } else { if (!k) { k = document.createElement('span'); k.className = 'mk-sayi'; m.appendChild(k); } k.textContent = n; } } } catch (e) {} }
