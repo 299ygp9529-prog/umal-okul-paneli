@@ -387,6 +387,78 @@
     };
     ciz();
   }
+
+  // K-716cw: Mesajlar — sınıf grupları ve birebir (deneme: yalnız Kurucu). İdare göremez; şikâyet: grup → Kurucu, birebir → rehberlik.
+  const MSJ = { L: [], ben: '', acik: null, M: [], yazabilir: true, engelli: [], uye: 0, sik: 0, zam: null };
+  const MSJ_SINIF = ['9-D', '12-A', '11-E'];   // Kurucunun sınıfları (deneme)
+  const msjAvatar = (no, ad) => `<span class="msj-av" data-foto="${esc(no)}">${D.fotolar && D.fotolar[no] ? `<img alt="" src="${D.fotolar[no]}">` : esc(String(baslik(ad || '?')).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span>`;
+  const msjSaat = t => { const d = new Date(t), b = new Date(); return d.toDateString() === b.toDateString() ? d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(tr, { day: 'numeric', month: 'short' }); };
+  async function msjRozet() { try { const { data } = await sb.rpc('umal_sohbet_listem'); if (!data || !data.ok) return; MSJ.L = data.liste || []; MSJ.ben = data.ben; MSJ.sik = data.kurucu_sikayet || 0;
+    const n = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), m = document.querySelector('#menu .menu-oge[data-b="mesajlar"]'); if (m) { let k = m.querySelector('.mk-sayi'); if (!n) { if (k) k.remove(); } else { if (!k) { k = document.createElement('span'); k.className = 'mk-sayi'; m.appendChild(k); } k.textContent = n; } } } catch (e) {} }
+  async function mesajlarBolumu() {
+    MSJ.acik = null; await Promise.all([msjRozet(), ogrencileriYukle().catch(() => [])]);
+    msjListeCiz(); yenile(async () => { await msjRozet(); if (MSJ.acik) await msjYukle(true); else msjListeCiz(); }, 8);
+  }
+  function msjListeCiz() {
+    const G = MSJ.L.filter(x => x.tur === 'grup'), B = MSJ.L.filter(x => x.tur === 'birebir').sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0));
+    const sat = x => `<button class="msj-sat" data-msjac="${esc(x.id)}">${x.tur === 'grup' ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<span class="m"><b>${x.tur === 'grup' ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || x.ogrenci)) + ' · ' + esc(x.ogr_sinif || '')}</b><small>${x.son ? (x.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span><span class="s">${x.son ? esc(msjSaat(x.son.zaman)) : ''}${x.yeni ? `<i>${x.yeni}</i>` : ''}${x.sikayet ? '<em>rehberliğe iletildi</em>' : ''}</span></button>`;
+    $('#icerik').innerHTML = `<div class="ust"><div><h1>Mesajlar</h1><div class="soluk kucuk">Sınıf grupları ve birebir konuşmalar · deneme: yalnız sizin hesabınızda · idare göremez</div></div><button class="birincil" id="msjYeni" style="margin-left:auto">+ Öğrenciye yaz</button></div>
+      ${MSJ.sik ? `<div class="kart td-uyari" style="cursor:pointer" data-git-sik="1"><b>${MSJ.sik} grup mesajı şikâyet edildi</b> · Mesaj Şikâyetleri'nde görün</div>` : ''}
+      <div class="kart msj-liste"><div class="msj-bas">SINIF GRUPLARI</div>${G.map(sat).join('') || `<div class="soluk kucuk" style="padding:8px 4px">Henüz grup yok.</div>`}
+        ${MSJ_SINIF.filter(x => !G.some(g => g.sinif === x)).length ? `<button class="ikincil kucuk" id="msjGrupKur" style="margin:8px 4px">${esc(MSJ_SINIF.filter(x => !G.some(g => g.sinif === x)).join(', '))} gruplarını kur</button>` : ''}
+        <div class="msj-bas">BİREBİR</div>${B.map(sat).join('') || '<div class="soluk kucuk" style="padding:8px 4px">Birebir konuşma yok. "Öğrenciye yaz" ile başlatın; öğrenciler de grubu olan öğretmene yazabilir.</div>'}</div>`;
+    const I = $('#icerik');
+    I.querySelectorAll('[data-msjac]').forEach(b => b.onclick = () => msjAc(b.dataset.msjac));
+    if ($('#msjGrupKur')) $('#msjGrupKur').onclick = async () => { const { data, error } = await sb.rpc('umal_sohbet_grup_kur', { p_siniflar: MSJ_SINIF }); if (error || !data || !data.ok) { uyar('Kurulamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; } await msjRozet(); msjListeCiz(); };
+    const gs = I.querySelector('[data-git-sik]'); if (gs) gs.onclick = () => ac('mesajsikayet');
+    $('#msjYeni').onclick = () => msjYeniBirebir();
+    fotolariYukle(MSJ.L.filter(x => x.ogrenci).map(x => x.ogrenci));
+  }
+  function msjYeniBirebir() { let q = '';
+    const ciz_ = () => { const t = q.trim().toLocaleLowerCase(tr), L = (D.ogrenciler || []).filter(o => MSJ_SINIF.includes(o.sinif) && (!t || (o.ad + ' ' + o.sinif + ' ' + o.no).toLocaleLowerCase(tr).includes(t))).slice(0, 40);
+      pencereAc(`<h2 style="margin-top:0">Öğrenciye yaz</h2><div class="soluk kucuk">Sınıflarınızdaki öğrenciler (${esc(MSJ_SINIF.join(', '))}). Birebir mesajlar 08.00–20.00 arası iletilir.</div>
+        <input id="msjAra" class="gk2-kp-ara" placeholder="Ad, numara ya da sınıf" value="${esc(q)}" autocomplete="off"><div class="msj-sec">${L.map(o => `<button class="msj-sat" data-msjogr="${esc(o.no)}">${msjAvatar(o.no, o.ad)}<span class="m"><b>${esc(baslik(o.ad))}</b><small>${esc(o.sinif)} · ${esc(o.no)}</small></span></button>`).join('') || '<p class="soluk">Öğrenci bulunamadı.</p>'}</div>`);
+      const a = $('#msjAra'); a.focus(); a.setSelectionRange(a.value.length, a.value.length); a.oninput = () => { q = a.value; ciz_(); };
+      fotolariYukle(L.map(o => o.no));
+      $('#pencere').querySelectorAll('[data-msjogr]').forEach(b => b.onclick = async () => { const { data, error } = await sb.rpc('umal_sohbet_birebir', { p_no: b.dataset.msjogr }); if (error || !data || !data.ok) { uyar(error ? hataYaz(error) : data && data.hata); return; } $('#pencere').classList.add('gizli'); await msjRozet(); msjAc(data.id); }); };
+    ciz_(); }
+  async function msjYukle(sessiz) { const x = MSJ.L.find(z => z.id === MSJ.acik); if (!x) return; const { data } = await sb.rpc('umal_sohbet_oku', { p_sohbet: x.id, p_sonra: 0 }); if (!data || !data.ok) return;
+    const eski = JSON.stringify(MSJ.M); MSJ.M = data.mesajlar || []; MSJ.yazabilir = data.yazabilir; MSJ.engelli = data.engelli || []; MSJ.uye = data.uye; x.yeni = 0;
+    if (!sessiz || eski !== JSON.stringify(MSJ.M)) msjSohbetCiz(); }
+  async function msjAc(id) { MSJ.acik = id; MSJ.M = []; msjSohbetCiz(); await msjYukle(); msjRozet(); }
+  function msjSohbetCiz() {
+    const x = MSJ.L.find(z => z.id === MSJ.acik); if (!x) return msjListeCiz(); const grup = x.tur === 'grup', I = $('#icerik'), taslak = $('#msjYaz') ? $('#msjYaz').value : '';
+    let gun = '';
+    const satir = m => { const ben = m.kim === MSJ.ben, no = m.kim.startsWith('o:') ? m.kim.slice(2) : '', g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }), gs = g !== gun ? (gun = g, `<div class="msj-gun">${esc(g)}</div>`) : '';
+      return gs + `<div class="msj ${ben ? 'ben' : ''} ${m.gizli ? 'gizli' : ''}">${!ben ? msjAvatar(no, m.ad) : ''}<div class="b">${!ben && grup ? `<small>${esc(baslik(m.ad || ''))}${MSJ.engelli.includes(no) ? ' · susturuldu' : ''}</small>` : ''}<span class="t">${m.gizli ? '<i>Bu mesaj gizlendi</i> ' + esc(m.metin || '') : esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}${ben && grup && m.okuyan != null ? ` · ${m.okuyan} okudu` : ''}</em>
+        ${grup && !ben ? `<span class="msj-ara"><button class="bag" data-msjgiz="${m.id}" data-v="${m.gizli ? 0 : 1}">${m.gizli ? 'Göster' : 'Gizle'}</button>${no ? `<button class="bag" data-msjeng="${esc(no)}" data-v="${MSJ.engelli.includes(no) ? 0 : 1}">${MSJ.engelli.includes(no) ? 'Yazmasına izin ver' : 'Sustur'}</button>` : ''}</span>` : ''}</div></div>`; };
+    I.innerHTML = `<div class="msj-ekran"><div class="msj-ust"><button class="ikincil kucuk" id="msjGeri">‹ Geri</button>${grup ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<div><b>${grup ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || ''))}</b><small>${grup ? MSJ.uye + ' öğrenci' : esc(x.ogr_sinif || '') + ' · birebir · 08.00–20.00'}</small></div>
+        ${grup ? `<label class="msj-tik"><input type="checkbox" id="msjYazabilir" ${MSJ.yazabilir ? 'checked' : ''}> Öğrenciler yazabilir</label>` : '<button class="bag" id="msjSik" style="margin-left:auto;color:#ff8a8a">Rehberliğe ilet</button>'}</div>
+      <div class="msj-akis" id="msjAkis">${MSJ.M.map(satir).join('') || '<div class="soluk kucuk" style="text-align:center;margin-top:20px">Henüz mesaj yok. İlk mesajı siz yazın.</div>'}</div>
+      <div class="msj-alt"><textarea id="msjYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msjGonder" aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div></div>`;
+    const ak = $('#msjAkis'); ak.scrollTop = ak.scrollHeight;
+    fotolariYukle([...new Set(MSJ.M.filter(m => m.kim.startsWith('o:')).map(m => m.kim.slice(2)).concat(x.ogrenci ? [x.ogrenci] : []))]);
+    $('#msjGeri').onclick = () => { MSJ.acik = null; msjRozet().then(msjListeCiz); };
+    const y = $('#msjYaz'); y.oninput = () => { y.style.height = 'auto'; y.style.height = Math.min(140, y.scrollHeight) + 'px'; };
+    y.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !telefon()) { e.preventDefault(); $('#msjGonder').click(); } };
+    $('#msjGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; const b = $('#msjGonder'); b.disabled = true;
+      const { data, error } = await sb.rpc('umal_sohbet_yaz', { p_sohbet: x.id, p_metin: t }); b.disabled = false;
+      if (error || !data || !data.ok) { uyar('Gönderilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+      y.value = ''; if (data.bekliyor) uyar('Mesajınız yarın 08.00\'de iletilecek (birebir mesajlar 08.00–20.00 arası).'); await msjYukle(); $('#msjYaz').focus(); };
+    if ($('#msjYazabilir')) $('#msjYazabilir').onchange = async e => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { yazabilir: e.target.checked } }); MSJ.yazabilir = e.target.checked; x.yazabilir = e.target.checked; };
+    I.querySelectorAll('[data-msjgiz]').forEach(b => b.onclick = async () => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { gizle: +b.dataset.msjgiz, gizli: b.dataset.v === '1' } }); msjYukle(); });
+    I.querySelectorAll('[data-msjeng]').forEach(b => b.onclick = async () => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { engel: b.dataset.msjeng, engelli: b.dataset.v === '1' } }); msjYukle(); });
+    if ($('#msjSik')) $('#msjSik').onclick = async () => { if (!await onayla('Bu konuşma rehberlik servisine iletilsin mi? Rehberlik yalnız bu konuşmayı görür.')) return; const { data } = await sb.rpc('umal_sohbet_sikayet_et', { p_sohbet: x.id, p_aciklama: 'Öğretmen iletti' }); if (data && data.ok) uyar('Konuşma rehberlik servisine iletildi.'); };
+  }
+  async function mesajSikayetBolumu() {
+    const { data, error } = await sb.rpc('umal_sohbet_sikayetler'); if (error || !data || !data.ok) { $('#icerik').innerHTML = `<div class="ust"><h1>Mesaj şikâyetleri</h1></div><div class="kart">${esc(error ? hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
+    const L = data.liste || [];
+    $('#icerik').innerHTML = `<div class="ust"><div><h1>Mesaj şikâyetleri</h1><div class="soluk kucuk">${data.hedef === 'kurucu' ? 'Sınıf gruplarında şikâyet edilen mesajlar' : 'Rehberliğe iletilen birebir konuşmalar · yalnız şikâyet edilen konuşma görünür'}</div></div></div>
+      ${L.map(k => `<div class="kart msj-sk ${k.durum === 'yeni' ? 'yeni' : ''}"><div class="msj-sk-ust"><b>${k.tur === 'grup' ? esc(k.sinif) + ' grubu' : 'Birebir: ' + esc(baslik(k.ogretmen || '')) + ' ↔ ' + esc(k.ogrenci || '')}</b><span class="soluk kucuk">${esc(new Date(k.zaman).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))} · şikâyet eden: ${esc(baslik(k.kim_ad || ''))}</span>
+          <button class="ikincil kucuk" data-mskd="${esc(k.id)}" data-v="${k.durum === 'yeni' ? 'incelendi' : 'yeni'}">${k.durum === 'yeni' ? 'İncelendi' : 'Yeniden aç'}</button></div>${k.aciklama ? `<div class="soluk kucuk">Not: ${esc(k.aciklama)}</div>` : ''}
+        <div class="msj-sk-akis">${(k.mesajlar || []).map(m => `<div class="${m.id === k.mesaj ? 'hedef' : ''}"><b>${esc(baslik(m.ad || ''))}</b> <small>${esc(new Date(m.zaman).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}${m.gizli ? ' · gizlendi' : ''}</small><br>${esc(m.metin)}</div>`).join('')}</div></div>`).join('') || '<div class="kart soluk">Şikâyet yok.</div>'}`;
+    $('#icerik').querySelectorAll('[data-mskd]').forEach(b => b.onclick = async () => { await sb.rpc('umal_sohbet_sikayet_durum', { p_id: b.dataset.mskd, p_durum: b.dataset.v }); mesajSikayetBolumu(); });
+  }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
@@ -409,7 +481,7 @@
     panelSelam().catch(e => console.warn('karşılama', e));   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
-    if (rol === 'bas') { erisimRozet(); bdRozet(); }
+    if (rol === 'bas') { erisimRozet(); bdRozet(); msjRozet(); }
     tfgYukle().catch(() => {});   // K-716cr: telafi görevleri
   }
   // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
@@ -563,6 +635,8 @@
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
+    { id: 'mesajlar', ad: 'Mesajlar', roller: ['bas'], ciz: () => mesajlarBolumu() },   // K-716cw: sınıf grupları ve birebir (deneme: yalnız Kurucu)
+    { id: 'mesajsikayet', ad: 'Mesaj Şikâyetleri', roller: ['bas', 'rehberlik'], ciz: () => mesajSikayetBolumu() },   // K-716cw: grup → Kurucu, birebir → rehberlik
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
     { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
     { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu() },   // K-702: otobüs koltuk yerleşimi + biletler
@@ -604,6 +678,8 @@
     dosyalar: '<path d="M3.500 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.500a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 10.500v5M9.500 13L12 10.500 14.500 13"/>',
     notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
     acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>',
+    mesajlar: '<path d="M4 5.5h12v8.5H8.5L4 17.5z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M4 5.5h12v8.5H8.5L4 17.5z"/><path d="M18.5 9H20v10.5l-3.5-3h-6"/>',
+    mesajsikayet: '<path d="M12 3.5 4.5 6.5v5.5c0 4.6 3.2 7.8 7.5 8.5 4.3-.7 7.5-3.9 7.5-8.5V6.5z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M12 3.5 4.5 6.5v5.5c0 4.6 3.2 7.8 7.5 8.5 4.3-.7 7.5-3.9 7.5-8.5V6.5z"/><path d="M12 8.5v4.5M12 15.6v.1"/>',
     bildirim: '<path d="M4 5h16v11H9.5L4 20z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M4 5h16v11H9.5L4 20z"/><path d="M12 8.2v3.6M12 14.4v.1"/>',
     gezikayit: '<rect x="4.500" y="4" width="15" height="17" rx="2.600" fill="currentColor" fill-opacity=".22" stroke="none"/><rect x="4.500" y="4" width="15" height="17" rx="2.600"/><path d="M9 2.800h6v2.600H9z"/><path d="M8.300 10.500h7.400M8.300 13.800h4.600"/><circle cx="15.600" cy="16.800" r="2.300"/><path d="m14.600 16.800.7.7 1.300-1.400"/>',
     gezi: '<rect x="4" y="3.500" width="16" height="15" rx="3"/><path d="M4 11h16M8 3.500v7.500M16 3.500v7.500"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M6.500 18.500V21M17.500 18.500V21"/>',
@@ -617,7 +693,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };

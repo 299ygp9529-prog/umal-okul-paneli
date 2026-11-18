@@ -1983,3 +1983,27 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .bdp-det { padding: 0 14px 14px 32px; display: flex; flex-direction: column; gap: 8px; } .bdp-foto { max-width: 220px; max-height: 300px; border-radius: 12px; border: 1px solid #ffffff22; } .bdp-lb { font-size: 12px; color: var(--soluk); margin-top: 4px; }
 .bdp-det textarea, .bdp-det input:not([type=checkbox]), .bdp-det select { width: 100%; box-sizing: border-box; } .bdp-pano { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
 .bdp-cocuk { border-left: 3px solid #ff8a8a55; padding-left: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; } .bdp-det .cip, .bdp-det button { text-transform: none !important; }
+/* K-716cw: mesajlar */
+.msj-liste { padding: 6px 10px; } .msj-bas { font-size: 11px; letter-spacing: .16em; color: var(--soluk); font-weight: 800; padding: 10px 4px 4px; }
+.msj-sat { width: 100%; display: flex; align-items: center; gap: 11px; padding: 10px 4px; border: 0; border-bottom: 1px solid #ffffff0d; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; text-transform: none !important; }
+.msj-sat .m { flex: 1; min-width: 0; } .msj-sat .m b { font-size: 14.5px; } .msj-sat .m small { display: block; color: var(--soluk); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.msj-sat .s { text-align: right; font-size: 11px; color: var(--soluk); display: flex; flex-direction: column; align-items: flex-end; gap: 4px; } .msj-sat .s i { font-style: normal; background: #22e8ff; color: #06121f; font-weight: 800; border-radius: 999px; padding: 1px 7px; } .msj-sat .s em { font-style: normal; color: #ff8a8a; font-weight: 700; }
+.msj-av { width: 40px; height: 40px; border-radius: 50%; flex: none; overflow: hidden; display: grid; place-items: center; background: linear-gradient(160deg, #3a5a8a, #1b2c48); border: 1.5px solid #ffffff2a; font-weight: 800; font-size: 13px; color: #cfe3f7; }
+.msj-av img { width: 100%; height: 100%; object-fit: cover; } .msj-av.g { background: linear-gradient(160deg, #22e8ff, #1677a8); color: #06121f; border: 0; font-size: 12px; }
+.msj-sec { max-height: 55vh; overflow: auto; margin-top: 8px; }
+.msj-ekran { display: flex; flex-direction: column; height: calc(100vh - 120px); min-height: 420px; border-radius: 18px; border: 1px solid #ffffff14; background: #0b1424; overflow: hidden; }
+@media (max-width: 760px) { .msj-ekran { height: calc(100dvh - 150px); border-radius: 14px; } }
+.msj-ust { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #ffffff12; } @media (min-width: 761px) { .msj-ust { padding-right: 76px; } } .msj-ust b { display: block; font-size: 16px; } .msj-ust small { color: var(--soluk); font-size: 12px; }
+.msj-tik { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 700; color: #3ef08a; }
+.msj-akis { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; } .msj-gun { align-self: center; font-size: 11px; color: var(--soluk); background: #ffffff0d; border-radius: 999px; padding: 3px 10px; margin: 6px 0; }
+.msj { display: flex; gap: 7px; align-items: flex-end; max-width: 82%; } .msj .msj-av { width: 30px; height: 30px; font-size: 10.5px; }
+.msj .b { position: relative; border-radius: 16px 16px 16px 4px; background: #16263f; padding: 8px 11px; font-size: 14px; line-height: 1.45; word-break: break-word; } .msj .b .t { white-space: pre-wrap; }
+.msj .b small { display: block; font-size: 11.5px; font-weight: 800; color: #7fe0ff; margin-bottom: 2px; } .msj .b em { display: block; text-align: right; font-style: normal; font-size: 10.5px; color: var(--soluk); margin-top: 3px; }
+.msj.ben { align-self: flex-end; flex-direction: row-reverse; } .msj.ben .b { border-radius: 16px 16px 4px 16px; background: linear-gradient(150deg, #1d6f8a, #155066); } .msj.ben .b em { color: #bfefff; }
+.msj.gizli .b { opacity: .55; } .msj.gizli i { font-style: italic; color: #ff8a8a; }
+.msj-ara { display: none; gap: 6px; margin-top: 4px; } .msj:hover .msj-ara, .msj:focus-within .msj-ara { display: flex; } .msj-ara .bag { font-size: 11.5px; padding: 0; text-transform: none !important; }
+@media (hover: none) { .msj-ara { display: flex; } }
+.msj-alt { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #ffffff12; align-items: flex-end; } .msj-alt textarea { flex: 1; resize: none; border-radius: 20px; min-height: 44px; max-height: 140px; padding: 11px 14px; font-size: 15px; box-sizing: border-box; }
+.msj-alt .birincil { width: 46px; height: 46px; border-radius: 50%; padding: 0; display: grid; place-items: center; flex: none; }
+.msj-sk.yeni { border-color: #ff8a8a77; } .msj-sk-ust { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; } .msj-sk-ust button { margin-left: auto; text-transform: none !important; }
+.msj-sk-akis { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow: auto; font-size: 13.5px; } .msj-sk-akis > div { padding: 7px 10px; border-radius: 10px; background: #ffffff08; } .msj-sk-akis > div.hedef { border: 1px solid #ff8a8a88; background: rgba(255,138,138,.08); }

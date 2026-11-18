@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -57,7 +57,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -338,6 +338,7 @@
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
+    $('#kutular').insertAdjacentHTML('afterbegin', msKutu());   // K-716cw: Mesajlar
     $('#kutular').insertAdjacentHTML('beforeend', bdKutu());   // K-716cv: Öneri ve sorun bildir
     sozCiz();
     rvAnaCiz(); dyAnaCiz();
@@ -345,7 +346,7 @@
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
@@ -392,6 +393,53 @@
   const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'telefon' };
   const UYARI_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5v4.5M12 16.6h.01"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
 
+
+  // K-716cw: Mesajlar — sınıf grubu ve öğretmenle birebir. Şikâyet: grup → okulun kurucusu, birebir → rehberlik.
+  const MS = { L: [], O: [], ben: '', acik: null, M: [], yazabilir: true, foto: {}, info: null, mesaj: '', zam: null };
+  const MS_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h12v8.5H8.5L4 17.5z" fill="currentColor" fill-opacity=".2"/><path d="M18.5 9H20v10.5l-3.5-3h-6"/></svg>';
+  async function msYukle() { try { const { data } = await sb.rpc('umal_ogr_sohbetler', { p_no: S.no, p_kod: S.kod }); if (data && data.ok) { MS.L = data.liste || []; MS.O = data.ogretmenler || []; MS.ben = data.ben; return true; } } catch (e) {} return false; }
+  const msYeni = () => MS.L.reduce((a, x) => a + (+x.yeni || 0), 0);
+  function msKutu() { if (!MS.L.length) return ''; const n = msYeni(), son = MS.L.filter(x => x.son).sort((a, b) => new Date(b.son.zaman) - new Date(a.son.zaman))[0];
+    return `<button data-git="msj" class="genis no-ana ms-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${MS_IK}</i><span><b>Mesajlar</b><small>${n ? n + ' yeni mesaj' : son ? esc(String(son.son.metin).slice(0, 48)) : 'Sınıf grubun ve öğretmenlerin'}</small></span></button>`; }
+  const msAv = (kim, ad) => { const no = kim.startsWith('o:') ? kim.slice(2) : ''; return `<span class="ms-av ${no ? '' : 'o'}">${no && MS.foto[no] ? `<img alt="" src="data:image/jpeg;base64,${MS.foto[no]}">` : esc(String(ad || '?').split(/\s+/).map(z => z[0]).slice(0, 2).join('').toLocaleUpperCase(tr))}</span>`; };
+  async function msAc() { MS.acik = null; goster('s-msj'); window.scrollTo(0, 0); await msYukle(); msListeCiz(); clearInterval(MS.zam); MS.zam = setInterval(async () => { if ($('#s-msj').classList.contains('gizli')) { clearInterval(MS.zam); return; } if (document.hidden) return; if (MS.acik) await msOku(true); else { await msYukle(); msListeCiz(); } }, 8000); }
+  function msListeCiz() { const el = $('#msIc'); if (!el) return; $('#msBaslik').textContent = 'Mesajlar';
+    const sat = x => `<button class="ms-sat" data-msac="${esc(x.id)}">${x.tur === 'grup' ? `<span class="ms-av g">${esc(x.sinif)}</span>` : `<span class="ms-av o">${esc(String(x.ogretmen || '?').split(/\s+/).map(z => z[0]).slice(0, 2).join('').toLocaleUpperCase(tr))}</span>`}<span class="m"><b>${x.tur === 'grup' ? esc(x.sinif) + ' sınıf grubu' : esc(baslik(x.ogretmen || 'Öğretmen'))}</b><small>${x.son ? (x.son.kim === MS.ben ? 'Sen: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span><span class="s">${x.son ? esc(new Date(x.son.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) : ''}${x.yeni ? `<i>${x.yeni}</i>` : ''}</span></button>`;
+    el.innerHTML = `<div class="kart ms-liste">${MS.L.filter(x => x.tur === 'grup').map(sat).join('')}${MS.L.filter(x => x.tur === 'birebir').length ? '<div class="ms-bas">ÖĞRETMENLERİM</div>' + MS.L.filter(x => x.tur === 'birebir').map(sat).join('') : ''}
+      ${MS.O.length ? `<div class="ms-bas">ÖĞRETMENİNE YAZ</div>${MS.O.map(o => `<button class="ms-sat" data-msbas="${esc(o.eposta_k)}"><span class="ms-av o">${esc(String(o.ad).split(/\s+/).map(z => z[0]).slice(0, 2).join('').toLocaleUpperCase(tr))}</span><span class="m"><b>${esc(baslik(o.ad))}</b><small>Birebir mesaj başlat</small></span></button>`).join('')}` : ''}</div>
+      ${MS.mesaj ? `<div class="bk-mesaj">${esc(MS.mesaj)}</div>` : ''}`;
+    el.querySelectorAll('[data-msac]').forEach(b => b.onclick = () => msSohbet(b.dataset.msac));
+    el.querySelectorAll('[data-msbas]').forEach(b => b.onclick = async () => { const { data } = await sb.rpc('umal_ogr_sohbet_baslat', { p_no: S.no, p_kod: S.kod, p_ogretmen_k: b.dataset.msbas }); if (data && data.ok) { await msYukle(); msSohbet(data.id); } else { MS.mesaj = (data && data.hata) || 'Olmadı.'; msListeCiz(); } });
+  }
+  async function msSohbet(id) { MS.acik = id; MS.M = []; MS.mesaj = ''; msCiz(); await msOku(); }
+  async function msOku(sessiz) { let d = null; try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_oku', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_sonra: 0 })); } catch (e) {} if (!d || !d.ok) return;
+    const eski = JSON.stringify(MS.M); MS.M = d.mesajlar || []; MS.info = d; MS.yazabilir = d.yazabilir; const x = MS.L.find(z => z.id === MS.acik); if (x) x.yeni = 0;
+    const eksik = [...new Set(MS.M.filter(m => m.kim.startsWith('o:')).map(m => m.kim.slice(2)))].filter(n => !(n in MS.foto));
+    if (eksik.length) { eksik.forEach(n => { MS.foto[n] = MS.foto[n] || ''; }); try { const { data: f } = await sb.rpc('umal_sohbet_fotolar', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_nolar: eksik }); if (f && f.ok) Object.assign(MS.foto, f.foto || {}); } catch (e) {} }
+    if (!sessiz || eski !== JSON.stringify(MS.M) || eksik.length) msCiz(); }
+  function msCiz() { const el = $('#msIc'), x = MS.L.find(z => z.id === MS.acik), I = MS.info || {}; if (!el || !x) return; const grup = x.tur === 'grup', taslak = $('#msYaz') ? $('#msYaz').value : '';
+    $('#msBaslik').textContent = grup ? x.sinif + ' sınıf grubu' : baslik(x.ogretmen || 'Öğretmen');
+    let gun = ''; const sat = m => { const ben = m.kim === MS.ben, g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }), gs = g !== gun ? (gun = g, `<div class="ms-gun">${esc(g)}</div>`) : '';
+      return gs + `<div class="ms-m ${ben ? 'ben' : ''}">${!ben ? msAv(m.kim, m.ad) : ''}<div class="b">${!ben && grup ? `<small class="${m.kim.startsWith('t:') ? 'ogt' : ''}">${esc(baslik(m.ad || ''))}${m.kim.startsWith('t:') ? ' · öğretmen' : ''}</small>` : ''}<span class="t">${esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}</em>${!ben && grup ? `<button class="ms-sk" data-mssk="${m.id}" aria-label="Şikâyet et">Şikâyet et</button>` : ''}</div></div>`; };
+    el.innerHTML = `<div class="ms-ekran"><div class="ms-ust"><button class="ikincil kucuk" id="msListe">‹ Sohbetler</button>${grup ? '' : '<button class="ms-skb" id="msSkBir">Şikâyet et</button>'}</div>
+      ${grup ? '' : '<div class="ms-kural">Bu konuşma okulun mesajlaşma kurallarına tabidir. Mesajlar silinmez; bir sorun olursa “Şikâyet et”e dokun, konuşma rehberlik servisine gider. Mesajlar 08.00–20.00 arası iletilir.</div>'}
+      <div class="ms-akis" id="msAkis">${MS.M.map(sat).join('') || '<div class="soluk kucuk" style="text-align:center;margin-top:24px">Henüz mesaj yok.</div>'}</div>
+      ${MS.mesaj ? `<div class="bk-mesaj">${esc(MS.mesaj)}</div>` : ''}
+      ${MS.yazabilir ? `<div class="ms-alt"><textarea id="msYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msGonder" aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div>` : '<div class="ms-kapali">Bu grupta şu an yalnız öğretmen yazabiliyor.</div>'}</div>`;
+    const ak = $('#msAkis'); ak.scrollTop = ak.scrollHeight;
+    $('#msListe').onclick = async () => { MS.acik = null; await msYukle(); msListeCiz(); anaCiz(true); goster('s-msj'); };
+    const y = $('#msYaz'); if (y) { y.oninput = () => { y.style.height = 'auto'; y.style.height = Math.min(130, y.scrollHeight) + 'px'; };
+      $('#msGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; $('#msGonder').disabled = true; let d = null;
+        try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_yaz', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_metin: t })); } catch (e) {}
+        if (d && d.ok) { y.value = ''; MS.mesaj = d.bekliyor ? 'Mesajın yarın 08.00\'de öğretmenine iletilecek.' : ''; await msOku(); } else { MS.mesaj = (d && d.hata) || 'Gönderilemedi; internetini kontrol et.'; msCiz(); } }; }
+    const sik = (mesaj, hedefYazi) => { MS.sik = { mesaj, hedefYazi }; msCiz(); };
+    if (MS.sik) { const k = document.createElement('div'); k.className = 'ms-skk'; k.innerHTML = `<b>Şikâyet et</b><div class="soluk kucuk">${esc(MS.sik.hedefYazi)}</div><textarea id="msSkA" rows="3" maxlength="500" placeholder="Neden? (isteğe bağlı)"></textarea><div class="ms-skd"><button class="ikincil" id="msSkV">Vazgeç</button><button class="birincil" id="msSkG">Gönder</button></div>`; el.querySelector('.ms-ekran').appendChild(k);
+      $('#msSkV').onclick = () => { MS.sik = null; msCiz(); };
+      $('#msSkG').onclick = async () => { const a = $('#msSkA').value; let d = null; try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_sikayet', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_mesaj: MS.sik.mesaj, p_aciklama: a })); } catch (e) {}
+        MS.sik = null; MS.mesaj = d && d.ok ? (d.hedef === 'rehberlik' ? 'Şikâyetin rehberlik servisine iletildi.' : 'Şikâyetin okul yönetimine iletildi.') : 'Şikâyet gönderilemedi.'; msCiz(); }; }
+    el.querySelectorAll('[data-mssk]').forEach(b => b.onclick = () => sik(+b.dataset.mssk, 'Bu mesaj okulun yönetimine iletilecek.'));
+    if ($('#msSkBir')) $('#msSkBir').onclick = () => sik(null, 'Bu konuşma rehberlik servisine iletilecek. Rehberlik yalnız bu konuşmayı görür.');
+  }
   // K-716cv: Öneri ve sorun bildir — hata, öneri, yanlış bilgi; yanıtlar ve isimsiz öneri panosu (yalnız Kurucu okur)
   const BD = { L: [], P: [], sekme: 'yeni', tur: '', bolum: '', metin: '', foto: null, cihaz: true, mesaj: '', mtur: '', gonderiyor: false };
   const BD_TUR = { hata: ['Hata', '#ff8a8a'], oneri: ['Öneri', '#c99bff'], yanlis: ['Yanlış bilgi', '#ffb547'] };
@@ -414,7 +462,7 @@
     let govde = '';
     if (BD.sekme === 'yeni') { const c = BD.cihaz ? bdCihaz() : null;
       govde = `<div class="kart bd-form"><div class="bd-tur">${Object.entries(BD_TUR).map(([k, [a, rk]]) => `<button class="${BD.tur === k ? 'secili' : ''}" style="--c:${rk}" data-bdt="${k}"><i>${k === 'hata' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" fill="currentColor" fill-opacity=".18"/><path d="M12 7.5v5.2M12 15.6v.1"/></svg>' : k === 'oneri' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17h6M10 20h4M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V17h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.5z" fill="currentColor" fill-opacity=".18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10l4 4v12H5z" fill="currentColor" fill-opacity=".18"/><path d="m9 12 6 6M15 12l-6 6"/></svg>'}</i>${a}</button>`).join('')}</div>
-        <label class="bd-lb" for="bdBolum">Hangi bölüm?</label><select id="bdBolum">${BD_BOLUM.map(b => `<option ${BD.bolum === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>
+        <div class="bd-lb">Hangi bölüm?</div><div class="bd-bolum">${BD_BOLUM.map(b => `<button type="button" class="${(BD.bolum || 'Genel') === b ? 'secili' : ''}" data-bdb="${esc(b)}">${esc(b.replace(' (ders dosyaları)', ''))}</button>`).join('')}</div>
         <label class="bd-lb" for="bdMetin">${BD.tur === 'oneri' ? 'Ne olsun istiyorsun?' : BD.tur === 'yanlis' ? 'Ne yanlış, doğrusu ne?' : 'Ne oldu?'}</label><div class="bd-yaz"><textarea id="bdMetin" maxlength="500" rows="5" placeholder="${BD.tur === 'oneri' ? 'Ör. Sınav sonuçlarım grafikle gösterilsin.' : BD.tur === 'yanlis' ? 'Ör. Perşembe 5. ders Kimya yazıyor, aslında Fizik.' : 'Ör. Sınav yerimi göster deyince boş sayfa açılıyor.'}">${esc(BD.metin)}</textarea><em id="bdSay">${BD.metin.length} / 500</em></div>
         <div class="bd-foto">${BD.foto ? `<img src="${BD.foto}" alt="Ekran görüntüsü"><button class="bag" id="bdFotoSil">Kaldır</button>` : `<label class="ikincil kucuk"><input type="file" accept="image/*" id="bdFoto" hidden>+ Ekran görüntüsü ekle</label>`}</div>
         <label class="bd-cihaz"><input type="checkbox" id="bdCihaz" ${BD.cihaz ? 'checked' : ''}><span>Telefon bilgisi eklensin${c ? `<small>${esc(c.cihaz)} · ${esc(c.tarayici)}${c.surum ? ' · sürüm ' + esc(c.surum.slice(-4)) : ''}</small>` : ''}</span></label>
@@ -428,7 +476,7 @@
     el.innerHTML = sek + govde;
     el.querySelectorAll('[data-bds]').forEach(b => b.onclick = async () => { BD.sekme = b.dataset.bds; BD.mesaj = ''; bdCiz(); if (BD.sekme === 'benim' && bdYeni()) { await bdYukle(true); BD.L.forEach(x => { x.okudu = true; }); bdCiz(); } });
     el.querySelectorAll('[data-bdt]').forEach(b => b.onclick = () => { BD.tur = b.dataset.bdt; bdCiz(); });
-    if ($('#bdBolum')) $('#bdBolum').onchange = e => { BD.bolum = e.target.value; };
+    el.querySelectorAll('[data-bdb]').forEach(b => b.onclick = () => { BD.bolum = b.dataset.bdb; el.querySelectorAll('[data-bdb]').forEach(x => x.classList.toggle('secili', x === b)); });   // K-716cx: gri iOS seçim penceresi yerine düğmeler
     if ($('#bdMetin')) $('#bdMetin').oninput = e => { BD.metin = e.target.value; $('#bdSay').textContent = BD.metin.length + ' / 500'; const g = $('#bdGonder'); if (g && BD.tur) { g.disabled = BD.metin.trim().length < 5; } };
     if ($('#bdCihaz')) $('#bdCihaz').onchange = e => { BD.cihaz = e.target.checked; bdCiz(); };
     if ($('#bdFoto')) $('#bdFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { BD.foto = await bdFotoKucult(f); } catch (x) { BD.mesaj = 'Fotoğraf eklenemedi.'; BD.mtur = 'kotu'; } bdCiz(); };
