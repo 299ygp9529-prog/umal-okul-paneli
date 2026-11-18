@@ -5945,9 +5945,17 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
         ${bilinmeyen.length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Okulda bulunamayan ${bilinmeyen.length} satır</b> (numarası ya da adı panelin öğrenci listesinde yok): ${bilinmeyen.slice(0, 40).map(esc).join(' · ')}${bilinmeyen.length > 40 ? ' …' : ''}</div>` : ''}
         ${Object.keys(turDisi).length ? `<div class="kart td-uyari" style="margin-top:10px"><b>Seçili devamsızlık türünde olmadığı için alınmayan satırlar:</b> ${Object.entries(turDisi).map(([k, n]) => `${esc(NEDEN[k] || k)} (${esc(k)}) · ${n}`).join(' · ')} — yukarıdaki tür düğmelerinden ekleyebilirsiniz.</div>` : ''}
         ${subesiz.size ? `<div class="kart td-uyari" style="margin-top:10px"><b>Sınav günü raporlu ama sınıfının o gün takvimde sınavı yok · ${subesiz.size}:</b> ${[...subesiz.values()].slice(0, 40).map(z => esc(baslik(z.o.ad)) + ' (' + esc(z.o.sinif) + ', ' + esc(kisaT(z.t)) + ')').join(' · ')}${subesiz.size > 40 ? ' …' : ''}<br><span class="soluk kucuk">Takvimde bu şubelerin o günkü sınavı eksik olabilir; takvimi düzenleyip şubeyi ekleyince listeye girerler.</span></div>` : ''}
-        ${E.length ? `<div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><button class="ikincil" id="rpPdf">🖨 Liste · PDF</button></div>
+        ${E.length ? `<div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><button class="ikincil" id="rpPdf">🖨 Liste · PDF</button><button class="birincil" id="rpTelafi">Telafi listelerine aktar · ${ogrS} öğrenci</button></div>
         <div style="margin-top:8px;max-height:46vh;overflow:auto"><table class="st-tablo"><thead><tr><th>Sınav</th><th>Öğrenci</th><th>Sınıf</th><th>Ders</th><th>Rapor</th></tr></thead><tbody>${E.map(z => `<tr><td>${esc(gunY(z.x.tarih))} · ${esc(dersYaz(z.x))}</td><td><b>${esc(baslik(z.o.ad))}</b> <span class="soluk">${esc(z.o.no)}</span></td><td>${esc(z.o.sinif)}</td><td>${esc(z.ders)}${z.yer === 'sinif' ? ' <span class="soluk">(sınıfta)</span>' : ''}</td><td>${esc(kisaT(z.a[0]))}${z.a[1] !== z.a[0] ? ' – ' + esc(kisaT(z.a[1])) : ''}${z.a[3] ? ` <span class="soluk">· ${esc(NEDEN[z.a[3]] || z.a[3])}</span>` : z.a[2] ? ' <span class="soluk">· yarım gün</span>' : ''}</td></tr>`).join('')}</tbody></table></div>${E.some(z => z.a[2]) ? '<div class="soluk kucuk" style="margin-top:6px">Yarım gün devamsızlıkta e-Okul hangi yarının olduğunu göstermez; sınav saatini öğrenciyle teyit edin.</div>' : ''}`
         : `<div class="soluk" style="margin-top:12px">${K.size ? 'Raporlu öğrencilerin hiçbiri sınav gününde raporlu görünmüyor.' : 'Listeden öğrenci tanınamadı. Satırlarda okul numarası ve tarih olduğundan emin olun.'}</div>`}`;
+      const rt = $('#rpTelafi'); if (rt) rt.onclick = async () => {   // K-716cq: yalnız "bu sınavın telafisine girer" bilgisi saklanır (rapor, tarih, neden saklanmaz)
+        const { data: ay } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'telafi_ogrenci').maybeSingle();
+        let T = {}; try { T = (ay && ay.deger ? JSON.parse(ay.deger) : {}).kayit || {}; } catch (e) { T = {}; }
+        let yeni = 0; E.forEach(z => { const k = z.x.tarih + '|' + parseInt(z.x.ders, 10), L = T[k] = T[k] || []; if (!L.some(y => y.no === String(z.o.no))) { L.push({ no: String(z.o.no), ders: z.ders }); yeni++; } });
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'telafi_ogrenci', deger: JSON.stringify({ kayit: T, z: Date.now() }) }, { onConflict: 'anahtar' });
+        if (error) { uyar('Aktarılamadı: ' + hataYaz(error)); return; }
+        rt.disabled = true; rt.textContent = yeni ? `${yeni} kayıt telafi listelerine aktarıldı` : 'Hepsi zaten telafi listelerindeydi';
+        uyar('Öğrenciler telafi listelerine eklendi. Sınav takviminde "Mazeret (telafi) sınavları" bölümünde her oturumun listesi ve yoklama çıktısı var. Rapor bilgisi saklanmadı.'); };
       const pd = $('#rpPdf'); if (pd) pd.onclick = () => {
         const G = {}; E.forEach(z => { const k = z.x.tarih + '|' + z.x.ders; (G[k] = G[k] || []).push(z); });
         const govde = raporBant('Sınav Gününde Raporlu Öğrenciler', `${esc(tk.ad || 'Ortak sınavlar')} · ${ogrS} öğrenci · ${E.length} sınav`)
@@ -6064,7 +6072,24 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     let telafi = null;
     if (D.rol !== 'ogretmen') try { const { data: tr_ } = await sb.from('umal_idari').select('anahtar,veri,guncel').like('anahtar', 'telafi:%').order('guncel', { ascending: false }).limit(4);
       const r_ = (tr_ || []).find(x => x.veri && (x.veri.gunler || []).some(g => g.tarih && (g.slot || []).length)); telafi = r_ ? r_.veri : null; } catch (e) { telafi = null; }
+    let tfOg = {}; if (D.rol !== 'ogretmen') try { const { data: to } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'telafi_ogrenci').maybeSingle(); tfOg = (to && to.deger ? JSON.parse(to.deger) : {}).kayit || {}; } catch (e) { tfOg = {}; }
+    const tfDk = x => String(x || '').toLocaleLowerCase(tr).replace(/\([^)]*\)/g, '').replace(/seçmeli|ve ahlak bilgisi|ve atatürkçülük|t\.c\.|\bs\.\s*/g, '').replace(/[^a-zçğıöşüâî]/g, '');
+    const tfEs = (a, b) => { a = tfDk(a); b = tfDk(b); return a && b && (a === b || (Math.min(a.length, b.length) >= 4 && (a.startsWith(b) || b.startsWith(a)))); };
     const tfOturum = telafi ? telafi.gunler.filter(g => g.tarih && (g.slot || []).length).sort((a, b) => a.tarih.localeCompare(b.tarih)).flatMap(g => g.slot.map(x => ({ tarih: g.tarih, ...x }))) : [];
+    // K-716cq: her telafi oturumuna, dersi ve şubesi tutan aktarılmış öğrenciler (şubesi yazılı satır önce)
+    const tfLis = tfOturum.map(() => []), tfYok = [];
+    Object.entries(tfOg).forEach(([asil, L]) => (L || []).forEach(y => { const o = (D.ogrenciler || []).find(q => String(q.no) === String(y.no)); if (!o) return; const v = seviye(o.sinif);
+      let en = -1, puan = 0; tfOturum.forEach((x, i) => String(x['s' + v] || '').split('\n').forEach(l => { if (!tfEs(l, y.ders)) return; const p = /\(([^)]*)\)/.exec(l), sb_ = p ? p[1].split(/[,;\s]+/).includes(o.sinif) : false, pu = sb_ ? 2 : 1; if (pu > puan) { puan = pu; en = i; } }));
+      if (en >= 0) { if (!tfLis[en].some(z => z.o.no === o.no)) tfLis[en].push({ o, ders: y.ders, asil }); } else tfYok.push({ o, ders: y.ders, asil }); }));
+    tfLis.forEach(L => L.sort((a, b) => sinifSira(a.o.sinif, b.o.sinif) || (+a.o.no) - (+b.o.no)));
+    let tfAcik = -1;
+    const tfYoklamaPdf = idx => { const I = idx == null ? tfOturum.map((_, i) => i).filter(i => tfLis[i].length) : [idx]; if (!I.length) { uyar('Telafi listelerinde öğrenci yok.'); return; }
+      const gy = t => new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+      const govde = I.map((i, j) => { const x = tfOturum[i], L = tfLis[i];
+        return `<div style="${j ? 'page-break-before:always;break-before:page' : ''}">` + raporBant('Telafi Sınavı Yoklama Listesi', `${esc(gy(x.tarih))} · ${esc(x.ders)}. ders (${esc(saat({ tarih: x.tarih, ders: x.ders }))})${x.yer ? ' · ' + esc(x.yer) : ''} · ${L.length} öğrenci`)
+          + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Ders</th><th style="width:22mm">Geldi</th><th style="width:22mm">Gelmedi</th><th style="width:34mm">Öğrenci imzası</th></tr></thead><tbody>${L.map((z, k) => `<tr><td class="s">${k + 1}</td><td class="mono">${esc(z.o.no)}</td><td class="ad">${esc(baslik(z.o.ad))}</td><td>${esc(z.o.sinif)}</td><td>${esc(baslik(z.ders))}</td><td></td><td></td><td></td></tr>`).join('')}</tbody></table>
+          <div class="imza"><div>Sınav görevlisi öğretmen<br>Ad Soyad / İmza</div><div>Müdür Yardımcısı</div></div></div>`; }).join('');
+      raporYazdir(govde, idx == null ? 'Telafi yoklama listeleri' : 'Telafi yoklama - ' + tfOturum[idx].tarih + ' ' + tfOturum[idx].ders + '. ders'); };
     const sinavlar = (tk.sinavlar || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
     const anahtar = s => `${s.tarih}|${parseInt(s.ders, 10)}`;
     // yoklamalar → gelmeyenler (sınav başına)
@@ -6129,7 +6154,10 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
           return `<div class="tk-tf"><h2 style="margin:18px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Mazeret (telafi) sınavları<span class="soluk kucuk" style="font-weight:500">${esc(telafi.yil || '')} ${esc(telafi.donem || '')} · ${esc(telafi.durum || '')}</span><button class="tk-pdf" data-tksk="telafi" style="margin-left:auto">Programı aç</button></h2>
             ${Object.entries(G).map(([t, S]) => `<div class="tk-gun ${t < bg ? 'olan' : 'olacak'}"><div class="tk-tarih"><b>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))}</span></div><div>${S.map(x => `<div class="tk-sinav"><div class="tk-saat"><b>${esc(x.ders)}. Ders</b><small>${esc(saat({ tarih: t, ders: x.ders }))}</small></div>
               <div class="tk-dersler">${['9', '10', '11', '12'].filter(v => String(x['s' + v] || '').trim()).map(v => `<div class="tk-tf-sv" style="--sv:${SEVIYE_RENK[v] || '#5cc8ff'}"><i>${v}</i><div>${String(x['s' + v]).split('\n').filter(z => z.trim()).map(sat).join('')}</div></div>`).join('')}</div>
-              ${x.yer ? `<span class="tk-sag soluk kucuk" style="max-width:180px;text-align:right">${esc(x.yer)}</span>` : ''}</div>`).join('')}</div></div>`).join('')}</div>`; })() : ''}</div>
+              <span class="tk-sag" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">${x.yer ? `<span class="soluk kucuk" style="max-width:180px;text-align:right">${esc(x.yer)}</span>` : ''}${(() => { const i = tfOturum.indexOf(x), n = tfLis[i].length; return n ? `<button class="tk-gel var" data-tfac="${i}">${n} öğrenci</button>` : ''; })()}</span></div>
+              ${tfAcik === tfOturum.indexOf(x) ? (() => { const i = tfAcik, L = tfLis[i]; return `<div class="tk-liste"><div style="flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap"><button class="tk-pdf" data-tfpdf="${i}">Yoklama listesi · PDF</button></div>${L.map(z => `<span class="oz-ogr tk-tf-o"><span class="sv-nokta" style="background:${seviyeRenk(z.o.sinif)}"></span>${esc(baslik(z.o.ad))} <small class="soluk">${esc(z.o.sinif)} · ${esc(z.o.no)}</small>${yonetir ? `<button class="bag" data-tfsil="${esc(z.asil)}|${esc(z.o.no)}" aria-label="Listeden çıkar">×</button>` : ''}</span>`).join('')}</div>`; })() : ''}`).join('')}</div></div>`).join('')}
+            ${tfLis.some(L => L.length) ? `<div class="dugmeler" style="justify-content:flex-start;margin-top:8px"><button class="tk-pdf" data-tfpdf="hepsi">Bütün telafi yoklama listeleri · PDF</button></div>` : `<div class="soluk kucuk" style="margin-top:8px">Öğrenci listesi için: Raporlu Öğrenciler → listeyi yükle → Karşılaştır → "Telafi listelerine aktar".</div>`}
+            ${tfYok.length ? `<div class="kart td-uyari" style="margin-top:8px"><b>Telafi programında dersi bulunamayan ${tfYok.length} kayıt:</b> ${tfYok.slice(0, 30).map(z => esc(baslik(z.o.ad)) + ' (' + esc(z.o.sinif) + ', ' + esc(baslik(z.ders)) + ')').join(' · ')}</div>` : ''}</div>`; })() : ''}</div>
           <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Tamamlananlar${olan.length && !ogrt ? '<button class="tk-pdf" data-pdf="hepsi" style="margin-left:auto">🖨 Tüm gelmeyenler · PDF</button>' : ''}</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
         <div class="kart" ${ogrt || (tfOturum.length && !mz.length) ? 'style="display:none"' : ''}><h2 style="margin-top:0">Mazeret sınavları</h2>
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
@@ -6151,6 +6179,13 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     $('#tkYazdir').onclick = () => takvimRapor(tk, saat, dersYaz);   // K-627
     if ($('#tkRapor')) $('#tkRapor').onclick = () => raporluKarsilastir(tk, saat, dersYaz);   // K-633
     const tkTik = async ev => {
+      const ta = ev.target.closest('[data-tfac]'); if (ta) { tfAcik = tfAcik === +ta.dataset.tfac ? -1 : +ta.dataset.tfac; ciz(); return; }   // K-716cq
+      const tp = ev.target.closest('[data-tfpdf]'); if (tp) { tfYoklamaPdf(tp.dataset.tfpdf === 'hepsi' ? null : +tp.dataset.tfpdf); return; }
+      const ts = ev.target.closest('[data-tfsil]'); if (ts) { const [asil, no] = ts.dataset.tfsil.split(/\|(?=[^|]*$)/); const o = (D.ogrenciler || []).find(q => String(q.no) === no);
+        if (!await onayla(`${o ? baslik(o.ad) : no} bu telafi listesinden çıkarılsın mı?`)) return;
+        tfOg[asil] = (tfOg[asil] || []).filter(y => String(y.no) !== no); if (!tfOg[asil].length) delete tfOg[asil];
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'telafi_ogrenci', deger: JSON.stringify({ kayit: tfOg, z: Date.now() }) }, { onConflict: 'anahtar' }); if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; }
+        takvim(); return; }
       if (ev.target.closest('#tkIc [data-tksk="telafi"]')) { await idariAc('telafi', { ad: 'Sınav takvimi', fn: () => takvim(), otoAktar: true }); return; }   // K-716cj
       const pd = ev.target.closest('[data-pdf]'); if (pd) { gelmeyenRapor(pd.dataset.pdf); return; }
       const g = ev.target.closest('[data-gel]'); if (g) { acik = acik === g.dataset.gel ? null : g.dataset.gel; ciz(); return; }
