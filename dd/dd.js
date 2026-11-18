@@ -136,7 +136,7 @@
     const IK = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;   // K-716bp: tek renk düzen
     kok.innerHTML = `<div class="rv-bas dd-ust"><div><h1 style="margin:0">Atlas Sınıf</h1><div class="soluk kucuk">Öğrencilere duyuru, dosya, video, test gönderin. Öğrenci kendi panelinde görür; kim açtı, ne sordu burada.</div></div>
 </div>
-      <div class="dd-arac ${idare() ? 'uc' : ''}"><button class="dd-yeni" id="ddYeni"${S.url ? '' : ' disabled'}><i>${IK('<path d="M12 5v14M5 12h14"/>')}</i>Yeni paylaşım</button>
+      <div class="dd-arac ${idare() ? 'uc' : ''}"><button class="dd-kare dd-yeni" id="ddYeni"${S.url ? '' : ' disabled'}><i>${IK('<path d="M12 5v14M5 12h14"/>')}</i><span>Yeni paylaşım</span></button>
         <button class="dd-kare" id="ddKisayol" title="iPhone kısayolu"><i>${IK('<rect x="7" y="2.8" width="10" height="18.4" rx="2.4" fill="currentColor" fill-opacity=".18"/><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/>')}</i><span>iPhone</span></button>
         ${idare() ? `<button class="dd-kare" id="ddAyar" title="Depolama ve ayarlar"><i>${IK('<circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity=".18"/><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>')}</i><span>Ayarlar</span></button>` : ''}</div>
       ${S.url ? '' : `<div class="kart dd-kurulum"><b>Drive bağlantısı henüz kurulmadı.</b><div class="soluk kucuk">${C.rol === 'bas' ? 'Depolama · Ayarlar\'dan Atlas Drive köprüsünün adresini girin.' : 'Kurulum <span class="kurucu-yazi">KURUCU</span> tarafından yapılacak.'}</div></div>`}
@@ -147,9 +147,10 @@
       const r = ev.target.closest('[data-dd]'); if (r) { const d = S.L.find(x => x.id === r.dataset.dd); if (!d) return;
         if (r.dataset.zum) { S.T = yeniTaslak(); Object.assign(S.T, { baslik: d.baslik, ders: d.ders, aciklama: d.aciklama || '', mevcut: d.dosyalar || [], linkler: (d.linkler && d.linkler.length ? d.linkler : d.link ? [d.link] : []).slice(), ses: d.ses, sinav: d.sinav, cevapMevcut: d.cevap, test: d.test ? d.test.anahtar : '', kaynak: d.id }); S.ekran = 'yeni'; ciz(); return; }
         S.sec = d.id; S.tsinif = ''; S.ekran = 'takip'; ciz(); return; }
-      if (ev.target.id === 'ddYeni') { S.T = yeniTaslak(); S.ekran = 'yeni'; ciz(); }
-      if (ev.target.id === 'ddAyar') { S.ekran = 'ayar'; ciz(); }
-      if (ev.target.id === 'ddKisayol') { S.ekran = 'kisayol'; ciz(); }
+      const b = ev.target.closest('button'); const id = b && b.id;   // K-716br: simgeye/yazıya dokunulsa da düğme çalışsın
+      if (id === 'ddYeni' && !b.disabled) { S.T = yeniTaslak(); S.ekran = 'yeni'; ciz(); }
+      if (id === 'ddAyar') { S.ekran = 'ayar'; ciz(); }
+      if (id === 'ddKisayol') { S.ekran = 'kisayol'; ciz(); }
     };
   }
 

@@ -1811,3 +1811,9 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 @media (max-width: 700px) { .rp-aktar { flex-direction: column; align-items: stretch; } }
 .rp-onizle { display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow: auto; } .rp-onizle > div { display: flex; flex-direction: column; gap: 4px; }
 .rp-onizle b small { color: var(--soluk); font-weight: 400; margin-left: 6px; } .rp-onizle span { font-size: 13px; color: var(--soluk); padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.04); } .rp-onizle em { font-style: normal; font-weight: 700; color: var(--neon); margin-right: 8px; }
+
+/* K-716br: Atlas Sınıf üst düğmeleri eşit boyda */
+.dd-arac, .dd-arac.uc { grid-template-columns: repeat(var(--n, 2), 1fr); } .dd-arac.uc { --n: 3; }
+.dd-arac .dd-kare { min-height: 82px; font-size: 13px; gap: 6px; } .dd-arac .dd-kare i { width: 36px; height: 36px; } .dd-arac .dd-kare svg { width: 21px; height: 21px; }
+.dd-arac .dd-yeni { border-color: rgba(34,232,255,.55); background: linear-gradient(150deg, #1b3a5c, #13243f); color: #fff; box-shadow: 0 0 16px rgba(34,232,255,.15); }
+.dd-kare * { pointer-events: none; }
