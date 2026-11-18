@@ -28,7 +28,7 @@
     if (!data || !data.ok) throw new Error((data && data.hata) || 'okunamadı');
     P = data.veri && data.veri.dersler ? data.veri : bosProje();
     P.ogretmen = P.ogretmen || {}; P.sinif = P.sinif || {}; P.sablon = P.sablon && P.sablon.length ? P.sablon : JSON.parse(JSON.stringify(SABLON0)); P.sinifSablon = P.sinifSablon || {};
-    [...new Set(P.dersler.map(d => d.sinif))].forEach(s => { if (!P.sinifSablon[s]) { const t = sablonBul(s); if (t) P.sinifSablon[s] = t.id; } }); P.ayar = Object.assign({ yakin: true, sure: 30, ayniGunMax: 1, bosluk: 40, herkesBosGun: true }, P.ayar || {}); kadroHazirla();
+    [...new Set(P.dersler.map(d => d.sinif))].forEach(s => { if (!P.sinifSablon[s]) { const t = sablonBul(s); if (t) P.sinifSablon[s] = t.id; } }); P.ayar = Object.assign({ yakin: true, sure: 30, ayniGunMax: 1, bosluk: 40, herkesBosGun: true, gunMax: 6 }, P.ayar || {}); kadroHazirla();
   }
   function kaydet(hemen) {
     clearTimeout(KAYIT_Z); const yap = async () => { const { data, error } = await X.sb.rpc('umal_dp_yaz', { p_anahtar: 'proje', p_veri: P }); if (error || !data || !data.ok) X.uyar('Kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); };
@@ -356,6 +356,7 @@
     E.innerHTML = `<div class="kart"><div class="dp-bas"><b>Programı hazırla</b><span class="soluk kucuk">${siniflar().length} sınıf · ${P.dersler.reduce((x, d) => x + (+d.saat || 0), 0)} ders saati · ${kural} öğretmenin kuralı</span></div>
       <div class="dp-al"><b>Başlangıç</b><div class="dya-sec">${cips('yakin', a.yakin, [[true, 'Mevcut programa yakın kalsın'], [false, 'Sıfırdan dağıt']])}</div><div class="soluk kucuk">Yakın kalsın: yalnız kurallar için gereken dersler yer değiştirir.</div></div>
       <div class="dp-al"><b>Boş gün</b><div class="dya-sec">${cips('herkesBosGun', a.herkesBosGun, [[true, 'Her öğretmene bir boş gün'], [false, 'Gerekmez']])}</div><div class="soluk kucuk">Günü Atlas seçer. Kendi boş gününü isteyen öğretmene o gün verilir; nöbet günü boş gün olmaz.</div></div>
+      <div class="dp-al"><b>Öğretmen bir günde en çok</b><div class="dya-sec">${cips('gunMax', a.gunMax, [[5, '5 ders'], [6, '6 ders'], [7, '7 ders'], [0, 'Sınır yok']])}</div><div class="soluk kucuk">Bütün öğretmenler için. Kendisi daha az isteyen öğretmene onun isteği uygulanır.</div></div>
       <div class="dp-al"><b>Öğretmenlerin ders araları</b><div class="dya-sec">${cips('bosluk', a.bosluk, [[40, 'Boşluk olmasın'], [12, 'Az boşluk'], [1, 'Önemli değil']])}</div><div class="soluk kucuk">Boşluk olmasın: öğretmenin dersleri arka arkaya gelir, aralarda boş saat kalmaz. Nöbet günü hariç.</div></div>
       <div class="dp-al"><b>Aynı ders bir günde</b><div class="dya-sec">${cips('ayniGunMax', a.ayniGunMax, [[1, 'En çok bir blok'], [2, 'İki blok olabilir']])}</div></div>
       <div class="dp-al"><b>Süre</b><div class="dya-sec">${cips('sure', a.sure, [[15, '15 sn'], [30, '30 sn'], [60, '1 dk'], [180, '3 dk']])}</div><div class="soluk kucuk">Uzun süre daha iyi sonuç verir.</div></div>
@@ -366,7 +367,7 @@
   function calistir() {
     const b = $('#dpCalis'); b.disabled = true; b.textContent = 'Atlas yerleştiriyor…'; $('#dpIlerle').innerHTML = '<div class="dp-bar"><i style="width:0%"></i></div><div class="soluk kucuk" id="dpIlY"></div>';
     const girdi = { gunSaat: gunSaat(), dersler: P.dersler.filter(d => d.ders && (+d.saat > 0)), ogretmen: P.ogretmen, sinif: P.sinif, mevcut: P.ayar.yakin ? (X.program() || {}).siniflar : null, ayar: Object.assign({}, P.ayar, { tohum: (Date.now() & 0xffff) + 1 }) };
-    let w; try { w = new Worker('dp-cozucu.js?v=202611181630'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
+    let w; try { w = new Worker('dp-cozucu.js?v=202611181645'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
     w.onmessage = ev => { const m = ev.data; if (m.ilerle) { const q = $('#dpIlerle i'); if (q) q.style.width = Math.round(m.ilerle.oran * 100) + '%'; const y = $('#dpIlY'); if (y) { const n = Math.floor(m.ilerle.ceza / 1000), kal = Math.max(0, Math.round(P.ayar.sure * (1 - m.ilerle.oran))); y.textContent = (n ? `Çakışmalar çözülüyor · ${n} çakışma kaldı` : 'Çakışma kalmadı · öğretmen istekleri iyileştiriliyor') + ` · yaklaşık ${kal} sn`; } return; }
       w.terminate(); b.disabled = false; b.textContent = 'Yeniden hazırla'; $('#dpIlerle').innerHTML = '';
       if (m.hata) { X.uyar('Hazırlanamadı: ' + m.hata); return; }

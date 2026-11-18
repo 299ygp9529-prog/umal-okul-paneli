@@ -8,7 +8,7 @@
   const SERT = 1000;
   function coz(G, ilerle) {
     const gunSaat = G.gunSaat || [8, 8, 8, 8, 8], D = gunSaat.length, P = Math.max(...gunSaat);
-    const ayar = Object.assign({ sure: 20, yakin: true, ayniGunMax: 1, bosluk: 1, tohum: 1 }, G.ayar || {});
+    const ayar = Object.assign({ sure: 20, yakin: true, ayniGunMax: 1, bosluk: 1, tohum: 1, gunMax: 6 }, G.ayar || {});
     let tohum = ayar.tohum >>> 0 || 1; const rnd = () => { tohum ^= tohum << 13; tohum ^= tohum >>> 17; tohum ^= tohum << 5; return (tohum >>> 0) / 4294967296; };
     const sinifAd = [...new Set(G.dersler.map(x => x.sinif))], Ci = Object.fromEntries(sinifAd.map((s, i) => [s, i]));
     const ogrAd = [...new Set(G.dersler.flatMap(x => x.ogr || []))], Ti = Object.fromEntries(ogrAd.map((s, i) => [s, i]));
@@ -25,6 +25,7 @@
       if (k.bosGun && k.bosGun.gun >= 0) { tBos[t] = k.bosGun.gun; tBosKesin[t] = k.bosGun.kesin ? 1 : 0; }
       if (k.gunMax > 0) tMax[t] = k.gunMax;
       if (k.nobet && k.nobet.gun >= 0) { tNob[t] = k.nobet.gun; tNobAz[t] = k.nobet.enAz || 0; tNobCok[t] = k.nobet.enCok >= 0 && k.nobet.enCok !== '' && k.nobet.enCok != null ? k.nobet.enCok : 99; } });
+    if (ayar.gunMax > 0) for (let t = 0; t < T; t++) if (!tMax[t] || tMax[t] > ayar.gunMax) tMax[t] = ayar.gunMax;   // okul geneli: öğretmen günde en çok
     Object.entries(G.sinif || {}).forEach(([ad, k]) => { const c = Ci[ad]; if (c === undefined || !k) return; (k.kapali || []).forEach(x => { const s = kod(x); if (s >= 0) cKapali[c][s] = 1; }); });
     for (let g = 0; g < D; g++) for (let n = gunSaat[g] + 1; n <= P; n++) { const s = g * P + n - 1; for (let c = 0; c < C; c++) cKapali[c][s] = 2; }   // olmayan saat
     // birimler: haftalık saat bloklara bölünür (blok 2: 2+2+…+1; blok 1: tek tek)
@@ -45,11 +46,12 @@
       return m; };
     const ogrGun = (t, g) => { let m = 0, n = 0, ilk = -1, son = -1; const b = g * P, o = oT[t], kp = tKapali[t], tr = tTercih[t];
       for (let i = 0; i < P; i++) { const v = o[i + b]; if (!v) continue; n++; if (ilk < 0) ilk = i; son = i; if (v > 1) m += SERT * (v - 1); if (kp[i + b]) m += SERT * v; if (tr[i + b]) m += 6 * v; }
-      if (n) { if (tNob[t] !== g) m += ayar.bosluk * ((son - ilk + 1) - n); if (tMax[t] && n > tMax[t]) m += 15 * (n - tMax[t]); if (tBos[t] === g) m += (tBosKesin[t] ? SERT : 25) * n; }
+      if (n) { if (tNob[t] !== g) m += ayar.bosluk * ((son - ilk + 1) - n); if (tMax[t] && n > tMax[t]) m += 80 * (n - tMax[t]); if (ayar.gunMax > 0 && n > ayar.gunMax) m += SERT * (n - ayar.gunMax); if (tBos[t] === g) m += (tBosKesin[t] ? SERT : 25) * n; }
       if (tNob[t] === g) { if (n < tNobAz[t]) m += 10 * (tNobAz[t] - n); if (n > tNobCok[t]) m += 10 * (n - tNobCok[t]); }
       return m; };
+    const tYuk = new Int16Array(T); U.forEach(u => u.t.forEach(t => { tYuk[t] += u.uz; }));
     const tHer = new Uint8Array(T).fill(ayar.herkesBosGun ? 1 : 0); Object.entries(G.ogretmen || {}).forEach(([ad, k]) => { const t = Ti[ad]; if (t !== undefined && k && k.bosGun && k.bosGun.herhangi) tHer[t] = 1; });
-    const haftaCeza = t => { if (!tHer[t] || tBos[t] >= 0) return 0; const o = oT[t]; for (let g = 0; g < D; g++) { if (g === tNob[t]) continue; let bos = true; for (let i = 0; i < P; i++) if (o[g * P + i]) { bos = false; break; } if (bos) return 0; } return 60; };
+    const haftaCeza = t => { if (!tHer[t] || tBos[t] >= 0 || (tMax[t] && tYuk[t] > (D - 1) * tMax[t])) return 0; const o = oT[t]; for (let g = 0; g < D; g++) { if (g === tNob[t]) continue; let bos = true; for (let i = 0; i < P; i++) if (o[g * P + i]) { bos = false; break; } if (bos) return 0; } return ayar.bosGunW || 150; };
     const yakinCeza = u => { if (!ayar.yakin || !G.mevcut) return 0; const e = eski[u.c], b = u.g * P + u.p; let m = 0; for (let i = 0; i < u.uz; i++) if (e[b + i] !== u.k) m += 1; return m; };
     // başlangıç: mevcut programdaki yerine (uyuyorsa), olmazsa en az çakışan yere
     const yerUygun = (u, g, p) => p >= 0 && p + u.uz <= gunSaat[g];
@@ -70,7 +72,7 @@
     // hareket: birimi aynı sınıfta başka yere taşı; orada aynı uzunlukta tek birim varsa yer değiştir
     const etkiliMaliyet = (us, gunler) => { let m = 0; const cs = new Set(), ts = new Set(); for (const u of us) { cs.add(u.c); for (const t of u.t) ts.add(t); m += yakinCeza(u); }
       for (const c of cs) for (const g of gunler) m += sinifGun(c, g); for (const t of ts) { m += haftaCeza(t); for (const g of gunler) m += ogrGun(t, g); } return m; };
-    const bas = Date.now(), sure = Math.max(1, +ayar.sure || 20) * 1000; let adim = 0, T0 = 8, Tc = T0, enIyi = toplam, enIyiYer = U.map(u => [u.g, u.p]);
+    const bas = Date.now(), sure = Math.max(1, +ayar.sure || 20) * 1000; let adim = 0, T0 = +ayar.T0 || 8, Tc = T0, enIyi = toplam, enIyiYer = U.map(u => [u.g, u.p]);
     while (true) {
       if ((adim & 2047) === 0) { const ge = Date.now() - bas; if (ge > sure) break; Tc = T0 * Math.pow(0.002, ge / sure); if (ilerle && (adim & 65535) === 0) ilerle({ oran: ge / sure, ceza: enIyi }); }
       adim++;
@@ -97,10 +99,11 @@
         if (tKapali[t][s]) ihlal.push({ tur: 'kapali', sert: 1, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${i + 1}. derste müsait değil ama dersi var` });
         if (tTercih[t][s]) ihlal.push({ tur: 'tercih', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${i + 1}. ders boş olsun istemişti` }); }
       if (n && tBos[t] === g) ihlal.push({ tur: 'bosgun', sert: tBosKesin[t], kim: ogrAd[t], yazi: `${ogrAd[t]}: boş gün istediği ${gunAd[g]} ${n} dersi var` });
-      if (n && tMax[t] && n > tMax[t]) ihlal.push({ tur: 'gunmax', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${n} ders (en çok ${tMax[t]} istendi)` });
+      if (n && tMax[t] && n > tMax[t]) ihlal.push({ tur: 'gunmax', sert: ayar.gunMax > 0 && n > ayar.gunMax ? 1 : 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${n} ders (en çok ${tMax[t]} istendi)` });
       if (tNob[t] === g && (n < tNobAz[t] || n > tNobCok[t])) ihlal.push({ tur: 'nobet', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: nöbet günü ${gunAd[g]} ${n} ders (${tNobAz[t]}${tNobCok[t] < 99 ? '–' + tNobCok[t] : '+'} istendi)` });
       if (n && tNob[t] !== g && (son - ilk + 1) - n >= (ayar.bosluk >= 12 ? 1 : 3)) ihlal.push({ tur: 'bosluk', sert: 0, kim: ogrAd[t], saat: (son - ilk + 1) - n, yazi: `${ogrAd[t]}: ${gunAd[g]} derslerin arasında ${(son - ilk + 1) - n} saat boşluk` }); }
-    for (let t = 0; t < T; t++) if (haftaCeza(t)) ihlal.push({ tur: 'bosgunyok', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: boş günü yok` });
+    for (let t = 0; t < T; t++) { if (haftaCeza(t)) ihlal.push({ tur: 'bosgunyok', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: boş günü yok` });
+      else if (tHer[t] && tBos[t] < 0 && tMax[t] && tYuk[t] > (D - 1) * tMax[t]) ihlal.push({ tur: 'bosgunyok', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: haftada ${tYuk[t]} saat, günde en çok ${tMax[t]} ile 4 güne sığmıyor; boş gün verilemez` }); }
     for (let c = 0; c < C; c++) for (let g = 0; g < D; g++) { for (let i = 0; i < P; i++) { const s = g * P + i; if (oC[c][s] > 1) ihlal.push({ tur: 'sinif', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders çakışıyor` }); if (oC[c][s] && cKapali[c][s] === 1) ihlal.push({ tur: 'skapali', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders kapalı saatte` }); }
       for (let k = 0; k < K; k++) if (kCD[(c * D + g) * K + k] > ayar.ayniGunMax) ihlal.push({ tur: 'ayni', sert: 0, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${dersAd[k].split('|')[1]} ${gunAd[g]} ${kCD[(c * D + g) * K + k]} kez` }); }
     let degisen = 0; if (G.mevcut) U.forEach(u => { degisen += yakinCeza(u); });
