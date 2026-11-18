@@ -1902,3 +1902,12 @@ body.hafif .ps-ic .dm, body.hafif .ps-ic .sc, body.hafif .ps-ic .cak, body.hafif
 .as-dug { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; } .as-dug button { flex: 1; min-width: 110px; min-height: 44px; }
 .as-takip { display: flex; gap: 8px; margin-top: 12px; } .as-takip input { flex: 1; min-width: 0; height: 48px; } .as-takip button { width: 48px; height: 48px; border-radius: 13px; border: 0; background: var(--neon); color: #06121f; display: grid; place-items: center; cursor: pointer; } .as-takip svg { width: 20px; height: 20px; }
 body:has(#panelSelam.acik) .as-fab { display: none; }
+
+/* K-716cf: telefonda Atlas'a sor üst çubukta (yüzen düğme gizli) */
+.as-tepe { display: none; }
+@media (max-width: 760px) {
+  .as-fab { display: none !important; }
+  .as-tepe { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 10px; border-radius: 999px; font: inherit; font-weight: 800; font-size: 15px; color: #fff; cursor: pointer;
+    border: 1px solid rgba(201,155,255,.6); background: linear-gradient(135deg, rgba(122,60,255,.45), rgba(34,232,255,.25)); }
+  .as-tepe svg { width: 18px; height: 18px; color: #22e8ff; }
+}
