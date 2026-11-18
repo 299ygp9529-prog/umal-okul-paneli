@@ -35,6 +35,7 @@
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
   // K-716f: iPhone "Atlas'a gönder" kısayolundan gelen dosya → Ders Dosyaları › Yeni paylaşım
+  try { const m = location.hash.match(/^#yazdir=([^|]+)\|?(.*)$/); if (m) { sessionStorage.setItem('atlasYazdir', JSON.stringify({ yol: decodeURIComponent(m[1]), ad: decodeURIComponent(m[2] || '') || 'Belge.pdf' })); history.replaceState(null, '', '#cikti'); } } catch (e) {}   // K-716bo: iPhone "Atlas ile Yazdır" kısayolu
   try { const m = location.hash.match(/^#(gelen|gelenhata)=(.+)$/); if (m) { sessionStorage.setItem('atlasGelen', JSON.stringify({ tur: m[1], v: decodeURIComponent(m[2]) })); history.replaceState(null, '', '#dosyalar'); } } catch (e) {}
   const D = { rol: null, eposta: '', bolum: null, ogrenciler: [], fotolar: {}, istenenFoto: new Set(), program: null, anketler: [], cevaplar: {}, durumlar: {}, tahtalar: [], planlar: [] };
 
@@ -382,6 +383,7 @@
     { id: 'soru', ad: 'Test Hazırla', roller: ['bas', 'yonetici', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
     { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
     { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas', 'yonetici'], ciz: ogretmenlerBolumu },   // K-716y: idareye tam yetki   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
+    { id: 'cikti', ad: 'Çıktı Al', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: ciktiBolumu },   // K-716bn: okul yazıcısına doğrudan çıktı
     { id: 'print', ad: 'Print', roller: ['bas'], ciz: printSayfa },   // K-469
     { id: 'acil', ad: 'Acil Mesaj', roller: ['bas', 'yonetici'], ciz: () => gonder(true), sinif: 'acil-oge' }   // K-341: tahtayı kaplayan mesaj
   ];
@@ -405,6 +407,7 @@
     soru: '<path d="M13.500 3.500H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.500-5.500Z"/><path d="M13.500 3.500V9H19M12 12.500v5M9.500 15h5"/>',
     testler: '<path d="M12 3.500l8.500 4.300L12 12 3.500 7.800 12 3.500Z"/><path d="M3.500 12l8.500 4.200 8.500-4.200M3.500 16.200l8.500 4.300 8.500-4.300"/>',
     ogretmenler: '<circle cx="9" cy="8.500" r="3.200"/><path d="M3 19.500c.5-3.300 2.800-5.300 6-5.300s5.500 2 6 5.300"/><path d="M15.500 5.600a3.200 3.200 0 0 1 0 5.800M17.500 14.600c2 .7 3.200 2.400 3.500 4.900"/>',
+    cikti: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/><path d="M17 12h.01"/>',
     print: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/>',
     dosyalar: '<path d="M3.500 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.500a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 10.500v5M9.500 13L12 10.500 14.500 13"/>',
     notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
@@ -419,7 +422,7 @@
   };
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
-  const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
+  const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
     ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezi']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
@@ -457,9 +460,9 @@
       : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
-    const KISA = { sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
+    const KISA = { cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
-    const OG_ACK = { takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
+    const OG_ACK = { cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const L = gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g]));
@@ -1434,7 +1437,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   function belgeOnizle(belge, baslikAdi, yatay, sec) {
     if (yatay && !/<body[^>]*class=/.test(belge)) belge = belge.replace('<body', '<body class="yatay"');
     // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
-    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="ikincil" id="rpGonder">📤 Gönder</button><button class="birincil" id="rpYazdir">🖨 Yazdır / PDF</button></div></div>
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="ikincil" id="rpGonder">📤 Gönder</button><button class="ikincil" id="rpYazdir">🖨 Yazdır / PDF</button><button class="birincil rp-okul" id="rpOkul">${KY_IK.yazdir}Okulda yazdır</button></div></div>
       <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
     $('#pencere .pencere-ic').classList.add('genis');
     const fr = document.getElementById('raporCerceve');
@@ -1445,7 +1448,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (mobil) return pdfPaylas(belge, baslikAdi, yatay, $('#rpYazdir'), sec && sec.kenar);   // K-391: telefonda PDF dosyası + paylaş
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
-    $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec && sec.kenar);   // K-507: her yazdırmanın yanında Gönder   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
+    $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec && sec.kenar);
+    $('#rpOkul').onclick = () => okuldaYazdir({ ad: baslikAdi, uret: () => pdfUret(belge, yatay, sec && sec.kenar) });   // K-716bn   // K-507: her yazdırmanın yanında Gönder   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
   }
   // K-391: telefonda rapor → gerçek PDF dosyası → telefonun paylaş menüsü (Dosyalar'a kaydet, WhatsApp, AirDrop, Yazdır)
   function betikYukle(src) { return new Promise((ok, red) => { if (window.html2pdf) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('PDF aracı yüklenemedi')); document.head.appendChild(sc); }); }
@@ -1458,14 +1462,70 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }).join('\n');
     return yaz(sh.cssRules);
   }
-  async function pdfPaylas(belge, baslikAdi, yatay, dugme, kenar) {
-    const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
-    if (dugme._dosya) {   // ikinci dokunuş: paylaş menüsü (dokunuşun hemen ardından açılmalı)
-      const f = dugme._dosya;
-      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) {} return; }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = ad; document.body.appendChild(a); a.click(); a.remove(); return;
-    }
-    const eski = dugme.textContent; dugme.disabled = true; dugme.textContent = 'PDF hazırlanıyor…';
+  // K-716bn: okulda yazdır — DersMap'e gitmeden; iş Print programının kuyruğuna gider (umal_yazdirma_isleri). Bütün panel kullanıcıları
+  const YZ_SON = 'umalYaziciSon';
+  async function okuldaYazdir(k) {   // k: { ad, dosya?: Blob, uret?: async () => Blob }
+    let L = [], sec = null, kopya = 1, cift = false, sayfa = '', blob = k.dosya || null;   // k.yol: kısayolla önceden yüklenmiş PDF (yazdir/kisayol/...)
+    try { const r = await sb.rpc('umal_panel_yazicilar'); if (r.error) throw r.error; L = Array.isArray(r.data) ? r.data.filter(y => y && y.yazici) : []; } catch (e) { uyar('Yazıcılar alınamadı: ' + hataYaz(e)); return; }
+    if (!L.length) { uyar('Okulda Print kurulu, yazıcısı olan açık bir bilgisayar görünmüyor.'); return; }
+    let son = ''; try { son = localStorage.getItem(YZ_SON) || ''; } catch (e) {}
+    sec = L.find(y => y.cihaz + '|' + y.yazici === son) || L.find(y => y.acik) || L[0];
+    const ciz = () => {
+      pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">Okulda yazdır</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(k.ad || 'Belge')}</b><small id="yzHazir">${blob ? 'PDF hazır' : 'PDF hazırlanıyor…'}</small></span></div>
+        <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(y.cihaz_ad)} · ${esc(y.yazici)}</b><small>${y.acik ? (y.hazir ? 'açık' : 'açık · yazdırma programı eksik') : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span></button>`).join('')}</div>
+        <div class="yz-bas">Kopya · Sayfa</div><div class="yz-sat"><div class="yz-kopya"><button data-k="-1">−</button><b>${kopya}</b><button data-k="1">+</button></div><input id="yzSayfa" placeholder="Tümü · ya da 1-3,5" inputmode="numeric" value="${esc(sayfa)}"></div>
+        <div class="yz-bas">Yüz</div><div class="yz-sat"><button class="yz-s ${cift ? '' : 'secili'}" data-c="0">Tek yüz</button><button class="yz-s ${cift ? 'secili' : ''}" data-c="1">Çift yüz</button></div>
+        <button class="birincil yz-gonder" id="yzGonder">${KY_IK.yazdir}Yazıcıya gönder</button></div>`);
+      const P = $('#pencere');
+      P.querySelectorAll('[data-yi]').forEach(b => b.onclick = () => { sec = L[+b.dataset.yi]; sayfa = $('#yzSayfa').value; ciz(); });
+      P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kopya = Math.max(1, Math.min(100, kopya + +b.dataset.k)); sayfa = $('#yzSayfa').value; ciz(); });
+      P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cift = b.dataset.c === '1'; sayfa = $('#yzSayfa').value; ciz(); });
+      $('#yzGonder').onclick = gonder;
+    };
+    const gonder = async () => {
+      const bt = $('#yzGonder'); sayfa = $('#yzSayfa').value.trim();
+      if (sayfa && !/^\s*\d+(\s*-\s*\d+)?(\s*,\s*\d+(\s*-\s*\d+)?)*\s*$/.test(sayfa)) { uyar('Sayfa aralığını 1-3,5 gibi yazın ya da boş bırakın (tümü).'); return; }
+      bt.disabled = true; bt.textContent = 'Gönderiliyor…';
+      try {
+        if (!blob) blob = await hazir;
+        const yol = k.yol || 'yazdir/panel/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.pdf';
+        if (!k.yol) { const up = await sb.storage.from('umal-pdf').upload(yol, blob, { contentType: 'application/pdf', upsert: false }); if (up.error) throw up.error; }
+        const h = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(x => x.toString(16).padStart(2, '0')).join('');
+        const ad = String(k.ad || 'Belge').replace(/[\\/:*?"<>|]+/g, ' ').trim().replace(/(\.pdf)?$/i, '.pdf');
+        const r = await sb.rpc('umal_panel_yazdir', { p_cihaz: sec.cihaz, p_yazici: sec.yazici, p_pdf_yol: yol, p_pdf_ad: ad, p_sha256: h, p_boyut: blob.size, p_kopya: kopya, p_cift_yuz: cift, p_sayfalar: sayfa || null });
+        if (r.error) throw r.error;
+        try { localStorage.setItem(YZ_SON, sec.cihaz + '|' + sec.yazici); } catch (e) {}
+        $('#pencere').classList.add('gizli');
+        uyar(`Gönderildi: ${sec.cihaz_ad} · ${sec.yazici}${sec.acik ? '' : ' (bilgisayar açılınca yazdırılacak)'}. Durumu Çıktı Al › Çıktılarım'da.`);
+        if (D.bolum === 'cikti') ciz_cikti();
+      } catch (e) { bt.disabled = false; bt.innerHTML = KY_IK.yazdir + 'Yazıcıya gönder'; uyar('Gönderilemedi: ' + hataYaz(e)); }
+    };
+    const hazir = blob ? Promise.resolve(blob) : k.yol ? sb.storage.from('umal-pdf').download(k.yol).then(r => { if (r.error) throw r.error; return r.data; }) : (k.uret ? k.uret() : Promise.reject(new Error('Belge yok')));
+    ciz();
+    hazir.then(b => { blob = b; const x = $('#yzHazir'); if (x) x.textContent = 'PDF hazır · ' + Math.max(1, Math.round(b.size / 1024)) + ' KB'; }).catch(e => { const x = $('#yzHazir'); if (x) x.textContent = 'PDF hazırlanamadı: ' + (e && e.message || e); });
+  }
+  let ciz_cikti = () => {};
+  async function ciktiBolumu() {
+    const el = $('#icerik');
+    el.innerHTML = `<div class="kart"><div class="ust"><div><h2 style="margin:0">Çıktı Al</h2><div class="soluk kucuk">Telefonundaki ya da bilgisayarındaki PDF'i okuldaki yazıcıya gönder. DersMap'e gitmene gerek yok.</div></div></div>
+      <label class="birincil yz-sec">${KY_IK.dosya}PDF seç ve yazdır<input type="file" id="ckDosya" accept="application/pdf,.pdf" hidden></label>
+      <p class="cok-soluk kucuk" style="margin:10px 0 0">Atlas'taki listeler, biletler ve raporlarda da önizlemenin üstündeki <b>Okulda yazdır</b> düğmesi aynı işi yapar.</p></div>
+      <div class="kart"><div class="ust" style="align-items:center"><h3 style="margin:0">Çıktılarım</h3><button class="ikincil" id="ckYenile">Yenile</button></div><div id="ckIsler" class="soluk">Yükleniyor…</div></div>`;
+    $('#ckDosya').onchange = ev => { const f = ev.target.files[0]; ev.target.value = ''; if (!f) return; if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { uyar('Yalnız PDF dosyası yazdırılabilir.'); return; } if (f.size > 40 * 1024 * 1024) { uyar('Dosya 40 MB\'tan büyük.'); return; } okuldaYazdir({ ad: f.name, dosya: f }); };
+    const DUR = { bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
+    ciz_cikti = async () => {
+      if (D.bolum !== 'cikti' || !$('#ckIsler')) return;
+      const r = await sb.rpc('umal_panel_islerim'); const L = !r.error && Array.isArray(r.data) ? r.data : [];
+      if (r.error) { $('#ckIsler').textContent = 'Yüklenemedi: ' + hataYaz(r.error); return; }
+      $('#ckIsler').classList.toggle('soluk', !L.length);
+      $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(i.cihaz_ad)} · ${esc(i.yazici)} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.durum === 'hata' && i.hata ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
+      if (L.some(i => i.durum === 'bekliyor' || i.durum === 'yazdiriliyor')) setTimeout(ciz_cikti, 8000);
+    };
+    $('#ckYenile').onclick = ciz_cikti; ciz_cikti();
+    let bek = null; try { bek = JSON.parse(sessionStorage.getItem('atlasYazdir') || 'null'); sessionStorage.removeItem('atlasYazdir'); } catch (e) {}
+    if (bek && /^yazdir\/kisayol\//.test(bek.yol || '')) okuldaYazdir({ ad: bek.ad, yol: bek.yol });
+  }
+  async function pdfUret(belge, yatay, kenar) {   // K-716bn: önizlemedeki belgeden gerçek A4 PDF (paylaşma ve okulda yazdırma ortak)
     const G = yatay ? 1123 : 794;   // A4 genişliği (px)
     const kat = document.createElement('div');   // dış kap: ekranda görünmez; PDF'e içteki #pdfKatman çekilir
     kat.style.cssText = `position:absolute;left:0;top:0;width:${G}px;height:0;overflow:hidden;pointer-events:none`;
@@ -1480,10 +1540,22 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const blob = await window.html2pdf().set({ margin: kenar || [8, 0, 10, 0], image: { type: 'jpeg', quality: 0.92 },
         html2canvas: { scale: olcek, useCORS: true, backgroundColor: '#ffffff', width: G, windowWidth: G, scrollX: 0, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza', '.kart'] } }).from(ic).outputPdf('blob');
+      return blob;
+    } finally { kat.remove(); }
+  }
+  async function pdfPaylas(belge, baslikAdi, yatay, dugme, kenar) {
+    const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
+    if (dugme._dosya) {   // ikinci dokunuş: paylaş menüsü (dokunuşun hemen ardından açılmalı)
+      const f = dugme._dosya;
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) {} return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = ad; document.body.appendChild(a); a.click(); a.remove(); return;
+    }
+    const eski = dugme.textContent; dugme.disabled = true; dugme.textContent = 'PDF hazırlanıyor…';
+    try { const blob = await pdfUret(belge, yatay, kenar);
       dugme._dosya = new File([blob], ad, { type: 'application/pdf' });
       dugme.textContent = '📤 Paylaş / Kaydet';
     } catch (e) { dugme.textContent = eski; uyar('PDF hazırlanamadı: ' + (e && e.message || e)); }
-    finally { kat.remove(); dugme.disabled = false; }
+    finally { dugme.disabled = false; }
   }
   const tarihAraligi = a => { const g = x => x ? new Date(x + 'T12:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' }) : ''; return a.tanim.bitis && a.tanim.bitis !== a.tanim.baslangic ? `${g(a.tanim.baslangic).replace(/ \d{4}$/, '')} – ${g(a.tanim.bitis)}` : g(a.tanim.baslangic); };
   const raporBant = (ust, alt) => `<div class="bant"><div class="ust"><img src="__LOGO__" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><h1>${ust}</h1><div class="alt">${alt}</div></div></div></div>`;
