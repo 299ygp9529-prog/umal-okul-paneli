@@ -236,6 +236,18 @@
     };
     $('#psAdK').onclick = kaydet; $('#psAd').onkeydown = e => { if (e.key === 'Enter') kaydet(); };
   }
+  // K-716ce: Atlas asistanı — her ekranda sağ altta "Atlas'a sor"
+  function asistanDugme() {
+    if (!['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol) || document.getElementById('asFab')) return;
+    const b = document.createElement('button'); b.id = 'asFab'; b.className = 'as-fab'; b.type = 'button';
+    b.innerHTML = '<i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z" fill="currentColor" fill-opacity=".25"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></i><span>Atlas\'a sor</span>';
+    b.onclick = async () => {
+      try { if (!window.UmalAsistan) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'asistan.js?v=202611181015'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+        await ogrencileriYukle().catch(() => []);
+        window.UmalAsistan.ac({ sb, rol: D.rol, ogrenciler: () => D.ogrenciler || [], esc, baslik, pencereAc, uyar, hataYaz, raporYazdir, raporBant });
+      } catch (e) { uyar('Atlas asistanı açılamadı: ' + hataYaz(e)); } };
+    document.body.appendChild(b);
+  }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
@@ -247,6 +259,7 @@
       erisimIste(); return;   // K-684: e-posta kodla doğrulandı; adını yazıp erişim ister, idare tek dokunuşla onaylar
     }
     D.rol = rol; document.body.classList.toggle('kurucu', rol === 'bas');
+    asistanDugme();   // K-716ce: Atlas'a sor
     $('#giris').classList.add('gizli');
     $('#uygulama').classList.remove('gizli');
     $('#kim').textContent = D.eposta;
