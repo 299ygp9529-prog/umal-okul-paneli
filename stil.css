@@ -2209,3 +2209,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .vtr { grid-template-columns: 70px minmax(160px, 1.5fr) 140px 110px !important; min-width: 0 !important; }
 @media (max-width: 700px) { .gb-ogr { grid-template-columns: 1fr 1fr; } .gb-sat { grid-template-columns: 58px 1fr 30px; } .gb-sat > span.soluk { grid-column: 2; } }
 .gb-o .msj-av { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; overflow: hidden; font-size: 13px; font-weight: 800; background: #22e8ff1f; color: var(--neon); } .gb-o .msj-av img { width: 100%; height: 100%; object-fit: cover; }
+/* Tebrik-uyarı öğrenci ızgarası: uzun isimler taşmasın (eski .gb-o kuralıyla çakışmayı ez) */
+.gb-ogr { grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); }
+.gb-ogr .gb-o { justify-content: flex-start; min-height: 52px; font-size: 13px; overflow: hidden; }
+.gb-ogr .gb-o > span:last-child { display: block; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.gb-ogr .gb-o b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+.gb-ogr .gb-o small { display: block; }
+@media (max-width: 700px) { .gb-ogr { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
