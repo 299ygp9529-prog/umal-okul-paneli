@@ -2057,3 +2057,15 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .dy-ders:not(.canli) .dy-o.y { border-color: rgba(255,107,114,.45); background: rgba(255,107,114,.09); } .dy-ders:not(.canli) .dy-o.y .a { color: #ffb3b7; }
 .dy-alt { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .dy-alt button { margin-left: auto; }
 @media (max-width: 760px) { .dy-sl { grid-template-columns: 1fr; } }
+/* K-690b: telefondan yoklama */
+.dya-ac { width: 100%; margin: 0 0 12px; text-transform: none; min-height: 50px; font-size: 16px; }
+.dya-sec { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; } .dya-sec .cip { text-transform: none; }
+.dya-ipucu { font-size: 13.5px; line-height: 1.5; padding: 10px 14px; }
+.dya-no { display: flex; gap: 8px; margin: 0 0 10px; } .dya-no input { flex: 1; min-width: 0; font-size: 16px; } .dya-no button { text-transform: none; flex: none; }
+.dya-liste { display: flex; flex-direction: column; gap: 6px; padding-bottom: 86px; }
+.dya-o { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: 14px; border: 1.5px solid rgba(62,240,138,.35); background: rgba(62,240,138,.06); color: #fff; font: inherit; text-transform: none; min-height: 56px; cursor: pointer; }
+.dya-o .msj-av { width: 38px; height: 38px; flex: none; } .dya-o .n { font-size: 13px; color: #9fb3cf; font-weight: 700; min-width: 40px; font-variant-numeric: tabular-nums; } .dya-o .a { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; }
+.dya-o em { font-style: normal; font-weight: 800; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(62,240,138,.14); color: #3ef08a; }
+.dya-o.y { border-color: rgba(255,107,114,.6); background: rgba(255,107,114,.12); } .dya-o.y em { background: #ff6b72; color: #fff; } .dya-o.y .a { color: #ffc2c5; }
+.dya-alt { position: sticky; bottom: 10px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: rgba(8,16,28,.94); border: 1px solid #23395c; box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(8px); }
+.dya-alt > div { flex: 1; font-size: 14px; color: #9fb3cf; } .dya-alt b { color: #3ef08a; font-size: 18px; } .dya-alt button { text-transform: none; }
