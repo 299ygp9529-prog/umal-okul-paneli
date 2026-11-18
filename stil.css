@@ -1970,3 +1970,4 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 .tfy-bul { padding: 8px 10px; border-radius: 10px; background: rgba(62,240,138,.1); color: #b9f7d2; } .tfy-gonder { width: 100%; min-height: 54px; margin-top: 14px; font-size: 16px; } .tfy-gonder:disabled { opacity: .55; }
 .tfy button, .tfg button, .tfg-kart button, .tfg-o, .tf-gorev button { text-transform: none !important; }
 .id-tfgor { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ffffff1a; } .id-tfgor button { text-transform: none !important; }   /* K-716cs */
+.tfg-ara { grid-column: 1 / -1; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; color: #8fa6c4; margin: 6px 2px 0; } .tfg-o small.z { color: #ffb547; } .tfg-o.zumre { border-color: #ffb54744; }   /* K-716cu */
