@@ -4667,6 +4667,28 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     if (!window.UmalDD) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dd/dd.js?v=202611180805'; sc.onload = ok; sc.onerror = () => red(new Error('Ders Dosyaları yüklenemedi')); document.head.appendChild(sc); });
     await kisiAdlariYukle();
     let gelen = null; try { gelen = JSON.parse(sessionStorage.getItem('atlasGelen') || 'null'); sessionStorage.removeItem('atlasGelen'); } catch (e) {}
+    // K-716br: "Atlas'a gönder" kısayoluyla PDF geldiyse önce sor: okulda yazdır mı, Atlas Sınıf'ta paylaş mı
+    let g = null; try { g = gelen && gelen.tur === 'gelen' ? JSON.parse(gelen.v) : null; } catch (e) {}
+    if (g && g.id && (/pdf/i.test(g.mime || '') || /\.pdf$/i.test(g.ad || ''))) {
+      const sec = await new Promise(ok => {
+        pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">iPhone'dan geldi</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(g.ad || 'Belge.pdf')}</b><small>Ne yapalım?</small></span></div>
+          <button class="birincil yz-gonder" id="glYaz">${KY_IK.yazdir}Okulda yazdır</button>
+          <button class="ikincil" id="glPay" style="width:100%;margin-top:10px;min-height:48px">Atlas Sınıf'ta paylaş</button></div>`);
+        const kap = $('#pencereKapat'), eski = kap.onclick, bit = v => { kap.onclick = eski; $('#pencere').classList.add('gizli'); ok(v); };
+        $('#glYaz').onclick = () => bit('yaz'); $('#glPay').onclick = () => bit('pay'); kap.onclick = () => bit('pay');
+      });
+      if (sec === 'yaz') {
+        gelen = null;
+        okuldaYazdir({ ad: g.ad, uret: async () => {
+          let url = ''; try { const { data } = await sb.rpc('umal_dd_ayar'); url = (data && data.url) || ''; } catch (e) {}
+          if (!url) throw new Error('Drive köprüsü adresi yok');
+          const r = await (await fetch(url + (url.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(g.id))).json();
+          if (!r.ok) throw new Error(r.hata || 'Dosya alınamadı');
+          const b = atob(r.veri), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+          return new Blob([u], { type: 'application/pdf' });
+        } });
+      }
+    }
     window.UmalDD.ac($('#icerik'), { gelen, sb, eposta: D.eposta, rol: D.rol, URL_, ogrencileriYukle, ogrenciler: () => D.ogrenciler, programYukle, takvimAl, baslik, hataYaz, onayla, uyar, girdiAl, dersAnahtar, kisiAd });
   }
   async function disiplinBolumu() {
