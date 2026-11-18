@@ -1858,3 +1858,11 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
   .gk2-form { grid-template-columns: 1fr 1fr; } .gk2-form label.genis { grid-column: span 2; } .gk2-kart { flex-wrap: wrap; } .gk2-sag { margin-left: 0; text-align: left; }
 }
 .gk2-sorular { margin: 6px 0 0; padding-left: 20px; color: #cfe3f7; font-size: 13.5px; line-height: 1.45; } .gk2-sorular li { margin: 5px 0; } .gk2-sorular small { display: block; color: var(--soluk); font-size: 11.5px; }
+/* K-716bx: öğrenciyi geziye kaydet */
+.gk2-kaydet { width: 100%; min-height: 56px; margin: 0 0 12px; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #e8c66b !important; color: #1a1406 !important; border-color: #e8c66b !important; } .gk2-kaydet .ky-ik { --r: #1a1406; }
+.gk2-ara.tek { grid-template-columns: 1fr; }
+.gk2-kp-ara { width: 100%; height: 52px; margin: 12px 0 8px; font-size: 16px; }
+.gk2-kp-liste { display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow: auto; }
+.gk2-kp-s { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; border-radius: 13px; border: 1.5px solid var(--cizgi); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.gk2-kp-s span { flex: 1; min-width: 0; } .gk2-kp-s b { display: block; font-size: 15px; } .gk2-kp-s small { color: var(--soluk); font-size: 12px; }
+.gk2-kp-s em { font-style: normal; font-size: 13px; font-weight: 800; padding: 7px 12px; border-radius: 10px; background: #e8c66b; color: #1a1406; } .gk2-kp-s.var { opacity: .55; cursor: default; } .gk2-kp-s.var em { background: rgba(62,240,138,.15); color: #3ef08a; }
