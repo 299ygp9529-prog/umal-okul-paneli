@@ -2072,3 +2072,15 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 /* K-716dh: sürüklenebilir Atlas düğmesi; yoklama alt çubuğu düğmenin altında kalmasın */
 .as-fab { touch-action: none; user-select: none; -webkit-user-select: none; } .as-fab.suruk { cursor: grabbing; transition: none; opacity: .92; box-shadow: 0 14px 40px rgba(0,0,0,.55); }
 @media (min-width: 761px) { .dya-alt { margin-right: 190px; } }
+/* K-690d: yoklama durumları — geç geldi · nöbetçi · izinli */
+.dya-sar { display: flex; flex-direction: column; gap: 6px; } .dya-o { transition: transform .15s; } .dya-sec2 { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 4px 6px; } .dya-sec2.gizli { display: none; } .dya-sec2 .cip { text-transform: none; }
+.dya-o.var { } .dya-o.yok { border-color: rgba(255,107,114,.6); background: rgba(255,107,114,.12); } .dya-o.yok em { background: #ff6b72; color: #fff; } .dya-o.yok .a { color: #ffc2c5; }
+.dya-o.gec { border-color: rgba(255,209,102,.6); background: rgba(255,209,102,.1); } .dya-o.gec em { background: #ffd166; color: #1a1406; }
+.dya-o.nobet { border-color: rgba(127,178,255,.6); background: rgba(127,178,255,.1); } .dya-o.nobet em { background: #7fb2ff; color: #06121f; }
+.dya-o.izin { border-color: rgba(201,155,255,.6); background: rgba(201,155,255,.1); } .dya-o.izin em { background: #c99bff; color: #1a0f2a; }
+.cip.dy-gec { border-color: #ffd16688; color: #ffd166; } .cip.dy-nobet { border-color: #7fb2ff88; color: #7fb2ff; } .cip.dy-izin { border-color: #c99bff88; color: #c99bff; } .cip.dy-yok { border-color: #ff6b7288; color: #ff9ca1; } .cip.dy-var, .cip.dy-geldi { border-color: #3ef08a88; color: #3ef08a; }
+.cip.dy-gec.secili, .cip.dy-nobet.secili, .cip.dy-izin.secili, .cip.dy-geldi.secili { background: currentColor; } .cip.dy-gec.secili { color: #ffd166; } .cip.dy-gec.secili, .cip.dy-nobet.secili, .cip.dy-izin.secili, .cip.dy-geldi.secili { -webkit-text-fill-color: #06121f; }
+button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; text-transform: none; } .dy-h3 { margin: 16px 0 8px; font-size: 15px; color: #9fb3cf; }
+.dy-sat.dy-d.gec { background: rgba(255,209,102,.07); border-color: rgba(255,209,102,.35); } .dy-sat.dy-d.nobet { background: rgba(127,178,255,.07); border-color: rgba(127,178,255,.35); } .dy-sat.dy-d.izin { background: rgba(201,155,255,.07); border-color: rgba(201,155,255,.35); }
+.dy-et { font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.08); } .dy-d.gec .dy-et, .dy-o.gec .dy-et { color: #ffd166; } .dy-d.nobet .dy-et, .dy-o.nobet .dy-et { color: #7fb2ff; } .dy-d.izin .dy-et, .dy-o.izin .dy-et { color: #c99bff; }
+.dy-o.izin { border-color: rgba(201,155,255,.4); }

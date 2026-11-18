@@ -478,7 +478,9 @@
     const saatYaz = x => x.anahtar && x.anahtar.startsWith('ek-') ? 'Ders dışı' : sn(x) + '. ders';
     const kisi = z => `<span class="dy-ogr"><b>${esc(baslik(z.ad || ''))}</b><small>${esc(z.no || '')}</small></span>`;
     // öğrenci bazında: hangi derslerde yok (e-Okul devamsızlık girişi için)
-    const O = {}; AL.forEach(x => (x.gelmeyen || []).forEach(z => { const k = x.sinif + '|' + z.no; (O[k] = O[k] || { no: z.no, ad: z.ad, sinif: x.sinif, s: [] }).s.push(sn(x)); }));
+    const O = {}; AL.forEach(x => (x.gelmeyen || []).forEach(z => { const k = x.sinif + '|' + z.no; (O[k] = O[k] || { no: z.no, ad: z.ad, sinif: x.sinif, s: [], a: [] }).s.push(sn(x)); O[k].a.push(x.anahtar); }));
+    const DADI = { gec: 'Geç geldi', nobet: 'Nöbetçi', izin: 'İzinli' }, E_ = {}; AL.forEach(x => (x.liste || []).forEach(z => { if (!DADI[z.d]) return; const k = x.sinif + '|' + z.no + '|' + z.d; (E_[k] = E_[k] || { no: z.no, ad: z.ad, sinif: x.sinif, d: z.d, s: [] }).s.push(sn(x)); }));
+    const EL = Object.values(E_).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
     const OL = Object.values(O).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no)); OL.forEach(o => o.s.sort((a, b) => a - b));
     const sinifler = [...new Set(L.map(x => x.sinif))].sort(sinifSira);
     const ust = `<div class="ust"><div><h1>Ders Yoklaması</h1><div class="soluk kucuk">${idare ? 'Tahtada sınıf başkanı işaretler, dersin öğretmeni onaylar' : 'Girdiğiniz derslerin tahtada alınan yoklamaları'}</div></div></div>
@@ -489,7 +491,8 @@
     if (idare) {
       h += `<div class="dy-ozet"><div><b>${sinifler.length}</b><span>sınıf</span></div><div><b>${AL.length}</b><span>onaylı yoklama</span></div><div><b style="color:#ff8a8a">${OL.length}</b><span>öğrenci gelmedi</span></div>
         <button class="birincil" id="dyPdf" style="text-transform:none">Günün devamsızlığı · PDF</button></div>
-        <div class="kart"><h2 style="margin-top:0">Gelmeyen öğrenciler</h2>${OL.length ? `<div class="dy-liste">${OL.map(o => `<div class="dy-sat"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)}"></span>${kisi(o)}<em>${esc(o.sinif)}</em><span class="dy-saat">${o.s.map(n => `<i>${n || '·'}</i>`).join('')}</span></div>`).join('')}</div>` : '<div class="soluk">Bugün alınan yoklamalarda gelmeyen yok.</div>'}</div>
+        <div class="kart"><h2 style="margin-top:0">Gelmeyen öğrenciler</h2>${OL.length ? `<div class="soluk kucuk" style="margin:-4px 0 8px">Dokunun: geldi, geç geldi, nöbetçi ya da izinli yapın.</div><div class="dy-liste">${OL.map(o => `<button class="dy-sat dy-tik" data-dyos="${esc(o.sinif + '|' + o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)}"></span>${kisi(o)}<em>${esc(o.sinif)}</em><span class="dy-saat">${o.s.map(n => `<i>${n || '·'}</i>`).join('')}</span></button>`).join('')}</div>` : '<div class="soluk">Bugün alınan yoklamalarda gelmeyen yok.</div>'}
+        ${EL.length ? `<h3 class="dy-h3">Geç · nöbetçi · izinli</h3><div class="dy-liste">${EL.map(o => `<div class="dy-sat dy-d ${o.d}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)}"></span>${kisi(o)}<em>${esc(o.sinif)}</em><b class="dy-et">${DADI[o.d]}</b><span class="dy-saat">${o.s.map(n => `<i>${n || '·'}</i>`).join('')}</span></div>`).join('')}</div>` : ''}</div>
         <div class="kart"><h2 style="margin-top:0">Sınıflar</h2><div class="dy-tablo"><div class="dy-tr dy-th"><span>Sınıf</span>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<span>${n}</span>`).join('')}</div>
           ${sinifler.map(sf => `<div class="dy-tr"><span><b>${esc(sf)}</b></span>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => { const x = L.find(q => q.sinif === sf && sn(q) === n && !String(q.anahtar).startsWith('ek-')); if (!x) return '<span class="dy-c bos">–</span>'; const g = (x.gelmeyen || []).length; if (!x.onay) return `<button class="dy-c tas" data-dya="${esc(x.sinif + '|' + x.anahtar)}" title="Başkan işaretliyor">···</button>`; return `<button class="dy-c ${g ? 'var' : 'tam'}" data-dya="${esc(x.sinif + '|' + x.anahtar)}" title="${esc(baslik(x.ders || ''))}">${g || '✓'}</button>`; }).join('')}</div>`).join('')}</div>
           <div class="soluk kucuk" style="margin-top:8px">Sayı: o derste gelmeyen öğrenci. ✓: herkes vardı. ···: başkan işaretliyor, onay bekleniyor. –: yoklama alınmadı. Dokunun, liste açılır.</div></div>`;
@@ -503,8 +506,19 @@
     if (sessiz !== true) yenile(() => dersYoklamaBolumu(true), L.some(x => !x.onay) ? 4 : 30);
     I.querySelectorAll('[data-dya]').forEach(b => b.onclick = () => { const [sf, an] = b.dataset.dya.split('|'), x = L.find(q => q.sinif === sf && q.anahtar === an); if (!x) return;
       pencereAc(dyKart(x, saatYaz, true)); dyOnay(); });
+    I.querySelectorAll('[data-dyos]').forEach(b => b.onclick = () => { const [sf, no] = b.dataset.dyos.split('|'), o = O[sf + '|' + no]; if (!o) return; let sec_ = new Set(o.a), dur = '';
+      const sl = o.a.map((a, i) => [a, o.s[i]]);
+      pencereAc(`<h2 style="margin-top:0">${esc(baslik(o.ad))}</h2><div class="soluk" style="margin-bottom:12px">${esc(o.sinif)} · ${esc(o.no)} · ${o.s.length} derste gelmedi olarak işaretli</div>
+        <div class="soluk kucuk" style="margin-bottom:6px">Yeni durum</div><div class="dya-sec">${[['geldi', 'Geldi'], ['gec', 'Geç geldi'], ['nobet', 'Nöbetçi'], ['izin', 'İzinli']].map(([k, a]) => `<button class="cip dy-${k}" data-dyyd="${k}">${a}</button>`).join('')}</div>
+        <div class="soluk kucuk" style="margin:12px 0 6px">Hangi derslerde</div><div class="dya-sec">${sl.map(([a, n]) => `<button class="cip secili" data-dyya="${esc(a)}">${n ? n + '. ders' : 'Ders dışı'}</button>`).join('')}</div>
+        <button class="birincil" id="dyyKaydet" style="width:100%;margin-top:14px;text-transform:none" disabled>Durum seçin</button>`);
+      const kb = $('#dyyKaydet'), gun_ = () => { kb.disabled = !dur || !sec_.size; kb.textContent = dur ? `Kaydet · ${sec_.size} ders` : 'Durum seçin'; };
+      document.querySelectorAll('[data-dyyd]').forEach(c => c.onclick = () => { dur = c.dataset.dyyd; document.querySelectorAll('[data-dyyd]').forEach(q => q.classList.toggle('secili', q === c)); gun_(); });
+      document.querySelectorAll('[data-dyya]').forEach(c => c.onclick = () => { const a = c.dataset.dyya; sec_.has(a) ? sec_.delete(a) : sec_.add(a); c.classList.toggle('secili', sec_.has(a)); gun_(); });
+      kb.onclick = async () => { kb.disabled = true; const { data: d_, error: e_ } = await sb.rpc('umal_ders_yoklama_ogrenci_durum', { p_tarih: DY.gun, p_sinif: sf, p_no: no, p_durum: dur, p_anahtarlar: [...sec_] });
+        if (e_ || !d_ || !d_.ok) { kb.disabled = false; uyar('Kaydedilemedi: ' + (e_ ? hataYaz(e_) : d_ && d_.hata)); return; } $('#pencere').classList.add('gizli'); dersYoklamaBolumu(true); }; });
     if ($('#dyPdf')) $('#dyPdf').onclick = () => raporYazdir(raporBant('Ders Yoklaması · Gelmeyenler', `${gunAd} · ${OL.length} öğrenci · ${sinifler.length} sınıf`)
-      + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Gelmediği dersler</th></tr></thead><tbody>${OL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>`, 'Devamsizlik-' + DY.gun);
+      + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Gelmediği dersler</th></tr></thead><tbody>${OL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>${EL.length ? `<h3 style="margin:8mm 0 3mm">Geç gelen · nöbetçi · izinli</h3><table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Durum</th><th>Dersler</th></tr></thead><tbody>${EL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${DADI[o.d]}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>` : ''}`, 'Devamsizlik-' + DY.gun);
   }
   // K-690b: telefondan yoklama — tahta çalışmazsa öğretmen okuyarak alır. Hız: bu dersin sınıfı ders programından kendiliğinden seçilir,
   // herkes "var" başlar (yalnız gelmeyene dokunulur), bugün önceki derste gelmeyenler hazır işaretli gelir, numara yazarak da işaretlenir.
@@ -531,29 +545,45 @@
     const ros = (D.ogrenciler || []).filter(o => o.sinif === sec.sinif).sort((a, b) => (+a.no) - (+b.no));
     if (!ros.length) { I.innerHTML = `<div class="ust"><h1>Yoklama al</h1></div>${secim}<div class="kart soluk">${esc(sec.sinif)} sınıfının öğrenci listesi bulunamadı.</div>`; dyaSecBagla(); return; }
     // mevcut kayıt (tahtadan ya da önceki girişten) yoksa bugün önceki derste gelmeyenler hazır işaretli
-    let onceki = null, var_ = new Set(ros.map(o => o.no)), kaynak = '';
+    // durum: var · yok (gelmedi) · gec (geç geldi) · nobet (nöbetçi) · izin (izinli/görevli) — geç ve nöbetçi gelmiş sayılır, izinli devamsızlık sayılmaz
+    const DUR = { var: 'Var', yok: 'Gelmedi', gec: 'Geç geldi', nobet: 'Nöbetçi', izin: 'İzinli' };
+    let st = Object.fromEntries(ros.map(o => [o.no, 'var'])), kaynak = '';
+    const zDur = z => z.d === 'gec' || z.d === 'nobet' || z.d === 'izin' ? z.d : z.v ? 'var' : 'yok';
     try { const { data } = await sb.rpc('umal_ders_yoklama_liste', { p_bas: gunIso, p_bit: gunIso });
       const L = ((data && data.liste) || []).filter(x => x.sinif === sec.sinif), bu = L.find(x => x.anahtar === anahtar);
-      if (bu && (bu.liste || []).length) { var_ = new Set(bu.liste.filter(z => z.v).map(z => String(z.no))); kaynak = bu.onay ? 'Bu dersin kayıtlı yoklaması açıldı; düzeltip yeniden kaydedebilirsiniz.' : 'Tahtada başkanın işaretleri geldi; kontrol edip onaylayın.'; }
-      else { onceki = L.filter(x => x.onay && parseInt(String(x.anahtar).replace(/\D/g, ''), 10) < sec.n).sort((a, b) => String(b.anahtar).localeCompare(String(a.anahtar), tr, { numeric: true }))[0];
-        if (onceki) { const g = new Set((onceki.gelmeyen || []).map(z => String(z.no))); var_ = new Set(ros.map(o => o.no).filter(n => !g.has(n))); if (g.size) kaynak = `${parseInt(String(onceki.anahtar).replace(/\D/g, ''), 10)}. derste gelmeyen ${g.size} öğrenci gelmedi olarak işaretlendi; geldiyse dokunun.`; } }
+      if (bu && (bu.liste || []).length) { bu.liste.forEach(z => { if (st[String(z.no)]) st[String(z.no)] = zDur(z); }); kaynak = bu.onay ? 'Bu dersin kayıtlı yoklaması açıldı; düzeltip yeniden kaydedebilirsiniz.' : 'Tahtada başkanın işaretleri geldi; kontrol edip onaylayın.'; }
+      else { const onceki = L.filter(x => x.onay && parseInt(String(x.anahtar).replace(/\D/g, ''), 10) < sec.n).sort((a, b) => String(b.anahtar).localeCompare(String(a.anahtar), tr, { numeric: true }))[0];
+        if (onceki) { let k = 0; (onceki.liste || []).forEach(z => { const d = zDur(z); if (st[String(z.no)] && (d === 'yok' || d === 'izin' || d === 'nobet')) { st[String(z.no)] = d; k++; } });   // geç gelen bu derste var sayılır
+          if (!(onceki.liste || []).length) (onceki.gelmeyen || []).forEach(z => { if (st[String(z.no)]) { st[String(z.no)] = 'yok'; k++; } });
+          if (k) kaynak = `${parseInt(String(onceki.anahtar).replace(/\D/g, ''), 10)}. dersin yoklaması aktarıldı (${k} öğrenci işaretli); değişen varsa dokunun.`; } }
     } catch (e) {}
-    const ciz = () => { const g = ros.filter(o => !var_.has(o.no));
+    const say = () => { const c = { var: 0, yok: 0, gec: 0, nobet: 0, izin: 0 }; ros.forEach(o => c[st[o.no]]++); return c; };
+    const altYaz = () => { const c = say(); return `<b>${c.var + c.gec + c.nobet}</b> var · <b style="color:#ff8a8a">${c.yok}</b> gelmedi${c.gec ? ` · <b style="color:#ffd166">${c.gec}</b> geç` : ''}${c.nobet ? ` · <b style="color:#7fb2ff">${c.nobet}</b> nöbetçi` : ''}${c.izin ? ` · <b style="color:#c99bff">${c.izin}</b> izinli` : ''}`; };
+    const ciz = () => {
       I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div><button class="ikincil kucuk" id="dyaOzet" style="text-transform:none">Günün yoklamaları</button></div>${secim}
-        <div class="kart dya-ipucu">Herkes <b>var</b> başlar. Okurken yalnız gelmeyenin adına dokunun.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>
+        <div class="kart dya-ipucu">Herkes <b>var</b> başlar. Gelmeyenin adına <b>dokunun</b>; geç geldi, nöbetçi ya da izinli için satırı <b>yana kaydırın</b>.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>
         <div class="dya-no"><input id="dyaNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Numara yaz"><button class="ikincil" id="dyaHepsi" style="text-transform:none">Herkes var</button></div>
-        <div class="dya-liste">${ros.map(o => `<button class="dya-o ${var_.has(o.no) ? 'v' : 'y'}" data-dyao="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${D.fotolar && D.fotolar[o.no] ? `<img alt="" src="${D.fotolar[o.no]}">` : esc(baslik(o.ad).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span><span class="n">${esc(o.no)}</span><span class="a">${esc(baslik(o.ad))}</span><em>${var_.has(o.no) ? 'Var' : 'Gelmedi'}</em></button>`).join('')}</div>
-        <div class="dya-alt"><div><b>${ros.length - g.length}</b> var · <b style="color:#ff8a8a">${g.length}</b> gelmedi</div><button class="birincil" id="dyaKaydet" style="text-transform:none">Kaydet ve onayla</button></div>`;
+        <div class="dya-liste">${ros.map(o => `<div class="dya-sar" data-dyar="${esc(o.no)}"><button class="dya-o ${st[o.no]}" data-dyao="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${D.fotolar && D.fotolar[o.no] ? `<img alt="" src="${D.fotolar[o.no]}">` : esc(baslik(o.ad).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span><span class="n">${esc(o.no)}</span><span class="a">${esc(baslik(o.ad))}</span><em>${DUR[st[o.no]]}</em></button>
+          <div class="dya-sec2 gizli">${['gec', 'nobet', 'izin', 'yok', 'var'].map(k => `<button class="cip dy-${k}" data-dyad="${k}">${DUR[k]}</button>`).join('')}</div></div>`).join('')}</div>
+        <div class="dya-alt"><div>${altYaz()}</div><button class="birincil" id="dyaKaydet" style="text-transform:none">Kaydet ve onayla</button></div>`;
       dyaSecBagla(); fotolariYukle(ros.map(o => o.no)).catch(() => {}); $('#dyaOzet').onclick = () => dersYoklamaBolumu('ozet');
-      I.querySelectorAll('[data-dyao]').forEach(b => b.onclick = () => { const n = b.dataset.dyao; var_.has(n) ? var_.delete(n) : var_.add(n); b.classList.toggle('v', var_.has(n)); b.classList.toggle('y', !var_.has(n)); b.querySelector('em').textContent = var_.has(n) ? 'Var' : 'Gelmedi'; sayac(); });
-      const sayac = () => { const g_ = ros.filter(o => !var_.has(o.no)).length; I.querySelector('.dya-alt > div').innerHTML = `<b>${ros.length - g_}</b> var · <b style="color:#ff8a8a">${g_}</b> gelmedi`; };
-      $('#dyaHepsi').onclick = () => { ros.forEach(o => var_.add(o.no)); ciz(); };
+      const ata = (n, d) => { st[n] = d; const r = I.querySelector(`[data-dyar="${CSS.escape(n)}"]`), b = r.querySelector('.dya-o'); b.className = 'dya-o ' + d; b.querySelector('em').textContent = DUR[d]; r.querySelector('.dya-sec2').classList.add('gizli'); I.querySelector('.dya-alt > div').innerHTML = altYaz(); };
+      I.querySelectorAll('[data-dyar]').forEach(r => { const n = r.dataset.dyar, b = r.querySelector('.dya-o'); let x0 = null, y0 = 0, kay = false;
+        b.addEventListener('pointerdown', ev => { x0 = ev.clientX; y0 = ev.clientY; kay = false; });
+        b.addEventListener('pointermove', ev => { if (x0 === null) return; const dx = ev.clientX - x0; if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(ev.clientY - y0)) { kay = true; b.style.transform = `translateX(${Math.max(-70, Math.min(70, dx))}px)`; } });
+        const bit = ev => { if (x0 === null) return; const dx = ev.clientX - x0; b.style.transform = ''; x0 = null; if (kay && Math.abs(dx) > 40) { I.querySelectorAll('.dya-sec2').forEach(q => q !== r.querySelector('.dya-sec2') && q.classList.add('gizli')); r.querySelector('.dya-sec2').classList.toggle('gizli'); } };
+        b.addEventListener('pointerup', bit); b.addEventListener('pointercancel', () => { b.style.transform = ''; x0 = null; });
+        b.onclick = ev => { if (kay) { kay = false; return; } ata(n, st[n] === 'var' ? 'yok' : 'var'); };
+        b.oncontextmenu = ev => { ev.preventDefault(); r.querySelector('.dya-sec2').classList.toggle('gizli'); };   // bilgisayarda sağ tık da açar
+        r.querySelectorAll('[data-dyad]').forEach(c => c.onclick = () => ata(n, c.dataset.dyad)); });
+      $('#dyaHepsi').onclick = () => { ros.forEach(o => { st[o.no] = 'var'; }); ciz(); };
       const no = $('#dyaNo'); no.onkeydown = ev => { if (ev.key !== 'Enter') return; const v = no.value.trim(), b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); if (b) { b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } else uyar(v + ' numara bu sınıfta yok.'); };
-      no.oninput = () => { const v = no.value.trim(); if (v.length >= 3 && ros.some(o => o.no === v) && !ros.some(o => o.no !== v && o.no.startsWith(v))) { I.querySelector(`[data-dyao="${CSS.escape(v)}"]`).click(); no.value = ''; } };
+      no.oninput = () => { const v = no.value.trim(); if (v.length >= 3 && ros.some(o => o.no === v) && !ros.some(o => o.no !== v && o.no.startsWith(v))) { const b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } };
       $('#dyaKaydet').onclick = async () => { const b = $('#dyaKaydet'); b.disabled = true; b.textContent = 'Kaydediliyor…';
-        const { data, error } = await sb.rpc('umal_ders_yoklama_ogretmen_yaz', { p_tarih: gunIso, p_sinif: sec.sinif, p_anahtar: anahtar, p_veri: { saat: sec.n + '.', ders: sat.ders || '', ogretmen: sat.ogretmen || [], liste: ros.map(o => ({ no: o.no, ad: o.ad, v: var_.has(o.no) })) } });
+        const liste = ros.map(o => { const d = st[o.no], z = { no: o.no, ad: o.ad, v: d === 'var' || d === 'gec' || d === 'nobet' }; if (d === 'gec' || d === 'nobet' || d === 'izin') z.d = d; return z; });
+        const { data, error } = await sb.rpc('umal_ders_yoklama_ogretmen_yaz', { p_tarih: gunIso, p_sinif: sec.sinif, p_anahtar: anahtar, p_veri: { saat: sec.n + '.', ders: sat.ders || '', ogretmen: sat.ogretmen || [], liste } });
         if (error || !data || !data.ok) { b.disabled = false; b.textContent = 'Kaydet ve onayla'; uyar('Kaydedilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
-        DY.gun = gunIso; await dersYoklamaBolumu(); uyar(`Yoklama kaydedildi · ${sec.sinif} ${sec.n}. ders`); };
+        DY.gun = gunIso; await dersYoklamaBolumu('ozet'); uyar(`Yoklama kaydedildi · ${sec.sinif} ${sec.n}. ders`); };
     };
     function dyaSecBagla() {
       const dd = $('#dyaDersler'); if (dd) dd.onclick = () => { pencereAc(`<h2 style="margin-top:0">Bugünkü dersleriniz</h2><div class="dya-sec">${D_.map(x => `<button class="cip ${sec && sec.sinif === x.sinif && sec.n === x.n ? 'secili' : ''}" data-dyas="${esc(x.sinif)}|${x.n}">${x.n}. ders · ${esc(x.sinif)}</button>`).join('')}</div>`);
@@ -568,11 +598,11 @@
     ciz();
   }
   function dyKart(x, saatYaz, pencere) {   // numaraya göre sınıf listesi; tahtada işaretlenenler burada da işaretli
-    const Ls = (x.liste || []).length ? x.liste : (x.gelmeyen || []).map(z => Object.assign({ v: false }, z)), g = Ls.filter(z => !z.v).length;
+    const Ls = (x.liste || []).length ? x.liste : (x.gelmeyen || []).map(z => Object.assign({ v: false }, z)), g = Ls.filter(z => !z.v && z.d !== 'izin').length;
     const durum = x.onay ? `<em class="${g ? 'var' : 'tam'}">${g ? g + ' gelmedi' : 'Herkes vardı'}</em>` : '<em class="tas"><i class="dy-nok"></i>Başkan işaretliyor</em>';
     return `<div class="${pencere ? '' : 'kart '}dy-ders ${x.onay ? '' : 'canli'}"><div class="dy-ders-ust"><b>${esc(x.sinif)} · ${esc(saatYaz(x))}</b><span class="soluk">${esc(baslik(x.ders || ''))}</span>${durum}</div>
       <div class="dy-sayi"><b>${Ls.filter(z => z.v).length}</b> / ${Ls.length || x.toplam || 0} var</div>
-      <div class="dy-sl">${Ls.map(z => `<div class="dy-o ${z.v ? 'v' : 'y'}"><span class="n">${esc(z.no)}</span><span class="a">${esc(baslik(z.ad || ''))}</span><i>${z.v ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.500 4.500 4.500L19 7.500"/></svg>' : ''}</i></div>`).join('')}</div>
+      <div class="dy-sl">${Ls.map(z => `<div class="dy-o ${z.v ? 'v' : 'y'} ${z.d || ''}"><span class="n">${esc(z.no)}</span><span class="a">${esc(baslik(z.ad || ''))}</span>${{ gec: '<b class="dy-et">Geç</b>', nobet: '<b class="dy-et">Nöbetçi</b>', izin: '<b class="dy-et">İzinli</b>' }[z.d] || ''}<i>${z.v ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.500 4.500 4.500L19 7.500"/></svg>' : ''}</i></div>`).join('')}</div>
       <div class="dy-alt">${x.onay ? `<span class="soluk kucuk">Onaylandı ${esc(new Date(x.onay).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${x.onaylayan && x.onaylayan !== 'tahta' ? ' · telefondan' : ''}</span>` : `<span class="soluk kucuk">Tahtada işaretlendikçe burası da güncellenir.</span>${x.benim || D.rol === 'bas' || D.rol === 'yonetici' ? `<button class="birincil" data-dyon="${esc(x.sinif + '|' + x.anahtar)}" style="text-transform:none">Onayla</button>` : ''}`}</div></div>`;
   }
   function dyBagla(kaydir) { if ($('#dyaAc')) $('#dyaAc').onclick = () => { clearInterval(yenileZamanlayici); dyAl(); }; document.querySelectorAll('[data-dyg]').forEach(b => b.onclick = () => { const n = +b.dataset.dyg; DY.gun = n ? kaydir(n) : bugunISO(); dersYoklamaBolumu(); }); }
