@@ -339,6 +339,54 @@
       <div class="tfy-liste">${L.map(z => `<div class="tfy-o"><div class="ad">${esc(baslik(z.ad))}<small>${esc(z.sinif)} · ${esc(z.no)} · ${esc(baslik(z.ders || ''))}</small></div>${y ? `<span class="ch-tf ${(yd(z.no) || {}).d === 'g' ? 'ok' : 'gec'}">${(yd(z.no) || {}).d === 'g' ? 'geldi' : 'gelmedi'}</span>` : ''}</div>`).join('') || '<p class="soluk">Bu oturumda dersinizden öğrenci yok.</p>'}</div>
       <div class="soluk kucuk" style="margin-top:8px">Soru kâğıtlarını sınav saatinden önce gözcüye ya da sınav yerine teslim edin. Yoklamayı gözcü öğretmen alır.</div></div>`);
   }
+
+  // K-716cv: Öğrenci bildirimleri (öneri, hata, yanlış bilgi) — yalnız KURUCU
+  const BDP = { L: [], suz: '', acik: null, ozet: null };
+  const BDP_TUR = { hata: ['Hata', '#ff8a8a'], oneri: ['Öneri', '#c99bff'], yanlis: ['Yanlış bilgi', '#ffb547'] };
+  const BDP_DUR = { alindi: ['Alındı', 'al'], inceleniyor: ['İnceleniyor', 'in'], planlandi: ['Planlandı', 'pl'], cozuldu: ['Çözüldü', 'ok'], yapilmayacak: ['Yapılmayacak', 'yk'] };
+  async function bdRozet() { try { const { data } = await sb.rpc('umal_bildirim_liste'); if (!data || !data.ok) return; BDP.L = data.liste || []; const n = BDP.L.filter(b => !b.okundu && !b.ana).length;
+    const m = document.querySelector('#menu .menu-oge[data-b="bildirim"]'); if (m) { let k = m.querySelector('.mk-sayi'); if (!n) { if (k) k.remove(); } else { if (!k) { k = document.createElement('span'); k.className = 'mk-sayi'; m.appendChild(k); } k.textContent = n; } } } catch (e) {} }
+  async function bildirimBolumu() {
+    $('#icerik').innerHTML = '<div class="ust"><h1>Öğrenci bildirimleri</h1></div><div class="kart soluk">Yükleniyor…</div>';
+    const { data, error } = await sb.rpc('umal_bildirim_liste'); if (error || !data || !data.ok) { $('#icerik').innerHTML = `<div class="ust"><h1>Öğrenci bildirimleri</h1></div><div class="kart">${esc(error ? hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
+    BDP.L = data.liste || []; try { BDP.ozet = JSON.parse(localStorage.getItem('bdOzet') || 'null'); } catch (e) { BDP.ozet = null; }
+    const guncelle = async (id, v) => { const { data: d, error: e } = await sb.rpc('umal_bildirim_guncelle', { p_id: id, p_veri: v }); if (e || !d || !d.ok) { uyar('Kaydedilemedi: ' + (e ? hataYaz(e) : d && d.hata)); return false; } return true; };
+    const zaman = t => new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const ciz = () => { const A = BDP.L.filter(b => !b.ana), cocuk = id => BDP.L.filter(b => b.ana === id), hf = Date.now() - 7 * 864e5;
+      const F = A.filter(b => !BDP.suz || (BDP.suz === 'yeni' ? !b.okundu : BDP.suz === 'panoda' ? b.panoda : b.tur === BDP.suz));
+      const say = k => A.filter(b => b.durum === k).length;
+      $('#icerik').innerHTML = `<div class="ust"><div><h1>Öğrenci bildirimleri</h1><div class="soluk kucuk">Öneri, hata ve yanlış bilgi bildirimleri · yalnız sizin hesabınızda görünür</div></div></div>
+        <div class="bdp-say"><div><b style="color:#22e8ff">${A.filter(b => !b.okundu).length}</b><span>Yeni</span></div><div><b style="color:#ffb547">${say('inceleniyor')}</b><span>İnceleniyor</span></div><div><b style="color:#c99bff">${say('planlandi')}</b><span>Planlandı</span></div><div><b style="color:#3ef08a">${say('cozuldu')}</b><span>Çözüldü</span></div><div><b style="color:#ff8a8a">${BDP.L.filter(b => b.tur === 'hata' && new Date(b.olustu) > hf).length}</b><span>Hata · bu hafta</span></div></div>
+        <div class="kart bdp-ozet"><div class="bdp-oz-ust"><b>Atlas haftalık özet</b>${BDP.ozet ? `<span class="soluk kucuk">${esc(zaman(BDP.ozet.z))} · ${BDP.ozet.n} bildirim</span>` : ''}<button class="ikincil kucuk" id="bdpOzet">${BDP.ozet ? 'Yenile' : 'Özet çıkar'}</button></div>${BDP.ozet ? `<div class="bdp-oz-ic">${esc(BDP.ozet.yazi).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>` : '<div class="soluk kucuk">Son 7 günün bildirimlerini Atlas özetler: en çok gelen sorunlar, en çok istenenler, yanlış bilgiler. Öğrenci adları gönderilmez.</div>'}</div>
+        <div class="cipler bdp-suz">${[['', 'Hepsi · ' + A.length], ['yeni', 'Yeni'], ['hata', 'Hata'], ['oneri', 'Öneri'], ['yanlis', 'Yanlış bilgi'], ['panoda', 'Panoda']].map(([k, a]) => `<button class="cip ${BDP.suz === k ? 'secili' : ''}" data-bdsuz="${k}">${a}</button>`).join('')}</div>
+        <div class="bdp-liste">${F.map(b => { const C = cocuk(b.id), t = BDP_TUR[b.tur] || ['?', '#999'], d = BDP_DUR[b.durum] || BDP_DUR.alindi, ac = BDP.acik === b.id;
+          return `<div class="kart bdp-s ${b.okundu ? '' : 'yeni'} ${ac ? 'acik' : ''}"><button class="bdp-bas" data-bdac="${esc(b.id)}"><span class="bdp-n"></span><span class="bdp-m"><b><i style="color:${t[1]}">${esc(t[0])}</i> ${esc(b.metin.length > 110 && !ac ? b.metin.slice(0, 108) + '…' : b.metin)}</b><small>${esc(baslik(b.ad || ''))} · ${esc(b.sinif || '')} · ${esc(b.bolum || 'Genel')}${b.cihaz && b.cihaz.cihaz ? ' · ' + esc(b.cihaz.cihaz) : ''} · ${esc(zaman(b.olustu))}${C.length ? ` · <em>+${C.length} benzer</em>` : ''}${b.panoda ? ` · <em style="color:#c99bff">panoda · ${b.oy + C.length + 1} oy</em>` : ''}${b.foto ? ' · ekran görüntüsü' : ''}</small></span><span class="bd-ch ${d[1]}">${d[0]}</span></button>
+            ${ac ? `<div class="bdp-det">${b.foto ? `<a href="${b.foto}" target="_blank" rel="noopener"><img src="${b.foto}" alt="Ekran görüntüsü" class="bdp-foto"></a>` : ''}
+              ${b.cihaz ? `<div class="soluk kucuk">${esc([b.cihaz.cihaz, b.cihaz.tarayici, b.cihaz.surum ? 'sürüm ' + b.cihaz.surum : '', b.cihaz.ekran, b.cihaz.uygulama].filter(Boolean).join(' · '))}</div>` : ''}
+              ${C.length ? `<div class="bdp-cocuk">${C.map(c => `<div><b>${esc(baslik(c.ad || ''))} · ${esc(c.sinif || '')}</b> ${esc(c.metin)} <button class="bag" data-bdayir="${esc(c.id)}">ayır</button></div>`).join('')}</div>` : ''}
+              <div class="bdp-lb">Durum</div><div class="cipler">${Object.entries(BDP_DUR).map(([k, [a]]) => `<button class="cip ${b.durum === k ? 'secili' : ''}" data-bddur="${k}">${a}</button>`).join('')}</div>
+              <div class="bdp-lb">Öğrenciye yanıt ${C.length ? '(birleştirilenler de görür)' : ''}</div><textarea id="bdpYanit" rows="3" maxlength="600" placeholder="Ör. Teşekkürler, düzelttik. Uygulamayı kapatıp açman yeterli.">${esc(b.yanit || '')}</textarea>
+              ${b.tur === 'oneri' ? `<label class="bdp-pano"><input type="checkbox" id="bdpPano" ${b.panoda ? 'checked' : ''}> Öneri panosuna koy (isimsiz, öğrenciler +1 verir)</label><input id="bdpPanoB" placeholder="Panoda görünecek kısa başlık" value="${esc(b.pano_baslik || '')}" maxlength="90">` : ''}
+              <div class="dugmeler" style="justify-content:flex-start"><select id="bdpBirles"><option value="">Benzerle birleştir…</option>${A.filter(x => x.id !== b.id && x.tur === b.tur).slice(0, 60).map(x => `<option value="${esc(x.id)}">${esc(x.metin.slice(0, 60))}</option>`).join('')}</select><button class="birincil" id="bdpKaydet" data-bdid="${esc(b.id)}">Kaydet · öğrenciye gider</button></div></div>` : ''}</div>`; }).join('') || '<div class="kart soluk">Bu süzgeçte bildirim yok.</div>'}</div>`;
+      const I = $('#icerik');
+      I.querySelectorAll('[data-bdsuz]').forEach(x => x.onclick = () => { BDP.suz = x.dataset.bdsuz; ciz(); });
+      I.querySelectorAll('[data-bdac]').forEach(x => x.onclick = async () => { const id = x.dataset.bdac; BDP.acik = BDP.acik === id ? null : id; const b = BDP.L.find(z => z.id === id); if (b && !b.okundu && BDP.acik) { b.okundu = true; guncelle(id, { okundu: true }).then(() => bdRozet()); } ciz(); });
+      I.querySelectorAll('[data-bddur]').forEach(x => x.onclick = () => { I.querySelectorAll('[data-bddur]').forEach(y => y.classList.toggle('secili', y === x)); });
+      I.querySelectorAll('[data-bdayir]').forEach(x => x.onclick = async () => { if (await guncelle(x.dataset.bdayir, { ana: '' })) { const c = BDP.L.find(z => z.id === x.dataset.bdayir); if (c) c.ana = null; ciz(); } });
+      const kb = $('#bdpKaydet'); if (kb) kb.onclick = async () => { const id = kb.dataset.bdid, b = BDP.L.find(z => z.id === id), dsel = I.querySelector('[data-bddur].secili'), birles = $('#bdpBirles').value;
+        if (birles) { if (!await onayla('Bu bildirim seçtiğiniz bildirimle birleştirilsin mi? Öğrencisi ana bildirimin durumunu ve yanıtını görür.')) return; if (await guncelle(id, { ana: birles })) { b.ana = birles; BDP.acik = birles; ciz(); } return; }
+        const v = { durum: dsel ? dsel.dataset.bddur : b.durum, yanit: $('#bdpYanit').value }; if ($('#bdpPano')) { v.panoda = $('#bdpPano').checked; v.pano_baslik = $('#bdpPanoB').value; }
+        if (await guncelle(id, v)) { Object.assign(b, { durum: v.durum, yanit: v.yanit.trim() || null }, $('#bdpPano') ? { panoda: v.panoda, pano_baslik: v.pano_baslik } : {}); uyar('Kaydedildi; öğrenci telefonunda görür.'); ciz(); } };
+      const oz = $('#bdpOzet'); if (oz) oz.onclick = async () => { const H = BDP.L.filter(b => new Date(b.olustu) > hf); if (!H.length) { uyar('Son 7 günde bildirim yok.'); return; }
+        oz.disabled = true; oz.textContent = 'Atlas düşünüyor…';
+        const metin = 'Okul uygulaması Atlas için öğrencilerden gelen son 7 günlük bildirimler (tür · bölüm · metin):\n' + H.map(b => `- ${(BDP_TUR[b.tur] || ['?'])[0]} · ${b.bolum || 'Genel'} · ${b.metin.replace(/\s+/g, ' ')}`).join('\n');
+        try { const { data: d, error: e } = await sb.functions.invoke('atlas-asistan', { body: { gorev: 'serbest', bicim: 'madde', metin, ek: 'Uygulamanın geliştiricisine kısa bir özet çıkar: 1) en çok bildirilen sorunlar (kaç öğrenci), 2) en çok istenen özellikler, 3) yanlış bilgi bildirimleri, 4) önce yapılması gereken 3 iş. En çok 12 madde.' } });
+          if (e || !d || !d.ok) throw e || new Error((d && d.hata) || 'yanıt yok');
+          BDP.ozet = { yazi: d.yazi, z: Date.now(), n: H.length }; try { localStorage.setItem('bdOzet', JSON.stringify(BDP.ozet)); } catch (x) {} } catch (x) { uyar('Özet çıkarılamadı: ' + hataYaz(x)); }
+        ciz(); };
+    };
+    ciz();
+  }
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
@@ -361,7 +409,7 @@
     panelSelam().catch(e => console.warn('karşılama', e));   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
-    if (rol === 'bas') erisimRozet();
+    if (rol === 'bas') { erisimRozet(); bdRozet(); }
     tfgYukle().catch(() => {});   // K-716cr: telafi görevleri
   }
   // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
@@ -515,6 +563,7 @@
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
+    { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
     { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
     { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu() },   // K-702: otobüs koltuk yerleşimi + biletler
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
@@ -555,6 +604,7 @@
     dosyalar: '<path d="M3.500 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.500a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 10.500v5M9.500 13L12 10.500 14.500 13"/>',
     notlar: '<path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/>',
     acil: '<path d="M12 3.500l9 16H3l9-16Z"/><path d="M12 10v4.500M12 17.200v.1"/>',
+    bildirim: '<path d="M4 5h16v11H9.5L4 20z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M4 5h16v11H9.5L4 20z"/><path d="M12 8.2v3.6M12 14.4v.1"/>',
     gezikayit: '<rect x="4.500" y="4" width="15" height="17" rx="2.600" fill="currentColor" fill-opacity=".22" stroke="none"/><rect x="4.500" y="4" width="15" height="17" rx="2.600"/><path d="M9 2.800h6v2.600H9z"/><path d="M8.300 10.500h7.400M8.300 13.800h4.600"/><circle cx="15.600" cy="16.800" r="2.300"/><path d="m14.600 16.800.7.7 1.300-1.400"/>',
     gezi: '<rect x="4" y="3.500" width="16" height="15" rx="3"/><path d="M4 11h16M8 3.500v7.500M16 3.500v7.500"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M6.500 18.500V21M17.500 18.500V21"/>',
     // K-697: Rehberlik'in alt bölümleri (telefonda grup içinde ayrı düğme)
@@ -567,7 +617,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim']], ['Öğretmen', '#7fb2ff', ['notlar', 'soru', 'testler', 'yonlendir']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };

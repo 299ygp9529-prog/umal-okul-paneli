@@ -26,7 +26,7 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
-  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
+  const goster = id => { ['giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld'].forEach(x => $('#' + x).classList.toggle('gizli', x !== id)); if ($('#sekme')) $('#sekme').classList.toggle('gizli', id !== 'giris'); const u = document.querySelector('main > .ust'); if (u) u.classList.toggle('gizli', (id.startsWith('s-') && !(id === 's-plan' && S.sinif === 'ÖZEL')) || id === 'form'); };   // K-598: özel ders öğrencisinde plan ekranında üst başlık (adı) görünür
 
   // ---- giriş
   $('#kod').addEventListener('input', () => {
@@ -57,7 +57,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -338,13 +338,14 @@
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
+    $('#kutular').insertAdjacentHTML('beforeend', bdKutu());   // K-716cv: Öneri ve sorun bildir
     sozCiz();
     rvAnaCiz(); dyAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
   }
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = anaCiz);
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
@@ -390,6 +391,56 @@
   const GB_AD = { tc: 'T.C. kimlik numarası', dogum: 'doğum tarihi', tel: 'telefon' };
   const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'telefon' };
   const UYARI_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5v4.5M12 16.6h.01"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
+
+  // K-716cv: Öneri ve sorun bildir — hata, öneri, yanlış bilgi; yanıtlar ve isimsiz öneri panosu (yalnız Kurucu okur)
+  const BD = { L: [], P: [], sekme: 'yeni', tur: '', bolum: '', metin: '', foto: null, cihaz: true, mesaj: '', mtur: '', gonderiyor: false };
+  const BD_TUR = { hata: ['Hata', '#ff8a8a'], oneri: ['Öneri', '#c99bff'], yanlis: ['Yanlış bilgi', '#ffb547'] };
+  const BD_DUR = { alindi: ['Alındı', 'al'], inceleniyor: ['İnceleniyor', 'in'], planlandi: ['Planlandı', 'pl'], cozuldu: ['Çözüldü', 'ok'], yapilmayacak: ['Yapılmayacak', 'yk'] };
+  const BD_BOLUM = ['Genel', 'Ana sayfa', 'Sınavlarım', 'Ders programım', 'Duyurular', 'Atlas Sınıf (ders dosyaları)', 'Notlarım', 'Gezi', 'Anketler', 'Rehberlik', 'Çalışma planım', 'Soru takibi', 'Giriş / şifre'];
+  const BD_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9.5L4 20z" fill="currentColor" fill-opacity=".2"/><path d="M12 8.2v3.6M12 14.4v.1"/></svg>';
+  async function bdYukle(okudu) { try { const { data } = await sb.rpc('umal_ogr_bildirimlerim', { p_no: S.no, p_kod: S.kod, p_okudu: !!okudu }); if (data && data.ok) { BD.L = data.liste || []; BD.P = data.pano || []; return true; } } catch (e) {} return false; }
+  const bdYeni = () => BD.L.filter(b => !b.okudu).length;
+  function bdKutu() { const n = bdYeni();
+    return `<button data-git="bld" class="genis no-ana bd-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#c99bff">${BD_IK}</i><span><b>Öneri ve sorun bildir</b><small>${n ? (n > 1 ? n + ' bildirimine yanıt geldi' : 'Bildirimine yanıt geldi') : 'Hata, istek, yanlış bilgi · Atlas\'ı birlikte geliştirelim'}</small></span></button>`; }
+  function bdCihaz() { const u = navigator.userAgent; const tel = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? ((u.match(/Android [\d.]+; ([^;)]+)/) || [])[1] || 'Android') : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows' : 'Diğer';
+    const os = (u.match(/OS (\d+)_/) || u.match(/Android (\d+)/) || [])[1] || ''; const tr_ = /CriOS|Chrome/.test(u) && !/Edg/.test(u) ? 'Chrome' : /Edg/.test(u) ? 'Edge' : /Firefox|FxiOS/.test(u) ? 'Firefox' : /Safari/.test(u) ? 'Safari' : 'Tarayıcı';
+    const sr = ((document.querySelector('script[src*="ogrenci.js"]') || {}).src || '').split('v=')[1] || ''; const uy = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    return { cihaz: tel + (os ? ' · ' + (/iPhone|iPad/.test(tel) ? 'iOS ' : 'Android ') + os : ''), tarayici: tr_, surum: sr, ekran: innerWidth + '×' + innerHeight, uygulama: uy ? 'ana ekrandan' : 'tarayıcıdan' }; }
+  const bdFotoKucult = f => new Promise((ok, red) => { const img = new Image(), url = URL.createObjectURL(f); img.onload = () => { const k = Math.min(1, 1080 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); let q = .72, d = c.toDataURL('image/jpeg', q); while (d.length > 520000 && q > .3) { q -= .12; d = c.toDataURL('image/jpeg', q); } ok(d); }; img.onerror = () => red(new Error('Fotoğraf okunamadı')); img.src = url; });
+  async function bdAc(sekme) { BD.sekme = sekme || (bdYeni() ? 'benim' : 'yeni'); BD.mesaj = ''; bdCiz(); goster('s-bld'); window.scrollTo(0, 0); await bdYukle(BD.sekme === 'benim'); bdCiz(); }
+  function bdCiz() { const el = $('#bdIc'); if (!el) return; const n = bdYeni();
+    const sek = `<div class="bd-sek">${[['yeni', 'Yeni'], ['benim', 'Bildirimlerim' + (BD.L.length ? ' · ' + BD.L.length : '')], ['pano', 'Öneri panosu']].map(([k, a]) => `<button class="${BD.sekme === k ? 'secili' : ''}" data-bds="${k}">${a}${k === 'benim' && n ? ' <i class="bd-rz">' + n + '</i>' : ''}</button>`).join('')}</div>${BD.mesaj ? `<div class="bk-mesaj ${BD.mtur}">${esc(BD.mesaj)}</div>` : ''}`;
+    const dur = d => `<span class="bd-ch ${(BD_DUR[d] || BD_DUR.alindi)[1]}">${(BD_DUR[d] || BD_DUR.alindi)[0]}</span>`, tarih = t => new Date(t).toLocaleDateString(tr, { day: 'numeric', month: 'long' });
+    let govde = '';
+    if (BD.sekme === 'yeni') { const c = BD.cihaz ? bdCihaz() : null;
+      govde = `<div class="kart bd-form"><div class="bd-tur">${Object.entries(BD_TUR).map(([k, [a, rk]]) => `<button class="${BD.tur === k ? 'secili' : ''}" style="--c:${rk}" data-bdt="${k}"><i>${k === 'hata' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" fill="currentColor" fill-opacity=".18"/><path d="M12 7.5v5.2M12 15.6v.1"/></svg>' : k === 'oneri' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17h6M10 20h4M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V17h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.5z" fill="currentColor" fill-opacity=".18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10l4 4v12H5z" fill="currentColor" fill-opacity=".18"/><path d="m9 12 6 6M15 12l-6 6"/></svg>'}</i>${a}</button>`).join('')}</div>
+        <label class="bd-lb" for="bdBolum">Hangi bölüm?</label><select id="bdBolum">${BD_BOLUM.map(b => `<option ${BD.bolum === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>
+        <label class="bd-lb" for="bdMetin">${BD.tur === 'oneri' ? 'Ne olsun istiyorsun?' : BD.tur === 'yanlis' ? 'Ne yanlış, doğrusu ne?' : 'Ne oldu?'}</label><div class="bd-yaz"><textarea id="bdMetin" maxlength="500" rows="5" placeholder="${BD.tur === 'oneri' ? 'Ör. Sınav sonuçlarım grafikle gösterilsin.' : BD.tur === 'yanlis' ? 'Ör. Perşembe 5. ders Kimya yazıyor, aslında Fizik.' : 'Ör. Sınav yerimi göster deyince boş sayfa açılıyor.'}">${esc(BD.metin)}</textarea><em id="bdSay">${BD.metin.length} / 500</em></div>
+        <div class="bd-foto">${BD.foto ? `<img src="${BD.foto}" alt="Ekran görüntüsü"><button class="bag" id="bdFotoSil">Kaldır</button>` : `<label class="ikincil kucuk"><input type="file" accept="image/*" id="bdFoto" hidden>+ Ekran görüntüsü ekle</label>`}</div>
+        <label class="bd-cihaz"><input type="checkbox" id="bdCihaz" ${BD.cihaz ? 'checked' : ''}><span>Telefon bilgisi eklensin${c ? `<small>${esc(c.cihaz)} · ${esc(c.tarayici)}${c.surum ? ' · sürüm ' + esc(c.surum.slice(-4)) : ''}</small>` : ''}</span></label>
+        <div class="bd-uy">Başkasının adını, telefonunu ya da T.C. numarasını yazma; yazarsan gizlenir. Günde en çok 3 bildirim. Bildirimini yalnız Atlas'ın kurucusu okur.</div>
+        <button class="birincil bd-gonder" id="bdGonder" ${!BD.tur || BD.metin.trim().length < 5 || BD.gonderiyor ? 'disabled' : ''}>${BD.gonderiyor ? 'Gönderiliyor…' : !BD.tur ? 'Önce türünü seç' : 'Gönder'}</button></div>`;
+    } else if (BD.sekme === 'benim') {
+      govde = BD.L.length ? BD.L.map(b => `<div class="kart bd-k ${b.okudu ? '' : 'yeni'}"><div class="bd-ust"><span>${esc((BD_TUR[b.tur] || ['Bildirim'])[0])} · ${esc(b.bolum || 'Genel')} · ${esc(tarih(b.olustu))}</span>${dur(b.durum)}</div><p>${esc(b.metin)}</p>${b.foto ? '<small class="soluk">Ekran görüntüsü eklendi</small>' : ''}${b.yanit ? `<div class="bd-yanit"><b>YANIT</b>${esc(b.yanit)}</div>` : ''}</div>`).join('') : '<div class="kart soluk">Henüz bildirim göndermedin.</div>';
+    } else {
+      govde = `<div class="soluk kucuk" style="margin:0 2px 10px">Kurucunun panoya koyduğu öneriler. Sen de istiyorsan +1 de; en çok istenenler önce yapılır. İsimler görünmez.</div>` + (BD.P.length ? BD.P.map(p => `<div class="kart bd-oy"><button class="bd-oyb ${p.benim ? 'v' : ''}" data-bdoy="${esc(p.id)}">+1<small>${p.oy}</small></button><div><b>${esc(p.baslik)}</b><small>${esc(p.bolum || 'Genel')} · ${dur(p.durum)}</small></div></div>`).join('') : '<div class="kart soluk">Panoda henüz öneri yok.</div>');
+    }
+    el.innerHTML = sek + govde;
+    el.querySelectorAll('[data-bds]').forEach(b => b.onclick = async () => { BD.sekme = b.dataset.bds; BD.mesaj = ''; bdCiz(); if (BD.sekme === 'benim' && bdYeni()) { await bdYukle(true); BD.L.forEach(x => { x.okudu = true; }); bdCiz(); } });
+    el.querySelectorAll('[data-bdt]').forEach(b => b.onclick = () => { BD.tur = b.dataset.bdt; bdCiz(); });
+    if ($('#bdBolum')) $('#bdBolum').onchange = e => { BD.bolum = e.target.value; };
+    if ($('#bdMetin')) $('#bdMetin').oninput = e => { BD.metin = e.target.value; $('#bdSay').textContent = BD.metin.length + ' / 500'; const g = $('#bdGonder'); if (g && BD.tur) { g.disabled = BD.metin.trim().length < 5; } };
+    if ($('#bdCihaz')) $('#bdCihaz').onchange = e => { BD.cihaz = e.target.checked; bdCiz(); };
+    if ($('#bdFoto')) $('#bdFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { BD.foto = await bdFotoKucult(f); } catch (x) { BD.mesaj = 'Fotoğraf eklenemedi.'; BD.mtur = 'kotu'; } bdCiz(); };
+    if ($('#bdFotoSil')) $('#bdFotoSil').onclick = () => { BD.foto = null; bdCiz(); };
+    if ($('#bdGonder')) $('#bdGonder').onclick = async () => { if (!BD.tur || BD.metin.trim().length < 5) return; BD.gonderiyor = true; bdCiz(); let r = null;
+      try { ({ data: r } = await sb.rpc('umal_ogr_bildirim_gonder', { p_no: S.no, p_kod: S.kod, p_tur: BD.tur, p_bolum: BD.bolum || 'Genel', p_metin: BD.metin.trim(), p_foto: BD.foto, p_cihaz: BD.cihaz ? bdCihaz() : null })); } catch (e) {}
+      BD.gonderiyor = false;
+      if (r && r.ok) { BD.mesaj = 'Teşekkürler! Bildirimin ulaştı. Yanıt gelince ana sayfada görürsün.'; BD.mtur = 'iyi'; BD.tur = ''; BD.metin = ''; BD.foto = null; BD.sekme = 'benim'; await bdYukle(); anaCiz(true); }
+      else { BD.mesaj = (r && r.hata) || 'Gönderilemedi; internet bağlantını kontrol edip yeniden dene.'; BD.mtur = 'kotu'; }
+      bdCiz(); goster('s-bld'); };
+    el.querySelectorAll('[data-bdoy]').forEach(b => b.onclick = async () => { b.disabled = true; try { await sb.rpc('umal_ogr_bildirim_oy', { p_no: S.no, p_kod: S.kod, p_id: b.dataset.bdoy }); } catch (e) {} await bdYukle(); bdCiz(); });
+  }
   // K-716bt: Gezi ilanı — "Katılmak istiyorum", başvuru durumu (başvuru → ödeme → izin belgesi → bilet)
   const IL_DUR = { yok: 'Katılmak için dokun', basvurdu: 'Başvurun alındı · ödeme bekleniyor', odedi: 'Kaydın kesin', yedek: 'Yedek listedesin', vazgecti: 'Vazgeçtin' };
   const IL_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16" /><path d="M5.5 19.5V9.8L12 5l6.5 4.8v9.7" fill="currentColor" fill-opacity=".2"/><path d="M9.5 19.5v-5h5v5"/><path d="M12 2.5v2.5"/></svg>';
