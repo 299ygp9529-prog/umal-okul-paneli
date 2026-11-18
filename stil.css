@@ -1857,3 +1857,4 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
   .gk2-adim { overflow-x: auto; } .gk2-adim-b { min-width: 74px; font-size: 11.5px; } .gk2-sayac { grid-template-columns: 1fr 1fr; } .gk2-ara, .gk2-uc, .gk2-belgeler { grid-template-columns: 1fr; } .gk2-belgeler { padding-left: 0; }
   .gk2-form { grid-template-columns: 1fr 1fr; } .gk2-form label.genis { grid-column: span 2; } .gk2-kart { flex-wrap: wrap; } .gk2-sag { margin-left: 0; text-align: left; }
 }
+.gk2-sorular { margin: 6px 0 0; padding-left: 20px; color: #cfe3f7; font-size: 13.5px; line-height: 1.45; } .gk2-sorular li { margin: 5px 0; } .gk2-sorular small { display: block; color: var(--soluk); font-size: 11.5px; }

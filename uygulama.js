@@ -3783,7 +3783,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       try { G.doluSay = kisiler().size; } catch (e) {}   // K-716bt: öğrenci başvurusunda kontenjan denetimi için
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: GZ_ANAH, deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
       if (!error && (GZ_K.ad !== G.ad)) { GZ_K.ad = G.ad; await sb.from('umal_ayarlar').upsert({ anahtar: 'gezi_liste', deger: JSON.stringify(GL) }, { onConflict: 'anahtar' }); }
-      durum = error ? 'Kaydedilemedi: ' + hataYaz(error) : 'Kaydedildi ✓'; durumYaz(); }, 500); };
+      durum = error ? 'Kaydedilemedi: ' + hataYaz(error) : 'Kaydedildi ✓'; durumYaz(); if (!error) { clearTimeout(kaydet.ank); kaydet.ank = setTimeout(() => gzAnketSenk().catch(() => {}), 3000); } }, 500); };
     const sunucuAl = S_ => {   // K-716bx: başkanın yerleşimi (yerZaman) ve öğrencilerin girdiği bilgiler (kayıt başına z) sunucudan alınır; panelde sonradan düzeltilen korunur
       let d_ = false; if (!S_) return d_;
       if ((+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; d_ = true; }
@@ -4313,6 +4313,32 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <table><thead><tr><th>${G.numarasiz ? 'Sıra' : 'Koltuk'}</th><th>Yer</th><th>Ad Soyad</th><th>Sınıf / Görev</th><th>No</th><th>İmza</th></tr></thead><tbody>${L.map(({ p, k }) => `<tr><td>${G.numarasiz ? gzKonum(o.kapasite, k).sira + '. sıra' : k}</td><td>${esc(G.numarasiz ? gzKonum(o.kapasite, k).taraf + ' ' + gzYerAd(yerOf(o, k)).toLocaleLowerCase(tr) : gzYerAd(yerOf(o, k)))}</td><td>${esc(baslik(p.ad))}</td><td>${esc(p.sinif || GZ_TUR[p.tur] || '')}</td><td>${esc(p.no || '')}</td><td></td></tr>`).join('')}</tbody></table></div>`; };
       belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Yolcu listeleri</title><style>${YL_CSS}</style></head><body>${G.otobusler.map(sayfa).join('')}</body></html>`, 'Yolcu listeleri');
     };
+    // K-716bu: GEZİ SONRASI ANKET — gezinin ertesi günü yalnız geziye katılan öğrencilerin telefon paneline düşer (8 kısa soru, isimsiz)
+    const GZ_ANKET_SORU = () => [
+      { tur: 'puan', metin: 'Geziyi genel olarak nasıl buldun?', zorunlu: true },
+      { tur: 'puan', metin: 'Gezilen yerler ve program ne kadar ilgini çekti?', zorunlu: true },
+      { tur: 'secim', metin: 'Gezinin süresi nasıldı?', secenekler: ['Kısaydı', 'Tam yerindeydi', 'Uzundu'], zorunlu: true },
+      { tur: 'puan', metin: 'Otobüs yolculuğu ne kadar rahattı? (koltuk, molalar, sürüş)', zorunlu: true },
+      { tur: 'puan', metin: 'Zamanlama ve düzen nasıldı? (hareket saatleri, bekleme, toplanma)', zorunlu: true },
+      { tur: 'secim', metin: 'Gezi boyunca kendini güvende hissettin mi?', secenekler: ['Evet', 'Kısmen', 'Hayır'], zorunlu: true },
+      { tur: 'secim', metin: 'Bir sonraki gezide en çok neyin daha iyi olmasını istersin?', secenekler: ['Daha çok serbest zaman', 'Yemek ve molalar', 'Daha az bekleme', 'Rehber anlatımı', 'Otobüs konforu', 'Ücret'], coklu: true, diger: true, zorunlu: true },
+      { tur: 'yazi', metin: 'Bir sonraki gezi nereye olsun ya da eklemek istediğin bir şey var mı?', zorunlu: false, uzunluk: 300 }];
+    const gzAnketOgr = () => { const odemeli = !G.ucretsiz && Object.keys(G.odeme || {}).length > 0; return [...kisiler().values()].filter(p => p.tur === 'ogr' && (!odemeli || G.odeme[p.an])); };   // ödeme alınan gezide yalnız ödeyenler
+    const gzAnketSenk = async () => {   // gezi tarihi ve katılanlar belliyse anketi hazırlar/günceller; anket başladıktan sonra dokunmaz
+      if (!G.tarih || G.sonAnketKapali || !/^\d{4}-\d{2}-\d{2}$/.test(G.tarih)) return;
+      const bas = gunEkle(G.tarih, 1); if (bugunISO() >= bas && G.sonAnket) return; if (bugunISO() > gunEkle(G.tarih, 8)) return;   // eski gezi
+      const P = gzAnketOgr(); if (!P.length) return;
+      const S = {}; P.forEach(p => { (S[p.sinif] = S[p.sinif] || new Set()).add(String(p.no)); });
+      const siniflar = {}; Object.keys(S).sort(sinifSira).forEach(sn => { const kat = S[sn], L = (D.ogrenciler || []).filter(o => o.sinif === sn).sort((a, b) => (+a.no) - (+b.no)).map(o => ({ no: String(o.no), ad: o.ad, katilir: kat.has(String(o.no)) }));
+        P.filter(p => p.sinif === sn && !L.some(o => o.no === String(p.no))).forEach(p => L.push({ no: String(p.no), ad: p.ad, katilir: true })); siniflar[sn] = L; });
+      const imza = G.tarih + '|' + Object.entries(S).map(([k, v]) => k + ':' + [...v].sort().join(',')).sort().join(';') + '|' + (G.ad || '');
+      if (G.sonAnket && G.sonAnketImza === imza) return;
+      const id = G.sonAnket || ('gz-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+      const t = { id, ad: (G.ad || 'Gezi') + ' · Değerlendirme', aciklama: 'Geziyle ilgili düşüncelerin bir sonraki geziyi daha iyi yapmamıza yardım edecek. 1 dakika sürer; adın görünmez.', baslangic: bas, bitis: gunEkle(G.tarih, 8), isimli: false, bolum: 'anket', kaynak: 'dersmap', kanal: 'web', kimler: 'ogrenci', sorular: GZ_ANKET_SORU(), siniflar, hazirlayan: D.eposta, gezi: GZ_ANAH };
+      const { error } = await sb.rpc('umal_anket_kaydet', { p_id: id, p_bolum: 'anket', p_durum: 'yayinda', p_tanim: JSON.stringify(t) });
+      if (error) { console.warn('gezi anketi', error); return; }
+      G.sonAnket = id; G.sonAnketImza = imza; G.sonAnketSayi = P.length; kaydet();
+    };
     // K-716bt: GEZİ KAYDI — ilan → kayıt → ödeme (kesin kayıt) → belgeler (MEB gezi dosyası) → otobüs → gezi günü
     const gkSurec = () => {
       if (!G.ilan || typeof G.ilan !== 'object') G.ilan = { acik: false, program: [] }; if (!Array.isArray(G.ilan.program)) G.ilan.program = [];
@@ -4397,7 +4423,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           govde = adim === 'otobus' ? `<div class="kart"><h3 style="margin-top:0">Otobüs</h3><p class="soluk">${K} kesin kayıtlı öğrenci · ${kat} kişi otobüslere yerleşti.</p><p class="soluk kucuk">Otobüs sayısı, plaka, şoför, koltuk yerleşimi ve biletler Gezi Otobüsleri bölümünde.</p><button class="birincil" data-gkgit="gezi">${KY_IK.otobus}Gezi Otobüsleri'ni aç</button></div>`
             : `<div class="kart"><h3 style="margin-top:0">Gezi günü</h3><p class="soluk">${G.tarih ? trT(G.tarih, true) + (G.saat ? ' · hareket ' + esc(G.saat) : '') + (I.donus ? ' · dönüş ' + esc(I.donus) : '') : 'Tarih girilmedi.'}</p>
               <ul class="gk2-gun"><li>Biletler öğrenci panelinde gezi günü şoför telefonuyla birlikte görünür; gezi bitince kalkar.</li><li>Yoklama ve oturma planı çıktısı Gezi Otobüsleri › Listeler'de.</li><li>Acil durum için veli telefonları T.C. listesinde.</li></ul>
-              <div class="gk2-sat"><button class="birincil" data-gkgit="gezi">${KY_IK.bilet}Biletler ve listeler</button><button class="ikincil" data-gkbelge="liste">Acil telefon listesi</button></div></div>`;
+              <div class="gk2-sat"><button class="birincil" data-gkgit="gezi">${KY_IK.bilet}Biletler ve listeler</button><button class="ikincil" data-gkbelge="liste">Acil telefon listesi</button></div></div>
+            ${(() => { const bas = G.tarih ? gunEkle(G.tarih, 1) : '', basladi = bas && bugun >= bas, n = gzAnketOgr().length;
+              return `<div class="kart gk2-anket"><div class="gk2-ust"><h3 style="margin:0">Gezi sonrası anket</h3><label class="gk2-tik ${G.sonAnketKapali ? '' : 'acik'}"><input type="checkbox" id="gkAnket" ${G.sonAnketKapali ? '' : 'checked'} ${basladi && G.sonAnket ? 'disabled' : ''}><span></span>${G.sonAnketKapali ? 'Kapalı' : 'Açık'}</label></div>
+                <p class="soluk" style="margin:8px 0">${G.sonAnketKapali ? 'Bu gezi için anket gönderilmeyecek.' : !G.tarih ? 'Gezi tarihi girilince hazırlanır.' : basladi ? (G.sonAnket ? `Anket ${esc(trT(bas))} günü ${G.sonAnketSayi || n} öğrencinin telefon paneline gönderildi; ${esc(trT(gunEkle(G.tarih, 8)))} gününe kadar açık.` : 'Anket hazırlanıyor…') : `<b>${esc(trT(bas, true))}</b> sabahı yalnız geziye katılan ${n} öğrencinin telefon paneline düşer; bir hafta açık kalır. Katılımcı listesi değişirse kendiliğinden güncellenir.`}</p>
+                <ol class="gk2-sorular">${GZ_ANKET_SORU().map(q => `<li>${esc(q.metin)}<small>${q.tur === 'puan' ? '1–5 puan' : q.tur === 'yazi' ? 'isteğe bağlı yazı' : q.coklu ? 'birden çok seçilebilir' : q.secenekler.join(' · ')}</small></li>`).join('')}</ol>
+                <p class="soluk kucuk" style="margin:8px 0 0">8 kısa soru, yaklaşık 1 dakika. İsimsiz: sonuçlarda öğrencinin adı görünmez.${G.sonAnket ? ' Sonuçlar Anketler bölümünde.' : ''}</p>
+                ${G.sonAnket ? '<div class="gk2-sat"><button class="ikincil" data-gkgit="anket">Sonuçları gör</button></div>' : ''}</div>`; })()}`;
         }
         $('#icerik').innerHTML = `<div class="kart gk2-bas"><div class="ust" style="align-items:flex-start"><div><h2 style="margin:0">Gezi Kaydı</h2><div class="soluk kucuk">İlan → Kayıt → Ödeme → Belgeler → Otobüs → Gezi günü</div></div><span id="gzDurum" class="soluk kucuk" style="margin-left:auto">${esc(durum)}</span></div>
             <div class="gk2-geziler">${GL.map(x => `<button class="${x.a === GZ_ANAH ? 'secili' : ''}" data-gksec="${esc(x.a)}">${esc(x.ad || 'Gezi')}</button>`).join('')}<button data-gkyeni="1">+ Yeni gezi</button></div>
@@ -4451,7 +4483,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const R = $('#icerik');
         R.querySelectorAll('[data-gkadim]').forEach(b => b.onclick = () => { adim = b.dataset.gkadim; acikAn = ekAn = null; if (adim === 'otobus' || adim === 'gun') { ciz_(); return; } ciz_(); });
         R.querySelectorAll('[data-gksec]').forEach(b => b.onclick = () => { try { localStorage.setItem('gezi_sec:' + D.eposta, b.dataset.gksec); } catch (e) {} geziBolumu('kayit'); });
-        R.querySelectorAll('[data-gkgit]').forEach(b => b.onclick = () => ac('gezi'));
+        R.querySelectorAll('[data-gkgit]').forEach(b => b.onclick = () => ac(b.dataset.gkgit));
+        if ($('#gkAnket')) $('#gkAnket').onchange = async ev => { G.sonAnketKapali = !ev.target.checked; G.sonAnketImza = '';
+          if (G.sonAnketKapali && G.sonAnket) { const a = (D.anketler || []).find(x => x.id === G.sonAnket); const { error } = await sb.rpc('umal_anket_kaydet', { p_id: G.sonAnket, p_bolum: 'anket', p_durum: 'taslak', p_tanim: JSON.stringify(Object.assign({}, a ? a.tanim : { id: G.sonAnket, ad: (G.ad || 'Gezi') + ' · Değerlendirme', sorular: GZ_ANKET_SORU(), kimler: 'ogrenci', kanal: 'web' })) }); if (error) uyar('Anket kapatılamadı: ' + hataYaz(error)); }
+          kay(); ciz_(); };
         const yeni = R.querySelector('[data-gkyeni]'); if (yeni) yeni.onclick = async () => { const ad_ = await girdiAl('Yeni gezinin adı (ör. Kapadokya Gezisi)', ''); const ad = String(ad_ || '').replace(/\s+/g, ' ').trim(); if (!ad) return;
           const a = 'gezi_otobus:' + Date.now().toString(36); GL.push({ a, ad: baslik(ad), tema: /çanakkale/i.test(ad) ? 'canakkale' : 'genel' });
           const yeniG = { ad: baslik(ad), tarih: '', saat: '', kalkis: 'Okul Önü', guzergah: '', anket: '', otobusler: [1, 2, 3, 4, 5, 6].map(i => ({ id: 'o' + i, no: i, kapasite: 42, plaka: '', sofor: '', tel: '' })), gorevli: [], ekOgr: [], cikar: [], cins: {}, yer: {}, ilan: { acik: false, program: [] } };
@@ -4504,6 +4539,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     if (bskKatil()) kaydet();   // K-716bq: önceden seçilmiş başkanlar da kayda alınır
     if (mod === 'kayit') gkSurec(); else ciz();
+    setTimeout(() => gzAnketSenk().catch(() => {}), 2000);   // K-716bu
   }
   const MENU_IK_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="2.200"/><path d="M3.800 10.500l6 1M20.200 10.500l-6 1M12 14.200V20.500"/></svg>';
   const BL_ABIDE = '<svg class="bl-abide" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 86h100"/><path d="M22 86V78h76v8"/><path d="M34 78V26M48 78V26M72 78V26M86 78V26"/><path d="M28 26h64v-9H28z" fill="currentColor" fill-opacity=".25"/><path d="M60 17V6"/><path d="M60 6c6 0 9 2 14 2v7c-5 0-8-2-14-2" fill="currentColor" fill-opacity=".9" stroke="none"/></svg>';
