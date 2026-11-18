@@ -4440,7 +4440,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
               ${acikAn === p.an ? (() => { const b = p; return `<div class="gk2-panel altin"><b>${esc(baslik(p.ad))} · ödeme alındı — eksik bilgileri şimdi gir</b>
                 <div class="gk2-uc"><label>T.C. kimlik no<input id="gkTc" inputmode="numeric" maxlength="11" value="${esc(b.tc || '')}" placeholder="11 hane"></label><label>Doğum tarihi<input id="gkDg" value="${esc(b.dogum || '')}" placeholder="gg.aa.yyyy"></label><label>Veli telefonu<input id="gkTl" inputmode="tel" value="${esc(b.tel || '')}" placeholder="05__ ___ __ __"></label></div>
                 <div class="gk2-sat"><label class="gk2-kutu"><input type="checkbox" id="gkIz" ${G.izin[p.an] ? 'checked' : ''}> Veli izin belgesi teslim alındı</label><button class="bag" id="gkOdeVaz">Vazgeç</button><button class="gk2-bt al" id="gkOdeKay">Kaydet · kesin kayıt</button></div></div>`; })() : ''}`; };
-          govde = `<button class="birincil gk2-kaydet" id="gkKaydetAc">${KY_IK.ekle}Öğrenciyi geziye kaydet</button><div class="gk2-sayac gk2-say"><div class="gk2-sy"><b>${L.length}</b><span>Başvuran</span></div><div class="gk2-sy y"><b>${say.kesin}</b><span>${G.ucretsiz ? 'Kayıtlı (ücretsiz)' : 'Kesin kayıt (ödedi)'}</span></div><div class="gk2-sy s"><b>${say.ek}</b><span>Ek süre verildi</span></div><div class="gk2-sy k"><b>${say.bek + say.doldu}</b><span>${say.doldu ? say.doldu + ' süresi doldu' : 'Ödeme bekliyor'}</span></div></div>
+          govde = `<button class="birincil gk2-kaydet" id="gkKaydetAc">${KY_IK.ekle}Geziye kaydet · öğrenci, öğretmen</button><div class="gk2-sayac gk2-say"><div class="gk2-sy"><b>${L.length}</b><span>Başvuran</span></div><div class="gk2-sy y"><b>${say.kesin}</b><span>${G.ucretsiz ? 'Kayıtlı (ücretsiz)' : 'Kesin kayıt (ödedi)'}</span></div><div class="gk2-sy s"><b>${say.ek}</b><span>Ek süre verildi</span></div><div class="gk2-sy k"><b>${say.bek + say.doldu}</b><span>${say.doldu ? say.doldu + ' süresi doldu' : 'Ödeme bekliyor'}</span></div></div>
             <div class="kart"><div class="gk2-ust"><div class="ky-suz">${[['', 'Hepsi · ' + L.length], ['bek', 'Ödeme bekliyor · ' + say.bek], ['ek', 'Ek süre · ' + say.ek], ['doldu', 'Süresi doldu · ' + say.doldu], ['kesin', 'Kesin kayıt · ' + say.kesin], ['eksik', 'Bilgi eksik · ' + L.filter(p => gzEksik(p).length).length]].filter(x => !G.ucretsiz || ['', 'kesin', 'eksik'].includes(x[0])).map(([v, t]) => `<button class="${suz === v ? 'secili' : ''}" data-gksuz="${v}">${t}</button>`).join('')}</div></div>
               <div class="gk2-ara tek"><input id="gkAra" placeholder="Listede ara: ad, sınıf, no" value="${esc(araq)}" autocomplete="off"></div>
               <div class="gk2-liste">${F.map(satir).join('') || '<p class="soluk">Bu süzgeçte öğrenci yok.</p>'}</div>
@@ -4524,25 +4524,45 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (tur === 'hepsi') { const logo = new URL('okul-logo.png', location.href).href, sb_ = '<div style="page-break-after:always"></div>';
           belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Gezi dosyası</title><style>${RAPOR_CSS}${IZIN_CSS}</style></head><body>${ustYaziHtml()}${sb_}${planHtml().replace(/__LOGO__/g, logo)}${sb_}${listeHtml().replace(/__LOGO__/g, logo)}${K.length ? sb_ + izinBelgesi(K) : ''}</body></html>`, (G.ad || 'Gezi') + ' - gezi dosyası'); }
       };
-      const kayitPenceresi = (q = '', mesaj = '') => {   // K-716bx: öğrenciyi geziye kaydet — ad/numara/sınıf ile ara, dokun, kaydet
+      let kpTur = 'ogr';   // K-716cb: kayıt penceresi — öğrenci | öğretmen · görevli
+      const kayitPenceresi = async (q = '', mesaj = '') => {   // K-716bx: öğrenciyi geziye kaydet — ad/numara/sınıf ile ara, dokun, kaydet
+        if (kpTur === 'ogt') await programYukle().catch(() => {});
         const K = +G.kontenjan || 0, dolu = () => kisiler().size;
         const ara = v => { const t = v.trim().toLocaleLowerCase(tr); if (!t) return []; const no = /^\d+$/.test(t);
           return gzOgr().filter(o => no ? String(o.no).startsWith(t) : (o.ad + ' ' + o.sinif).toLocaleLowerCase(tr).includes(t)).slice(0, 12); };
-        const ciz = () => { const L = ara(q);
-          pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">Öğrenciyi geziye kaydet</h2><div class="soluk kucuk">${esc(G.ad || 'Gezi')} · ${dolu()}${K ? ' / ' + K : ''} kişi kayıtlı${K && dolu() >= K ? ' · <b style="color:#e8c66b">kontenjan dolu, yeni kayıt yedeğe alınır</b>' : ''}</div>
-            ${mesaj ? `<div class="gk2-not" style="margin-top:10px">${mesaj}</div>` : ''}
-            <input id="gkKpAra" class="gk2-kp-ara" placeholder="Ad soyad, numara ya da sınıf yaz" value="${esc(q)}" autocomplete="off">
-            <div class="gk2-kp-liste">${!q.trim() ? '<p class="soluk kucuk">Yazmaya başlayın; öğrenciler burada listelenir.</p>' : L.length ? L.map(o => { const an = 'o:' + o.sinif + ':' + o.no, var_ = kisiler().has(an), k = G.kayit[an];
-              return `<button class="gk2-kp-s ${var_ ? 'var' : ''}" data-kp="${esc(an)}" ${var_ ? 'disabled' : ''}><span><b>${esc(baslik(o.ad))}</b><small>${esc(o.sinif)} · ${esc(o.no)}${k && k.d === 'y' ? ' · yedekte' : k && k.d === 'v' ? ' · daha önce vazgeçti' : ''}</small></span><em>${var_ ? 'Kayıtlı' : 'Kaydet'}</em></button>`; }).join('') : '<p class="soluk kucuk">Bu aramayla öğrenci bulunamadı.</p>'}</div></div>`);
+        const araOgt = v => { const t = gzAdK(v); return t ? ogretmenListesi().filter(a => gzAdK(a).includes(t)).slice(0, 10) : []; };
+        const gorevliVar = ad => G.gorevli.some(x => gzAdK(x.ad) === gzAdK(ad));
+        const ciz = () => {
+          const ust = `<div class="gk2-kp-tur"><button class="${kpTur === 'ogr' ? 'secili' : ''}" data-kpt="ogr">Öğrenci</button><button class="${kpTur === 'ogt' ? 'secili' : ''}" data-kpt="ogt">Öğretmen · görevli</button></div>`;
+          let liste = '';
+          if (kpTur === 'ogr') { const L = ara(q);
+            liste = !q.trim() ? '<p class="soluk kucuk">Yazmaya başlayın; öğrenciler burada listelenir.</p>' : L.length ? L.map(o => { const an = 'o:' + o.sinif + ':' + o.no, var_ = kisiler().has(an), k = G.kayit[an];
+              return `<button class="gk2-kp-s ${var_ ? 'var' : ''}" data-kp="${esc(an)}" ${var_ ? 'disabled' : ''}><span><b>${esc(baslik(o.ad))}</b><small>${esc(o.sinif)} · ${esc(o.no)}${k && k.d === 'y' ? ' · yedekte' : k && k.d === 'v' ? ' · daha önce vazgeçti' : ''}</small></span><em>${var_ ? 'Kayıtlı' : 'Kaydet'}</em></button>`; }).join('') : '<p class="soluk kucuk">Bu aramayla öğrenci bulunamadı.</p>';
+          } else { const L = araOgt(q), ad_ = baslik(q.replace(/\s+/g, ' ').trim());
+            liste = `${G.gorevli.length ? `<div class="gk2-kp-kayitli">${G.gorevli.map(g => `<span>${esc(baslik(g.ad))}<small>${esc(GZ_TUR[g.tur] || 'Görevli')}</small><button class="bag" data-kpsil="${esc(g.id)}" aria-label="Çıkar">×</button></span>`).join('')}</div>` : ''}
+              ${L.map(a => `<button class="gk2-kp-s ${gorevliVar(a) ? 'var' : ''}" data-kpo="${esc(a)}" ${gorevliVar(a) ? 'disabled' : ''}><span><b>${esc(baslik(a))}</b><small>Öğretmen</small></span><em>${gorevliVar(a) ? 'Kayıtlı' : 'Kaydet'}</em></button>`).join('')}
+              ${ad_.length > 2 && !L.some(a => gzAdK(a) === gzAdK(ad_)) && !gorevliVar(ad_) ? `<div class="gk2-kp-yeni"><b>${esc(ad_)}</b><select id="gkKpTur">${Object.entries(GZ_TUR).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select><input id="gkKpTel" placeholder="Telefon (isteğe bağlı)" inputmode="tel" value="05"><button class="gk2-bt al" id="gkKpYeni">Kaydet</button></div>` : ''}
+              ${!q.trim() ? '<p class="soluk kucuk">Öğretmenin adını yazın. Belediye görevlisi ya da rehber gibi listede olmayan biriyse adını yazıp türünü seçin.</p>' : ''}`;
+          }
+          pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">Geziye kaydet</h2><div class="soluk kucuk">${esc(G.ad || 'Gezi')} · ${dolu()}${K ? ' / ' + K : ''} kişi kayıtlı${K && dolu() >= K ? ' · <b style="color:#e8c66b">kontenjan dolu, yeni öğrenci yedeğe alınır</b>' : ''}</div>
+            ${ust}${mesaj ? `<div class="gk2-not" style="margin-top:10px">${mesaj}</div>` : ''}
+            <input id="gkKpAra" class="gk2-kp-ara" placeholder="${kpTur === 'ogr' ? 'Ad soyad, numara ya da sınıf yaz' : 'Öğretmenin ya da görevlinin adı'}" value="${esc(q)}" autocomplete="off">
+            <div class="gk2-kp-liste">${liste}</div></div>`);
           const g = $('#gkKpAra'); g.focus(); g.setSelectionRange(g.value.length, g.value.length);
           g.oninput = () => { q = g.value; mesaj = ''; ciz(); };
+          $('#pencere').querySelectorAll('[data-kpt]').forEach(b => b.onclick = () => { kpTur = b.dataset.kpt; kayitPenceresi('', ''); });
+          const ogtKaydet = (ad, tur, tel) => { G.gorevli.push({ id: Date.now().toString(36), ad: baslik(ad), tur: tur || 'ogt', tel: tel && tel.length > 4 ? tel : '' }); kay(); ciz_(); kayitPenceresi('', `<b>${esc(baslik(ad))}</b> (${esc(GZ_TUR[tur] || 'Öğretmen')}) geziye kaydedildi.`); };
+          $('#pencere').querySelectorAll('[data-kpo]').forEach(b => b.onclick = () => ogtKaydet(b.dataset.kpo, 'ogt', ''));
+          if ($('#gkKpYeni')) $('#gkKpYeni').onclick = () => ogtKaydet(q.replace(/\s+/g, ' ').trim(), $('#gkKpTur').value, gzTel($('#gkKpTel').value));
+          $('#pencere').querySelectorAll('[data-kpsil]').forEach(b => b.onclick = async () => { const x = G.gorevli.find(y => y.id === b.dataset.kpsil); if (!x || !await onayla(`${baslik(x.ad)} geziden çıkarılsın mı?`)) { kayitPenceresi(q); return; }
+            G.gorevli = G.gorevli.filter(y => y.id !== x.id); delete G.yer['g:' + x.id]; if (G.kafile === 'g:' + x.id) delete G.kafile; kay(); ciz_(); kayitPenceresi(q, `${esc(baslik(x.ad))} çıkarıldı.`); });
           $('#pencere').querySelectorAll('[data-kp]').forEach(b => b.onclick = async () => { const an = b.dataset.kp, o = gzOgr().find(x => 'o:' + x.sinif + ':' + x.no === an); if (!o) return;
             const yedek = K && dolu() >= K; if (yedek && !await onayla(`Kontenjan dolu (${dolu()} / ${K}). ${baslik(o.ad)} yedek listesine alınsın mı?`)) { kayitPenceresi(q); return; }
             if (!G.ekOgr.some(x => String(x.no) === String(o.no) && x.sinif === o.sinif)) G.ekOgr.push({ no: String(o.no), ad: o.ad, sinif: o.sinif });
             G.cikar = G.cikar.filter(x => x !== an); G.kayit[an] = Object.assign({}, G.kayit[an], { d: yedek ? 'y' : 'k', z: Date.now(), kim: 'panel' }); delete (G.kayit[an] || {}).vz;
             kay(); suz = ''; ciz_();
             kayitPenceresi('', yedek ? `${esc(baslik(o.ad))} (${esc(o.sinif)}) yedek listesine alındı.` : `<b>${esc(baslik(o.ad))}</b> (${esc(o.sinif)} · ${esc(o.no)}) geziye kaydedildi.${G.ucretsiz ? '' : ` <button class="gk2-bt al" id="gkKpOde">Ödemesini şimdi al</button>`}`);
-            if ($('#gkKpOde')) $('#gkKpOde').onclick = () => { $('#pencere').classList.add('gizli'); acikAn = an; ekAn = null; suz = ''; araq = ''; ciz_(); const e = document.querySelector('.gk2-panel.altin'); if (e) e.scrollIntoView({ block: 'center' }); }; }); };
+            setTimeout(() => { if ($('#gkKpOde')) $('#gkKpOde').onclick = () => { $('#pencere').classList.add('gizli'); acikAn = an; ekAn = null; suz = ''; araq = ''; ciz_(); const e = document.querySelector('.gk2-panel.altin'); if (e) e.scrollIntoView({ block: 'center' }); }; }, 0); }); };
         ciz(); };
       const bagla = () => {
         const R = $('#icerik');
@@ -4576,7 +4596,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         // Kayıt · ödeme
         R.querySelectorAll('[data-gksuz]').forEach(b => b.onclick = () => { suz = b.dataset.gksuz; ciz_(); });
         if ($('#gkAra')) $('#gkAra').oninput = ev => { araq = ev.target.value.trim().toLocaleLowerCase(tr); const p = ev.target.selectionStart; ciz_(); const e = $('#gkAra'); e.focus(); e.setSelectionRange(p, p); };
-        if ($('#gkKaydetAc')) $('#gkKaydetAc').onclick = () => kayitPenceresi();
+        if ($('#gkKaydetAc')) $('#gkKaydetAc').onclick = () => { kpTur = 'ogr'; kayitPenceresi(); };
         if ($('#gkNo')) $('#gkNo').onkeydown = ev => { if (ev.key !== 'Enter') return; const v = ev.target.value.trim(), o = gzOgr().find(x => String(x.no) === v); if (!o) { uyar('Bu numarada öğrenci bulunamadı.'); return; }
           const an = 'o:' + o.sinif + ':' + o.no; if (kisiler().has(an)) { uyar(`${baslik(o.ad)} zaten kayıtlı.`); return; }
           if (!G.ekOgr.some(x => String(x.no) === String(o.no) && x.sinif === o.sinif)) G.ekOgr.push({ no: String(o.no), ad: o.ad, sinif: o.sinif });
