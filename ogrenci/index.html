@@ -80,7 +80,7 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .izg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; } .izg button { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; padding: 14px; color: #fff; text-align: left; position: relative; cursor: pointer; }
 .izg button:disabled { opacity: .5; cursor: default; } .izg b { font-size: 15px; } .izg small { color: var(--soluk); font-size: 12px; }
 .izg .ik { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 24px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
-.zarf { position: absolute; top: 10px; right: 10px; width: 34px; height: 28px; border-radius: 9px; background: #ff9a3a; display: grid; place-items: center; box-shadow: 0 0 14px rgba(255,154,58,.9); animation: zarfYan 1.4s ease-in-out infinite; }
+.zarf { position: absolute; top: 10px; right: 10px; width: 34px; height: 28px; border-radius: 9px; background: #ff9a3a; display: grid; place-items: center; box-shadow: 0 0 14px rgba(255,154,58,.9);  }
 /* K-549: yeni anket etiketi (mektup işaretinin yerinde) */
 .zarf.etiket { width: auto; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 800; color: #1a0d00; white-space: nowrap; }
 @keyframes zarfYan { 50% { opacity: .45; box-shadow: 0 0 2px rgba(255,154,58,.3); } }
@@ -105,21 +105,10 @@ input:focus, textarea:focus { outline: 2px solid var(--neon); outline-offset: -1
 .selam h2 { margin: 0; font-size: 25px; line-height: 1.2; } .selam .hv { font-size: 13.5px; color: var(--soluk); margin-top: 3px; }
 .selam .sz { grid-column: 1 / -1; font-size: 15px; line-height: 1.45; margin-top: 6px; color: #e8f4ff; }
 .selam .hi { width: 62px; height: 62px; grid-row: 1 / 3; grid-column: 2; color: var(--s3, #ffd166); } .selam .hi svg { width: 100%; height: 100%; }
-.selam { position: relative; border-color: transparent; }
-.selam .halka { position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; background: conic-gradient(from var(--psA, 0deg), #22e8ff, #b06bff, #3ef08a, #22e8ff, #0b4f6c, #22e8ff);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 6s linear infinite; }
-@property --psA { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-@keyframes psCerceve { to { --psA: 360deg; } }
-@media (prefers-reduced-motion: reduce) { .selam .halka { animation: none; } }
-.izg button { border-color: transparent; }
-.izg button::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
-  background: conic-gradient(from var(--psA, 0deg), #22e8ff, #b06bff, rgba(34,232,255,.15), #3ef08a, rgba(176,107,255,.15), #22e8ff);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: psCerceve 7s linear infinite; }
-.izg button:nth-child(2n)::after { animation-delay: -2.3s; } .izg button:nth-child(3n)::after { animation-delay: -4.6s; }
-.izg button:disabled::after { animation: none; opacity: .4; }
-@media (prefers-reduced-motion: reduce) { .izg button::after { animation: none; } }
+/* K-716bw: öğrenci ekranı akıcı olsun — dönen çerçeveler ve sürekli animasyonlar kaldırıldı */
+.selam { position: relative; border-color: rgba(34,232,255,.35); } .selam .halka { display: none; }
 .gz-ara { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: #fff; background: linear-gradient(150deg, rgba(62,240,138,.18), rgba(18,33,58,.9)); border: 1.5px solid rgba(62,240,138,.6); box-shadow: 0 0 18px rgba(62,240,138,.25); }
-.gz-ara i { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #3ef08a; color: #06121f; animation: gzAra 1.8s ease-in-out infinite; } .gz-ara i svg { width: 24px; height: 24px; }
+.gz-ara i { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #3ef08a; color: #06121f;  } .gz-ara i svg { width: 24px; height: 24px; }
 .gz-ara span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .gz-ara small { color: #b9f7d2; font-size: 12px; } .gz-ara b { font-size: 16px; } .gz-ara em { font-style: normal; font-size: 18px; font-weight: 700; color: #3ef08a; letter-spacing: .5px; }
 @keyframes gzAra { 0%, 100% { box-shadow: 0 0 0 0 rgba(62,240,138,.6); } 50% { box-shadow: 0 0 0 10px rgba(62,240,138,0); } }
 .gzt { position: relative; margin: 0 0 16px; border-radius: 18px; overflow: hidden; background: #fff; color: #111; box-shadow: 0 14px 40px rgba(0,0,0,.45); font-family: Inter, -apple-system, 'Segoe UI', Arial, sans-serif; }
@@ -305,7 +294,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gz-lej i { width: 14px; height: 12px; border-radius: 3px; border: 1px solid #ffffff2a; background: rgba(127,246,255,.06); } .gz-lej .l-cam { box-shadow: inset 3px 0 0 #7fdcff; } .gz-lej .l-kapi { border-style: dashed; border-color: #e8c66b77; background: repeating-linear-gradient(45deg, #e8c66b22 0 3px, transparent 3px 6px); }
 .izg button.genis.gz-ana { position: relative; }
 /* K-716bx: gezi bilgilerim */
-.izg button.genis.gb-uyari { position: relative; display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px; border-radius: 18px; border: 1.5px solid #ff3b47; background: linear-gradient(150deg, rgba(255,59,71,.22), rgba(60,10,20,.6)); box-shadow: 0 0 22px rgba(255,59,71,.35); animation: gbNabiz 2.2s ease-in-out infinite; }
+.izg button.genis.gb-uyari { position: relative; display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px; border-radius: 18px; border: 1.5px solid #ff3b47; background: linear-gradient(150deg, rgba(255,59,71,.22), rgba(60,10,20,.6)); box-shadow: 0 0 22px rgba(255,59,71,.35); }
 .gb-uyari .gb-u-ik { width: 44px; height: 44px; flex: none; border-radius: 13px; display: grid; place-items: center; background: #ff3b47; color: #fff; box-shadow: 0 0 16px rgba(255,59,71,.7); } .gb-uyari .gb-u-ik svg { width: 24px; height: 24px; }
 .gb-uyari span { flex: 1; min-width: 0; } .gb-uyari b { display: block; font-size: 15px; color: #fff; } .gb-uyari small { display: block; margin-top: 2px; font-size: 12.5px; color: #ffc2c6; line-height: 1.35; }
 .gb-uyari em { font-style: normal; font-weight: 700; font-size: 13px; color: #fff; background: #ff3b47; padding: 8px 12px; border-radius: 12px; white-space: nowrap; }
