@@ -118,7 +118,7 @@
   // yeni gelenleri bul: ilk yüklemede yalnız öğrenilir (ses yok), sonraki yoklamalarda listede olmayan okunmamış kayıt varsa bir kez çalar
   function sesDenetle() {
     if (!S.kod) return;
-    const simdi_ = new Set([...RH.mesajlar.filter(m => !m.okundu).map(m => 'm' + m.id), ...DY.L.filter(d => !d.okundu).map(d => 'd' + d.id), ...RV.L.filter(x => x.yeni && x.durum !== 'talep').map(x => 'r' + x.id + x.durum), ...noYeni().map(n => 'n' + noAnahtar(n))]);
+    const simdi_ = new Set([...RH.mesajlar.filter(m => !m.okundu).map(m => 'm' + m.id), ...DY.L.filter(d => !d.okundu).map(d => 'd' + d.id), ...RV.L.filter(x => x.yeni && x.durum !== 'talep').map(x => 'r' + x.id + x.durum), ...noYeni().map(n => 'n' + noAnahtar(n)), ...(GZ.I || []).filter(ilGorulmedi).map(d => 'i' + d.anahtar), ...(GZ.I || []).filter(d => ilUyari(d)).map(d => 'u' + d.anahtar + ilUyari(d))]);
     if (SES.bilinen && [...simdi_].some(k => !SES.bilinen.has(k))) sesCal('yeni');
     SES.bilinen = SES.bilinen ? new Set([...SES.bilinen, ...simdi_]) : simdi_;
   }
@@ -394,9 +394,14 @@
   const IL_DUR = { yok: 'Katılmak için dokun', basvurdu: 'Başvurun alındı · ödeme bekleniyor', odedi: 'Kaydın kesin', yedek: 'Yedek listedesin', vazgecti: 'Vazgeçtin' };
   const IL_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16" /><path d="M5.5 19.5V9.8L12 5l6.5 4.8v9.7" fill="currentColor" fill-opacity=".2"/><path d="M9.5 19.5v-5h5v5"/><path d="M12 2.5v2.5"/></svg>';
   const ilGoster = d => d.durum !== 'odedi' || !(GZ.L || []).some(x => x.anahtar === d.anahtar && x.koltuk);
-  function ilKutu() { return (GZ.I || []).map((d, i) => !ilGoster(d) || (d.durum === 'vazgecti' && !d.kayitAcik) || (d.durum === 'yok' && !d.kayitAcik) ? '' : `<button data-git="ilan" data-il="${i}" class="genis no-ana il-ana ${d.durum === 'yok' ? 'yeni' : ''}"><i class="ik" style="--c:#e8c66b">${IL_IK}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${d.tarih ? esc(gzTarih(d.tarih)) + ' · ' : ''}${esc(d.durum === 'basvurdu' && d.ekSure ? 'Ödeme için ek süren: ' + gzTarih(d.ekSure) : IL_DUR[d.durum] || '')}</small></span>${d.durum === 'yok' ? '<em class="il-yeni">Yeni gezi</em>' : ''}</button>`).join(''); }
+  const ilGun = iso => { if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return null; const t = new Date(); t.setHours(12, 0, 0, 0); return Math.round((new Date(iso + 'T12:00:00') - t) / 864e5); };
+  const ilAnah = d => 'ilan:' + d.anahtar + ':' + S.no;
+  const ilGorulmedi = d => { try { return d.durum === 'yok' && localStorage.getItem(ilAnah(d)) !== '1'; } catch (e) { return false; } };
+  const ilUyari = d => { if (d.durum !== 'basvurdu' || !d.ucret) return ''; const k = ilGun(d.ekSure || d.sonOdeme); return k == null || k > 2 ? '' : k < 0 ? 'Ödeme süren doldu; öğretmenle konuş' : k === 0 ? 'Bugün son ödeme günü!' : `Son ödemeye ${k} gün kaldı`; };
+  function ilKutu() { return (GZ.I || []).map((d, i) => { if (!ilGoster(d) || (d.durum === 'vazgecti' && !d.kayitAcik) || (d.durum === 'yok' && !d.kayitAcik)) return ''; const u = ilUyari(d), yeni = ilGorulmedi(d);   // K-716cc: yeni ilan zarfı, ödeme günü yaklaşınca uyarı
+    return `<button data-git="ilan" data-il="${i}" class="genis no-ana il-ana ${yeni ? 'yeni' : ''} ${u ? 'il-acil' : ''}">${yeni ? ZARF : ''}<i class="ik" style="--c:${u ? '#ff9a3a' : '#e8c66b'}">${IL_IK}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${d.tarih ? esc(gzTarih(d.tarih)) + ' · ' : ''}${esc(u || (d.durum === 'basvurdu' && d.ekSure ? 'Ödeme için ek süren: ' + gzTarih(d.ekSure) : IL_DUR[d.durum] || ''))}</small></span>${d.durum === 'yok' ? '<em class="il-yeni">Yeni gezi</em>' : ''}</button>`; }).join(''); }
   let IL = { i: 0, mesaj: '', tur: '' };
-  function ilAc(i) { IL = { i: i || 0, mesaj: '', tur: '' }; ilCiz(); goster('s-ilan'); window.scrollTo(0, 0); }
+  function ilAc(i) { IL = { i: i || 0, mesaj: '', tur: '' }; const d = (GZ.I || [])[IL.i]; if (d) { try { localStorage.setItem(ilAnah(d), '1'); } catch (e) {} } ilCiz(); goster('s-ilan'); window.scrollTo(0, 0); }
   function ilCiz() {
     const d = (GZ.I || [])[IL.i], el = $('#ilIc'); if (!el) return;
     if (!d) { el.innerHTML = '<div class="kart soluk">Bu gezinin ilanı kapandı.</div>'; return; }
