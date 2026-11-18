@@ -29,6 +29,7 @@
     P = data.veri && data.veri.dersler ? data.veri : bosProje();
     P.ogretmen = P.ogretmen || {}; P.sinif = P.sinif || {}; P.sablon = P.sablon && P.sablon.length ? P.sablon : JSON.parse(JSON.stringify(SABLON0)); P.sinifSablon = P.sinifSablon || {};
     [...new Set(P.dersler.map(d => d.sinif))].forEach(s => { if (!P.sinifSablon[s]) { const t = sablonBul(s); if (t) P.sinifSablon[s] = t.id; } }); P.ayar = Object.assign({ yakin: false, sure: 180, ayniGunMax: 1, bosluk: 40, herkesBosGun: true, gunMax: 6, nobetEnCok: 99 }, P.ayar || {}); kadroHazirla(); if (!P.nobetKaynak) nobetUygula('okul');
+    if (!P.dersSaatKapali) { P.dersSaatKapali = {}; ['Beden Eğitimi', 'Spor Eğitimi'].forEach(x => { if (P.dersler.some(z => z.ders === x)) P.dersSaatKapali[x] = [1, 2]; }); }   // bu yılki programda beden eğitimi hiç ilk iki saatte değil
   }
   function kaydet(hemen) {
     clearTimeout(KAYIT_Z); const yap = async () => { const { data, error } = await X.sb.rpc('umal_dp_yaz', { p_anahtar: 'proje', p_veri: P }); if (error || !data || !data.ok) X.uyar('Kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); };
@@ -329,9 +330,9 @@
     const bil = d => { const L = P.dersler.filter(x => x.ders === d); return { n: L.length, s: L.reduce((a, x) => a + (+x.saat || 0), 0), b: L.length && L.every(x => +x.blok === 1) ? 1 : 2 }; };
     E_(`<div class="kart"><div class="dp-bas"><b>Dersler</b><span class="soluk kucuk">${adlar.length} ders · kısaltma çarşaf listede, branş öğretmene ders atamada kullanılır</span><button class="birincil kucuk" id="dpDYeni">+ Ders ekle</button></div>
       <input class="dp-in" id="dpDAra" placeholder="Ders ara" style="margin-bottom:8px">
-      <div class="dp-tbl dp-dtbl"><div class="dp-tr bas"><span>Ders</span><span>Kısaltma</span><span>Branş</span><span>Yerleşim</span><span>Sınıf</span><span>Saat</span></div>
+      <div class="dp-tbl dp-dtbl"><div class="dp-tr bas"><span>Ders</span><span>Kısaltma</span><span>Branş</span><span>Yerleşim</span><span>Olmasın</span><span>Sınıf</span><span>Saat</span></div>
       ${adlar.map(d => { const b = bil(d); return `<div class="dp-tr" data-dad="${esc(d)}"><span><input class="dp-in" value="${esc(d)}" data-df="ad"></span><span><input class="dp-in" value="${esc(KM[d])}" data-df="kisa" maxlength="5" style="width:70px"></span>
-        <span><input class="dp-in" value="${esc(dersBrans(d))}" data-df="brans" list="dpBrL2"></span><span class="dp-blok">${[1, 2].map(x => `<button class="${b.b === x ? 'secili' : ''}" data-df="blok" data-v="${x}">${x === 1 ? 'Tek' : 'İkili'}</button>`).join('')}</span><span>${b.n}</span><span>${b.s}</span></div>`; }).join('')}</div>
+        <span><input class="dp-in" value="${esc(dersBrans(d))}" data-df="brans" list="dpBrL2"></span><span class="dp-blok">${[1, 2].map(x => `<button class="${b.b === x ? 'secili' : ''}" data-df="blok" data-v="${x}">${x === 1 ? 'Tek' : 'İkili'}</button>`).join('')}</span><span><button class="ikincil kucuk dp-dk" data-df="kapali">${(P.dersSaatKapali[d] || []).length ? (P.dersSaatKapali[d] || []).sort((a, c) => a - c).join(', ') + '. saat' : '—'}</button></span><span>${b.n}</span><span>${b.s}</span></div>`; }).join('')}</div>
       <datalist id="dpBrL2">${branslar().map(b => `<option value="${esc(b)}">`).join('')}</datalist>
       <div class="soluk kucuk" style="margin-top:8px">İkili: haftalık saat iki saatlik bloklarla yerleşir (1-2, 3-4, 5-6, 7-8; tek saat kalırsa tek). Tek: her saat ayrı yerleşebilir. Bir sınıfa ders eklemek için Sınıfa ders atama sekmesi.</div></div>`);
     const E = $('#dpIc');
@@ -342,7 +343,11 @@
         if (f === 'ad' && v && v !== d) { P.dersler.forEach(x => { if (x.ders === d) x.ders = v; }); P.sablon.forEach(t => t.dersler.forEach(x => { if (x.ders === d) x.ders = v; }));
           if (P.dersBrans[d]) { P.dersBrans[v] = P.dersBrans[d]; delete P.dersBrans[d]; } if (P.dersKisa[d]) { P.dersKisa[v] = P.dersKisa[d]; delete P.dersKisa[d]; } P.ekDers = (P.ekDers || []).map(x => x === d ? v : x); kaydet(); dersListCiz(); }
         else if (f === 'kisa') { P.dersKisa[d] = v.toLocaleUpperCase(tr); kaydet(); } else if (f === 'brans') { P.dersBrans[d] = v; kaydet(); } });
-      r.querySelectorAll('[data-df="blok"]').forEach(b => b.onclick = () => { P.dersler.forEach(x => { if (x.ders === d) x.blok = +b.dataset.v; }); kaydet(); dersListCiz(); }); });
+      r.querySelectorAll('[data-df="blok"]').forEach(b => b.onclick = () => { P.dersler.forEach(x => { if (x.ders === d) x.blok = +b.dataset.v; }); kaydet(); dersListCiz(); });
+      r.querySelector('[data-df="kapali"]').onclick = () => { const L = new Set(P.dersSaatKapali[d] || []), N = Math.max(...gunSaat());
+        X.pencereAc(`<h2 style="margin-top:0">${esc(d)}</h2><div class="soluk" style="margin-bottom:8px">Bu dersin konmayacağı saatler (bütün günler). Ör. beden eğitimi ilk iki saatte olmasın.</div><div class="dya-sec">${Array.from({ length: N }, (_, i) => `<button class="cip ${L.has(i + 1) ? 'secili' : ''}" data-dks="${i + 1}">${i + 1}. saat</button>`).join('')}</div><div class="dugmeler"><button class="birincil" id="dpDKOk" style="text-transform:none">Kaydet</button></div>`);
+        document.querySelectorAll('[data-dks]').forEach(x => x.onclick = () => { const n = +x.dataset.dks; if (L.has(n)) L.delete(n); else L.add(n); x.classList.toggle('secili', L.has(n)); });
+        $('#dpDKOk').onclick = () => { if (L.size) P.dersSaatKapali[d] = [...L]; else delete P.dersSaatKapali[d]; kaydet(); document.getElementById('pencere').classList.add('gizli'); dersListCiz(); }; }; });
   }
   const E_ = h => { $('#dpIc').innerHTML = h; };
   // ---------- 3. Öğretmenler (kadro)
@@ -395,8 +400,8 @@
       Object.keys(t.yer).forEach(x => { const [g, n] = x.split('-').map(Number); (gunler[g] = gunler[g] || []).push(n); });
       (k.kapali || []).forEach(x => { if (t.yer[x]) { const [g, n] = x.split('-'); hata.push(`${bas(o)}: ${GUN[g]} ${n}. derste müsait değil ama dersi var`); } });
       if (k.bosGun && k.bosGun.kesin && gunler[k.bosGun.gun]) hata.push(`${bas(o)}: kesin boş günü ${GUN[k.bosGun.gun]} dersi var`);
-      let bos = 0, mx = 0, ilk = 0, son = 0; Object.entries(gunler).forEach(([g, L]) => { const a = Math.min(...L), b = Math.max(...L); mx = Math.max(mx, L.length); if (+g !== ng) bos += b - a + 1 - L.length; if (a === 1) ilk++; if (b === gs[g]) son++; });
-      bosToplam += bos; R[o] = { saat: t.saat, gunSay: Object.keys(gunler).length, bosGun: GUN.filter((_, g) => !gunler[g] && g !== ng).length > 0 && Object.keys(gunler).length < gs.length, bos, mx, ilk, son, ng, gunler }; });
+      let bos = 0, mx = 0, ilk = 0, son = 0, kisa = 0; Object.entries(gunler).forEach(([g, L]) => { const a = Math.min(...L), b = Math.max(...L); mx = Math.max(mx, L.length); if (+g !== ng) { bos += b - a + 1 - L.length; if (L.length <= 2 && t.saat >= 8) kisa++; } if (a === 1) ilk++; if (b === gs[g]) son++; });
+      bosToplam += bos; R[o] = { saat: t.saat, gunSay: Object.keys(gunler).length, bosGun: GUN.filter((_, g) => !gunler[g] && g !== ng).length > 0 && Object.keys(gunler).length < gs.length, bos, mx, ilk, son, ng, gunler, kisa }; });
     return { hata: [...new Set(hata)], T: R, bosToplam };
   }
   // ---------- Ön kontrol: yerleştirmeden önce imkânsızı söyler
@@ -502,6 +507,9 @@
       <div class="dp-al"><b>Boş gün</b><div class="dya-sec">${cips('herkesBosGun', a.herkesBosGun, [[true, 'Her öğretmene bir boş gün'], [false, 'Gerekmez']])}</div><div class="soluk kucuk">Günü Atlas seçer. Kendi boş gününü isteyen öğretmene o gün verilir; nöbet günü boş gün olmaz.</div></div>
       <div class="dp-al"><b>Öğretmen bir günde en çok</b><div class="dya-sec">${cips('gunMax', a.gunMax, [[5, '5 ders'], [6, '6 ders'], [7, '7 ders'], [0, 'Sınır yok']])}</div></div>
       <div class="dp-al"><b>Öğretmenlerin ders araları</b><div class="dya-sec">${cips('bosluk', a.bosluk, [[40, 'Boşluk olmasın'], [12, 'Az boşluk'], [1, 'Önemli değil']])}</div><div class="soluk kucuk">Nöbet günündeki boşluk sayılmaz; zorunlu boşluklar oraya toplanır.</div></div>
+      <div class="dp-al"><b>Öğretmen 1-2 ders için gelmesin</b><div class="dya-sec">${cips('kisaGun', a.kisaGun !== false, [[true, 'Evet'], [false, 'Önemli değil']])}</div><div class="soluk kucuk">Nöbet günü hariç; haftada 8 saatten az dersi olanlara uygulanmaz.</div></div>
+      <div class="dp-al"><b>Aynı dersin günleri art arda gelmesin</b><div class="dya-sec">${cips('ardisik', a.ardisik !== false, [[true, 'Evet'], [false, 'Önemli değil']])}</div><div class="soluk kucuk">Ör. iki günlük ders Pazartesi-Salı yerine Pazartesi-Perşembe.</div></div>
+      <div class="dp-al"><b>Zümrelere ortak boş saat</b><div class="dya-sec">${cips('zumre', !!a.zumre, [[true, 'Haftada bir'], [false, 'Gerekmez']])}</div><div class="soluk kucuk">3 ve daha çok öğretmeni olan branşların herkesinin okulda ve boş olduğu bir saat (zümre toplantısı için). Boş gün sayısını biraz azaltabilir.</div></div>
       <div class="dp-al"><b>Aynı ders bir günde</b><div class="dya-sec">${cips('ayniGunMax', a.ayniGunMax, [[1, 'En çok bir blok'], [2, 'İki blok olabilir']])}</div></div>
       <div class="dp-al"><b>Süre</b><div class="dya-sec">${cips('sure', a.sure, [[30, '30 sn'], [60, '1 dk'], [180, '3 dk'], [300, '5 dk']])}</div><div class="soluk kucuk">Gerçek program için 3-5 dk önerilir.</div></div>
       <button class="birincil dp-calis" id="dpCalis" ${engel ? 'disabled' : ''}>${engel ? `Önce ${engel} engeli giderin` : 'Programı yerleştir'}</button><div id="dpIlerle"></div></div><div id="dpSonuc"></div>`;
@@ -516,8 +524,9 @@
     if (P.ayar.nobetEnCok < 99) Object.values(og).forEach(k => { if (k && k.nobet && k.nobet.gun >= 0 && !(k.nobet.enCok < 99)) k.nobet.enCok = P.ayar.nobetEnCok; });
     const kd = kilitliDersler(), onar = P.ayar.yakin === 'onar';
     if (kd.atlanan) X.uyar(`${kd.atlanan} kilit artık derslerle uyuşmadığı için yok sayıldı.`);
-    const girdi = { gunSaat: gunSaat(), dersler: kd.dersler, ogretmen: og, sinif: P.sinif, mevcut: P.ayar.yakin ? (X.program() || {}).siniflar : null, ayar: Object.assign({}, P.ayar, { yakin: !!P.ayar.yakin, izgara: !P.ayar.yakin, yakinW: onar ? 60 : 1, tohum: (Date.now() & 0xffff) + 1 }, onar ? { herkesBosGun: false, bosluk: Math.min(+P.ayar.bosluk || 1, 12) } : {}) };   // onarım: yalnız gereken dersler oynar
-    let w; try { w = new Worker('dp-cozucu.js?v=202611182100'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
+    const ZB = P.ayar.zumre ? branslar().map(b => [b, ogretmenler().filter(o => (P.kadro[o] || {}).brans === b)]).filter(([, L]) => L.length >= 3) : [];
+    const girdi = { gunSaat: gunSaat(), dersler: kd.dersler, ogretmen: og, sinif: P.sinif, dersKapali: P.dersSaatKapali || {}, zumre: ZB.map(x => x[1]), zumreAd: ZB.map(x => x[0]), mevcut: P.ayar.yakin ? (X.program() || {}).siniflar : null, ayar: Object.assign({}, P.ayar, { yakin: !!P.ayar.yakin, izgara: !P.ayar.yakin, yakinW: onar ? 60 : 1, tohum: (Date.now() & 0xffff) + 1, ardW: P.ayar.ardisik !== false ? 6 : 0, kisaGunW: P.ayar.kisaGun !== false && !onar ? 15 : 0 }, onar ? { herkesBosGun: false, bosluk: Math.min(+P.ayar.bosluk || 1, 12) } : {}) };   // onarım: yalnız gereken dersler oynar
+    let w; try { w = new Worker('dp-cozucu.js?v=202611182130'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
     w.onmessage = ev => { const m = ev.data; if (m.ilerle) { const q = $('#dpIlerle i'); if (q) q.style.width = Math.round(m.ilerle.oran * 100) + '%'; const y = $('#dpIlY'); if (y) { const n = Math.floor(m.ilerle.ceza / 1000), kal = Math.max(0, Math.round(P.ayar.sure * (1 - m.ilerle.oran))); y.textContent = (n ? `Çakışmalar çözülüyor · ${n} çakışma kaldı` : 'Çakışma kalmadı · öğretmen istekleri iyileştiriliyor') + ` · yaklaşık ${kal} sn`; } return; }
       w.terminate(); b.disabled = false; b.textContent = 'Yeniden yerleştir'; $('#dpIlerle').innerHTML = '';
       if (m.hata) { X.uyar('Yerleştirilemedi: ' + m.hata); return; }
@@ -580,11 +589,12 @@
     const E = $('#dpSonuc'); if (!E || !SON) return; const r = SON.r, dg = SON.dg = degerlendir(SON.prog), yum = (r.ihlal || []).filter(x => !x.sert);
     if (!GOR.kim || (GOR.tur === 'sinif' && !SON.prog[GOR.kim])) GOR = { tur: 'sinif', kim: Object.keys(SON.prog).sort(sira)[0] };
     const T = Object.values(dg.T), bgsiz = Object.entries(dg.T).filter(([, t]) => !t.bosGun), bgD = GUN.map((_, g) => T.filter(t => !t.gunler[g] && t.ng !== g).length);
-    const istekIhl = SON.elle ? [] : yum.filter(x => ['tercih', 'bosgun', 'gunmax', 'nobet'].includes(x.tur)), boslT = T.filter(t => t.bos).length, mx = Math.max(0, ...T.map(t => t.mx)), DG = SON.dg.degisen = degisenler(SON.prog);
+    const istekIhl = SON.elle ? [] : yum.filter(x => ['tercih', 'bosgun', 'gunmax', 'nobet', 'derssaat', 'zumre'].includes(x.tur)), ardL = SON.elle ? [] : yum.filter(x => x.tur === 'ardisik'), boslT = T.filter(t => t.bos).length, mx = Math.max(0, ...T.map(t => t.mx)), DG = SON.dg.degisen = degisenler(SON.prog);
     E.innerHTML = `<div class="kart"><div class="dp-oz"><div class="${dg.hata.length ? 'kotu' : 'iyi'}"><b>${dg.hata.length || '✓'}</b><span>${dg.hata.length ? 'denetimde hata · yayınlanamaz' : 'Denetimden geçti · çakışma yok'}</span></div>
         <div class="${bgsiz.length ? '' : 'iyi'}"><b>${T.length - bgsiz.length}/${T.length}</b><span>öğretmenin boş günü var</span></div>
         <div class="${dg.bosToplam ? '' : 'iyi'}"><b>${dg.bosToplam}</b><span>saat ders arası boşluk${boslT ? ` · ${boslT} öğretmen` : ''} (nöbet günü hariç)</span></div>
         <div><b>${mx}</b><span>bir öğretmenin bir gündeki en çok dersi</span></div>${istekIhl.length ? `<div><b>${istekIhl.length}</b><span>karşılanamayan istek</span></div>` : ''}<div><b>${Object.keys(DG).length}</b><span>öğretmenin programı şu ankinden farklı</span></div></div>
+      <div class="soluk kucuk" style="margin:2px 0 2px">1-2 ders için okula gelinen gün: ${T.reduce((a, t) => a + t.kisa, 0)}${ardL.length ? ` · günleri art arda gelen ders: ${ardL.length}` : ''}</div>
       <div class="soluk kucuk" style="margin:2px 0 8px">Boş günler: ${GUN.map((g, i) => `${g} ${bgD[i]}`).join(' · ')} öğretmen${SON.elle ? ' · elle düzeltildi' : ''}</div>
       ${dg.hata.length ? `<details class="dp-ih" open><summary>Denetim hataları (${dg.hata.length})</summary>${dg.hata.slice(0, 200).map(x => `<div class="sert">${esc(x)}</div>`).join('')}</details>` : ''}
       ${istekIhl.length || bgsiz.length ? `<details class="dp-ih"><summary>Karşılanamayanlar (${istekIhl.length + bgsiz.length})</summary>${istekIhl.map(x => `<div>${esc(x.yazi)}</div>`).join('')}${bgsiz.map(([o, t]) => `<div>${esc(bas(o))}: boş günü yok${t.saat > (gunSaat().length - 1) * (P.ayar.gunMax || 99) ? ` — ${t.saat} saat, günde en çok ${P.ayar.gunMax} ile 4 güne sığmaz` : ''}</div>`).join('')}</details>` : ''}

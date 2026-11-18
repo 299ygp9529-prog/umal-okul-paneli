@@ -2188,3 +2188,4 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .dp-stbl .dp-tr > span, .dp-otbl .dp-tr > span { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .dp-stbl .dp-tr > span.dp-tr-dug { grid-column: 1 / -1; } .dp-tr-dug button { min-height: 34px; padding: 4px; font-size: 12px; }
 }
+.dp-dtbl .dp-tr { grid-template-columns: minmax(200px, 2fr) 90px minmax(150px, 1.4fr) 120px 110px 60px 60px; min-width: 820px; } .dp-dk { text-transform: none !important; width: 100%; }
