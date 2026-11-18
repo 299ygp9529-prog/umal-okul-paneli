@@ -3948,9 +3948,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const eksikListe = () => { const L = [...kisiler().values()].filter(p => p.tur === 'ogr' && gzEksik(p).length).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
       if (!L.length) { $('#pencere').classList.add('gizli'); uyar('Bilgisi eksik öğrenci kalmadı ✓'); return; }
       pencereAc(`<h2 style="margin-top:0">Bilgisi eksik öğrenciler · ${L.length}</h2><p class="soluk kucuk">Öğrenciye dokunun, eksikleri yazıp kaydedin. Öğrenciler de kendi panellerinden tamamlayabilir; tamamlayan listeden düşer.</p>
+        <div class="dugmeler" style="justify-content:flex-start;margin:0 0 12px"><button class="ikincil gz-ikli" id="gzEksikYaz">${KY_IK.yazdir}Yazdır / PDF</button></div>
         <div class="gz-eksikler">${L.map(p => `<button class="gz-ek" data-eks="${esc(p.an)}">${foto(String(p.no), p.ad)}<span><b>${esc(baslik(p.ad))}</b><small>${esc(p.sinif)} · No ${esc(p.no)}</small></span><em>${esc(gzEksik(p).join(' · '))}</em></button>`).join('')}</div>`);
       fotolariYukle(L.map(p => String(p.no))).catch(() => {});
       $('#pencere').querySelectorAll('[data-eks]').forEach(b => b.onclick = () => bilgiDuzenle(b.dataset.eks, () => eksikListe()));
+      $('#gzEksikYaz').onclick = () => {   // K-716bm: kâğıtta toplamak için — kayıtlı bilgi yazdırılmaz (✓), eksik olanın yeri boş
+        const var_ = (p, k) => k === 'tc' ? p.tc && gzTcGecerli(String(p.tc).replace(/\D/g, '')) : !!p[k];
+        const hucre = (p, k) => var_(p, k) ? '<td class="v">✓</td>' : `<td class="b">${k === 'tc' && p.tc ? '<small>hatalı</small>' : ''}</td>`;
+        const satir = (p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sinif)}</td><td>${esc(p.no)}</td><td class="ad">${esc(baslik(p.ad))}</td>${hucre(p, 'tc')}${hucre(p, 'dogum')}${hucre(p, 'tel')}<td class="${p.cins ? 'v' : 'b'}">${p.cins ? (p.cins === 'K' ? 'K' : 'E') : ''}</td></tr>`;
+        const css = YL_CSS + ` table td.b { border: 1px solid #10203a; min-width: 30mm; } table td.v { color: #1a8a4a; text-align: center; font-weight: 700; } td.b small { color: #c0392b; } td.ad { font-weight: 600; } .yl-not { font-size: 9pt; color: #555; margin: 4mm 0 0; }`;
+        belgeOnizle(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Bilgisi eksik öğrenciler</title><style>${css}</style></head><body><div class="yl-sayfa"><div class="yl-bas"><img src="${new URL('okul-logo.png', location.href).href}" alt=""><div><h1>${esc(G.ad)} · Bilgisi eksik öğrenciler</h1><p>${esc(gzTarih(G.tarih))} · ${L.length} öğrenci</p></div></div>
+          <table><thead><tr><th>#</th><th>Sınıf</th><th>No</th><th>Ad Soyad</th><th>T.C. kimlik no</th><th>Doğum tarihi</th><th>Telefon (veli)</th><th>K/E</th></tr></thead><tbody>${L.map(satir).join('')}</tbody></table>
+          <p class="yl-not">✓ olan bilgi sistemde kayıtlı. Boş kutulara eksik bilgiyi yazın. Öğrenciler de Atlas öğrenci panelinden kendileri tamamlayabilir.</p></div></body></html>`, 'Bilgisi eksik öğrenciler');
+      };
     };
     // K-716bf: hatalı T.C. / cinsiyeti belirsiz rozetine dokununca o öğrencilerin listesi; düzeltilen listeden düşer
     const sorunListe = tur => { const L = [...kisiler().values()].filter(p => p.tur === 'ogr' && (tur === 'tc' ? p.tc && !gzTcGecerli(p.tc) : !p.cins)).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));

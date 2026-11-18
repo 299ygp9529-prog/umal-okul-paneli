@@ -1764,3 +1764,15 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 .gz-ek:hover { border-color: #ff3b4777; } .gz-ek img, .gz-ek .foto { width: 40px; height: 40px; border-radius: 50%; flex: none; } .gz-ek span { flex: 1; min-width: 0; } .gz-ek b { display: block; } .gz-ek small { color: var(--soluk); }
 .gz-ek em { font-style: normal; font-size: 11.5px; font-weight: 700; color: #ff7a80; background: rgba(255,59,71,.12); border: 1px solid #ff3b4766; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
 @media (max-width: 700px) { .gz-ek { flex-wrap: wrap; } .gz-ek em { margin-left: 52px; } }
+
+/* K-716bm: gezi düğmeleri B düzeni — beyaz yazı; simge rengi görevi söyler: camgöbeği yerleştirme, altın çıktılar, mor otobüs, kırmızı uyarı */
+.gz-dug button { color: #e8f1ff !important; background: #13213a !important; border: 1.5px solid color-mix(in srgb, var(--r) 35%, transparent) !important; box-shadow: none !important; }
+.gz-dug button.birincil { background: linear-gradient(150deg, #1b3a5c, #13243f) !important; border-color: color-mix(in srgb, var(--r) 55%, transparent) !important; }
+.gz-dug button .ky-ik { color: var(--r) !important; background: color-mix(in srgb, var(--r) 14%, transparent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--r) 40%, transparent) !important; }
+.gz-dug #gzKayit, .gz-dug #gzNum, .gz-dug #gzKapat, .gz-dug #gzOto, .gz-dug #gzOtoS, .gz-dug #gzYayin { --r: #22e8ff !important; }
+.gz-dug #gzPlan, .gz-dug #gzBilet, .gz-dug #gzListe, .gz-dug #gzExcel { --r: #e8c66b !important; }
+.gz-dug #gzOtoEkle, .gz-dug #gzOtoCikar { --r: #b06bff !important; }
+.gz-dug #gzEksikL.var { --r: #ff5a63 !important; color: #ff8a8f !important; background: rgba(255,59,71,.1) !important; } .gz-dug #gzEksikL.yok { --r: #3ef08a !important; }
+.gz-dug #gzSifir { --r: #ff5a63 !important; color: #ff5a63 !important; background: none !important; border: 0 !important; }
+.gz-dug .gz-tumkap button { --r: #22e8ff !important; }
+.gz-dug button.birincil .ky-ik { --r: inherit !important; }
