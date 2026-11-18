@@ -1924,3 +1924,4 @@ body:has(#panelSelam.acik) .as-fab { display: none; }
 @media (max-width: 760px) { .gk2-form input[type="date"], .gk2-form input[type="time"] { -webkit-appearance: none; appearance: none; } }
 .gk2-pr { min-width: 0; } .gk2-pr input { min-width: 0; box-sizing: border-box; }
 @media (max-width: 760px) { .gk2-pr { grid-template-columns: 112px minmax(0, 1fr) auto !important; } .gk2-pr input[type="time"] { width: 112px; } }
+.gk2-kp-kl { display: block; width: auto !important; margin: 8px 0 10px auto !important; padding: 4px 2px !important; background: none !important; border: 0 !important; box-shadow: none !important; color: var(--neon) !important; font: inherit; font-size: 13.5px !important; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
