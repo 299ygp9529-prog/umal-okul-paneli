@@ -1804,3 +1804,10 @@ body.kurucu .tm-gk, body.kurucu .tm-oge { box-shadow: 0 0 14px rgba(255,209,102,
 .dd-seg-b { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 6px; border: 0; border-radius: 10px; background: transparent; color: #9fb3cf; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; text-transform: none !important; }
 .dd-seg-b span { overflow: hidden; text-overflow: ellipsis; } .dd-seg-b small { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,.08); font-size: 11.5px; color: inherit; }
 .dd-seg-b.secili { background: linear-gradient(150deg, #1b3a5c, #13243f); color: #fff; box-shadow: inset 0 0 0 1.5px rgba(34,232,255,.55); } .dd-seg-b.secili small { background: rgba(34,232,255,.2); color: #22e8ff; }
+
+/* K-716bq: çalışma planı — PDF'ten aktar */
+.rp-aktar { display: flex; align-items: center; gap: 14px; margin-top: 14px; border-color: rgba(34,232,255,.35); background: linear-gradient(150deg, rgba(34,232,255,.08), transparent); }
+.rp-aktar > div { flex: 1; } .rp-aktar b { display: block; } .rp-aktar small { color: var(--soluk); line-height: 1.4; } .rp-aktar button { white-space: nowrap; }
+@media (max-width: 700px) { .rp-aktar { flex-direction: column; align-items: stretch; } }
+.rp-onizle { display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow: auto; } .rp-onizle > div { display: flex; flex-direction: column; gap: 4px; }
+.rp-onizle b small { color: var(--soluk); font-weight: 400; margin-left: 6px; } .rp-onizle span { font-size: 13px; color: var(--soluk); padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.04); } .rp-onizle em { font-style: normal; font-weight: 700; color: var(--neon); margin-right: 8px; }
