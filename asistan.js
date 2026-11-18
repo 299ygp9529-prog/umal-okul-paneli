@@ -59,7 +59,18 @@
   }
   const geriYaz = (yazi, M) => M && M.eslem.length ? yazi.replace(/\[ÖĞRENCİ-(\d+)\]/g, (m, n) => { const e = M.eslem[+n - 1]; return e ? C.baslik(e.ad) : m; }) : yazi;
   const vurgula = t => C.esc(t).replace(/\[(ÖĞRENCİ-\d+|T\.C\.|TELEFON|NO|E-POSTA)\]/g, '<span class="as-mask">[$1]</span>');
-  const md = t => { const e = C.esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); let h = '', liste = false;
+  // K-716dc: matematik — $…$, $$…$$, \(…\), \[…\] KaTeX ile gerçek kesir, kök, üs olarak çizilir (tahtadaki gibi)
+  let KTX = null;
+  const katexYukle = () => KTX || (KTX = new Promise(ok => { if (window.katex) return ok(true);
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'katex/katex.min.css'; document.head.appendChild(l);
+    const sc = document.createElement('script'); sc.src = 'katex/katex.min.js'; sc.onload = () => ok(true); sc.onerror = () => { KTX = null; ok(false); }; document.head.appendChild(sc); }));
+  const MAT = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g;
+  const matVar = t => { MAT.lastIndex = 0; return MAT.test(String(t || '')); };
+  const matCiz = (tex, blok) => { try { return window.katex.renderToString(tex, { displayMode: blok, throwOnError: false, strict: 'ignore', output: 'html' }); } catch (e) { return C.esc(tex); } };
+  const md = t => { const F = []; t = String(t || '');
+    if (window.katex) t = t.replace(MAT, (m, a, b, c, d) => { const blok = a != null || b != null; F.push(matCiz((blok ? '' : '\\displaystyle ') + (a ?? b ?? c ?? d).trim(), blok)); return '\u0000' + (F.length - 1) + '\u0000'; });
+    return md0(t).replace(/\u0000(\d+)\u0000/g, (m, i) => F[+i]); };
+  const md0 = t => { const e = C.esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); let h = '', liste = false;
     e.split('\n').forEach(s => { const l = s.trim(); if (/^[-*•]\s+/.test(l)) { if (!liste) { h += '<ul>'; liste = true; } h += '<li>' + l.replace(/^[-*•]\s+/, '') + '</li>'; return; }
       if (liste) { h += '</ul>'; liste = false; } if (/^#{1,4}\s+/.test(l)) h += '<h4>' + l.replace(/^#+\s+/, '') + '</h4>'; else if (l) h += '<p>' + l + '</p>'; });
     return h + (liste ? '</ul>' : ''); };
@@ -99,7 +110,7 @@
       else r = data; } catch (e) { hata = C.hataYaz(e); }
     S.bekle = false;
     if (!r || !r.ok) { C.uyar('Atlas cevap veremedi: ' + (hata || (r && r.hata) || 'bilinmeyen hata')); if (ek) sonucCiz(); else yazCiz(); return; }
-    S.ham = r.yazi; S.yazi = geriYaz(r.yazi, M); sonucCiz();
+    S.ham = r.yazi; S.yazi = geriYaz(r.yazi, M); if (matVar(S.yazi)) await katexYukle(); sonucCiz();
   }
   function sonucCiz(bekliyor) {
     const g = G[S.gorev];
@@ -109,7 +120,7 @@
       <div class="as-takip"><input id="asEk" placeholder="&quot;Daha kısa yaz&quot;, &quot;veliye hitaben yaz&quot;…" autocomplete="off"><button id="asEkGonder" aria-label="Gönder">${IK('<path d="M4 12h15M13 6l6 6-6 6"/>')}</button></div></div>`);
     document.getElementById('asGeri').onclick = yazCiz;
     document.getElementById('asKopya').onclick = async () => { try { await navigator.clipboard.writeText(S.yazi.replace(/^#+\s+/gm, '').replace(/\*\*(.+?)\*\*/g, '$1')); C.uyar('Kopyalandı.'); } catch (e) { C.uyar('Kopyalanamadı; metni seçip kopyalayın.'); } };
-    document.getElementById('asYaz').onclick = () => C.raporYazdir(C.raporBant(C.esc(g[0]), 'Atlas asistanı · taslak') + `<div style="margin:6mm 14mm;font-size:11pt;line-height:1.55">${md(S.yazi)}</div>`, g[0]);
+    document.getElementById('asYaz').onclick = () => C.raporYazdir(C.raporBant(C.esc(g[0]), 'Atlas asistanı · taslak') + (window.katex && matVar(S.yazi) ? `<link rel="stylesheet" href="${new URL('katex/katex.min.css', location.href).href}">` : '') + `<div style="margin:6mm 14mm;font-size:11pt;line-height:1.55">${md(S.yazi)}</div>`, g[0]);
     document.getElementById('asTekrar').onclick = () => gonder();
     const ek = document.getElementById('asEk'), git = () => { const v = ek.value.trim(); if (!v) return; gonder(v, S.ham || S.yazi); };
     document.getElementById('asEkGonder').onclick = git; ek.onkeydown = ev => { if (ev.key === 'Enter') git(); };

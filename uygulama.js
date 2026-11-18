@@ -242,7 +242,7 @@
     const b = document.createElement('button'); b.id = 'asFab'; b.className = 'as-fab'; b.type = 'button';
     b.innerHTML = '<i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z" fill="currentColor" fill-opacity=".25"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></i><span>Atlas\'a sor</span>';
     const ac = async () => {
-      try { if (!window.UmalAsistan) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'asistan.js?v=202611181015'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      try { if (!window.UmalAsistan) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'asistan.js?v=202611181415'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
         await ogrencileriYukle().catch(() => []);
         window.UmalAsistan.ac({ sb, rol: D.rol, ogrenciler: () => D.ogrenciler || [], esc, baslik, pencereAc, uyar, hataYaz, raporYazdir, raporBant });
       } catch (e) { uyar('Atlas asistanı açılamadı: ' + hataYaz(e)); } };
