@@ -45,7 +45,7 @@
       return m; };
     const ogrGun = (t, g) => { let m = 0, n = 0, ilk = -1, son = -1; const b = g * P, o = oT[t], kp = tKapali[t], tr = tTercih[t];
       for (let i = 0; i < P; i++) { const v = o[i + b]; if (!v) continue; n++; if (ilk < 0) ilk = i; son = i; if (v > 1) m += SERT * (v - 1); if (kp[i + b]) m += SERT * v; if (tr[i + b]) m += 6 * v; }
-      if (n) { m += ayar.bosluk * ((son - ilk + 1) - n); if (tMax[t] && n > tMax[t]) m += 15 * (n - tMax[t]); if (tBos[t] === g) m += (tBosKesin[t] ? SERT : 25) * n; }
+      if (n) { if (tNob[t] !== g) m += ayar.bosluk * ((son - ilk + 1) - n); if (tMax[t] && n > tMax[t]) m += 15 * (n - tMax[t]); if (tBos[t] === g) m += (tBosKesin[t] ? SERT : 25) * n; }
       if (tNob[t] === g) { if (n < tNobAz[t]) m += 10 * (tNobAz[t] - n); if (n > tNobCok[t]) m += 10 * (n - tNobCok[t]); }
       return m; };
     const yakinCeza = u => { if (!ayar.yakin || !G.mevcut) return 0; const e = eski[u.c], b = u.g * P + u.p; let m = 0; for (let i = 0; i < u.uz; i++) if (e[b + i] !== u.k) m += 1; return m; };
@@ -97,7 +97,7 @@
       if (n && tBos[t] === g) ihlal.push({ tur: 'bosgun', sert: tBosKesin[t], kim: ogrAd[t], yazi: `${ogrAd[t]}: boş gün istediği ${gunAd[g]} ${n} dersi var` });
       if (n && tMax[t] && n > tMax[t]) ihlal.push({ tur: 'gunmax', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${n} ders (en çok ${tMax[t]} istendi)` });
       if (tNob[t] === g && (n < tNobAz[t] || n > tNobCok[t])) ihlal.push({ tur: 'nobet', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: nöbet günü ${gunAd[g]} ${n} ders (${tNobAz[t]}${tNobCok[t] < 99 ? '–' + tNobCok[t] : '+'} istendi)` });
-      if (n && (son - ilk + 1) - n >= 3) ihlal.push({ tur: 'bosluk', sert: 0, kim: ogrAd[t], yazi: `${ogrAd[t]}: ${gunAd[g]} ${(son - ilk + 1) - n} saat boşluk` }); }
+      if (n && tNob[t] !== g && (son - ilk + 1) - n >= (ayar.bosluk >= 12 ? 1 : 3)) ihlal.push({ tur: 'bosluk', sert: 0, kim: ogrAd[t], saat: (son - ilk + 1) - n, yazi: `${ogrAd[t]}: ${gunAd[g]} derslerin arasında ${(son - ilk + 1) - n} saat boşluk` }); }
     for (let c = 0; c < C; c++) for (let g = 0; g < D; g++) { for (let i = 0; i < P; i++) { const s = g * P + i; if (oC[c][s] > 1) ihlal.push({ tur: 'sinif', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders çakışıyor` }); if (oC[c][s] && cKapali[c][s] === 1) ihlal.push({ tur: 'skapali', sert: 1, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${gunAd[g]} ${i + 1}. ders kapalı saatte` }); }
       for (let k = 0; k < K; k++) if (kCD[(c * D + g) * K + k] > ayar.ayniGunMax) ihlal.push({ tur: 'ayni', sert: 0, kim: sinifAd[c], yazi: `${sinifAd[c]}: ${dersAd[k].split('|')[1]} ${gunAd[g]} ${kCD[(c * D + g) * K + k]} kez` }); }
     let degisen = 0; if (G.mevcut) U.forEach(u => { degisen += yakinCeza(u); });

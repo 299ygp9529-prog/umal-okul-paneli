@@ -993,7 +993,7 @@
   }
   async function dpAc(tur) {   // K-700: ders programı hazırlama modülü (ihtiyaç olunca yüklenir)
     try { await programYukle();
-      for (const f of ['dersprog.js?v=202611181610']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      for (const f of ['dersprog.js?v=202611181620']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalDP[tur]({ sb, esc, baslik, program: () => D.program, programYenile: () => { D.program = null; programYukle(); }, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant });
     } catch (e) { uyar('Ders programı açılamadı: ' + hataYaz(e)); } }
   async function programYukle() {

@@ -28,7 +28,7 @@
     if (!data || !data.ok) throw new Error((data && data.hata) || 'okunamadı');
     P = data.veri && data.veri.dersler ? data.veri : bosProje();
     P.ogretmen = P.ogretmen || {}; P.sinif = P.sinif || {}; P.sablon = P.sablon && P.sablon.length ? P.sablon : JSON.parse(JSON.stringify(SABLON0)); P.sinifSablon = P.sinifSablon || {};
-    [...new Set(P.dersler.map(d => d.sinif))].forEach(s => { if (!P.sinifSablon[s]) { const t = sablonBul(s); if (t) P.sinifSablon[s] = t.id; } }); P.ayar = Object.assign({ yakin: true, sure: 30, ayniGunMax: 1 }, P.ayar || {}); kadroHazirla();
+    [...new Set(P.dersler.map(d => d.sinif))].forEach(s => { if (!P.sinifSablon[s]) { const t = sablonBul(s); if (t) P.sinifSablon[s] = t.id; } }); P.ayar = Object.assign({ yakin: true, sure: 30, ayniGunMax: 1, bosluk: 40 }, P.ayar || {}); kadroHazirla();
   }
   function kaydet(hemen) {
     clearTimeout(KAYIT_Z); const yap = async () => { const { data, error } = await X.sb.rpc('umal_dp_yaz', { p_anahtar: 'proje', p_veri: P }); if (error || !data || !data.ok) X.uyar('Kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); };
@@ -355,6 +355,7 @@
     const kural = Object.keys(P.ogretmen).filter(o => kuralOzet(P.ogretmen[o])).length;
     E.innerHTML = `<div class="kart"><div class="dp-bas"><b>Programı hazırla</b><span class="soluk kucuk">${siniflar().length} sınıf · ${P.dersler.reduce((x, d) => x + (+d.saat || 0), 0)} ders saati · ${kural} öğretmenin kuralı</span></div>
       <div class="dp-al"><b>Başlangıç</b><div class="dya-sec">${cips('yakin', a.yakin, [[true, 'Mevcut programa yakın kalsın'], [false, 'Sıfırdan dağıt']])}</div><div class="soluk kucuk">Yakın kalsın: yalnız kurallar için gereken dersler yer değiştirir.</div></div>
+      <div class="dp-al"><b>Öğretmenlerin ders araları</b><div class="dya-sec">${cips('bosluk', a.bosluk, [[40, 'Boşluk olmasın'], [12, 'Az boşluk'], [1, 'Önemli değil']])}</div><div class="soluk kucuk">Boşluk olmasın: öğretmenin dersleri arka arkaya gelir, aralarda boş saat kalmaz. Nöbet günü hariç.</div></div>
       <div class="dp-al"><b>Aynı ders bir günde</b><div class="dya-sec">${cips('ayniGunMax', a.ayniGunMax, [[1, 'En çok bir blok'], [2, 'İki blok olabilir']])}</div></div>
       <div class="dp-al"><b>Süre</b><div class="dya-sec">${cips('sure', a.sure, [[15, '15 sn'], [30, '30 sn'], [60, '1 dk'], [180, '3 dk']])}</div><div class="soluk kucuk">Uzun süre daha iyi sonuç verir.</div></div>
       <button class="birincil dp-calis" id="dpCalis">Programı hazırla</button><div id="dpIlerle"></div></div><div id="dpSonuc"></div>`;
@@ -364,7 +365,7 @@
   function calistir() {
     const b = $('#dpCalis'); b.disabled = true; b.textContent = 'Atlas yerleştiriyor…'; $('#dpIlerle').innerHTML = '<div class="dp-bar"><i style="width:0%"></i></div><div class="soluk kucuk" id="dpIlY"></div>';
     const girdi = { gunSaat: gunSaat(), dersler: P.dersler.filter(d => d.ders && (+d.saat > 0)), ogretmen: P.ogretmen, sinif: P.sinif, mevcut: P.ayar.yakin ? (X.program() || {}).siniflar : null, ayar: Object.assign({}, P.ayar, { tohum: (Date.now() & 0xffff) + 1 }) };
-    let w; try { w = new Worker('dp-cozucu.js?v=202611181610'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
+    let w; try { w = new Worker('dp-cozucu.js?v=202611181620'); } catch (e) { X.uyar('Çözücü başlatılamadı: ' + e.message); b.disabled = false; return; }
     w.onmessage = ev => { const m = ev.data; if (m.ilerle) { const q = $('#dpIlerle i'); if (q) q.style.width = Math.round(m.ilerle.oran * 100) + '%'; const y = $('#dpIlY'); if (y) { const n = Math.floor(m.ilerle.ceza / 1000), kal = Math.max(0, Math.round(P.ayar.sure * (1 - m.ilerle.oran))); y.textContent = (n ? `Çakışmalar çözülüyor · ${n} çakışma kaldı` : 'Çakışma kalmadı · öğretmen istekleri iyileştiriliyor') + ` · yaklaşık ${kal} sn`; } return; }
       w.terminate(); b.disabled = false; b.textContent = 'Yeniden hazırla'; $('#dpIlerle').innerHTML = '';
       if (m.hata) { X.uyar('Hazırlanamadı: ' + m.hata); return; }
@@ -387,10 +388,10 @@
   function sonucCiz() {
     const E = $('#dpSonuc'); if (!E || !SON) return; const r = SON.r, sert = r.ihlal.filter(x => x.sert), yum = r.ihlal.filter(x => !x.sert);
     if (!GOR.kim || (GOR.tur === 'sinif' && !SON.prog[GOR.kim])) GOR = { tur: 'sinif', kim: Object.keys(SON.prog).sort(sira)[0] };
-    const istekIhl = yum.filter(x => ['tercih', 'bosgun', 'gunmax', 'nobet'].includes(x.tur));
+    const istekIhl = yum.filter(x => ['tercih', 'bosgun', 'gunmax', 'nobet'].includes(x.tur)), bosl = yum.filter(x => x.tur === 'bosluk'), boslS = bosl.reduce((a, x) => a + (x.saat || 0), 0);
     E.innerHTML = `<div class="kart"><div class="dp-oz"><div class="${sert.length ? 'kotu' : 'iyi'}"><b>${sert.length || '✓'}</b><span>${sert.length ? 'çakışma / kesin kural ihlali' : 'Çakışma yok'}</span></div>
-        <div><b>${istekIhl.length}</b><span>karşılanamayan istek</span></div>${P.ayar.yakin ? `<div><b>${r.degisen}</b><span>saat yer değiştirdi</span></div>` : ''}<div><b>${yum.filter(x => x.tur === 'ayni').length}</b><span>aynı ders aynı gün</span></div></div>
-      ${sert.length || istekIhl.length ? `<details class="dp-ih" ${sert.length ? 'open' : ''}><summary>Ayrıntılar (${sert.length + istekIhl.length})</summary>${sert.concat(istekIhl).map(x => `<div class="${x.sert ? 'sert' : ''}">${esc(x.yazi)}</div>`).join('')}</details>` : '<div class="soluk" style="margin:6px 0">Bütün öğretmen istekleri karşılandı.</div>'}
+        <div><b>${istekIhl.length}</b><span>karşılanamayan istek</span></div>${P.ayar.yakin ? `<div><b>${r.degisen}</b><span>saat yer değiştirdi</span></div>` : ''}<div class="${bosl.length ? '' : 'iyi'}"><b>${bosl.length ? boslS : '✓'}</b><span>${bosl.length ? `saat boşluk · ${new Set(bosl.map(x => x.kim)).size} öğretmen` : 'Ders aralarında boşluk yok'}</span></div><div><b>${yum.filter(x => x.tur === 'ayni').length}</b><span>aynı ders aynı gün</span></div></div>
+      ${sert.length || istekIhl.length || bosl.length ? `<details class="dp-ih" ${sert.length ? 'open' : ''}><summary>Ayrıntılar (${sert.length + istekIhl.length + bosl.length})</summary>${sert.concat(istekIhl, bosl).map(x => `<div class="${x.sert ? 'sert' : ''}">${esc(x.yazi)}</div>`).join('')}</details>` : '<div class="soluk" style="margin:6px 0">Bütün öğretmen istekleri karşılandı.</div>'}
       <div class="dugmeler" style="justify-content:flex-start;flex-wrap:wrap"><button class="birincil" id="dpTKaydet" style="text-transform:none">Taslak olarak kaydet</button><button class="ikincil" id="dpYazdir" style="text-transform:none">Çıktı al</button></div></div>
       <div class="kart"><div class="dya-sec">${['sinif', 'ogretmen'].map(t => `<button class="cip ${GOR.tur === t ? 'secili' : ''}" data-dpg="${t}">${t === 'sinif' ? 'Sınıf' : 'Öğretmen'}</button>`).join('')}</div>
         <div class="dya-sec dp-kimler">${(GOR.tur === 'sinif' ? Object.keys(SON.prog).sort(sira) : ogretmenler()).map(k => `<button class="cip ${GOR.kim === k ? 'secili' : ''}" data-dpk="${esc(k)}">${esc(GOR.tur === 'sinif' ? k : bas(k))}</button>`).join('')}</div>
