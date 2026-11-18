@@ -6043,6 +6043,11 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     const ayar = k => { const r = (ay || []).find(x => x.anahtar === k); try { return r && r.deger ? JSON.parse(r.deger) : null; } catch (e) { return null; } };
     let tk = ayar('sinav_takvimi') || await takvimAl();
     let mazeret = ayar('mazeret_sinavlari') || [];
+    // K-716cj: idarenin "Telafi Sınav Programı"nda hazırladığı mazeret (telafi) sınavları da takvimde görünsün
+    let telafi = null;
+    if (D.rol !== 'ogretmen') try { const { data: tr_ } = await sb.from('umal_idari').select('anahtar,veri,guncel').like('anahtar', 'telafi:%').order('guncel', { ascending: false }).limit(4);
+      const r_ = (tr_ || []).find(x => x.veri && (x.veri.gunler || []).some(g => g.tarih && (g.slot || []).length)); telafi = r_ ? r_.veri : null; } catch (e) { telafi = null; }
+    const tfOturum = telafi ? telafi.gunler.filter(g => g.tarih && (g.slot || []).length).sort((a, b) => a.tarih.localeCompare(b.tarih)).flatMap(g => g.slot.map(x => ({ tarih: g.tarih, ...x }))) : [];
     const sinavlar = (tk.sinavlar || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true }));
     const anahtar = s => `${s.tarih}|${parseInt(s.ders, 10)}`;
     // yoklamalar → gelmeyenler (sınav başına)
@@ -6100,11 +6105,16 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
           <div><span class="soluk">Sıradaki sınav</span><b>${siradaki ? esc(new Date(siradaki.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'short' })) + ' · ' + esc(dersYaz(siradaki)) : '—'}</b><span class="neon">${esc(kalan)}</span></div>
           <div><span class="soluk">Kalan sınav</span><b>${olacak.length}</b><span class="soluk">${olan.length} sınav yapıldı</span></div>
           ${ogrt ? '' : `<div><span class="soluk">Mazeret adayı</span><b class="turuncu">${farkli}</b><span class="soluk">${topGel} sınava girilmedi</span></div>
-          <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div>`}</div>
+          <div><span class="soluk">Mazeret sınavı</span><b>${mazeret.length + tfOturum.length}</b><span class="soluk">${mz.filter(m => m.tarih >= bugunISO()).length + tfOturum.filter(m => m.tarih >= bugunISO()).length} yaklaşan</span></div>`}</div>
         <div class="tk-iki">
-          <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : '<div class="soluk">Takvimde kalan sınav yok.</div>'}</div>
+          <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : `<div class="soluk">Takvimde kalan ortak sınav yok.</div>`}${tfOturum.length && !ogrt ? (() => { const bg = bugunISO(), G = {}; tfOturum.forEach(x => (G[x.tarih] = G[x.tarih] || []).push(x));
+          const sat = l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); return m ? `<span class="tk-tf-d"><b>${esc(m[1])}</b><small>${esc(m[2])}</small></span>` : `<span class="tk-tf-d"><b>${esc(l)}</b></span>`; };
+          return `<div class="tk-tf"><h2 style="margin:18px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Mazeret (telafi) sınavları<span class="soluk kucuk" style="font-weight:500">${esc(telafi.yil || '')} ${esc(telafi.donem || '')} · ${esc(telafi.durum || '')}</span><button class="tk-pdf" data-tksk="telafi" style="margin-left:auto">Programı aç</button></h2>
+            ${Object.entries(G).map(([t, S]) => `<div class="tk-gun ${t < bg ? 'olan' : 'olacak'}"><div class="tk-tarih"><b>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))}</span></div><div>${S.map(x => `<div class="tk-sinav"><div class="tk-saat"><b>${esc(x.ders)}. Ders</b><small>${esc(saat({ tarih: t, ders: x.ders }))}</small></div>
+              <div class="tk-dersler">${['9', '10', '11', '12'].filter(v => String(x['s' + v] || '').trim()).map(v => `<div class="tk-tf-sv" style="--sv:${SEVIYE_RENK[v] || '#5cc8ff'}"><i>${v}</i><div>${String(x['s' + v]).split('\n').filter(z => z.trim()).map(sat).join('')}</div></div>`).join('')}</div>
+              ${x.yer ? `<span class="tk-sag soluk kucuk" style="max-width:180px;text-align:right">${esc(x.yer)}</span>` : ''}</div>`).join('')}</div></div>`).join('')}</div>`; })() : ''}</div>
           <div class="kart"><h2 style="margin-top:0;display:flex;align-items:center;gap:10px">Tamamlananlar${olan.length && !ogrt ? '<button class="tk-pdf" data-pdf="hepsi" style="margin-left:auto">🖨 Tüm gelmeyenler · PDF</button>' : ''}</h2>${olan.length ? gun(olan, 'olan') : '<div class="soluk">Henüz yapılan sınav yok.</div>'}</div></div>
-        <div class="kart" ${ogrt ? 'style="display:none"' : ''}><h2 style="margin-top:0">Mazeret sınavları</h2>
+        <div class="kart" ${ogrt || (tfOturum.length && !mz.length) ? 'style="display:none"' : ''}><h2 style="margin-top:0">Mazeret sınavları</h2>
           ${mz.length ? `<div class="tk-mz">${mz.map(m => { const G = gelmeyen[m.asil] || []; const as = sinavlar.find(s => anahtar(s) === m.asil);
             return `<div class="tk-mz-sat"><div class="tk-tarih"><b>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(m.tarih + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))} · ${esc(m.saat || '')}</span></div>
               <div class="tk-mz-ic"><b>${esc(m.ders || (as ? [...new Set(Object.values(as.siniflar || {}))].join(' / ') : ''))}</b><small>${as ? `Asıl sınav: ${esc(new Date(as.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} ${esc(dersYaz(as))}` : ''}${m.yer ? ' · Yer: ' + esc(m.yer) : ''}${m.not ? ' · ' + esc(m.not) : ''}</small></div>
@@ -6124,6 +6134,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     $('#tkYazdir').onclick = () => takvimRapor(tk, saat, dersYaz);   // K-627
     if ($('#tkRapor')) $('#tkRapor').onclick = () => raporluKarsilastir(tk, saat, dersYaz);   // K-633
     const tkTik = async ev => {
+      if (ev.target.closest('#tkIc [data-tksk="telafi"]')) { await idariAc('telafi', { ad: 'Sınav takvimi', fn: () => takvim(), otoAktar: true }); return; }   // K-716cj
       const pd = ev.target.closest('[data-pdf]'); if (pd) { gelmeyenRapor(pd.dataset.pdf); return; }
       const g = ev.target.closest('[data-gel]'); if (g) { acik = acik === g.dataset.gel ? null : g.dataset.gel; ciz(); return; }
       const o = ev.target.closest('[data-oz]'); if (o) { ogrenciKarti(D.ogrenciler.find(k => k.no === o.dataset.oz)); return; }
