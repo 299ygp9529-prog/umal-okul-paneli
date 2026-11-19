@@ -672,13 +672,16 @@
     const ogrGunu = g => { const T = {}; Object.entries(prog).forEach(([s, H]) => Object.entries(H).forEach(([k, h]) => { const [gg, n] = k.split('-').map(Number); if (gg !== g) return; (h.ogretmen || []).forEach(o => { (T[o] = T[o] || {})[n] = { sinif: s, ders: h.ders }; }); })); return T; };
     const nobetci = (o, g) => { const a = Object.keys(NG).find(x => nk(x) === nk(o)); return a != null && NG[a] === g; };
     const kokD = d => String(d || '').replace(/^S\.\s*/, '').replace(/^HTDE\s*/, '');
+    const IDARE = new Set(['mehmettatar']), idareci = o => IDARE.has(nk(o));   // idareciler boş derse görevlendirilmez (panelde rolü İdare olanlar + bilinen idareciler)
+    try { let R = null; try { const { data, error } = await X.sb.rpc('umal_roller_al'); if (!error && Array.isArray(data)) R = data; } catch (e) {} if (!R) { const r = await X.sb.from('umal_yoneticiler').select('eposta,rol'); R = r.data || []; }
+      const ep = new Set(R.filter(x => (x.rol || 'yonetici') === 'yonetici').map(x => String(x.eposta))); if (ep.size) { const { data: OG } = await X.sb.from('umal_ogretmenler').select('eposta,ad'); (OG || []).forEach(x => { if (ep.has(String(x.eposta)) && x.ad) IDARE.add(nk(x.ad)); }); } } catch (e) {}
     async function yukle() { const { data } = await X.sb.rpc('umal_gorev_liste', { p_tarih: iso(gun) }); G = (data && data.ok) ? data : { liste: [], say: {} }; GEL = new Set(G.liste.map(x => x.asil).filter(Boolean)); }
     function ciz2() {
       const g = (gun.getDay() + 6) % 7, T = ogrGunu(g), O = Object.keys(T).sort(sira), atanan = {}; G.liste.forEach(x => { atanan[x.sinif + '|' + x.saat] = x; });
       const dersler = [...GEL].flatMap(o => Object.entries(T[o] || {}).map(([n, v]) => ({ n: +n, sinif: v.sinif, ders: v.ders, asil: o }))).sort((a, b) => a.n - b.n || sira(a.sinif, b.sinif));
       const bugunSay = {}; G.liste.forEach(x => { if (x.giren) bugunSay[x.giren] = (bugunSay[x.giren] || 0) + 1; });
       const aday = d => { const S = O.filter(o => !GEL.has(o) && !(T[o] || {})[d.n] && !G.liste.some(x => x.giren === o && +x.saat === d.n && !(x.sinif === d.sinif)));
-        const herkes = Object.keys(NG).filter(a => NG[a] === g).map(a => O.find(o => nk(o) === nk(a)) || a).concat(S).filter((o, i, A) => A.indexOf(o) === i && !GEL.has(o) && !((T[o] || {})[d.n]));
+        const herkes = Object.keys(NG).filter(a => NG[a] === g).map(a => O.find(o => nk(o) === nk(a)) || a).concat(S).filter((o, i, A) => A.indexOf(o) === i && !GEL.has(o) && !idareci(o) && !((T[o] || {})[d.n]));
         const br = kokD(d.ders);
         return herkes.map(o => { const L = Object.keys(T[o] || {}).map(Number), ok = L.length > 0, ara = L.some(n => n < d.n) && L.some(n => n > d.n), nb = nobetci(o, g), ayni = Object.values(T[o] || {}).some(v => kokD(v.ders) === br);
           const p = (nb ? 50 : 0) + (ara ? 40 : 0) + (ok ? 20 : -30) + (ayni ? 15 : 0) - 35 * (bugunSay[o] || 0);   // K-727: adalet yalnız o günün dağılımına bakar
@@ -690,7 +693,7 @@
         <div class="kart"><div class="dp-bas"><b>Tarih</b><input type="date" class="dp-in" id="gvT" value="${iso(gun)}" style="width:auto"><span class="soluk">${GUN[g] || 'Hafta sonu'}</span></div>
           <b style="display:block;margin:6px 0">Gelmeyen öğretmenler</b><input class="dp-in" id="gvAra" placeholder="Öğretmen ara" style="margin-bottom:8px">
           <div class="dp-gv-o">${O.map(o => `<button class="cip ${GEL.has(o) ? 'secili' : ''}" data-gvo="${esc(o)}">${esc(bas(o))} <small>${Object.keys(T[o]).length}</small></button>`).join('') || '<span class="soluk">Bu gün ders yok.</span>'}</div></div>
-        ${(() => { const NB = Object.keys(NG).filter(a => NG[a] === g).map(a => O.find(o => nk(o) === nk(a)) || a).filter(o => !GEL.has(o)); if (!NB.length) return '';
+        ${(() => { const NB = Object.keys(NG).filter(a => NG[a] === g).map(a => O.find(o => nk(o) === nk(a)) || a).filter(o => !GEL.has(o) && !idareci(o)); if (!NB.length) return '';
           const saatler = (zilSay => Array.from({ length: zilSay }, (_, i) => i + 1))(Math.max(8, ...Object.values(T).flatMap(v => Object.keys(v).map(Number))));
           return `<div class="kart"><div class="dp-bas"><b>Bugünün nöbetçileri</b><span class="soluk kucuk">boş oldukları saatler</span></div><div class="gv-nb">${NB.map(o => { const bos = saatler.filter(n => !(T[o] || {})[n] && !G.liste.some(x => x.giren === o && +x.saat === n)), dolu = G.liste.filter(x => x.giren === o).length;
             return `<div class="gv-nbs"><b>${esc(bas(o))}</b><span>${bos.map(n => `<i>${n}</i>`).join('') || '<small class="soluk">boş saati yok</small>'}</span>${dolu ? `<small class="iyi">${dolu} görev</small>` : ''}</div>`; }).join('')}</div></div>`; })()}
@@ -705,7 +708,7 @@
             const fazla = Z.filter(([, n]) => n >= 2), bos = [...uygunlar].filter(o => !bugunSay[o]);
             return `<div class="gv-adalet ${fazla.length && bos.length ? 'uyari' : ''}"><b>Bugünkü dağılım</b><div class="gv-ad-l">${Z.map(([o, n]) => `<span class="${n >= 2 ? 'cok' : ''}">${esc(bas(o).split(' ').slice(0, 2).join(' '))} <i>${n}</i></span>`).join('')}</div>
               ${fazla.length && bos.length ? `<div class="gv-ad-u">${fazla.map(([o, n]) => `<b>${esc(bas(o))}</b> ${n} derse`).join(', ')} görevlendirildi; o saatlerde boş olup bugün hiç görev almamış ${bos.length} öğretmen var (${bos.slice(0, 4).map(o => esc(bas(o).split(' ')[0])).join(', ')}${bos.length > 4 ? '…' : ''}). <button class="ikincil kucuk" id="gvDengele">Dengele</button></div>` : bekleyen.length ? '' : '<div class="gv-ad-ok">Görevler dengeli dağıtıldı.</div>'}</div>`; })()}
-          <div class="soluk kucuk" style="margin-top:8px">Öneri sırası: o gün nöbetçi olan · iki dersinin arasında boşu olan · o gün okulda olan · aynı branştan · bugün daha az görev almış olan.</div></div>` : ''}`;
+          <div class="soluk kucuk" style="margin-top:8px">İdareciler görevlendirilmez. Öneri sırası: o gün nöbetçi olan · iki dersinin arasında boşu olan · o gün okulda olan · aynı branştan · bugün daha az görev almış olan.</div></div>` : ''}`;
       $('#gvT').onchange = async ev => { const d = new Date(ev.target.value + 'T12:00:00'); if (isNaN(d)) return; gun = d; await yukle(); ciz2(); };
       $('#gvAra').oninput = ev => { const q = nk(ev.target.value); I.querySelectorAll('[data-gvo]').forEach(b => b.style.display = !q || nk(b.dataset.gvo).includes(q) ? '' : 'none'); };
       I.querySelectorAll('[data-gvo]').forEach(b => b.onclick = () => { const o = b.dataset.gvo; if (GEL.has(o)) { GEL.delete(o); G.liste = G.liste.filter(x => x.asil !== o); } else GEL.add(o); ciz2(); });
