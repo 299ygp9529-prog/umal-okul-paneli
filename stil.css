@@ -2497,7 +2497,7 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 }
 
 /* K-745: öğretmen telefonunda sohbet akıcı — sohbet açıkken süs animasyonları durur, mesaj listesi kendi katmanında kayar */
-body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-play-state: paused !important; }
+body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::after { animation-play-state: paused !important; }   /* K-757: yalnız sayfa içeriği; uyarı ve pencereler (açılış animasyonu) durmaz — durursa görünmez kalıp ekranı kilitliyordu */
 @media (max-width: 760px) { body.ogt-alt .msj-ekran { contain: layout paint; } body.ogt-alt .msj-ekran > *:not(.msj-ust):not(.msj-alt) { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; will-change: scroll-position; transform: translateZ(0); } #ogtAlt { transform: translateZ(0); } }
 /* K-745b: sohbet açıkken sayfa kaymaz; yalnız mesaj listesi kayar (alt kutu titremez) */
 @media (max-width: 760px) {
