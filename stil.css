@@ -2593,3 +2593,7 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .gb-sc > select { flex: 0 0 auto; width: auto; min-width: 84px; color: var(--soluk); font-weight: 700; text-align-last: center; }
 .gb-sc > .secili { background: linear-gradient(180deg, #2ee6ff, #13a9cf); border-color: transparent; color: #04131f; box-shadow: 0 0 14px rgba(34,232,255,.35); }
 .gb-bul.tek { display: block; } .gb-bul.tek > input { width: 100%; box-sizing: border-box; }
+/* K-769: tahtalar seviyelere göre */
+.ot-grup { margin-top: 14px; } .ot-grup .ot-bas { display: flex; align-items: center; gap: 8px; color: var(--sv); margin: 0 2px 8px; } .ot-grup .ot-bas::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--sv) 35%, transparent); order: 1; } .ot-grup .ot-bas small { order: 2; color: var(--soluk); font-weight: 700; }
+.ot-grup .ot-liste { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .ot-grup .ot-sat { border-left: 3px solid color-mix(in srgb, var(--sv) 70%, transparent); padding: 9px 10px; } .ot-grup .ot-sat b { font-size: 15.5px; overflow-wrap: anywhere; line-height: 1.15; } .ot-grup .ot-sat { padding: 8px 8px 8px 9px; } .ot-grup .ot-sat span { font-size: 12px; }
+.ot-grup.ot-diger .ot-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ot-grup.ot-diger .ot-sat b { overflow-wrap: normal; }

@@ -652,7 +652,9 @@
     else { const sn = D_.find(q => dk(q.bas) - 5 > t); ust = `<div class="kart soluk ot-bos">Şu an dersiniz yok; dersinizin saatinde o sınıfın tahtası burada en üstte çıkar.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; }
     const diger = TL.filter(q => !x || q.sinif !== x.sinif);
     I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1></div></div>${ust}
-      <div class="ot-bas">OKULDAKİ TAHTALAR</div><div class="ot-liste">${diger.map(q => { const d = dur(q); return `<div class="ot-sat ot-${d.s}"><b>${esc(q.sinif)}</b><span><i></i>${esc(d.y)}</span></div>`; }).join('') || '<div class="soluk kucuk" style="padding:10px">Tahta bilgisi yok.</div>'}</div>`;
+      ${(() => { const sv = q => (String(q.sinif).match(/^(\d+)/) || [])[1] || 'Diğer', G = {}; diger.forEach(q => (G[sv(q)] = G[sv(q)] || []).push(q));   // K-769: seviyelere göre gruplu
+        const sira = Object.keys(G).sort((a, b) => (+a || 99) - (+b || 99)), RNK = { 9: '#22e8ff', 10: '#3ef08a', 11: '#b06bff', 12: '#ffa64d' };
+        return sira.length ? sira.map(k => `<div class="ot-grup ${/^\d+$/.test(k) ? '' : 'ot-diger'}" style="--sv:${RNK[k] || '#8fa3bf'}"><div class="ot-bas">${/^\d+$/.test(k) ? k + '. SINIFLAR' : 'DİĞER'}<small>${G[k].length}</small></div><div class="ot-liste">${G[k].map(q => { const d = dur(q); return `<div class="ot-sat ot-${d.s}"><b>${esc(q.sinif)}</b><span><i></i>${esc(String(d.y).replace(/^Tahta kapalı$/, 'Kapalı'))}</span></div>`; }).join('')}</div></div>`).join('') : '<div class="ot-bas">OKULDAKİ TAHTALAR</div><div class="soluk kucuk" style="padding:10px">Tahta bilgisi yok.</div>'; })()}`;
     I.querySelectorAll('[data-oti]').forEach(b => b.onclick = async () => { const i = b.dataset.oti;
       if (i === 'kapat' && !await onayla(`${x.sinif} tahtası kapatılsın mı?`)) return;
       b.disabled = true; const { data: r, error: er } = await sb.rpc('umal_tahta_ogretmen', { p_sinif: x.sinif, p_islem: i });
