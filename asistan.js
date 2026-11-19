@@ -31,7 +31,7 @@
     yonetici: [['İdare', ['resmi', 'duyuru', 'tutanak', 'plan', 'serbest']]],
     bas: [['İdare', ['resmi', 'duyuru', 'tutanak', 'plan']], ['Rehberlik', ['rapor', 'mektup', 'anket', 'seminer']], ['Öğretmen', ['soru', 'olcut', 'etkinlik', 'veli']], ['', ['serbest']]] };
   const ROL_AD = { bas: 'KURUCU', yonetici: 'İdare', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' };
-  let C = null, S = { gorev: null, metin: '', bicim: 'resmi', yazi: '', maske: null, bekle: false };
+  let C = null, S = { gorev: null, metin: '', bicim: 'kisa', yazi: '', maske: null, bekle: false };
 
   // ---- gizleme
   const tr = 'tr', BUY = x => String(x || '').toLocaleUpperCase(tr);
@@ -81,7 +81,7 @@
     C.pencereAc(`<div class="as"><div class="as-ust"><div><small>ATLAS</small><h2>Atlas'a sor</h2></div><span class="as-rol">${ROL_AD[C.rol] || ''}</span></div>
       <p class="as-acik">Rolünüze göre hazır işler. Öğrenci adı, numarası, T.C. ve telefonu yapay zekâya gitmeden gizlenir.</p>
       ${R.map(([b, L]) => `${b ? `<div class="as-bas">${b.toLocaleUpperCase(tr)}</div>` : '<div class="as-bas">&nbsp;</div>'}<div class="as-hz">${L.map(k => `<button data-asg="${k}"><i>${IK(I[k])}</i><b>${G[k][0]}</b><small>${G[k][1]}</small></button>`).join('')}</div>`).join('')}</div>`);
-    document.querySelectorAll('[data-asg]').forEach(b => b.onclick = () => { S = { gorev: b.dataset.asg, metin: '', bicim: 'resmi', yazi: '', maske: null, bekle: false }; yazCiz(); });
+    document.querySelectorAll('[data-asg]').forEach(b => b.onclick = () => { S = { gorev: b.dataset.asg, metin: '', bicim: 'kisa', yazi: '', maske: null, bekle: false }; yazCiz(); });
   }
   function yazCiz() {
     const g = G[S.gorev];
