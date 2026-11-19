@@ -6382,11 +6382,11 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
       m = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/.exec(h); if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; return null; };
     const kisi = new Map(D.ogrenciler.map(o => [String(o.no), o])), adla = new Map(D.ogrenciler.map(o => [String(o.ad).toLocaleLowerCase(tr).replace(/\s+/g, ' ').trim(), o]));
     // K-640: e-Okul devamsızlık listesi (OOK08001R080 vb.): başlık satırından sütunlar; neden kodu ve miktar (0,5 = yarım gün, 2 = iki gün)
-    const NEDEN = { S: 'Raporlu', SY: 'Raporlu (yarım gün)', R: 'Raporlu', RY: 'Raporlu (yarım gün)', 'İ': 'İzinli', I: 'İzinli', 'İY': 'İzinli (yarım gün)', D: 'Özürsüz', G: 'Özürsüz (yarım gün)', Z: 'Özürsüz', ZY: 'Özürsüz (yarım gün)', F: 'Faaliyet', FY: 'Faaliyet (yarım gün)', N: 'Nakil', 'ÖY': 'Özürlü (yarım gün)', 'Ö': 'Özürlü' };
+    const NEDEN = { S: 'Raporlu', SY: 'İzinli (yarım gün)', R: 'Raporlu', RY: 'İzinli (yarım gün)', 'İ': 'İzinli', I: 'İzinli', 'İY': 'İzinli (yarım gün)', D: 'Özürsüz', G: 'Özürsüz (yarım gün)', Z: 'Özürsüz', ZY: 'Özürsüz (yarım gün)', F: 'Faaliyet', FY: 'Faaliyet (yarım gün)', N: 'Nakil', 'ÖY': 'Özürlü (yarım gün)', 'Ö': 'Özürlü' };
     const nKod = t => { t = String(t || '').trim().toLocaleUpperCase(tr); if (!t || NEDEN[t]) return t; const y = /YARIM/.test(t) ? 'Y' : '', m = [[/RAPOR/, 'S'], [/İZİN|IZIN/, 'İ'], [/FAAL/, 'F'], [/ÖZÜRSÜZ|OZURSUZ/, 'D'], [/ÖZÜRLÜ|OZURLU/, 'Ö'], [/NAK[İI]L/, 'N']].find(([re]) => re.test(t)); return m ? (m[1] === 'D' && y ? 'G' : m[1] + y) : t; };   // e-Okul kodu ya da yazıyla (Raporlu, İzinli, Faaliyet…)
     const DRENK = k => /^[SR]/.test(k) ? '#ff8a5c' : /^[İI]/.test(k) ? '#5cc8ff' : /^F/.test(k) ? '#3ef08a' : /^[DGZ]/.test(k) ? '#ff5c7a' : '#b9a6ff';
     const durum = (a, pdf) => { const k = a[3]; if (!k) return pdf ? (a[2] ? 'Yarım gün' : '—') : '<span class="soluk">belirtilmemiş</span>'; const ad = NEDEN[k] || k; return pdf ? esc(ad) : `<span class="durum-etiketi" style="color:${DRENK(k)};border-color:${DRENK(k)}55">${esc(ad)}</span>`; };
-    const TURLER = [['rapor', 'Raporlu', ['S', 'SY', 'R', 'RY']], ['izin', 'İzinli', ['İ', 'I', 'İY']], ['ozursuz', 'Özürsüz', ['D', 'G', 'Z', 'ZY']], ['diger', 'Diğer (faaliyet, özürlü…)', ['F', 'FY', 'N', 'Ö', 'ÖY']]];
+    const TURLER = [['rapor', 'Raporlu', ['S', 'R']], ['izin', 'İzinli', ['İ', 'I', 'İY', 'SY', 'RY']], ['ozursuz', 'Özürsüz', ['D', 'G', 'Z', 'ZY']], ['diger', 'Diğer (faaliyet, özürlü…)', ['F', 'FY', 'N', 'Ö', 'ÖY']]];
     let secTur = new Set(['rapor', 'izin', 'diger']), yarimAl = false;   // yarım gün: öğrenci sabah ya da öğleden sonra okuldaydı, sınava girmiş olabilir — varsayılan sayılmaz   // raporlu, izinli, faaliyet varsayılan; özürsüz isteğe bağlı
     const isGunuSonra = (t, n) => { let d = new Date(t + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
     const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false, onceki = null;
@@ -6416,6 +6416,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           { const nh = H.find(h => /rapor|izin|faaliyet|özürsüz|özürlü|nakil/i.test(h) || (/^[A-ZÇĞİÖŞÜ]{1,2}$/.test(h) && NEDEN[h])); if (nh) { neden = nKod(nh); kodlu = true; if (/Y$/.test(neden)) yarim = true; } } }
         tarihli++;
         if (!o) { bilinmeyen.push(H.slice(0, 4).join(' · ')); continue; }
+        if (yarim && /^[SR]Y?$/.test(neden)) neden = 'İY';   // yarım gün rapor yok: izinli (yarım gün) sayılır
         if (neden) { const tur = TURLER.find(([, , K_]) => K_.includes(neden)); if ((tur && !secTur.has(tur[0])) || (!tur && !secTur.has('diger'))) { (turDisi[neden] = (turDisi[neden] || 0) + 1); continue; } }
         const S_ = T.slice().sort(); (K.get(o.no) || K.set(o.no, { o, A: [] }).get(o.no)).A.push([S_[0], S_[S_.length - 1], yarim, neden]); }
       return { K, bilinmeyen, tarihli, kodlu, turDisi }; };
