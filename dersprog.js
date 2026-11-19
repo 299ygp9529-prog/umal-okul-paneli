@@ -669,9 +669,11 @@
     const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     let gun = new Date(); while (gun.getDay() === 0 || gun.getDay() === 6) gun.setDate(gun.getDate() + 1);
     let G = { liste: [], say: {} }, GEL = new Set();
-    const ogrGunu = g => { const T = {}; Object.entries(prog).forEach(([s, H]) => Object.entries(H).forEach(([k, h]) => { const [gg, n] = k.split('-').map(Number); if (gg !== g) return; (h.ogretmen || []).forEach(o => { (T[o] = T[o] || {})[n] = { sinif: s, ders: h.ders }; }); })); return T; };
+    // programdaki öğretmen adı tek biçime getirilir: sondaki numara ("Ayfer ÖZEL 2") atılır, aynı kişinin farklı yazımları (büyük/küçük harf) tek kişide birleşir
+    const OGR_AD = new Map(), ogrAd = a => { const t = String(a || '').replace(/\s+\d+$/, '').trim(); if (!t) return ''; const k = nk(t); if (!OGR_AD.has(k)) OGR_AD.set(k, t); return OGR_AD.get(k); };
+    const ogrGunu = g => { const T = {}; Object.entries(prog).forEach(([s, H]) => Object.entries(H).forEach(([k, h]) => { const [gg, n] = k.split('-').map(Number); if (gg !== g) return; [].concat(h.ogretmen || []).forEach(o0 => { const o = ogrAd(o0); if (!o) return; (T[o] = T[o] || {})[n] = { sinif: s, ders: h.ders }; }); })); return T; };
     // nöbet listesindeki ad ↔ ders programındaki ad: yazımı farklı olsa da (büyük/küçük harf, ikinci ad, soyad) aynı kişiye bağlanır; eşleşmeyen nöbetçinin programı bilinmediği için önerilmez
-    const TUM = [...new Set(Object.values(prog).flatMap(H => Object.values(H || {}).flatMap(h => (h && h.ogretmen) || [])))];
+    const TUM = [...new Set(Object.values(prog).flatMap(H => Object.values(H || {}).flatMap(h => [].concat((h && h.ogretmen) || []).map(ogrAd).filter(Boolean))))];
     const pr = a => { const t = String(a || '').trim().split(/\s+/).map(nk).filter(Boolean); return { ad: t[0] || '', soy: t[t.length - 1] || '' }; };
     const progAdi = a => { const e = TUM.find(o => nk(o) === nk(a)); if (e) return e; const p = pr(a); if (!p.soy) return null;
       const S = TUM.filter(o => pr(o).soy === p.soy), A = S.filter(o => { const q = pr(o).ad; return q && p.ad && (q.startsWith(p.ad) || p.ad.startsWith(q)); });
@@ -735,10 +737,8 @@
           <div class="dugmeler"><button class="ikincil" id="gvBos" style="text-transform:none">Boş geçsin / idare ilgilensin</button></div>`);
         document.querySelectorAll('[data-gva]').forEach(x => x.onclick = async () => { document.getElementById('pencere').classList.add('gizli'); if (await adilMi(d, x.dataset.gva)) { ata(d, x.dataset.gva); ciz2(); } });
         $('#gvBos').onclick = () => { ata(d, ''); document.getElementById('pencere').classList.add('gizli'); ciz2(); }; });
-      if ($('#gvDengele')) $('#gvDengele').onclick = async () => { if (!await X.onayla('Bugünkü görevler baştan, en dengeli şekilde yeniden dağıtılsın mı? (Boş geçsin dedikleriniz korunur.)')) return;
-        G.liste = G.liste.filter(x => !x.giren); Object.keys(bugunSay).forEach(k => delete bugunSay[k]); ciz2(); $('#gvOto') && $('#gvOto').click(); };
+      if ($('#gvDengele')) $('#gvDengele').onclick = () => $('#gvOto') && $('#gvOto').click();   // Dengele = Adil dağıt (aynı kurallar, baştan dağıtır)
       if ($('#gvOto')) $('#gvOto').onclick = async (ev) => {   // adil dağıtım baştan yapılır (Boş geçsin dedikleri korunur): kimse 2. görevi almadan, o saatte boş her nöbetçi önce 1 görev alır (tur tur eşleştirme)
-        if (ev && ev.isTrusted && G.liste.some(x => x.giren && GEL.has(x.asil)) && !await X.onayla('Görevler baştan, en adil şekilde yeniden dağıtılsın mı? (Boş geçsin dedikleriniz korunur.)')) return;
         G.liste = G.liste.filter(x => !x.giren || !GEL.has(x.asil)); Object.keys(bugunSay).forEach(k => delete bugunSay[k]); G.liste.forEach(x => { if (x.giren) bugunSay[x.giren] = (bugunSay[x.giren] || 0) + 1; });
         let kalan = dersler.filter(d => !G.liste.some(x => x.sinif === d.sinif && +x.saat === d.n));
         for (let tur = 1; kalan.length && tur <= 8; tur++) {
