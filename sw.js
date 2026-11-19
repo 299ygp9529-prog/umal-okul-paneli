@@ -6,10 +6,21 @@ self.addEventListener('fetch', () => {});
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { metin: e.data ? e.data.text() : '' }; }
   const acil = !!d.acil;
-  e.waitUntil(self.registration.showNotification(d.baslik || 'Ümraniye Merkez Anadolu Lisesi', {
-    body: d.metin || '', icon: '/simge-192.png', badge: '/simge-192.png', tag: d.tag || undefined, renotify: true,
+  // Kilit ekranı: büyük simge okul logosu; durum çubuğundaki küçük simge tek renkli Atlas rozeti (renkli logo orada bozuk görünüyordu)
+  // Uygulama simgesindeki sayı = okunmamış bildirim sayısı (d.sayi); bilinmiyorsa değiştirilmez
+  const rozet = typeof d.sayi === 'number' && self.navigator.setAppBadge ? (d.sayi > 0 ? self.navigator.setAppBadge(d.sayi) : self.navigator.clearAppBadge()).catch(() => {}) : Promise.resolve();
+  e.waitUntil(Promise.all([rozet, self.registration.showNotification(d.baslik || 'Atlas', {
+    body: d.metin || '', icon: '/simge-192.png', badge: '/rozet-96.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
     requireInteraction: acil, vibrate: acil ? [400, 150, 400, 150, 400, 150, 600] : [200, 100, 200], silent: false, data: { url: d.url || '/' }, lang: 'tr'
-  }));
+  })]));
+});
+// Sayfa "okundu" deyince: o bildirimler bildirim çekmecesinden kalkar, simgedeki sayı güncellenir
+self.addEventListener('message', e => {
+  const m = e.data || {}; if (m.tur !== 'bildirim-durum') return;
+  e.waitUntil((async () => {
+    try { const L = await self.registration.getNotifications(); L.forEach(n => { if (m.hepsi || (m.taglar || []).includes(n.tag)) n.close(); }); } catch (x) {}
+    try { if (self.navigator.setAppBadge) { if (m.sayi > 0) await self.navigator.setAppBadge(m.sayi); else await self.navigator.clearAppBadge(); } } catch (x) {}
+  })());
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close(); const u = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;

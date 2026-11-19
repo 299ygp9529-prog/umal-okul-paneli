@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -63,7 +63,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); tuYukle(); bldCiz(); obYukle(); if (window.UmalBildirim && S.kod && S.no !== '1907') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); tuYukle(); bldCiz(); obYukle(); blYukle().then(() => { if (!hashGit()) anaCiz(true); }); if (window.UmalBildirim && S.kod && S.no !== '1907') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -345,7 +345,7 @@
       + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
-    $('#kutular').insertAdjacentHTML('afterbegin', msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
+    $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
     rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
@@ -361,6 +361,7 @@
     const ph = sl.map(e => { const c = document.createComment(''); e.before(c); return c; }); ph.forEach((c, i) => c.replaceWith(sr[i])); }
   $('#kutular').addEventListener('click', ev => { const e = ev.target.closest('#kutular > *'); if (!e || e.disabled || e.classList.contains('genis')) return; const a = kAnahtar(e); if (!a) return; try { const t = kSon(); t[a] = Date.now(); localStorage.setItem(kSonAn(), JSON.stringify(t)); } catch (x) {} }, true);
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
+    if (id === 'bild') return blAc(); blUrlOku(id);
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
@@ -463,7 +464,7 @@
   const BD_DUR = { alindi: ['Alındı', 'al'], inceleniyor: ['İnceleniyor', 'in'], planlandi: ['Planlandı', 'pl'], cozuldu: ['Çözüldü', 'ok'], yapilmayacak: ['Yapılmayacak', 'yk'] };
   const BD_BOLUM = ['Genel', 'Ana sayfa', 'Sınavlarım', 'Ders programım', 'Duyurular', 'Atlas Sınıf (ders dosyaları)', 'Notlarım', 'Gezi', 'Anketler', 'Rehberlik', 'Çalışma planım', 'Soru takibi', 'Giriş / şifre'];
   const BD_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9.5L4 20z" fill="currentColor" fill-opacity=".2"/><path d="M12 8.2v3.6M12 14.4v.1"/></svg>';
-  async function bdYukle(okudu) { try { const { data } = await sb.rpc('umal_ogr_bildirimlerim', { p_no: S.no, p_kod: S.kod, p_okudu: !!okudu }); if (data && data.ok) { BD.L = data.liste || []; BD.P = data.pano || []; return true; } } catch (e) {} return false; }
+  async function bdYukle(okudu) { try { const { data } = await sb.rpc('umal_ogr_bildirim_kutusuim', { p_no: S.no, p_kod: S.kod, p_okudu: !!okudu }); if (data && data.ok) { BD.L = data.liste || []; BD.P = data.pano || []; return true; } } catch (e) {} return false; }
   const bdYeni = () => BD.L.filter(b => !b.okudu).length;
   function bdKutu() { const n = bdYeni();
     return `<button data-git="bld" class="bd-ana ${n ? 'yeni' : ''}">${n ? ZARF : ''}<i class="ik" style="--c:#c99bff">${BD_IK}</i><b>Öneri bildir</b><small>${n ? (n > 1 ? n + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri'}</small></button>`; }
@@ -895,7 +896,7 @@
     $('#rhBaslik').textContent = baslik_; $('#rhGeri').textContent = '← Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
   function mkAc() { altAc('mektup', 'Mektup'); }
   function rvAc() {
-    altAc('randevu', 'Randevu'); rvCiz();
+    blUrlOku('rv'); altAc('randevu', 'Randevu'); rvCiz();
     if (rvYeni()) rvYukle(true).then(() => { RV.L.forEach(x => { x.yeni = false; }); });   // görüldü: mektup işareti gider (bu ekranda "yeni" çerçevesi kalır)
   }
   function rvCiz() {
@@ -994,7 +995,7 @@
     let gor = 0; try { gor = +localStorage.getItem(tuAn()) || 0; } catch (e) {} const yeni = Math.max(0, TU.L.length - gor), d = TU.L[0], t = TU.L.filter(x => x.tur === 'tebrik').length;
     k.className = 'kart gbana ' + (d.tur === 'tebrik' ? 'tebrik' : 'uyari');
     k.innerHTML = `<i class="ik">${d.tur === 'tebrik' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.5l-5.1 2.7 1-5.7-4.1-4 5.7-.8z" fill="currentColor" fill-opacity=".25"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4l9 16H3z" fill="currentColor" fill-opacity=".2"/><path d="M12 10v4M12 17h.01"/></svg>'}</i><div><b>${yeni ? `${yeni} yeni · ` : ''}${d.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'}: ${esc(d.neden)}</b><span>${esc(d.ogretmen || '')} · ${t} tebrik, ${TU.L.length - t} uyarı · hepsi için dokun</span></div>`; }
-  function tuAc() { try { localStorage.setItem(tuAn(), String(TU.L.length)); } catch (e) {}
+  function tuAc() { blUrlOku('gb'); try { localStorage.setItem(tuAn(), String(TU.L.length)); } catch (e) {}
     $('#gblListe').innerHTML = TU.L.map(x => `<div class="kart gbs ${x.tur}"><span class="etk">${x.tur === 'tebrik' ? 'TEBRİK' : 'UYARI'}</span><b>${esc(x.neden)}</b>${x.aciklama ? `<div class="soluk">${esc(x.aciklama)}</div>` : ''}<small class="soluk">${esc(x.ogretmen || '')} · ${esc(new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</small></div>`).join('')
       + '<div class="not">Tebrik ve uyarıları öğretmenlerin gönderir; velin de görür.</div>'; goster('s-gbl'); window.scrollTo(0, 0); tuAnaCiz(); }
   $('#gbAnaKart').onclick = () => tuAc();
@@ -1506,6 +1507,61 @@
     if (d.cevap && d.cevap.acik) ddGoster(document.querySelector('[data-ddcevap]'), d.cevap);
     if (d.ses) ddGoster(document.querySelector('[data-ddses]'), Object.assign({ ad: 'ses' }, d.ses));
   }
+  // ---- Bildirimler kutusu: gelen her bildirim burada; dokununca ilgili bölüm açılır; tiklenip silinebilir. Uygulama simgesindeki sayı = okunmamış bildirim
+  const BL = { L: [], n: 0, sec: new Set(), yuklendi: false };
+  const BL_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="currentColor" fill-opacity=".2"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/><path d="M12 3v2"/></svg>';
+  const blSwTag = t => /^(acil|ozel)\|/.test(t) ? t : 'ogr|' + t;
+  function blRozet(okunanTaglar) {
+    try { if (navigator.setAppBadge) (BL.n > 0 ? navigator.setAppBadge(BL.n) : navigator.clearAppBadge()).catch(() => {}); } catch (e) {}
+    try { const m = { tur: 'bildirim-durum', sayi: BL.n, hepsi: BL.n === 0, taglar: (okunanTaglar || BL.L.filter(x => x.okundu).map(x => x.tag)).map(blSwTag) };
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage(m);
+      else if (navigator.serviceWorker) navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage(m)).catch(() => {}); } catch (e) {}
+  }
+  async function blYukle() { let d = null; try { ({ data: d } = await sb.rpc('umal_ogr_bildirim_kutusu', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!d || !d.ok) return false; BL.L = d.liste || []; BL.n = +d.okunmamis || 0; BL.yuklendi = true; BL.sec = new Set([...BL.sec].filter(i => BL.L.some(x => x.id === i)));
+    blRozet(); const k = $('#kutular [data-git="bild"]'); if (k) k.outerHTML = blKutu(); if (!$('#s-bild').classList.contains('gizli')) blCiz(); return true; }
+  async function blIsle(islem, idler, tag) { let d = null; try { ({ data: d } = await sb.rpc('umal_ogr_bildirim_kutu_isle', { p_no: S.no, p_kod: S.kod, p_islem: islem, p_idler: idler || null, p_tag: tag || null })); } catch (e) {}
+    if (d && d.ok) { BL.n = +d.okunmamis || 0; } return d; }
+  // bir bölüm açıldı: o bölüme ait okunmamış bildirimler okundu sayılır
+  function blUrlOku(git) { if (!S.kod || !git) return; const on = '/ogrenci/#git=' + git, L = BL.L.filter(x => !x.okundu && String(x.url || '').startsWith(on)); if (!L.length) return;
+    L.forEach(x => { x.okundu = true; }); BL.n = Math.max(0, BL.n - L.length); blRozet(L.map(x => x.tag)); blIsle('url_oku', null, on).then(() => blRozet()); }
+  function blKutu() { if (!BL.yuklendi) return ''; const n = BL.n;
+    return `<button data-git="bild" class="genis bl-ana ${n ? 'yeni' : ''}"><i class="ik" style="--c:#ffd166">${BL_IK}</i><span><b>Bildirimler</b><small>${n ? n + ' okunmamış bildirim' : BL.L.length ? 'Hepsini okudun' : 'Henüz bildirim yok'}</small></span>${n ? `<em class="bl-sayi">${n > 99 ? '99+' : n}</em>` : ''}</button>`; }
+  function blZaman(z) { const d = new Date(z), f = (Date.now() - d) / 6e4; if (f < 1) return 'şimdi'; if (f < 60) return Math.floor(f) + ' dk önce'; if (f < 1440 && d.getDate() === new Date().getDate()) return 'bugün ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); }
+  function blCiz() { const el = $('#blIc'); if (!el) return; const s_ = BL.sec.size;
+    el.innerHTML = `<div class="bl-arac">${BL.n ? '<button class="ikincil" id="blHepOku">Tümünü okundu say</button>' : ''}${s_ ? `<button class="ikincil bl-sil" id="blSecSil">Seçilenleri sil (${s_})</button>` : ''}${BL.L.length ? `<button class="ikincil" id="blHepSec">${s_ === BL.L.length ? 'Seçimi kaldır' : 'Tümünü seç'}</button>` : ''}</div>`
+      + (BL.L.length ? BL.L.map(x => `<div class="bl-sat ${x.okundu ? '' : 'yeni'} ${BL.sec.has(x.id) ? 'sec' : ''}"><button class="bl-tik" data-bltik="${x.id}" aria-label="Seç">${BL.sec.has(x.id) ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</button><button class="bl-ic" data-blac="${x.id}"><b>${esc(x.baslik || 'Bildirim')}</b>${x.metin ? `<span>${esc(x.metin)}</span>` : ''}<small>${blZaman(x.zaman)}</small></button></div>`).join('')
+        : '<div class="kart soluk">Henüz bildirim yok. Mesaj, ödev, duyuru, gezi, anket… sana gelen her yeni şey burada görünür.</div>');
+    const h = $('#blHepOku'); if (h) h.onclick = async () => { BL.L.forEach(x => { x.okundu = true; }); BL.n = 0; blCiz(); blRozet(); await blIsle('hepsini_oku'); blRozet(); };
+    const hs = $('#blHepSec'); if (hs) hs.onclick = () => { BL.sec = BL.sec.size === BL.L.length ? new Set() : new Set(BL.L.map(x => x.id)); blCiz(); };
+    const ss = $('#blSecSil'); if (ss) ss.onclick = async () => { const I = [...BL.sec]; BL.L = BL.L.filter(x => !BL.sec.has(x.id)); BL.sec = new Set(); blCiz(); await blIsle('sil', I); await blYukle(); };
+    el.querySelectorAll('[data-bltik]').forEach(b => b.onclick = () => { const i = +b.dataset.bltik; BL.sec.has(i) ? BL.sec.delete(i) : BL.sec.add(i); blCiz(); });
+    el.querySelectorAll('[data-blac]').forEach(b => b.onclick = async () => { const x = BL.L.find(z => z.id === +b.dataset.blac); if (!x) return;
+      if (!x.okundu) { x.okundu = true; BL.n = Math.max(0, BL.n - 1); blRozet([x.tag]); blIsle('oku', [x.id]).then(() => blRozet()); }
+      if (!blGit(x.url)) blCiz(); });
+  }
+  function blAc() { BL.sec = new Set(); blCiz(); goster('s-bild'); window.scrollTo(0, 0); blYukle(); }
+  // bildirim adresi (/ogrenci/#git=msj&s=… ) → uygulamadaki bölüm açılır
+  function blGit(url) { const i = String(url || '').indexOf('#'); if (i < 0) return false; return hedefAc(new URLSearchParams(String(url).slice(i + 1))); }
+  function hedefAc(p) { const git = p.get('git') || '', bt = p.get('bt');
+    if (bt) { const x = BL.L.find(z => z.tag === bt); if (x && !x.okundu) { x.okundu = true; BL.n = Math.max(0, BL.n - 1); } blRozet([bt]); blIsle('tag_oku', null, bt).then(() => blRozet()); }
+    if (!git) return false;
+    blUrlOku(git);
+    if (git === 'msj') { msAc().then(() => { const s_ = p.get('s'); if (s_ && MS.L.some(z => z.id === s_)) msSohbet(s_); }); return true; }
+    if (git === 'dd') { const id = p.get('id'); if (id && !DD.L.some(x => x.id === id)) { ddYukle().then(() => ddAc(DD.L.some(x => x.id === id) ? id : undefined)); return true; } ddAc(id || undefined); return true; }
+    if (git === 'rv') { rehAc(); rvAc(); return true; }
+    if (git === 'gb') { tuAc(); return true; }
+    if (git === 'bld') { bdAc('benim'); return true; }
+    if (git === 'bild') { blAc(); return true; }
+    const b = document.createElement('button'); b.dataset.git = git; if (git === 'ilan') b.dataset.il = '0'; if (git === 'gezi') b.dataset.gz = '0';
+    try { $('#kutular').onclick({ target: b }); return true; } catch (e) { return false; }
+  }
+  // bildirime dokunulunca telefon bu adresi açar (#git=…): giriş yapılmışsa ilgili bölüme geçilir, adres temizlenir
+  function hashGit() { if (!S.kod) return false; const h = location.hash.slice(1); if (!/(^|&)(git|bt)=/.test(h)) return false;
+    history.replaceState(null, '', location.pathname + location.search); return hedefAc(new URLSearchParams(h)); }
+  window.addEventListener('hashchange', () => { hashGit(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kod) blYukle(); });
   async function ddAc(id) {
     if (id) { DD.sec = id; const d = DD.L.find(x => x.id === id); ddGordum(id); if (d && !(d.ben && d.ben.acti)) { d.ben = Object.assign({}, d.ben, { acti: new Date().toISOString() }); ddIsle(id, 'acti'); } ddDetayCiz(); }
     else { DD.sec = null; ddListeCiz(); ddYukle().then(c => { if (c && !$('#s-dd').classList.contains('gizli') && !DD.sec) ddListeCiz(); }); }

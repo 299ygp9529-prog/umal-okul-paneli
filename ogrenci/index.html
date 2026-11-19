@@ -436,6 +436,23 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .bld { border-color: rgba(34,232,255,.45); background: linear-gradient(160deg, rgba(34,232,255,.10), var(--kart) 65%); } .bld .bld-ust { display: flex; gap: 12px; align-items: flex-start; }
 .bld .bld-ust i { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; color: var(--neon); background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.4); } .bld .bld-ust svg { width: 24px; height: 24px; }
 .bld b { display: block; font-size: 15px; } .bld span { display: block; color: var(--soluk); font-size: 13px; margin-top: 2px; } .bld .bld-alt { display: flex; gap: 8px; margin-top: 12px; } .bld .bld-alt button { flex: 1; margin: 0; } .bld .bilgi:empty { display: none; }
+
+/* Bildirimler */
+.izg button.bl-ana { grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; gap: 12px; position: relative; }
+.izg button.bl-ana > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.izg button.bl-ana.yeni { border-color: rgba(255,209,102,.6); box-shadow: 0 0 0 1px rgba(255,209,102,.25) inset, 0 0 18px rgba(255,209,102,.12); }
+.bl-sayi { font-style: normal; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 14px; display: grid; place-items: center; background: #ff3b4e; color: #fff; font-weight: 800; font-size: 14px; box-shadow: 0 0 12px rgba(255,59,78,.45); }
+.bl-arac { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; } .bl-arac .ikincil { font-size: 14px; padding: 8px 12px; } .bl-arac .bl-sil { color: #ff8a8a; border-color: rgba(255,138,138,.7); }
+.bl-sat { display: flex; align-items: stretch; gap: 0; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
+.bl-sat.yeni { border-color: rgba(34,232,255,.55); background: linear-gradient(90deg, rgba(34,232,255,.10), var(--kart) 40%); }
+.bl-sat.sec { border-color: #ff8a8a; }
+.bl-tik { flex: none; width: 52px; display: grid; place-items: center; background: transparent; border: 0; border-right: 1px solid var(--cizgi); cursor: pointer; color: var(--zemin); }
+.bl-tik::before { content: ''; grid-area: 1 / 1; width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--cizgi); }
+.bl-tik svg { grid-area: 1 / 1; width: 16px; height: 16px; position: relative; z-index: 1; }
+.bl-sat.sec .bl-tik::before { background: #ff8a8a; border-color: #ff8a8a; }
+.bl-ic { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 13px 14px; background: transparent; border: 0; color: #fff; text-align: left; font: inherit; cursor: pointer; position: relative; }
+.bl-ic b { font-size: 15.5px; } .bl-ic span { color: #d9e3f0; font-size: 14px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; } .bl-ic small { color: var(--soluk); font-size: 12px; }
+.bl-sat.yeni .bl-ic b::after { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon); margin-left: 8px; vertical-align: middle; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -512,6 +529,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-bild" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Bildirimler</h1></div><div id="blIc"></div></section>
   <section id="s-msj" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="msBaslik">Mesajlar</h1></div><div id="msIc"></div></section>
   <section id="s-bld" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Öneri ve sorun</h1></div><div id="bdIc"></div></section>
   <section id="s-ilan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="ilBaslik">Gezi</h1></div><div id="ilIc"></div></section>
@@ -575,11 +593,11 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="../bicim.js?v=202611190850"></script>
+<script src="../bicim.js?v=202611190930"></script>
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611190850"></script>
+<script src="ogrenci.js?v=202611190930"></script>
 </body>
 </html>
