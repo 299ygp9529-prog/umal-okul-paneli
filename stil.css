@@ -2509,3 +2509,8 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
 .msj-gec { opacity: .7; }
 /* K-747: iPhone'da çift dokunuşta yakınlaştırma yok (alt sekmeler ve düğmeler) */
 #ogtAlt, #ogtAlt *, body.ogt-alt button, body.ogt-alt a, body.ogt-alt .msj-sat, body.ogt-alt .tm-gk { touch-action: manipulation; }
+/* K-745d: klavye açıkken sohbet görünen alana sabit; mesajlar alttan dizilir (WhatsApp gibi) */
+@media (max-width: 760px) {
+  body.ogt-alt .msj-ekran.msj-sabit { position: fixed; left: 10px; right: 10px; z-index: 40; min-height: 0 !important; }
+  body.ogt-alt .msj-akis > :first-child { margin-top: auto; }
+}
