@@ -622,7 +622,7 @@
         <div class="soluk kucuk">Kilit ve açma zil çalınca kendiliğinden kalkar. Kapat: tahta 2 dakika uyarı verip kapanır.</div><div id="otBilgi" class="kucuk"></div></div>`; }
     else { const sn = D_.find(q => dk(q.bas) - 5 > t); ust = `<div class="kart soluk ot-bos">Şu an dersiniz yok; dersinizin saatinde o sınıfın tahtası burada en üstte çıkar.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; }
     const diger = TL.filter(q => !x || q.sinif !== x.sinif);
-    I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Dersinizdeki tahtayı yönetirsiniz; diğer tahtaların durumunu görürsünüz</div></div></div>${ust}
+    I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1></div></div>${ust}
       <div class="ot-bas">OKULDAKİ TAHTALAR</div><div class="ot-liste">${diger.map(q => { const d = dur(q); return `<div class="ot-sat ot-${d.s}"><b>${esc(q.sinif)}</b><span><i></i>${esc(d.y)}</span></div>`; }).join('') || '<div class="soluk kucuk" style="padding:10px">Tahta bilgisi yok.</div>'}</div>`;
     I.querySelectorAll('[data-oti]').forEach(b => b.onclick = async () => { const i = b.dataset.oti;
       if (i === 'kapat' && !await onayla(`${x.sinif} tahtası kapatılsın mı?`)) return;
