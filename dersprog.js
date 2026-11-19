@@ -655,7 +655,7 @@
     X = ctx; const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Ders Programı İsteğim</h1></div><div class="kart soluk">Yükleniyor…</div>';
     const { data } = await X.sb.rpc('umal_dp_istek_benim'); IS = Object.assign({ veri: {} }, data || {}); const k = JSON.parse(JSON.stringify(IS.veri || {}));
     const DUR = { bekliyor: 'İdare inceleyecek', uygulandi: 'Uygulandı', kismen: 'Kısmen uygulandı', uygulanamadi: 'Uygulanamadı' };
-    I.innerHTML = `<div class="ust"><div><h1>Ders Programı İsteğim</h1><div class="soluk kucuk">Yeni ders programı hazırlanırken idare isteğinizi görür. Her isteğin karşılanması garanti değildir.</div></div></div>
+    I.innerHTML = `<div class="ust"><div><h1>Ders Programı İsteğim</h1><div class="soluk kucuk">İdare yeni programı hazırlarken görür; karşılanması garanti değildir.</div></div></div>
       ${IS.durum ? `<div class="kart dp-durum ${IS.durum}"><b>${DUR[IS.durum] || IS.durum}</b>${IS.idare_notu ? `<div class="soluk">${esc(IS.idare_notu)}</div>` : ''}<span class="soluk kucuk">Son gönderim ${esc(new Date(IS.guncel).toLocaleString(tr))}</span></div>` : ''}
       <div class="kart" id="dpKF">${kuralFormHtml(k, false)}</div>
       <div class="dugmeler">${IS.durum ? '<button class="ikincil" id="dpISil" style="text-transform:none">İsteği geri çek</button>' : ''}<button class="birincil" id="dpIGonder" style="text-transform:none">${IS.durum ? 'Güncelle' : 'İsteği gönder'}</button></div>`;

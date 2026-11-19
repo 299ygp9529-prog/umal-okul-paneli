@@ -2580,3 +2580,5 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .tk-ust { margin: 4px 0 12px; } .tk-ust-s { display: flex; align-items: center; gap: 10px; } .tk-ust-s h1 { margin: 0; flex: 1; }
 .tk-pdf { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; border: 1px solid rgba(34,232,255,.55); background: rgba(34,232,255,.1); color: var(--neon); font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
 .tk-ad { color: var(--soluk); font-size: 13px; margin-top: 4px; } .tk-ust-d { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; } .tk-ust-d button { text-transform: none; }
+/* K-764: telefonda sayfa başlığı ile ilk kutu arasında nefes payı */
+@media (max-width: 760px) { #icerik > .ust { margin-bottom: 16px; } #icerik > .ust .soluk.kucuk { margin-top: 4px; line-height: 1.45; } }
