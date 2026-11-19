@@ -645,8 +645,7 @@
       const e = document.querySelector('.msj-ekran'); if (!e || window.innerWidth > 760) return;
       const vv = window.visualViewport, ak = e.querySelector('.msj-akis'), dipte = !ak || ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80, kl = document.body.classList.contains('klavye-acik') && vv && window.innerHeight - vv.height > 120;
       if (e.classList.contains('msj-sabit')) { e.classList.remove('msj-sabit'); e.style.removeProperty('top'); delete e.dataset.sabit; }
-      if (kl) { if (ak && dipte) ak.scrollTop = ak.scrollHeight; return; }   // klavye açıkken boy değişmez; iPhone yazı kutusunu klavyenin üstüne kendisi getirir
-      const alt = n.getBoundingClientRect().top; if (!alt) { if (ak && dipte) ak.scrollTop = ak.scrollHeight; return; }   // çubuk gizliyken (klavye) boy korunur
+      const alt = document.body.classList.contains('klavye-acik') ? window.innerHeight - 4 : n.getBoundingClientRect().top; if (!alt) return;   // klavye açıkken kutu sayfanın dibine uzanır; iPhone yazı kutusunu klavyenin hemen üstüne getirir
       const h = Math.max(240, Math.round(alt - (e.getBoundingClientRect().top + window.scrollY) - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; } };
     let bz = 0; const boyutSonra = () => { cancelAnimationFrame(bz); bz = requestAnimationFrame(boyut); };   // tek karede bir kez
     window.addEventListener('resize', boyutSonra); if (window.visualViewport) { visualViewport.addEventListener('resize', boyutSonra); }
@@ -654,8 +653,8 @@
     const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
     // klavye açıkken alt sekmeler gizlenir (iOS'ta klavyenin üstüne oturmasın)
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
-    document.addEventListener('focusin', ev => { if (!yaziMi(ev.target)) return; document.body.classList.add('klavye-acik'); if (ev.target.id === 'msjYaz') { const dip = () => { const ak = document.getElementById('msjAkis'); if (ak) ak.scrollTop = ak.scrollHeight; }; [120, 450].forEach(t => setTimeout(() => { boyut(); dip(); }, t)); } });   // yazarken son mesaj görünür
-    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); }, 120));
+    document.addEventListener('focusin', ev => { if (!yaziMi(ev.target)) return; document.body.classList.add('klavye-acik'); boyut(); if (ev.target.id === 'msjYaz') { const dip = () => { const ak = document.getElementById('msjAkis'); if (ak) ak.scrollTop = ak.scrollHeight; }; [120, 450].forEach(t => setTimeout(() => { boyut(); dip(); }, t)); } });   // yazarken son mesaj görünür
+    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) { document.body.classList.remove('klavye-acik'); boyut(); } }, 120));
     if (window.visualViewport) { const vv = () => { document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px'); if (window.innerHeight - visualViewport.height < 120 && !yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik');
 };
       visualViewport.addEventListener('resize', vv); visualViewport.addEventListener('scroll', () => document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px')); vv(); }
