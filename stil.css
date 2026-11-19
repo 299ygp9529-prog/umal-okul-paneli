@@ -2309,3 +2309,45 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 @media (max-width: 700px) { .dya-sec.gb-sek:has(.cip:nth-child(3)) .cip { font-size: 13px; gap: 5px; padding: 11px 4px; } .dya-sec.gb-sek:has(.cip:nth-child(3)) .cip svg { width: 14px; height: 14px; } }
 .gb-eksik { border-radius: 14px; animation: gbEksik .9s ease-out 1; }
 @keyframes gbEksik { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,84,112,0); } 20%, 60% { box-shadow: 0 0 0 2px #ff5470, 0 0 18px rgba(255,84,112,.55); } }
+
+/* Bilgisayar giriş ekranı: solda okulun tanıtım alanı, sağda giriş kartı; ekrana tam oturur, kaydırma yok (telefon görünümü değişmez) */
+.gt { display: none; }
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .giris { display: grid; grid-template-columns: minmax(0, 1fr) clamp(440px, 34vw, 540px); height: 100vh; min-height: 0; padding: 0; align-items: stretch; }
+  .gt { display: flex; flex-direction: column; justify-content: space-between; position: relative; z-index: 1; padding: clamp(28px, 5vh, 56px) clamp(32px, 4vw, 72px); overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(34,232,255,.10), transparent 70%), linear-gradient(160deg, #0b1626 0%, #0f1f36 55%, #0b1626 100%); border-right: 1px solid rgba(34,232,255,.18); }
+  .gt::after { content: ""; position: absolute; right: -14vh; bottom: -14vh; width: 62vh; height: 62vh; background: url('okul-logo.png') center / contain no-repeat; opacity: .05; pointer-events: none; }
+  .gt > * { position: relative; z-index: 1; }
+  .gt-ust { display: flex; align-items: center; gap: clamp(16px, 1.6vw, 26px); }
+  .gt-logo { width: clamp(72px, 10vh, 104px); height: auto; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,214,120,.55), 0 0 28px rgba(34,232,255,.35); }
+  .gt-ad { display: flex; flex-direction: column; line-height: 1; }
+  .gt-ad1 { font-family: 'UMAL Marcellus', serif; font-size: clamp(15px, 1.35vw, 22px); letter-spacing: .32em; color: var(--neonacik); }
+  .gt-ad2 { font-family: 'UMAL Cormorant', serif; font-weight: 600; font-size: clamp(40px, 4.4vw, 72px); color: #fff; margin-top: 6px; letter-spacing: .01em; }
+  .gt-yil { display: flex; align-items: center; gap: 12px; margin-top: 12px; font-family: 'UMAL Marcellus', serif; font-size: clamp(12px, .95vw, 15px); letter-spacing: .28em; text-transform: uppercase; color: #e6c27a; }
+  .gt-yil i { display: block; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, #e6c27a); } .gt-yil i:last-child { background: linear-gradient(90deg, #e6c27a, transparent); }
+  .gt-ata { display: flex; align-items: center; gap: clamp(24px, 2.6vw, 48px); margin: 0; min-height: 0; flex: 1; padding: clamp(18px, 3vh, 36px) 0; }
+  .gt-cerceve { height: min(46vh, 520px); aspect-ratio: 520 / 679; flex: none; padding: 7px; border-radius: 6px; background: linear-gradient(145deg, #f0d48e, #a8822f 45%, #f6e2a8 70%, #9b7426); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 30px rgba(230,194,122,.18); }
+  .gt-cerceve img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 3px; }
+  .gt-ata figcaption { max-width: 30ch; }
+  .gt-ata q { display: block; font-family: 'UMAL Cormorant', serif; font-style: italic; font-weight: 500; font-size: clamp(26px, 2.5vw, 42px); line-height: 1.2; color: #fff; quotes: "“" "”"; }
+  .gt-ata cite { display: block; margin-top: 16px; font-style: normal; font-family: 'UMAL Marcellus', serif; letter-spacing: .2em; text-transform: uppercase; font-size: clamp(11px, .85vw, 13.5px); color: #e6c27a; }
+  .gt-alt { display: flex; align-items: center; gap: 14px; color: var(--soluk); font-size: 13.5px; }
+  .gt-atlas { font-family: 'UMAL Marcellus', serif; letter-spacing: .3em; color: var(--neon); font-size: 15px; text-shadow: 0 0 12px rgba(34,232,255,.5); }
+  .giris > .kutu { align-self: center; justify-self: center; width: calc(100% - 48px); max-height: calc(100vh - 40px); overflow: hidden; padding: clamp(22px, 3.4vh, 40px) 36px clamp(18px, 2.6vh, 30px); }
+  .giris > .kutu::-webkit-scrollbar { display: none; }
+  .giris .logo-cerceve { width: clamp(84px, 12vh, 128px); height: clamp(84px, 12vh, 128px); margin-bottom: clamp(8px, 1.6vh, 20px); }
+  .giris .logo-cerceve img { inset: 7%; width: 86%; height: 86%; }
+  .giris .atlas { font-size: clamp(30px, 5vh, 44px); }
+  .giris-sekme { margin-top: clamp(12px, 2.4vh, 26px) !important; }
+  .giris label { margin-top: clamp(12px, 2.2vh, 28px); }
+  .giris .giris-sekme + #adim1 label { margin-top: clamp(12px, 2vh, 22px); }
+  .giris input, .giris .birincil, .giris .ikincil { height: clamp(42px, 5.6vh, 52px); }
+  .giris .birincil, .giris .ikincil { margin-top: clamp(8px, 1.4vh, 14px); }
+  .giris .not { margin-top: clamp(8px, 1.4vh, 14px); }
+  .kurlink { margin-top: clamp(8px, 1.4vh, 16px); }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 820px) and (hover: hover) {
+  .giris > .kutu .not { display: none; }
+  .giris .alt { margin-top: 2px; } .giris .baslik { margin-top: 4px; }
+  .giris .kod-link { font-size: 14px; }
+}
