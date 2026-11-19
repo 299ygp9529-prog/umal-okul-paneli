@@ -646,7 +646,9 @@
   async function siradakiBaslat() {
     if (!['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol) || siradakiBaslat.oldu) return; siradakiBaslat.oldu = true;
     let V = null, vZ = 0, alinan = new Set(), aZ = 0;
-    const el = document.createElement('div'); el.id = 'siradaki'; el.className = 'sr-kart gizli'; document.body.appendChild(el);
+    const el = document.createElement('section'); el.id = 'siradaki'; el.className = 'sr-kart gizli'; el.setAttribute('aria-live', 'polite');
+    const yerles = () => { const tm = document.body.classList.contains('tm-acik') && document.querySelector('.tumu-menu'), m = tm || $('#icerik'); if (m && (el.parentNode !== m || m.firstChild !== el)) m.prepend(el); };   // K-726: sayfanın (telefonda bölümler ekranının) en üstünde
+    yerles(); new MutationObserver(yerles).observe($('#icerik'), { childList: true }); setInterval(yerles, 700);
     const kapali = () => { try { return JSON.parse(sessionStorage.getItem('srKapali') || '[]'); } catch (e) { return []; } };
     const tur = async () => {
       if (!V || Date.now() - vZ > 300000) { V = await dyDerslerim().catch(() => null); vZ = Date.now(); }
@@ -654,14 +656,16 @@
       const an = new Date(), t = an.getHours() * 60 + an.getMinutes(), { D_, dk } = V;
       const simdi = D_.find(x => dk(x.bas) - 5 <= t && t < dk(x.bit)), sonraki = D_.find(x => dk(x.bas) - 5 > t);
       if (simdi && Date.now() - aZ > 60000) { aZ = Date.now(); try { const { data } = await sb.rpc('umal_ders_yoklama_liste', { p_bas: bugunISO(), p_bit: bugunISO() }); alinan = new Set(((data && data.liste) || []).filter(x => x.onay).map(x => x.sinif + '|' + x.anahtar)); } catch (e) {} }
-      const dersYaz = x => `${x.n}. ders · ${esc(x.sinif)}${x.ders ? ' · ' + esc(baslik(x.ders)) : ''}`;
+      const kart = (x, ust, alt, oran, dug) => `<div class="sr-no"><b>${x.n}</b><span>DERS</span></div>
+        <div class="sr-ic"><small>${ust}</small><div class="sr-sinif">${esc(x.sinif)}</div><div class="sr-ders">${esc(x.ders ? baslik(x.ders) : '')}</div>
+          <div class="sr-zaman"><span>${esc(String(x.bas).replace(':', '.'))} – ${esc(String(x.bit).replace(':', '.'))}</span><em>${alt}</em></div>${oran != null ? `<div class="sr-bar"><i style="width:${Math.max(3, Math.min(100, oran * 100)).toFixed(0)}%"></i></div>` : ''}</div>${dug}`;
       let h = '', k = '';
-      if (simdi && !alinan.has(simdi.sinif + '|ders-' + simdi.n)) { k = 'y' + simdi.sinif + simdi.n;
-        h = `<div class="sr-ic"><small>Şu an dersiniz${simdi.gorev ? ' · görevlendirme' : ''}</small><b>${dersYaz(simdi)}</b></div><button class="birincil sr-dug" data-sry="${esc(simdi.sinif)}|${simdi.n}">Yoklamayı al</button>`; }
-      else if (sonraki && (!simdi || alinan.has(simdi.sinif + '|ders-' + simdi.n)) && dk(sonraki.bas) - t <= 45) { k = 's' + sonraki.sinif + sonraki.n;
-        h = `<div class="sr-ic"><small>Sıradaki dersiniz · ${esc(sonraki.bas)}</small><b>${dersYaz(sonraki)}</b></div>`; }
+      if (simdi && !alinan.has(simdi.sinif + '|ders-' + simdi.n)) { k = 'y' + simdi.sinif + simdi.n; const b0 = dk(simdi.bas), b1 = dk(simdi.bit), kal = b1 - t;
+        h = kart(simdi, `ŞU AN DERSİNİZ${simdi.gorev ? ' · GÖREVLENDİRME' : ''}`, t < b0 ? `${b0 - t} dk sonra başlıyor` : `${kal} dk kaldı`, t < b0 ? 0 : (t - b0) / Math.max(1, b1 - b0), `<button class="birincil sr-dug" data-sry="${esc(simdi.sinif)}|${simdi.n}">Yoklamayı al</button>`); }
+      else if (sonraki && (!simdi || alinan.has(simdi.sinif + '|ders-' + simdi.n)) && dk(sonraki.bas) - t <= 45) { k = 's' + sonraki.sinif + sonraki.n; const kal = dk(sonraki.bas) - t;
+        h = kart(sonraki, `SIRADAKİ DERSİNİZ${sonraki.gorev ? ' · GÖREVLENDİRME' : ''}`, kal <= 0 ? 'şimdi başlıyor' : `${kal} dk sonra`, null, ''); }
       if (!h || kapali().includes(k)) { el.classList.add('gizli'); return; }
-      el.innerHTML = h + `<button class="sr-x" aria-label="Kapat">×</button>`; el.classList.remove('gizli');
+      el.innerHTML = h + `<button class="sr-x" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`; el.classList.remove('gizli'); yerles();
       el.querySelector('.sr-x').onclick = () => { try { sessionStorage.setItem('srKapali', JSON.stringify(kapali().concat([k]).slice(-20))); } catch (e) {} el.classList.add('gizli'); };
       const y = el.querySelector('[data-sry]'); if (y) y.onclick = () => { const [sf, n] = y.dataset.sry.split('|'); el.classList.add('gizli'); aZ = 0; try { tumuKapat(); } catch (e) {} ac('dersyoklama'); };
     };
@@ -1053,7 +1057,7 @@
     return D.ogrenciler;
   }
   async function gbAc(tur, on) {   // K-720: tebrik/uyarı, veli erişimi (ihtiyaç olunca yüklenir)
-    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190730'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190740'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalGB[tur]({ sb, esc, baslik, D, bolumAc: id => { tumuKapat(); ac(id); }, ogrencileriYukle, fotolariYukle, dyDerslerim, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant, rol: D.rol }, on);
     } catch (e) { uyar('Açılamadı: ' + hataYaz(e)); } }
   async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)

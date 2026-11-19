@@ -7,6 +7,8 @@
     uyari: ['Derste konuştu', 'Dersin huzurunu bozdu', 'Ödevini yapmadı', 'Ders materyali getirmedi', 'Derse geç kaldı', 'Derste telefonla ilgilendi']
   };
   let X = null;
+  const SEK_IK = { gonder: '<path d="M4 12.5 20 4l-6.5 16-2.6-6.9z" fill="currentColor" fill-opacity=".18"/><path d="M20 4 10.9 13.1"/>', gecmis: '<rect x="4.5" y="4" width="15" height="16" rx="2.5" fill="currentColor" fill-opacity=".14"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/>', giden: '<rect x="4.5" y="4" width="15" height="16" rx="2.5" fill="currentColor" fill-opacity=".14"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/>', gelen: '<path d="M4 13.5h4.5l1.5 2.5h4l1.5-2.5H20" /><path d="M5.5 6.5h13l1.5 7v4.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18v-4.5z" fill="currentColor" fill-opacity=".14"/>' };
+  const sekIk = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEK_IK[k] || ''}</svg>`;
   const $ = s => document.querySelector(s), esc = s => X.esc(s), bas = s => X.baslik(s);
   const gunYaz = t => new Date(String(t).length <= 10 ? t + 'T12:00:00' : t).toLocaleDateString(tr, { day: 'numeric', month: 'short' });
   // ---------- Tebrik ve uyarı
@@ -24,7 +26,7 @@
     const S = BEN.length ? (idareMi ? [...BEN, ...TUM.filter(s => !BEN.includes(s))] : BEN) : TUM; GB.benS = BEN;   // öğretmen yalnız girdiği sınıfları görür
     if (!GB.sinif || !S.includes(GB.sinif)) GB.sinif = S[0];
     I.innerHTML = `<div class="ust"><div><h1>Tebrik ve Uyarı</h1><div class="soluk kucuk">Öğrencinin paneline ve veli ekranına gider.</div></div></div>
-      <div class="dya-sec gb-sek">${[['gonder', 'Gönder'], ['gecmis', X.rol === 'ogretmen' ? 'Gönderdiklerim' : 'Gönderilenler']].map(([k, a]) => `<button class="cip ${GB.sek === k ? 'secili' : ''}" data-gbs="${k}">${a}</button>`).join('')}</div><div id="gbIc"></div>`;
+      <div class="dya-sec gb-sek">${[['gonder', 'Gönder'], ['gecmis', X.rol === 'ogretmen' ? 'Gönderdiklerim' : 'Gönderilenler']].map(([k, a]) => `<button class="cip ${GB.sek === k ? 'secili' : ''}" data-gbs="${k}">${sekIk(k)}${a}</button>`).join('')}</div><div id="gbIc"></div>`;
     I.querySelectorAll('[data-gbs]').forEach(b => b.onclick = () => { GB.sek = b.dataset.gbs; ciz(); });
     if (GB.sek === 'gonder') gonderCiz(S); else gecmisCiz();
   }
@@ -132,7 +134,7 @@
   function obCiz() {
     const I = $('#icerik'), sek = idare() ? [['gonder', 'Gönder'], ['giden', 'Gönderilenler'], ['gelen', 'Bana gelenler']] : [['gelen', 'Bana gelenler']];
     I.innerHTML = `<div class="ust"><div><h1>Okul Bildirimleri</h1><div class="soluk kucuk">${idare() ? 'Veliye, öğrenciye ya da öğretmene bildirim gönderin. Telefonunda bildirim açık olana anında gider; diğerleri kendi ekranında görür.' : 'İdareden size gelen bildirimler. Telefonunuza anında gelmesi için bildirimleri açın.'}</div></div></div>
-      <div id="obTel"></div>${sek.length > 1 ? `<div class="dya-sec gb-sek">${sek.map(([k, a]) => `<button class="cip ${OB.sek === k ? 'secili' : ''}" data-obs="${k}">${a}</button>`).join('')}</div>` : ''}<div id="obIc"></div>`;
+      <div id="obTel"></div>${sek.length > 1 ? `<div class="dya-sec gb-sek">${sek.map(([k, a]) => `<button class="cip ${OB.sek === k ? 'secili' : ''}" data-obs="${k}">${sekIk(k)}${a}</button>`).join('')}</div>` : ''}<div id="obIc"></div>`;
     I.querySelectorAll('[data-obs]').forEach(b => b.onclick = () => { OB.sek = b.dataset.obs; OB.sonuc = ''; obCiz(); });
     telCiz(); if (OB.sek === 'gonder') gonderObCiz(); else if (OB.sek === 'giden') gidenCiz(); else gelenCiz();
   }
