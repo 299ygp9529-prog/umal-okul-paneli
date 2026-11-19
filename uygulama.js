@@ -6640,7 +6640,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       return tfBitti(x) ? '<span class="ch-tf gec">Yoklama yok</span>' : '<span class="ch-tf bek">Bekliyor</span>'; };
     const tfSinifIci = async () => {   // K-738: ortak takvimde olmayan (sınıfta yapılan) sınavların tarihi + ders saati, şube şube
       let K = {}; try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle(); K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
-      const ortak = (sube, ders) => (tk.subeler || []).some(y => !y.sinifIci && tfEs((y.subeler || {})[sube], ders)), DL = [];
+      const ortak = (sube, ders) => (tk.subeler || []).some(y => !y.sinifIci && String((y.subeler || {})[sube] || '').split(/\s*\/\s*/).some(z => tfDk(z) && tfDk(z) === tfDk(ders))), DL = [];
       tfOturum.forEach(x => ['9', '10', '11', '12'].forEach(v => String(x['s' + v] || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); if (!m) return; const ad = m[1].trim(), S = m[2].split(/[,;]\s*/).map(z => z.trim()).filter(z => z && !ortak(z, ad));
         if (!S.length) return; const d = DL.find(q => q.ad === ad); if (d) S.forEach(z => { if (!d.S.includes(z)) d.S.push(z); }); else DL.push({ ad, S }); })));
       if (!DL.length) { uyar('Telafi programındaki bütün dersler ortak sınav takviminde var.'); return; }
