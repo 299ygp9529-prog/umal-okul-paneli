@@ -2356,3 +2356,12 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) {
   .gt-yil { display: none; } .gt-ad2 { font-size: 34px; } .giris > .kutu { margin-top: 56px; }
 }
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .gt-slogan { margin-top: 8px; font-family: 'UMAL Cormorant', serif; font-style: italic; font-size: clamp(15px, 1.1vw, 19px); color: rgba(255,255,255,.82); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+  .gt-alt { gap: 10px; max-width: none; }
+  .gt-baglar { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+  .gt-baglar a { display: inline-flex; align-items: center; gap: 9px; color: #e9f3ff; text-decoration: none; font-size: 13.5px; font-weight: 600; letter-spacing: .01em; padding: 6px 12px 6px 10px; border-radius: 999px; background: rgba(9,18,32,.55); border: 1px solid rgba(34,232,255,.25); transition: border-color .2s, background .2s; }
+  .gt-baglar a:hover { border-color: var(--neon); background: rgba(34,232,255,.12); }
+  .gt-baglar svg { width: 17px; height: 17px; color: var(--neon); flex: none; }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-slogan { display: none; } }
