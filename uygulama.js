@@ -6390,9 +6390,10 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     let secTur = new Set(['rapor', 'izin', 'diger']);   // raporlu, izinli, faaliyet varsayılan; özürsüz isteğe bağlı
     const isGunuSonra = (t, n) => { let d = new Date(t + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
     const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false;
-      const bi = L.findIndex(r => r.some(c => /öğr\.?\s*no|okul\s*no|öğrenci\s*no/i.test(c)) && r.some(c => /tarih/i.test(c)));
+      const NOB = /öğr\.?\s*no|okul\s*no|öğrenci\s*no|^\s*(no|numara|numarası|öğr\.?\s*numarası)\s*$/i;
+      const bi = L.findIndex(r => r.some(c => NOB.test(String(c || ''))) && r.some(c => /tarih|başla/i.test(String(c || ''))));
       const B = bi >= 0 ? L[bi].map(c => String(c || '').toLocaleLowerCase(tr)) : null, sut = re => B ? B.findIndex(c => re.test(c)) : -1;
-      const cNo = sut(/öğr\.?\s*no|okul\s*no|öğrenci\s*no/), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün\s*say|süre|kaç\s*gün|^\s*gün\b|\bgün\s*$/), cN = sut(/neden|tür/);
+      const cNo = sut(NOB), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün\s*say|süre|kaç\s*gün|^\s*gün\b|\bgün\s*$/), cN = sut(/neden|tür/);
       for (const r of (bi >= 0 ? L.slice(bi + 1) : L)) { const H = r.map(x => String(x || '').trim()).filter(Boolean); if (!H.length) continue;
         let T, o = null, yarim = false, neden = '';
         if (B) { const g = k => k >= 0 ? String(r[k] || '').trim() : ''; const t0 = tarihBul(g(cBas) || g(cT)) || seri(g(cBas) || g(cT)); if (!t0) continue; const t1 = tarihBul(g(cBit)) || seri(g(cBit)) || t0;
