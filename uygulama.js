@@ -5093,10 +5093,18 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         R.querySelectorAll('textarea[data-prt]').forEach(e => { prBoy(e); e.addEventListener('input', () => prBoy(e)); });
         R.querySelectorAll('[data-prsil]').forEach(b => b.onclick = () => { prOku(); I.program.splice(+b.dataset.prsil, 1); kay(); ciz_(); });
         if ($('#gkPrEkle')) $('#gkPrEkle').onclick = () => { prOku(); I.program.push({ s: '', t: '' }); ciz_(); const t = R.querySelectorAll('[data-prt]'); if (t.length) t[t.length - 1].focus(); };
-        if ($('#gkAfis')) $('#gkAfis').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; if (f.size > 6 * 1024 * 1024) { uyar('Afiş 6 MB\'tan küçük olsun.'); return; }
-          const yol = 'gezi/afis/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.' + ((f.name.match(/\.(\w+)$/) || [])[1] || 'jpg').toLowerCase();
-          const up = await sb.storage.from('umal-pdf').upload(yol, f, { contentType: f.type || 'image/jpeg', upsert: false }); if (up.error) { uyar('Afiş yüklenemedi: ' + hataYaz(up.error)); return; }
-          I.afis = `${URL_}/storage/v1/object/public/umal-pdf/${yol}`; kay(); ciz_(); };
+        if ($('#gkAfis')) $('#gkAfis').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; if (f.size > 15 * 1024 * 1024) { uyar('Afiş 15 MB\'tan küçük olsun.'); return; }
+          // afiş her biçimde (PNG, HEIC, WEBP…) seçilebilir: yüklemeden önce JPEG'e çevrilir ve en çok 1800 piksele küçültülür
+          let jpg = null; try { const bmp = await createImageBitmap(f), o = Math.min(1, 1800 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * o); c.height = Math.round(bmp.height * o);
+            const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(bmp, 0, 0, c.width, c.height); jpg = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.88)); } catch (e) { jpg = null; }
+          if (!jpg) { uyar('Bu dosya resim olarak okunamadı. JPG ya da PNG bir afiş seçin.'); return; }
+          const ad = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.jpg';
+          let up = await sb.storage.from('umal-pdf').upload('gezi/afis/' + ad, jpg, { contentType: 'image/jpeg', upsert: false });
+          if (!up.error) I.afis = `${URL_}/storage/v1/object/public/umal-pdf/gezi/afis/${ad}`;
+          else { const y2 = 'gezi/' + ad; up = await sb.storage.from('umal-resim').upload(y2, jpg, { contentType: 'image/jpeg', upsert: false });
+            if (up.error) { uyar('Afiş yüklenemedi: ' + hataYaz(up.error)); return; }
+            const sg = await sb.storage.from('umal-resim').createSignedUrl(y2, 60 * 60 * 24 * 730); if (sg.error || !sg.data) { uyar('Afiş yüklenemedi: ' + hataYaz(sg.error || {})); return; } I.afis = sg.data.signedUrl; }
+          kay(); ciz_(); };
         if ($('#gkAfisSil')) $('#gkAfisSil').onclick = () => { delete I.afis; kay(); ciz_(); };
         // Kayıt · ödeme
         R.querySelectorAll('[data-gksuz]').forEach(b => b.onclick = () => { suz = b.dataset.gksuz; ciz_(); });
