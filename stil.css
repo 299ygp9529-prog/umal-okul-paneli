@@ -2507,3 +2507,5 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
   body.ogt-sakin .msj-akis { overflow-y: auto; overscroll-behavior: contain; }
 }
 .msj-gec { opacity: .7; }
+/* K-747: iPhone'da çift dokunuşta yakınlaştırma yok (alt sekmeler ve düğmeler) */
+#ogtAlt, #ogtAlt *, body.ogt-alt button, body.ogt-alt a, body.ogt-alt .msj-sat, body.ogt-alt .tm-gk { touch-action: manipulation; }
