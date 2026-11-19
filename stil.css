@@ -2365,3 +2365,13 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .gt-baglar svg { width: 17px; height: 17px; color: var(--neon); flex: none; }
 }
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-slogan { display: none; } }
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .gt-baglar svg.ig { width: 20px; height: 20px; color: inherit; }
+  .gt-logo { display: block; width: clamp(64px, 9.5vh, 100px); height: auto; border-radius: 50%; box-shadow: 0 0 0 2px rgba(230,194,122,.7), 0 0 26px rgba(34,232,255,.35), 0 8px 24px rgba(0,0,0,.5); }
+  .gt-ust { gap: clamp(8px, 1.4vh, 14px); top: clamp(16px, 3vh, 34px); }
+  .giris > .kutu { margin-top: clamp(110px, 17vh, 170px); }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) {
+  .gt-logo { width: 52px; } .gt-ad1 { font-size: 11px; } .gt-ad2 { font-size: 28px; margin-top: 2px; }
+  .giris > .kutu { margin-top: 104px; } .giris .atlas { font-size: 28px; }
+}
