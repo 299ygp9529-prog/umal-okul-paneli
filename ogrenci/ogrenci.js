@@ -643,7 +643,7 @@
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.numarasiz ? `${d.otobus.no}. otobüste krokide kırmızı SEN yazan koltuğa otur.` : `${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur.`} Değişiklik olursa burada hemen görünür.</p>${gzProgram(d)}`;
   }
   function gzProgram(d) {   // ilandaki gezi programı biletle birlikte de görünür
-    const I = (GZ.I || []).find(x => x.anahtar === d.anahtar) || {}, L = (I.program || []).filter(x => x.t);
+    const I0 = (GZ.I || []).find(x => x.anahtar === d.anahtar) || {}, I = { program: (d.program && d.program.length ? d.program : I0.program) || [], aciklama: d.aciklama || I0.aciklama || '' }, L = I.program.filter(x => x && x.t);
     return `${L.length ? `<div class="kart gz-prog"><h3>Gezi programı</h3><div class="il-prog">${L.map(x => `<div><i>${esc(x.s || '')}</i>${esc(x.t)}</div>`).join('')}</div></div>` : ''}${I.aciklama ? `<div class="kart gz-prog"><h3>Notlar</h3><div class="il-not">${esc(I.aciklama)}</div></div>` : ''}`;
   }
   // K-680: Çalışma Haritası — zümrenin seçtiği senaryodan yaklaşan yazılının tema/konu/soru dağılımı
