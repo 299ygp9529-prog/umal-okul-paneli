@@ -517,9 +517,8 @@
     const EL = Object.values(E_).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
     const OL = Object.values(O).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no)); OL.forEach(o => o.s.sort((a, b) => a - b));
     const sinifler = [...new Set(L.map(x => x.sinif))].sort(sinifSira);
-    const ust = `<div class="ust"><div><h1>Ders Yoklaması</h1><div class="soluk kucuk">${idare ? 'Tahtada sınıf başkanı işaretler, dersin öğretmeni onaylar' : 'Girdiğiniz derslerin tahtada alınan yoklamaları'}</div></div></div>
-      ${DY.gun === bugunISO() ? '<button class="birincil dya-ac" id="dyaAc">Telefondan yoklama al</button>' : ''}
-      <div class="dy-gun"><button class="ikincil" data-dyg="-1" aria-label="Önceki gün">‹</button><b>${esc(gunAd)}</b><button class="ikincil" data-dyg="1" aria-label="Sonraki gün" ${DY.gun >= bugunISO() ? 'disabled' : ''}>›</button>${DY.gun !== bugunISO() ? '<button class="ikincil kucuk" data-dyg="0">Bugün</button>' : ''}</div>`;
+    const ust = `<div class="dyu"><h1>Yoklama</h1>${DY.gun === bugunISO() ? '<button class="dyu-al" id="dyaAc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M11 18.5h2"/></svg><span>Telefondan al</span></button>' : ''}</div>
+      <div class="dyu-gun"><button data-dyg="-1" aria-label="Önceki gün">‹</button><b>${esc(gunAd)}</b>${DY.gun !== bugunISO() ? '<button class="dyu-bugun" data-dyg="0">Bugün</button>' : ''}<button data-dyg="1" aria-label="Sonraki gün" ${DY.gun >= bugunISO() ? 'disabled' : ''}>›</button></div>`;   // K-759: sade başlık
     const eksik = idare ? await dyEksikHtml(L, sn) : '';   // K-720: yoklama almayan öğretmenler
     if (!L.length) { I.innerHTML = ust + eksik + `<div class="kart soluk">Bu gün için tahtadan gelen yoklama yok.${idare ? ' Öğretmen, tahtada Okul › Yoklama ile alır.' : ''}</div>`; dyBagla(kaydir); dyHatBagla(); return; }
     let h = ust + eksik;
