@@ -2476,3 +2476,12 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ogt-ara-k small { color: #22e8ff; letter-spacing: .14em; font-weight: 800; font-size: 11.5px; } .ogt-ara-k div { display: flex; align-items: baseline; gap: 10px; margin: 4px 0; } .ogt-ara-k div b { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; } .ogt-ara-k div span { color: #c9d6e8; font-style: italic; }
 .ogt-ara-k em { font-style: normal; color: #ffcf7a; font-weight: 700; font-size: 13.5px; }
 .sr-kart.sr-op { display: none !important; }   /* K-741: programda "şu an" satırı zaten var */
+/* K-742: öğretmen tahta kontrol */
+.ot-kart { align-items: stretch; text-align: left; margin-top: 12px; padding: 18px; border-radius: 22px; background: linear-gradient(155deg, #14294a, #0f1b31); border: 1px solid #22e8ff33; display: flex; flex-direction: column; gap: 12px; }
+.ot-kart.kl { border-color: #ff6b7a66; } .ot-kart.kp { border-color: #ffffff1a; }
+.ot-ust { display: flex; align-items: baseline; gap: 12px; } .ot-sinif { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 700; line-height: 1; } .ot-ders { color: #b8c6da; font-style: italic; }
+.ot-durum { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 17px; } .ot-durum i { width: 11px; height: 11px; border-radius: 50%; background: #3ef08a; box-shadow: 0 0 10px #3ef08a; }
+.ot-kart.kl .ot-durum i { background: #ff6b7a; box-shadow: 0 0 10px #ff6b7a; } .ot-kart.kp .ot-durum i { background: #6f819c; box-shadow: none; }
+.ot-dug { display: grid; gap: 10px; } .ot-dug button { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; font-size: 17px; border-radius: 16px; } .ot-dug svg { width: 24px; height: 24px; }
+.ot-kapat { color: #ffb0b8 !important; border-color: #ff6b7a66 !important; } .ot-bos { text-align: center; padding: 22px; }
+.ogt-msj-yok { opacity: .75; }

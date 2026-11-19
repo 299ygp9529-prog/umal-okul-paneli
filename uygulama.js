@@ -412,13 +412,26 @@
   const MSJ_SINIF = ['9-D', '12-A', '11-E'];   // Kurucunun sınıfları (deneme)
   const msjAvatar = (no, ad) => `<span class="msj-av" data-foto="${esc(no)}">${D.fotolar && D.fotolar[no] ? `<img alt="" src="${D.fotolar[no]}">` : esc(String(baslik(ad || '?')).split(' ').map(z => z[0]).slice(0, 3).join(''))}</span>`;
   const msjSaat = t => { const d = new Date(t), b = new Date(); return d.toDateString() === b.toDateString() ? d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(tr, { day: 'numeric', month: 'short' }); };
-  async function msjRozet() { try { const { data } = await sb.rpc('umal_sohbet_listem'); if (!data || !data.ok) return; MSJ.L = data.liste || []; MSJ.ben = data.ben; MSJ.sik = data.kurucu_sikayet || 0;
+  async function msjRozet() { try { const { data } = await sb.rpc('umal_sohbet_listem'); MSJ.kapali = !!(data && data.kapali); if (!data || !data.ok) return; MSJ.L = data.liste || []; MSJ.ben = data.ben; MSJ.sik = data.kurucu_sikayet || 0;
     const n = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), m = document.querySelector('#menu .menu-oge[data-b="mesajlar"]'); if (m) { let k = m.querySelector('.mk-sayi'); if (!n) { if (k) k.remove(); } else { if (!k) { k = document.createElement('span'); k.className = 'mk-sayi'; m.appendChild(k); } k.textContent = n; } } } catch (e) {} }
   async function mesajlarBolumu() {
     MSJ.acik = null; await Promise.all([msjRozet(), ogrencileriYukle().catch(() => [])]);
     msjListeCiz(); yenile(async () => { await msjRozet(); if (MSJ.acik) await msjYukle(true); else msjListeCiz(); }, 8);
   }
+  async function ogtMesajListe() {   // K-743: öğretmende Mesajlar = yalnız girdiği sınıflar (sınıf grupları)
+    const { siniflarim } = await dyDerslerim().catch(() => ({ siniflarim: [] })), S = (siniflarim || []).slice().sort(sinifSira), G = MSJ.L.filter(x => x.tur === 'grup'), I = $('#icerik');
+    const sat = s => { const g = G.find(x => x.sinif === s), n = g ? +g.yeni || 0 : 0;
+      return `<button class="msj-sat ${g ? '' : 'ogt-msj-yok'}" ${g ? `data-msjac="${esc(g.id)}"` : `data-ogtkur="${esc(s)}"`}><span class="msj-av g">${esc(s)}</span><span class="m"><b>${esc(s)} sınıfı</b><small>${g ? (g.son ? (g.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(g.son.metin) : 'Henüz mesaj yok') : (MSJ.kapali ? 'Mesajlaşma idare açınca kullanılabilir' : 'Grubu kurmak için dokunun')}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
+    I.innerHTML = `<div class="ust"><div><h1>Mesajlar</h1><div class="soluk kucuk">Girdiğiniz sınıflar · idare grup mesajlarını göremez</div></div></div>
+      <div class="kart msj-liste">${S.map(sat).join('') || '<div class="soluk" style="padding:10px 4px">Ders programında girdiğiniz sınıf bulunamadı; idareye bildirin.</div>'}</div>`;
+    I.querySelectorAll('[data-msjac]').forEach(b => b.onclick = () => msjAc(b.dataset.msjac));
+    I.querySelectorAll('[data-ogtkur]').forEach(b => b.onclick = async () => { if (MSJ.kapali) { uyar('Sınıf mesajlaşması sizin için henüz açılmadı; idare açınca kullanabilirsiniz.'); return; }
+      const s = b.dataset.ogtkur; if (!await onayla(`${s} sınıfının mesaj grubu kurulsun mu? Sınıftaki öğrenciler grubu sizin adınızla görür.`)) return;
+      const { data, error } = await sb.rpc('umal_sohbet_grup_kur', { p_siniflar: [s] }); if (error || !data || !data.ok) { uyar('Kurulamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+      await msjRozet(); const g = MSJ.L.find(x => x.tur === 'grup' && x.sinif === s); if (g) msjAc(g.id); else ogtMesajListe(); });
+  }
   function msjListeCiz() {
+    if (D.rol === 'ogretmen') return ogtMesajListe();
     const G = MSJ.L.filter(x => x.tur === 'grup'), B = MSJ.L.filter(x => x.tur === 'birebir').sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0));
     const sat = x => `<button class="msj-sat" data-msjac="${esc(x.id)}">${x.tur === 'grup' ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<span class="m"><b>${x.tur === 'grup' ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || x.ogrenci)) + ' · ' + esc(x.ogr_sinif || '')}</b><small>${x.son ? (x.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span><span class="s">${x.son ? esc(msjSaat(x.son.zaman)) : ''}${x.yeni ? `<i>${x.yeni}</i>` : ''}${x.sikayet ? '<em>rehberliğe iletildi</em>' : ''}</span></button>`;
     $('#icerik').innerHTML = `<div class="ust"><div><h1>Mesajlar</h1><div class="soluk kucuk">Sınıf grupları ve birebir konuşmalar · deneme: yalnız sizin hesabınızda · idare göremez</div></div><button class="birincil" id="msjYeni" style="margin-left:auto">+ Öğrenciye yaz</button></div>
@@ -556,12 +569,36 @@
     $('#ogtBugun').onclick = () => dersYoklamaBolumu('ozet');
     clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== 'dersyoklama' || document.hidden) return; const an = new Date(), t2 = an.getHours() * 60 + an.getMinutes(); if (D_.some(x => dk(x.bas) - 5 <= t2 && t2 < dk(x.bit) + 10)) { clearInterval(yenileZamanlayici); dyAl(); } }, 30000);
   }
+  async function ogtEsle() { if (D.rol !== 'ogretmen') return ''; if (ogtEsle.v == null) { try { const { data } = await sb.rpc('umal_ogretmen_esle_benim'); ogtEsle.v = data || ''; } catch (e) { ogtEsle.v = ''; } } return ogtEsle.v; }
+  async function ogtTahta() {   // K-742: öğretmen, ders saatinde girdiği sınıfın tahtasını kilitler / açar / kapatır
+    const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Tahta Kontrol</h1></div><div class="kart soluk">Yükleniyor…</div>';
+    const { D_, dk, t } = await dyDerslerim(), su = D_.filter(x => dk(x.bas) - 5 <= t && t < dk(x.bit) + 10);
+    if (!su.length) { const sn = D_.find(x => dk(x.bas) - 5 > t);
+      I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Dersinizin saatinde, o sınıfın tahtasını buradan kilitler, kilidini açar ya da kapatırsınız.</div></div></div><div class="kart soluk ot-bos">Şu an dersiniz yok.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; return; }
+    const x = su[0], { data, error } = await sb.rpc('umal_tahta_ogretmen', { p_sinif: x.sinif, p_islem: 'durum' });
+    if (error || !data || !data.ok) { I.innerHTML = `<div class="ust"><h1>Tahta Kontrol</h1></div><div class="kart">${esc(error ? hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
+    const e = data.erisim || {}, kilitli = e.durum === 'kilitli', KOD = { ders: 'Açık · ders', teneffus: 'Kilitli · teneffüs', bosders: 'Kilitli · boş ders', yonetim: 'Kilitli · ' + (e.kim || 'idare'), izin: 'Açık · ' + (e.kim || 'izin'), okul_disi: 'Kilitli · okul saati dışı', tatil: 'Kilitli · tatil' };
+    const durum = !data.var ? 'Bu sınıfın tahtası panele bağlı değil' : !data.acik ? 'Tahta kapalı' : (KOD[e.kod] || (kilitli ? 'Kilitli' : 'Açık'));
+    const ik = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+    I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Yalnız şu anki dersinizin sınıfı</div></div></div>
+      <div class="ot-kart ${!data.acik ? 'kp' : kilitli ? 'kl' : 'ac'}"><div class="ot-ust"><span class="ot-sinif">${esc(x.sinif)}</span><span class="ot-ders">${x.n}. ders · ${esc(x.ders ? baslik(x.ders) : '')}</span></div>
+        <div class="ot-durum"><i></i>${esc(durum)}</div>
+        <div class="ot-dug">${data.acik ? (kilitli ? `<button class="birincil" data-oti="ac">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>')}Kilidi aç</button>` : `<button class="birincil" data-oti="kilitle">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9M12 14.5v2"/>')}Kilitle</button>`)
+          + `<button class="ikincil ot-kapat" data-oti="kapat">${ik('<path d="M12 3.5v8"/><path d="M7 6.5a7.5 7.5 0 1 0 10 0"/>')}Tahtayı kapat</button>` : '<div class="soluk kucuk">Tahta açılınca buradan kilitleyebilirsiniz.</div>'}</div>
+        <div class="soluk kucuk">Kilit ve açma ders bitince kendiliğinden kalkar. Kapat: tahta 2 dakika uyarı verip kapanır.</div><div id="otBilgi" class="kucuk"></div></div>`;
+    I.querySelectorAll('[data-oti]').forEach(b => b.onclick = async () => { const i = b.dataset.oti;
+      if (i === 'kapat' && !await onayla(`${x.sinif} tahtası kapatılsın mı?`)) return;
+      b.disabled = true; const { data: r, error: er } = await sb.rpc('umal_tahta_ogretmen', { p_sinif: x.sinif, p_islem: i });
+      $('#otBilgi').innerHTML = er || !r || !r.ok ? `<span class="kirmizi">${esc(er ? hataYaz(er) : (r && r.hata) || 'Gönderilemedi')}</span>` : '<span class="yeşil">Gönderildi; tahta en geç 20 saniyede uygular.</span>';
+      setTimeout(() => { if (D.bolum === 'otahta') ogtTahta(); }, 22000); });
+  }
   // K-741: öğretmenin telefon ekranı — alt sekmeler (Yoklama · Program · Mesajlar · Menü) ve günlük ders programı
   const OP = { tarih: '' };
   async function ogtDersleriGun(tarih) {
     await Promise.all([programYukle(), kisiAdlariYukle().catch(() => {})]);
     const p = D.program || {}, d = new Date(tarih + 'T12:00:00'), gun = (d.getDay() + 6) % 7, nk = x => String(x || '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
     let ben = KISI.get(String(D.eposta).toLowerCase()) || ''; if (!ben) try { ben = localStorage.getItem('umalAd:' + String(D.eposta).toLowerCase()) || ''; } catch (e) {}
+    ben = (await ogtEsle()) || ben;
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0), L = [];
     Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) L.push({ sinif: sf, n, ders: h.ders || '', bas: z.bas, bit: z.bit }); }));
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: tarih }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !L.some(y => y.sinif === x.sinif && y.n === +x.saat)) L.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', bas: z.bas, bit: z.bit, gorev: true }); }); } catch (e) {}
@@ -590,13 +627,13 @@
     const T = [['dersyoklama', 'Yoklama', ik(`<rect x="4" y="3.5" width="16" height="17" rx="3" ${F}/><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/>`)],
       ['oprogram', 'Program', ik(`<rect x="3.5" y="5" width="17" height="15.5" rx="3" ${F}/><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h2M12 14h2M16 14h.5M8 17h2M12 17h2"/>`)],
       ['dosyalar', 'Atlas Sınıf', ik(`<path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" ${F}/><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M12 17v-5.5M9.6 13.6 12 11.2l2.4 2.4"/>`)],
-      ['obil', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)],
+      ['mesajlar', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)],
       ['menu', 'Menü', ik(`<rect x="3.5" y="3.5" width="7" height="7" rx="2" ${F}/><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" ${F}/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>`)]];
     const n = document.createElement('nav'); n.id = 'ogtAlt'; n.setAttribute('aria-label', 'Öğretmen menüsü');
-    n.innerHTML = T.map(([id, ad, s]) => `<button data-oa="${id}">${s}<span>${ad}</span>${id === 'obil' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n); document.body.classList.add('ogt-alt');
+    n.innerHTML = T.map(([id, ad, s]) => `<button data-oa="${id}">${s}<span>${ad}</span>${id === 'mesajlar' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n); document.body.classList.add('ogt-alt');
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; const id = b.dataset.oa; if (id === 'menu') { tumuAc(); } else { try { tumuKapat(); } catch (e) {} ac(id); } guncelle(); };
     const guncelle = () => { const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
-    const say = async () => { try { const { data } = await sb.rpc('umal_obil_benim'); const k = (data || []).filter(x => !x.okundu).length, e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
+    const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
     setInterval(guncelle, 400); say(); setInterval(() => { if (!document.hidden) say(); }, 60000); window.addEventListener('hashchange', guncelle);
   }
   async function dyDerslerim() {   // ders programından öğretmenin bugünkü dersleri ve şu anki ders
@@ -604,6 +641,7 @@
     const p = D.program || {}, an = new Date(), gun = (an.getDay() + 6) % 7, dk = x => { const [h, m] = String(x).split(':').map(Number); return h * 60 + m; }, t = an.getHours() * 60 + an.getMinutes();
     const nk = x => String(x || '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
     let ben = KISI.get(String(D.eposta).toLowerCase()) || ''; if (!ben) try { ben = localStorage.getItem('umalAd:' + String(D.eposta).toLowerCase()) || ''; } catch (e) {}
+    ben = (await ogtEsle()) || ben;   // K-742: deneme hesabı başka öğretmenin programını kullanır
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0);
     const D_ = []; Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) D_.push({ sinif: sf, n, ders: h.ders || '', ogretmen: h.ogretmen || [], bas: z.bas, bit: z.bit }); }));
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: bugunISO() }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !D_.some(y => y.sinif === x.sinif && y.n === +x.saat)) D_.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', ogretmen: [ben], bas: z.bas, bit: z.bit, gorev: x.asil || true }); }); } catch (e) {}   // K-700i: görevlendirme
@@ -705,7 +743,7 @@
     if (!['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol) || siradakiBaslat.oldu) return; siradakiBaslat.oldu = true;
     let V = null, vZ = 0, alinan = new Set(), aZ = 0;
     const el = document.createElement('section'); el.id = 'siradaki'; el.className = 'sr-kart gizli'; el.setAttribute('aria-live', 'polite');
-    const yerles = () => { el.classList.toggle('sr-op', (D.bolum === 'oprogram' || !!document.querySelector('#icerik .ogt-ara')) && !document.body.classList.contains('tm-acik')); const tm = document.body.classList.contains('tm-acik') && document.querySelector('.tumu-menu'), m = tm || $('#icerik'); if (m && (el.parentNode !== m || m.firstChild !== el)) m.prepend(el); };   // K-726: sayfanın (telefonda bölümler ekranının) en üstünde
+    const yerles = () => { el.classList.toggle('sr-op', (['oprogram', 'otahta', 'mesajlar'].includes(D.bolum) || !!document.querySelector('#icerik .ogt-ara')) && !document.body.classList.contains('tm-acik')); const tm = document.body.classList.contains('tm-acik') && document.querySelector('.tumu-menu'), m = tm || $('#icerik'); if (m && (el.parentNode !== m || m.firstChild !== el)) m.prepend(el); };   // K-726: sayfanın (telefonda bölümler ekranının) en üstünde
     yerles(); new MutationObserver(yerles).observe($('#icerik'), { childList: true }); setInterval(yerles, 700);
     const kapali = () => { try { return JSON.parse(sessionStorage.getItem('srKapali') || '[]'); } catch (e) { return []; } };
     const tur = async () => {
@@ -926,6 +964,7 @@
     { id: 'dpistek', ad: 'Ders Programı İsteğim', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dpAc('ogretmen') },   // K-700
     { id: 'gb', ad: 'Tebrik ve Uyarı', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => gbAc('gb') },   // K-720
     { id: 'veli', ad: 'Veli Erişimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: () => gbAc('veli') },   // K-720
+    { id: 'otahta', ad: 'Tahta Kontrol', roller: ['ogretmen'], ciz: () => ogtTahta() },   // K-742: öğretmen kendi dersindeki tahtayı yönetir
     { id: 'oprogram', ad: 'Ders Programım', roller: ['ogretmen'], ciz: () => ogtProgram() },   // K-741: öğretmen günlük programı (telefon alt sekmesi)
     { id: 'obil', ad: 'Okul Bildirimleri', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => gbAc('obil') },   // K-723
     { id: 'dersyoklama', ad: 'Ders Yoklaması', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dersYoklamaBolumu() },   // K-690
@@ -936,7 +975,7 @@
     { id: 'mektup', ad: 'Mektuplar', roller: ['rehberlik'], ciz: mektuplarBolumu },
     { id: 'randevu', ad: 'Randevular', roller: ['bas', 'rehberlik'], ciz: randevularBolumu, ust: 'rehberlik' },
     { id: 'sorutakip', ad: 'Soru takibi', roller: ['bas', 'rehberlik'], ciz: soruTakipBolumu, ust: 'rehberlik' },   // K-575
-    { id: 'mesajlar', ad: 'Mesajlar', roller: ['bas'], ciz: () => mesajlarBolumu() },   // K-716cw: sınıf grupları ve birebir (deneme: yalnız Kurucu)
+    { id: 'mesajlar', ad: 'Mesajlar', roller: ['bas', 'ogretmen'], ciz: () => mesajlarBolumu() },   // K-716cw: sınıf grupları ve birebir (deneme: yalnız Kurucu)
     { id: 'mesajsikayet', ad: 'Mesaj Şikâyetleri', roller: ['bas', 'rehberlik'], ciz: () => mesajSikayetBolumu() },   // K-716cw: grup → Kurucu, birebir → rehberlik
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
     { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
@@ -956,6 +995,8 @@
   ];
   // K-618: menü simgeleri (çizgi SVG) — masaüstünde simge üstte, ad altta
   const MENU_IK = {
+    otahta: '<rect x="2.800" y="4" width="18.400" height="12.500" rx="2.200" fill="currentColor" fill-opacity=".18"/><rect x="2.800" y="4" width="18.400" height="12.500" rx="2.200"/><path d="M8.500 20.200h7M12 16.500v3.700"/><rect x="9.300" y="9.300" width="5.400" height="4.200" rx="1"/><path d="M10.300 9.300V8.200a1.700 1.700 0 0 1 3.400 0v1.100"/>',
+    oprogram: '<rect x="3.500" y="4.500" width="17" height="15.500" rx="2.800" fill="currentColor" fill-opacity=".18"/><rect x="3.500" y="4.500" width="17" height="15.500" rx="2.800"/><path d="M8 2.800v3.400M16 2.800v3.400M3.500 9.500h17M8 13.500h2.200M12.500 13.500h3.500M8 16.800h2.200"/>',
     harita: '<path d="M12 21s-6.500-5.600-6.500-11a6.500 6.500 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.400"/>',
     kontrol: '<rect x="3" y="4.500" width="18" height="12" rx="2"/><path d="M8.500 20h7M12 16.500V20"/>',
     sinav: '<rect x="5" y="4.500" width="14" height="16" rx="2.500"/><path d="M9 4.500V3.500h6v1M8.800 13l2.200 2.200 4.200-4.400"/>',
@@ -1045,12 +1086,12 @@
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
     const KISA = { obil: 'bildirim', gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
-    const OG_ACK = { oprogram: 'Günlük ders programınız', obil: D.rol === 'ogretmen' ? 'İdareden gelen bildirimler' : 'Veliye, öğrenciye, öğretmene bildirim', gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
+    const OG_ACK = { otahta: 'Dersinizdeki tahtayı kilitle, aç, kapat', oprogram: 'Günlük ders programınız', obil: D.rol === 'ogretmen' ? 'İdareden gelen bildirimler' : 'Veliye, öğrenciye, öğretmene bildirim', gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
       const L = (t => gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g])).concat(izin.has('dosyalar') ? [['dosyalar', '#7fb2ff', '']] : []).concat(izin.has('cikti') ? [['cikti', '#22e8ff', '']] : []).sort((a, b) => (t[b[0]] || 0) - (t[a[0]] || 0) || vs(a[0]) - vs(b[0])))(menuSon());   // K-716da
-      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.filter(([id]) => !['dersyoklama', 'duyuru', 'oprogram', 'obil', 'dosyalar'].includes(id)).map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-yazi"><span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small></span>${n_(id)}</button>`).join('')}</div></div>`;   // K-716da: Atlas Sınıf da normal kutu
+      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.filter(([id]) => !['dersyoklama', 'duyuru', 'oprogram', 'mesajlar', 'dosyalar'].includes(id)).map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-yazi"><span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small></span>${n_(id)}</button>`).join('')}</div></div>`;   // K-716da: Atlas Sınıf da normal kutu
     } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).concat(izin.has('cikti') ? [kutu('cikti', '#22e8ff')] : []).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = ''   // K-716dd: "Sık Kullanılanlar" kaldırıldı — son kullanılan zaten en üstte
