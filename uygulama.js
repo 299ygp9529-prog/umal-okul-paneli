@@ -6386,6 +6386,10 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   }
   function raporluKarsilastir(tk, saat, dersYaz) {
     let satirlar = [];
+    // K-738: sınıf içi yapılan sınavlar (idarenin girdiği tarih + ders saati) da raporlu listesiyle karşılaştırılır
+    sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle().then(({ data }) => { let K = {}; try { K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
+      const M = new Map(); Object.entries(K).forEach(([ders, S]) => Object.entries(S || {}).forEach(([sube, v]) => { if (!v || !v.t || !v.d) return; const k = v.t + '|' + v.d; if (!M.has(k)) M.set(k, { tarih: v.t, ders: v.d + '. Ders', subeler: {}, sinifIci: true }); M.get(k).subeler[sube] = ders; }));
+      if (M.size) tk = Object.assign({}, tk, { subeler: (tk.subeler || []).filter(x => !x.sinifIci).concat([...M.values()]) }); }).catch(() => {});
     pencereAc(`<h2 style="margin-top:0">Raporlu öğrenciler × sınav takvimi</h2>
       <div class="soluk kucuk" style="line-height:1.5">e-Okul'dan aldığınız raporlu / izinli öğrenci listesini yükleyin (.xls, .xlsx, .csv) ya da Excel'de seçip buraya yapıştırın. Her satırda <b>okul numarası</b> (ya da ad soyad) ve <b>rapor tarihleri</b> (tek gün ya da başlangıç–bitiş) olması yeter; sütun sırası önemli değil.<br>Liste yalnız bu ekranda işlenir, hiçbir yere kaydedilmez.</div>
       <div class="dugmeler" style="justify-content:flex-start;margin-top:10px"><label class="ikincil" style="cursor:pointer">Dosya seç<input type="file" id="rpDosya" accept=".xls,.xlsx,.csv,.txt,.tsv,.html,.htm,.xml" hidden></label><span class="kucuk soluk" id="rpDosyaAd"></span></div>
@@ -6634,6 +6638,28 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
         return `<span class="ch-tf ok">${g} / ${y.liste.length} geldi</span><small class="soluk">${esc(kim ? baslik(kim.ad) : (y.gonderen || ''))}${y.zaman ? ' · ' + new Date(+y.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : ''}${ek ? ` · <b style="color:#ffb547">${ek} listede yoktu</b>` : ''}</small>`; }
       if (!(o.gozcu || []).length) return '<span class="ch-tf sim">Gözcü yok</span>';
       return tfBitti(x) ? '<span class="ch-tf gec">Yoklama yok</span>' : '<span class="ch-tf bek">Bekliyor</span>'; };
+    const tfSinifIci = async () => {   // K-738: ortak takvimde olmayan (sınıfta yapılan) sınavların tarihi + ders saati, şube şube
+      let K = {}; try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle(); K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
+      const ortak = (sube, ders) => (tk.subeler || []).some(y => !y.sinifIci && tfEs((y.subeler || {})[sube], ders)), DL = [];
+      tfOturum.forEach(x => ['9', '10', '11', '12'].forEach(v => String(x['s' + v] || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); if (!m) return; const ad = m[1].trim(), S = m[2].split(/[,;]\s*/).map(z => z.trim()).filter(z => z && !ortak(z, ad));
+        if (!S.length) return; const d = DL.find(q => q.ad === ad); if (d) S.forEach(z => { if (!d.S.includes(z)) d.S.push(z); }); else DL.push({ ad, S }); })));
+      if (!DL.length) { uyar('Telafi programındaki bütün dersler ortak sınav takviminde var.'); return; }
+      DL.forEach(d => { d.S.sort(sinifSira); K[d.ad] = K[d.ad] || {}; });
+      const saatSec = (id, v) => `<select data-sid="${esc(id)}" style="width:86px"><option value="">Saat</option>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<option value="${n}" ${+v === n ? 'selected' : ''}>${n}. ders</option>`).join('')}</select>`;
+      pencereAc(`<div class="tfg tf-si"><h2 style="margin-top:0">Sınıf içi sınav tarihleri</h2><div class="soluk kucuk">Bu dersler ortak sınav takviminde yok. Her şubenin asıl sınav gününü ve ders saatini girin; Raporlu Öğrenciler karşılaştırması bu günleri de sayar. Kaydettikten sonra e-Okul listesini yeniden yükleyip "Telafi listelerine aktar"a basın (önceki kayıtlar korunur).</div>
+        <div style="max-height:60vh;overflow:auto;margin-top:10px">${DL.map((d, j) => `<div class="kart" style="padding:10px 12px;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="flex:1;min-width:180px">${esc(baslik(d.ad))}</b><span class="soluk kucuk">Hepsine:</span><input type="date" data-sh="${j}" style="width:150px">${saatSec('h' + j, '')}<button class="bag" data-shu="${j}">Uygula</button></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px;margin-top:8px">${d.S.map(z => { const v = K[d.ad][z] || {}; return `<label style="display:flex;gap:6px;align-items:center"><b style="width:44px">${esc(z)}</b><input type="date" data-st="${j}|${esc(z)}" value="${esc(v.t || '')}" style="width:150px">${saatSec(j + '|' + z, v.d)}</label>`; }).join('')}</div></div>`).join('')}</div>
+        <div class="dugmeler"><button class="birincil" id="tfsiKaydet">Kaydet</button></div></div>`);
+      const P = $('#pencere');
+      P.querySelectorAll('[data-shu]').forEach(b => b.onclick = () => { const j = b.dataset.shu, t = P.querySelector(`[data-sh="${j}"]`).value, d = P.querySelector(`[data-sid="h${j}"]`).value;
+        DL[+j].S.forEach(z => { if (t) P.querySelector(`[data-st="${j}|${z}"]`).value = t; if (d) P.querySelector(`[data-sid="${j}|${z}"]`).value = d; }); });
+      $('#tfsiKaydet').onclick = async () => { let n = 0, eksik = 0; DL.forEach((d, j) => d.S.forEach(z => { const t = P.querySelector(`[data-st="${j}|${z}"]`).value, h = +P.querySelector(`[data-sid="${j}|${z}"]`).value;
+          if (t && h) { K[d.ad][z] = { t, d: h }; n++; } else { delete K[d.ad][z]; if (t || h) eksik++; } }));
+        Object.keys(K).forEach(a => { if (!Object.keys(K[a] || {}).length) delete K[a]; });
+        if (eksik && !await onayla(`${eksik} şubede tarih ya da ders saatinden biri eksik; bunlar kaydedilmeyecek. Devam edilsin mi?`)) return;
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'sinif_ici_sinav', deger: JSON.stringify({ kayit: K, z: Date.now() }) }, { onConflict: 'anahtar' });
+        if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; }
+        P.classList.add('gizli'); uyar(`${n} şubenin sınav günü kaydedildi. Şimdi Raporlu Öğrenciler'den e-Okul listesini yükleyip "Telafi listelerine aktar"a basın.`); }; };
     const tfOgtSec = i => {   // K-736: öğretmen, sınıf içi sınavına girmeyen öğrencilerini telafi oturumuna ekler
       const x = tfOturum[i], k = tfK(x), DL = [];
       ['9', '10', '11', '12'].forEach(v => String(x['s' + v] || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l), ad = (m ? m[1] : l).trim(), S = m ? m[2].split(/[,;]\s*/).map(z => z.trim()).filter(Boolean) : (D.ogrenciler || []).filter(o => seviye(o.sinif) === v).map(o => o.sinif).filter((z, j, A) => A.indexOf(z) === j);
@@ -6770,7 +6796,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
         <div class="tk-iki">
           <div class="kart"><h2 style="margin-top:0">Sınavlar</h2>${olacak.length ? gun(olacak, 'olacak') : `<div class="soluk">Takvimde kalan ortak sınav yok.</div>`}${tfOturum.length ? (() => { const bg = bugunISO(), G = {}; tfOturum.forEach(x => (G[x.tarih] = G[x.tarih] || []).push(x));
           const sat = l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); return m ? `<span class="tk-tf-d"><b>${esc(m[1])}</b><small>${esc(m[2])}</small></span>` : `<span class="tk-tf-d"><b>${esc(l)}</b></span>`; };
-          return `<div class="tk-tf"><h2 style="margin:18px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Mazeret (telafi) sınavları<span class="soluk kucuk" style="font-weight:500">${esc(telafi.yil || '')} ${esc(telafi.donem || '')} · ${esc(telafi.durum || '')}</span>${ogrt ? '' : '<button class="tk-pdf" data-tksk="telafi" style="margin-left:auto">Programı aç</button>'}</h2>
+          return `<div class="tk-tf"><h2 style="margin:18px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Mazeret (telafi) sınavları<span class="soluk kucuk" style="font-weight:500">${esc(telafi.yil || '')} ${esc(telafi.donem || '')} · ${esc(telafi.durum || '')}</span>${ogrt ? '' : '<button class="tk-pdf" data-tfsi="1" style="margin-left:auto" title="Sınıfta yapılan sınavların tarihleri; raporlu listesi bu günlerle de karşılaştırılır">Sınıf içi sınav tarihleri</button><button class="tk-pdf" data-tksk="telafi">Programı aç</button>'}</h2>
             ${Object.entries(G).map(([t, S]) => `<div class="tk-gun ${t < bg ? 'olan' : 'olacak'}"><div class="tk-tarih"><b>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}</b><span>${esc(new Date(t + 'T12:00:00').toLocaleDateString(tr, { weekday: 'long' }))}</span></div><div>${S.map(x => `<div class="tk-sinav"><div class="tk-saat"><b>${esc(x.ders)}. Ders</b><small>${esc(saat({ tarih: t, ders: x.ders }))}</small></div>
               <div class="tk-dersler">${['9', '10', '11', '12'].filter(v => String(x['s' + v] || '').trim()).map(v => `<div class="tk-tf-sv" style="--sv:${SEVIYE_RENK[v] || '#5cc8ff'}"><i>${v}</i><div>${String(x['s' + v]).split('\n').filter(z => z.trim()).map(sat).join('')}</div></div>`).join('')}</div>
               <span class="tk-sag" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">${x.yer ? `<span class="soluk kucuk" style="max-width:180px;text-align:right">${esc(x.yer)}</span>` : ''}${(() => { const i = tfOturum.indexOf(x), n = tfLis[i].length; return n ? `<button class="tk-gel var" data-tfac="${i}">${n} öğrenci</button>` : ''; })()}</span>
@@ -6807,6 +6833,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
         if (kar === 'k') { const a = 'ek|' + k; tfOg[a] = (tfOg[a] || []).filter(q => q.no !== no).concat([{ no, ders: z.ders || '' }]); await sb.from('umal_ayarlar').upsert({ anahtar: 'telafi_ogrenci', deger: JSON.stringify({ kayit: tfOg, z: Date.now() }) }, { onConflict: 'anahtar' }); }
         await tfGorevKaydet(); ciz(); return; }
       const tg = ev.target.closest('[data-tfgor]'); if (tg) { tfGorevliSec(+tg.dataset.tfgor); return; }   // K-716cr
+      if (ev.target.closest('[data-tfsi]')) { tfSinifIci(); return; }   // K-738
       const to_ = ev.target.closest('[data-tfogt]'); if (to_) { tfOgtSec(+to_.dataset.tfogt); return; }   // K-736
       const tb_ = ev.target.closest('[data-tfben]'); if (tb_) { tfgAc(tb_.dataset.tfben); return; }   // K-716db: öğretmen kendi görevini açar
       const ta = ev.target.closest('[data-tfac]'); if (ta) { tfAcik = tfAcik === +ta.dataset.tfac ? -1 : +ta.dataset.tfac; ciz(); return; }   // K-716cq
