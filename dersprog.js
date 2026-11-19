@@ -683,7 +683,7 @@
         return herkes.map(o => { const L = Object.keys(T[o] || {}).map(Number), ok = L.length > 0, ara = L.some(n => n < d.n) && L.some(n => n > d.n), nb = nobetci(o, g), ayni = Object.values(T[o] || {}).some(v => kokD(v.ders) === br);
           const p = (nb ? 50 : 0) + (ara ? 40 : 0) + (ok ? 20 : -30) + (ayni ? 15 : 0) - 35 * (bugunSay[o] || 0);   // K-727: adalet yalnız o günün dağılımına bakar
           const neden = [nb ? 'nöbetçi' : '', ara ? 'iki dersinin arasında boş' : ok && !nb ? 'o gün okulda' : '', ok || nb ? '' : 'o gün dersi yok', ayni ? 'aynı branş' : '', bugunSay[o] ? `bugün ${bugunSay[o]} görev` : ''].filter(Boolean).join(' · ');
-          return { o, p, neden, nb, bs: bugunSay[o] || 0, kisa: (bugunSay[o] ? `bugün ${bugunSay[o]} görev · ` : '') + (nb ? 'nöbetçi' : ara ? 'arada boş' : ok ? 'okulda' : 'dersi yok') }; }).sort((a, b) => b.p - a.p || sira(a.o, b.o)); };
+          return { o, p, neden, nb, ok: ok || nb, bs: bugunSay[o] || 0, kisa: (bugunSay[o] ? `bugün ${bugunSay[o]} görev · ` : '') + (nb ? 'nöbetçi' : ara ? 'arada boş' : ok ? 'okulda' : 'dersi yok') }; }).sort((a, b) => b.p - a.p || sira(a.o, b.o)); };
       const oneri = d => { const A = aday(d), nb = A.filter(x => x.nb); return nb.concat(A.filter(x => !x.nb).slice(0, Math.max(0, 3 - nb.length))); };   // o saatte boş tüm nöbetçiler görünür; 3'ten azsa diğer uygunlarla 3'e tamamlanır
       const ata = (d, giren) => { G.liste = G.liste.filter(x => !(x.sinif === d.sinif && +x.saat === d.n)); G.liste.push({ sinif: d.sinif, saat: d.n, ders: d.ders, asil: d.asil, giren }); };
       I.innerHTML = `<div class="ust"><div><h1>Günlük Görevlendirme</h1><div class="soluk kucuk">Gelmeyen öğretmeni seçin; Atlas her dersine o saatte boşta olanlardan öneri sunar. Görevli öğretmen dersi kendi panelinde görür ve yoklamayı alabilir.</div></div></div>
@@ -701,7 +701,7 @@
             <span>${a ? `<button class="dp-gv-sec ${a.giren ? 'dolu' : ''}" data-gvd="${esc(d.sinif)}|${d.n}">${a.giren ? esc(bas(a.giren)) : 'Boş geçer'}</button>`
               : `<span class="gv-oner">${oneri(d).map(x => `<button class="gv-cip ${x.nb ? 'nb' : ''}" data-gvh="${esc(d.sinif)}|${d.n}|${esc(x.o)}" title="${esc(x.neden)}">${x.nb ? '<i></i>' : ''}${esc(bas(x.o).split(' ').slice(0, 2).join(' '))}<small>${esc(x.kisa)}</small></button>`).join('')}<button class="gv-cip diger" data-gvd="${esc(d.sinif)}|${d.n}">Diğer…</button></span>`}</span></div>`; }).join('')}</div>
           ${(() => { const Z = Object.entries(bugunSay).sort((a, b) => b[1] - a[1]); if (!Z.length) return '';
-            const bekleyen = dersler.filter(d => !atanan[d.sinif + '|' + d.n]), uygunlar = new Set(); dersler.forEach(d => aday(d).forEach(x => { if (!x.bs) uygunlar.add(x.o); }));
+            const bekleyen = dersler.filter(d => !atanan[d.sinif + '|' + d.n]), uygunlar = new Set(); dersler.forEach(d => aday(d).forEach(x => { if (!x.bs && x.ok) uygunlar.add(x.o); }));
             const fazla = Z.filter(([, n]) => n >= 2), bos = [...uygunlar].filter(o => !bugunSay[o]);
             return `<div class="gv-adalet ${fazla.length && bos.length ? 'uyari' : ''}"><b>Bugünkü dağılım</b><div class="gv-ad-l">${Z.map(([o, n]) => `<span class="${n >= 2 ? 'cok' : ''}">${esc(bas(o).split(' ').slice(0, 2).join(' '))} <i>${n}</i></span>`).join('')}</div>
               ${fazla.length && bos.length ? `<div class="gv-ad-u">${fazla.map(([o, n]) => `<b>${esc(bas(o))}</b> ${n} derse`).join(', ')} görevlendirildi; o saatlerde boş olup bugün hiç görev almamış ${bos.length} öğretmen var (${bos.slice(0, 4).map(o => esc(bas(o).split(' ')[0])).join(', ')}${bos.length > 4 ? '…' : ''}). <button class="ikincil kucuk" id="gvDengele">Dengele</button></div>` : bekleyen.length ? '' : '<div class="gv-ad-ok">Görevler dengeli dağıtıldı.</div>'}</div>`; })()}
@@ -709,7 +709,7 @@
       $('#gvT').onchange = async ev => { const d = new Date(ev.target.value + 'T12:00:00'); if (isNaN(d)) return; gun = d; await yukle(); ciz2(); };
       $('#gvAra').oninput = ev => { const q = nk(ev.target.value); I.querySelectorAll('[data-gvo]').forEach(b => b.style.display = !q || nk(b.dataset.gvo).includes(q) ? '' : 'none'); };
       I.querySelectorAll('[data-gvo]').forEach(b => b.onclick = () => { const o = b.dataset.gvo; if (GEL.has(o)) { GEL.delete(o); G.liste = G.liste.filter(x => x.asil !== o); } else GEL.add(o); ciz2(); });
-      const adilMi = async (d, o) => { const n = bugunSay[o] || 0; if (!n) return true; const bos = aday(d).filter(x => !x.bs && x.o !== o); if (!bos.length) return true;
+      const adilMi = async (d, o) => { const n = bugunSay[o] || 0; if (!n) return true; const bos = aday(d).filter(x => !x.bs && x.ok && x.o !== o); if (!bos.length) return true;
         return X.onayla(`${bas(o)} bugün zaten ${n} derse görevlendirildi. Bu saatte boş olup bugün hiç görev almamış ${bos.length} öğretmen var (${bos.slice(0, 3).map(x => bas(x.o)).join(', ')}). Yine de atansın mı?`); };
       I.querySelectorAll('[data-gvh]').forEach(b => b.onclick = async () => { const [s, n, o] = b.dataset.gvh.split('|'), d = dersler.find(x => x.sinif === s && x.n === +n); if (d && await adilMi(d, o)) { ata(d, o); ciz2(); } });
       I.querySelectorAll('[data-gvd]').forEach(b => b.onclick = () => { const [s, n] = b.dataset.gvd.split('|'), d = dersler.find(x => x.sinif === s && x.n === +n), A = aday(d);
@@ -720,7 +720,16 @@
         $('#gvBos').onclick = () => { ata(d, ''); document.getElementById('pencere').classList.add('gizli'); ciz2(); }; });
       if ($('#gvDengele')) $('#gvDengele').onclick = async () => { if (!await X.onayla('Bugünkü görevler baştan, en dengeli şekilde yeniden dağıtılsın mı? (Boş geçsin dedikleriniz korunur.)')) return;
         G.liste = G.liste.filter(x => !x.giren); Object.keys(bugunSay).forEach(k => delete bugunSay[k]); ciz2(); $('#gvOto') && $('#gvOto').click(); };
-      if ($('#gvOto')) $('#gvOto').onclick = () => { dersler.forEach(d => { const a = atanan[d.sinif + '|' + d.n]; if (a && a.giren) return; const A = aday(d); if (A[0]) { ata(d, A[0].o); bugunSay[A[0].o] = (bugunSay[A[0].o] || 0) + 1; } }); ciz2(); };
+      if ($('#gvOto')) $('#gvOto').onclick = () => {   // adil dağıtım: kimse 2. görevi almadan, o saatte boş ve okulda olan herkes önce 1 görev alır (tur tur eşleştirme)
+        let kalan = dersler.filter(d => { const a = atanan[d.sinif + '|' + d.n]; return !a; });
+        for (let tur = 1; kalan.length && tur <= 8; tur++) {
+          const C = new Map(kalan.map(d => [d, aday(d).filter(x => x.ok && (bugunSay[x.o] || 0) < tur).map(x => x.o)])), es = new Map();   // öğretmen → ders
+          const dene = (d, gor) => { for (const o of C.get(d)) { if (gor.has(o)) continue; gor.add(o); if (!es.has(o) || dene(es.get(o), gor)) { es.set(o, d); return true; } } return false; };
+          [...kalan].sort((a, b) => C.get(a).length - C.get(b).length).forEach(d => dene(d, new Set()));
+          es.forEach((d, o) => { ata(d, o); bugunSay[o] = (bugunSay[o] || 0) + 1; });
+          const atandi = new Set(es.values()); kalan = kalan.filter(d => !atandi.has(d));
+        }
+        ciz2(); };
       if ($('#gvKaydet')) $('#gvKaydet').onclick = async () => { const { data, error } = await X.sb.rpc('umal_gorev_yaz', { p_tarih: iso(gun), p_liste: G.liste.filter(x => GEL.has(x.asil)) });
         if (error || !data || !data.ok) { X.uyar('Kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; } const yeni = G.liste.filter(x => x.giren && GEL.has(x.asil)), kisi = [...new Set(yeni.map(x => x.giren))];
           X.uyar(kisi.length ? `Kaydedildi ve ${kisi.length} öğretmene bildirildi: ${kisi.map(bas).join(', ')}. Telefonunda bildirim açık olana anında gider; herkes görevini kendi panelinde ve yoklama ekranında görür.` : 'Kaydedildi.'); await yukle(); ciz2(); };
