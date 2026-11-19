@@ -581,7 +581,7 @@
   async function ogtEsle() { if (D.rol !== 'ogretmen') return ''; if (ogtEsle.v == null) { try { const { data } = await sb.rpc('umal_ogretmen_esle_benim'); ogtEsle.v = data || ''; } catch (e) { ogtEsle.v = ''; } } return ogtEsle.v; }
   async function ogtTahta() {   // K-742: üstte şu anki dersinizin tahtası (büyük, neon, kontrol düğmeleri); altta okuldaki bütün tahtaların durumu
     const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Tahta Kontrol</h1></div><div class="kart soluk">Yükleniyor…</div>';
-    const [{ D_, dk, t }, lr] = await Promise.all([dyDerslerim(), sb.rpc('umal_tahta_ogretmen_liste').catch(() => ({}))]);
+    const [{ D_, dk, t }, lr] = await Promise.all([dyDerslerim(), sb.rpc('umal_tahta_ogretmen_liste').then(r => r, () => ({}))]);
     const su = D_.filter(x => dk(x.bas) - 5 <= t && t < dk(x.bit) + 10), x = su[0], TL = ((lr && lr.data && lr.data.liste) || []).sort((a, b) => sinifSira(a.sinif, b.sinif));
     const KOD = e => ({ ders: 'Açık · ders', teneffus: 'Kilitli · teneffüs', bosders: 'Kilitli · boş ders', yonetim: 'Kilitli · ' + (e.kim || 'idare'), izin: 'Açık · ' + (e.kim || 'izin'), okul_disi: 'Kilitli · okul saati dışı', tatil: 'Kilitli · tatil', ertele: 'Açık · kapanış ertelendi' }[e.kod] || (e.durum === 'kilitli' ? 'Kilitli' : 'Açık'));
     const dur = z => !z ? { s: 'kp', y: 'Panele bağlı değil' } : !z.acik ? { s: 'kp', y: 'Tahta kapalı' } : (z.erisim || {}).durum === 'kilitli' ? { s: 'kl', y: KOD(z.erisim || {}) } : { s: 'ac', y: KOD(z.erisim || {}) };
