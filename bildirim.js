@@ -60,6 +60,11 @@
     .ub-adim div{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
     .ub-adim i{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#22e8ff;background:rgba(34,232,255,.12);font-style:normal;font-weight:800}
     .ub-adim i svg{width:20px;height:20px}
+    .ub-ort.ub-sade{background:rgba(4,10,20,.55)}
+    .ub-ok{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:#fff;font:800 17px -apple-system,system-ui,sans-serif;text-shadow:0 2px 10px #000;animation:ubZ 1.1s ease-in-out infinite}
+    .ub-ok i{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:#22e8ff;color:#04202a;box-shadow:0 0 30px rgba(34,232,255,.7)} .ub-ok i svg{width:30px;height:30px}
+    .ub-ok b{width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:18px solid #22e8ff}
+    @keyframes ubZ{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,12px)}}
     @keyframes ubG{from{opacity:0}}@keyframes ubY{from{opacity:0;transform:translateY(14px) scale(.98)}}
     @keyframes ubS{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(14deg)}20%{transform:rotate(-12deg)}30%{transform:rotate(8deg)}40%{transform:rotate(-5deg)}}
     @media (prefers-reduced-motion:reduce){.ub-ort,.ub-k,.ub-ik svg{animation:none}}`; document.head.appendChild(s); }
@@ -72,30 +77,39 @@
       await new Promise(r => setTimeout(r, 2500)); for (let i = 0; i < 120 && engel(); i++) await new Promise(r => setTimeout(r, 800)); if (engel() || acikPencere) return;
       const d = await durum();
       if (d === 'acik') { tazele(o); return; }
-      if (d !== 'kapali' && d !== 'ios-ekle') return;
-      const an = 'umalBldSor:' + o.kim + ':' + (o.no || ''); let ert = 0; try { ert = +localStorage.getItem(an) || 0; } catch (e) {}
-      if (ert > Date.now()) return;
-      const ertele = gun => { try { localStorage.setItem(an, String(Date.now() + gun * 864e5)); } catch (e) {} };
+      if (d !== 'kapali' && d !== 'ios-ekle' && d !== 'red') return;
+      // K-731: ısrarcı — uygulama her açıldığında yeniden sorulur; "şimdi değil" yalnız bu oturum için geçerli (engellenmişse günde bir)
+      const an = 'umalBldSor:' + o.kim + ':' + (o.no || ''); let ert = 0, otur = false; try { ert = +localStorage.getItem(an) || 0; otur = sessionStorage.getItem(an) === '1'; } catch (e) {}
+      if (otur || (d === 'red' && ert > Date.now())) return;
+      const ertele = () => { try { sessionStorage.setItem(an, '1'); if (d === 'red') localStorage.setItem(an, String(Date.now() + 864e5)); } catch (e) {} };
       stil(); acikPencere = true;
       const el = document.createElement('div'); el.className = 'ub-ort'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
       const kapat = () => { el.remove(); acikPencere = false; };
       if (d === 'ios-ekle') {
         el.innerHTML = `<div class="ub-k"><div class="ub-ik">${ZIL}</div><small>BİLDİRİMLER</small><h2>Önce ana ekrana ekleyin</h2><p>iPhone'da bildirimler yalnız ana ekrana eklenen uygulamada çalışır. Bir kez yapmanız yeterli.</p>
-          <div class="ub-adim"><div><i>${PAYLAS}</i><span>Safari'nin altındaki <b>Paylaş</b> düğmesine dokunun.</span></div><div><i>${EKLE}</i><span>Aşağı kaydırıp <b>Ana Ekrana Ekle</b> › <b>Ekle</b> deyin.</span></div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><circle cx="12" cy="10" r="2.5" fill="currentColor" fill-opacity=".25"/></svg></i><span>Ana ekrandaki simgeden açın; bildirim izni orada sorulacak.</span></div></div>
-          <button class="ub-b" data-ub="tamam">Anladım</button><button class="ub-s" data-ub="sonra">Daha sonra</button></div>`;
+          <div class="ub-adim"><div><i>${PAYLAS}</i><span>Safari'nin altındaki <b>Paylaş</b> düğmesine dokunun.</span></div><div><i>${EKLE}</i><span>Aşağı kaydırıp <b>Ana Ekrana Ekle</b> › <b>Ekle</b> deyin.</span></div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><circle cx="12" cy="10" r="2.5" fill="currentColor" fill-opacity=".25"/></svg></i><span>Ana ekrandaki simgeden açıp <b>bir kez daha giriş yapın</b>; bildirim izni orada sorulacak.</span></div></div>
+          <button class="ub-b" data-ub="tamam">Şimdi ekleyeyim</button><button class="ub-s" data-ub="sonra">Bu sefer değil</button></div>`;
         document.body.appendChild(el);
-        el.querySelector('[data-ub="tamam"]').onclick = () => { ertele(1); kapat(); };
-        el.querySelector('[data-ub="sonra"]').onclick = () => { ertele(3); kapat(); };
+        const ok = document.createElement('div'); ok.className = 'ub-ok'; ok.innerHTML = `<span>Paylaş'a dokunun</span><i>${PAYLAS}</i><b></b>`;
+        el.querySelector('[data-ub="tamam"]').onclick = ev => { ev.stopPropagation(); el.querySelector('.ub-k').style.display = 'none'; el.classList.add('ub-sade'); el.appendChild(ok); el.onclick = () => { ertele(); kapat(); }; };
+        el.querySelector('[data-ub="sonra"]').onclick = () => { ertele(); kapat(); };
         return;
       }
+      if (d === 'red') {
+        el.innerHTML = `<div class="ub-k"><div class="ub-ik">${ZIL}</div><small>BİLDİRİMLER KAPALI</small><h2>Bildirimleri açmanız gerekiyor</h2><p>${METIN[o.kim] || METIN.ogrenci} Şu an bu cihazda bildirimler kapalı; telefon ayarlarından açın:</p>
+          <div class="ub-adim">${ios ? `<div><i>1</i><span><b>Ayarlar</b> › <b>Bildirimler</b>'i açın.</span></div><div><i>2</i><span>Listeden <b>${o.kim === 'veli' ? 'UMAL Veli' : o.kim === 'ogrenci' ? 'UMAL Öğrenci' : 'Atlas'}</b>'ı seçin.</span></div><div><i>3</i><span><b>Bildirimlere İzin Ver</b>'i açın, sesi ve kilit ekranını da açık bırakın.</span></div>`
+            : `<div><i>1</i><span>Adres çubuğundaki <b>kilit simgesine</b> (ya da ⋮ › Ayarlar › Site ayarları) dokunun.</span></div><div><i>2</i><span><b>İzinler › Bildirimler</b>'i <b>İzin ver</b> yapın.</span></div><div><i>3</i><span>Sayfayı yenileyin.</span></div>`}</div>
+          <button class="ub-b" data-ub="tamam">Tamam, açacağım</button></div>`;
+        document.body.appendChild(el); el.querySelector('[data-ub="tamam"]').onclick = () => { ertele(); kapat(); }; return;
+      }
       el.innerHTML = `<div class="ub-k"><div class="ub-ik">${ZIL}</div><small>BİLDİRİMLER</small><h2>Hiçbir şeyi kaçırmayın</h2><p>${METIN[o.kim] || METIN.ogrenci} Telefon izin isteyince <b>İzin ver</b> deyin.</p>
-        <div class="ub-h"></div><button class="ub-b" data-ub="ac">Bildirimlere izin ver</button><button class="ub-s" data-ub="sonra">Şimdi değil</button></div>`;
+        <div class="ub-h"></div><button class="ub-b" data-ub="ac">Bildirimlere izin ver</button><button class="ub-s" data-ub="sonra">Bu sefer değil</button></div>`;
       document.body.appendChild(el);
       const b = el.querySelector('[data-ub="ac"]'), h = el.querySelector('.ub-h');
       b.onclick = async () => { b.disabled = true; b.textContent = 'Açılıyor…'; const r = await ac(o);
         if (r.ok) { el.querySelector('h2').textContent = 'Bildirimler açık'; el.querySelector('p').textContent = 'Artık önemli bir şey olduğunda telefonunuza anında haber gelecek.'; h.textContent = ''; b.remove(); el.querySelector('.ub-s').remove(); if (typeof o.tamam === 'function') o.tamam(); setTimeout(kapat, 1800); }
-        else { h.textContent = r.hata; b.disabled = false; b.textContent = 'Yeniden dene'; if (typeof Notification !== 'undefined' && Notification.permission === 'denied') { ertele(30); b.remove(); } } };
-      el.querySelector('[data-ub="sonra"]').onclick = () => { ertele(3); kapat(); };
+        else { h.textContent = r.hata; b.disabled = false; b.textContent = 'Yeniden dene'; if (typeof Notification !== 'undefined' && Notification.permission === 'denied') { b.remove(); el.querySelector('.ub-s').textContent = 'Kapat'; } } };
+      el.querySelector('[data-ub="sonra"]').onclick = () => { ertele(); kapat(); };
     } catch (e) { acikPencere = false; }
   }
   window.UmalBildirim = { durum, ac, tazele, kapat, karsila, ios, ekranda };
