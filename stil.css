@@ -2396,3 +2396,7 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-cerceve { height: 84px; } }
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 900px) and (hover: hover) { .gt-slogan { display: none; } }
 @media (min-width: 1100px) and (min-height: 761px) and (max-height: 900px) and (hover: hover) { .gt-yil { margin-top: 8px; } .giris > .kutu { margin-top: 150px; } .gt-logo { width: 74px; } .gt-ad2 { font-size: 38px; } }
+
+/* gezi programı: her satır alt alta birden çok madde alabilir */
+.gk2-pr { align-items: start; }
+.gk2-pr textarea { min-width: 0; box-sizing: border-box; width: 100%; min-height: 44px; resize: none; overflow: hidden; font: inherit; line-height: 1.45; padding: 10px 12px; }
