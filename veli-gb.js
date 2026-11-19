@@ -96,21 +96,36 @@
     const { data } = await X.sb.rpc('umal_veli_kod_durum'); const K = {}; ((data && data.liste) || []).forEach(k => { K[k.no] = k; });
     const S = [...new Set((X.D.ogrenciler || []).map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira); let sec = S[0];
     const adres = location.origin + location.pathname.replace(/[^/]*$/, '') + 'veli/';
+    const KART_CSS = '.vk{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.vk div{border:.6pt dashed #8a93a6;border-radius:3mm;padding:5mm;page-break-inside:avoid;font-size:10pt}.vk b.k{font-size:17pt;letter-spacing:2pt;display:block;margin:2mm 0}.vk small{color:#555}';
+    const kart = r => `<div><b>${esc(bas(r.ad))}</b> · ${esc(r.sinif)} · No ${esc(r.no)}<br><small>Veli kodu</small><b class="k">${esc(String(r.kod).replace(/(\d{3})(\d{3})/, '$1 $2'))}</b><small>Giriş: ${esc(adres)}<br>Öğrenci numarası ve bu kodla ilk kez girin; sistem sizden kendi 6 haneli şifrenizi belirlemenizi ister. Sonraki girişlerde o şifreyi kullanın.</small></div>`;
     const ciz2 = () => { const ros = (X.D.ogrenciler || []).filter(o => o.sinif === sec).sort((a, b) => (+a.no) - (+b.no)), kodlu = ros.filter(o => K[o.no]).length, giren = ros.filter(o => K[o.no] && K[o.no].son_giris).length;
       I.innerHTML = `<div class="ust"><div><h1>Veli Erişimi</h1><div class="soluk kucuk">Veli, öğrenci numarası ve veli koduyla girer; çocuğunun devamsızlığını, tebrik ve uyarılarını, okul duyurularını görür. Notlar e-Okul'da kalır.</div></div></div>
         <div class="kart"><div class="dp-bas"><b>Veli giriş adresi</b><span class="soluk">${esc(adres)}</span></div>
           <div class="dya-sec">${S.map(s => `<button class="cip ${s === sec ? 'secili' : ''}" data-vs="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+        <div class="kart vk-toplu"><div class="dp-bas"><b>Seviyece toplu kart</b><span class="soluk kucuk">Her şube ayrı sayfada yazdırılır · yalnız kodu olmayan öğrencilere üretilir</span></div>
+          <div class="vk-sv">${['9', '10', '11', '12'].filter(v => S.some(s => s.split('-')[0] === v)).map(v => { const R_ = (X.D.ogrenciler || []).filter(o => String(o.sinif).split('-')[0] === v), yok = R_.filter(o => !K[o.no]).length;
+            return `<button class="vk-svb" data-vsv="${v}" ${yok ? '' : 'disabled'}><b>${v}. sınıflar</b><small>${yok ? yok + ' öğrenciye kod' : 'hepsinin kodu var'}</small></button>`; }).join('')}</div></div>
         <div class="kart"><div class="dp-bas"><b>${esc(sec || '')}</b><span class="soluk kucuk">${ros.length} öğrenci · kodu olan ${kodlu} · giriş yapan veli ${giren}</span>
           <button class="birincil kucuk" id="vUret">${kodlu ? 'Kodu olmayanlara üret' : 'Sınıfa veli kodu üret'}</button>${kodlu ? '<button class="ikincil kucuk" id="vYeni">Bütün kodları yenile</button>' : ''}</div>
           <div class="dp-tbl"><div class="dp-tr bas vtr"><span>No</span><span>Öğrenci</span><span>Veli kodu</span><span>Veli girişi</span></div>
           ${ros.map(o => `<div class="dp-tr vtr"><span>${esc(o.no)}</span><span><b>${esc(bas(o.ad))}</b></span><span class="${K[o.no] ? 'iyi' : 'soluk'}">${K[o.no] ? 'Var · ' + gunYaz(K[o.no].uretildi) : 'Yok'}</span><span class="soluk">${K[o.no] && K[o.no].son_giris ? (K[o.no].sifre ? 'Şifre aldı · ' : '') + gunYaz(K[o.no].son_giris) : '—'}</span></div>`).join('')}</div>
           <div class="soluk kucuk" style="margin-top:8px">Kod yalnız üretildiği anda görünür ve veli kartı olarak yazdırılır. Veli ilk girişte kendi şifresini belirler. Şifresini unutan veliye buradan yeni kod üretilir; eski şifre geçersiz olur.</div></div>`;
       I.querySelectorAll('[data-vs]').forEach(b => b.onclick = () => { sec = b.dataset.vs; ciz2(); });
+      I.querySelectorAll('[data-vsv]').forEach(b => b.onclick = async () => {   // K-762: seviyedeki her şube ayrı sayfa
+        const v = b.dataset.vsv, SS = S.filter(s => s.split('-')[0] === v), L = (X.D.ogrenciler || []).filter(o => SS.includes(o.sinif) && !K[o.no]);
+        if (!L.length) return; if (!await X.onayla(`${v}. sınıflarda kodu olmayan ${L.length} öğrenciye veli kodu üretilsin mi? Kartlar her şube ayrı sayfada yazdırılır. (Kodu olanlara dokunulmaz.)`)) return;
+        b.disabled = true; const sm = b.querySelector('small'); const T = [];
+        for (const s_ of SS) { const N = L.filter(o => o.sinif === s_).map(o => o.no); if (!N.length) continue; if (sm) sm.textContent = s_ + ' hazırlanıyor…';
+          const { data: d, error } = await X.sb.rpc('umal_veli_kod_uret', { p_nolar: N }); if (error || !Array.isArray(d)) { X.uyar(`${s_} üretilemedi: ` + (error ? X.hataYaz(error) : '')); break; }
+          d.forEach(r => { K[r.no] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; }); T.push([s_, d.slice().sort((a, b) => (+a.no) - (+b.no))]); }
+        if (T.length) X.raporYazdir(`<style>${KART_CSS}.vk-sayfa{page-break-after:always}.vk-sayfa:last-child{page-break-after:auto}.vk-sb{font-size:15pt;font-weight:800;color:#13305a;margin:0 0 4mm;padding:0 16mm}.vk{padding:0 16mm}</style>
+          ${T.map(([s_, d], i) => `<section class="vk-sayfa">${i === 0 ? X.raporBant('Veli Giriş Kartları', esc(v) + '. sınıflar · ' + T.reduce((t, x) => t + x[1].length, 0) + ' öğrenci') : '<div style="height:6mm"></div>'}<div class="vk-sb">${esc(s_)} · ${d.length} öğrenci</div><div class="vk">${d.map(kart).join('')}</div></section>`).join('')}`, 'Veli kartları ' + v + '. sınıflar');
+        ciz2(); });
       const uret = async nolar => { if (!nolar.length) { X.uyar('Kodu olmayan öğrenci yok.'); return; }
         const { data: d, error } = await X.sb.rpc('umal_veli_kod_uret', { p_nolar: nolar }); if (error || !Array.isArray(d)) { X.uyar('Üretilemedi: ' + (error ? X.hataYaz(error) : '')); return; }
         d.forEach(r => { K[r.no] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; });
-        X.raporYazdir(`<style>.vk{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.vk div{border:.6pt dashed #8a93a6;border-radius:3mm;padding:5mm;page-break-inside:avoid;font-size:10pt}.vk b.k{font-size:17pt;letter-spacing:2pt;display:block;margin:2mm 0}.vk small{color:#555}</style>
-          ${X.raporBant('Veli Giriş Kartları', esc(sec) + ' · ' + d.length + ' öğrenci')}<div class="vk">${d.map(r => `<div><b>${esc(bas(r.ad))}</b> · ${esc(r.sinif)} · No ${esc(r.no)}<br><small>Veli kodu</small><b class="k">${esc(String(r.kod).replace(/(\d{3})(\d{3})/, '$1 $2'))}</b><small>Giriş: ${esc(adres)}<br>Öğrenci numarası ve bu kodla ilk kez girin; sistem sizden kendi 6 haneli şifrenizi belirlemenizi ister. Sonraki girişlerde o şifreyi kullanın.</small></div>`).join('')}</div>`, 'Veli kartları ' + sec);
+        X.raporYazdir(`<style>${KART_CSS}</style>
+          ${X.raporBant('Veli Giriş Kartları', esc(sec) + ' · ' + d.length + ' öğrenci')}<div class="vk">${d.map(kart).join('')}</div>`, 'Veli kartları ' + sec);
         ciz2(); };
       $('#vUret').onclick = () => uret(ros.filter(o => !K[o.no]).map(o => o.no));
       if ($('#vYeni')) $('#vYeni').onclick = async () => { if (!await X.onayla(`${sec} sınıfındaki bütün veli kodları yenilensin mi? Eski kodlar geçersiz olur.`)) return; uret(ros.map(o => o.no)); };
