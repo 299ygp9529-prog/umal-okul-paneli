@@ -10,13 +10,14 @@
   async function sw() { if (kayit) return kayit; kayit = await navigator.serviceWorker.register('/sw.js', { scope: '/' }); await navigator.serviceWorker.ready; return kayit; }
   const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
   async function durum() {
-    if (!destek()) return ios && !ekranda() ? 'ios-ekle' : 'yok';
+    if (ios && !ekranda()) return 'ios-ekle';   // iPhone: Safari sekmesinde bildirim olmaz, yalnız ana ekrana eklenen uygulamada
+    if (!destek()) return 'yok';
     if (Notification.permission === 'denied') return 'red';
     try { const r = await sw(), s = await r.pushManager.getSubscription(); return s && Notification.permission === 'granted' ? 'acik' : 'kapali'; } catch (e) { return 'kapali'; }
   }
   // ac({ sb, kim: 'ogrenci'|'veli'|'personel', no, kod })  (personel: panel oturumu; no = e-posta) -> { ok, hata }
   async function ac(o) {
-    if (!destek()) return { ok: false, hata: ios ? 'iPhone\'da bildirim için önce sayfayı ana ekrana ekleyin (Paylaş › Ana Ekrana Ekle), sonra oradan açın.' : 'Bu tarayıcı bildirimleri desteklemiyor. Chrome ile açmayı deneyin.' };
+    if (!destek() || (ios && !ekranda())) return { ok: false, hata: ios ? 'iPhone\'da bildirim için önce sayfayı ana ekrana ekleyin (Paylaş › Ana Ekrana Ekle), sonra oradan açın.' : 'Bu tarayıcı bildirimleri desteklemiyor. Chrome ile açmayı deneyin.' };
     const izin = await Notification.requestPermission();
     if (izin !== 'granted') return { ok: false, hata: 'Bildirim izni verilmedi. Telefonun ayarlarından bu site için bildirimlere izin verebilirsiniz.' };
     try {
