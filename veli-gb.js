@@ -144,7 +144,7 @@
   }
   function obCiz() {
     const I = $('#icerik'), sek = idare() ? [['gonder', 'Gönder'], ['giden', 'Gönderilenler'], ['gelen', 'Bana gelenler']] : [['gelen', 'Bana gelenler']];
-    I.innerHTML = `<div class="ust"><div><h1>Okul Bildirimleri</h1><div class="soluk kucuk">${idare() ? 'Veliye, öğrenciye ya da öğretmene bildirim gönderin. Telefonunda bildirim açık olana anında gider; diğerleri kendi ekranında görür.' : 'İdareden size gelen bildirimler. Telefonunuza anında gelmesi için bildirimleri açın.'}</div></div></div>
+    I.innerHTML = `<div class="ust"><div><h1>Okul Bildirimleri</h1><div class="soluk kucuk">${idare() ? 'Veliye, öğrenciye ya da öğretmene bildirim gönderin.' : 'İdareden size gelen bildirimler.'}</div></div></div>
       <div id="obTel"></div>${sek.length > 1 ? `<div class="dya-sec gb-sek">${sek.map(([k, a]) => `<button class="cip ${OB.sek === k ? 'secili' : ''}" data-obs="${k}">${sekIk(k)}${a}</button>`).join('')}</div>` : ''}<div id="obIc"></div>`;
     I.querySelectorAll('[data-obs]').forEach(b => b.onclick = () => { OB.sek = b.dataset.obs; OB.sonuc = ''; obCiz(); });
     telCiz(); if (OB.sek === 'gonder') gonderObCiz(); else if (OB.sek === 'giden') gidenCiz(); else gelenCiz();
