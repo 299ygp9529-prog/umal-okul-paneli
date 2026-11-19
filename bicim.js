@@ -92,3 +92,71 @@
   new MutationObserver(L => { for (const m of L) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches && n.matches('input[type="date"]')) tarihHazirla(n); else tara(n); } }).observe(document.documentElement, { childList: true, subtree: true });
   window.UmalBicim = { isoGos, gosIso };
 })();
+
+// Telefonda açılır listeler (select) tarayıcının beyaz kutusuyla değil, Atlas temasında alttan açılan panelle seçilir.
+// Sınıf listeleri seviye bantlarıyla (9 camgöbeği · 10 yeşil · 11 mor · 12 turuncu) kutu kutu gelir; diğer listeler satır satır. Masaüstüne dokunmaz.
+(function () {
+  'use strict';
+  const dokunmatik = () => window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  const SV = { '9': '#22e8ff', '10': '#3ef08a', '11': '#b06bff', '12': '#ff9a3a' };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const st = document.createElement('style');
+  st.textContent = `
+  .as-ort { position: fixed; inset: 0; z-index: 100000; background: rgba(3,8,16,.62); display: flex; align-items: flex-end; justify-content: center; }
+  .as-pan { width: 100%; max-width: 560px; max-height: 82vh; display: flex; flex-direction: column; background: #0f1c2e; border: 1px solid rgba(34,232,255,.35); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(34,232,255,.08) inset; color: #fff; font-family: inherit; padding-bottom: env(safe-area-inset-bottom); }
+  .as-tut { width: 42px; height: 5px; border-radius: 3px; background: rgba(159,179,204,.45); margin: 10px auto 4px; }
+  .as-bas { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 18px 10px; border-bottom: 1px solid #2a4468; }
+  .as-bas b { font-size: 17px; font-weight: 800; letter-spacing: .2px; color: #fff; }
+  .as-kapat { border: 1px solid #2a4468; background: #13233a; color: #9fb3cc; border-radius: 12px; padding: 7px 14px; font: inherit; font-size: 14px; font-weight: 700; }
+  .as-ic { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 14px 16px; }
+  .as-sat { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 50px; padding: 0 14px; margin: 0 0 6px; border: 1px solid #2a4468; border-radius: 14px; background: #13233a; color: #fff; font: inherit; font-size: 16px; font-weight: 700; text-align: left; }
+  .as-sat.sec { border-color: #22e8ff; background: rgba(34,232,255,.12); box-shadow: 0 0 0 1px #22e8ff inset, 0 0 14px rgba(34,232,255,.25); }
+  .as-sat.sec::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #22e8ff; box-shadow: 0 0 8px #22e8ff; flex: none; }
+  .as-sat:disabled { opacity: .45; }
+  .as-grup { font-size: 12px; font-weight: 800; color: #9fb3cc; letter-spacing: .6px; text-transform: uppercase; margin: 12px 4px 6px; }
+  .as-bant { display: flex; align-items: center; gap: 8px; margin: 12px 2px 8px; padding: 6px 12px; border-radius: 10px; background: color-mix(in srgb, var(--sv) 18%, transparent); border-left: 4px solid var(--sv); font-size: 14px; font-weight: 800; color: var(--sv); }
+  .as-bant:first-child { margin-top: 2px; }
+  .as-kutular { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .as-kutu { position: relative; height: 68px; border: 1px solid #2a4468; border-radius: 14px; background: #13233a; color: #fff; font: inherit; font-size: 19px; font-weight: 800; overflow: hidden; }
+  .as-kutu::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sv); }
+  .as-kutu.sec { border-color: var(--sv); background: color-mix(in srgb, var(--sv) 20%, #13233a); box-shadow: 0 0 0 1px var(--sv) inset, 0 0 16px color-mix(in srgb, var(--sv) 45%, transparent); }
+  .as-kutu:disabled { opacity: .45; }`;
+  document.head.appendChild(st);
+  function baslikBul(sel) {
+    const l = sel.id && document.querySelector(`label[for="${CSS.escape(sel.id)}"]`);
+    const t = sel.getAttribute('aria-label') || sel.title || (l && l.textContent) || (sel.closest('label') && sel.closest('label').childNodes[0] && sel.closest('label').childNodes[0].textContent) || '';
+    return String(t).trim() || 'Seçin';
+  }
+  function ac(sel) {
+    if (document.querySelector('.as-ort')) return;
+    const ops = [...sel.options], sinifMi = ops.filter(o => o.value !== '' && /^(9|10|11|12)\s*[-/]\s*[A-ZÇĞİÖŞÜ]/i.test(o.text.trim())).length >= Math.max(3, ops.filter(o => o.value !== '').length * .6);
+    let ic = '';
+    if (sinifMi) {
+      const G = {}, diger = [];
+      ops.forEach((o, i) => { const m = o.text.trim().match(/^(9|10|11|12)\s*[-/]/); if (m) (G[m[1]] = G[m[1]] || []).push([o, i]); else diger.push([o, i]); });
+      ic += diger.map(([o, i]) => `<button class="as-sat ${i === sel.selectedIndex ? 'sec' : ''}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text)}</button>`).join('');
+      ['9', '10', '11', '12'].filter(k => G[k]).forEach(k => { ic += `<div class="as-bant" style="--sv:${SV[k]}">${k}. Sınıflar</div><div class="as-kutular">${G[k].map(([o, i]) => `<button class="as-kutu ${i === sel.selectedIndex ? 'sec' : ''}" style="--sv:${SV[k]}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text.trim())}</button>`).join('')}</div>`; });
+    } else {
+      let grup = null;
+      ops.forEach((o, i) => { const g = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode.label : null; if (g && g !== grup) ic += `<div class="as-grup">${esc(g)}</div>`; grup = g; if (o.hidden) return; ic += `<button class="as-sat ${i === sel.selectedIndex ? 'sec' : ''}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text)}</button>`; });
+    }
+    const ort = document.createElement('div'); ort.className = 'as-ort';
+    ort.innerHTML = `<div class="as-pan" role="dialog" aria-modal="true"><div class="as-tut"></div><div class="as-bas"><b>${esc(baslikBul(sel))}</b><button class="as-kapat" type="button">Kapat</button></div><div class="as-ic">${ic}</div></div>`;
+    const kapat = () => { ort.remove(); document.documentElement.style.overflow = ''; };
+    ort.addEventListener('click', ev => {
+      if (ev.target === ort || ev.target.closest('.as-kapat')) { kapat(); return; }
+      const b = ev.target.closest('[data-i]'); if (!b || b.disabled) return;
+      const i = +b.dataset.i; kapat();
+      if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+    document.documentElement.style.overflow = 'hidden'; document.body.appendChild(ort);
+    const s = ort.querySelector('.sec'); if (s) s.scrollIntoView({ block: 'center' });
+  }
+  const hedef = ev => { const s = ev.target && ev.target.closest && ev.target.closest('select'); return s && !s.multiple && !s.disabled && (s.size || 0) <= 1 && !s.dataset.yerel && dokunmatik() ? s : null; };
+  let dokunBas = null;
+  document.addEventListener('touchstart', ev => { const s = hedef(ev); dokunBas = s ? { s, x: ev.touches[0].clientX, y: ev.touches[0].clientY } : null; }, { passive: true, capture: true });
+  document.addEventListener('touchend', ev => { const s = hedef(ev); if (!s || !dokunBas || dokunBas.s !== s) return; const t = ev.changedTouches[0]; if (Math.abs(t.clientX - dokunBas.x) > 10 || Math.abs(t.clientY - dokunBas.y) > 10) return; ev.preventDefault(); s.blur(); ac(s); }, { passive: false, capture: true });
+  document.addEventListener('mousedown', ev => { const s = hedef(ev); if (s) { ev.preventDefault(); ac(s); } }, true);
+  document.addEventListener('keydown', ev => { const s = hedef(ev); if (s && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ac(s); } }, true);
+  window.UmalSecim = { ac };
+})();
