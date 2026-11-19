@@ -151,8 +151,8 @@
   }
   async function telCiz() {   // öğretmenin kendi telefonu
     const k = $('#obTel'); if (!k || !window.UmalBildirim) return; const d = await UmalBildirim.durum(); if (!$('#obTel')) return;
-    if (d === 'acik') { k.innerHTML = `<div class="kart ob-tel tamam"><i>${ZIL}</i><div><b>Bu cihazda bildirimler açık</b><span>Görevlendirme ve idare bildirimleri bu cihaza anında gelir.</span></div><button class="ikincil" id="obKapat">Kapat</button></div>`;
-      $('#obKapat').onclick = async () => { await UmalBildirim.kapat({ sb: X.sb, kim: 'personel', no: String(X.D.eposta || '').toLowerCase() }); try { const r = await navigator.serviceWorker.ready, s = await r.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {} telCiz(); }; return; }
+    if (d === 'acik') { k.innerHTML = `<div class="ob-tel-ince"><i>${ZIL}</i><span>Bu cihazda bildirimler açık</span><button class="ob-anahtar" id="obKapat" role="switch" aria-checked="true" aria-label="Bu cihazda bildirimleri kapat"><b></b></button></div>`;   // K-761: tek satır, küçük anahtar
+      $('#obKapat').onclick = async () => { const kb = $('#obKapat'); kb.classList.add('kapaniyor'); await UmalBildirim.kapat({ sb: X.sb, kim: 'personel', no: String(X.D.eposta || '').toLowerCase() }); try { const r = await navigator.serviceWorker.ready, s = await r.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {} telCiz(); }; return; }
     if (d === 'yok') { k.innerHTML = ''; return; }
     const M = { kapali: ['Bildirimleri bu cihazda açın', 'Boş ders görevi, müdür çağrısı gibi bildirimler telefonunuza anında gelsin.'], 'ios-ekle': ['iPhone\'da bildirim için', 'Safari\'de Paylaş › "Ana Ekrana Ekle"ye dokunun; ana ekrandaki Atlas simgesinden açıp buradan bildirimleri açın.'], red: ['Bildirimler engellenmiş', 'Telefonun ayarlarından bu site için bildirimlere izin verin.'] }[d];
     k.innerHTML = `<div class="kart ob-tel"><i>${ZIL}</i><div><b>${M[0]}</b><span>${M[1]}</span><span class="hata" id="obTelH"></span></div>${d === 'kapali' ? '<button class="birincil" id="obAc">Bildirimleri aç</button>' : ''}</div>`;

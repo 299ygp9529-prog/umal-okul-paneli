@@ -997,4 +997,6 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     document.head.appendChild(s);
   }
   window.UmalIdari = { ac, MODULLER, ikon, _test: { sbOtomatik, sbCakisma, soDagit: () => soDagit, tabloOku } };
+  window.UmalIdari.dosyaOku = async (f, yard) => { const c0 = C; if (!C) C = yard; try { return await dosyaSatirlar(f); } finally { C = c0; } };   // K-760: takvim aktarımı da kullanır
+  window.UmalIdari.tabloOku = tabloOku;
 })();

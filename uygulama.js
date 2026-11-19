@@ -1241,7 +1241,7 @@
     return D.ogrenciler;
   }
   async function gbAc(tur, on) {   // K-720: tebrik/uyarı, veli erişimi (ihtiyaç olunca yüklenir)
-    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190955'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611192230'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalGB[tur]({ sb, esc, baslik, D, bolumAc: id => { tumuKapat(); ac(id); }, ogrencileriYukle, fotolariYukle, dyDerslerim, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant, rol: D.rol }, on);
     } catch (e) { uyar('Açılamadı: ' + hataYaz(e)); } }
   async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)
@@ -5760,7 +5760,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611192045'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611192230'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
@@ -5795,7 +5795,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611191830');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611192045');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611192230');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
@@ -6216,6 +6216,27 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     return { sinavlar: [], subeler: [] };
   }
   const tkYer = (tk, tarih, ders, sv) => { const x = ((tk && tk.sinavlar) || []).find(s => s.tarih === tarih && s.ders === ders); return (x && x.yer && x.yer[sv]) || 'kelebek'; };
+  // K-760: sınav takvimi tablosu → [{tarih, n, sv: {'9': 'Matematik', ...}}]. Başlıkta "Tarih" ve seviye sütunları (9. Sınıf, 10, 11. sınıflar…) aranır; ders saati sütunu ya da saat (10.20) olabilir.
+  function takvimSatirCoz(R, SV) {
+    const AYL = ['ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran', 'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık'], kucuk = x => String(x || '').toLocaleLowerCase(tr).trim();
+    const yil0 = (() => { const b = new Date(); return b.getMonth() >= 7 ? b.getFullYear() : b.getFullYear() - 1; })();
+    const tarihCoz = x => { const t = kucuk(x); let m = t.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/); if (m) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return `${y}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`; }
+      m = t.match(/(\d{1,2})\s+([a-zçğıöşü]+)\s*(\d{4})?/); if (m) { const a = AYL.findIndex(z => m[2].startsWith(z.slice(0, 3))); if (a >= 0) { const y = m[3] ? +m[3] : (a >= 7 ? yil0 : yil0 + 1); return `${y}-${String(a + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`; } }
+      if (/^\d{5}$/.test(t)) { const d = new Date(Date.UTC(1899, 11, 30) + (+t) * 864e5); return d.toISOString().slice(0, 10); } return ''; };
+    const zilN = (tarih, x) => { const t = kucuk(x); let m = t.match(/(\d)\s*\.?\s*(ders|saat)/) || t.match(/^(\d)\.?$/); if (m) return +m[1];
+      m = t.match(/(\d{1,2})[.:](\d{2})/); if (m && tarih) { const g = (new Date(tarih + 'T12:00:00').getDay() + 6) % 7, Z = (((D.program || {}).zil || {})[g === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0), dk = +m[1] * 60 + +m[2], dk2 = z => { const [h, mm] = String(z.bas).split(':').map(Number); return h * 60 + mm; };
+        const z = Z.slice().sort((a, b) => Math.abs(dk2(a) - dk) - Math.abs(dk2(b) - dk))[0]; if (z && Math.abs(dk2(z) - dk) <= 25) return parseInt(z.ders, 10); } return 0; };
+    let bas = -1, cT = -1, cN = -1; const cS = {};
+    for (let i = 0; i < Math.min(R.length, 40) && bas < 0; i++) { const r = R[i].map(kucuk); const t = r.findIndex(z => /tarih/.test(z)); if (t < 0) continue;
+      const S = {}; r.forEach((z, j) => { if (j === t) return; const m = z.match(/^(9|10|11|12)\b/) || z.match(/\b(9|10|11|12)\s*\.?\s*(sınıf|sinif|lar|ler)/); if (m && SV.includes(m[1]) && !(m[1] in S)) S[m[1]] = j; });
+      if (!Object.keys(S).length) continue; bas = i; cT = t; Object.assign(cS, S); cN = r.findIndex((z, j) => j !== t && !Object.values(S).includes(j) && /(ders|saat|oturum)/.test(z)); }
+    if (bas < 0) return [];
+    const L = []; let sonT = '';
+    for (let i = bas + 1; i < R.length; i++) { const r = R[i]; const t = tarihCoz(r[cT]) || ''; if (t) sonT = t; const tarih = t || sonT; if (!tarih) continue;
+      const sv = {}; Object.entries(cS).forEach(([v, j]) => { const d = String(r[j] || '').replace(/\s+/g, ' ').trim(); if (d && !/^[-–—x]+$/i.test(d) && !/yok|sınav yok/i.test(d)) sv[v] = d; }); if (!Object.keys(sv).length) continue;
+      const n = (cN >= 0 ? zilN(tarih, r[cN]) : 0) || zilN(tarih, r.join(' ')) || 4; L.push({ tarih, n, sv }); }
+    return L;
+  }
   async function takvimDuzenle(tk) {
     await ogrencileriYukle();
     await programYukle();
@@ -6247,6 +6268,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
               ${secAcik && secAcik.id === x.id && secAcik.v === v ? secPanel(x, v) : ''}
               <button class="bag td-svsil" data-tdsvs="${x.id}:${v}" title="Bu seviyeyi sınavdan çıkar">✕</button></div>`; }).join('')}
             ${SV.some(v => !x.sv[v]) ? `<div class="cipler" style="margin-top:8px">${SV.filter(v => !x.sv[v]).map(v => `<button class="cip" style="border-color:${SEVIYE_RENK[v]}" data-tdsve="${x.id}:${v}">+ ${v}. sınıflar</button>`).join('')}</div>` : ''}</div>`; }).join('')}</div>
+        <div class="kart td-aktar"><div><b>Takvimi dosyadan aktar</b><small>Okulun sınav takvimini seçin (Excel, Word, PDF) ya da Excel'den kopyalayıp yapıştırın. Sınavlar aşağıya eklenir; kontrol edip Kaydet deyin.</small></div><div class="dugmeler" style="margin:0"><button class="birincil" id="tdDosya">Dosya seç</button><button class="ikincil" id="tdYapistir">Yapıştır</button>${E.sinavlar.some(x => x.tarih && x.tarih < bugunISO()) ? '<button class="ikincil" id="tdEskiSil" title="Tarihi geçmiş sınavları listeden çıkarır">Geçmiş sınavları kaldır</button>' : ''}</div></div>
         <div class="dugmeler" style="margin-top:12px"><button class="ikincil" id="tdEkle" style="margin-right:auto">+ Sınav ekle</button><span class="kucuk" id="tdBilgi"></span><button class="ikincil" id="tdVazgec">Vazgeç</button><button class="birincil" id="tdKaydet">Kaydet</button></div>`;
     };
     const bul = id => E.sinavlar.find(x => x.id === +id);
@@ -6341,6 +6363,17 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
       const b = ev.target.closest('button'); if (!b) return; const ds = b.dataset;
       if (b.id === 'tdGeri' || b.id === 'tdVazgec') { if (degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return; takvim(); return; }
       if (b.id === 'tdKaydet') return kaydet();
+      if (b.id === 'tdEskiSil') { const n = E.sinavlar.filter(x => x.tarih && x.tarih < bugunISO()).length; if (!await onayla(`Tarihi geçmiş ${n} sınav listeden çıkarılsın mı? (Kaydet deyince takvimden kalkar; geçmiş sınavların telafi ve not kayıtları silinmez.)`)) return; E.sinavlar = E.sinavlar.filter(x => !x.tarih || x.tarih >= bugunISO()); degisti = true; ciz(); return; }
+      if (b.id === 'tdDosya' || b.id === 'tdYapistir') {   // K-760: takvimi dosyadan / yapıştırarak aktar
+        const isle = R => { const L = takvimSatirCoz(R, SV); if (!L.length) { uyar('Dosyada sınav satırı bulunamadı. Başlık satırında "Tarih" ve sınıf seviyeleri (9, 10, 11, 12) yazan bir tablo olmalı.'); return; }
+          let eklenen = 0; L.forEach(r => { const sv = {}; Object.entries(r.sv).forEach(([v, ad]) => { sv[v] = { ad, yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; });
+            if (E.sinavlar.some(x => x.tarih === r.tarih && x.n === r.n)) { const x = E.sinavlar.find(x => x.tarih === r.tarih && x.n === r.n); Object.assign(x.sv, sv); } else E.sinavlar.push({ id: nid++, tarih: r.tarih, n: r.n, sv }); eklenen++; });
+          degisti = true; ciz(); const tb = $('#tdBilgi'); if (tb) tb.innerHTML = `<span class="yeşil">${eklenen} sınav aktarıldı — kontrol edip Kaydet deyin</span>`; };
+        try { if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611192230'; sc.onload = ok; sc.onerror = () => red(new Error('okuyucu yüklenemedi')); document.head.appendChild(sc); }); } catch (e) { uyar(e.message); return; }
+        if (b.id === 'tdYapistir') { pencereAc(`<h2 style="margin-top:0">Takvimi yapıştır</h2><div class="soluk kucuk" style="margin-bottom:8px">Excel'de takvim tablosunu başlık satırıyla birlikte seçip kopyalayın, buraya yapıştırın.</div><textarea id="tdYap" rows="10" style="width:100%;box-sizing:border-box" data-bicim="yok"></textarea><div class="dugmeler"><button class="birincil" id="tdYapOk">Aktar</button></div>`);
+          $('#tdYapOk').onclick = () => { const t = $('#tdYap').value; $('#pencere').classList.add('gizli'); isle(window.UmalIdari.tabloOku(t)); }; return; }
+        const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.xlsx,.xls,.docx,.pdf,.csv,.txt';
+        inp.onchange = async () => { const f = inp.files[0]; if (!f) return; try { isle(await window.UmalIdari.dosyaOku(f, { xlsxSatirlar, xlsSatirlar })); } catch (e) { uyar('Dosya okunamadı: ' + (e.message || e)); } }; inp.click(); return; }
       if (b.id === 'tdEkle') { const son = E.sinavlar[E.sinavlar.length - 1]; E.sinavlar.push({ id: nid++, tarih: son ? son.tarih : bugunISO(), n: 4, sv: {} }); degisti = true; ciz(); const k = document.querySelector(`[data-tdi="${nid - 1}"]`); if (k) k.scrollIntoView({ block: 'center' }); return; }
       if (ds.tdn) { const [i, n] = ds.tdn.split(':'); bul(i).n = +n; degisti = true; ciz(); return; }
       if (ds.tdsil) { const x = bul(ds.tdsil); if (!await onayla(`${x.tarih ? new Date(x.tarih + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' }) : ''} ${x.n}. ders sınavı takvimden silinsin mi?`)) return; E.sinavlar = E.sinavlar.filter(y => y !== x); degisti = true; ciz(); return; }
