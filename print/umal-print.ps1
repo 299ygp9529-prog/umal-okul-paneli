@@ -1,12 +1,23 @@
 # UMAL Print - okul bilgisayarindaki yazicilari DersMap ve tahtalara acar, gelen ciktilari yazdirir.
 # Kurulum: panel > Print sekmesi. Dosyalar: C:\ProgramData\UMAL-Print (ayar.json, umal-print.ps1, SumatraPDF.exe, gunluk.txt)
 param([switch]$Kullanici, [switch]$Dene)
-$Surum = '1.3'
+$Surum = '1.4'
 $ErrorActionPreference = 'Stop'
 $Klasor = Join-Path $env:ProgramData 'UMAL-Print'
 $KulKlasor = Join-Path $Klasor 'kullanici'
 # Sanal "yazicilar" listelenmez (PDF/XPS/OneNote/Fax)
 $Sanal = 'Microsoft Print to PDF|Microsoft XPS|OneNote|^Fax$|PDF24|Adobe PDF|CutePDF|Foxit.*PDF|doPDF|Bullzip|PDFCreator'
+# Yazicinin bildirdigi durum: hazir | kagit_az | kagit_yok | toner_az | toner_yok | kapak_acik | sikisma | cevrimdisi | servis | duraklatildi | hata
+function YaziciSaglik($p) {
+  try {
+    $e = 0; try { $e = [int]$p.DetectedErrorState } catch {}
+    switch ($e) { 3 { return 'kagit_az' } 4 { return 'kagit_yok' } 5 { return 'toner_az' } 6 { return 'toner_yok' } 7 { return 'kapak_acik' } 8 { return 'sikisma' } 9 { return 'cevrimdisi' } 10 { return 'servis' } 11 { return 'cikis_dolu' } }
+    $s = 0; try { $s = [int]$p.PrinterStatus } catch {}
+    if ($s -eq 7) { return 'cevrimdisi' }
+    if ([bool]$p.WorkOffline) { return 'cevrimdisi' }
+    return 'hazir'
+  } catch { return 'bilinmiyor' }
+}
 function Yazicilar {
   $liste = @()
   try {
@@ -16,7 +27,7 @@ function Yazicilar {
       $ip = $null
       if ($portlar.ContainsKey($_.PortName)) { $ip = [string]$portlar[$_.PortName] }
       elseif ($_.PortName -match '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})') { $ip = $Matches[1] }
-      $liste += @{ ad = [string]$_.Name; port = [string]$_.PortName; ip = $ip; varsayilan = [bool]$_.Default }
+      $liste += @{ ad = [string]$_.Name; port = [string]$_.PortName; ip = $ip; varsayilan = [bool]$_.Default; saglik = (YaziciSaglik $_) }
     }
   } catch {}
   return $liste
@@ -165,6 +176,59 @@ function KullaniciYazdir([string]$id, [string]$sum, [string]$arg) {
   return -3
 }
 
+# Yazdirmadan once ve hata sonrasi: cevrimdisi isareti kaldirilir, duraklatilmis yazici devam ettirilir,
+# ag yazicisinda yaniltici "cevrimdisi"ya yol acan SNMP denetimi kapatilir, kuyrukta hata verip takilan eski isler temizlenir.
+function YaziciOnar([string]$ad) {
+  $yapilan = @()
+  try {
+    $p = Get-WmiObject -Class Win32_Printer | Where-Object { $_.Name -eq $ad } | Select-Object -First 1
+    if (-not $p) { return '' }
+    try { if ([bool]$p.WorkOffline) { $p.WorkOffline = $false; [void]$p.Put(); $yapilan += 'cevrimdisi isareti kaldirildi' } } catch {}
+    try { if ([int]$p.PrinterStatus -eq 7 -or [int]$p.ExtendedPrinterStatus -eq 8) { [void]$p.Resume(); $yapilan += 'devam ettirildi' } } catch {}
+    try {
+      $port = Get-WmiObject -Class Win32_TCPIPPrinterPort | Where-Object { $_.Name -eq $p.PortName } | Select-Object -First 1
+      if ($port -and [bool]$port.SNMPEnabled) { $port.SNMPEnabled = $false; [void]$port.Put(); $yapilan += 'SNMP kapatildi' }
+    } catch {}
+    try {
+      $esik = (Get-Date).AddMinutes(-10)
+      Get-WmiObject -Class Win32_PrintJob | Where-Object { ([string]$_.Name).StartsWith($ad + ',') } | ForEach-Object {
+        $j = $_; $zaman = $null
+        try { $zaman = [Management.ManagementDateTimeConverter]::ToDateTime([string]$j.TimeSubmitted) } catch {}
+        $hatali = ([string]$j.Status) -match 'Error|Hata' -or ([string]$j.JobStatus) -match 'Error|Hata|Deleting|Siliniyor'
+        if ($hatali -and $zaman -and $zaman -lt $esik) { try { [void]$j.Delete(); $yapilan += ('takilan is silindi: ' + [string]$j.Document) } catch {} }
+      }
+    } catch {}
+  } catch {}
+  if ($yapilan.Count -gt 0) { Gunluk ('Yazici onarildi (' + $ad + '): ' + ($yapilan -join ', ')) }
+  return ($yapilan -join ', ')
+}
+# Kuyruktaki isimiz: yok (bitti) | bekliyor | hata nedeni
+function KuyrukDurumu([string]$ad, [string]$id) {
+  try {
+    $j = Get-WmiObject -Class Win32_PrintJob | Where-Object { ([string]$_.Name).StartsWith($ad + ',') -and ([string]$_.Document) -like ('*' + $id + '*') } | Select-Object -First 1
+    if (-not $j) { return 'yok' }
+    $p = Get-WmiObject -Class Win32_Printer | Where-Object { $_.Name -eq $ad } | Select-Object -First 1
+    $s = 'hazir'; if ($p) { $s = YaziciSaglik $p }
+    if ($s -ne 'hazir' -and $s -ne 'bilinmiyor') { return $s }
+    if (([string]$j.Status) -match 'Error|Hata' -or ([string]$j.JobStatus) -match 'Error|Hata|Offline|Paper') { return 'hata' }
+    return 'bekliyor'
+  } catch { return 'yok' }
+}
+$Izle = @{}
+$SaglikAd = @{ kagit_az = 'kagit azaldi'; kagit_yok = 'kagit yok'; toner_az = 'toner azaldi'; toner_yok = 'toner bitti'; kapak_acik = 'kapak acik'; sikisma = 'kagit sikisti'; cevrimdisi = 'yazici kapali ya da agda yok'; servis = 'servis gerekiyor'; cikis_dolu = 'cikis tepsisi dolu'; hata = 'yazici hata veriyor'; bekliyor = 'sirasini bekliyor' }
+function IzleKontrol {
+  foreach ($k in @($script:Izle.Keys)) {
+    try {
+      $x = $script:Izle[$k]
+      $dur = KuyrukDurumu ([string]$x.yazici) $k
+      if ($dur -eq 'yok') { IsDurum $k 'yazdirildi' $null; $script:Izle.Remove($k); Gunluk ('Yazicidan cikti: ' + $k); continue }
+      if (((Get-Date) - [DateTime]$x.zaman).TotalHours -ge 3) { $script:Izle.Remove($k); continue }
+      if ($dur -ne [string]$x.son) { $x.son = $dur; $n = [string]$script:SaglikAd[$dur]; if (-not $n) { $n = $dur }; IsDurum $k 'yazicida' ('Yazicida bekliyor: ' + $n) }
+      if ($dur -eq 'cevrimdisi' -or $dur -eq 'hata') { [void](YaziciOnar ([string]$x.yazici)) }
+    } catch {}
+  }
+}
+
 function DurumGonder {
   $d = @{
     sinif = $Ad; surum = ('Print ' + $Surum); cihaz_turu = 'bilgisayar'
@@ -174,7 +238,7 @@ function DurumGonder {
   }
   if ($script:SonHata) { $d.hata = $script:SonHata }
   [void](Rpc 'umal_durum_yaz' @{ p_anahtar = $TahtaAnahtar; p_cihaz = $Cihaz; p_durum = $d })
-  return ($d.kurulu_yazicilar | ForEach-Object { $_.ad }) -join '|'
+  return ($d.kurulu_yazicilar | ForEach-Object { [string]$_.ad + ':' + [string]$_.saglik }) -join '|'
 }
 
 function IsDurum([string]$id, [string]$durum, [string]$hata) {
@@ -218,20 +282,42 @@ function Yazdir($is) {
     $yon = [string]$is.yon; if ($yon -eq 'dikey') { $ay += 'portrait' } elseif ($yon -eq 'yatay') { $ay += 'landscape' }
     $kg = [string]$is.kagit; if (@('A3', 'A5') -contains $kg) { $ay += ('paper=' + $kg) }
     $arg = '-print-to "' + $yaz + '" -print-settings "' + ($ay -join ',') + '" -silent -exit-when-done "' + $dosya + '"'
+    [void](YaziciOnar $yaz)
     # 1) hizmet kendi yazdirir  2) olmazsa oturumu acik kullanicinin hesabinda  3) o da olmazsa yazicinin kendi ayarlariyla
     $kod1 = -9; $kod2 = -9; $kod3 = -9; $yol = ''
+    $arg3 = '-print-to "' + $yaz + '" -silent -exit-when-done "' + $dosya + '"'
     if ($bende) { $kod1 = SumatraCalistir $sum $arg; if ($kod1 -eq 0) { $yol = 'hizmet' } }
     if (-not $yol) { $kod2 = KullaniciYazdir $id $sum $arg; if ($kod2 -eq 0) { $yol = 'kullanici' } }
     if (-not $yol -and $kod2 -ne -3) {
-      $arg3 = '-print-to "' + $yaz + '" -silent -exit-when-done "' + $dosya + '"'
       $kod3 = KullaniciYazdir $id $sum $arg3; if ($kod3 -eq 0) { $yol = 'kullanici-sade' }
+    }
+    if (-not $yol -and $bende) { $kod3 = SumatraCalistir $sum $arg3; if ($kod3 -eq 0) { $yol = 'hizmet-sade' } }
+    # Olmadiysa vazgecilmez: yazici onarilir, biriktirici yeniden baslatilir, iki kez daha denenir
+    for ($d = 2; $d -le 3 -and -not $yol; $d++) {
+      IsDurum $id 'yazdiriliyor' ('Yeniden deneniyor (' + $d + '/3)')
+      Gunluk ('Yeniden deneniyor (' + $d + '/3): ' + $yaz)
+      [void](YaziciOnar $yaz)
+      if ($d -eq 2) { try { Restart-Service -Name Spooler -Force; Start-Sleep -Seconds 8 } catch {} } else { Start-Sleep -Seconds 40 }
+      Biriktirici
+      $bende = [bool](Get-WmiObject -Class Win32_Printer | Where-Object { $_.Name -eq $yaz })
+      if ($bende) { $kod1 = SumatraCalistir $sum $arg; if ($kod1 -eq 0) { $yol = 'hizmet-' + $d } }
+      if (-not $yol -and $bende) { $kod3 = SumatraCalistir $sum $arg3; if ($kod3 -eq 0) { $yol = 'hizmet-sade-' + $d } }
+      if (-not $yol) { $kod2 = KullaniciYazdir $id $sum $arg3; if ($kod2 -eq 0) { $yol = 'kullanici-sade-' + $d } }
     }
     if (-not $yol) {
       $ek = ''; if ($kod2 -eq -3) { $ek = '; bilgisayarda oturumu acik kullanici yok ya da yanit vermedi' }
       throw ('Yazici yazdirmayi kabul etmedi (hizmet ' + $kod1 + ', kullanici ' + $kod2 + ', sade ' + $kod3 + ')' + $ek)
     }
-    IsDurum $id 'yazdirildi' $null
-    Gunluk ('Yazdirildi [' + $yol + ']: ' + [string]$is.pdf_ad + ' > ' + $yaz + ' (' + ($ay -join ',') + ')')
+    Gunluk ('Yaziciya gonderildi [' + $yol + ']: ' + [string]$is.pdf_ad + ' > ' + $yaz + ' (' + ($ay -join ',') + ')')
+    # Kuyruk dogrulamasi: is yazicidan cikana kadar izlenir; takilirsa nedeni panele bildirilir
+    $dur = 'yok'
+    for ($k = 0; $k -lt 6; $k++) { Start-Sleep -Seconds 3; $dur = KuyrukDurumu $yaz $id; if ($dur -eq 'yok') { break } }
+    if ($dur -eq 'yok') { IsDurum $id 'yazdirildi' $null }
+    else {
+      $n = [string]$script:SaglikAd[$dur]; if (-not $n) { $n = $dur }
+      IsDurum $id 'yazicida' ('Yazicida bekliyor: ' + $n)
+      $script:Izle[$id] = @{ yazici = $yaz; zaman = (Get-Date); son = $dur }
+    }
   } catch {
     $m = $_.Exception.Message
     IsDurum $id 'hata' $m
@@ -279,14 +365,14 @@ if ($Dene) { exit 0 }
 Gunluk ("UMAL Print $Surum basladi: $Ad ($Cihaz)")
 Get-ChildItem $Klasor -Filter 'is-*.pdf' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 KullaniciGorevi
-$sonDurum = [DateTime]::MinValue; $sonGuncelle = [DateTime]::MinValue; $sonListe = ''; $sonTara = [DateTime]::MinValue; $ardHata = 0
+$sonDurum = [DateTime]::MinValue; $sonGuncelle = [DateTime]::MinValue; $sonListe = ''; $sonTara = [DateTime]::MinValue; $ardHata = 0; $sonIzle = [DateTime]::MinValue
 while ($true) {
   try {
     $simdi = Get-Date
     # yazici listesi 10 sn'de bir bakilir; degistiyse hemen, degismediyse 30 sn'de bir bildirilir
     if (($simdi - $sonTara).TotalSeconds -ge 10) {
       $sonTara = $simdi
-      $imdi = (@(TumYazicilar) | ForEach-Object { $_.ad }) -join '|'
+      $imdi = (@(TumYazicilar) | ForEach-Object { [string]$_.ad + ':' + [string]$_.saglik }) -join '|'
       if ($imdi -ne $sonListe -or ($simdi - $sonDurum).TotalSeconds -ge 30) { $sonListe = DurumGonder; $sonDurum = $simdi; Biriktirici }
     }
     # isler 3 sn'de bir
@@ -294,6 +380,7 @@ while ($true) {
     $isler = @()
     if ($yanit) { $coz = $yanit | ConvertFrom-Json; foreach ($x in $coz) { if ($x) { $isler += $x } } }
     foreach ($is in $isler) { if ($is -and $is.id) { Yazdir $is } }
+    if ($Izle.Count -gt 0 -and ($simdi - $sonIzle).TotalSeconds -ge 10) { $sonIzle = $simdi; IzleKontrol }
     if ($isler.Count -gt 0) { $sonListe = DurumGonder; $sonDurum = Get-Date }
     if (($simdi - $sonGuncelle).TotalMinutes -ge 20) { $sonGuncelle = $simdi; Guncelle }
     $ardHata = 0
