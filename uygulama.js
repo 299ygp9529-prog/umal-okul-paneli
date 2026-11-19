@@ -6595,7 +6595,6 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     let tfOg = {}; if (D.rol !== 'ogretmen') try { const { data: to } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'telafi_ogrenci').maybeSingle(); tfOg = (to && to.deger ? JSON.parse(to.deger) : {}).kayit || {}; } catch (e) { tfOg = {}; }
     // K-736: sınav salon yoklamasında "gelmedi" olanlar ve sınıf içi sınavda öğretmenin işaretledikleri de telafi listesine girer
     let tfSy = [], tfOt = [], tfBen = []; if (D.rol !== 'ogretmen') {
-      try { const { data: sy } = await sb.from('umal_sinav_salon').select('tarih,ders,veri'); (sy || []).forEach(r => { const d = parseInt(r.ders, 10); if (!d) return; ((r.veri || {}).gelmedi || []).forEach(g => tfSy.push({ no: String(g.no), ders: g.ders || '', asil: 'sy|' + r.tarih + '|' + d })); }); } catch (e) {}
       try { const { data: ot } = await sb.from('umal_telafi_ogt').select('oturum,no,ders,ekleyen,ekleyen_ad'); tfOt = ot || []; tfBen = tfOt.filter(r => (r.ekleyen || '').toLowerCase() === String(D.eposta || '').toLowerCase()); } catch (e) {} }
     else try { const { data: bn } = await sb.rpc('umal_telafi_ogt_benim'); tfBen = (bn && bn.ok && bn.liste) || []; } catch (e) {}
     const tfDk = x => String(x || '').toLocaleLowerCase(tr).replace(/\([^)]*\)/g, '').replace(/seçmeli|ve ahlak bilgisi|ve atatürkçülük|t\.c\.|\bs\.\s*/g, '').replace(/[^a-zçğıöşüâî]/g, '');
@@ -6607,7 +6606,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       if (en == null) { en = -1; let puan = 0; tfOturum.forEach((x, i) => String(x['s' + v] || '').split('\n').forEach(l => { if (!tfEs(l, y.ders)) return; const p = /\(([^)]*)\)/.exec(l), sb_ = p ? p[1].split(/[,;\s]+/).includes(o.sinif) : false, pu = sb_ ? 2 : 1; if (pu > puan) { puan = pu; en = i; } })); }
       if (en >= 0) { if (!tfLis[en].some(z => z.o.no === o.no)) tfLis[en].push({ o, ders: y.ders, asil, tur, bekle }); } else if (!bekle) tfYok.push({ o, ders: y.ders, asil }); };
     Object.entries(tfOg).forEach(([asil, L]) => { if (asil.startsWith('cikar|')) return; (L || []).forEach(y => tfYerles(y, asil, y.tur || (asil.startsWith('ek|') ? 'Elle eklendi' : ''), false)); });
-    tfSy.forEach(y => { if ((tfOg['cikar|' + y.asil] || []).some(q => String(q.no) === y.no)) return; tfYerles(y, y.asil, 'Sınava gelmedi · mazeret belgesi?', true); });
+    // K-736: salon yoklamasındaki 'gelmedi' kayıtları telafiye alınmaz — telafi yalnız raporlu/izinli listesi × sınav günü (idare kararı)
     tfOt.forEach(r => { const en = tfOturum.findIndex(x => x.tarih + '|' + parseInt(x.ders, 10) === r.oturum); if (en >= 0) tfYerles({ no: r.no, ders: r.ders }, 'ogt|' + r.oturum, 'Sınıf içi sınava girmedi · ' + baslik(r.ekleyen_ad || ''), true, en); });
     tfLis.forEach(L => L.sort((a, b) => sinifSira(a.o.sinif, b.o.sinif) || (+a.o.no) - (+b.o.no)));
     let tfAcik = -1;
