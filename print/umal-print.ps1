@@ -1,7 +1,7 @@
 # UMAL Print - okul bilgisayarindaki yazicilari DersMap ve tahtalara acar, gelen ciktilari yazdirir.
 # Kurulum: panel > Print sekmesi. Dosyalar: C:\ProgramData\UMAL-Print (ayar.json, umal-print.ps1, SumatraPDF.exe, gunluk.txt)
-param([switch]$Kullanici)
-$Surum = '1.2'
+param([switch]$Kullanici, [switch]$Dene)
+$Surum = '1.3'
 $ErrorActionPreference = 'Stop'
 $Klasor = Join-Path $env:ProgramData 'UMAL-Print'
 $KulKlasor = Join-Path $Klasor 'kullanici'
@@ -50,9 +50,12 @@ $Site = 'https://umalatlas.com.tr/print'
 $ImzaAcik = '<RSAKeyValue><Modulus>wA8tOqte9uyUB8ANNT8ZeJxnyaWMIFqNJRaXin4sdCrqPhy4UlmlhmAwy79e2rV12RtHxmeUYMPOeaI6WB6JnuVceeYsg2i6IhI9ucHYeKObkMWNhmoHt8sTYzxf3+6okkl8CyUZEZoj0k+Z8Tqv2vfBqxr+PvquTYomKpZ05a1ZJpmjuPsZKrE9b0xZejO2ry8mw/15syQ0EqaXR/CTSw2l2pdEZ7Y4d/VIapBCC3ak/qpZhrnKgHoI7GewAF2R+7TlmmL2Foet1hgbd5nh9a9Y7XmoDyQq8CInRI5T3UuDEWrHlgl0lwEbGu59V/XmCkO5ypjNiJTgt1jhR6+u0Q==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>'
 
 # Tek kopya calisir (baslangic gorevi + dakikalik bekci ayni betigi baslatir)
-$yeni = $false
-$kilit = New-Object System.Threading.Mutex($true, 'Global\UMAL-Print', [ref]$yeni)
-if (-not $yeni) { exit 0 }
+# -Dene: guncelleme oncesi deneme calistirmasi (tanimlar ve ayar yuklenir, sonra cikar; calisan kopyaya dokunmaz)
+if (-not $Dene) {
+  $yeni = $false
+  $kilit = New-Object System.Threading.Mutex($true, 'Global\UMAL-Print', [ref]$yeni)
+  if (-not $yeni) { exit 0 }
+}
 
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 # Okul agi HTTPS'i kendi sertifikasiyla actigi icin sertifika denetimi kapali (guncelleme ayrica imzayla dogrulanir)
@@ -254,15 +257,25 @@ function Guncelle {
     $ok = $rsa.VerifyHash($sha.ComputeHash($veri), [System.Security.Cryptography.CryptoConfig]::MapNameToOID('SHA256'), $imza)
     if (-not $ok) { Gunluk 'Guncelleme imzasi gecersiz; uygulanmadi'; return }
     $hedef = Join-Path $Klasor 'umal-print.ps1'
-    [IO.File]::WriteAllBytes($hedef + '.yeni', $veri)
+    $deneme = Join-Path $Klasor 'umal-print-yeni.ps1'
+    [IO.File]::WriteAllBytes($deneme, $veri)
+    # Guvenlik: yeni surum once dil denetiminden, sonra deneme calistirmasindan gecer; gecemezse uygulanmaz
+    $hatalar = $null; $jetonlar = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile($deneme, [ref]$jetonlar, [ref]$hatalar)
+    if ($hatalar -and $hatalar.Count -gt 0) { Gunluk ('Guncelleme ' + $yeniSurum + ' dil denetiminden gecemedi; uygulanmadi: ' + $hatalar[0].Message); try { Remove-Item $deneme -Force } catch {}; return }
+    $dp = Start-Process -FilePath 'powershell.exe' -ArgumentList ('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $deneme + '" -Dene') -PassThru -WindowStyle Hidden
+    $tut2 = $dp.Handle
+    if (-not $dp.WaitForExit(60000)) { try { $dp.Kill() } catch {}; Gunluk ('Guncelleme ' + $yeniSurum + ' deneme calistirmasi bitmedi; uygulanmadi'); try { Remove-Item $deneme -Force } catch {}; return }
+    if ($dp.ExitCode -ne 0) { Gunluk ('Guncelleme ' + $yeniSurum + ' deneme calistirmasi hata verdi (' + $dp.ExitCode + '); uygulanmadi'); try { Remove-Item $deneme -Force } catch {}; return }
     Copy-Item $hedef ($hedef + '.onceki') -Force
-    Move-Item ($hedef + '.yeni') $hedef -Force
+    Move-Item $deneme $hedef -Force
     Gunluk ("Guncellendi: $Surum > $yeniSurum")
     try { $kilit.ReleaseMutex() } catch {}
     exit 0
   } catch { Gunluk ('Guncelleme: ' + $_.Exception.Message) }
 }
 
+if ($Dene) { exit 0 }
 Gunluk ("UMAL Print $Surum basladi: $Ad ($Cihaz)")
 Get-ChildItem $Klasor -Filter 'is-*.pdf' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 KullaniciGorevi
