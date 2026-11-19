@@ -2216,3 +2216,9 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .gb-ogr .gb-o b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
 .gb-ogr .gb-o small { display: block; }
 @media (max-width: 700px) { .gb-ogr { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Giriş sekmeleri: Yönetim · Öğrenci · Veli */
+.giris-sekme { grid-template-columns: repeat(3, 1fr) !important; }
+.giris-sekme .gs-kayan { width: calc((100% - 10px) / 3) !important; transform: none; }
+.giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
+.giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
+.giris-sekme .gs small { white-space: nowrap; }

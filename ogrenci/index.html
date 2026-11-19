@@ -424,6 +424,11 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .ms-sk { display: block; margin-top: 2px; border: 0; background: transparent; color: #ff8a8a99; font: inherit; font-size: 11px; padding: 0; }
 .ms-alt { display: flex; gap: 8px; padding-top: 8px; align-items: flex-end; } .ms-alt textarea { flex: 1; resize: none; border-radius: 22px; min-height: 46px; max-height: 130px; padding: 12px 15px; font-size: 16px; box-sizing: border-box; }
 .ms-alt .birincil { width: 48px; height: 48px; border-radius: 50%; padding: 0; display: grid; place-items: center; flex: none; } .ms-kapali { text-align: center; color: #8fa6c4; font-size: 13px; padding: 12px; }
+.giris-sekme { grid-template-columns: repeat(3, 1fr) !important; }
+.giris-sekme .gs-kayan { width: calc((100% - 10px) / 3) !important; transform: none; }
+.giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
+.giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
+.giris-sekme .gs small { white-space: nowrap; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -463,10 +468,11 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <main>
   <div class="ust"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi"><div class="ust-ad"><b class="okul-ad"><span class="oa1">ÜMRANİYE MERKEZ</span><span class="oa2">Anadolu Lisesi</span></b><small id="ustAlt">Öğrenci</small></div><button class="cikis-ust ses-ust gizli" id="sesUst"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.500 2-6.500Z"/><path d="M10 19.500a2.200 2.200 0 0 0 4 0"/><path class="ses-cizgi" d="M4 4l16 16"/></svg></button><button class="cikis-ust gizli" id="cikisUst" style="margin-left:8px" title="Çıkış" aria-label="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/></svg></button></div>
 
-  <nav class="giris-sekme ogr" id="sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
-    <a class="gs" href="/" onclick="this.parentNode.classList.remove('ogr');setTimeout(()=>location.href='/',230);return false"><b>Yönetim</b><small>E-posta koduyla</small></a>
-    <a class="gs secili" href="/ogrenci/" aria-current="page"><b>Öğrenci</b><small>Okul no ve giriş kodu</small></a>
-  </nav>
+  <nav class="giris-sekme" id="sekme" data-p="1" aria-label="Giriş türü"><i class="gs-kayan"></i>
+      <a class="gs" data-i="0" href="/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Yönetim</b><small>E-posta ve şifre</small></a>
+      <a class="gs secili" data-i="1" href="/ogrenci/" aria-current="page"><b>Öğrenci</b><small>Okul no ve kod</small></a>
+      <a class="gs" data-i="2" href="/veli/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Veli</b><small>Veli kodu ile</small></a>
+    </nav>
 
   <section id="giris" class="kart">
     <h1>Öğrenci girişi</h1>
@@ -480,7 +486,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <button id="girisBtn" class="birincil">Giriş</button>
     <div id="girisBilgi" class="bilgi"></div>
     <div class="kvkk">🔒 <b>Özel</b> anketlerdeki bilgileri yalnız okulumuzun rehberlik servisi görür; sınıf arkadaşların, öğretmenlerin ya da başka biri göremez. 🌐 Genel anketlerin sonuçlarını okul idaresi görür; genel bir anketi tahtadan ve buradan doldurabilirsin, son cevabın geçerli olur.</div>
-    <a class="veli-link" href="../veli/">Veliyseniz: <b>Veli girişi</b> ›</a>
     <div class="not">İlk girişte sana verilen kodu yazarsın, sonra kendi şifreni belirlersin. Şifreni kimseyle paylaşma; unutursan rehberlik servisinden yeni kod iste. Ortak bir bilgisayardaysan işin bitince "Çıkış"a bas.</div>
   </section>
 

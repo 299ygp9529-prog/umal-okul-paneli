@@ -41,11 +41,25 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
 .gb .etk.tebrik { background: #3ef08a22; color: var(--yesil); } .gb .etk.uyari { background: #ffb86722; color: var(--turuncu); } .gb b { display: block; font-size: 16px; margin: 6px 0 2px; }
 .duy b { display: block; margin-bottom: 4px; } .duy { white-space: pre-wrap; }
 .not { font-size: 13px; color: var(--soluk); margin-top: 14px; line-height: 1.5; }
+.giris-sekme { position: relative; display: grid; margin: 0 0 14px; padding: 5px; border-radius: 16px; background: rgba(8,16,30,.55); border: 1px solid rgba(34,232,255,.22); }
+.giris-sekme .gs-kayan { position: absolute; top: 5px; bottom: 5px; left: 5px; border-radius: 12px; background: linear-gradient(180deg, rgba(34,232,255,.22), rgba(34,232,255,.10)); box-shadow: 0 0 0 1.5px rgba(34,232,255,.75), 0 0 18px rgba(34,232,255,.35); transition: transform .23s cubic-bezier(.3,.7,.3,1); pointer-events: none; }
+.giris-sekme .gs { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 9px 6px; border-radius: 12px; text-decoration: none; }
+.giris-sekme .gs b { font-size: 14.5px; font-weight: 800; } .giris-sekme .gs small { font-size: 11px; } .giris-sekme .gs.secili small { color: var(--neonacik) !important; opacity: 1 !important; }
+.giris-sekme { grid-template-columns: repeat(3, 1fr) !important; }
+.giris-sekme .gs-kayan { width: calc((100% - 10px) / 3) !important; transform: none; }
+.giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
+.giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
+.giris-sekme .gs small { white-space: nowrap; }
 </style>
 </head>
 <body>
 <main>
   <div class="ust"><img src="../okul-logo.png" alt=""><div><span class="oa1">ÜMRANİYE MERKEZ</span><span class="oa2">Anadolu Lisesi</span><small>Veli</small></div><button class="ikincil cik gizli" id="cik">Çıkış</button></div>
+  <nav id="sekme" class="giris-sekme" data-p="2" aria-label="Giriş türü"><i class="gs-kayan"></i>
+      <a class="gs" data-i="0" href="/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Yönetim</b><small>E-posta ve şifre</small></a>
+      <a class="gs" data-i="1" href="/ogrenci/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Öğrenci</b><small>Okul no ve kod</small></a>
+      <a class="gs secili" data-i="2" href="/veli/" aria-current="page"><b>Veli</b><small>Veli kodu ile</small></a>
+    </nav>
   <section id="giris" class="kart">
     <h1>Veli girişi</h1>
     <div class="soluk kucuk">Çocuğunuzun okul numarası ve okulun verdiği 6 haneli veli koduyla girin.</div>
@@ -80,9 +94,9 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
     $('#girBtn').disabled = true; b.textContent = 'Kontrol ediliyor…';
     try { V = await yukle(no, kod); O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
     catch (e) { b.textContent = e.message; b.classList.add('hata'); } finally { $('#girBtn').disabled = false; } };
-  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
+  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
   function ciz() {
-    $('#giris').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
+    $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
     const D = V.devam || [], G = V.gb || [], yok = D.filter(x => x.durum === 'yok'), gunler = new Set(yok.map(x => x.tarih)), tb = G.filter(x => x.tur === 'tebrik').length;
     const bugun = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10), bYok = yok.filter(x => x.tarih === bugun);
     const grup = {}; D.forEach(x => (grup[x.tarih] = grup[x.tarih] || []).push(x));
@@ -98,7 +112,7 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
     A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; ciz(); });
   }
   async function yenile() { if (!O) return; try { V = await yukle(O.no, O.kod); ciz(); } catch (e) { if (e.kod) $('#cik').click(); $('#bilgi').textContent = e.message; } }
-  if (O) { $('#giris').classList.add('gizli'); yenile(); }
+  if (O) { $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); yenile(); }
   setInterval(() => { if (!document.hidden) yenile(); }, 300000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) yenile(); });
 })();

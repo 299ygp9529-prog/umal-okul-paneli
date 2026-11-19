@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="simge-192.png">
 <link rel="apple-touch-icon" href="simge-192.png">
-<link rel="stylesheet" href="stil.css?v=202611182330">
+<link rel="stylesheet" href="stil.css?v=202611190610">
 <script src="supabase.min.js?v=2.45.4"></script>
 <script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>')</script>
 </head>
@@ -19,9 +19,10 @@
     <div class="atlas" aria-label="Atlas"><span>A</span><span>T</span><span>L</span><span>A</span><span>S</span></div>
     <div class="baslik">Okul Yönetim Paneli</div>
     <div class="alt">Ümraniye Merkez Anadolu Lisesi</div>
-    <nav class="giris-sekme" aria-label="Giriş türü"><i class="gs-kayan"></i>
-      <a class="gs secili" href="/" aria-current="page"><b>Yönetim</b><small>E-posta ve şifre</small></a>
-      <a class="gs" href="/ogrenci/" onclick="this.parentNode.classList.add('ogr');setTimeout(()=>location.href='/ogrenci/',230);return false"><b>Öğrenci</b><small>Okul no ve giriş kodu</small></a>
+    <nav class="giris-sekme" data-p="0" aria-label="Giriş türü"><i class="gs-kayan"></i>
+      <a class="gs secili" data-i="0" href="/" aria-current="page"><b>Yönetim</b><small>E-posta ve şifre</small></a>
+      <a class="gs" data-i="1" href="/ogrenci/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Öğrenci</b><small>Okul no ve kod</small></a>
+      <a class="gs" data-i="2" href="/veli/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Veli</b><small>Veli kodu ile</small></a>
     </nav>
     <form id="adim1" onsubmit="return false" autocomplete="on">
       <label for="eposta">E-posta adresiniz</label>
