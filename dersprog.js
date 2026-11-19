@@ -690,8 +690,8 @@
       const g = (gun.getDay() + 6) % 7, T = ogrGunu(g), O = Object.keys(T).sort(sira), atanan = {}; G.liste.forEach(x => { atanan[x.sinif + '|' + x.saat] = x; });
       const dersler = [...GEL].flatMap(o => Object.entries(T[o] || {}).map(([n, v]) => ({ n: +n, sinif: v.sinif, ders: v.ders, asil: o }))).sort((a, b) => a.n - b.n || sira(a.sinif, b.sinif));
       const bugunSay = {}; G.liste.forEach(x => { if (x.giren) bugunSay[x.giren] = (bugunSay[x.giren] || 0) + 1; });
-      const aday = d => { const S = O.filter(o => !GEL.has(o) && !(T[o] || {})[d.n] && !G.liste.some(x => x.giren === o && +x.saat === d.n && !(x.sinif === d.sinif)));
-        const herkes = gununNobetcileri(g).map(a => NGP[a]).filter(Boolean).concat(S).filter((o, i, A) => A.indexOf(o) === i && !GEL.has(o) && !idareci(o) && !((T[o] || {})[d.n]));
+      const aday = d => {   // boş derse yalnız o günün nöbetçileri girer: o saatte dersi ya da başka sınıfta görevi olmayanlar
+        const herkes = gununNobetcileri(g).map(a => NGP[a]).filter(Boolean).filter((o, i, A) => A.indexOf(o) === i && !GEL.has(o) && !idareci(o) && !((T[o] || {})[d.n]) && !G.liste.some(x => x.giren === o && +x.saat === d.n && x.sinif !== d.sinif));
         const br = kokD(d.ders);
         return herkes.map(o => { const L = Object.keys(T[o] || {}).map(Number), ok = L.length > 0, ara = L.some(n => n < d.n) && L.some(n => n > d.n), nb = nobetci(o, g), ayni = Object.values(T[o] || {}).some(v => kokD(v.ders) === br);
           const p = (nb ? 50 : 0) + (ara ? 40 : 0) + (ok ? 20 : -30) + (ayni ? 15 : 0) - 35 * (bugunSay[o] || 0);   // K-727: adalet yalnız o günün dağılımına bakar
@@ -717,17 +717,17 @@
             const bekleyen = dersler.filter(d => !atanan[d.sinif + '|' + d.n]), uygunlar = new Set(); dersler.forEach(d => aday(d).forEach(x => { if (!x.bs && x.ok) uygunlar.add(x.o); }));
             const fazla = Z.filter(([, n]) => n >= 2), bos = [...uygunlar].filter(o => !bugunSay[o]);
             return `<div class="gv-adalet ${fazla.length && bos.length ? 'uyari' : ''}"><b>Bugünkü dağılım</b><div class="gv-ad-l">${Z.map(([o, n]) => `<span class="${n >= 2 ? 'cok' : ''}">${esc(bas(o).split(' ').slice(0, 2).join(' '))} <i>${n}</i></span>`).join('')}</div>
-              ${fazla.length && bos.length ? `<div class="gv-ad-u">${fazla.map(([o, n]) => `<b>${esc(bas(o))}</b> ${n} derse`).join(', ')} görevlendirildi; o saatlerde boş olup bugün hiç görev almamış ${bos.length} öğretmen var (${bos.slice(0, 4).map(o => esc(bas(o).split(' ')[0])).join(', ')}${bos.length > 4 ? '…' : ''}). <button class="ikincil kucuk" id="gvDengele">Dengele</button></div>` : bekleyen.length ? '' : '<div class="gv-ad-ok">Görevler dengeli dağıtıldı.</div>'}</div>`; })()}
-          <div class="soluk kucuk" style="margin-top:8px">İdareciler görevlendirilmez. Öneri sırası: o gün nöbetçi olan · iki dersinin arasında boşu olan · o gün okulda olan · aynı branştan · bugün daha az görev almış olan.</div></div>` : ''}`;
+              ${fazla.length && bos.length ? `<div class="gv-ad-u">${fazla.map(([o, n]) => `<b>${esc(bas(o))}</b> ${n} derse`).join(', ')} görevlendirildi; o saatlerde boş olup bugün hiç görev almamış ${bos.length} nöbetçi var (${bos.slice(0, 4).map(o => esc(bas(o).split(' ')[0])).join(', ')}${bos.length > 4 ? '…' : ''}). <button class="ikincil kucuk" id="gvDengele">Dengele</button></div>` : bekleyen.length ? '' : '<div class="gv-ad-ok">Görevler dengeli dağıtıldı.</div>'}</div>`; })()}
+          <div class="soluk kucuk" style="margin-top:8px">Boş derse yalnız o günün nöbetçileri girer; idareciler görevlendirilmez. Öneri sırası: iki dersinin arasında boşu olan · aynı branştan · bugün daha az görev almış olan.</div></div>` : ''}`;
       $('#gvT').onchange = async ev => { const d = new Date(ev.target.value + 'T12:00:00'); if (isNaN(d)) return; gun = d; await yukle(); ciz2(); };
       $('#gvAra').oninput = ev => { const q = nk(ev.target.value); I.querySelectorAll('[data-gvo]').forEach(b => b.style.display = !q || nk(b.dataset.gvo).includes(q) ? '' : 'none'); };
       I.querySelectorAll('[data-gvo]').forEach(b => b.onclick = () => { const o = b.dataset.gvo; if (GEL.has(o)) { GEL.delete(o); G.liste = G.liste.filter(x => x.asil !== o); } else GEL.add(o); ciz2(); });
       const adilMi = async (d, o) => { const n = bugunSay[o] || 0; if (!n) return true; const bos = aday(d).filter(x => !x.bs && x.ok && x.o !== o); if (!bos.length) return true;
-        return X.onayla(`${bas(o)} bugün zaten ${n} derse görevlendirildi. Bu saatte boş olup bugün hiç görev almamış ${bos.length} öğretmen var (${bos.slice(0, 3).map(x => bas(x.o)).join(', ')}). Yine de atansın mı?`); };
+        return X.onayla(`${bas(o)} bugün zaten ${n} derse görevlendirildi. Bu saatte boş olup bugün hiç görev almamış ${bos.length} nöbetçi var (${bos.slice(0, 3).map(x => bas(x.o)).join(', ')}). Yine de atansın mı?`); };
       I.querySelectorAll('[data-gvh]').forEach(b => b.onclick = async () => { const [s, n, o] = b.dataset.gvh.split('|'), d = dersler.find(x => x.sinif === s && x.n === +n); if (d && await adilMi(d, o)) { ata(d, o); ciz2(); } });
       I.querySelectorAll('[data-gvd]').forEach(b => b.onclick = () => { const [s, n] = b.dataset.gvd.split('|'), d = dersler.find(x => x.sinif === s && x.n === +n), A = aday(d);
         X.pencereAc(`<h2 style="margin-top:0">${esc(d.sinif)} · ${d.n}. ders <small class="soluk">${esc(d.ders)}</small></h2><div class="soluk kucuk" style="margin-bottom:8px">Gelmeyen: ${esc(bas(d.asil))}</div>
-          <div class="dp-ol">${A.slice(0, 30).map(x => `<button class="dp-or" data-gva="${esc(x.o)}"><span><b>${esc(bas(x.o))}</b><small>${esc(x.neden || 'boşta')}</small></span></button>`).join('') || '<div class="soluk">Bu saatte boşta öğretmen yok.</div>'}</div>
+          <div class="dp-ol">${A.slice(0, 30).map(x => `<button class="dp-or" data-gva="${esc(x.o)}"><span><b>${esc(bas(x.o))}</b><small>${esc(x.neden || 'boşta')}</small></span></button>`).join('') || '<div class="soluk">Bu saatte boşta nöbetçi yok.</div>'}</div>
           <div class="dugmeler"><button class="ikincil" id="gvBos" style="text-transform:none">Boş geçsin / idare ilgilensin</button></div>`);
         document.querySelectorAll('[data-gva]').forEach(x => x.onclick = async () => { document.getElementById('pencere').classList.add('gizli'); if (await adilMi(d, x.dataset.gva)) { ata(d, x.dataset.gva); ciz2(); } });
         $('#gvBos').onclick = () => { ata(d, ''); document.getElementById('pencere').classList.add('gizli'); ciz2(); }; });
