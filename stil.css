@@ -2222,3 +2222,21 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
 .giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
 .giris-sekme .gs small { white-space: nowrap; }
+/* K-723 Okul bildirimleri */
+.ob-kim { grid-template-columns: repeat(3, 1fr); } .gb-t.secili.yesil { background: #22e8ff1a; border-color: var(--neon); color: var(--neon); }
+.ob-l { display: block; margin: 12px 0 5px; font-weight: 700; font-size: 13px; }
+#obIc input, #obIc textarea, #obIc select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 11px; border: 1px solid var(--cizgi); background: var(--zemin); color: var(--yazi); font: inherit; font-size: 15px; }
+#obIc textarea { resize: vertical; min-height: 90px; line-height: 1.45; }
+.ob-onem { display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; padding: 0; background: none; border: 0; color: var(--yazi); font: inherit; font-size: 14px; cursor: pointer; text-align: left; }
+.ob-onem i { width: 22px; height: 22px; flex: none; border-radius: 7px; border: 1.5px solid var(--cizgi); display: grid; place-items: center; } .ob-onem.secili i { background: var(--neon); border-color: var(--neon); }
+.ob-onem.secili i::after { content: ''; width: 10px; height: 5px; border: solid #04202a; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg) translate(1px, -1px); }
+.ob-ara { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; } .ob-ara input, .ob-ara select { flex: 1; min-width: 0; } .ob-ara .cip { flex: none; white-space: nowrap; }
+.gb-ogr-say { color: var(--neon); text-transform: none; letter-spacing: 0; }
+.ob-sonuc { margin: 10px 0; padding: 10px 12px; border-radius: 11px; background: #5ee08a1a; border: 1px solid #5ee08a66; color: #b8f5cf; font-size: 14px; }
+.ob-sat { padding: 11px 0; border-bottom: 1px solid var(--cizgi); } .ob-sat:last-child { border-bottom: 0; } .ob-sat > div { margin-top: 3px; }
+.ob-sat.onemli .ob-ust b { color: #ffb867; } .ob-ust { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; } .ob-ust b { font-size: 15px; }
+.ob-tel { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-color: rgba(34,232,255,.45); } .ob-tel > div { flex: 1; min-width: 180px; } .ob-tel b { display: block; } .ob-tel span { display: block; color: var(--soluk); font-size: 13px; }
+.ob-tel > i { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; color: var(--neon); background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.4); } .ob-tel > i svg { width: 24px; height: 24px; }
+.ob-tel.tamam { border-color: #5ee08a66; } .ob-tel.tamam > i { color: #5ee08a; background: #5ee08a1a; border-color: #5ee08a66; } .ob-tel .hata { color: #ff8a8a; }
+@media (max-width: 700px) { .ob-tel .birincil, .ob-tel .ikincil { width: 100%; } }
+#obGonder { width: 100%; margin-top: 12px; } .ob-tel .birincil { margin-left: auto; }

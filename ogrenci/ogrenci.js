@@ -63,7 +63,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); tuYukle(); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); tuYukle(); bldCiz(); obYukle(); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -108,6 +108,7 @@
   }
   // K-617: sayfa açıkken yeni mesaj / duyuru / randevu / acil mesaj gelince kısa uyarı sesi + titreşim. Zil düğmesiyle kapatılır. Tarayıcı sesi ilk dokunuştan sonra açar.
   const SES = { ctx: null, kapali: false, bilinen: null };
+  const BLD = { d: null, taze: false };   // K-722 bildirim durumu
   try { SES.kapali = localStorage.getItem('umalSes') === '0'; } catch (e) {}
   const sesHazir = () => { try { if (!SES.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) SES.ctx = new A(); } if (SES.ctx && SES.ctx.state === 'suspended') SES.ctx.resume(); } catch (e) {} };
   ['pointerdown', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, sesHazir, { passive: true }));
@@ -129,7 +130,7 @@
     SES.bilinen = SES.bilinen ? new Set([...SES.bilinen, ...simdi_]) : simdi_;
   }
   function sesDugme() { const b = $('#sesUst'); if (!b) return; b.classList.toggle('gizli', !S.kod); b.classList.toggle('kapali', SES.kapali); b.title = SES.kapali ? 'Uyarı sesi kapalı (açmak için dokun)' : 'Uyarı sesi açık (kapatmak için dokun)'; b.setAttribute('aria-label', b.title); }
-  const cikis = () => { SES.bilinen = null; const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; NO.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
+  const cikis = () => { if (S.no && window.UmalBildirim) UmalBildirim.kapat({ sb, kim: 'ogrenci', no: S.no }); BLD.d = null; BLD.taze = false; SES.bilinen = null; const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; NO.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   $('#sesUst').onclick = () => { SES.kapali = !SES.kapali; try { localStorage.setItem('umalSes', SES.kapali ? '0' : '1'); } catch (e) {} sesDugme(); if (!SES.kapali) sesCal('yeni'); };
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
@@ -965,6 +966,29 @@
   $('#duyAnaKart').onclick = () => dyAc();
   // ---- K-720: öğretmenden tebrik ve uyarılar (veliye de gider)
   const TU = { L: [] }, tuAn = () => 'gbGor:' + S.no;
+  // K-722: acil duyuru telefona anlık bildirim olarak gelsin (kart yalnız bildirim kapalıysa görünür)
+  async function bldCiz() { const k = $('#bldKart'); if (!k || !window.UmalBildirim || !S.kod) return;
+    if (BLD.d === null) BLD.d = await UmalBildirim.durum();
+    if (BLD.d === 'acik' && !BLD.taze) { BLD.taze = true; UmalBildirim.tazele({ sb, kim: 'ogrenci', no: S.no, kod: S.kod }); }
+    let ert = 0; try { ert = +localStorage.getItem('umalBldErt') || 0; } catch (e) {}
+    if (BLD.d === 'acik' || BLD.d === 'yok' || ert > Date.now()) { k.innerHTML = ''; return; }
+    const M = { kapali: ['Acil duyurular telefonuna gelsin', 'Okul acil bir duyuru yaptığında sayfa kapalıyken bile bildirim alırsın.'],
+      'ios-ekle': ['iPhone\'da acil bildirim için', 'Safari\'de Paylaş › "Ana Ekrana Ekle"ye dokun; ana ekrandaki simgeden açıp bildirimleri aç.'],
+      red: ['Bildirimler engellenmiş', 'Telefonun ayarlarından bu site için bildirimlere izin verirsen acil duyurular gelir.'] }[BLD.d];
+    k.innerHTML = `<div class="kart bld"><div class="bld-ust"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg></i><div><b>${M[0]}</b><span>${M[1]}</span></div></div>
+      <div class="bilgi" id="bldBilgi"></div><div class="bld-alt">${BLD.d === 'kapali' ? '<button class="birincil" id="bldAc">Bildirimleri aç</button>' : ''}<button class="ikincil" id="bldErt">${BLD.d === 'kapali' ? 'Şimdi değil' : 'Tamam'}</button></div></div>`;
+    const a = $('#bldAc'); if (a) a.onclick = async () => { a.disabled = true; $('#bldBilgi').textContent = 'Açılıyor…'; const r = await UmalBildirim.ac({ sb, kim: 'ogrenci', no: S.no, kod: S.kod });
+      if (r.ok) { BLD.d = 'acik'; BLD.taze = true; k.innerHTML = ''; } else { a.disabled = false; $('#bldBilgi').textContent = r.hata; $('#bldBilgi').classList.add('hata'); BLD.d = await UmalBildirim.durum(); } };
+    $('#bldErt').onclick = () => { try { localStorage.setItem('umalBldErt', String(Date.now() + 7 * 864e5)); } catch (e) {} k.innerHTML = ''; };
+  }
+  // K-723: idareden öğrenciye bildirim (okunmamışlar ana sayfada kart)
+  async function obYukle() { const k = $('#obilKart'); if (!k || !S.kod) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_obil', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+    if (!data || !data.ok) return; let g = 0; try { g = +localStorage.getItem('umalObil:' + S.no) || 0; } catch (e) {}
+    const L = (data.liste || []).filter(x => x.id > g).slice(0, 3);
+    k.innerHTML = L.map(x => `<div class="kart obk ${x.onemli ? 'onemli' : ''}"><small>${x.onemli ? 'ÖNEMLİ · ' : ''}İDAREDEN</small><b></b><p></p><button class="ikincil" data-obok="${x.id}">Okudum</button></div>`).join('');
+    k.querySelectorAll('.obk').forEach((el, i) => { el.querySelector('b').textContent = L[i].baslik; el.querySelector('p').textContent = L[i].metin; });
+    k.querySelectorAll('[data-obok]').forEach(b => b.onclick = () => { const m = Math.max(g, ...L.map(x => x.id).filter(id => id <= +b.dataset.obok)); try { localStorage.setItem('umalObil:' + S.no, String(Math.max(+b.dataset.obok, m))); } catch (e) {} obYukle(); });
+  }
   async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); }
   function tuAnaCiz() { const k = $('#gbAnaKart'); if (!k) return; if (!TU.L.length) { k.classList.add('gizli'); return; }
     let gor = 0; try { gor = +localStorage.getItem(tuAn()) || 0; } catch (e) {} const yeni = Math.max(0, TU.L.length - gor), d = TU.L[0], t = TU.L.filter(x => x.tur === 'tebrik').length;

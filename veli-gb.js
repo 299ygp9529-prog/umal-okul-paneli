@@ -87,5 +87,108 @@
     };
     ciz2();
   }
-  window.UmalGB = { gb, veli };
+
+  // ---------- K-723: Okul bildirimleri (idare → veli / öğrenci / öğretmen; öğretmen gelenleri görür, telefon bildirimini açar)
+  const SABLON = {
+    veli: [['davet', 'Okula davet', 'Okula davet', 'Sayın velimiz, {ad} ile ilgili görüşmek üzere ... tarihinde saat ...\'te okulumuza gelmenizi rica ederiz.', true],
+      ['devam', 'Devamsızlık görüşmesi', 'Devamsızlık hakkında görüşme', 'Sayın velimiz, öğrencimiz {ad}\'ın devamsızlığı artmıştır. Durumu birlikte değerlendirmek için en kısa sürede okulumuza gelmenizi rica ederiz.', true],
+      ['bilgi', 'Bilgilendirme', 'Okuldan bilgilendirme', '', false]],
+    ogrenci: [['cagri', 'İdareye çağrı', 'İdareye uğra', '{ad}, ilk teneffüste müdür yardımcısının odasına uğramanı rica ediyoruz.', true],
+      ['bilgi', 'Bilgilendirme', 'Okuldan bilgilendirme', '', false]],
+    ogretmen: [['gorev', 'Boş ders görevi', 'Boş ders görevi', 'Bugün ... ders ... sınıfının dersine girmenizi rica ederiz.', true],
+      ['cagri', 'Müdür çağırıyor', 'Okul müdürü sizi bekliyor', 'Müsait olduğunuz ilk anda müdür odasına uğramanızı rica ederiz.', true],
+      ['toplanti', 'Toplantı', 'Toplantı', 'Bugün saat ...\'te öğretmenler odasında kısa bir toplantı yapılacaktır.', false],
+      ['bilgi', 'Bilgilendirme', 'İdareden bilgilendirme', '', false]]
+  };
+  const KIM_AD = { veli: 'Veliye', ogrenci: 'Öğrenciye', ogretmen: 'Öğretmene' };
+  let OB = { sek: null, kim: 'veli', sablon: 'davet', baslik: '', metin: '', onemli: true, sinif: null, sec: new Set(), ara: '', ogr: null, sonuc: '' };
+  const ZIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>';
+  const idare = () => ['bas', 'yonetici'].includes(X.rol);
+  const zaman = t => new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  function sablonUygula() { const S = SABLON[OB.kim].find(s => s[0] === OB.sablon) || SABLON[OB.kim][0]; OB.sablon = S[0]; OB.baslik = S[2]; OB.metin = S[3]; OB.onemli = S[4]; }
+  async function obil(ctx) {
+    X = ctx; if (!OB.sek) OB.sek = idare() ? 'gonder' : 'gelen';
+    if (idare() && !OB.baslik && !OB.metin) sablonUygula();
+    await X.ogrencileriYukle().catch(() => []);
+    obCiz();
+  }
+  function obCiz() {
+    const I = $('#icerik'), sek = idare() ? [['gonder', 'Gönder'], ['giden', 'Gönderilenler'], ['gelen', 'Bana gelenler']] : [['gelen', 'Bana gelenler']];
+    I.innerHTML = `<div class="ust"><div><h1>Okul Bildirimleri</h1><div class="soluk kucuk">${idare() ? 'Veliye, öğrenciye ya da öğretmene bildirim gönderin. Telefonunda bildirim açık olana anında gider; diğerleri kendi ekranında görür.' : 'İdareden size gelen bildirimler. Telefonunuza anında gelmesi için bildirimleri açın.'}</div></div></div>
+      <div id="obTel"></div>${sek.length > 1 ? `<div class="dya-sec gb-sek">${sek.map(([k, a]) => `<button class="cip ${OB.sek === k ? 'secili' : ''}" data-obs="${k}">${a}</button>`).join('')}</div>` : ''}<div id="obIc"></div>`;
+    I.querySelectorAll('[data-obs]').forEach(b => b.onclick = () => { OB.sek = b.dataset.obs; OB.sonuc = ''; obCiz(); });
+    telCiz(); if (OB.sek === 'gonder') gonderObCiz(); else if (OB.sek === 'giden') gidenCiz(); else gelenCiz();
+  }
+  async function telCiz() {   // öğretmenin kendi telefonu
+    const k = $('#obTel'); if (!k || !window.UmalBildirim) return; const d = await UmalBildirim.durum(); if (!$('#obTel')) return;
+    if (d === 'acik') { k.innerHTML = `<div class="kart ob-tel tamam"><i>${ZIL}</i><div><b>Bu cihazda bildirimler açık</b><span>Görevlendirme ve idare bildirimleri bu cihaza anında gelir.</span></div><button class="ikincil" id="obKapat">Kapat</button></div>`;
+      $('#obKapat').onclick = async () => { await UmalBildirim.kapat({ sb: X.sb, kim: 'personel', no: String(X.D.eposta || '').toLowerCase() }); try { const r = await navigator.serviceWorker.ready, s = await r.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {} telCiz(); }; return; }
+    if (d === 'yok') { k.innerHTML = ''; return; }
+    const M = { kapali: ['Bildirimleri bu cihazda açın', 'Boş ders görevi, müdür çağrısı gibi bildirimler telefonunuza anında gelsin.'], 'ios-ekle': ['iPhone\'da bildirim için', 'Safari\'de Paylaş › "Ana Ekrana Ekle"ye dokunun; ana ekrandaki Atlas simgesinden açıp buradan bildirimleri açın.'], red: ['Bildirimler engellenmiş', 'Telefonun ayarlarından bu site için bildirimlere izin verin.'] }[d];
+    k.innerHTML = `<div class="kart ob-tel"><i>${ZIL}</i><div><b>${M[0]}</b><span>${M[1]}</span><span class="hata" id="obTelH"></span></div>${d === 'kapali' ? '<button class="birincil" id="obAc">Bildirimleri aç</button>' : ''}</div>`;
+    const a = $('#obAc'); if (a) a.onclick = async () => { a.disabled = true; const r = await UmalBildirim.ac({ sb: X.sb, kim: 'personel' }); if (r.ok) telCiz(); else { a.disabled = false; $('#obTelH').textContent = r.hata; } };
+  }
+  function aliciHtml() {
+    if (OB.kim === 'ogretmen') {
+      if (!OB.ogr) return '<div class="soluk">Öğretmenler yükleniyor…</div>';
+      const L = OB.ogr.filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr)));
+      return `<div class="ob-ara"><input id="obAra" placeholder="Öğretmen ara" value="${esc(OB.ara)}"><button class="cip" id="obHepsi">${L.length && L.every(o => OB.sec.has(o.e)) ? 'Seçimi kaldır' : 'Tümünü seç'}</button></div>
+        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${OB.sec.has(o.e) ? 'secili' : ''}" data-obo="${esc(o.e)}"><span class="msj-av">${esc(o.ad.split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small>${o.tel ? 'telefonu açık' : '&nbsp;'}</small></span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
+    }
+    const S = [...new Set((X.D.ogrenciler || []).map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira); if (!OB.sinif || !S.includes(OB.sinif)) OB.sinif = S[0];
+    const ros = (X.D.ogrenciler || []).filter(o => o.sinif === OB.sinif).sort((a, b) => (+a.no) - (+b.no));
+    return `<div class="ob-ara"><select id="obSinif">${S.map(s => `<option ${s === OB.sinif ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select><button class="cip" id="obHepsi">${ros.length && ros.every(o => OB.sec.has(o.no)) ? 'Sınıfı kaldır' : 'Tüm sınıf'}</button></div>
+      <div class="gb-ogr">${ros.map(o => `<button class="gb-o ${OB.sec.has(o.no) ? 'secili' : ''}" data-obn="${esc(o.no)}"><span class="msj-av">${esc(bas(o.ad).split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small>${esc(o.no)}</small></span></button>`).join('')}</div>`;
+  }
+  async function gonderObCiz() {
+    const E = $('#obIc');
+    if (OB.kim === 'ogretmen' && !OB.ogr) { (async () => { try { const { data } = await X.sb.from('umal_ogretmenler').select('eposta,ad'); OB.ogr = (data || []).filter(o => o.eposta && o.ad).map(o => ({ e: String(o.eposta).toLowerCase(), ad: o.ad })).sort((a, b) => a.ad.localeCompare(b.ad, tr)); } catch (e) { OB.ogr = []; } if (OB.sek === 'gonder') gonderObCiz(); })(); }
+    E.innerHTML = `<div class="kart">
+      <div class="gb-bas">Kime</div><div class="gb-tur ob-kim">${Object.entries(KIM_AD).map(([k, a]) => `<button class="gb-t ${OB.kim === k ? 'secili yesil' : ''}" data-obk="${k}">${a}</button>`).join('')}</div>
+      <div class="gb-bas" style="margin-top:14px">Konu</div><div class="dya-sec">${SABLON[OB.kim].map(s => `<button class="cip ${OB.sablon === s[0] ? 'secili' : ''}" data-obt="${s[0]}">${s[1]}</button>`).join('')}</div>
+      <label class="ob-l">Başlık</label><input id="obBaslik" maxlength="90" value="${esc(OB.baslik)}">
+      <label class="ob-l">Metin</label><textarea id="obMetin" maxlength="600" rows="4">${esc(OB.metin)}</textarea>
+      ${OB.kim !== 'ogretmen' ? '<div class="soluk kucuk">{ad} yazdığınız yere öğrencinin adı gelir; her alıcıya kendi adıyla gider.</div>' : ''}
+      <button class="ob-onem ${OB.onemli ? 'secili' : ''}" id="obOnemli"><i></i><span>Önemli: telefon ekranında kapatılana kadar kalsın</span></button>
+      <div class="gb-bas" style="margin-top:14px">Alıcılar <span class="gb-ogr-say">${OB.sec.size ? OB.sec.size + ' seçili' : ''}</span></div>${aliciHtml()}
+      ${OB.sonuc ? `<div class="ob-sonuc">${OB.sonuc}</div>` : ''}
+      <button class="birincil" id="obGonder" ${OB.sec.size ? '' : 'disabled'}>${OB.sec.size ? OB.sec.size + ' ' + (OB.kim === 'veli' ? 'veliye' : OB.kim === 'ogrenci' ? 'öğrenciye' : 'öğretmene') + ' gönder' : 'Alıcı seçin'}</button></div>`;
+    const oku = () => { OB.baslik = $('#obBaslik').value; OB.metin = $('#obMetin').value; };
+    E.querySelectorAll('[data-obk]').forEach(b => b.onclick = () => { if (OB.kim === b.dataset.obk) return; OB.kim = b.dataset.obk; OB.sablon = SABLON[OB.kim][0][0]; OB.sec = new Set(); OB.sonuc = ''; sablonUygula(); gonderObCiz(); });
+    E.querySelectorAll('[data-obt]').forEach(b => b.onclick = () => { OB.sablon = b.dataset.obt; sablonUygula(); OB.sonuc = ''; gonderObCiz(); });
+    $('#obBaslik').oninput = oku; $('#obMetin').oninput = oku;
+    $('#obOnemli').onclick = () => { oku(); OB.onemli = !OB.onemli; gonderObCiz(); };
+    const sinif = $('#obSinif'); if (sinif) sinif.onchange = () => { oku(); OB.sinif = sinif.value; gonderObCiz(); };
+    const ara = $('#obAra'); if (ara) ara.oninput = () => { oku(); OB.ara = ara.value; const p = ara.selectionStart; gonderObCiz(); const y = $('#obAra'); y.focus(); y.setSelectionRange(p, p); };
+    E.querySelectorAll('[data-obn],[data-obo]').forEach(b => b.onclick = () => { oku(); const k = b.dataset.obn || b.dataset.obo; OB.sec.has(k) ? OB.sec.delete(k) : OB.sec.add(k); OB.sonuc = ''; gonderObCiz(); });
+    if ($('#obHepsi')) $('#obHepsi').onclick = () => { oku(); const L = OB.kim === 'ogretmen' ? (OB.ogr || []).filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr))).map(o => o.e) : (X.D.ogrenciler || []).filter(o => o.sinif === OB.sinif).map(o => o.no);
+      const hepsi = L.length && L.every(k => OB.sec.has(k)); L.forEach(k => hepsi ? OB.sec.delete(k) : OB.sec.add(k)); OB.sonuc = ''; gonderObCiz(); };
+    $('#obGonder').onclick = async () => { oku(); const B = OB.baslik.trim(), M = OB.metin.trim();
+      if (B.length < 2 || M.length < 2) return X.uyar('Başlık ve metin yazın.'); if (/\.\.\./.test(B + M) && !await X.onayla('Metinde "..." ile boş bırakılmış yer var. Yine de gönderilsin mi?')) return;
+      const hedef = [...OB.sec], kisisel = OB.kim !== 'ogretmen' && /\{ad\}/.test(B + M), adi = no => { const o = (X.D.ogrenciler || []).find(x => x.no === no); return o ? bas(o.ad).split(' ')[0] : 'öğrencimiz'; };
+      if (!await X.onayla(`${hedef.length} ${OB.kim === 'veli' ? 'veliye' : OB.kim === 'ogrenci' ? 'öğrenciye' : 'öğretmene'} gönderilsin mi?${OB.onemli ? ' (önemli)' : ''}`)) return;
+      const d = $('#obGonder'); d.disabled = true; d.textContent = 'Gönderiliyor…'; let al = 0, tel = 0, hata = '';
+      const parcalar = kisisel ? hedef.map(n => [[n], B.replace(/\{ad\}/g, adi(n)), M.replace(/\{ad\}/g, adi(n))]) : [[hedef, B, M]];
+      for (const [h, b_, m_] of parcalar) { const { data, error } = await X.sb.rpc('umal_obil_gonder', { p_kim: OB.kim, p_hedef: h, p_sablon: OB.sablon, p_baslik: b_, p_metin: m_, p_onemli: OB.onemli });
+        if (error || !data || !data.ok) { hata = error ? X.hataYaz(error) : (data && data.hata) || 'Gönderilemedi'; break; } al += data.alici; tel += data.telefon; }
+      if (hata) { d.disabled = false; d.textContent = 'Yeniden dene'; return X.uyar(hata); }
+      OB.sonuc = `${al} alıcıya gönderildi.` + (tel ? ` <b>${tel}</b> kişinin telefonuna bildirim gitti.` : '') + (al - tel > 0 ? ` ${al - tel} kişi ${tel ? 'ise ' : ''}${OB.kim === 'veli' ? 'veli ekranında' : OB.kim === 'ogrenci' ? 'öğrenci sayfasında' : 'panelde'} görecek.` : '');
+      OB.sec = new Set(); gonderObCiz(); };
+  }
+  async function gidenCiz() {
+    const E = $('#obIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
+    const { data, error } = await X.sb.rpc('umal_obil_liste', { p_gun: 60 }); if (!$('#obIc')) return;
+    if (error || !data || !data.ok) { E.innerHTML = `<div class="kart">${esc(error ? X.hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
+    const ad = (k, h) => k === 'ogretmen' ? h.length + ' öğretmen' : h.length === 1 ? esc(bas(((X.D.ogrenciler || []).find(o => o.no === h[0]) || {}).ad || h[0])) + (k === 'veli' ? ' velisi' : '') : h.length + (k === 'veli' ? ' veli' : ' öğrenci');
+    E.innerHTML = `<div class="kart">${(data.liste || []).map(b => `<div class="ob-sat ${b.onemli ? 'onemli' : ''}"><div class="ob-ust"><b>${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>
+      <div class="soluk kucuk">${KIM_AD[b.kim]} · ${ad(b.kim, b.hedef || [])} · telefon bildirimi ${b.telefon}${b.gonderen_ad ? ' · ' + esc(bas(b.gonderen_ad)) : ''}</div></div>`).join('') || '<div class="soluk">Son 60 günde bildirim gönderilmedi.</div>'}</div>`;
+  }
+  async function gelenCiz() {
+    const E = $('#obIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
+    const { data, error } = await X.sb.rpc('umal_obil_benim'); if (!$('#obIc')) return;
+    if (error) { E.innerHTML = `<div class="kart">${esc(X.hataYaz(error))}</div>`; return; }
+    const L = data || []; try { if (L[0]) localStorage.setItem('obilGor:' + X.D.eposta, String(L[0].id)); } catch (e) {}
+    E.innerHTML = `<div class="kart">${L.map(b => `<div class="ob-sat ${b.onemli ? 'onemli' : ''}"><div class="ob-ust"><b>${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>${b.gonderen_ad ? `<div class="soluk kucuk">${esc(bas(b.gonderen_ad))}</div>` : ''}</div>`).join('') || '<div class="soluk">Size gelen bildirim yok.</div>'}</div>`;
+  }
+  window.UmalGB = { gb, veli, obil };
 })();

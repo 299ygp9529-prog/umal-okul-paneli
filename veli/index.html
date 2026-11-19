@@ -9,7 +9,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UMAL Veli">
 <link rel="icon" href="../simge-192.png"><link rel="apple-touch-icon" href="../simge-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <script src="../supabase.min.js?v=2.45.4"></script>
+<script src="../bildirim.js?v=202611190800"></script>
 <style>
 :root { --zemin:#0d1726; --kart:#13233a; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --kirmizi:#ff6b6b; --yesil:#3ef08a; --turuncu:#ffb867; color-scheme: dark; }
 * { box-sizing: border-box; } html, body { margin: 0; min-height: 100%; background: var(--zemin); color: #fff; font: 16px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -50,6 +52,12 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
 .giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
 .giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
 .giris-sekme .gs small { white-space: nowrap; }
+.sek { grid-template-columns: repeat(4, 1fr); } @media (max-width: 520px) { .sek { grid-template-columns: 1fr 1fr; } }
+.yenimes { border-color: rgba(34,232,255,.55); } .yenimes.onemli { border-color: #ffb867; background: linear-gradient(160deg, rgba(255,184,103,.12), var(--kart) 65%); } .yenimes b { display: block; font-size: 17px; margin-bottom: 4px; } .yenimes .ikincil { margin-top: 10px; }
+.gb.mes.onemli { border-color: #ffb86799; }
+.bld .bilgi:empty { display: none; } .bld { border-color: rgba(34,232,255,.45); background: linear-gradient(160deg, rgba(34,232,255,.10), var(--kart) 65%); } .bld .bld-ust { display: flex; gap: 12px; align-items: flex-start; }
+.bld .bld-ust i { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; color: var(--neon); background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.4); } .bld .bld-ust svg { width: 24px; height: 24px; }
+.bld b { display: block; font-size: 16px; } .bld span { display: block; color: var(--soluk); font-size: 14px; margin-top: 2px; } .bld .birincil { margin-top: 12px; } .bld .ikincil { margin-top: 10px; } .bld.tamam { border-color: rgba(62,240,138,.5); } .bld.tamam i { color: var(--yesil); border-color: rgba(62,240,138,.45); background: rgba(62,240,138,.12); }
 </style>
 </head>
 <body>
@@ -102,22 +110,24 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
     $('#girBtn').disabled = true; b.textContent = 'Kontrol ediliyor…';
     try { V = await yukle(no, kod); if (V.gecici) { sifreAc(no, kod); b.textContent = ''; return; } O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
     catch (e) { b.textContent = e.message; b.classList.add('hata'); } finally { $('#girBtn').disabled = false; } };
-  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#sifre').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
+  $('#cik').onclick = () => { if (O && window.UmalBildirim) UmalBildirim.kapat({ sb, kim: 'veli', no: O.no }); BLD = null; bldTaze = false; try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#sifre').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
   function ciz() {
     $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
     const D = V.devam || [], G = V.gb || [], yok = D.filter(x => x.durum === 'yok'), gunler = new Set(yok.map(x => x.tarih)), tb = G.filter(x => x.tur === 'tebrik').length;
     const bugun = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10), bYok = yok.filter(x => x.tarih === bugun);
     const grup = {}; D.forEach(x => (grup[x.tarih] = grup[x.tarih] || []).push(x));
     A.innerHTML = `<div class="kart cocuk"><span class="av">${esc(bas(V.ad).split(' ').map(w => w[0]).join('').slice(0, 2))}</span><div><b>${esc(bas(V.ad))}</b><span class="soluk">${esc(V.sinif)} · No ${esc(O.no)}</span></div></div>
-      ${bYok.length ? `<div class="kart" style="border-color:#ff6b6b88"><b style="color:#ff6b6b">Bugün ${bYok.length} derse girmedi</b><div class="soluk kucuk">${bYok.map(x => esc(String(x.saat || '').replace('.', '') + '. ders ' + (x.ders || ''))).join(' · ')}</div></div>` : ''}
+      <div id="bldKart"></div>${(() => { const m = (V.mesajlar || [])[0]; let g_ = 0; try { g_ = +localStorage.getItem('umalVeliMes') || 0; } catch (e) {} return m && m.id > g_ ? `<div class="kart yenimes ${m.onemli ? 'onemli' : ''}"><b>${esc(m.baslik)}</b><div class="duy">${esc(m.metin)}</div><button class="ikincil" id="mesTamam">Okudum</button></div>` : ''; })()}${bYok.length ? `<div class="kart" style="border-color:#ff6b6b88"><b style="color:#ff6b6b">Bugün ${bYok.length} derse girmedi</b><div class="soluk kucuk">${bYok.map(x => esc(String(x.saat || '').replace('.', '') + '. ders ' + (x.ders || ''))).join(' · ')}</div></div>` : ''}
       <div class="ozet"><div><b style="color:#ff6b6b">${yok.length}</b><span>devamsız ders · 60 gün</span></div><div><b style="color:#3ef08a">${tb}</b><span>tebrik</span></div><div><b style="color:#ffb867">${G.length - tb}</b><span>uyarı</span></div></div>
-      <div class="sek">${[['devam', 'Devamsızlık'], ['gb', 'Tebrik · uyarı'], ['duy', 'Duyurular']].map(([k, a]) => `<button class="${sek === k ? 'secili' : ''}" data-s="${k}">${a}</button>`).join('')}</div>
+      <div class="sek">${[['devam', 'Devamsızlık'], ['gb', 'Tebrik · uyarı'], ['mes', 'Mesajlar' + ((V.mesajlar || []).length ? ' · ' + V.mesajlar.length : '')], ['duy', 'Duyurular']].map(([k, a]) => `<button class="${sek === k ? 'secili' : ''}" data-s="${k}">${a}</button>`).join('')}</div>
       <div class="kart">${sek === 'devam' ? (Object.keys(grup).length ? Object.entries(grup).map(([t, L]) => `<div class="gun"><b>${esc(gun(t))}</b>${L.map(x => `<div class="sat"><span>${esc(String(x.saat || '').replace('.', ''))}. ders${x.ders ? ' · ' + esc(x.ders) : ''}</span><span class="etk ${x.durum}">${DUR[x.durum] || ''}</span></div>`).join('')}</div>`).join('') : '<div class="soluk">Son 60 günde devamsızlık yok.</div>')
         + `<div class="not">Ders ders yoklamalar Atlas'tan gelir. Resmî devamsızlık ve notlar için e-Okul Veli Bilgilendirme Sistemi'ne bakın. ${gunler.size ? `Devamsız olduğu gün: ${gunler.size}.` : ''}</div>`
+      : sek === 'mes' ? ((V.mesajlar || []).length ? V.mesajlar.map(x => `<div class="gb mes ${x.onemli ? 'onemli' : ''}"><span class="etk ${x.onemli ? 'uyari' : 'tebrik'}">${x.onemli ? 'ÖNEMLİ' : 'OKULDAN'}</span><b>${esc(x.baslik)}</b><div class="duy">${esc(x.metin)}</div><div class="soluk kucuk">${esc(gun(x.olusma))}</div></div>`).join('') : '<div class="soluk">Okuldan mesaj yok.</div>')
       : sek === 'gb' ? (G.length ? G.map(x => `<div class="gb ${x.tur}"><span class="etk ${x.tur}">${x.tur === 'tebrik' ? 'TEBRİK' : 'UYARI'}</span><b>${esc(x.neden)}</b>${x.aciklama ? `<div class="soluk">${esc(x.aciklama)}</div>` : ''}<div class="soluk kucuk">${esc(bas(x.ogretmen || ''))} · ${esc(gun(x.tarih))}</div></div>`).join('') : '<div class="soluk">Henüz tebrik ya da uyarı yok.</div>')
       : ((V.duyurular || []).length ? V.duyurular.map(d => `<div class="gb duy"><b>${esc(d.baslik)}</b>${esc(d.metin || '')}<div class="soluk kucuk">${esc(gun(d.tarih))}</div></div>`).join('') : '<div class="soluk">Duyuru yok.</div>')}</div>
       <div class="not">Son güncelleme: ${new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })} · Sayfa açıkken 5 dakikada bir yenilenir.</div>`;
-    A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; ciz(); });
+    A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; if (sek === 'mes' && (V.mesajlar || [])[0]) { try { localStorage.setItem('umalVeliMes', String(V.mesajlar[0].id)); } catch (e) {} } ciz(); }); bldCiz();
+    const mt = $('#mesTamam'); if (mt) mt.onclick = () => { try { localStorage.setItem('umalVeliMes', String(V.mesajlar[0].id)); } catch (e) {} ciz(); };
   }
   let SF = null;
   function sifreAc(no, kod) { SF = { no, kod }; $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#sifre').classList.remove('gizli'); $('#sfY').value = $('#sfT').value = ''; $('#sfBilgi').textContent = ''; setTimeout(() => $('#sfY').focus(), 60); }
@@ -133,6 +143,24 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
       O = { no: SF.no, kod: y }; SF = null; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {}
       $('#sifre').classList.add('gizli'); b.textContent = ''; V = await yukle(O.no, O.kod); ciz(); }
     catch (e) { hata(e.message); } finally { $('#sfKaydet').disabled = false; } };
+  // K-722: anlık bildirim kartı ("derse girmedi" bildirimi velinin telefonuna)
+  const ZIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>';
+  let BLD = null, bldTaze = false;
+  async function bldCiz() { const k = $('#bldKart'); if (!k || !window.UmalBildirim || !O) return;
+    if (BLD === null) BLD = await UmalBildirim.durum();
+    if (BLD === 'acik' && !bldTaze) { bldTaze = true; UmalBildirim.tazele({ sb, kim: 'veli', no: O.no, kod: O.kod }); }
+    let ert = 0; try { ert = +localStorage.getItem('umalBldErt') || 0; } catch (e) {}
+    const kk = $('#bldKart'); if (!kk) return;
+    if (BLD === 'acik' || BLD === 'yok' || (BLD !== 'kapali' && ert > Date.now())) { kk.innerHTML = ''; return; }
+    const M = { kapali: ['Bildirimleri açın', 'Çocuğunuz derse girmediğinde telefonunuza anında bildirim gelsin.', '<button class="birincil" id="bldAc">Bildirimleri aç</button>'],
+      'ios-ekle': ['iPhone\'da bildirim almak için', 'Safari\'de alttaki Paylaş düğmesine, ardından "Ana Ekrana Ekle"ye dokunun. Ana ekrandaki UMAL Veli simgesinden açıp buradan bildirimleri açın.', ''],
+      red: ['Bildirimler engellenmiş', 'Telefonun ayarlarından bu site için bildirimlere izin verirseniz devamsızlık bildirimleri gelir.', ''] }[BLD];
+    kk.innerHTML = `<div class="kart bld"><div class="bld-ust"><i>${ZIL}</i><div><b>${M[0]}</b><span>${M[1]}</span></div></div>${M[2]}<div class="bilgi" id="bldBilgi"></div>${BLD !== 'kapali' ? '<button class="ikincil" id="bldErt">Tamam</button>' : ''}</div>`;
+    const a = $('#bldAc'); if (a) a.onclick = async () => { a.disabled = true; $('#bldBilgi').textContent = 'Açılıyor…'; const r = await UmalBildirim.ac({ sb, kim: 'veli', no: O.no, kod: O.kod });
+      if (r.ok) { BLD = 'acik'; bldTaze = true; kk.innerHTML = '<div class="kart bld tamam"><div class="bld-ust"><i>' + ZIL + '</i><div><b>Bildirimler açık</b><span>Çocuğunuz derse girmediğinde telefonunuza bildirim gelecek.</span></div></div></div>'; setTimeout(() => { if (BLD === 'acik') kk.innerHTML = ''; }, 6000); }
+      else { a.disabled = false; $('#bldBilgi').textContent = r.hata; $('#bldBilgi').classList.add('hata'); BLD = await UmalBildirim.durum(); } };
+    const e = $('#bldErt'); if (e) e.onclick = () => { try { localStorage.setItem('umalBldErt', String(Date.now() + 7 * 864e5)); } catch (x) {} kk.innerHTML = ''; };
+  }
   async function yenile() { if (!O) return; try { V = await yukle(O.no, O.kod); if (V.gecici) { const o = O; try { localStorage.removeItem('umalVeli'); } catch (e) {} O = null; sifreAc(o.no, o.kod); return; } ciz(); } catch (e) { if (e.kod) $('#cik').click(); $('#bilgi').textContent = e.message; } }
   if (O) { $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); yenile(); }
   setInterval(() => { if (!document.hidden) yenile(); }, 300000);

@@ -186,6 +186,7 @@
       D_.sort((a, b) => a[0] - b[0]);
       if (D_.length && h < 16) soz += ` Bugün <b>${D_.length} dersiniz</b> var; ilki <b>${D_[0][0]}. saat ${esc(D_[0][1])}</b>.`;
       try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: bugunISO() }); if ((gv || []).length && h < 17) soz += ` Bugün görevlendirildiniz: <b>${gv.map(x => `${x.saat}. ders ${esc(x.sinif)}`).join(', ')}</b>.`; } catch (e) {}   // K-700i
+      try { const { data: ob } = await sb.rpc('umal_obil_benim'); let g_ = 0; try { g_ = +localStorage.getItem('obilGor:' + D.eposta) || 0; } catch (e) {} const yn = (ob || []).filter(x => x.id > g_); if (yn.length) soz += ` İdareden <b>${yn.length} yeni bildiriminiz</b> var: ${esc(yn[0].baslik)}.`; } catch (e) {}   // K-723
     } } catch (e) {}
     try { if (tam && D.program) {   // K-700j: ders programım değişti mi (bu cihazda son görülene göre)
       const ad = tam.toLocaleUpperCase('tr').replace(/\s+/g, ' ').trim(), I = [];
@@ -840,6 +841,7 @@
     { id: 'dpistek', ad: 'Ders Programı İsteğim', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dpAc('ogretmen') },   // K-700
     { id: 'gb', ad: 'Tebrik ve Uyarı', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => gbAc('gb') },   // K-720
     { id: 'veli', ad: 'Veli Erişimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: () => gbAc('veli') },   // K-720
+    { id: 'obil', ad: 'Okul Bildirimleri', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => gbAc('obil') },   // K-723
     { id: 'dersyoklama', ad: 'Ders Yoklaması', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dersYoklamaBolumu() },   // K-690
     { id: 'notlar', ad: 'Not Yükle', roller: ['bas', 'yonetici', 'ogretmen'], ciz: notlarBolumu },   // K-619: sınav notları (öğrenci yalnız kendi notunu görür)
     { id: 'duyuru', ad: 'Öğrenci Duyuruları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: duyurularBolumu },   // K-569
@@ -894,6 +896,7 @@
     gorev: '<circle cx="9" cy="8" r="3.300" fill="currentColor" fill-opacity=".2"/><path d="M3.500 19.500c.6-3.200 2.800-5 5.500-5s4.900 1.800 5.500 5"/><path d="M15.500 11.500l2 2 4-4"/>',
     dersprog: '<rect x="3.500" y="4.500" width="17" height="15" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M3.500 9h17M8.500 9v10.500M14 9v10.500M3.500 14.200h17"/><path d="M8.500 2.800v3.400M15.500 2.800v3.400"/>',
     dpistek: '<rect x="3.500" y="4.500" width="13" height="15" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M3.500 9h13M8 2.800v3.400M12 2.800v3.400"/><path d="M14.500 20l1-3.500 4.700-4.700a1.400 1.400 0 0 1 2 2L17.500 18.500z"/>',
+    obil: '<path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 2h-15z" fill="currentColor" fill-opacity=".18"/><path d="M10 20.500a2.200 2.200 0 0 0 4 0"/>',
     gb: '<path d="M12 3.500l2.500 5.200 5.700.800-4.100 4 1 5.700L12 16.500l-5.100 2.700 1-5.700-4.100-4 5.700-.800z" fill="currentColor" fill-opacity=".2"/>',
     veli: '<circle cx="8.500" cy="7.500" r="3" fill="currentColor" fill-opacity=".2"/><circle cx="16.500" cy="9.500" r="2.300"/><path d="M3 19.500c.5-3.200 2.700-5 5.500-5s5 1.800 5.500 5M13.500 19.500c.4-2.400 1.700-3.700 3-3.700s2.700 1.300 3.100 3.700"/>',
     dersyoklama: '<rect x="4" y="4" width="16" height="17" rx="2.500" fill="currentColor" fill-opacity=".18"/><path d="M9 3v3M15 3v3M4 9h16"/><path d="m8.500 14.500 2.200 2.200 4.800-4.800"/>',
@@ -912,7 +915,7 @@
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
   const MENU_GRUP = [['Okul', '#22e8ff', ['cikti', 'harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -944,7 +947,7 @@
     const ALT = { rehberlik: ['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan'].filter(altVar) };
     const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
-    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id) && !(D.rol === 'yonetici' && g === 'Öğretmen' && id !== 'dersyoklama' && id !== 'gb')).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
+    const gruplar = MENU_GRUP.map(([g, rk, L]) => [g, rk, L.filter(id => izin.has(id) && !(D.rol === 'yonetici' && g === 'Öğretmen' && id !== 'dersyoklama' && id !== 'gb' && id !== 'obil')).flatMap(id => ALT[id] && ALT[id].length > 1 ? ALT[id] : [id])]).filter(x => x[2].length);   // K-716s: idarede Öğretmen grubu yok
     const kalan = [...izin].filter(id => id !== 'ozelders' && id !== 'dosyalar' && !MENU_GRUP.some(g => g[2].includes(id))); if (kalan.length) gruplar.push(['Diğer', '#9fb3cf', kalan]);
     { const t = menuSon(), z = id => t[id] || 0, gz = L => Math.max(0, ...L.map(z));   // K-716da: son kullanılan önce (sıralama kararlı: hiç açılmayanlar eski sırasında)
       gruplar.forEach(g => { g[2] = g[2].map((id, i) => [id, i]).sort((a, b) => z(b[0]) - z(a[0]) || a[1] - b[1]).map(x => x[0]); });
@@ -954,9 +957,9 @@
       : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
-    const KISA = { gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
+    const KISA = { obil: 'bildirim', gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
-    const OG_ACK = { gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
+    const OG_ACK = { obil: 'Veliye, öğrenciye, öğretmene bildirim', gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
@@ -1047,7 +1050,7 @@
     return D.ogrenciler;
   }
   async function gbAc(tur, on) {   // K-720: tebrik/uyarı, veli erişimi (ihtiyaç olunca yüklenir)
-    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190630'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190815'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalGB[tur]({ sb, esc, baslik, D, ogrencileriYukle, fotolariYukle, dyDerslerim, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant, rol: D.rol }, on);
     } catch (e) { uyar('Açılamadı: ' + hataYaz(e)); } }
   async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)

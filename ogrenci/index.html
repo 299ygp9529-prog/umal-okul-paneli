@@ -7,7 +7,10 @@
 <meta name="theme-color" content="#0d1726">
 <meta name="robots" content="noindex">
 <link rel="icon" href="../simge-192.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../simge-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="UMAL Öğrenci">
 <script src="../supabase.min.js?v=2.45.4"></script>
+<script src="../bildirim.js?v=202611190800"></script>
 <style>
 :root { --zemin:#0d1726; --kart:#13233a; --koyu:#0f1c2e; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --cs:#6f819c; --kirmizi:#ff3b4e; --yesil:#2fbf71; color-scheme: dark; }
 * { box-sizing: border-box; }
@@ -429,6 +432,10 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
 .giris-sekme .gs { color: var(--soluk) !important; padding-left: 2px !important; padding-right: 2px !important; } .giris-sekme .gs.secili { color: #fff !important; } .giris-sekme .gs:not(.secili) small { color: inherit !important; opacity: .7 !important; }
 .giris-sekme .gs small { white-space: nowrap; }
+.obk { border-color: rgba(34,232,255,.55); } .obk.onemli { border-color: #ffb867; background: linear-gradient(160deg, rgba(255,184,103,.12), var(--kart) 65%); } .obk small { color: var(--neonacik); font-weight: 800; letter-spacing: .08em; font-size: 11px; } .obk.onemli small { color: #ffb867; } .obk b { display: block; font-size: 16px; margin: 3px 0; } .obk p { margin: 0 0 10px; color: #dbe6f5; white-space: pre-wrap; }
+.bld { border-color: rgba(34,232,255,.45); background: linear-gradient(160deg, rgba(34,232,255,.10), var(--kart) 65%); } .bld .bld-ust { display: flex; gap: 12px; align-items: flex-start; }
+.bld .bld-ust i { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; color: var(--neon); background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.4); } .bld .bld-ust svg { width: 24px; height: 24px; }
+.bld b { display: block; font-size: 15px; } .bld span { display: block; color: var(--soluk); font-size: 13px; margin-top: 2px; } .bld .bld-alt { display: flex; gap: 8px; margin-top: 12px; } .bld .bld-alt button { flex: 1; margin: 0; } .bld .bilgi:empty { display: none; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -495,6 +502,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="kart gizli" id="dersKart"><h2>Bugünkü derslerin</h2><div class="dersler" id="bugunDersler"></div></div>
     <button class="kart rvana gizli" id="rvAnaKart"></button>
     <button class="kart duyana gizli" id="duyAnaKart"></button>
+    <div id="bldKart"></div><div id="obilKart"></div>
     <button class="kart gbana gizli" id="gbAnaKart"></button>
     <div class="izg" id="kutular"></div>
     <div class="soz" id="gununSozu"></div>
@@ -572,6 +580,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611182300"></script>
+<script src="ogrenci.js?v=202611190800"></script>
 </body>
 </html>
