@@ -338,7 +338,9 @@
     const kutu = (id, ik, renk, ad, alt, ok = true, zarf = false, etiket = '') => `<button data-git="${id}" ${ok ? '' : 'disabled'}>${zarf ? ZARF : ''}${etiket ? `<span class="zarf etiket">${esc(etiket)}</span>` : ''}<i class="ik" style="--c:${renk}">${svg(ik)}</i><b>${ad}</b><small>${alt}</small></button>`;
     const soK = soAktif() ? (() => { const [a, b] = soAralik('hafta', simdi()), st = SO.L ? soIstat(a, b) : null; return `<button data-git="soru"><i class="ik" style="--c:#22e8ff">${svg('soru')}</i><b>Soru takibi</b><small>${st ? (st.n ? `Bu hafta ${st.n.toLocaleString(tr)} soru · net ${sayi1(st.net)}` : 'Bugün çözdüğün soruları gir') : 'YKS soru ve net takibi'}</small></button>`; })() : '';
     if (ozel()) { if (sessiz === true) { if (!$('#s-plan').classList.contains('gizli') && PL.veri) plCiz(); return; } plAc(); return; }   // K-598: özel ders öğrencisi doğrudan çalışma planına
-    const noK = NO.L.length ? (() => { const y = noYeni(), n = y[0] || NO.L[0]; return `<button data-git="notlar" class="genis no-ana ${y.length ? 'yeni' : ''}">${y.length ? ZARF : ''}<i class="ik" style="--c:#3ef08a">${svg('not')}</i><span><b>Notlarım</b><small>${y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(n.sinav)}</small></span><span class="so-mini"><b style="color:${noRenk(n.not)}">${esc(noYaz(n.not))}</b><small>${esc(n.ders)}</small></span></button>`; })() : '';
+    const noK = NO.L.length ? (() => { const y = noYeni(), n = y[0] || NO.L[0];
+      if (TEL()) return kutu('notlar', 'not', '#3ef08a', 'Notlarım', y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(noYaz(n.not)), true, !!y.length);   // K-750: telefonda küçük kutu
+      return `<button data-git="notlar" class="genis no-ana ${y.length ? 'yeni' : ''}">${y.length ? ZARF : ''}<i class="ik" style="--c:#3ef08a">${svg('not')}</i><span><b>Notlarım</b><small>${y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(n.sinav)}</small></span><span class="so-mini"><b style="color:${noRenk(n.not)}">${esc(noYaz(n.not))}</b><small>${esc(n.ders)}</small></span></button>`; })() : '';
     $('#kutular').innerHTML = gzKutu() + noK + ddKutu() + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
@@ -346,6 +348,7 @@
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
     $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
+    if (TEL()) { const k = $('#kutular'); [...k.querySelectorAll(':scope > .gz-ana, :scope > .il-ana, :scope > .gb-uyari')].reverse().forEach(e => k.prepend(e)); }   // K-750: telefonda gezi en üstte tam satır, diğerleri ikişer kutu
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
     rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
@@ -1546,7 +1549,9 @@
   // bir bölüm açıldı: o bölüme ait okunmamış bildirimler okundu sayılır
   function blUrlOku(git) { if (!S.kod || !git) return; const on = '/ogrenci/#git=' + git, L = BL.L.filter(x => !x.okundu && String(x.url || '').startsWith(on)); if (!L.length) return;
     L.forEach(x => { x.okundu = true; }); BL.n = Math.max(0, BL.n - L.length); blRozet(L.map(x => x.tag)); blIsle('url_oku', null, on).then(() => blRozet()); }
+  function TEL() { return window.matchMedia('(max-width: 760px)').matches; }
   function blKutu() { if (!BL.yuklendi) return ''; const n = BL.n;
+    if (TEL()) return `<button data-git="bild" class="bl-kk">${n ? `<span class="zarf etiket">${n > 99 ? '99+' : n} yeni</span>` : ''}<i class="ik" style="--c:#ffd166">${BL_IK}</i><b>Bildirimler</b><small>${n ? n + ' okunmamış' : BL.L.length ? 'Hepsini okudun' : 'Henüz yok'}</small></button>`;   // K-750: telefonda küçük kutu
     return `<button data-git="bild" class="genis bl-ana ${n ? 'yeni' : ''}"><i class="ik" style="--c:#ffd166">${BL_IK}</i><span><b>Bildirimler</b><small>${n ? n + ' okunmamış bildirim' : BL.L.length ? 'Hepsini okudun' : 'Henüz bildirim yok'}</small></span>${n ? `<em class="bl-sayi">${n > 99 ? '99+' : n}</em>` : ''}</button>`; }
   function blZaman(z) { const d = new Date(z), f = (Date.now() - d) / 6e4; if (f < 1) return 'şimdi'; if (f < 60) return Math.floor(f) + ' dk önce'; if (f < 1440 && d.getDate() === new Date().getDate()) return 'bugün ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
     return d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); }
