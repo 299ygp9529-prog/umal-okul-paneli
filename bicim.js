@@ -114,10 +114,10 @@
   .as-sat.sec::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #22e8ff; box-shadow: 0 0 8px #22e8ff; flex: none; }
   .as-sat:disabled { opacity: .45; }
   .as-grup { font-size: 12px; font-weight: 800; color: #9fb3cc; letter-spacing: .6px; text-transform: uppercase; margin: 12px 4px 6px; }
-  .as-bant { display: flex; align-items: center; gap: 8px; margin: 12px 2px 8px; padding: 6px 12px; border-radius: 10px; background: color-mix(in srgb, var(--sv) 18%, transparent); border-left: 4px solid var(--sv); font-size: 14px; font-weight: 800; color: var(--sv); }
+  .as-bant { display: flex; align-items: center; gap: 8px; margin: 14px 2px 7px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--sv); } .as-bant::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--sv) 35%, transparent); }
   .as-bant:first-child { margin-top: 2px; }
-  .as-kutular { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .as-kutu { position: relative; height: 68px; border: 1px solid #2a4468; border-radius: 14px; background: #13233a; color: #fff; font: inherit; font-size: 19px; font-weight: 800; overflow: hidden; }
+  .as-kutular { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .as-kutular.az { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 4px; }
+  .as-kutu { position: relative; height: 54px; border: 1px solid #2a4468; border-radius: 14px; background: #13233a; color: #fff; font: inherit; font-size: 17px; font-weight: 800; overflow: hidden; } .as-kutular.az .as-kutu { height: 60px; font-size: 18px; }
   .as-kutu::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sv); }
   .as-kutu.sec { border-color: var(--sv); background: color-mix(in srgb, var(--sv) 20%, #13233a); box-shadow: 0 0 0 1px var(--sv) inset, 0 0 16px color-mix(in srgb, var(--sv) 45%, transparent); }
   .as-kutu:disabled { opacity: .45; }`;
@@ -135,7 +135,9 @@
       const G = {}, diger = [];
       ops.forEach((o, i) => { const m = o.text.trim().match(/^(9|10|11|12)\s*[-/]/); if (m) (G[m[1]] = G[m[1]] || []).push([o, i]); else diger.push([o, i]); });
       ic += diger.map(([o, i]) => `<button class="as-sat ${i === sel.selectedIndex ? 'sec' : ''}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text)}</button>`).join('');
-      ['9', '10', '11', '12'].filter(k => G[k]).forEach(k => { ic += `<div class="as-bant" style="--sv:${SV[k]}">${k}. Sınıflar</div><div class="as-kutular">${G[k].map(([o, i]) => `<button class="as-kutu ${i === sel.selectedIndex ? 'sec' : ''}" style="--sv:${SV[k]}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text.trim())}</button>`).join('')}</div>`; });
+      const kutu = (k, [o, i]) => `<button class="as-kutu ${i === sel.selectedIndex ? 'sec' : ''}" style="--sv:${SV[k]}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text.trim())}</button>`, SVL = ['9', '10', '11', '12'].filter(k => G[k]), top = SVL.reduce((t, k) => t + G[k].length, 0);
+      if (top <= 12) ic += `<div class="as-kutular az" style="grid-template-columns:repeat(${top <= 4 ? top : top <= 6 || top === 9 ? 3 : 4}, minmax(0, 1fr))">${SVL.map(k => G[k].map(x => kutu(k, x)).join('')).join('')}</div>`;   // K-767: az sınıf: başlıksız tek düzgün ızgara
+      else SVL.forEach(k => { ic += `<div class="as-bant" style="--sv:${SV[k]}">${k}. sınıflar</div><div class="as-kutular">${G[k].map(x => kutu(k, x)).join('')}</div>`; });
     } else {
       let grup = null;
       ops.forEach((o, i) => { const g = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode.label : null; if (g && g !== grup) ic += `<div class="as-grup">${esc(g)}</div>`; grup = g; if (o.hidden) return; ic += `<button class="as-sat ${i === sel.selectedIndex ? 'sec' : ''}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${esc(o.text)}</button>`; });
