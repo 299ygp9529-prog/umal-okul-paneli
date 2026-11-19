@@ -80,19 +80,20 @@
       if (d !== 'kapali' && d !== 'ios-ekle' && d !== 'red') return;
       // K-731: ısrarcı — uygulama her açıldığında yeniden sorulur; "şimdi değil" yalnız bu oturum için geçerli (engellenmişse günde bir)
       const an = 'umalBldSor:' + o.kim + ':' + (o.no || ''); let ert = 0, otur = false; try { ert = +localStorage.getItem(an) || 0; otur = sessionStorage.getItem(an) === '1'; } catch (e) {}
-      if (otur || (d === 'red' && ert > Date.now())) return;
-      const ertele = () => { try { sessionStorage.setItem(an, '1'); if (d === 'red') localStorage.setItem(an, String(Date.now() + 864e5)); } catch (e) {} };
+      if (otur || ((d === 'red' || d === 'ios-ekle') && ert > Date.now())) return;
+      const ertele = (gun) => { try { sessionStorage.setItem(an, '1'); if (d === 'red') localStorage.setItem(an, String(Date.now() + 864e5)); if (d === 'ios-ekle') localStorage.setItem(an, String(Date.now() + (gun || 7) * 864e5)); } catch (e) {} };
       stil(); acikPencere = true;
       const el = document.createElement('div'); el.className = 'ub-ort'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
       const kapat = () => { el.remove(); acikPencere = false; };
       if (d === 'ios-ekle') {
-        el.innerHTML = `<div class="ub-k"><div class="ub-ik">${ZIL}</div><small>BİLDİRİMLER</small><h2>Önce ana ekrana ekleyin</h2><p>iPhone'da bildirimler yalnız ana ekrana eklenen uygulamada çalışır. Bir kez yapmanız yeterli.</p>
+        el.innerHTML = `<div class="ub-k"><div class="ub-ik">${ZIL}</div><small>BİLDİRİMLER</small><h2>Önce ana ekrana ekleyin</h2><p>iPhone ve iPad'de bildirimler yalnız ana ekrana eklenen uygulamada çalışır. Bir kez yapmanız yeterli.</p>
           <div class="ub-adim"><div><i>${PAYLAS}</i><span>Safari'nin altındaki <b>Paylaş</b> düğmesine dokunun.</span></div><div><i>${EKLE}</i><span>Aşağı kaydırıp <b>Ana Ekrana Ekle</b> › <b>Ekle</b> deyin.</span></div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><circle cx="12" cy="10" r="2.5" fill="currentColor" fill-opacity=".25"/></svg></i><span>Ana ekrandaki simgeden açıp <b>bir kez daha giriş yapın</b>; bildirim izni orada sorulacak.</span></div></div>
-          <button class="ub-b" data-ub="tamam">Şimdi ekleyeyim</button><button class="ub-s" data-ub="sonra">Bu sefer değil</button></div>`;
+          <button class="ub-b" data-ub="tamam">Şimdi ekleyeyim</button><button class="ub-s" data-ub="ekli">Zaten ana ekranımda, bir daha sorma</button><button class="ub-s" data-ub="sonra">Bu sefer değil</button></div>`;
         document.body.appendChild(el);
         const ok = document.createElement('div'); ok.className = 'ub-ok'; ok.innerHTML = `<span>Paylaş'a dokunun</span><i>${PAYLAS}</i><b></b>`;
         el.querySelector('[data-ub="tamam"]').onclick = ev => { ev.stopPropagation(); el.querySelector('.ub-k').style.display = 'none'; el.classList.add('ub-sade'); el.appendChild(ok); el.onclick = () => { ertele(); kapat(); }; };
         el.querySelector('[data-ub="sonra"]').onclick = () => { ertele(); kapat(); };
+        el.querySelector('[data-ub="ekli"]').onclick = () => { ertele(3650); kapat(); };   // ana ekrandaki uygulama ayrı; Safari sekmesinde bir daha sorulmaz
         return;
       }
       if (d === 'red') {

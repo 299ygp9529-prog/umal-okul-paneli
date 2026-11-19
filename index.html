@@ -61,6 +61,7 @@
     <div id="girisBilgi" class="bilgi"></div>
     <button id="yukleGiris" class="ikincil yukle gizli">Simge olarak ekle</button>
     <a class="kurlink" href="kur.html">Telefona ya da bilgisayara simge ekle →</a>
+    <script>try { if ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone) document.querySelector('.kurlink').style.display = 'none'; } catch (e) {}</script>
     <div class="not">İlk girişte e-postanıza kod gelir, sonra kendi şifrenizi belirlersiniz · Panelde hesabınız yoksa koddan sonra «Erişim İste» ile isteyin, idare onaylar</div>
   </div>
 </div>
@@ -105,7 +106,7 @@
 <script src="bicim.js?v=202611190930"></script>
 <link rel="stylesheet" href="senaryo/senaryo.css?v=202611160830">
 <script src="senaryo/senaryo.js?v=202611160950"></script>
-<script src="bildirim.js?v=202611190935"></script>
+<script src="bildirim.js?v=202611191405"></script>
 <script src="uygulama.js?v=202611191300"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});</script>
 </body>
