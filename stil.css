@@ -2587,3 +2587,9 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .dyo > div { flex: 1; min-width: 0; } .dyo b { display: block; font-size: 14px; } .dyo small { display: block; color: var(--soluk); font-size: 12px; margin-top: 2px; line-height: 1.35; }
 .dyo select { flex: none; width: auto; padding: 6px 8px; border-radius: 9px; font-size: 13px; }
 .msj-salt { justify-content: center; color: var(--soluk); font-size: 12.5px; padding: 12px !important; }
+/* K-768: tebrik/uyarı — sınıflar yan yana düğme */
+.gb-sc { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 8px; margin-bottom: 2px; } .gb-sc::-webkit-scrollbar { display: none; }
+.gb-sc > button, .gb-sc > select { flex: 1 0 auto; min-width: 64px; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--cizgi); background: #13233a; color: #dce8f6; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; text-align: center; }
+.gb-sc > select { flex: 0 0 auto; width: auto; min-width: 84px; color: var(--soluk); font-weight: 700; text-align-last: center; }
+.gb-sc > .secili { background: linear-gradient(180deg, #2ee6ff, #13a9cf); border-color: transparent; color: #04131f; box-shadow: 0 0 14px rgba(34,232,255,.35); }
+.gb-bul.tek { display: block; } .gb-bul.tek > input { width: 100%; box-sizing: border-box; }

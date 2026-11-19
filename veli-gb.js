@@ -38,15 +38,18 @@
     E.innerHTML = `<div class="kart"><div class="gb-tur">${[['tebrik', 'Tebrik'], ['uyari', 'Uyarı']].map(([k, a]) => `<button class="gb-t ${k} ${GB.tur === k ? 'secili' : ''}" data-gbt="${k}">${a}</button>`).join('')}</div>
         <b class="gb-b">Sebep</b><div class="dya-sec">${NEDEN[GB.tur].map(n => `<button class="cip ${GB.neden === n ? 'secili' : ''}" data-gbn="${X.esc(n)}">${esc(n)}</button>`).join('')}</div>
         <input class="dp-in gb-not" id="gbNot" maxlength="300" placeholder="Kısa not (isteğe bağlı)" value="${esc(GB.not)}">
-        <b class="gb-b">Öğrenci</b><div class="gb-bul"><select class="dp-in" id="gbSinif">${(() => { const B = GB.benS || [], o = s => `<option ${s === GB.sinif ? 'selected' : ''}>${esc(s)}</option>`, D = S.filter(s => !B.includes(s));
-          return B.length && D.length ? `<optgroup label="Derse girdiklerim">${B.map(o).join('')}</optgroup><optgroup label="Diğer sınıflar">${D.map(o).join('')}</optgroup>` : S.map(o).join(''); })()}</select><input class="dp-in" id="gbAra" inputmode="search" autocomplete="off" placeholder="Numara ya da ad yazın" value="${esc(GB.ara)}"></div>
+        <b class="gb-b">Öğrenci</b>${(() => { const B = (GB.benS || []).filter(x => S.includes(x)), D = S.filter(x => !B.includes(x));   // K-768: derse girdiği sınıflar yan yana düğme; diğerleri "Diğer" listesinde
+          if (!B.length) return `<div class="gb-bul"><select class="dp-in" id="gbSinif">${S.map(x => `<option ${x === GB.sinif ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+          const digerde = D.includes(GB.sinif);
+          return `<div class="gb-sc">${B.map(x => `<button class="${x === GB.sinif ? 'secili' : ''}" data-gbsc="${esc(x)}">${esc(x)}</button>`).join('')}${D.length ? `<select id="gbSinif" class="gb-sc-d ${digerde ? 'secili' : ''}" aria-label="Diğer sınıflar"><option value="" ${digerde ? '' : 'selected'} hidden>Diğer</option>${D.map(x => `<option ${x === GB.sinif ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : ''}</div><div class="gb-bul tek">`; })()}<input class="dp-in" id="gbAra" inputmode="search" autocomplete="off" placeholder="Numara ya da ad yazın" value="${esc(GB.ara)}"></div>
         <div id="gbIzgara"></div>
 </div>`;
     izgara(); void ros;
     E.querySelectorAll('[data-gbt]').forEach(b => b.onclick = () => { GB.tur = b.dataset.gbt; GB.neden = ''; gonderCiz(S); });
     E.querySelectorAll('[data-gbn]').forEach(b => b.onclick = () => { GB.neden = b.dataset.gbn; gonderCiz(S); });
     $('#gbNot').oninput = ev => { GB.not = ev.target.value; };
-    $('#gbSinif').onchange = ev => { GB.sinif = ev.target.value; GB.ara = ''; $('#gbAra').value = ''; izgara(); };
+    if ($('#gbSinif')) $('#gbSinif').onchange = ev => { if (!ev.target.value) return; GB.sinif = ev.target.value; GB.ara = ''; gonderCiz(S); };
+    document.querySelectorAll('[data-gbsc]').forEach(b => b.onclick = () => { GB.sinif = b.dataset.gbsc; GB.ara = ''; gonderCiz(S); });
     const ara = $('#gbAra'); ara.oninput = () => { GB.ara = ara.value; izgara(); };
     ara.onkeydown = ev => { if (ev.key !== 'Enter') return; ev.preventDefault(); const L = bulunan(); const tam = L.find(o => o.no === GB.ara.trim()) || (L.length === 1 ? L[0] : null);
       if (tam) { GB.sec.add(tam.no); GB.ara = ''; ara.value = ''; izgara(); } };
