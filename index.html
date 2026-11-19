@@ -65,6 +65,12 @@
   </div>
 </div>
 
+<script>/* bilgisayar giriş ekranı: giriş alanı, okul adının hemen altındaki boşlukta dengeli durur (sabit boşluk yok) */
+(function () { var g = document.getElementById('giris'); function yerles() { var u = g.querySelector('.gt-ust'), k = g.querySelector(':scope > .kutu');
+  if (!u || !k || getComputedStyle(u).position !== 'absolute' || g.classList.contains('gizli')) { if (k) k.style.marginTop = ''; return; }
+  k.style.marginTop = '0px'; var H = innerHeight, ub = u.getBoundingClientRect().bottom, kh = k.offsetHeight, alt = 90, bos = Math.max(28, (H - ub - kh - alt) / 2);
+  k.style.marginTop = (ub + bos - (H - kh) / 2) * 2 + 'px'; }
+  addEventListener('resize', yerles); new MutationObserver(yerles).observe(g, { attributes: true, attributeFilter: ['class'] }); if (document.fonts) document.fonts.ready.then(yerles); setTimeout(yerles, 50); })();</script>
 <div id="uygulama" class="uygulama gizli">
   <nav class="yan">
     <button id="telGeri" class="tel-geri gizli" type="button" aria-label="Bölümlere dön">‹ Geri</button>
