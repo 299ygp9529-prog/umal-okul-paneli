@@ -2310,53 +2310,49 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .gb-eksik { border-radius: 14px; animation: gbEksik .9s ease-out 1; }
 @keyframes gbEksik { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,84,112,0); } 20%, 60% { box-shadow: 0 0 0 2px #ff5470, 0 0 18px rgba(255,84,112,.55); } }
 
-/* Bilgisayar giriş ekranı: solda okulun tanıtım alanı, sağda giriş kartı; ekrana tam oturur, kaydırma yok (telefon görünümü değişmez) */
+/* Bilgisayar giriş ekranı: tam ekran okul binası, ortada çerçevesiz giriş; üstte okul adı, altta Atatürk sözü. Ekrana tam oturur (telefon görünümü değişmez) */
 .gt { display: none; }
 @media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
-  .giris { display: grid; grid-template-columns: minmax(0, 1fr) clamp(440px, 34vw, 540px); height: 100vh; min-height: 0; padding: 0; align-items: stretch; }
-  .gt { display: flex; flex-direction: column; justify-content: space-between; position: relative; z-index: 1; padding: clamp(28px, 5vh, 56px) clamp(32px, 4vw, 72px); overflow: hidden;
-    background: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(34,232,255,.10), transparent 70%), linear-gradient(160deg, #0b1626 0%, #0f1f36 55%, #0b1626 100%); border-right: 1px solid rgba(34,232,255,.18); }
-  .gt::after { content: ""; position: absolute; right: -14vh; bottom: -14vh; width: 62vh; height: 62vh; background: url('okul-logo.png') center / contain no-repeat; opacity: .05; pointer-events: none; }
-  .gt > * { position: relative; z-index: 1; }
-  .gt-ust { display: flex; align-items: center; gap: clamp(16px, 1.6vw, 26px); }
-  .gt-logo { width: clamp(72px, 10vh, 104px); height: auto; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,214,120,.55), 0 0 28px rgba(34,232,255,.35); }
-  .gt-ad { display: flex; flex-direction: column; line-height: 1; }
-  .gt-ad1 { font-family: 'UMAL Marcellus', serif; font-size: clamp(15px, 1.35vw, 22px); letter-spacing: .32em; color: var(--neonacik); }
-  .gt-ad2 { font-family: 'UMAL Cormorant', serif; font-weight: 600; font-size: clamp(40px, 4.4vw, 72px); color: #fff; margin-top: 6px; letter-spacing: .01em; }
-  .gt-yil { display: flex; align-items: center; gap: 12px; margin-top: 12px; font-family: 'UMAL Marcellus', serif; font-size: clamp(12px, .95vw, 15px); letter-spacing: .28em; text-transform: uppercase; color: #e6c27a; }
-  .gt-yil i { display: block; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, #e6c27a); } .gt-yil i:last-child { background: linear-gradient(90deg, #e6c27a, transparent); }
-  .gt-ata { display: flex; align-items: center; gap: clamp(24px, 2.6vw, 48px); margin: 0; min-height: 0; flex: 1; padding: clamp(18px, 3vh, 36px) 0; }
-  .gt-cerceve { height: min(46vh, 520px); aspect-ratio: 520 / 679; flex: none; padding: 7px; border-radius: 6px; background: linear-gradient(145deg, #f0d48e, #a8822f 45%, #f6e2a8 70%, #9b7426); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 30px rgba(230,194,122,.18); }
-  .gt-cerceve img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 3px; }
-  .gt-ata figcaption { max-width: 30ch; }
-  .gt-ata q { display: block; font-family: 'UMAL Cormorant', serif; font-style: italic; font-weight: 500; font-size: clamp(26px, 2.5vw, 42px); line-height: 1.2; color: #fff; quotes: "“" "”"; }
-  .gt-ata cite { display: block; margin-top: 16px; font-style: normal; font-family: 'UMAL Marcellus', serif; letter-spacing: .2em; text-transform: uppercase; font-size: clamp(11px, .85vw, 13.5px); color: #e6c27a; }
-  .gt-alt { display: flex; align-items: center; gap: 14px; color: var(--soluk); font-size: 13.5px; }
-  .gt-atlas { font-family: 'UMAL Marcellus', serif; letter-spacing: .3em; color: var(--neon); font-size: 15px; text-shadow: 0 0 12px rgba(34,232,255,.5); }
-  .giris > .kutu { align-self: center; justify-self: center; width: calc(100% - 48px); max-height: calc(100vh - 40px); overflow: hidden; padding: clamp(22px, 3.4vh, 40px) 36px clamp(18px, 2.6vh, 30px); }
-  .giris > .kutu::-webkit-scrollbar { display: none; }
-  .giris .logo-cerceve { width: clamp(84px, 12vh, 128px); height: clamp(84px, 12vh, 128px); margin-bottom: clamp(8px, 1.6vh, 20px); }
-  .giris .logo-cerceve img { inset: 7%; width: 86%; height: 86%; }
-  .giris .atlas { font-size: clamp(30px, 5vh, 44px); }
-  .giris-sekme { margin-top: clamp(12px, 2.4vh, 26px) !important; }
-  .giris label { margin-top: clamp(12px, 2.2vh, 28px); }
-  .giris .giris-sekme + #adim1 label { margin-top: clamp(12px, 2vh, 22px); }
-  .giris input, .giris .birincil, .giris .ikincil { height: clamp(42px, 5.6vh, 52px); }
-  .giris .birincil, .giris .ikincil { margin-top: clamp(8px, 1.4vh, 14px); }
-  .giris .not { margin-top: clamp(8px, 1.4vh, 14px); }
-  .kurlink { margin-top: clamp(8px, 1.4vh, 16px); }
-}
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 820px) and (hover: hover) {
+  .giris { height: 100vh; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse 40% 58% at 50% 56%, rgba(9,18,32,.93), rgba(9,18,32,.82) 45%, rgba(9,18,32,.5) 80%, rgba(9,18,32,.4) 100%),
+                linear-gradient(180deg, rgba(9,18,32,.92) 0%, rgba(9,18,32,.35) 22%, rgba(9,18,32,.35) 70%, rgba(9,18,32,.95) 100%),
+                url('giris-bina.jpg') center 32% / cover no-repeat, #0b1626; }
+  .giris::before, .giris .isik { display: none; }
+  .gt { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .gt > * { pointer-events: auto; }
+  /* üst şerit: okul */
+  .gt-ust { position: absolute; top: clamp(22px, 4vh, 40px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .gt-logo { display: none; }
+  .gt-ad { display: flex; flex-direction: column; align-items: center; line-height: 1; text-align: center; }
+  .gt-ad1 { font-family: 'UMAL Marcellus', serif; font-size: clamp(13px, 1.05vw, 17px); letter-spacing: .42em; margin-right: -.42em; color: var(--neonacik); }
+  .gt-ad2 { font-family: 'UMAL Cormorant', serif; font-weight: 600; font-size: clamp(34px, 3.2vw, 54px); color: #fff; margin-top: 6px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+  .gt-yil { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-family: 'UMAL Marcellus', serif; font-size: clamp(11px, .85vw, 13.5px); letter-spacing: .3em; text-transform: uppercase; color: #e6c27a; }
+  .gt-yil i { display: block; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, #e6c27a); } .gt-yil i:last-child { background: linear-gradient(90deg, #e6c27a, transparent); }
+  /* alt şerit: Atatürk sözü (solda) · Atlas (sağda) */
+  .gt-ata { position: absolute; left: clamp(28px, 3.4vw, 64px); bottom: clamp(22px, 4vh, 40px); margin: 0; display: flex; align-items: center; gap: 16px; }
+  .gt-cerceve { width: clamp(54px, 7vh, 72px); height: clamp(54px, 7vh, 72px); border-radius: 50%; overflow: hidden; flex: none; box-shadow: 0 0 0 1.5px #e6c27a, 0 6px 20px rgba(0,0,0,.5); }
+  .gt-cerceve img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gt-ata figcaption { max-width: 34ch; }
+  .gt-ata q { display: block; font-family: 'UMAL Cormorant', serif; font-style: italic; font-weight: 500; font-size: clamp(18px, 1.35vw, 23px); line-height: 1.2; color: #fff; quotes: "“" "”"; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  .gt-ata cite { display: block; margin-top: 6px; font-style: normal; font-family: 'UMAL Marcellus', serif; letter-spacing: .2em; text-transform: uppercase; font-size: 11px; color: #e6c27a; }
+  .gt-alt { position: absolute; right: clamp(28px, 3.4vw, 64px); bottom: clamp(22px, 4vh, 40px); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 46ch; text-align: right; color: var(--soluk); font-size: 12.5px; line-height: 1.4; }
+  .gt-atlas { font-family: 'UMAL Marcellus', serif; letter-spacing: .34em; margin-right: -.34em; color: var(--neon); font-size: 15px; text-shadow: 0 0 12px rgba(34,232,255,.5); }
+  /* giriş: çerçevesiz, sayfanın ortasında */
+  .giris > .kutu { z-index: 2; width: 400px; max-width: 400px; padding: 0; background: none; box-shadow: none; overflow: visible; isolation: auto; border-radius: 0; margin-top: clamp(40px, 6vh, 70px); }
+  .giris > .kutu::before, .giris > .kutu::after { display: none; }
+  .giris .logo-cerceve, .giris > .kutu > .alt { display: none; }
+  .giris .atlas { font-size: clamp(30px, 4.6vh, 42px); }
+  .giris .baslik { margin-top: 4px; font-size: 16px; color: var(--neonacik); font-weight: 600; letter-spacing: .04em; }
+  .giris-sekme { margin-top: clamp(14px, 2.6vh, 24px) !important; background: rgba(9,18,32,.6) !important; }
+  .giris input { background: rgba(9,18,32,.72); }
+  .giris label { margin-top: clamp(12px, 2vh, 20px); }
+  .giris .giris-sekme + #adim1 label { margin-top: clamp(12px, 2vh, 20px); }
+  .giris input, .giris .birincil, .giris .ikincil { height: clamp(42px, 5.4vh, 50px); }
+  .giris .birincil, .giris .ikincil { margin-top: clamp(8px, 1.4vh, 12px); }
+  .giris .kod-link { background: rgba(9,18,32,.5); }
   .giris > .kutu .not { display: none; }
-  .giris .alt { margin-top: 2px; } .giris .baslik { margin-top: 4px; }
-  .giris .kod-link { font-size: 14px; }
+  .kurlink { margin-top: clamp(8px, 1.6vh, 16px); }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
-  .gt { background: linear-gradient(90deg, rgba(9,18,32,.95) 0%, rgba(9,18,32,.88) 50%, rgba(9,18,32,.45) 100%), linear-gradient(0deg, rgba(9,18,32,.85) 0%, transparent 30%), url('giris-bina.jpg') 100% 35% / cover no-repeat, #0b1626; }
-  .gt::after { display: none; }
-  .gt-ata q, .gt-ad2 { text-shadow: 0 2px 18px rgba(0,0,0,.6); }
-}
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
-  .gt-ata figcaption { flex: 0 1 auto; width: clamp(280px, 26vw, 520px); max-width: none; padding: clamp(16px, 2vh, 26px) clamp(18px, 1.6vw, 30px); border-radius: 16px; background: rgba(9,18,32,.62); border: 1px solid rgba(230,194,122,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-  .gt-ata cite { white-space: nowrap; }
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) {
+  .gt-yil { display: none; } .gt-ad2 { font-size: 34px; } .giris > .kutu { margin-top: 56px; }
 }
