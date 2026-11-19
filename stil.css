@@ -2506,3 +2506,4 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
   body.ogt-alt.ogt-sakin main { padding-bottom: 0 !important; }
   body.ogt-sakin .msj-akis { overflow-y: auto; overscroll-behavior: contain; }
 }
+.msj-gec { opacity: .7; }
