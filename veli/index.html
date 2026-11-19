@@ -58,15 +58,23 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
   <nav id="sekme" class="giris-sekme" data-p="2" aria-label="Giriş türü"><i class="gs-kayan"></i>
       <a class="gs" data-i="0" href="/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Yönetim</b><small>E-posta ve şifre</small></a>
       <a class="gs" data-i="1" href="/ogrenci/" onclick="var n=this.parentNode;n.dataset.p=this.dataset.i;n.querySelectorAll('.gs').forEach(function(a){a.classList.toggle('secili',a===this)},this);var h=this.getAttribute('href');setTimeout(function(){location.href=h},230);return false"><b>Öğrenci</b><small>Okul no ve kod</small></a>
-      <a class="gs secili" data-i="2" href="/veli/" aria-current="page"><b>Veli</b><small>Veli kodu ile</small></a>
+      <a class="gs secili" data-i="2" href="/veli/" aria-current="page"><b>Veli</b><small>No ve şifre</small></a>
     </nav>
   <section id="giris" class="kart">
     <h1>Veli girişi</h1>
-    <div class="soluk kucuk">Çocuğunuzun okul numarası ve okulun verdiği 6 haneli veli koduyla girin.</div>
+    <div class="soluk kucuk">Çocuğunuzun okul numarası ve kendi şifrenizle girin. İlk girişte okulun verdiği veli kodunu yazın; ardından kendi şifrenizi belirleyeceksiniz.</div>
     <label for="no">Öğrenci numarası</label><input id="no" inputmode="numeric" maxlength="8" autocomplete="username" placeholder="Örnek: 1234">
-    <label for="kod">Veli kodu</label><input id="kod" inputmode="numeric" maxlength="7" autocomplete="off" placeholder="6 haneli kod">
+    <label for="kod">Şifreniz <span class="soluk kucuk">(ilk girişte veli kodu)</span></label><input id="kod" inputmode="numeric" maxlength="7" autocomplete="off" placeholder="6 haneli">
     <button class="birincil" id="girBtn">Giriş</button><div class="bilgi" id="bilgi"></div>
-    <div class="not">Bu cihazda oturum açık kalır; ortak bir cihazdaysanız işiniz bitince Çıkış'a basın. Kodunuzu kaybederseniz okuldan yenisini isteyin. Telefonunuzda ana ekrana eklerseniz uygulama gibi açılır.</div>
+    <div class="not">Bu cihazda oturum açık kalır; ortak bir cihazdaysanız işiniz bitince Çıkış'a basın. Şifrenizi unutursanız okul idaresinden yeni veli kodu isteyin. Telefonunuzda ana ekrana eklerseniz uygulama gibi açılır.</div>
+  </section>
+  <section id="sifre" class="kart gizli">
+    <h1>Kendi şifrenizi belirleyin</h1>
+    <div class="soluk kucuk">Okulun verdiği kod yalnız ilk giriş içindi. Bundan sonra çocuğunuzun numarası ve burada belirlediğiniz şifreyle gireceksiniz.</div>
+    <label for="sfY">Yeni şifre</label><input id="sfY" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="6 haneli sayı">
+    <label for="sfT">Yeni şifre (tekrar)</label><input id="sfT" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="6 haneli sayı">
+    <div class="not" style="margin-top:10px">Doğum tarihi ya da 123456 gibi kolay bir şifre seçmeyin. Unutursanız okul idaresi yeni veli kodu verir.</div>
+    <button class="birincil" id="sfKaydet">Şifremi kaydet</button><div class="bilgi" id="sfBilgi"></div>
   </section>
   <section id="ana" class="gizli"></section>
 </main>
@@ -90,11 +98,11 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
     return data;
   }
   $('#girBtn').onclick = async () => { const no = $('#no').value.trim(), kod = $('#kod').value.trim(), b = $('#bilgi'); b.classList.remove('hata');
-    if (!no || kod.length !== 6) { b.textContent = 'Öğrenci numarasını ve 6 haneli veli kodunu yazın.'; b.classList.add('hata'); return; }
+    if (!no || kod.length !== 6) { b.textContent = 'Öğrenci numarasını ve 6 haneli şifrenizi yazın.'; b.classList.add('hata'); return; }
     $('#girBtn').disabled = true; b.textContent = 'Kontrol ediliyor…';
-    try { V = await yukle(no, kod); O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
+    try { V = await yukle(no, kod); if (V.gecici) { sifreAc(no, kod); b.textContent = ''; return; } O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
     catch (e) { b.textContent = e.message; b.classList.add('hata'); } finally { $('#girBtn').disabled = false; } };
-  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
+  $('#cik').onclick = () => { try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#sifre').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
   function ciz() {
     $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
     const D = V.devam || [], G = V.gb || [], yok = D.filter(x => x.durum === 'yok'), gunler = new Set(yok.map(x => x.tarih)), tb = G.filter(x => x.tur === 'tebrik').length;
@@ -111,7 +119,21 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
       <div class="not">Son güncelleme: ${new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })} · Sayfa açıkken 5 dakikada bir yenilenir.</div>`;
     A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; ciz(); });
   }
-  async function yenile() { if (!O) return; try { V = await yukle(O.no, O.kod); ciz(); } catch (e) { if (e.kod) $('#cik').click(); $('#bilgi').textContent = e.message; } }
+  let SF = null;
+  function sifreAc(no, kod) { SF = { no, kod }; $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#sifre').classList.remove('gizli'); $('#sfY').value = $('#sfT').value = ''; $('#sfBilgi').textContent = ''; setTimeout(() => $('#sfY').focus(), 60); }
+  ['#sfY', '#sfT'].forEach(s => { $(s).oninput = () => { $(s).value = $(s).value.replace(/\D/g, '').slice(0, 6); }; $(s).onkeydown = ev => { if (ev.key === 'Enter') $('#sfKaydet').click(); }; });
+  $('#sfKaydet').onclick = async () => { const y = $('#sfY').value, b = $('#sfBilgi'), hata = m => { b.textContent = m; b.classList.add('hata'); }; b.classList.remove('hata');
+    if (!SF) return; if (y.length !== 6) return hata('Şifre 6 haneli olmalı.');
+    if (/^(\d)\1+$/.test(y) || '0123456789012345'.includes(y) || '9876543210987654'.includes(y)) return hata('Bu şifre çok kolay tahmin edilir; başka rakamlar seçin.');
+    if (y === SF.kod) return hata('Okulun verdiği koddan farklı bir şifre seçin.');
+    if (y !== $('#sfT').value) return hata('İki şifre birbirini tutmuyor.');
+    $('#sfKaydet').disabled = true; b.textContent = 'Kaydediliyor…';
+    try { const { data, error } = await sb.rpc('umal_veli_sifre', { p_no: SF.no, p_kod: SF.kod, p_yeni: y });
+      if (error || !data) throw new Error('Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.'); if (!data.ok) throw new Error(data.hata || 'Kaydedilemedi.');
+      O = { no: SF.no, kod: y }; SF = null; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {}
+      $('#sifre').classList.add('gizli'); b.textContent = ''; V = await yukle(O.no, O.kod); ciz(); }
+    catch (e) { hata(e.message); } finally { $('#sfKaydet').disabled = false; } };
+  async function yenile() { if (!O) return; try { V = await yukle(O.no, O.kod); if (V.gecici) { const o = O; try { localStorage.removeItem('umalVeli'); } catch (e) {} O = null; sifreAc(o.no, o.kod); return; } ciz(); } catch (e) { if (e.kod) $('#cik').click(); $('#bilgi').textContent = e.message; } }
   if (O) { $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); yenile(); }
   setInterval(() => { if (!document.hidden) yenile(); }, 300000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) yenile(); });
