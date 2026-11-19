@@ -691,7 +691,8 @@
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
     panelSelam().catch(e => console.warn('karşılama', e));
-    setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);   // K-720   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
+    setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);
+    if (window.UmalBildirim && ['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol)) UmalBildirim.karsila({ sb, kim: 'personel', no: String(D.eposta || '').toLowerCase() });   // K-730: girişte bildirim izni   // K-720   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
     if (rol === 'bas') { erisimRozet(); bdRozet(); msjRozet(); }

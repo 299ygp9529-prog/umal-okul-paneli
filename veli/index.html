@@ -11,7 +11,7 @@
 <link rel="icon" href="../simge-192.png"><link rel="apple-touch-icon" href="../simge-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="../supabase.min.js?v=2.45.4"></script>
-<script src="../bildirim.js?v=202611190655"></script>
+<script src="../bildirim.js?v=202611190850"></script>
 <style>
 :root { --zemin:#0d1726; --kart:#13233a; --cizgi:#2a4468; --neon:#22e8ff; --neonacik:#7ff6ff; --soluk:#9fb3cc; --kirmizi:#ff6b6b; --yesil:#3ef08a; --turuncu:#ffb867; color-scheme: dark; }
 * { box-sizing: border-box; } html, body { margin: 0; min-height: 100%; background: var(--zemin); color: #fff; font: 16px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -110,7 +110,7 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
     $('#girBtn').disabled = true; b.textContent = 'Kontrol ediliyor…';
     try { V = await yukle(no, kod); if (V.gecici) { sifreAc(no, kod); b.textContent = ''; return; } O = { no, kod }; try { localStorage.setItem('umalVeli', JSON.stringify(O)); } catch (e) {} b.textContent = ''; ciz(); }
     catch (e) { b.textContent = e.message; b.classList.add('hata'); } finally { $('#girBtn').disabled = false; } };
-  $('#cik').onclick = () => { if (O && window.UmalBildirim) UmalBildirim.kapat({ sb, kim: 'veli', no: O.no }); BLD = null; bldTaze = false; try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#sifre').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
+  $('#cik').onclick = () => { if (O && window.UmalBildirim) UmalBildirim.kapat({ sb, kim: 'veli', no: O.no }); BLD = null; bldTaze = false; karsilandi = false; try { localStorage.removeItem('umalVeli'); } catch (e) {} O = V = null; $('#ana').classList.add('gizli'); $('#sifre').classList.add('gizli'); $('#giris').classList.remove('gizli'); $('#sekme').classList.remove('gizli'); $('#cik').classList.add('gizli'); };
   function ciz() {
     $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#cik').classList.remove('gizli'); const A = $('#ana'); A.classList.remove('gizli');
     const D = V.devam || [], G = V.gb || [], yok = D.filter(x => x.durum === 'yok'), gunler = new Set(yok.map(x => x.tarih)), tb = G.filter(x => x.tur === 'tebrik').length;
@@ -147,7 +147,9 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
   // K-722: anlık bildirim kartı ("derse girmedi" bildirimi velinin telefonuna)
   const ZIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>';
   let BLD = null, bldTaze = false;
+  let karsilandi = false;
   async function bldCiz() { const k = $('#bldKart'); if (!k || !window.UmalBildirim || !O) return;
+    if (!karsilandi) { karsilandi = true; UmalBildirim.karsila({ sb, kim: 'veli', no: O.no, kod: O.kod, tamam: () => { BLD = 'acik'; bldTaze = true; const kk = $('#bldKart'); if (kk) kk.innerHTML = ''; } }); }
     if (BLD === null) BLD = await UmalBildirim.durum();
     if (BLD === 'acik' && !bldTaze) { bldTaze = true; UmalBildirim.tazele({ sb, kim: 'veli', no: O.no, kod: O.kod }); }
     let ert = 0; try { ert = +localStorage.getItem('umalBldErt') || 0; } catch (e) {}
