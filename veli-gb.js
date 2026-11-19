@@ -165,7 +165,7 @@
     E.innerHTML = `<div class="kart">
       <div class="gb-bas">Kime</div><div class="gb-tur ob-kim">${Object.entries(KIM_AD).map(([k, a]) => `<button class="gb-t ${OB.kim === k ? 'secili yesil' : ''}" data-obk="${k}">${a}</button>`).join('')}</div>
       <div class="gb-bas" style="margin-top:14px">Konu</div><div class="dya-sec">${SABLON[OB.kim].map(s => `<button class="cip ${OB.sablon === s[0] ? 'secili' : ''}" data-obt="${s[0]}">${s[1]}</button>`).join('')}</div>
-      ${OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? `<div class="ob-yon"><b>Gelmeyen öğretmenin derslerine görevli mi atayacaksınız?</b><span>Günlük Görevlendirme ekranında gelmeyeni işaretleyin; Atlas o saatte boş olan nöbetçileri önerir, tek dokunuşla atarsınız ve "Kaydet ve bildir" ile görevliye bildirim kendiliğinden gider.</span><button class="birincil" id="obGorev">Günlük Görevlendirme'yi aç</button></div>` : ''}
+      ${OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? `<div class="ob-yon"><b>Gelmeyen öğretmenin derslerine görevli mi atayacaksınız?</b><span>Boş Ders Görevlendirme ekranında gelmeyeni işaretleyin; Atlas o saatte boş olan nöbetçileri önerir, tek dokunuşla atarsınız ve "Kaydet ve bildir" ile görevliye bildirim kendiliğinden gider.</span><button class="birincil" id="obGorev">Boş Ders Görevlendirme'yi aç</button></div>` : ''}
       <label class="ob-l">Başlık</label><input id="obBaslik" maxlength="90" value="${esc(OB.baslik)}">
       <label class="ob-l">Metin</label><textarea id="obMetin" maxlength="600" rows="4">${esc(OB.metin)}</textarea>
       ${OB.kim !== 'ogretmen' ? '<div class="soluk kucuk">{ad} yazdığınız yere öğrencinin adı gelir; her alıcıya kendi adıyla gider.</div>' : ''}

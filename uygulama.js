@@ -844,7 +844,7 @@
     { id: 'konu', ad: 'Sınav Konuları', roller: ['bas', 'yonetici', 'ogretmen'], ciz: sinavKonulari },   // K-574
     { id: 'dosyalar', ad: 'Atlas Sınıf', roller: ['bas', 'yonetici', 'ogretmen'], ciz: dersDosyalariBolumu },   // K-716: öğrencilere dosya / link / test (Drive)
     { id: 'dersprog', ad: 'Ders Programı Hazırla', roller: ['bas', 'yonetici'], ciz: () => dpAc('idare') },   // K-700
-    { id: 'gorev', ad: 'Günlük Görevlendirme', roller: ['bas', 'yonetici'], ciz: () => dpAc('gorev') },   // K-700i
+    { id: 'gorev', ad: 'Boş Ders Görevlendirme', roller: ['bas', 'yonetici'], ciz: () => dpAc('gorev') },   // K-700i
     { id: 'dpistek', ad: 'Ders Programı İsteğim', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => dpAc('ogretmen') },   // K-700
     { id: 'gb', ad: 'Tebrik ve Uyarı', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => gbAc('gb') },   // K-720
     { id: 'veli', ad: 'Veli Erişimi', roller: ['bas', 'yonetici', 'rehberlik'], ciz: () => gbAc('veli') },   // K-720
@@ -1057,7 +1057,7 @@
     return D.ogrenciler;
   }
   async function gbAc(tur, on) {   // K-720: tebrik/uyarı, veli erişimi (ihtiyaç olunca yüklenir)
-    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190740'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190812'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalGB[tur]({ sb, esc, baslik, D, bolumAc: id => { tumuKapat(); ac(id); }, ogrencileriYukle, fotolariYukle, dyDerslerim, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant, rol: D.rol }, on);
     } catch (e) { uyar('Açılamadı: ' + hataYaz(e)); } }
   async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)
@@ -1066,7 +1066,7 @@
   async function dpAc(tur) {   // K-700: ders programı hazırlama modülü (ihtiyaç olunca yüklenir)
     try { await programYukle(); const NR = await dpNobet();
       const nobetGunleri = () => { const M = {}; (NR.gunler || []).forEach((G, g) => Object.values(G || {}).forEach(v => (Array.isArray(v) ? v : [v]).forEach(a => { if (a) M[a] = g; }))); return M; };
-      for (const f of ['dersprog.js?v=202611190805']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      for (const f of ['dersprog.js?v=202611190812']) if (!window.UmalDP) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = f; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalDP[tur]({ sb, esc, baslik, program: () => D.program, programYenile: () => { D.program = null; programYukle(); }, pencereAc, uyar, onayla, girdiAl, hataYaz, raporYazdir, raporBant, nobetGunleri, rol: D.rol, eposta: D.eposta });
     } catch (e) { uyar('Ders programı açılamadı: ' + hataYaz(e)); } }
   async function programYukle() {

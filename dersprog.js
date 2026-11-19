@@ -663,7 +663,7 @@
     $('#dpIGonder').onclick = async () => { const { data: d, error } = await X.sb.rpc('umal_dp_istek_yaz', { p_veri: k }); if (error || !d || !d.ok) { X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : d && d.hata)); return; } X.uyar('İsteğiniz idareye iletildi.'); ogretmen(X); };
     if ($('#dpISil')) $('#dpISil').onclick = async () => { if (!await X.onayla('İsteğiniz geri çekilsin mi?')) return; await X.sb.rpc('umal_dp_istek_yaz', { p_veri: null }); ogretmen(X); };
   }
-  // ---------- K-700i: Günlük görevlendirme (gelmeyen öğretmenin derslerine)
+  // ---------- K-700i: Boş Ders Görevlendirme (gelmeyen öğretmenin derslerine)
   async function gorev(ctx) {
     X = ctx; if (!GOZ) { GOZ = new MutationObserver(() => etiketle($('#icerik'))); GOZ.observe($('#icerik'), { childList: true, subtree: true }); } const I = $('#icerik'), prog = (X.program() || {}).siniflar || {}, NG = (X.nobetGunleri && X.nobetGunleri()) || {};
     const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -689,7 +689,7 @@
           return { o, p, neden, nb, ok: ok || nb, bs: bugunSay[o] || 0, kisa: (bugunSay[o] ? `bugün ${bugunSay[o]} görev · ` : '') + (nb ? 'nöbetçi' : ara ? 'arada boş' : ok ? 'okulda' : 'dersi yok') }; }).sort((a, b) => b.p - a.p || sira(a.o, b.o)); };
       const oneri = d => { const A = aday(d), nb = A.filter(x => x.nb); return nb.concat(A.filter(x => !x.nb).slice(0, Math.max(0, 3 - nb.length))); };   // o saatte boş tüm nöbetçiler görünür; 3'ten azsa diğer uygunlarla 3'e tamamlanır
       const ata = (d, giren) => { G.liste = G.liste.filter(x => !(x.sinif === d.sinif && +x.saat === d.n)); G.liste.push({ sinif: d.sinif, saat: d.n, ders: d.ders, asil: d.asil, giren }); };
-      I.innerHTML = `<div class="ust"><div><h1>Günlük Görevlendirme</h1><div class="soluk kucuk">Gelmeyen öğretmeni seçin; Atlas her dersine o saatte boşta olanlardan öneri sunar. Görevli öğretmen dersi kendi panelinde görür ve yoklamayı alabilir.</div></div></div>
+      I.innerHTML = `<div class="ust"><div><h1>Boş Ders Görevlendirme</h1><div class="soluk kucuk">Gelmeyen öğretmeni seçin; Atlas her dersine o saatte boşta olanlardan öneri sunar. Görevli öğretmen dersi kendi panelinde görür ve yoklamayı alabilir.</div></div></div>
         <div class="kart"><div class="dp-bas"><b>Tarih</b><input type="date" class="dp-in" id="gvT" value="${iso(gun)}" style="width:auto"><span class="soluk">${GUN[g] || 'Hafta sonu'}</span></div>
           <b style="display:block;margin:6px 0">Gelmeyen öğretmenler</b><input class="dp-in" id="gvAra" placeholder="Öğretmen ara" style="margin-bottom:8px">
           <div class="dp-gv-o">${O.map(o => `<button class="cip ${GEL.has(o) ? 'secili' : ''}" data-gvo="${esc(o)}">${esc(bas(o))} <small>${Object.keys(T[o]).length}</small></button>`).join('') || '<span class="soluk">Bu gün ders yok.</span>'}</div></div>
@@ -737,9 +737,9 @@
         if (error || !data || !data.ok) { X.uyar('Kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; } const yeni = G.liste.filter(x => x.giren && GEL.has(x.asil)), kisi = [...new Set(yeni.map(x => x.giren))];
           X.uyar(kisi.length ? `Kaydedildi ve ${kisi.length} öğretmene bildirildi: ${kisi.map(bas).join(', ')}. Telefonunda bildirim açık olana anında gider; herkes görevini kendi panelinde ve yoklama ekranında görür.` : 'Kaydedildi.'); await yukle(); ciz2(); };
       if ($('#gvYaz')) $('#gvYaz').onclick = () => { const L = dersler.map(d => ({ d, a: atanan[d.sinif + '|' + d.n] }));
-        X.raporYazdir(`${X.raporBant('Günlük Görevlendirme Çizelgesi', esc(gun.toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })))}<table class="liste"><thead><tr><th style="width:7%">Saat</th><th style="width:9%">Sınıf</th><th>Ders</th><th>Gelmeyen öğretmen</th><th>Görevli öğretmen</th><th style="width:16%">İmza</th></tr></thead><tbody>${L.map(({ d, a }) => `<tr><td class="s">${d.n}.</td><td>${esc(d.sinif)}</td><td>${esc(d.ders)}</td><td>${esc(bas(d.asil))}</td><td><b>${a && a.giren ? esc(bas(a.giren)) : '—'}</b></td><td></td></tr>`).join('')}</tbody></table>`, 'Günlük görevlendirme'); };
+        X.raporYazdir(`${X.raporBant('Boş Ders Görevlendirme Çizelgesi', esc(gun.toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })))}<table class="liste"><thead><tr><th style="width:7%">Saat</th><th style="width:9%">Sınıf</th><th>Ders</th><th>Gelmeyen öğretmen</th><th>Görevli öğretmen</th><th style="width:16%">İmza</th></tr></thead><tbody>${L.map(({ d, a }) => `<tr><td class="s">${d.n}.</td><td>${esc(d.sinif)}</td><td>${esc(d.ders)}</td><td>${esc(bas(d.asil))}</td><td><b>${a && a.giren ? esc(bas(a.giren)) : '—'}</b></td><td></td></tr>`).join('')}</tbody></table>`, 'Boş Ders Görevlendirme'); };
     }
-    I.innerHTML = '<div class="ust"><h1>Günlük Görevlendirme</h1></div><div class="kart soluk">Yükleniyor…</div>';
+    I.innerHTML = '<div class="ust"><h1>Boş Ders Görevlendirme</h1></div><div class="kart soluk">Yükleniyor…</div>';
     await yukle(); ciz2();
   }
   window.UmalDP = { idare, ogretmen, gorev };
