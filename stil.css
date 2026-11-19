@@ -2401,3 +2401,14 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .gk2-pr { align-items: start; }
 .gk2-pr textarea { min-width: 0; box-sizing: border-box; width: 100%; min-height: 44px; resize: none; overflow: hidden; font: inherit; line-height: 1.45; padding: 10px 12px; }
 .yz-uyari { color: #ffb867; font-weight: 700; }
+/* K-733 Öğretmen kaydı */
+.og-davet { border-color: rgba(34,232,255,.45); background: linear-gradient(160deg, rgba(34,232,255,.08), var(--kart) 60%); }
+.og-dv-ust { display: flex; gap: 12px; align-items: flex-start; } .og-dv-ust b { display: block; font-size: 16px; } .og-dv-ust span { color: var(--soluk); font-size: 14px; }
+.og-dv-ik { flex: none; width: 44px; height: 44px; border-radius: 13px; display: grid !important; place-items: center; color: var(--neon) !important; background: rgba(34,232,255,.12); border: 1px solid rgba(34,232,255,.4); } .og-dv-ik svg { width: 24px; height: 24px; }
+.og-dv-bag { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; } .og-dv-bag code { flex: 1 1 200px; padding: 10px 12px; border-radius: 11px; background: var(--zemin); border: 1px solid var(--cizgi); color: var(--neon); font-size: 15px; }
+.og-dv-bag a.birincil { text-decoration: none; display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 11px; }
+.kayit-bilgi { margin: 0 0 14px; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(34,232,255,.45); background: rgba(34,232,255,.07); font-size: 14.5px; line-height: 1.5; }
+.kayit-bilgi b:first-child { display: block; font-size: 16px; color: #fff; } .kayit-bilgi ol { margin: 6px 0; padding-left: 20px; } .kayit-bilgi > span { color: var(--soluk); font-size: 13px; }
+.kod-link.kayit-vurgu { border-color: var(--neon) !important; color: var(--neon) !important; font-weight: 800; box-shadow: 0 0 16px rgba(34,232,255,.35); }
+.kayit-bilgi, .kayit-bilgi li { text-align: left !important; } .kayit-bilgi li { display: list-item !important; margin: 2px 0; } .kayit-bilgi li b { display: inline !important; font-size: inherit !important; color: var(--neon); }
+.kayit-modu label[for="sifre"], .kayit-modu .sifre-kutu, .kayit-modu #sifreGiris { display: none !important; } .kayit-modu #kodGonder { width: 100%; padding: 15px; font-size: 16px; }
