@@ -104,14 +104,45 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   function tabloOku(metin) {   // Excel'den yapıştırılan (sekme) ya da CSV (; ,) satırlar
     const satir = String(metin || '').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
     if (!satir.length) return [];
-    const ayr = satir[0].includes('\t') ? '\t' : (satir[0].split(';').length > satir[0].split(',').length ? ';' : ',');
+    const ayr = satir.some(l => l.includes('\t')) ? '\t' : (satir[0].split(';').length > satir[0].split(',').length ? ';' : ',');
     return satir.map(l => { const o = []; let c = '', q = false; for (let i = 0; i < l.length; i++) { const h = l[i]; if (q) { if (h === '"' && l[i + 1] === '"') { c += '"'; i++; } else if (h === '"') q = false; else c += h; } else if (h === '"') q = true; else if (h === ayr) { o.push(c.trim()); c = ''; } else c += h; } o.push(c.trim()); return o; }).filter(r => !/^sep=/i.test(r[0] || ''));
   }
+  async function zipOku(B, ad) {   // .docx içinden tek dosya (merkezi dizin + deflate-raw)
+    const dv = new DataView(B.buffer, B.byteOffset, B.byteLength), dec = new TextDecoder(); let e = B.length - 22; while (e > 0 && dv.getUint32(e, true) !== 0x06054b50) e--; if (e <= 0) throw new Error('Dosya açılamadı');
+    const n = dv.getUint16(e + 10, true); let o = dv.getUint32(e + 16, true);
+    for (let i = 0; i < n; i++) { const yon = dv.getUint16(o + 10, true), bs = dv.getUint32(o + 20, true), al = dv.getUint16(o + 28, true), el = dv.getUint16(o + 30, true), cl = dv.getUint16(o + 32, true), lo = dv.getUint32(o + 42, true), a = dec.decode(B.subarray(o + 46, o + 46 + al)); o += 46 + al + el + cl;
+      if (a !== ad) continue; const ba = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true), ham = B.subarray(ba, ba + bs);
+      return yon === 0 ? dec.decode(ham) : await new Response(new Blob([ham]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text(); }
+    return ''; }
+  async function dosyaSatirlar(f) {   // K-737: Excel (.xlsx/.xls), Word (.docx), PDF (metinli), CSV/TXT → satır dizileri
+    const ad = f.name.toLowerCase();
+    if (/\.xlsx$/.test(ad)) return await C.xlsxSatirlar(f);
+    if (/\.(xls|html?|xml)$/.test(ad)) return await C.xlsSatirlar(f);
+    if (/\.doc$/.test(ad)) throw new Error('Eski Word (.doc) dosyası okunamıyor. Word\'de "Farklı kaydet → .docx" ya da PDF yapıp tekrar seçin.');
+    if (/\.docx$/.test(ad)) {
+      const x = await zipOku(new Uint8Array(await f.arrayBuffer()), 'word/document.xml'); if (!x) throw new Error('Word dosyası açılamadı');
+      const d = new DOMParser().parseFromString(x, 'application/xml'), E = (n, t) => [...n.getElementsByTagNameNS('*', t)], R = [];
+      const metin = n => E(n, 'p').map(p => E(p, 't').map(t => t.textContent).join('')).join(' ').replace(/\s+/g, ' ').trim();
+      const govde = E(d, 'body')[0]; if (!govde) return R;
+      [...govde.children].forEach(n => { if (n.localName === 'tbl') E(n, 'tr').forEach(tr => { const r = [...tr.children].filter(c => c.localName === 'tc').map(metin); if (r.some(Boolean)) R.push(r); });
+        else if (n.localName === 'p') { const t = E(n, 't').map(t => t.textContent).join('').trim(); if (t) R.push(t.split(/\t+|\s{3,}/).map(z => z.trim()).filter(Boolean)); } });
+      return R; }
+    if (/\.pdf$/.test(ad)) {
+      const pdfjs = await import(new URL('soru/pdf.min.mjs', location.href).href); pdfjs.GlobalWorkerOptions.workerSrc = new URL('soru/pdf.worker.min.mjs', location.href).href;
+      const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise, R = [];
+      for (let p = 1; p <= doc.numPages; p++) { const it = (await (await doc.getPage(p)).getTextContent()).items.filter(i => i.str && i.str.trim()), S = [];
+        it.forEach(i => { const y = i.transform[5], x = i.transform[4], s = S.find(q => Math.abs(q.y - y) < 3); (s || (S.push({ y, W: [] }), S[S.length - 1])).W.push({ x, w: i.width || 0, t: i.str }); });
+        S.sort((a, b) => b.y - a.y).forEach(s => { s.W.sort((a, b) => a.x - b.x); const r = []; let son = -1e9; s.W.forEach(w => { if (r.length && w.x - son < 8) r[r.length - 1] += (w.x - son > 1.5 ? ' ' : '') + w.t; else r.push(w.t); son = w.x + w.w; }); const t = r.map(z => z.trim()).filter(Boolean); if (t.length) R.push(t); }); }
+      if (!R.length) throw new Error('PDF\'te metin yok (taranmış belge). Word ya da Excel hâlini seçin.');
+      return R; }
+    let t = await f.text(); if (/�/.test(t)) { try { t = new TextDecoder('windows-1254').decode(await f.arrayBuffer()); } catch (e) {} }
+    return tabloOku(t); }
   function yapistirPenceresi(baslik, aciklama, ok) {
     C.pencereAc(`<h2 style="margin-top:0">${esc(baslik)}</h2><div class="soluk kucuk" style="margin-bottom:8px">${aciklama}</div>
       <textarea id="idYap" rows="10" style="width:100%;box-sizing:border-box" placeholder="Excel'de satırları seçip kopyalayın, buraya yapıştırın" data-bicim="yok"></textarea>
-      <div class="dugmeler" style="justify-content:space-between;margin-top:10px"><label class="ikincil" style="cursor:pointer;padding:9px 14px;border-radius:12px">CSV dosyası seç<input type="file" id="idDosya" accept=".csv,.txt" style="display:none"></label><button class="birincil" id="idYapOk">İçeri al</button></div>`);
-    document.getElementById('idDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; let t = await f.text(); if (/�/.test(t)) { try { t = new TextDecoder('windows-1254').decode(await f.arrayBuffer()); } catch (e) {} } document.getElementById('idYap').value = t; };
+      <div class="dugmeler" style="justify-content:space-between;margin-top:10px"><label class="ikincil" style="cursor:pointer;padding:9px 14px;border-radius:12px">Dosya seç · Excel, Word, PDF, CSV<input type="file" id="idDosya" accept=".xlsx,.xls,.docx,.doc,.pdf,.csv,.txt" style="display:none"></label><button class="birincil" id="idYapOk">İçeri al</button></div>`);
+    document.getElementById('idDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const ta = document.getElementById('idYap'); ta.value = 'Okunuyor…';
+      try { const R = await dosyaSatirlar(f); ta.value = R.map(r => r.map(c => String(c == null ? '' : c).replace(/[\t\r\n]+/g, ' ').trim()).join('\t')).join('\n'); if (!R.length) uyar('Dosyada satır bulunamadı.'); } catch (e) { ta.value = ''; uyar(e.message || 'Dosya okunamadı.'); } };
     document.getElementById('idYapOk').onclick = () => { const R = tabloOku(document.getElementById('idYap').value); if (!R.length) { uyar('Yapıştırılan satır yok.'); return; } C.pencereKapat(); ok(R); };
   }
   const baslikBul = (R, adlar) => { const h = (R[0] || []).map(norm); const i = h.findIndex(x => adlar.includes(x)); return i; };
@@ -492,7 +523,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         <div class="id-satir"><input id="krAd" placeholder="Ad Soyad"><input id="krBr" placeholder="Branş"><input id="krGr" placeholder="Görev (ör. Zümre Başkanı)"><button class="ikincil" data-kr="ogekle">Ekle</button></div>
         <div class="id-kaydir" style="max-height:420px"><table class="ds-tablo"><tr><th>Ad Soyad</th><th>Branş</th><th>Görev</th><th>Sınıflar</th><th></th></tr>${V.ogretmenler.map(o => `<tr><td><input data-kro="${o.id}:ad" value="${esc(o.ad)}"></td><td><input data-kro="${o.id}:brans" value="${esc(o.brans)}"></td><td><input data-kro="${o.id}:gorev" value="${esc(o.gorev)}" style="width:120px"></td><td><input data-kro="${o.id}:sinif" value="${esc(o.sinif)}" style="width:120px"></td><td><button class="bag" style="color:var(--kirmizi)" data-krosil="${o.id}">Sil</button></td></tr>`).join('')}</table></div></div>
         <div class="kart"><h3 style="margin-top:0">Kurul / komisyon ekle</h3><div class="id-satir"><input id="krKad" placeholder="Kurul / komisyon adı"><input id="krKm" placeholder="Madde" style="width:80px"></div><div class="cipler" style="margin-top:6px">${['KURUL', 'KOMISYON', 'EKIP'].map(t => `<button class="cip" data-krkekle="${t}">+ ${t === 'KURUL' ? 'Kurul' : t === 'KOMISYON' ? 'Komisyon' : 'Ekip'} olarak ekle</button>`).join('')}</div>
-          <button class="ikincil" data-kr="kyapistir" style="margin-top:10px">Excel'den kurul listesi yapıştır</button></div></div>
+          <button class="ikincil" data-kr="kyapistir" style="margin-top:10px">Hazır listeyi yükle · Excel, Word, PDF</button></div></div>
       <div class="cipler" style="margin:12px 0 8px">${[['HEPSI', 'Tümü'], ['KURUL', 'Kurullar'], ['KOMISYON', 'Komisyonlar'], ['EKIP', 'Ekipler']].map(([k, a]) => `<button class="cip ${KR.suz === k ? 'secili' : ''}" data-krsuz="${k}">${a} (${k === 'HEPSI' ? V.kurullar.length : V.kurullar.filter(x => x.tur === k).length})</button>`).join('')}</div>
       <datalist id="krOgL">${V.ogretmenler.map(o => `<option value="${esc(o.ad)}">`).join('')}</datalist>
       <div class="id-kurullar">${L.map(k => `<div class="kart id-kurul"><div class="id-satir"><input data-krk="${k.id}:ad" value="${esc(k.ad)}" style="flex:1;font-weight:700"><span class="durum-etiketi">${k.tur}</span><span class="soluk kucuk">Md. ${esc(k.madde)}</span><button class="bag" style="color:var(--kirmizi)" data-krksil="${k.id}">Sil</button></div>
@@ -531,9 +562,20 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         const Y = (h ? R.slice(1) : R).filter(r => (r[iA] || '').trim()).map(r => ({ id: 'g' + uid(), ad: r[iA].trim(), brans: (r[iB] || '').trim(), gorev: (r[iG] || '').trim() || 'Öğretmen', sinif: (r[iS] || '').trim() }));
         if (!Y.length) { uyar('Öğretmen adı bulunamadı.'); return; } if (V.ogretmenler.length && !await onayla(`${Y.length} öğretmen bulundu. Mevcut liste bununla değiştirilsin mi?`)) return;
         V.ogretmenler = Y; KR.degisti = true; krCiz(); bilgi(`${Y.length} öğretmen alındı. Kaydetmeyi unutmayın.`); }); return true; }
-    if (d.kr === 'kyapistir') { yapistirPenceresi('Kurul / komisyon listesi', 'Sütunlar: <b>Ad, Tür (Kurul / Komisyon / Ekip), Madde, Açıklama</b>. Satırlar mevcut listenin sonuna eklenir.', R => {
-        const h = baslikBul(R, ['ad', 'kurul komisyon adi', 'kurul veya komisyon']) >= 0, Y = (h ? R.slice(1) : R).filter(r => (r[0] || '').trim()).map(r => { const t = norm(r[1]); return { id: 'k' + uid(), ad: r[0].trim(), tur: t.includes('ekip') ? 'EKIP' : t.includes('kurul') ? 'KURUL' : 'KOMISYON', madde: (r[2] || '').trim(), not: (r[3] || '').trim(), uyeler: [] }; });
-        V.kurullar.push(...Y); KR.degisti = true; krCiz(); bilgi(`${Y.length} kurul/komisyon eklendi.`); }); return true; }
+    if (d.kr === 'kyapistir') { yapistirPenceresi('Kurul / komisyon listesi', 'Okulun hazır listesini <b>Excel, Word ya da PDF</b> olarak seçin ya da yapıştırın. Kurul / komisyon / ekip adı geçen satır yeni bir başlık sayılır, altındaki satırlar üyesi olur (<b>Ad Soyad, Görevi</b>). Tek tabloda <b>Kurul adı, Üye, Görevi</b> sütunları da olur. Aynı adlı kurul varsa üyeleri ona eklenir.', R => {   // K-737
+        const grupRe = /(kurul|komisyon|ekib|ekip|zümre|zumre)/i, unvanRe = /^(t\.?\s*c\.?|ümraniye|umraniye|.*müdürlüğü|.*eğitim öğretim yılı|sıra|s\.?\s*no|#|adı? soyadı?|görevi?|imza|branşı?)$/i;
+        const turBul = a => { const t = norm(a); return /ekip|ekib/.test(t) ? 'EKIP' : /kurul|zumre/.test(t) ? 'KURUL' : 'KOMISYON'; };
+        const kurulBul = a => { const n = norm(a); let k = V.kurullar.find(x => norm(x.ad) === n); if (!k) { k = { id: 'k' + uid(), ad: a.trim(), tur: turBul(a), madde: '', not: '', uyeler: [] }; V.kurullar.push(k); yeniK++; } return k; };
+        const uyeEkle = (k, ad, gorev) => { ad = ad.replace(/\s+/g, ' ').trim(); if (!ad || ad.length < 4 || !/[a-zçğıöşü]/i.test(ad) || grupRe.test(ad) || unvanRe.test(ad)) return; const o = V.ogretmenler.find(x => norm(x.ad) === norm(ad));
+          if (k.uyeler.some(u => norm(krAd(V, u)) === norm(ad))) return; k.uyeler.push(o ? { ogr: o.id, gorev: gorev || 'Üye' } : { ad: C.baslik ? C.baslik(ad) : ad, gorev: gorev || 'Üye' }); uyeN++; if (!o) tanimsiz.add(ad); };
+        let yeniK = 0, uyeN = 0, cur = null; const tanimsiz = new Set();
+        const H = (R[0] || []).map(norm), iK = H.findIndex(x => /kurul|komisyon|ekip/.test(x) && !/gorev/.test(x)), iU = H.findIndex(x => /ad soyad|adi soyadi|uye|ogretmen/.test(x)), iG = H.findIndex(x => /gorev|unvan/.test(x));
+        if (iK >= 0 && iU >= 0) R.slice(1).forEach(r => { const ka = (r[iK] || '').trim(); if (ka) cur = kurulBul(ka); if (cur) uyeEkle(cur, r[iU] || '', iG >= 0 ? (r[iG] || '').trim() : ''); });
+        else R.forEach(r => { const c = r.map(z => String(z || '').trim()).filter(Boolean); if (!c.length) return; const gi = c.findIndex(z => grupRe.test(z) && z.length < 120 && !/^(üye|başkan|sekreter)/i.test(z) && !/ogretim yili|(kurul|komisyon|ekip)(lar|ler)/.test(norm(z)));
+          if (gi >= 0 && c.filter(z => !/^\d+[.)]?$/.test(z)).length <= 2) { cur = kurulBul(c[gi].replace(/^\d+[.)-]\s*/, '').replace(/[:：]\s*$/, '')); return; }
+          if (!cur) return; const C_ = c.filter(z => !/^\d+[.)]?$/.test(z) && !/^\d{10,}$/.test(z)); if (!C_.length) return; uyeEkle(cur, C_[0].replace(/^\d+[.)-]\s*/, ''), (C_[1] || '').replace(/^[-–:]\s*/, '')); });
+        if (!yeniK && !uyeN) { uyar('Listede kurul / komisyon adı bulunamadı. Başlık satırlarında "Kurulu", "Komisyonu" ya da "Ekibi" geçmeli.'); return; }
+        KR.degisti = true; krCiz(); bilgi(`${yeniK} yeni kurul/komisyon, ${uyeN} üye eklendi.${tanimsiz.size ? ` Öğretmen listesinde olmayan ${tanimsiz.size} ad yazıldığı gibi eklendi: ${[...tanimsiz].slice(0, 12).join(', ')}${tanimsiz.size > 12 ? '…' : ''}.` : ''} Kontrol edip kaydedin.`); }); return true; }
     if (d.kr === 'ogekle') { const a = kok.querySelector('#krAd').value.trim(); if (!a) { uyar('Öğretmen adını yazın.'); return true; } V.ogretmenler.push({ id: 'g' + uid(), ad: a, brans: kok.querySelector('#krBr').value.trim(), gorev: kok.querySelector('#krGr').value.trim() || 'Öğretmen', sinif: '' }); KR.degisti = true; krCiz(); return true; }
     if (d.krosil) { V.ogretmenler = V.ogretmenler.filter(o => o.id !== d.krosil); V.kurullar.forEach(k => { k.uyeler = k.uyeler.filter(u => u.ogr !== d.krosil); }); KR.degisti = true; krCiz(); return true; }
     if (d.krkekle) { const a = kok.querySelector('#krKad').value.trim(); if (!a) { uyar('Kurul / komisyon adını yazın.'); return true; } V.kurullar.push({ id: 'k' + uid(), ad: a, tur: d.krkekle, madde: kok.querySelector('#krKm').value.trim(), not: '', uyeler: [] }); KR.degisti = true; krCiz(); return true; }
