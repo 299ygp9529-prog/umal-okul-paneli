@@ -670,10 +670,16 @@
     let gun = new Date(); while (gun.getDay() === 0 || gun.getDay() === 6) gun.setDate(gun.getDate() + 1);
     let G = { liste: [], say: {} }, GEL = new Set();
     // programdaki öğretmen adı tek biçime getirilir: sondaki numara ("Ayfer ÖZEL 2") atılır, aynı kişinin farklı yazımları (büyük/küçük harf) tek kişide birleşir
-    const OGR_AD = new Map(), ogrAd = a => { const t = String(a || '').replace(/\s+\d+$/, '').trim(); if (!t) return ''; const k = nk(t); if (!OGR_AD.has(k)) OGR_AD.set(k, t); return OGR_AD.get(k); };
-    const ogrGunu = g => { const T = {}; Object.entries(prog).forEach(([s, H]) => Object.entries(H).forEach(([k, h]) => { const [gg, n] = k.split('-').map(Number); if (gg !== g) return; [].concat(h.ogretmen || []).forEach(o0 => { const o = ogrAd(o0); if (!o) return; (T[o] = T[o] || {})[n] = { sinif: s, ders: h.ders }; }); })); return T; };
+    const OGR_AD = new Map(), ogrAd = a => { const t = String(a || '').replace(/\([^)]*\)/g, ' ').replace(/\s+\d+$/, '').replace(/\s+/g, ' ').trim(); if (!t) return ''; const k = nk(t); if (!OGR_AD.has(k)) OGR_AD.set(k, t); return OGR_AD.get(k); };
+    // bir hücrede birden çok öğretmen tek metin olarak yazılmış olabilir ("Ertan ÖZARSLAN / Cengiz YILDIRIM"): ayrı ayrı sayılır
+    const hucreOgr = h => [].concat((h && h.ogretmen) || []).flatMap(x => String(x || '').split(/\s*[,;\/&+]\s*|\s+-\s+|\s+ve\s+/i)).map(ogrAd).filter(Boolean);
+    const kel = a => String(a || '').split(/\s+/).map(nk).filter(Boolean);
+    const ayniKisi = (a, b) => { if (nk(a) === nk(b)) return true; const x = kel(a), y = kel(b), [k, u] = x.length <= y.length ? [x, y] : [y, x]; return k.length >= 2 && k[0] === u[0] && k.every(t => u.includes(t)); };
+    const ogrGunu = g => { const T = {}; Object.entries(prog).forEach(([s, H]) => Object.entries(H || {}).forEach(([k, h]) => { if (!h) return; const [gg, n] = k.split('-').map(Number); if (gg !== g) return; hucreOgr(h).forEach(o => { (T[o] = T[o] || {})[n] = { sinif: s, ders: h.ders }; }); }));
+      // aynı kişinin farklı yazılmış adları (ikinci ad/soyad eklenmiş) tek kişide birleşir: biri bir saatte derste ise o kişi o saatte dolu sayılır
+      const A = Object.keys(T); A.forEach(a => A.forEach(b => { if (a !== b && ayniKisi(a, b)) Object.entries(T[b]).forEach(([n, v]) => { if (!T[a][n]) T[a][n] = v; }); })); return T; };
     // nöbet listesindeki ad ↔ ders programındaki ad: yazımı farklı olsa da (büyük/küçük harf, ikinci ad, soyad) aynı kişiye bağlanır; eşleşmeyen nöbetçinin programı bilinmediği için önerilmez
-    const TUM = [...new Set(Object.values(prog).flatMap(H => Object.values(H || {}).flatMap(h => [].concat((h && h.ogretmen) || []).map(ogrAd).filter(Boolean))))];
+    const TUM = [...new Set(Object.values(prog).flatMap(H => Object.values(H || {}).flatMap(hucreOgr)))];
     const pr = a => { const t = String(a || '').trim().split(/\s+/).map(nk).filter(Boolean); return { ad: t[0] || '', soy: t[t.length - 1] || '' }; };
     const progAdi = a => { const e = TUM.find(o => nk(o) === nk(a)); if (e) return e; const p = pr(a); if (!p.soy) return null;
       const S = TUM.filter(o => pr(o).soy === p.soy), A = S.filter(o => { const q = pr(o).ad; return q && p.ad && (q.startsWith(p.ad) || p.ad.startsWith(q)); });
