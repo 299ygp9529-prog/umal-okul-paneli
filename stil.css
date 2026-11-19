@@ -2240,3 +2240,4 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ob-tel.tamam { border-color: #5ee08a66; } .ob-tel.tamam > i { color: #5ee08a; background: #5ee08a1a; border-color: #5ee08a66; } .ob-tel .hata { color: #ff8a8a; }
 @media (max-width: 700px) { .ob-tel .birincil, .ob-tel .ikincil { width: 100%; } }
 #obGonder { width: 100%; margin-top: 12px; } .ob-tel .birincil { margin-left: auto; }
+.gb-o small.ob-telacik { color: #5ee08a; }

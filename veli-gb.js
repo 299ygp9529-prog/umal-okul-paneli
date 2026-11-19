@@ -133,7 +133,7 @@
       if (!OB.ogr) return '<div class="soluk">Öğretmenler yükleniyor…</div>';
       const L = OB.ogr.filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr)));
       return `<div class="ob-ara"><input id="obAra" placeholder="Öğretmen ara" value="${esc(OB.ara)}"><button class="cip" id="obHepsi">${L.length && L.every(o => OB.sec.has(o.e)) ? 'Seçimi kaldır' : 'Tümünü seç'}</button></div>
-        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${OB.sec.has(o.e) ? 'secili' : ''}" data-obo="${esc(o.e)}"><span class="msj-av">${esc(o.ad.split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small>${o.tel ? 'telefonu açık' : '&nbsp;'}</small></span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
+        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${OB.sec.has(o.e) ? 'secili' : ''}" data-obo="${esc(o.e)}"><span class="msj-av">${esc(o.ad.split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small class="${o.tel ? 'ob-telacik' : ''}">${o.tel ? 'telefon bildirimi açık' : 'yalnız panelde görür'}</small></span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
     }
     const S = [...new Set((X.D.ogrenciler || []).map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira); if (!OB.sinif || !S.includes(OB.sinif)) OB.sinif = S[0];
     const ros = (X.D.ogrenciler || []).filter(o => o.sinif === OB.sinif).sort((a, b) => (+a.no) - (+b.no));
@@ -142,7 +142,7 @@
   }
   async function gonderObCiz() {
     const E = $('#obIc');
-    if (OB.kim === 'ogretmen' && !OB.ogr) { (async () => { try { const { data } = await X.sb.from('umal_ogretmenler').select('eposta,ad'); OB.ogr = (data || []).filter(o => o.eposta && o.ad).map(o => ({ e: String(o.eposta).toLowerCase(), ad: o.ad })).sort((a, b) => a.ad.localeCompare(b.ad, tr)); } catch (e) { OB.ogr = []; } if (OB.sek === 'gonder') gonderObCiz(); })(); }
+    if (OB.kim === 'ogretmen' && !OB.ogr) { (async () => { try { const [{ data }, tl] = await Promise.all([X.sb.from('umal_ogretmenler').select('eposta,ad'), X.sb.rpc('umal_obil_telefonlar').then(r => new Set(r.data || []), () => new Set())]); OB.ogr = (data || []).filter(o => o.eposta && o.ad).map(o => ({ e: String(o.eposta).toLowerCase(), ad: o.ad, tel: tl.has(String(o.eposta).toLowerCase()) })).sort((a, b) => a.ad.localeCompare(b.ad, tr)); } catch (e) { OB.ogr = []; } if (OB.sek === 'gonder') gonderObCiz(); })(); }
     E.innerHTML = `<div class="kart">
       <div class="gb-bas">Kime</div><div class="gb-tur ob-kim">${Object.entries(KIM_AD).map(([k, a]) => `<button class="gb-t ${OB.kim === k ? 'secili yesil' : ''}" data-obk="${k}">${a}</button>`).join('')}</div>
       <div class="gb-bas" style="margin-top:14px">Konu</div><div class="dya-sec">${SABLON[OB.kim].map(s => `<button class="cip ${OB.sablon === s[0] ? 'secili' : ''}" data-obt="${s[0]}">${s[1]}</button>`).join('')}</div>
