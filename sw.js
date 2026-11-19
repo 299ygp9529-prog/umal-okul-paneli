@@ -6,11 +6,11 @@ self.addEventListener('fetch', () => {});
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { metin: e.data ? e.data.text() : '' }; }
   const acil = !!d.acil;
-  // Kilit ekranı: küçük simge tek renkli Atlas rozeti; sağdaki simge lacivert zeminde Atlas maskotu (simge verilmezse Android adresin baş harfini "U" koyuyor)
+  // Kilit ekranı: küçük simge tek renkli Atlas rozeti; sağ taraf boş: şeffaf simge (hiç simge verilmezse Android adresin baş harfini "U" koyuyor)
   // Uygulama simgesindeki sayı = okunmamış bildirim sayısı (d.sayi); bilinmiyorsa değiştirilmez
   const rozet = typeof d.sayi === 'number' && self.navigator.setAppBadge ? (d.sayi > 0 ? self.navigator.setAppBadge(d.sayi) : self.navigator.clearAppBadge()).catch(() => {}) : Promise.resolve();
   e.waitUntil(Promise.all([rozet, self.registration.showNotification(d.baslik || 'Atlas', {
-    body: d.metin || '', icon: '/bildirim-simge.png', badge: '/rozet-96.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
+    body: d.metin || '', icon: '/bildirim-bos.png', badge: '/rozet-96.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
     requireInteraction: acil, vibrate: acil ? [400, 150, 400, 150, 400, 150, 600] : [200, 100, 200], silent: false, data: { url: d.url || '/' }, lang: 'tr'
   })]));
 });
