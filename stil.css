@@ -2249,6 +2249,7 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .gv-nb { display: grid; gap: 6px; } .gv-nbs { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px solid var(--cizgi); } .gv-nbs:last-child { border-bottom: 0; }
 .gv-nbs b { min-width: 150px; } .gv-nbs span { display: flex; gap: 4px; flex-wrap: wrap; } .gv-nbs i { font-style: normal; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: rgba(94,224,138,.12); color: #5ee08a; border: 1px solid rgba(94,224,138,.4); }
 .gv-nbs small.iyi { color: var(--neon); }
+.gv-nbs i.gv { background: var(--neon); color: #04131f; border-color: var(--neon); box-shadow: 0 0 8px rgba(34,232,255,.45); }
 .gv-cip.nb { padding-right: 18px; }
 .ob-yon { margin: 12px 0 4px; padding: 12px; border-radius: 12px; border: 1px solid rgba(94,224,138,.45); background: rgba(94,224,138,.07); } .ob-yon b { display: block; } .ob-yon span { display: block; color: var(--soluk); font-size: 13px; margin: 3px 0 10px; } .ob-yon .birincil { width: 100%; }
 /* K-725 okundu bilgisi */
