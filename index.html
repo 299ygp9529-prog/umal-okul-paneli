@@ -11,8 +11,42 @@
 <link rel="stylesheet" href="stil.css?v=202611192140">
 <script src="supabase.min.js?v=2.45.4"></script>
 <script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>')</script>
+<style>/* K-755: yenile düğmesinde Atlas açılışı (öğrenci ekranındakiyle aynı) */
+#acilis { display: none; }
+html.atlas-yenile #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 9999; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
+#acilis .atl { width: min(62vw, 250px); height: auto; overflow: visible; }
+#acilis .govde { animation: atlSuz 1.8s ease-in-out infinite; transform-box: view-box; transform-origin: 192px 390px; }
+@keyframes atlSuz { 50% { transform: translateY(-6px); } }
+#acilis .gozler ellipse { transform-box: fill-box; transform-origin: center; animation: atlKirp 3.2s infinite; } @keyframes atlKirp { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+#acilis .mutlu { opacity: 0; } #acilis .el { transform-box: view-box; transform-origin: 262px 280px; transform: translateY(46px) rotate(24deg) scale(.7); opacity: 0; }
+#acilis .rozet { transform-box: fill-box; transform-origin: center; transform: scale(0); opacity: 0; }
+#acilis.tikli .el { animation: atlEl .55s cubic-bezier(.2,1.5,.45,1) forwards; }
+@keyframes atlEl { 0% { opacity: 0; transform: translateY(46px) rotate(24deg) scale(.7); } 35% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) rotate(-4deg) scale(1.08); } }
+#acilis.tikli .bas { transform-box: fill-box; transform-origin: 50% 100%; animation: atlBas .32s ease-out .5s 2 alternate; } @keyframes atlBas { to { transform: translateY(-4px) scaleY(1.06); } }
+#acilis.tikli .gozler { animation: atlSon .15s .35s forwards; } #acilis.tikli .mutlu { animation: atlGel .2s .35s forwards; }
+@keyframes atlSon { to { opacity: 0; } } @keyframes atlGel { to { opacity: 1; } }
+#acilis.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .45s forwards; } @keyframes atlRozet { to { transform: scale(1); opacity: 1; } }
+#acilis.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .7s forwards; } @keyframes atlHalka { to { transform: scale(1.9); opacity: 0; } }
+</style>
+<script>try { if (sessionStorage.getItem('atlasYenile')) { sessionStorage.removeItem('atlasYenile'); document.documentElement.classList.add('atlas-yenile'); } } catch (e) {}</script>
 </head>
 <body>
+<div id="acilis"><svg class="atl" viewBox="0 0 384 390" aria-hidden="true">
+  <defs><linearGradient id="elG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe6f1"/></linearGradient>
+    <radialGradient id="tkG" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8ff8ff"/><stop offset=".45" stop-color="#22e8ff"/><stop offset="1" stop-color="#0aa6c9"/></radialGradient>
+    <filter id="parla" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <g class="govde"><image href="ogrenci/img/atlas-govde.png" width="384" height="390"/>
+    <g class="gozler" filter="url(#parla)" fill="#7ff0ff"><ellipse class="g1" cx="124" cy="130" rx="15" ry="20"/><ellipse class="g2" cx="192" cy="130" rx="15" ry="20"/></g>
+    <g class="mutlu" filter="url(#parla)" fill="none" stroke="#7ff0ff" stroke-width="10" stroke-linecap="round"><path d="M106 136q18-22 36 0"/><path d="M174 136q18-22 36 0"/></g>
+    <g class="el"><g transform="translate(286 236)">
+      <path d="M-30 30 Q-22 10 -4 6 L8 26 Q-8 34 -18 44 Z" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/>
+      <rect x="-12" y="4" width="26" height="15" rx="7" transform="rotate(-30 1 11)" fill="#101a3a"/>
+      <rect x="-6" y="-26" width="58" height="50" rx="18" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/>
+      <path d="M8 -11h34M8 1h36M8 13h32" stroke="#c3cee0" stroke-width="3" stroke-linecap="round"/>
+      <g class="bas"><rect x="0" y="-66" width="22" height="50" rx="11" fill="url(#elG)" stroke="#c9d3e2" stroke-width="2"/><path d="M5.5 -55q5.5-5 11 0" stroke="#eef3fa" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+    </g></g></g>
+  <g class="rozet"><circle class="halka" cx="332" cy="150" r="26" fill="none" stroke="#22e8ff" stroke-width="3"/><circle cx="332" cy="150" r="24" fill="url(#tkG)"/><path d="M320 150.5l8.5 8.5 15.5-17" fill="none" stroke="#04202a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg></div>
 <div id="giris" class="giris gizli"><i class="isik bir"></i><i class="isik iki"></i>
   <aside class="gt" aria-hidden="true">
     <div class="gt-ust"><img class="gt-logo" src="okul-logo.png" alt=""><div class="gt-ad"><span class="gt-ad1">ÜMRANİYE MERKEZ</span><span class="gt-ad2">Anadolu Lisesi</span><span class="gt-yil"><i></i>1965'ten bu yana<i></i></span><span class="gt-slogan">1965 yılından bugüne ve bugünden geleceğe nitelikli eğitimin adresiyiz.</span></div></div>
@@ -108,7 +142,7 @@
 <script src="senaryo/senaryo.js?v=202611160950"></script>
 <script src="bildirim.js?v=202611191405"></script>
 <script src="sohbet-klavye.js?v=202611192105"></script>
-<script src="uygulama.js?v=202611192140"></script>
+<script src="uygulama.js?v=202611192145"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});</script>
 </body>
 </html>

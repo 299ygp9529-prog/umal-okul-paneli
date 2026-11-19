@@ -1185,7 +1185,10 @@
     const bu = surum(document.documentElement.innerHTML); let son = Date.now();
     ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { son = Date.now(); }, { passive: true }));
     const tazeleHemen = async () => { try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {} const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };
-    const yd = document.getElementById('yenileDug'); if (yd) yd.onclick = () => { yd.classList.add('donuyor'); tazeleHemen(); };   // K-744: elle yenile
+    const yd = document.getElementById('yenileDug'); if (yd) yd.onclick = () => { yd.classList.add('donuyor'); try { sessionStorage.setItem('atlasYenile', '1'); } catch (e) {} document.documentElement.classList.add('atlas-yenile'); tazeleHemen(); };   // K-744: elle yenile · K-755: Atlas açılışı
+    if (document.documentElement.classList.contains('atlas-yenile')) { const ac_ = document.getElementById('acilis'), t0 = Date.now();   // K-755: panel hazır olunca Atlas başparmak + tik, sonra kalkar
+      const bit = () => { if (!ac_) return; ac_.classList.add('tikli'); document.documentElement.classList.remove('atlas-yenile'); setTimeout(() => { ac_.classList.add('kalk'); setTimeout(() => ac_.classList.remove('tikli', 'kalk'), 320); }, 1250); };
+      const bak = () => { const u = document.getElementById('uygulama'), hazir = (u && !u.classList.contains('gizli') && (document.querySelector('#icerik > *') || document.body.classList.contains('tm-acik'))) || (u && u.classList.contains('gizli') && Date.now() - t0 > 2500); if (hazir || Date.now() - t0 > 5000) bit(); else setTimeout(bak, 150); }; setTimeout(bak, 300); }
     const denetle = async () => {
       if (document.hidden || !bu) return;
       let h = ''; try { h = await (await fetch('index.html?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }
