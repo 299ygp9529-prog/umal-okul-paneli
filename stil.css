@@ -2351,3 +2351,12 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .giris .alt { margin-top: 2px; } .giris .baslik { margin-top: 4px; }
   .giris .kod-link { font-size: 14px; }
 }
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .gt { background: linear-gradient(90deg, rgba(9,18,32,.95) 0%, rgba(9,18,32,.88) 50%, rgba(9,18,32,.45) 100%), linear-gradient(0deg, rgba(9,18,32,.85) 0%, transparent 30%), url('giris-bina.jpg') 100% 35% / cover no-repeat, #0b1626; }
+  .gt::after { display: none; }
+  .gt-ata q, .gt-ad2 { text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .gt-ata figcaption { flex: 0 1 auto; width: clamp(280px, 26vw, 520px); max-width: none; padding: clamp(16px, 2vh, 26px) clamp(18px, 1.6vw, 30px); border-radius: 16px; background: rgba(9,18,32,.62); border: 1px solid rgba(230,194,122,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .gt-ata cite { white-space: nowrap; }
+}
