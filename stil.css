@@ -2241,3 +2241,5 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 @media (max-width: 700px) { .ob-tel .birincil, .ob-tel .ikincil { width: 100%; } }
 #obGonder { width: 100%; margin-top: 12px; } .ob-tel .birincil { margin-left: auto; }
 .gb-o small.ob-telacik { color: #5ee08a; }
+.gb-bul { display: grid; grid-template-columns: auto 1fr; gap: 8px; margin-bottom: 8px; } .gb-bul .dp-in { width: 100%; min-width: 0; font-size: 16px; } .gb-bul select.dp-in { width: auto; }
+.gb-secli { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } .gb-secli .cip { text-transform: none; }

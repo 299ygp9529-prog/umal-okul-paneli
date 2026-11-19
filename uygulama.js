@@ -554,7 +554,10 @@
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: bugunISO() }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !D_.some(y => y.sinif === x.sinif && y.n === +x.saat)) D_.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', ogretmen: [ben], bas: z.bas, bit: z.bit, gorev: x.asil || true }); }); } catch (e) {}   // K-700i: görevlendirme
     D_.sort((a, b) => a.n - b.n);
     const simdi = D_.find(x => dk(x.bas) - 5 <= t && t < dk(x.bit));   // dersten 5 dk önce de sayılır
-    return { p, gun, dk, t, zil, D_, simdi };
+    const sm = new Set(D_.map(x => x.sinif));   // K-720b: haftanın tüm günlerinde girdiği sınıflar
+    if (ben) Object.entries(p.siniflar || {}).forEach(([sf, S]) => { if (Object.values(S || {}).some(h => h && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben)))) sm.add(sf); });
+    const yakin = simdi || D_.filter(x => dk(x.bas) <= t).pop() || D_.find(x => dk(x.bas) > t) || null;
+    return { p, gun, dk, t, zil, D_, simdi, yakin, siniflarim: [...sm] };
   }
   async function dyAl(sec) {
     clearInterval(yenileZamanlayici);
@@ -1050,7 +1053,7 @@
     return D.ogrenciler;
   }
   async function gbAc(tur, on) {   // K-720: tebrik/uyarı, veli erişimi (ihtiyaç olunca yüklenir)
-    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190705'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    try { if (!window.UmalGB) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'veli-gb.js?v=202611190712'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
       window.UmalGB[tur]({ sb, esc, baslik, D, ogrencileriYukle, fotolariYukle, dyDerslerim, pencereAc, uyar, onayla, hataYaz, raporYazdir, raporBant, rol: D.rol }, on);
     } catch (e) { uyar('Açılamadı: ' + hataYaz(e)); } }
   async function dpNobet() {   // K-700h: okulun nöbet çizelgesi (öğretmen → gün; dönemler arasında gün değişmez)

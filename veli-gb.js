@@ -10,15 +10,18 @@
   const $ = s => document.querySelector(s), esc = s => X.esc(s), bas = s => X.baslik(s);
   const gunYaz = t => new Date(String(t).length <= 10 ? t + 'T12:00:00' : t).toLocaleDateString(tr, { day: 'numeric', month: 'short' });
   // ---------- Tebrik ve uyarı
-  let GB = { sinif: null, tur: 'tebrik', neden: '', not: '', sec: new Set(), sek: 'gonder' };
+  let GB = { sinif: null, tur: 'tebrik', neden: '', not: '', sec: new Set(), sek: 'gonder', ara: '' };
   async function gb(ctx, on) {
-    X = ctx; if (on && on.sinif) { GB.sinif = on.sinif; GB.sek = 'gonder'; GB.sec = new Set(); }
+    X = ctx; GB.ara = '';
     await X.ogrencileriYukle().catch(() => []);
-    if (!GB.sinif) { try { const { simdi, D_ } = await X.dyDerslerim(); const x = simdi || (D_ || [])[0]; if (x) GB.sinif = x.sinif; } catch (e) {} }
+    try { const d = await X.dyDerslerim(); GB.benim = d.siniflarim || []; if (!(on && on.sinif) && d.yakin) GB.sinif = d.yakin.sinif; } catch (e) { GB.benim = []; }   // K-720b: o anki dersin sınıfı seçili gelir
+    if (on && on.sinif) { GB.sinif = on.sinif; GB.sek = 'gonder'; GB.sec = new Set(); }
     ciz();
   }
   function ciz() {
-    const I = $('#icerik'), S = [...new Set((X.D.ogrenciler || []).map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira);
+    const I = $('#icerik'), TUM = [...new Set((X.D.ogrenciler || []).map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira);
+    const BEN = (GB.benim || []).filter(s => TUM.includes(s)).sort(sira), idareMi = ['bas', 'yonetici', 'rehberlik'].includes(X.rol);
+    const S = BEN.length ? (idareMi ? [...BEN, ...TUM.filter(s => !BEN.includes(s))] : BEN) : TUM; GB.benS = BEN;   // öğretmen yalnız girdiği sınıfları görür
     if (!GB.sinif || !S.includes(GB.sinif)) GB.sinif = S[0];
     I.innerHTML = `<div class="ust"><div><h1>Tebrik ve Uyarı</h1><div class="soluk kucuk">Öğrencinin paneline ve veli ekranına gider.</div></div></div>
       <div class="dya-sec gb-sek">${[['gonder', 'Gönder'], ['gecmis', X.rol === 'ogretmen' ? 'Gönderdiklerim' : 'Gönderilenler']].map(([k, a]) => `<button class="cip ${GB.sek === k ? 'secili' : ''}" data-gbs="${k}">${a}</button>`).join('')}</div><div id="gbIc"></div>`;
@@ -30,16 +33,30 @@
     E.innerHTML = `<div class="kart"><div class="gb-tur">${[['tebrik', 'Tebrik'], ['uyari', 'Uyarı']].map(([k, a]) => `<button class="gb-t ${k} ${GB.tur === k ? 'secili' : ''}" data-gbt="${k}">${a}</button>`).join('')}</div>
         <b class="gb-b">Sebep</b><div class="dya-sec">${NEDEN[GB.tur].map(n => `<button class="cip ${GB.neden === n ? 'secili' : ''}" data-gbn="${X.esc(n)}">${esc(n)}</button>`).join('')}</div>
         <input class="dp-in gb-not" id="gbNot" maxlength="300" placeholder="Kısa not (isteğe bağlı)" value="${esc(GB.not)}">
-        <b class="gb-b">Sınıf</b><select class="dp-in" id="gbSinif" style="width:auto">${S.map(s => `<option ${s === GB.sinif ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
-        <b class="gb-b">Öğrenci <small class="soluk">${GB.sec.size ? GB.sec.size + ' seçili' : 'dokunarak seçin'}</small></b>
-        <div class="gb-ogr">${ros.map(o => `<button class="gb-o ${GB.sec.has(o.no) ? 'secili' : ''}" data-gbo="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${X.D.fotolar && X.D.fotolar[o.no] ? `<img alt="" src="${X.D.fotolar[o.no]}">` : esc(bas(o.ad).split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small>${esc(o.no)}</small></span></button>`).join('')}</div>
+        <b class="gb-b">Öğrenci</b><div class="gb-bul"><select class="dp-in" id="gbSinif">${(() => { const B = GB.benS || [], o = s => `<option ${s === GB.sinif ? 'selected' : ''}>${esc(s)}</option>`, D = S.filter(s => !B.includes(s));
+          return B.length && D.length ? `<optgroup label="Derse girdiklerim">${B.map(o).join('')}</optgroup><optgroup label="Diğer sınıflar">${D.map(o).join('')}</optgroup>` : S.map(o).join(''); })()}</select><input class="dp-in" id="gbAra" inputmode="search" autocomplete="off" placeholder="Numara ya da ad yazın" value="${esc(GB.ara)}"></div>
+        <div id="gbIzgara"></div>
         <button class="birincil gb-gonder ${GB.tur}" id="gbGonder" ${GB.sec.size && GB.neden ? '' : 'disabled'}>${GB.sec.size && GB.neden ? `${GB.sec.size} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönder` : 'Sebep ve öğrenci seçin'}</button></div>`;
-    X.fotolariYukle(ros.map(o => o.no)).catch(() => {});
+    izgara(); void ros;
     E.querySelectorAll('[data-gbt]').forEach(b => b.onclick = () => { GB.tur = b.dataset.gbt; GB.neden = ''; gonderCiz(S); });
     E.querySelectorAll('[data-gbn]').forEach(b => b.onclick = () => { GB.neden = b.dataset.gbn; gonderCiz(S); });
     $('#gbNot').oninput = ev => { GB.not = ev.target.value; };
-    $('#gbSinif').onchange = ev => { GB.sinif = ev.target.value; GB.sec = new Set(); gonderCiz(S); };
-    E.querySelectorAll('[data-gbo]').forEach(b => b.onclick = () => { const n = b.dataset.gbo; GB.sec.has(n) ? GB.sec.delete(n) : GB.sec.add(n); gonderCiz(S); });
+    $('#gbSinif').onchange = ev => { GB.sinif = ev.target.value; GB.ara = ''; $('#gbAra').value = ''; izgara(); };
+    const ara = $('#gbAra'); ara.oninput = () => { GB.ara = ara.value; izgara(); };
+    ara.onkeydown = ev => { if (ev.key !== 'Enter') return; ev.preventDefault(); const L = bulunan(); const tam = L.find(o => o.no === GB.ara.trim()) || (L.length === 1 ? L[0] : null);
+      if (tam) { GB.sec.add(tam.no); GB.ara = ''; ara.value = ''; izgara(); } };
+    function bulunan() { const q = GB.ara.trim().toLocaleLowerCase(tr); if (!q) return null; const sade = s => String(s).toLocaleLowerCase(tr);
+      const L = (X.D.ogrenciler || []).filter(o => S.includes(o.sinif)).filter(o => /^\d+$/.test(q) ? String(o.no).startsWith(q) : sade(o.ad).split(/\s+/).some(w => w.startsWith(q)) || sade(o.ad).includes(q));
+      return L.sort((a, b) => (String(a.no) === q ? -1 : 0) - (String(b.no) === q ? -1 : 0) || String(a.no).length - String(b.no).length || (+a.no) - (+b.no)).slice(0, 24); }
+    function izgara() { const Z = $('#gbIzgara'); if (!Z) return; const B = bulunan(), L = B || (X.D.ogrenciler || []).filter(o => o.sinif === GB.sinif).sort((a, b) => (+a.no) - (+b.no));
+      const secili = (X.D.ogrenciler || []).filter(o => GB.sec.has(o.no));
+      Z.innerHTML = `${secili.length ? `<div class="gb-secli">${secili.map(o => `<button class="cip secili" data-gbx="${esc(o.no)}">${esc(o.no)} · ${esc(bas(o.ad).split(' ')[0])} <span aria-hidden="true">×</span></button>`).join('')}</div>` : ''}
+        ${B && !B.length ? '<div class="soluk" style="margin:8px 0">Bu numara ya da adla öğrenci bulunamadı.</div>' : ''}
+        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${GB.sec.has(o.no) ? 'secili' : ''}" data-gbo="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${X.D.fotolar && X.D.fotolar[o.no] ? `<img alt="" src="${X.D.fotolar[o.no]}">` : esc(bas(o.ad).split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small>${esc(o.no)}${B ? ' · ' + esc(o.sinif) : ''}</small></span></button>`).join('')}</div>`;
+      X.fotolariYukle(L.map(o => o.no)).catch(() => {});
+      Z.querySelectorAll('[data-gbo]').forEach(b => b.onclick = () => { const n = b.dataset.gbo; GB.sec.has(n) ? GB.sec.delete(n) : GB.sec.add(n); if (B) { GB.ara = ''; $('#gbAra').value = ''; } izgara(); });
+      Z.querySelectorAll('[data-gbx]').forEach(b => b.onclick = () => { GB.sec.delete(b.dataset.gbx); izgara(); });
+      const d = $('#gbGonder'); if (d) { const ok = GB.sec.size && GB.neden; d.disabled = !ok; d.textContent = ok ? `${GB.sec.size} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönder` : GB.sec.size ? 'Sebep seçin' : 'Sebep ve öğrenci seçin'; } }
     $('#gbGonder').onclick = async () => { const b = $('#gbGonder'); b.disabled = true;
       const { data, error } = await X.sb.rpc('umal_gb_yaz', { p_nolar: [...GB.sec], p_tur: GB.tur, p_neden: GB.neden, p_aciklama: GB.not || null });
       if (error || !data || !data.ok) { b.disabled = false; X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; }
