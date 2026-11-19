@@ -414,7 +414,8 @@
 
 
   // K-716cw: Mesajlar — sınıf grubu ve öğretmenle birebir. Şikâyet: grup → okulun kurucusu, birebir → rehberlik.
-  const MS = { L: [], O: [], ben: '', acik: null, M: [], yazabilir: true, foto: {}, info: null, mesaj: '', zam: null };
+  const MS = { L: [], O: [], ben: '', acik: null, M: [], yazabilir: true, foto: {}, info: null, mesaj: '', zam: null, sk: null };
+  try { MS.sk = window.UmalSohbetKlavye ? window.UmalSohbetKlavye({ ekran: '.ms-ekran', akis: '#msAkis', gonder: '#msGonder', cubuk: '#ogrAlt', etkin: () => !!MS.acik && !document.getElementById('s-msj').classList.contains('gizli') }) : null; } catch (e) {}   // K-749: klavye ve boy ortak modülde
   const MS_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h12v8.5H8.5L4 17.5z" fill="currentColor" fill-opacity=".2"/><path d="M18.5 9H20v10.5l-3.5-3h-6"/></svg>';
   async function msYukle() { try { const { data } = await sb.rpc('umal_ogr_sohbetler', { p_no: S.no, p_kod: S.kod }); if (data && data.ok) { MS.L = data.liste || []; MS.O = data.ogretmenler || []; MS.ben = data.ben; return true; } } catch (e) {} return false; }
   const msYeni = () => MS.L.reduce((a, x) => a + (+x.yeni || 0), 0);
@@ -436,26 +437,42 @@
     const eksik = [...new Set(MS.M.filter(m => m.kim.startsWith('o:')).map(m => m.kim.slice(2)))].filter(n => !(n in MS.foto));
     if (eksik.length) { eksik.forEach(n => { MS.foto[n] = MS.foto[n] || ''; }); try { const { data: f } = await sb.rpc('umal_sohbet_fotolar', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_nolar: eksik }); if (f && f.ok) Object.assign(MS.foto, f.foto || {}); } catch (e) {} }
     if (!sessiz || eski !== JSON.stringify(MS.M) || eksik.length) msCiz(); }
-  function msCiz() { const el = $('#msIc'), x = MS.L.find(z => z.id === MS.acik), I = MS.info || {}; if (!el || !x) return; const grup = x.tur === 'grup', taslak = $('#msYaz') ? $('#msYaz').value : '';
+  function msCiz() { const el = $('#msIc'), x = MS.L.find(z => z.id === MS.acik); if (!el || !x) return; const grup = x.tur === 'grup', SK = MS.sk;
     $('#msBaslik').textContent = grup ? (x.ogretmen ? baslik(x.ogretmen) + ' · ' + x.sinif + ' grubu' : x.sinif + ' sınıf grubu') : baslik(x.ogretmen || 'Öğretmen');   // K-746: aynı sınıfta birden çok öğretmenin grubu ayırt edilir
-    let gun = ''; const sat = m => { const ben = m.kim === MS.ben, g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }), gs = g !== gun ? (gun = g, `<div class="ms-gun">${esc(g)}</div>`) : '';
-      return gs + `<div class="ms-m ${ben ? 'ben' : ''}">${!ben ? msAv(m.kim, m.ad) : ''}<div class="b">${!ben && grup ? `<small class="${m.kim.startsWith('t:') ? 'ogt' : ''}">${esc(baslik(m.ad || ''))}${m.kim.startsWith('t:') ? ' · öğretmen' : ''}</small>` : ''}<span class="t">${esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}</em>${!ben && grup ? `<button class="ms-sk" data-mssk="${m.id}" aria-label="Şikâyet et">Şikâyet et</button>` : ''}</div></div>`; };
-    el.innerHTML = `<div class="ms-ekran">${grup ? '' : '<div class="ms-ust"><button class="ms-skb" id="msSkBir">Şikâyet et</button></div>'}
-      ${grup ? '' : '<div class="ms-kural">Bu konuşma okulun mesajlaşma kurallarına tabidir. Mesajlar silinmez; bir sorun olursa “Şikâyet et”e dokun, konuşma rehberlik servisine gider. Mesajlar 08.00–20.00 arası iletilir.</div>'}
-      <div class="ms-akis" id="msAkis">${MS.M.map(sat).join('') || '<div class="soluk kucuk" style="text-align:center;margin-top:24px">Henüz mesaj yok.</div>'}</div>
-      ${MS.mesaj ? `<div class="bk-mesaj">${esc(MS.mesaj)}</div>` : ''}
-      ${MS.yazabilir ? `<div class="ms-alt"><textarea id="msYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msGonder" aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div>` : '<div class="ms-kapali">Bu grupta şu an yalnız öğretmen yazabiliyor.</div>'}</div>`;
-    const ak = $('#msAkis'); ak.scrollTop = ak.scrollHeight;
-    const y = $('#msYaz'); if (y) { y.oninput = () => { y.style.height = 'auto'; y.style.height = Math.min(130, y.scrollHeight) + 'px'; };
-      $('#msGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; $('#msGonder').disabled = true; let d = null;
-        try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_yaz', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_metin: t })); } catch (e) {}
-        if (d && d.ok) { y.value = ''; MS.mesaj = d.bekliyor ? 'Mesajın yarın 08.00\'de öğretmenine iletilecek.' : ''; await msOku(); } else { MS.mesaj = (d && d.hata) || 'Gönderilemedi; internetini kontrol et.'; msCiz(); } }; }
+    const mesajHtml = m => { const ben = m.kim === MS.ben;
+      return `<div class="ms-m ${ben ? 'ben' : ''}">${!ben ? msAv(m.kim, m.ad) : ''}<div class="b">${!ben && grup ? `<small class="${m.kim.startsWith('t:') ? 'ogt' : ''}">${esc(baslik(m.ad || ''))}${m.kim.startsWith('t:') ? ' · öğretmen' : ''}</small>` : ''}<span class="t">${esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}</em>${!ben && grup ? `<button class="ms-sk" data-mssk="${m.id}" aria-label="Şikâyet et">Şikâyet et</button>` : ''}</div></div>`; };
+    const parcalar = () => { let gun = ''; const P = [];   // K-749: her mesaj kendi anahtarıyla; yalnız değişen satır yeniden yazılır (yazı kutusu ve klavye yerinde kalır)
+      MS.M.forEach(m => { const g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }); if (g !== gun) { gun = g; P.push({ k: 'g:' + g, h: `<div class="ms-gun">${esc(g)}</div>` }); } P.push({ k: 'm:' + m.id, h: mesajHtml(m) }); });
+      if (!P.length) P.push({ k: 'bos', h: '<div class="soluk kucuk ms-bos" style="text-align:center;margin-top:24px">Henüz mesaj yok.</div>' }); return P; };
+    const akisCiz = ak => { if (SK) { SK.akisYaz(ak, parcalar()); return; } ak.innerHTML = parcalar().map(p => p.h).join(''); ak.scrollTop = ak.scrollHeight; };
+    const durumCiz = () => { const dm = $('#msDurum'); if (dm) { dm.textContent = MS.mesaj || ''; dm.hidden = !MS.mesaj; } };
     const sik = (mesaj, hedefYazi) => { MS.sik = { mesaj, hedefYazi }; msCiz(); };
-    if (MS.sik) { const k = document.createElement('div'); k.className = 'ms-skk'; k.innerHTML = `<b>Şikâyet et</b><div class="soluk kucuk">${esc(MS.sik.hedefYazi)}</div><textarea id="msSkA" rows="3" maxlength="500" placeholder="Neden? (isteğe bağlı)"></textarea><div class="ms-skd"><button class="ikincil" id="msSkV">Vazgeç</button><button class="birincil" id="msSkG">Gönder</button></div>`; el.querySelector('.ms-ekran').appendChild(k);
+    const sikCiz = () => { const e = el.querySelector('.ms-ekran'), var_ = e && e.querySelector('.ms-skk'); if (!MS.sik) { if (var_) var_.remove(); return; } if (var_ || !e) return;
+      const k = document.createElement('div'); k.className = 'ms-skk'; k.innerHTML = `<b>Şikâyet et</b><div class="soluk kucuk">${esc(MS.sik.hedefYazi)}</div><textarea id="msSkA" rows="3" maxlength="500" placeholder="Neden? (isteğe bağlı)"></textarea><div class="ms-skd"><button class="ikincil" id="msSkV">Vazgeç</button><button class="birincil" id="msSkG">Gönder</button></div>`; e.appendChild(k);
       $('#msSkV').onclick = () => { MS.sik = null; msCiz(); };
       $('#msSkG').onclick = async () => { const a = $('#msSkA').value; let d = null; try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_sikayet', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_mesaj: MS.sik.mesaj, p_aciklama: a })); } catch (e) {}
-        MS.sik = null; MS.mesaj = d && d.ok ? (d.hedef === 'rehberlik' ? 'Şikâyetin rehberlik servisine iletildi.' : 'Şikâyetin okul yönetimine iletildi.') : 'Şikâyet gönderilemedi.'; msCiz(); }; }
-    el.querySelectorAll('[data-mssk]').forEach(b => b.onclick = () => sik(+b.dataset.mssk, 'Bu mesaj okulun yönetimine iletilecek.'));
+        MS.sik = null; MS.mesaj = d && d.ok ? (d.hedef === 'rehberlik' ? 'Şikâyetin rehberlik servisine iletildi.' : 'Şikâyetin okul yönetimine iletildi.') : 'Şikâyet gönderilemedi.'; msCiz(); }; };
+    const var_ = el.querySelector('.ms-ekran'); if (var_ && var_.dataset.id === String(x.id) && var_.dataset.yz === String(!!MS.yazabilir)) { akisCiz($('#msAkis')); durumCiz(); sikCiz(); return; }   // açık sohbette yalnız liste yenilenir
+    const taslak = $('#msYaz') ? $('#msYaz').value : '';
+    el.innerHTML = `<div class="ms-ekran" data-id="${esc(String(x.id))}" data-yz="${!!MS.yazabilir}">${grup ? '' : '<div class="ms-ust"><button class="ms-skb" id="msSkBir">Şikâyet et</button></div>'}
+      ${grup ? '' : '<div class="ms-kural">Bu konuşma okulun mesajlaşma kurallarına tabidir. Mesajlar silinmez; bir sorun olursa “Şikâyet et”e dokun, konuşma rehberlik servisine gider. Mesajlar 08.00–20.00 arası iletilir.</div>'}
+      <div class="ms-akis" id="msAkis"></div>
+      <div class="bk-mesaj" id="msDurum" hidden></div>
+      ${MS.yazabilir ? `<div class="ms-alt"><textarea id="msYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msGonder" data-klavye-kalsin aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div>` : '<div class="ms-kapali">Bu grupta şu an yalnız öğretmen yazabiliyor.</div>'}</div>`;
+    const ak = $('#msAkis'); akisCiz(ak); ak.scrollTop = ak.scrollHeight; durumCiz();
+    if (SK) SK.olc();   // boy ilk çizimde doğru gelir
+    ak.onclick = ev => { const b = ev.target.closest('[data-mssk]'); if (b) sik(+b.dataset.mssk, 'Bu mesaj okulun yönetimine iletilecek.'); };   // tek dinleyici: satırlar yeniden yazılsa da çalışır
+    const y = $('#msYaz'); if (y) { y.oninput = () => { if (SK) SK.buyut(y, 130); else { y.style.height = 'auto'; y.style.height = Math.min(130, y.scrollHeight) + 'px'; } };
+      $('#msGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; const b = $('#msGonder'), odakta = document.activeElement === y; b.disabled = true; let d = null;
+        const gec = document.createElement('div'); gec.className = 'ms-m ben ms-gec'; gec.innerHTML = `<div class="b"><span class="t">${esc(t)}</span><em>gönderiliyor…</em></div>`;
+        const bos = ak.querySelector('.ms-bos'); if (bos) bos.remove(); ak.appendChild(gec); y.value = ''; y.style.height = ''; ak.scrollTop = ak.scrollHeight;   // mesaj hemen görünür
+        if (odakta && document.activeElement !== y && SK) SK.odakla(y);
+        try { ({ data: d } = await sb.rpc('umal_ogr_sohbet_yaz', { p_no: S.no, p_kod: S.kod, p_sohbet: MS.acik, p_metin: t })); } catch (e) {}
+        b.disabled = false;
+        if (d && d.ok) { MS.mesaj = d.bekliyor ? 'Mesajın yarın 08.00\'de öğretmenine iletilecek.' : ''; await msOku();
+          if (gec.isConnected) { gec.classList.remove('ms-gec'); const em = gec.querySelector('em'); if (em) em.textContent = new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); } }
+        else { gec.remove(); if (!y.value) y.value = t; MS.mesaj = (d && d.hata) || 'Gönderilemedi; internetini kontrol et.'; msCiz(); } }; }
+    sikCiz();
     if ($('#msSkBir')) $('#msSkBir').onclick = () => sik(null, 'Bu konuşma rehberlik servisine iletilecek. Rehberlik yalnız bu konuşmayı görür.');
   }
   // K-716cv: Öneri ve sorun bildir — hata, öneri, yanlış bilgi; yanıtlar ve isimsiz öneri panosu (yalnız Kurucu okur)

@@ -426,7 +426,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .ms-m .b em { display: block; text-align: right; font-style: normal; font-size: 10.5px; color: #8fa6c4; margin-top: 3px; } .ms-m.ben { align-self: flex-end; flex-direction: row-reverse; } .ms-m.ben .b { border-radius: 16px 16px 4px 16px; background: linear-gradient(150deg, #1d6f8a, #155066); } .ms-m.ben .b em { color: #bfefff; }
 .ms-sk { display: block; margin-top: 2px; border: 0; background: transparent; color: #ff8a8a99; font: inherit; font-size: 11px; padding: 0; }
 .ms-alt { display: flex; gap: 8px; padding-top: 8px; align-items: flex-end; } .ms-alt textarea { flex: 1; resize: none; border-radius: 22px; min-height: 46px; max-height: 130px; padding: 12px 15px; font-size: 16px; box-sizing: border-box; }
-.ms-alt .birincil { width: 48px; height: 48px; border-radius: 50%; padding: 0; display: grid; place-items: center; flex: none; } .ms-kapali { text-align: center; color: #8fa6c4; font-size: 13px; padding: 12px; }
+.ms-alt .birincil { width: 48px; height: 48px; border-radius: 50%; padding: 0; display: grid; place-items: center; flex: none; } .ms-gec { opacity: .7; } #msDurum[hidden] { display: none !important; } .ms-alt textarea { min-width: 0; } .ms-kapali { text-align: center; color: #8fa6c4; font-size: 13px; padding: 12px; }
 .giris-sekme { grid-template-columns: repeat(3, 1fr) !important; }
 .giris-sekme .gs-kayan { width: calc((100% - 10px) / 3) !important; transform: none; }
 .giris-sekme[data-p="1"] .gs-kayan { transform: translateX(100%) !important; } .giris-sekme[data-p="2"] .gs-kayan { transform: translateX(200%) !important; } .giris-sekme[data-p="0"] .gs-kayan { transform: none !important; }
@@ -468,6 +468,18 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   body.ogr-alt.klavye-acik #ogrAlt { display: none !important; }
   body.ogr-alt input, body.ogr-alt textarea, body.ogr-alt select { font-size: 16px !important; }
   body.ogr-alt button, body.ogr-alt a { touch-action: manipulation; }
+  /* K-749: telefonda sohbet — boy ve klavye ../sohbet-klavye.js'te. Kutu alt sekmelerin üstünde biter; klavye açılınca klavyenin hemen üstünde durur; sayfa kaymaz */
+  body.ogr-alt .ms-ekran { height: calc(100dvh - 120px - 96px - env(safe-area-inset-bottom)); min-height: 0; }
+  body.sohbet-acik main { padding-bottom: 0 !important; }
+  body.sohbet-acik { overscroll-behavior: none; }
+  body.ogr-alt .ms-akis { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  body.ogr-alt .ms-akis > :first-child { margin-top: auto; }   /* mesajlar alttan dizilir: son mesaj yazı kutusunun hemen üstünde */
+  body.ogr-alt.klavye-acik .ms-kural { display: none; }
+  /* alt sekmelere taşınan kutular ana sayfada yinelenmez */
+  body.ogr-alt #kutular > [data-git="s-sinav"], body.ogr-alt #kutular > [data-git="s-program"], body.ogr-alt #kutular > [data-git="msj"] { display: none !important; }
+  body.ogr-alt #kutular { grid-auto-flow: dense; }   /* kalkan kutuların yeri boş kalmaz */
+  /* çalışma planı özeti dar ekranda alt satıra iner (sağa taşmaz) */
+  .pl-ozet { flex-wrap: wrap; gap: 8px 12px; } .pl-ozet .pl-bar { flex: 1 1 100%; } .pl-sayi { white-space: normal; flex: 1 1 100%; min-width: 0; line-height: 1.6; } .pl-seri { margin-left: 6px; }
 }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
@@ -609,11 +621,12 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 
   <section id="bitti" class="gizli kart tesekkur"><div class="tik">✓</div><h1>Teşekkürler</h1><div class="soluk" id="bittiYazi">Cevabın kaydedildi.</div><button class="birincil" id="bittiGeri">Listeye dön</button></div>
 </main>
-<script src="../bicim.js?v=202611190930"></script>
+<script src="../bicim.js?v=202611192105"></script>
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
-<script src="ogrenci.js?v=202611192020"></script>
+<script src="../sohbet-klavye.js?v=202611192105"></script>
+<script src="ogrenci.js?v=202611192105"></script>
 </body>
 </html>

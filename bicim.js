@@ -168,6 +168,6 @@
   const yaziMi = e => e && (e.tagName === 'TEXTAREA' || e.isContentEditable || (e.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|range|color|file)$/i.test(e.type || '')));
   let bas = null;
   document.addEventListener('touchstart', ev => { const a = document.activeElement; bas = yaziMi(a) ? { x: ev.touches[0].clientY, a } : null;
-    if (!bas) return; const t = ev.target; if (t === a || (t.closest && t.closest('input, textarea, select, [contenteditable="true"], label'))) { bas = null; return; } }, { passive: true, capture: true });
+    if (!bas) return; const t = ev.target; if (t === a || (t.closest && t.closest('input, textarea, select, [contenteditable="true"], label, [data-klavye-kalsin]'))) { bas = null; return; } /* data-klavye-kalsin: sohbette "gönder" düğmesi klavyeyi kapatmaz */ }, { passive: true, capture: true });
   document.addEventListener('touchend', ev => { if (!bas) return; const a = bas.a; bas = null; if (document.activeElement === a) a.blur(); }, { passive: true, capture: true });
 })();

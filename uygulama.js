@@ -408,7 +408,7 @@
   }
 
   // K-716cw: Mesajlar — sınıf grupları ve birebir (deneme: yalnız Kurucu). İdare göremez; şikâyet: grup → Kurucu, birebir → rehberlik.
-  const MSJ = { L: [], ben: '', acik: null, M: [], yazabilir: true, engelli: [], uye: 0, sik: 0, zam: null };
+  const MSJ = { L: [], ben: '', acik: null, M: [], yazabilir: true, engelli: [], uye: 0, sik: 0, zam: null, sk: null };
   const MSJ_SINIF = ['9-D', '12-A', '11-E'];   // Kurucunun sınıfları (deneme)
   const msjAvatar = (no, ad) => `<span class="msj-av" data-foto="${esc(no)}">${D.fotolar && D.fotolar[no] ? `<img alt="" src="${D.fotolar[no]}">` : esc(String(baslik(ad || '?')).split(' ').map(z => z[0]).slice(0, 3).join(''))}</span>`;
   const msjSaat = t => { const d = new Date(t), b = new Date(); return d.toDateString() === b.toDateString() ? d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(tr, { day: 'numeric', month: 'short' }); };
@@ -459,36 +459,38 @@
     if (!sessiz || eski !== JSON.stringify(MSJ.M)) msjSohbetCiz(); }
   async function msjAc(id) { MSJ.acik = id; MSJ.M = []; msjSohbetCiz(); await msjYukle(); msjRozet(); }
   function msjSohbetCiz() {
-    const x = MSJ.L.find(z => z.id === MSJ.acik); if (!x) return msjListeCiz(); const grup = x.tur === 'grup', I = $('#icerik'), taslak = $('#msjYaz') ? $('#msjYaz').value : '';
-    let gun = '';
-    const satir = m => { const ben = m.kim === MSJ.ben, no = m.kim.startsWith('o:') ? m.kim.slice(2) : '', g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }), gs = g !== gun ? (gun = g, `<div class="msj-gun">${esc(g)}</div>`) : '';
-      return gs + `<div class="msj ${ben ? 'ben' : ''} ${m.gizli ? 'gizli' : ''}">${!ben ? msjAvatar(no, m.ad) : ''}<div class="b">${!ben && grup ? `<small>${esc(baslik(m.ad || ''))}${MSJ.engelli.includes(no) ? ' · susturuldu' : ''}</small>` : ''}<span class="t">${m.gizli ? '<i>Bu mesaj gizlendi</i> ' + esc(m.metin || '') : esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}${ben && grup && m.okuyan != null ? ` · ${m.okuyan} okudu` : ''}</em>
+    const x = MSJ.L.find(z => z.id === MSJ.acik); if (!x) return msjListeCiz(); const grup = x.tur === 'grup', I = $('#icerik'), taslak = $('#msjYaz') ? $('#msjYaz').value : '', SK = MSJ.sk;
+    const mesajHtml = m => { const ben = m.kim === MSJ.ben, no = m.kim.startsWith('o:') ? m.kim.slice(2) : '';
+      return `<div class="msj ${ben ? 'ben' : ''} ${m.gizli ? 'gizli' : ''}">${!ben ? msjAvatar(no, m.ad) : ''}<div class="b">${!ben && grup ? `<small>${esc(baslik(m.ad || ''))}${MSJ.engelli.includes(no) ? ' · susturuldu' : ''}</small>` : ''}<span class="t">${m.gizli ? '<i>Bu mesaj gizlendi</i> ' + esc(m.metin || '') : esc(m.metin || '')}</span><em>${esc(new Date(m.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}${m.bekliyor ? ' · 08.00\'de iletilecek' : ''}${ben && grup && m.okuyan != null ? ` · ${m.okuyan} okudu` : ''}</em>
         ${grup && !ben ? `<span class="msj-ara"><button class="bag" data-msjgiz="${m.id}" data-v="${m.gizli ? 0 : 1}">${m.gizli ? 'Göster' : 'Gizle'}</button>${no ? `<button class="bag" data-msjeng="${esc(no)}" data-v="${MSJ.engelli.includes(no) ? 0 : 1}">${MSJ.engelli.includes(no) ? 'Yazmasına izin ver' : 'Sustur'}</button>` : ''}</span>` : ''}</div></div>`; };
-    const akisHtml = () => MSJ.M.map(satir).join('') || '<div class="soluk kucuk" style="text-align:center;margin-top:20px">Henüz mesaj yok. İlk mesajı siz yazın.</div>';
-    const akisBagla = () => {
-      I.querySelectorAll('[data-msjgiz]').forEach(b => b.onclick = async () => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { gizle: +b.dataset.msjgiz, gizli: b.dataset.v === '1' } }); msjYukle(); });
-      I.querySelectorAll('[data-msjeng]').forEach(b => b.onclick = async () => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { engel: b.dataset.msjeng, engelli: b.dataset.v === '1' } }); msjYukle(); }); };
+    const parcalar = () => { let gun = ''; const P = [];   // K-749: her mesaj kendi anahtarıyla; yalnız değişen satır yeniden yazılır
+      MSJ.M.forEach(m => { const g = new Date(m.zaman).toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }); if (g !== gun) { gun = g; P.push({ k: 'g:' + g, h: `<div class="msj-gun">${esc(g)}</div>` }); } P.push({ k: 'm:' + m.id, h: mesajHtml(m) }); });
+      if (!P.length) P.push({ k: 'bos', h: '<div class="soluk kucuk msj-bos" style="text-align:center;margin-top:20px">Henüz mesaj yok. İlk mesajı siz yazın.</div>' }); return P; };
+    const akisCiz = ak => { if (SK) { SK.akisYaz(ak, parcalar()); return; } const dip = ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80; ak.innerHTML = parcalar().map(p => p.h).join(''); if (dip) ak.scrollTop = ak.scrollHeight; };
     const var_ = I.querySelector('.msj-ekran'); if (var_ && var_.dataset.id === String(x.id)) {   // K-745c: açık sohbette yalnız mesaj listesi yenilenir (yazı kutusu, klavye ve odak yerinde kalır)
-      const ak0 = $('#msjAkis'), dip = ak0.scrollHeight - ak0.scrollTop - ak0.clientHeight < 80; ak0.innerHTML = akisHtml(); if (dip) ak0.scrollTop = ak0.scrollHeight;
-      const sm = var_.querySelector('.msj-ust small'); if (sm && grup) sm.textContent = MSJ.uye + ' öğrenci'; akisBagla(); return; }
+      akisCiz($('#msjAkis')); const sm = var_.querySelector('.msj-ust small'); if (sm && grup) sm.textContent = MSJ.uye + ' öğrenci'; return; }
     I.innerHTML = `<div class="msj-ekran" data-id="${esc(String(x.id))}"><div class="msj-ust"><button class="ikincil kucuk" id="msjGeri">‹ Geri</button>${grup ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<div><b>${grup ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || ''))}</b><small>${grup ? MSJ.uye + ' öğrenci' : esc(x.ogr_sinif || '') + ' · birebir · 08.00–20.00'}</small></div>
         ${grup ? `<label class="msj-tik"><input type="checkbox" id="msjYazabilir" ${MSJ.yazabilir ? 'checked' : ''}> Öğrenciler yazabilir</label>` : '<button class="bag" id="msjSik" style="margin-left:auto;color:#ff8a8a">Rehberliğe ilet</button>'}</div>
-      <div class="msj-akis" id="msjAkis">${akisHtml()}</div>
-      <div class="msj-alt"><textarea id="msjYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msjGonder" aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div></div>`;
-    const ak = $('#msjAkis'); ak.scrollTop = ak.scrollHeight;
+      <div class="msj-akis" id="msjAkis"></div>
+      <div class="msj-alt"><textarea id="msjYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msjGonder" data-klavye-kalsin aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div></div>`;
+    const ak = $('#msjAkis'); akisCiz(ak); ak.scrollTop = ak.scrollHeight;
+    if (SK) SK.olc();   // boy ilk çizimde doğru gelir (sonradan sıçramaz)
     fotolariYukle([...new Set(MSJ.M.filter(m => m.kim.startsWith('o:')).map(m => m.kim.slice(2)).concat(x.ogrenci ? [x.ogrenci] : []))]);
     $('#msjGeri').onclick = () => { MSJ.acik = null; msjRozet().then(msjListeCiz); };
-    const y = $('#msjYaz'); y.oninput = () => { y.style.height = 'auto'; y.style.height = Math.min(140, y.scrollHeight) + 'px'; };
+    const y = $('#msjYaz'); y.oninput = () => { if (SK) SK.buyut(y, 140); else { y.style.height = 'auto'; y.style.height = Math.min(140, y.scrollHeight) + 'px'; } };
     y.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !telefon()) { e.preventDefault(); $('#msjGonder').click(); } };
     $('#msjGonder').addEventListener('pointerdown', e => e.preventDefault());   // dokununca yazı kutusu odağı kaybetmez, klavye kapanıp açılmaz
-    $('#msjGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; const b = $('#msjGonder'); b.disabled = true;
-      const ak = $('#msjAkis'), gec = document.createElement('div'); gec.className = 'msj ben msj-gec'; gec.innerHTML = `<div class="b"><span class="t">${esc(t)}</span><em>gönderiliyor…</em></div>`;
-      const bos = ak.querySelector('.soluk'); if (bos) bos.remove(); ak.appendChild(gec); ak.scrollTop = ak.scrollHeight; y.value = ''; y.style.height = '';   // mesaj hemen görünür
+    $('#msjGonder').onclick = async () => { const t = y.value.trim(); if (!t) return; const b = $('#msjGonder'), odakta = document.activeElement === y; b.disabled = true;
+      const gec = document.createElement('div'); gec.className = 'msj ben msj-gec'; gec.innerHTML = `<div class="b"><span class="t">${esc(t)}</span><em>gönderiliyor…</em></div>`;
+      const bos = ak.querySelector('.msj-bos'); if (bos) bos.remove(); ak.appendChild(gec); y.value = ''; y.style.height = ''; ak.scrollTop = ak.scrollHeight;   // mesaj hemen görünür
+      if (odakta && document.activeElement !== y && SK) SK.odakla(y);
       const { data, error } = await sb.rpc('umal_sohbet_yaz', { p_sohbet: x.id, p_metin: t }); b.disabled = false;
-      if (error || !data || !data.ok) { gec.remove(); y.value = t; uyar('Gönderilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
-      if (data.bekliyor) uyar('Mesajınız yarın 08.00\'de iletilecek (birebir mesajlar 08.00–20.00 arası).'); await msjYukle(true); };
+      if (error || !data || !data.ok) { gec.remove(); if (!y.value) y.value = t; uyar('Gönderilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+      if (data.bekliyor) uyar('Mesajınız yarın 08.00\'de iletilecek (birebir mesajlar 08.00–20.00 arası).'); await msjYukle(true); if (gec.isConnected) { gec.classList.remove('msj-gec'); const em = gec.querySelector('em'); if (em) em.textContent = new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); } };   // liste yenilenemediyse balon kalır, sonraki yenilemede yerine gerçeği gelir
     if ($('#msjYazabilir')) $('#msjYazabilir').onchange = async e => { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { yazabilir: e.target.checked } }); MSJ.yazabilir = e.target.checked; x.yazabilir = e.target.checked; };
-    akisBagla();
+    ak.onclick = async ev => { const g = ev.target.closest('[data-msjgiz]'), s = ev.target.closest('[data-msjeng]');   // tek dinleyici: satırlar yeniden yazılsa da çalışır
+      if (g) { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { gizle: +g.dataset.msjgiz, gizli: g.dataset.v === '1' } }); msjYukle(); }
+      else if (s) { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { engel: s.dataset.msjeng, engelli: s.dataset.v === '1' } }); msjYukle(); } };
     if ($('#msjSik')) $('#msjSik').onclick = async () => { if (!await onayla('Bu konuşma rehberlik servisine iletilsin mi? Rehberlik yalnız bu konuşmayı görür.')) return; const { data } = await sb.rpc('umal_sohbet_sikayet_et', { p_sohbet: x.id, p_aciklama: 'Öğretmen iletti' }); if (data && data.ok) uyar('Konuşma rehberlik servisine iletildi.'); };
   }
   // K-690: Ders yoklaması — tahtada başkan işaretler, öğretmen onaylar; idare günün devamsızlığını, öğretmen kendi derslerini görür
@@ -643,26 +645,15 @@
     const n = document.createElement('nav'); n.id = 'ogtAlt'; n.setAttribute('aria-label', 'Öğretmen menüsü');
     n.innerHTML = T.map(([id, ad, s]) => `<button data-oa="${id}">${s}<span>${ad}</span>${id === 'mesajlar' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n); document.body.classList.add('ogt-alt');
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; const id = b.dataset.oa; if (id === 'menu') { tumuAc(); } else { try { tumuKapat(); } catch (e) {} ac(id); } guncelle(); };
-    const boyut = () => {   // sohbet ekranı: başlıktan alt çubuğa kadar; klavye açılınca boy aynı kalır
-      const e = document.querySelector('.msj-ekran'); if (!e || window.innerWidth > 760) return;
-      const vv = window.visualViewport, ak = e.querySelector('.msj-akis'), dipte = !ak || ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80, kl = document.body.classList.contains('klavye-acik') && vv && window.innerHeight - vv.height > 120;
-      if (e.classList.contains('msj-sabit')) { e.classList.remove('msj-sabit'); e.style.removeProperty('top'); delete e.dataset.sabit; }
-      if (kl) {   // klavye açık: kutu görünen alan kadar olur, sayfa bir kez kutunun başına kaydırılır (19.16'daki iyi çalışan düzen)
-        const h = Math.round(vv.height) - 12; if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; }
-        clearTimeout(boyut.s); boyut.s = setTimeout(() => { const y = Math.max(0, Math.round(e.getBoundingClientRect().top + window.scrollY - 6)); if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); }, 220); return; }
-      const alt = n.getBoundingClientRect().top; if (!alt) return;   // klavye açıkken kutu sayfanın dibine uzanır; iPhone yazı kutusunu klavyenin hemen üstüne getirir
-      const h = Math.max(240, Math.round(alt - (e.getBoundingClientRect().top + window.scrollY) - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; } };
-    let bz = 0; const boyutSonra = () => { cancelAnimationFrame(bz); bz = requestAnimationFrame(boyut); };   // tek karede bir kez
-    window.addEventListener('resize', boyutSonra); if (window.visualViewport) { visualViewport.addEventListener('resize', boyutSonra); }
+    // K-749: sohbet ekranının boyu ve klavye davranışı ortak modülde (sohbet-klavye.js): sayfa kaymaz, kutu klavyenin üstünde durur
+    const SK = MSJ.sk = window.UmalSohbetKlavye ? window.UmalSohbetKlavye({ ekran: '.msj-ekran', akis: '#msjAkis', gonder: '#msjGonder', cubuk: '#ogtAlt', darEsik: 300, etkin: () => D.bolum === 'mesajlar' && !document.body.classList.contains('tm-acik') }) : null;
+    const boyut = () => { if (SK) SK.olc(); };
     const guncelle = () => { boyut(); const sk = D.bolum === 'mesajlar' && !document.body.classList.contains('tm-acik') && !!document.querySelector('.msj-ekran'); if (sk !== document.body.classList.contains('ogt-sakin')) { document.body.classList.toggle('ogt-sakin', sk); if (sk) window.scrollTo(0, 0); } const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
     const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
     // klavye açıkken alt sekmeler gizlenir (iOS'ta klavyenin üstüne oturmasın)
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
-    document.addEventListener('focusin', ev => { if (!yaziMi(ev.target)) return; document.body.classList.add('klavye-acik'); boyut(); if (ev.target.id === 'msjYaz') { const dip = () => { const ak = document.getElementById('msjAkis'); if (ak) ak.scrollTop = ak.scrollHeight; }; [120, 450].forEach(t => setTimeout(() => { boyut(); dip(); }, t)); } });   // yazarken son mesaj görünür
-    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) { document.body.classList.remove('klavye-acik'); boyut(); } }, 120));
-    if (window.visualViewport) { const vv = () => { document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px'); if (window.innerHeight - visualViewport.height < 120 && !yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik');
-};
-      visualViewport.addEventListener('resize', vv); visualViewport.addEventListener('scroll', () => document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px')); vv(); }
+    document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });
+    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); }, 120));
     setInterval(guncelle, 1000); n.addEventListener('click', () => setTimeout(guncelle, 50)); new MutationObserver(() => { clearTimeout(guncelle.z); guncelle.z = setTimeout(guncelle, 60); }).observe($('#icerik'), { childList: true }); say(); setInterval(() => { if (!document.hidden) say(); }, 60000); window.addEventListener('hashchange', guncelle);
   }
   async function dyDerslerim() {   // ders programından öğretmenin bugünkü dersleri ve şu anki ders
@@ -1093,6 +1084,10 @@
   const grupIk = g => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round">${GRUP_SVG[g] || GRUP_SVG['Diğer']}</svg></i>`;
   const grupKod = g => g.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z]/g, '');
   // K-694: ana ekranda Sık Kullanılanlar açık, gruplar kapalı kart; gruba dokununca içi açılır, "‹ Geri" ana ekrana döner
+  // K-749: menünün altında küçük sürüm satırı — telefonda hangi sürümün çalıştığı ve klavye ölçümü görülür (sorun bildirirken işe yarar)
+  function surumSatiri() { let v = '', k = ''; try { const m = ((document.querySelector('script[src*="uygulama.js"]') || {}).src || '').match(/v=(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)/); if (m) v = `${m[3]}.${m[2]} · ${m[4]}.${m[5]}`; } catch (e) {}
+    try { const a = JSON.parse(localStorage.getItem('umalKlv') || 'null'), t = JSON.parse(localStorage.getItem('umalKlvT') || 'null'); if (a) k = ` · k${a.k}/${a.t}`; if (t) k += ` i${t.i}${t.y ? '' : 'x'}`; } catch (e) {}
+    return v ? `<div class="tm-surum">Atlas · sürüm ${v}${esc(k)}</div>` : ''; }
   function tumuAc(gecmis, grup) {
     if (!telefon()) return;
     const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
@@ -1120,7 +1115,7 @@
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
       const L = (t => gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g])).concat(izin.has('dosyalar') ? [['dosyalar', '#7fb2ff', '']] : []).concat(izin.has('cikti') ? [['cikti', '#22e8ff', '']] : []).sort((a, b) => (t[b[0]] || 0) - (t[a[0]] || 0) || vs(a[0]) - vs(b[0])))(menuSon());   // K-716da
-      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.filter(([id]) => !['dersyoklama', 'duyuru', 'oprogram', 'mesajlar', 'dosyalar'].includes(id)).map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-yazi"><span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small></span>${n_(id)}</button>`).join('')}</div></div>`;   // K-716da: Atlas Sınıf da normal kutu
+      d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.filter(([id]) => !['dersyoklama', 'duyuru', 'oprogram', 'mesajlar', 'dosyalar'].includes(id)).map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-yazi"><span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small></span>${n_(id)}</button>`).join('')}</div></div>${surumSatiri()}`;   // K-716da: Atlas Sınıf da normal kutu
     } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-bas">${G[0]}</div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).concat(izin.has('cikti') ? [kutu('cikti', '#22e8ff')] : []).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = ''   // K-716dd: "Sık Kullanılanlar" kaldırıldı — son kullanılan zaten en üstte

@@ -2487,7 +2487,7 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ogt-msj-yok { opacity: .75; }
 @media (max-width: 760px) { body.ogt-alt.klavye-acik #ogtAlt { display: none !important; } body.ogt-alt.klavye-acik main { padding-bottom: 12px !important; } }
 .msj-alt textarea { min-width: 0; }
-@media (max-width: 760px) { body.ogt-alt .msj-ekran { height: calc(100dvh - 150px - 96px - env(safe-area-inset-bottom)); min-height: 300px; } }
+@media (max-width: 760px) { body.ogt-alt .msj-ekran { height: calc(100dvh - 150px - 96px - env(safe-area-inset-bottom)); min-height: 0; } }
 /* K-744: elle yenile düğmesi */
 #yenileDug { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; background: #13243d; border: 1px solid rgba(34,232,255,.55); color: var(--neon); flex: none; }
 #yenileDug.donuyor svg { animation: yenileDon .8s linear infinite; } @keyframes yenileDon { to { transform: rotate(360deg); } }
@@ -2507,11 +2507,19 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
 .msj-gec { opacity: .7; }
 /* K-747: iPhone'da çift dokunuşta yakınlaştırma yok (alt sekmeler ve düğmeler) */
 #ogtAlt, #ogtAlt *, body.ogt-alt button, body.ogt-alt a, body.ogt-alt .msj-sat, body.ogt-alt .tm-gk { touch-action: manipulation; }
-/* K-745d: klavye açıkken sohbet görünen alana sabit; mesajlar alttan dizilir (WhatsApp gibi) */
+/* K-745d: mesajlar alttan dizilir (son mesaj yazı kutusunun hemen üstünde) */
 @media (max-width: 760px) {
-  body.ogt-alt .msj-ekran.msj-sabit { position: fixed; left: 10px; right: 10px; z-index: 40; min-height: 0 !important; }
   body.ogt-alt .msj-akis > :first-child { margin-top: auto; }
 }
+/* K-749: telefonda sohbet — boy ve klavye sohbet-klavye.js'te. Sayfa kaymaz, yalnız liste kayar; kutu klavyenin hemen üstünde durur */
+@media (max-width: 760px) {
+  body.sohbet-acik main { padding-bottom: 0 !important; }
+  body.sohbet-acik { overscroll-behavior: none; }
+  body.ogt-alt .msj-akis { overscroll-behavior: contain; touch-action: pan-y; padding-bottom: 8px; }
+  body.ogt-alt .msj-alt { padding: 8px 10px; }
+  body.ogt-alt.sohbet-dar .yan { display: none !important; }   /* küçük telefonda klavye açıkken üst şerit yer açar */
+}
+.tm-surum { text-align: center; color: #5d708c; font-size: 11px; letter-spacing: .02em; padding: 14px 0 2px; }
 /* K-742b: tahta kontrol — kendi dersiniz büyük ve neon (durağan parıltı, animasyon yok), diğer tahtalar sade liste */
 .ot-ben { border: 2px solid #22e8ff !important; box-shadow: 0 0 0 1px rgba(34,232,255,.25), 0 0 26px rgba(34,232,255,.35), inset 0 0 24px rgba(34,232,255,.08); background: linear-gradient(155deg, #123a5c, #0e2340) !important; }
 .ot-ben.kl { border-color: #ff6b7a !important; box-shadow: 0 0 0 1px rgba(255,107,122,.25), 0 0 26px rgba(255,107,122,.32), inset 0 0 24px rgba(255,107,122,.08); }
