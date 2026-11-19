@@ -2421,3 +2421,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .tk-tf-o .tf-tur { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; background: #22e8ff1a; color: #8fe9ff; }
 .tk-tf-o .tf-tur.bekle { background: #ffb5471f; color: #ffcf7a; }
 .tf-ogtbt { margin-top: 4px; }
+/* K-739: kod beklemeden öğretmen kaydı */
+.kayit-modu #adim1, .kayit-modu #adim2, .kayit-modu #adim3, .kayit-modu .giris-sekme { display: none !important; }
+#kyForm { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; text-align: left; }
+#kyForm label { font-size: 13.5px; color: var(--soluk); margin-top: 6px; }
+#kyForm input { width: 100%; box-sizing: border-box; padding: 14px; font-size: 16px; border-radius: 12px; }
+#kyForm button { margin-top: 10px; padding: 15px; font-size: 16px; width: 100%; }
+.ky-bilgi { min-height: 18px; font-size: 13.5px; color: #ffcf7a; }

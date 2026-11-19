@@ -744,8 +744,18 @@
     try { const son = localStorage.getItem('atlas-son-eposta'); if (son && !$('#eposta').value) $('#eposta').value = son; } catch (e) {}
     if (/[?&]kayit\b/.test(location.search) && !$('#kayitBilgi')) {   // K-733: umalatlas.com.tr/kayit
       const k = document.createElement('div'); k.id = 'kayitBilgi'; k.className = 'kayit-bilgi';
-      k.innerHTML = `<b>Öğretmen kaydı · 1 dakika</b><ol><li>E-posta adresinizi yazın ve <b>e-postama kod gönder</b>'e basın.</li><li>E-postanıza gelen 6 haneli kodu yazın.</li><li>Adınızı ve soyadınızı yazıp <b>Erişim İste</b>'ye basın.</li></ol><span>İdare onaylayınca aynı e-postayla girersiniz.</span>`;
-      $('#adim1').before(k); $('#kodGonder').classList.add('kayit-vurgu'); document.body.classList.add('kayit-modu'); $('#kodGonder').textContent = 'E-postama kod gönder'; try { $('#eposta').value = ''; } catch (e) {}
+      k.innerHTML = `<b>Öğretmen kaydı</b><span>Adınızı, soyadınızı ve e-posta adresinizi yazıp gönderin. İdare onaylayınca bu e-postayla panele girersiniz.</span>
+        <form id="kyForm" onsubmit="return false" autocomplete="on"><label for="kyAd">Adınız soyadınız</label><input id="kyAd" autocomplete="name" placeholder="Ör. Ayşe Yılmaz" autocapitalize="words">
+        <label for="kyEp">E-posta adresiniz</label><input id="kyEp" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="ornek@gmail.com">
+        <button class="birincil" id="kyGonder" type="submit">Gönder</button><div id="kyBilgi" class="ky-bilgi"></div></form>`;
+      $('#adim1').before(k); document.body.classList.add('kayit-modu');
+      $('#kyForm').onsubmit = async () => { const ad = $('#kyAd').value.trim(), ep = $('#kyEp').value.trim(), bl = $('#kyBilgi');
+        if (ad.split(/\s+/).length < 2) { bl.textContent = 'Adınızı ve soyadınızı yazın.'; return false; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ep)) { bl.textContent = 'E-posta adresini kontrol edin.'; return false; }
+        $('#kyGonder').disabled = true; bl.textContent = 'Gönderiliyor…';
+        try { const { data, error } = await sb.rpc('umal_ogretmen_kayit', { p_ad: ad, p_eposta: ep }); if (error || !data || !data.ok) throw new Error(error ? hataYaz(error) : (data && data.hata) || 'Gönderilemedi');
+          k.innerHTML = `<b>Teşekkürler, ${esc(ad)}</b><span>${data.zaten ? 'Bu e-posta panelde zaten kayıtlı. Aşağıdan e-posta adresinizle giriş yapabilirsiniz.' : 'Kaydınız idareye ulaştı. Onaylanınca bu e-postayla (' + esc(ep) + ') panele girersiniz; ilk girişte e-postanıza kod gelir.'}</span>`;
+          if (data.zaten) { document.body.classList.remove('kayit-modu'); try { $('#eposta').value = ep; } catch (e) {} }
+        } catch (e) { bl.textContent = e.message || 'Gönderilemedi'; $('#kyGonder').disabled = false; } return false; };
     }
   }
   // K-716cd: panel hızı — zayıf cihazda (az bellek/çekirdek, veri tasarrufu, hareket azaltma) çerçeveler sabit; ekran dışındaki kutuların animasyonu durur
