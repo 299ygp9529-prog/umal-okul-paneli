@@ -2598,3 +2598,6 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .ot-grup .ot-liste { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .ot-grup .ot-sat { border-left: 3px solid color-mix(in srgb, var(--sv) 70%, transparent); padding: 9px 10px; } .ot-grup .ot-sat b { font-size: 15.5px; overflow-wrap: anywhere; line-height: 1.15; } .ot-grup .ot-sat { padding: 8px 8px 8px 9px; } .ot-grup .ot-sat span { font-size: 12px; }
 .ot-grup.ot-diger .ot-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ot-grup.ot-diger .ot-sat b { overflow-wrap: normal; }
 @media (max-width: 760px) { body.ogt-alt .yan:has(#telGeri:not(.gizli)) > .logo3d { display: block; } }   /* K-770: alt sekmeli telefonda Geri yok; logo her sayfada kalır */
+/* K-772: ders programında boş saatler */
+.op-ders.op-bosd { background: repeating-linear-gradient(135deg, #ffffff04 0 8px, transparent 8px 16px); } .op-ders.op-bosd .op-saat { opacity: .55; } .op-ders.op-bosd .op-ic b { color: #6f819b; font-weight: 700; letter-spacing: .04em; font-size: 15px; }
+.op-ders.op-bosd .op-saat b { font-size: 15px; }

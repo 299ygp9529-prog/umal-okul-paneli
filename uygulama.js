@@ -671,7 +671,7 @@
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0), L = [];
     Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) L.push({ sinif: sf, n, ders: h.ders || '', bas: z.bas, bit: z.bit }); }));
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: tarih }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !L.some(y => y.sinif === x.sinif && y.n === +x.saat)) L.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', bas: z.bas, bit: z.bit, gorev: true }); }); } catch (e) {}
-    return { ben, L: L.sort((a, b) => a.n - b.n) };
+    return { ben, L: L.sort((a, b) => a.n - b.n), zil };
   }
   async function ogtProgram() {
     if (!OP.tarih) OP.tarih = bugunISO();
@@ -682,12 +682,15 @@
       <div class="op-serit"><button class="op-ok" data-opk="-1" aria-label="Önceki hafta">‹</button>${G.map((g, i) => `<button class="op-gun ${g === OP.tarih ? 'secili' : ''} ${g === bug ? 'bugun' : ''}" data-opg="${g}"><b>${+g.slice(8)}</b><span>${GA[i]}</span></button>`).join('')}<button class="op-ok" data-opk="1" aria-label="Sonraki hafta">›</button></div><div id="opListe" class="op-liste"><div class="soluk">Yükleniyor…</div></div></div>`;
     I.querySelectorAll('[data-opg]').forEach(b => b.onclick = () => { OP.tarih = b.dataset.opg; ogtProgram(); });
     I.querySelectorAll('[data-opk]').forEach(b => b.onclick = () => kay(+b.dataset.opk));
-    const { ben, L } = await ogtDersleriGun(OP.tarih); const E = $('#opListe'); if (!E) return;
+    const { ben, L, zil } = await ogtDersleriGun(OP.tarih); const E = $('#opListe'); if (!E) return;
     if (!ben) { E.innerHTML = '<div class="kart soluk">Adınız ders programında bulunamadı; idareye bildirin.</div>'; return; }
     if (!L.length) { E.innerHTML = '<div class="kart soluk op-bos">Bu gün dersiniz yok.</div>'; return; }
     const an = new Date(), t = an.getHours() * 60 + an.getMinutes(), dk = x => { const [h, m] = String(x).split(':').map(Number); return h * 60 + m; }, bugun = OP.tarih === bug;
-    E.innerHTML = L.map(x => { const su = bugun && dk(x.bas) - 5 <= t && t < dk(x.bit) + 10, gecti = OP.tarih < bug || (bugun && dk(x.bit) + 10 <= t);
-      return `<button class="op-ders ${su ? 'su' : ''} ${gecti ? 'gecti' : ''}" ${su ? `data-opy="${esc(x.sinif)}|${x.n}"` : 'disabled'}><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>${esc((x.ders || '').toLocaleUpperCase(tr))}</b><span>${esc(x.sinif.replace('-', '/'))}${x.gorev ? ' · görevlendirme' : ''}</span>${su ? '<em>Şu an · yoklamayı al</em>' : ''}</span></button>`; }).join('');
+    const satir = x => { const su = bugun && dk(x.bas) - 5 <= t && t < dk(x.bit) + 10, gecti = OP.tarih < bug || (bugun && dk(x.bit) + 10 <= t);
+      if (x.bos) return `<div class="op-ders op-bosd ${gecti ? 'gecti' : ''}"><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>Boş</b></span></div>`;
+      return `<button class="op-ders ${su ? 'su' : ''} ${gecti ? 'gecti' : ''}" ${su ? `data-opy="${esc(x.sinif)}|${x.n}"` : 'disabled'}><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>${esc((x.ders || '').toLocaleUpperCase(tr))}</b><span>${esc(x.sinif.replace('-', '/'))}${x.gorev ? ' · görevlendirme' : ''}</span>${su ? '<em>Şu an · yoklamayı al</em>' : ''}</span></button>`; };
+    // K-772: günün bütün ders saatleri; dersi olmayan saat "Boş"
+    E.innerHTML = (zil || []).map(z => { const n = parseInt(z.ders, 10), B = L.filter(x => x.n === n); return B.length ? B.map(satir).join('') : satir({ bos: true, n, bas: z.bas, bit: z.bit }); }).join('') + L.filter(x => !(zil || []).some(z => parseInt(z.ders, 10) === x.n)).map(satir).join('');
     E.querySelectorAll('[data-opy]').forEach(b => b.onclick = () => ac('dersyoklama'));
   }
   function ogtAltKur() {   // yalnız öğretmen, yalnız telefon (CSS ile)
