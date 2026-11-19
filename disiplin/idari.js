@@ -23,11 +23,12 @@
     telafi: 'M4 6h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3M13 14.5h3M8 17.5h3',
     kurul: 'M12 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM5 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 5 7ZM19 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 19 7ZM6.5 20c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6M1.5 18c0-2.2 1.4-3.8 3.5-4.2M22.5 18c0-2.2-1.4-3.8-3.5-4.2',
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7zM7 7.5h0M17 7.5h0',
+    sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -765,6 +766,26 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     const tablo = `<div class="vt-so-y">Sınıf Öğretmeni: <b>${esc(so ? C.baslik(so) : '……………………')}</b></div><table class="vt-t vt-imz"><tr><th>Ders</th><th>Öğretmen</th><th style="width:38mm">İmza</th></tr>${liste.map(([d, O]) => `<tr><td>${esc(d)}</td><td>${esc(O.map(o => C.baslik(o)).join(', '))}</td><td></td></tr>`).join('')}</table>`;
     return `<section class="vt-s${ilk ? '' : ' vt-yeni'}">${bas}${izgara}${tablo}</section>`;
   }
+  const vtCssAl = () => `<style>.vt-yeni{break-before:page;page-break-before:always}.vt-bas{display:flex;align-items:baseline;gap:4mm;border-bottom:.6mm solid #13305a;padding:3mm 0 2mm;margin:2mm 0 4mm}.vt-bas b{font-size:18pt;color:#13305a}.vt-bas span{font-size:13pt;font-weight:700}.vt-bas small{margin-left:auto;color:#475569;font-size:9pt}
+.vt-gun{font-size:12.5pt;line-height:1.9;padding-left:7mm}.vt-not{margin:3mm 0;padding:2mm 3mm;border-left:1.4mm solid #0e7490;background:#e3f6fa;font-size:10pt}
+.vt-t{width:100%;border-collapse:collapse;font-size:10pt}.vt-t th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}.vt-t td{border:.3mm solid #8fa3bf;padding:1.4mm 2mm}.vt-t td.c{text-align:center}.vt-t tr.vt-uy td{background:#fee2e2;font-weight:700}
+.vt-kapak{min-height:200mm;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12mm}.vt-kp-ust small{display:block;color:#475569;font-size:11pt;letter-spacing:.06em}.vt-kp-ust b{display:block;font-size:40pt;color:#13305a;margin:4mm 0 2mm}.vt-kp-ust span{font-size:15pt;font-weight:700;color:#0e7490;letter-spacing:.04em}
+.vt-kp-ad{margin-top:22mm;font-size:24pt;font-weight:700;color:#b4232c;font-family:Georgia,'Times New Roman',serif;font-style:italic}.vt-kp-et{font-size:11pt;color:#475569;letter-spacing:.2em;text-transform:uppercase;margin-top:1mm}
+.vt-kp-ic{margin-top:20mm;text-align:left;border:.4mm solid #13305a;border-radius:3mm;padding:7mm 12mm;min-width:120mm}.vt-kp-ic b{display:block;letter-spacing:.35em;font-size:13pt;color:#13305a;margin-bottom:3mm}.vt-kp-ic ol{margin:0;padding-left:7mm;font-size:14pt;line-height:2}.vt-kp-alt{margin-top:auto;padding-top:10mm;color:#475569;font-size:10pt}
+.vt-h{font-size:12pt;color:#13305a;margin:5mm 0 2mm;border-bottom:.3mm solid #8fa3bf;padding-bottom:1mm}.vt-yazi{font-size:11pt;line-height:1.6;min-height:20mm}.vt-yazi i{display:block;height:8mm;border-bottom:.3mm dotted #8fa3bf}
+.vt-bilgi th{background:#e8eef7;color:#13305a;text-align:left;width:32mm}.vt-imza{display:flex;justify-content:space-between;margin-top:14mm;text-align:center;font-weight:700}.vt-imza>div{min-width:60mm}.vt-imza small{font-weight:400;color:#475569}
+.vt-tut .vt-ib-u{font-size:11pt}.vt-tut-b{text-align:center;font-weight:700;font-size:11pt;margin:8mm 0 6mm;line-height:1.5}.vt-tut-k th{text-align:left;font-weight:700;padding:1mm 4mm 1mm 0;white-space:nowrap}.vt-tut-k td{padding:1mm 0}.vt-tut-k{font-size:10.5pt}
+.vt-tut-h{font-size:11pt;margin:7mm 0 2mm}.vt-tut-h.u{text-decoration:underline}.vt-tut-g{font-size:11pt;line-height:1.55;margin:0;padding-left:7mm}.vt-tut-v{margin:1mm 0 0 7mm;font-size:11pt}.vt-tut-a{text-align:right;font-size:9pt;color:#475569;margin-top:6mm}
+.vt-kur-ust{display:flex;align-items:center;gap:5mm;background:#1f2937;color:#fff;padding:4mm 6mm;border-radius:2mm}.vt-kur-ust img{width:22mm;height:22mm;border-radius:50%;background:#fff}.vt-kur-ust small{display:block;font-size:10pt;font-weight:700;letter-spacing:.06em}.vt-kur-ust b{display:block;font-size:26pt;line-height:1.05;letter-spacing:.02em}.vt-kur-ust span{display:block;font-size:9pt;letter-spacing:.12em;margin-top:1mm}.vt-kur-ust em{display:block;font-style:normal;font-size:8pt;letter-spacing:.2em;color:#cbd5e1;margin-top:1.5mm}
+.vt-kur-l{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin:4mm 0}.vt-kur-l ol{margin:0;padding:0;list-style:none}.vt-kur-l li{display:flex;gap:2.5mm;align-items:flex-start;font-size:8.8pt;line-height:1.3;margin-bottom:2.2mm;break-inside:avoid}.vt-kur-l li i{font-style:normal;flex:none;width:7mm;height:7mm;border-radius:1.2mm;background:#374151;color:#fff;font-weight:800;font-size:10pt;display:grid;place-items:center}
+.vt-kur-d{display:flex;align-items:center;justify-content:space-between;background:#1f2937;color:#fff;padding:2.5mm 5mm;border-radius:2mm;margin-top:2mm}.vt-kur-d b{font-size:15pt;letter-spacing:.04em}.vt-kur-d span{font-size:8.5pt;font-weight:700;max-width:60mm;text-align:right}.vt-kur-a{font-size:8.5pt;font-weight:700;margin:2mm 0;text-align:center}
+.vt-kur-t{font-size:8.5pt}.vt-kur-t th{background:#374151;border-color:#1f2937}.vt-kur-n{font-size:7.8pt;color:#334155;margin:2mm 0;padding-left:5mm}.vt-kur-s{text-align:center;font-weight:800;font-size:12pt;letter-spacing:.06em;margin-top:3mm;color:#1f2937}
+.vt-kural{font-size:13pt;line-height:2;padding-left:8mm}
+.vt-vs-u{display:flex;align-items:center;justify-content:space-between;text-align:center;font-size:10.5pt;line-height:1.4}.vt-vs-u img{width:19mm;height:19mm;object-fit:contain}.vt-vs-b{text-align:center;font-weight:700;font-size:10.5pt;margin:4mm 0 3mm;line-height:1.5}.vt-vs-b span{font-size:13pt;letter-spacing:.08em;color:#13305a}.vt-vs-k{display:flex;justify-content:space-between;font-size:9.5pt;margin-bottom:2mm}.vt-vs-t{width:100%;border-collapse:collapse;font-size:9pt}.vt-vs-t th{background:#13305a;color:#fff;padding:1.5mm;text-align:left;font-weight:700}.vt-vs-t td{border:.25mm solid #94a3b8;height:5.6mm;padding:0 1.5mm}.vt-vs-t td:first-child{text-align:center;color:#475569}.vt-vs-t tr{break-inside:avoid}.vt-vs .vt-imza{margin-top:5mm}
+.vt-ib{margin-bottom:3mm}.vt-ib-u{text-align:center;font-size:10pt;line-height:1.35}.vt-ib-s{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;margin-top:2mm;font-size:9.5pt}.vt-ib-s b{font-size:13pt;padding:0 10mm}
+.vt-dp{font-size:7.6pt;table-layout:fixed}.vt-dp th{font-size:8pt;padding:1mm}.vt-dp th small{font-weight:400;font-size:6.8pt}.vt-dp td{height:11mm;padding:.8mm 1mm;line-height:1.2;vertical-align:top}.vt-dp td b{font-size:7.6pt}
+.vt-so-y{margin:5mm 0 2mm;font-size:11pt}.vt-imz td{height:8.5mm}
+.vt-foto{display:grid;grid-template-columns:repeat(6,1fr);gap:3mm}.vt-foto>div{display:flex;flex-direction:column;align-items:center;text-align:center;break-inside:avoid;font-size:8.5pt;line-height:1.2}.vt-f{width:24mm;height:30mm;border:.3mm solid #8fa3bf;border-radius:1.5mm;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f1f5f9;margin-bottom:1mm}.vt-f img{width:100%;height:100%;object-fit:cover}.vt-f span{font-size:18pt;opacity:.4}.vt-foto b{font-size:9pt}</style>`;
   async function vtDosya(sadeceFoto) {
     const M = VT.M, O = vtOgr(M), dv = M.devam || {}, S = M.sinif ? [M.sinif] : [...new Set(O.map(o => o.sinif))].sort(sinifSira);
     if (!O.length) { uyar('Öğrenci listesi boş.'); return; }
@@ -808,26 +829,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         h += vtImzaSirkusu(M, s, ilk); ilk = false;
       }
       return h; }).join('');
-    const css = `<style>.vt-yeni{break-before:page;page-break-before:always}.vt-bas{display:flex;align-items:baseline;gap:4mm;border-bottom:.6mm solid #13305a;padding:3mm 0 2mm;margin:2mm 0 4mm}.vt-bas b{font-size:18pt;color:#13305a}.vt-bas span{font-size:13pt;font-weight:700}.vt-bas small{margin-left:auto;color:#475569;font-size:9pt}
-.vt-gun{font-size:12.5pt;line-height:1.9;padding-left:7mm}.vt-not{margin:3mm 0;padding:2mm 3mm;border-left:1.4mm solid #0e7490;background:#e3f6fa;font-size:10pt}
-.vt-t{width:100%;border-collapse:collapse;font-size:10pt}.vt-t th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}.vt-t td{border:.3mm solid #8fa3bf;padding:1.4mm 2mm}.vt-t td.c{text-align:center}.vt-t tr.vt-uy td{background:#fee2e2;font-weight:700}
-.vt-kapak{min-height:200mm;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12mm}.vt-kp-ust small{display:block;color:#475569;font-size:11pt;letter-spacing:.06em}.vt-kp-ust b{display:block;font-size:40pt;color:#13305a;margin:4mm 0 2mm}.vt-kp-ust span{font-size:15pt;font-weight:700;color:#0e7490;letter-spacing:.04em}
-.vt-kp-ad{margin-top:22mm;font-size:24pt;font-weight:700;color:#b4232c;font-family:Georgia,'Times New Roman',serif;font-style:italic}.vt-kp-et{font-size:11pt;color:#475569;letter-spacing:.2em;text-transform:uppercase;margin-top:1mm}
-.vt-kp-ic{margin-top:20mm;text-align:left;border:.4mm solid #13305a;border-radius:3mm;padding:7mm 12mm;min-width:120mm}.vt-kp-ic b{display:block;letter-spacing:.35em;font-size:13pt;color:#13305a;margin-bottom:3mm}.vt-kp-ic ol{margin:0;padding-left:7mm;font-size:14pt;line-height:2}.vt-kp-alt{margin-top:auto;padding-top:10mm;color:#475569;font-size:10pt}
-.vt-h{font-size:12pt;color:#13305a;margin:5mm 0 2mm;border-bottom:.3mm solid #8fa3bf;padding-bottom:1mm}.vt-yazi{font-size:11pt;line-height:1.6;min-height:20mm}.vt-yazi i{display:block;height:8mm;border-bottom:.3mm dotted #8fa3bf}
-.vt-bilgi th{background:#e8eef7;color:#13305a;text-align:left;width:32mm}.vt-imza{display:flex;justify-content:space-between;margin-top:14mm;text-align:center;font-weight:700}.vt-imza>div{min-width:60mm}.vt-imza small{font-weight:400;color:#475569}
-.vt-tut .vt-ib-u{font-size:11pt}.vt-tut-b{text-align:center;font-weight:700;font-size:11pt;margin:8mm 0 6mm;line-height:1.5}.vt-tut-k th{text-align:left;font-weight:700;padding:1mm 4mm 1mm 0;white-space:nowrap}.vt-tut-k td{padding:1mm 0}.vt-tut-k{font-size:10.5pt}
-.vt-tut-h{font-size:11pt;margin:7mm 0 2mm}.vt-tut-h.u{text-decoration:underline}.vt-tut-g{font-size:11pt;line-height:1.55;margin:0;padding-left:7mm}.vt-tut-v{margin:1mm 0 0 7mm;font-size:11pt}.vt-tut-a{text-align:right;font-size:9pt;color:#475569;margin-top:6mm}
-.vt-kur-ust{display:flex;align-items:center;gap:5mm;background:#1f2937;color:#fff;padding:4mm 6mm;border-radius:2mm}.vt-kur-ust img{width:22mm;height:22mm;border-radius:50%;background:#fff}.vt-kur-ust small{display:block;font-size:10pt;font-weight:700;letter-spacing:.06em}.vt-kur-ust b{display:block;font-size:26pt;line-height:1.05;letter-spacing:.02em}.vt-kur-ust span{display:block;font-size:9pt;letter-spacing:.12em;margin-top:1mm}.vt-kur-ust em{display:block;font-style:normal;font-size:8pt;letter-spacing:.2em;color:#cbd5e1;margin-top:1.5mm}
-.vt-kur-l{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin:4mm 0}.vt-kur-l ol{margin:0;padding:0;list-style:none}.vt-kur-l li{display:flex;gap:2.5mm;align-items:flex-start;font-size:8.8pt;line-height:1.3;margin-bottom:2.2mm;break-inside:avoid}.vt-kur-l li i{font-style:normal;flex:none;width:7mm;height:7mm;border-radius:1.2mm;background:#374151;color:#fff;font-weight:800;font-size:10pt;display:grid;place-items:center}
-.vt-kur-d{display:flex;align-items:center;justify-content:space-between;background:#1f2937;color:#fff;padding:2.5mm 5mm;border-radius:2mm;margin-top:2mm}.vt-kur-d b{font-size:15pt;letter-spacing:.04em}.vt-kur-d span{font-size:8.5pt;font-weight:700;max-width:60mm;text-align:right}.vt-kur-a{font-size:8.5pt;font-weight:700;margin:2mm 0;text-align:center}
-.vt-kur-t{font-size:8.5pt}.vt-kur-t th{background:#374151;border-color:#1f2937}.vt-kur-n{font-size:7.8pt;color:#334155;margin:2mm 0;padding-left:5mm}.vt-kur-s{text-align:center;font-weight:800;font-size:12pt;letter-spacing:.06em;margin-top:3mm;color:#1f2937}
-.vt-kural{font-size:13pt;line-height:2;padding-left:8mm}
-.vt-vs-u{display:flex;align-items:center;justify-content:space-between;text-align:center;font-size:10.5pt;line-height:1.4}.vt-vs-u img{width:19mm;height:19mm;object-fit:contain}.vt-vs-b{text-align:center;font-weight:700;font-size:10.5pt;margin:4mm 0 3mm;line-height:1.5}.vt-vs-b span{font-size:13pt;letter-spacing:.08em;color:#13305a}.vt-vs-k{display:flex;justify-content:space-between;font-size:9.5pt;margin-bottom:2mm}.vt-vs-t{width:100%;border-collapse:collapse;font-size:9pt}.vt-vs-t th{background:#13305a;color:#fff;padding:1.5mm;text-align:left;font-weight:700}.vt-vs-t td{border:.25mm solid #94a3b8;height:5.6mm;padding:0 1.5mm}.vt-vs-t td:first-child{text-align:center;color:#475569}.vt-vs-t tr{break-inside:avoid}.vt-vs .vt-imza{margin-top:5mm}
-.vt-ib{margin-bottom:3mm}.vt-ib-u{text-align:center;font-size:10pt;line-height:1.35}.vt-ib-s{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;margin-top:2mm;font-size:9.5pt}.vt-ib-s b{font-size:13pt;padding:0 10mm}
-.vt-dp{font-size:7.6pt;table-layout:fixed}.vt-dp th{font-size:8pt;padding:1mm}.vt-dp th small{font-weight:400;font-size:6.8pt}.vt-dp td{height:11mm;padding:.8mm 1mm;line-height:1.2;vertical-align:top}.vt-dp td b{font-size:7.6pt}
-.vt-so-y{margin:5mm 0 2mm;font-size:11pt}.vt-imz td{height:8.5mm}
-.vt-foto{display:grid;grid-template-columns:repeat(6,1fr);gap:3mm}.vt-foto>div{display:flex;flex-direction:column;align-items:center;text-align:center;break-inside:avoid;font-size:8.5pt;line-height:1.2}.vt-f{width:24mm;height:30mm;border:.3mm solid #8fa3bf;border-radius:1.5mm;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f1f5f9;margin-bottom:1mm}.vt-f img{width:100%;height:100%;object-fit:cover}.vt-f span{font-size:18pt;opacity:.4}.vt-foto b{font-size:9pt}</style>`;
+    const css = vtCssAl();
     belgeGoster(belgeKabuk(sadeceFoto ? 'Fotoğraflı Öğrenci Listeleri' : 'Veli Toplantısı Sınıf Dosyası', css + govde), sadeceFoto ? 'Fotoğraflı öğrenci listeleri' : 'Veli toplantısı sınıf dosyası');
   }
   async function vtTik(ev) {
@@ -859,9 +861,82 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (d.vtara) { VT.ara = t.value; const c = t.selectionStart; vtCiz(); const y = kok.querySelector('[data-vtara]'); if (y) { y.focus(); y.setSelectionRange(c, c); } }
   }
 
+  // ================================================================ ŞUBE ÖĞRETMENLER KURULU (K-740)
+  // Ortaöğretim Kurumları Yönetmeliği: şubede derse giren öğretmenler, başkanlık müdür ya da görevlendirdiği müdür yardımcısı.
+  const SK_GUNDEM = 'Açılış ve yoklama\nBir önceki şube öğretmenler kurulunda alınan kararların değerlendirilmesi\nŞubenin derslere göre genel başarı durumunun değerlendirilmesi\nBaşarısı düşük öğrencilerin belirlenmesi ve alınacak önlemler\nÖğrencilerin devam ve devamsızlık durumlarının görüşülmesi\nÖğrencilerin davranışları, sağlık, sosyal ve ruhsal gelişimleriyle ilgili gözlemlerin paylaşılması\nRehberlik servisine yönlendirilecek öğrencilerin belirlenmesi\nSosyal, kültürel ve sportif etkinlikler ile öğrencilerin bunlara katılımı\nÖğretmenler arasında ortak tutum ve iş birliği; ölçme ve değerlendirme uygulamaları\nDilek ve temenniler, kapanış';
+  const SK = { L: [], M: null, degisti: false };
+  const skBos = () => ({ id: 'sk' + uid(), yil: egitimYili(), donem: '1. dönem', toplanti: '1. toplantı', tarih: '', saat: '', yer: 'Öğrencinin kendi sınıfında', baskan: MUDUR, baskanUnvan: 'Okul Müdürü', siniflar: [], gundem: SK_GUNDEM, so: {} });
+  async function sok() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    try { SK.L = (await liste('sok:')).map(r => r.veri).sort((a, b) => String(b.tarih).localeCompare(String(a.tarih))); } catch (e) { kok.innerHTML = bas('Şube Öğretmenler Kurulu') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    SK.M = SK.L[0] ? JSON.parse(JSON.stringify(SK.L[0])) : skBos(); SK.degisti = false; skCiz();
+  }
+  function skCiz() {
+    const M = SK.M, S = siniflar(), sec = new Set(M.siniflar || []), alan = (k, ad, ek = '') => `<label>${ad}<input data-sk="${k}" value="${esc(M[k] || '')}" ${ek}></label>`;
+    const hedef = sec.size ? S.filter(x => sec.has(x)) : S;
+    kok.innerHTML = bas('Şube Öğretmenler Kurulu', `${esc(M.yil)} · ${esc(M.donem)} · ${esc(M.toplanti)}${M.tarih ? ' · ' + tGos(M.tarih) : ''}`, '<button class="ikincil" data-skx="yeni">Yeni toplantı</button><button class="birincil" data-skx="kaydet">Kaydet</button>') +
+      (SK.L.length ? `<div class="cipler" style="margin:4px 0 10px">${SK.L.map(x => `<button class="cip ${x.id === M.id ? 'secili' : ''}" data-skac="${esc(x.id)}">${esc(x.donem)} · ${esc(x.toplanti)}${x.tarih ? ' · ' + tGos(x.tarih) : ''}</button>`).join('')}</div>` : '') +
+      `<div class="kart id-not"><b>Şube öğretmenler kurulu</b> şubede derse giren öğretmenlerden oluşur; okul müdürü ya da görevlendirdiği müdür yardımcısı başkanlık eder. Öğretmenler ve dersler ders programından gelir. Dosyada her şube için tutanak, katılım ve imza çizelgesi, öğrenci değerlendirme çizelgesi ve haftalık ders programı vardır.</div>
+      <div class="kart"><div class="id-form">${alan('yil', 'Eğitim öğretim yılı')}
+        <div><span class="id-et">Dönem</span><div class="cipler">${['1. dönem', '2. dönem'].map(d => `<button class="cip ${M.donem === d ? 'secili' : ''}" data-skdonem="${d}">${d}</button>`).join('')}</div></div>
+        <div><span class="id-et">Toplantı</span><div class="cipler">${['1. toplantı', '2. toplantı', 'Olağanüstü'].map(d => `<button class="cip ${M.toplanti === d ? 'secili' : ''}" data-sktop="${d}">${d}</button>`).join('')}</div></div>
+        <label>Toplantı tarihi<input type="date" data-sk="tarih" value="${esc(M.tarih || '')}"></label>${alan('saat', 'Saat', 'placeholder="ör. 15:00"')}${alan('yer', 'Yer')}${alan('baskan', 'Kurul başkanı')}${alan('baskanUnvan', 'Başkanın unvanı', 'placeholder="Okul Müdürü / Müdür Yardımcısı"')}
+        <label class="genis">Gündem<textarea rows="10" data-sk="gundem">${esc(M.gundem || SK_GUNDEM)}</textarea></label></div></div>
+      <div class="kart"><span class="id-et" style="margin-top:0">Şubeler · ${sec.size ? sec.size + ' seçili' : 'hepsi (' + S.length + ')'}</span><div class="cipler id-sinif"><button class="cip ${!sec.size ? 'secili' : ''}" data-sksinif="">Tüm şubeler</button>${S.map(x => `<button class="cip ${sec.has(x) ? 'secili' : ''}" style="border-color:${SVR[seviye(x)]}" data-sksinif="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+        <span class="id-et">Sınıf rehber öğretmenleri <small class="soluk" style="font-weight:400">(ders programındaki Rehberlik dersinden; değiştirebilirsiniz)</small></span><div class="vt-so">${hedef.map(x => `<label><b>${esc(x)}</b><input data-skso="${esc(x)}" value="${esc((M.so || {})[x] || '')}" placeholder="${esc(C.baslik(vtSO({ so: {} }, x) || ''))}"></label>`).join('')}</div></div>
+      <div class="dugmeler" style="justify-content:flex-start"><button class="birincil" data-skx="dosya">ŞÖK dosyası · ${hedef.length} şube · PDF</button><button class="ikincil" data-skx="duyuru">Öğretmen duyurusu</button>${SK.L.some(x => x.id === M.id) ? '<button class="bag" style="color:var(--kirmizi)" data-skx="sil">Sil</button>' : ''}</div><div id="idBilgi" class="id-bilgi"></div>`;
+  }
+  const skBaslik = () => `<div class="vt-vs-u"><img src="${new URL('okul-logo.png', location.href).href}" alt=""><div>T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br><b>Ümraniye Merkez Anadolu Lisesi Müdürlüğü</b></div><img src="${new URL('okul-logo.png', location.href).href}" alt="" style="visibility:hidden"></div>`;
+  function skDosya(sadeceDuyuru) {
+    const M = SK.M, S = siniflar(), sec = new Set(M.siniflar || []), hedef = sec.size ? S.filter(x => sec.has(x)) : S;
+    if (!hedef.length) { uyar('Şube yok.'); return; }
+    const G = String(M.gundem || SK_GUNDEM).split('\n').map(x => x.trim()).filter(Boolean), zaman = `${tGos(M.tarih)}${M.saat ? ' · ' + esc(M.saat) : ''}`, DON = String(M.donem || '').toLocaleUpperCase(tr), TOP = String(M.toplanti || '').toLocaleUpperCase(tr);
+    const rehber = s => C.baslik((M.so || {})[s] || vtSO({ so: {} }, s) || '');
+    if (sadeceDuyuru) {
+      const satir = hedef.map(s => { const { liste: Ls } = vtDersler(s); return `<tr><td><b>${esc(s)}</b></td><td>${esc(rehber(s))}</td><td>${esc([...new Set(Ls.flatMap(([, O]) => O.map(o => C.baslik(o))))].join(', '))}</td></tr>`; }).join('');
+      const g = `<section class="vt-s">${skBaslik()}<div class="vt-vs-b">${esc(M.yil)} EĞİTİM ÖĞRETİM YILI ${DON} ${TOP}<br><span>ŞUBE ÖĞRETMENLER KURULU TOPLANTISI</span></div>
+        <p style="font-size:11pt;line-height:1.6">Şube öğretmenler kurulu toplantısı <b>${zaman}</b> tarihinde ${esc(M.yer || 'öğrencinin kendi sınıfında')} aşağıdaki gündemle yapılacaktır. Şubede derse giren öğretmenlerimizin katılması rica olunur.</p>
+        <h3 class="vt-tut-h">GÜNDEM</h3><ol class="vt-tut-g">${G.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+        <table class="vt-t" style="margin-top:5mm"><tr><th style="width:16mm">Şube</th><th style="width:42mm">Sınıf rehber öğretmeni</th><th>Derse giren öğretmenler</th></tr>${satir}</table>
+        <div class="vt-imza"><div></div><div>${esc(M.baskan || MUDUR)}<br><small>${esc(M.baskanUnvan || 'Okul Müdürü')}</small></div></div></section>`;
+      belgeGoster(belgeKabuk('Şube Öğretmenler Kurulu Duyurusu', skCss() + g), 'ŞÖK duyurusu'); return; }
+    let ilk = true;
+    const govde = hedef.map(s => { const L = OGR.filter(o => o.sinif === s).sort((a, b) => (+a.no) - (+b.no)), { liste: Ls } = vtDersler(s), so = rehber(s); let h = '';
+      h += `<section class="vt-s${ilk ? '' : ' vt-yeni'} vt-tut sk-tut">${skBaslik()}<div class="vt-tut-b">${esc(M.yil)} EĞİTİM ÖĞRETİM YILI ${DON}<br>${esc(s)} ŞUBE ÖĞRETMENLER KURULU ${TOP} TUTANAĞI</div>
+        <table class="vt-tut-k"><tr><th>Toplantı tarihi ve saati:</th><td>${zaman}</td></tr><tr><th>Toplantı yeri:</th><td>${esc(M.yer || '')}</td></tr><tr><th>Kurul başkanı:</th><td>${esc(M.baskan || '')}${M.baskanUnvan ? ' (' + esc(M.baskanUnvan) + ')' : ''}</td></tr><tr><th>Sınıf rehber öğretmeni:</th><td>${esc(so)}</td></tr><tr><th>Şube mevcudu:</th><td>${L.length} öğrenci</td></tr><tr><th>Derse giren öğretmen:</th><td>${new Set(Ls.flatMap(([, O]) => O)).size} öğretmen</td></tr></table>
+        <h3 class="vt-tut-h">GÜNDEM</h3><ol class="vt-tut-g">${G.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+        <h3 class="vt-tut-h u">Gündem maddelerinin görüşülmesi:</h3><div class="vt-yazi">${'<i></i>'.repeat(6)}</div>
+        <h3 class="vt-tut-h u">Alınan kararlar:</h3><div class="vt-yazi">${'<i></i>'.repeat(3)}</div>
+        <div class="vt-imza"><div>${esc(so || '……………………')}<br><small>Sınıf Rehber Öğretmeni</small></div><div>${esc(M.baskan || '……………………')}<br><small>Kurul Başkanı</small></div></div><div class="vt-tut-a">Katılan öğretmenlerin imzaları sonraki sayfadadır. Arka sayfayı kullanabilirsiniz.</div></section>`; ilk = false;
+      h += `<section class="vt-s vt-yeni">${skBaslik()}<div class="vt-vs-b">${esc(M.yil)} ${DON} · ${esc(s)} ŞUBE ÖĞRETMENLER KURULU<br><span>KATILIM VE İMZA ÇİZELGESİ</span></div><div class="vt-vs-k"><span>Toplantı: <b>${zaman}</b></span><span>${esc(M.toplanti || '')}</span></div>
+        <table class="vt-t vt-imz"><tr><th style="width:9mm">Sıra</th><th>Ders</th><th>Öğretmen</th><th style="width:22mm">Görevi</th><th style="width:36mm">İmza</th></tr>
+        <tr><td class="c">1</td><td>—</td><td><b>${esc(M.baskan || '')}</b></td><td>Başkan</td><td></td></tr>${Ls.map(([d, O], i) => `<tr><td class="c">${i + 2}</td><td>${esc(d)}</td><td>${esc(O.map(o => C.baslik(o)).join(', '))}</td><td>${O.some(o => C.baslik(o) === so) ? 'Rehber öğrt.' : 'Üye'}</td><td></td></tr>`).join('')}
+        ${Array.from({ length: 3 }, (_, i) => `<tr><td class="c">${Ls.length + 2 + i}</td><td></td><td></td><td></td><td></td></tr>`).join('')}</table><div class="vt-not">Kurula katılamayan öğretmenin adının yanına mazereti yazılır.</div></section>`;
+      h += `<section class="vt-s vt-yeni">${skBaslik()}<div class="vt-vs-b">${esc(s)} ŞUBE ÖĞRETMENLER KURULU<br><span>ÖĞRENCİ DEĞERLENDİRME ÇİZELGESİ</span></div>
+        <table class="vt-t sk-deg"><thead><tr><th style="width:8mm">#</th><th style="width:13mm">No</th><th>Adı soyadı</th><th style="width:38mm">Başarısı düşük dersler</th><th style="width:44mm">Davranış / gözlem</th><th style="width:15mm">Rehberliğe<br>yönlendir</th></tr></thead><tbody>${L.map((o, i) => `<tr><td class="c">${i + 1}</td><td class="c">${esc(o.no)}</td><td>${esc(C.baslik(o.ad))}</td><td></td><td></td><td class="c"><span class="sk-kutu"></span></td></tr>`).join('')}</tbody></table>
+        <div class="vt-imza"><div></div><div>${esc(so || '……………………')}<br><small>Sınıf Rehber Öğretmeni</small></div></div></section>`;
+      h += vtImzaSirkusu({ so: { [s]: so } }, s, false);
+      return h; }).join('');
+    belgeGoster(belgeKabuk('Şube Öğretmenler Kurulu Dosyası', skCss() + govde), 'ŞÖK dosyası');
+  }
+  const skCss = () => { const v = vtCssAl(); return v + '<style>body>.ust,body>h1{display:none}.sk-tut .vt-imza{margin-top:7mm}.sk-tut .vt-tut-h{margin:4mm 0 1.5mm}.sk-deg td{height:6.4mm;font-size:9pt}.sk-deg thead{display:table-header-group}.sk-deg tr{break-inside:avoid}.sk-kutu{display:inline-block;width:4mm;height:4mm;border:.3mm solid #334155}</style>'; };
+  async function skTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, M = SK.M, k = d.skx;
+    if (k === 'kaydet') { try { await yaz('sok:' + M.id, M); SK.L = [JSON.parse(JSON.stringify(M)), ...SK.L.filter(x => x.id !== M.id)].sort((a, b) => String(b.tarih).localeCompare(String(a.tarih))); SK.degisti = false; skCiz(); bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (k === 'yeni') { if (SK.degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return true; SK.M = skBos(); SK.degisti = false; skCiz(); return true; }
+    if (k === 'sil') { if (!await onayla('Bu toplantı kaydı silinsin mi?')) return true; const { error } = await C.sb.from('umal_idari').delete().eq('anahtar', 'sok:' + M.id); if (error) { uyar('Silinemedi: ' + C.hataYaz(error)); return true; } SK.L = SK.L.filter(x => x.id !== M.id); SK.M = SK.L[0] ? JSON.parse(JSON.stringify(SK.L[0])) : skBos(); SK.degisti = false; skCiz(); return true; }
+    if (k === 'dosya' || k === 'duyuru') { if (!M.tarih) { uyar('Önce toplantı tarihini seçin.'); return true; } skDosya(k === 'duyuru'); return true; }
+    if (d.skac) { if (SK.degisti && !await onayla('Kaydedilmemiş değişiklikler silinsin mi?')) return true; SK.M = JSON.parse(JSON.stringify(SK.L.find(x => x.id === d.skac))); SK.degisti = false; skCiz(); return true; }
+    if (d.skdonem) { M.donem = d.skdonem; SK.degisti = true; skCiz(); return true; }
+    if (d.sktop) { M.toplanti = d.sktop; SK.degisti = true; skCiz(); return true; }
+    if (d.sksinif != null) { const v = d.sksinif; if (!v) M.siniflar = []; else { const S_ = new Set(M.siniflar || []); if (S_.has(v)) S_.delete(v); else S_.add(v); M.siniflar = [...S_].sort(sinifSira); } SK.degisti = true; skCiz(); return true; }
+    return false;
+  }
+  function skGirdi(ev) { const t = ev.target, d = t.dataset, M = SK.M; if (!M) return; if (d.sk) { M[d.sk] = t.value; SK.degisti = true; } if (d.skso) { M.so = M.so || {}; M.so[d.skso] = t.value; SK.degisti = true; } }
+
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -869,19 +944,20 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik }[aktif])(ev);
     };
     kok.onchange = async ev => { const t = ev.target; if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
     if (id === 'kurul') return kurul();
     if (id === 'sinifOlustur') return sinifOlustur();
     if (id === 'veli') return veli();
+    if (id === 'sok') return sok();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
