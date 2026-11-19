@@ -521,7 +521,7 @@
       ${DY.gun === bugunISO() ? '<button class="birincil dya-ac" id="dyaAc">Telefondan yoklama al</button>' : ''}
       <div class="dy-gun"><button class="ikincil" data-dyg="-1" aria-label="Önceki gün">‹</button><b>${esc(gunAd)}</b><button class="ikincil" data-dyg="1" aria-label="Sonraki gün" ${DY.gun >= bugunISO() ? 'disabled' : ''}>›</button>${DY.gun !== bugunISO() ? '<button class="ikincil kucuk" data-dyg="0">Bugün</button>' : ''}</div>`;
     const eksik = idare ? await dyEksikHtml(L, sn) : '';   // K-720: yoklama almayan öğretmenler
-    if (!L.length) { I.innerHTML = ust + eksik + `<div class="kart soluk">Bu gün için tahtadan gelen yoklama yok.${idare ? ' Öğretmen, tahtada Okul › Yoklama ile alır.' : ''}</div>`; dyBagla(kaydir); return; }
+    if (!L.length) { I.innerHTML = ust + eksik + `<div class="kart soluk">Bu gün için tahtadan gelen yoklama yok.${idare ? ' Öğretmen, tahtada Okul › Yoklama ile alır.' : ''}</div>`; dyBagla(kaydir); dyHatBagla(); return; }
     let h = ust + eksik;
     if (idare) {
       h += `<div class="dy-ozet"><div><b>${sinifler.length}</b><span>sınıf</span></div><div><b>${AL.length}</b><span>onaylı yoklama</span></div><div><b style="color:#ff8a8a">${OL.length}</b><span>öğrenci gelmedi</span></div>
@@ -534,7 +534,7 @@
     } else {
       h += L.slice().sort((a, b) => (a.onay ? 1 : 0) - (b.onay ? 1 : 0) || sn(b) - sn(a) || sinifSira(a.sinif, b.sinif)).map(x => dyKart(x, saatYaz)).join('');
     }
-    I.innerHTML = h; dyBagla(kaydir);
+    I.innerHTML = h; dyBagla(kaydir); dyHatBagla();
     const dyOnay = () => document.querySelectorAll('[data-dyon]').forEach(b => b.onclick = async () => { const [sf, an] = b.dataset.dyon.split('|'); b.disabled = true;
       const { data: o, error: e } = await sb.rpc('umal_ders_yoklama_onayla', { p_tarih: DY.gun, p_sinif: sf, p_anahtar: an });
       if (e || !o || !o.ok) { b.disabled = false; uyar('Onaylanamadı: ' + (e ? hataYaz(e) : o && o.hata)); return; } $('#pencere').classList.add('gizli'); dersYoklamaBolumu(true); }); dyOnay();
@@ -555,6 +555,19 @@
     if ($('#dyPdf')) $('#dyPdf').onclick = () => raporYazdir(raporBant('Ders Yoklaması · Gelmeyenler', `${gunAd} · ${OL.length} öğrenci · ${sinifler.length} sınıf`)
       + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Gelmediği dersler</th></tr></thead><tbody>${OL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>${EL.length ? `<h3 style="margin:8mm 0 3mm">Geç gelen · nöbetçi · izinli</h3><table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Durum</th><th>Dersler</th></tr></thead><tbody>${EL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${DADI[o.d]}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>` : ''}`, 'Devamsizlik-' + DY.gun);
   }
+  function dyHatBagla() {   // K-756: yoklama almayan öğretmene telefon bildirimi ("Yoklama alınız")
+    const I = $('#icerik');
+    I.querySelectorAll('[data-dyeg]').forEach(b => b.onclick = () => { DY.eksG = b.dataset.dyeg; dersYoklamaBolumu(true); });
+    const gonder = async (L_, dug) => { const H = L_.filter(x => x.ep); if (!H.length) return;
+      if (!await onayla(H.length === 1 ? `${baslik(H[0].o.replace(/\s+\d+$/, ''))} öğretmenine "Yoklama alınız" bildirimi gönderilsin mi?` : `${H.length} öğretmene "Yoklama alınız" bildirimi gönderilsin mi?`)) return;
+      if (dug) { dug.disabled = true; dug.textContent = 'Gönderiliyor…'; } let hata = '';
+      for (const x of H) { const ders = x.L.map(([n, sf]) => `${n}. ders ${sf}`).join(', ');
+        const { data, error } = await sb.rpc('umal_obil_gonder', { p_kim: 'ogretmen', p_hedef: [x.ep], p_sablon: 'yoklama', p_baslik: 'Yoklama alınız', p_metin: `Bugün ${ders} yoklaması alınmadı. Lütfen yoklamayı alınız.`, p_onemli: true });
+        if (error || !data || !data.ok) { hata = error ? hataYaz(error) : (data && data.hata) || 'Gönderilemedi'; break; } DY.hat[DY.gun + '|' + x.o] = 1; }
+      if (hata) uyar(hata); dersYoklamaBolumu(true); };
+    I.querySelectorAll('[data-dyhat]').forEach(b => b.onclick = () => gonder((DY.eksik || []).filter(x => x.o === b.dataset.dyhat), b));
+    const hh = $('#dyHatHepsi'); if (hh) hh.onclick = () => gonder(DY.eksik || [], hh);
+  }
   async function dyEksikHtml(L, sn) {
     await programYukle().catch(() => null); const P = D.program || {}, gd = new Date(DY.gun + 'T12:00:00'), g = (gd.getDay() + 6) % 7; if (g > 4) return '';
     const zil = ((P.zil || {})[g === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0), an = new Date(), bugun = DY.gun === bugunISO(), t = an.getHours() * 60 + an.getMinutes();
@@ -564,8 +577,15 @@
       if (var_.has(sf + '|' + n)) return; say++; (h.ogretmen || []).forEach(o => (T[o] = T[o] || []).push([n, sf])); }));
     const O = Object.entries(T).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], tr));
     if (!O.length) return `<div class="kart dy-eksik iyi"><b>Yoklama almayan öğretmen yok</b><span class="soluk kucuk">${bugun ? 'Başlamış derslerin hepsinin' : 'Bu günün bütün derslerinin'} yoklaması alınmış.</span></div>`;
-    return `<div class="kart dy-eksik"><div class="dp-bas"><b>Yoklama almayan öğretmenler</b><span class="soluk kucuk">${O.length} öğretmen · ${say} ders${bugun ? ' · başlamış dersler' : ''}</span></div>
-      <div class="dy-eks-l">${O.map(([o, L2]) => `<div><b>${esc(baslik(o))}</b><span>${L2.sort((a, b) => a[0] - b[0]).map(([n, sf]) => `${n}. ders ${esc(sf)}`).join(' · ')}</span></div>`).join('')}</div></div>`;
+    // K-756: öğretmenin e-postası (hatırlatma bildirimi için) ve sınıflara göre görünüm
+    await kisiAdlariYukle().catch(() => {}); const nk = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, ''), EP = new Map(); KISI.forEach((ad, ep) => EP.set(nk(ad), ep));
+    const S_ = {}; O.forEach(([o, L2]) => L2.forEach(([n, sf]) => { (S_[sf] = S_[sf] || new Map()).set(n, [...((S_[sf].get(n)) || []), o]); }));
+    const SL = Object.keys(S_).sort(sinifSira), gonderilen = DY.hat || (DY.hat = {}), gk = o => DY.gun + '|' + o;
+    DY.eksik = O.map(([o, L2]) => ({ o, ep: EP.get(nk(o)) || '', L: L2.slice().sort((a, b) => a[0] - b[0]) }));
+    const ogtSat = x => `<div><b>${esc(baslik(x.o.replace(/\s+\d+$/, '')))}</b><span>${x.L.map(([n, sf]) => `${n}. ders ${esc(sf)}`).join(' · ')}</span>${bugun ? (x.ep ? `<button class="ikincil kucuk dy-hat ${gonderilen[gk(x.o)] ? 'gitti' : ''}" data-dyhat="${esc(x.o)}">${gonderilen[gk(x.o)] ? '✓ Hatırlatıldı' : 'Yoklama alınız'}</button>` : '<small class="soluk">e-postası eşleşmedi</small>') : ''}</div>`;
+    return `<div class="kart dy-eksik"><div class="dp-bas"><b>Yoklama alınmayan dersler</b><span class="soluk kucuk">${O.length} öğretmen · ${SL.length} sınıf · ${say} ders${bugun ? ' · başlamış dersler' : ''}</span></div>
+      <div class="dy-eks-sek"><button class="cip ${DY.eksG !== 'sinif' ? 'secili' : ''}" data-dyeg="ogt">Öğretmenler</button><button class="cip ${DY.eksG === 'sinif' ? 'secili' : ''}" data-dyeg="sinif">Sınıflar</button>${bugun && DY.eksik.some(x => x.ep) ? '<button class="birincil kucuk" id="dyHatHepsi">Hepsine "yoklama alınız" gönder</button>' : ''}</div>
+      ${DY.eksG === 'sinif' ? `<div class="dy-eks-l">${SL.map(sf => `<div><b>${esc(sf)}</b><span>${[...S_[sf].entries()].sort((a, b) => a[0] - b[0]).map(([n, oo]) => `${n}. ders · ${esc(oo.map(baslik).join(', '))}`).join('<br>')}</span></div>`).join('')}</div>` : `<div class="dy-eks-l">${DY.eksik.map(ogtSat).join('')}</div>`}</div>`;
   }
   // K-690b: telefondan yoklama — tahta çalışmazsa öğretmen okuyarak alır. Hız: bu dersin sınıfı ders programından kendiliğinden seçilir,
   // herkes "var" başlar (yalnız gelmeyene dokunulur), bugün önceki derste gelmeyenler hazır işaretli gelir, numara yazarak da işaretlenir.
@@ -635,14 +655,18 @@
     E.querySelectorAll('[data-opy]').forEach(b => b.onclick = () => ac('dersyoklama'));
   }
   function ogtAltKur() {   // yalnız öğretmen, yalnız telefon (CSS ile)
-    if (D.rol !== 'ogretmen' || document.getElementById('ogtAlt')) return;
+    if (!ALT_SEKME[D.rol] || document.getElementById('ogtAlt')) return;
     const ik = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`, F = 'fill="currentColor" fill-opacity=".18" stroke="none"';
-    const T = [['dersyoklama', 'Yoklama', ik(`<rect x="4" y="3.5" width="16" height="17" rx="3" ${F}/><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/>`)],
+    const T0 = [['dersyoklama', 'Yoklama', ik(`<rect x="4" y="3.5" width="16" height="17" rx="3" ${F}/><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/>`)],
       ['oprogram', 'Program', ik(`<rect x="3.5" y="5" width="17" height="15.5" rx="3" ${F}/><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h2M12 14h2M16 14h.5M8 17h2M12 17h2"/>`)],
       ['dosyalar', 'Atlas Sınıf', ik(`<path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" ${F}/><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M12 17v-5.5M9.6 13.6 12 11.2l2.4 2.4"/>`)],
       ['mesajlar', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)],
-      ['menu', 'Menü', ik(`<rect x="3.5" y="3.5" width="7" height="7" rx="2" ${F}/><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" ${F}/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>`)]];
-    const n = document.createElement('nav'); n.id = 'ogtAlt'; n.setAttribute('aria-label', 'Öğretmen menüsü');
+      ['menu', 'Menü', ik(`<rect x="3.5" y="3.5" width="7" height="7" rx="2" ${F}/><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" ${F}/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>`)],
+      ['gorev', 'Görev', ik(`<circle cx="9" cy="8" r="3.5" ${F}/><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 11.5l2 2 4-4.3"/>`)],
+      ['harita', 'Kim nerede', ik(`<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" ${F}/><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.6"/>`)],
+      ['obil', 'Bildirim', ik(`<path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5z" ${F}/><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/>`)]];
+    const T = ALT_SEKME[D.rol].map(id => T0.find(x => x[0] === id)).filter(Boolean);   // K-756: rol başına alt sekmeler
+    const n = document.createElement('nav'); n.id = 'ogtAlt'; n.setAttribute('aria-label', 'Alt menü');
     n.innerHTML = T.map(([id, ad, s]) => `<button data-oa="${id}">${s}<span>${ad}</span>${id === 'mesajlar' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n); document.body.classList.add('ogt-alt');
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; const id = b.dataset.oa; if (id === 'menu') { tumuAc(); } else { try { tumuKapat(); } catch (e) {} ac(id); } guncelle(); };
     // K-749: sohbet ekranının boyu ve klavye davranışı ortak modülde (sohbet-klavye.js): sayfa kaymaz, kutu klavyenin üstünde durur
@@ -808,7 +832,7 @@
     menuKur();
     panelSelam().catch(e => console.warn('karşılama', e));
     setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);
-    if (rol === 'ogretmen') ogtAltKur();   // K-741
+    if (ALT_SEKME[rol]) ogtAltKur();   // K-741 · K-756: idare ve Kurucu da
     if (window.UmalBildirim && ['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol)) UmalBildirim.karsila({ sb, kim: 'personel', no: String(D.eposta || '').toLowerCase() });   // K-730: girişte bildirim izni   // K-720   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
@@ -1061,6 +1085,9 @@
   };
   const menuIk = (id, ik) => `<i class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round">${MENU_IK[ik || id] || '<circle cx="12" cy="12" r="8"/>'}</svg></i>`;
   // K-692: telefonda menü — çok kullanılanlar başta, "☰ Tümü" konu gruplu tam ekran menü (masaüstü değişmez)
+  // K-756: telefonda alt sekmeler (rol başına). Alttaki bölümler telefondaki menüde yinelenmez.
+  const ALT_SEKME = { ogretmen: ['dersyoklama', 'oprogram', 'dosyalar', 'mesajlar', 'menu'], yonetici: ['dersyoklama', 'gorev', 'harita', 'obil', 'menu'], bas: ['harita', 'dersyoklama', 'obil', 'mesajlar', 'menu'] };
+  const altta = id => telefon() && (ALT_SEKME[D.rol] || []).includes(id);
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
     ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
@@ -1090,7 +1117,7 @@
     return v ? `<div class="tm-surum">Atlas · sürüm ${v}${esc(k)}</div>` : ''; }
   function tumuAc(gecmis, grup) {
     if (!telefon()) return;
-    const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
+    const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust && !altta(b.id)).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
     const ad = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mad`); return m ? m.innerHTML : esc((BOLUMLER.find(b => b.id === id) || {}).ad || id); };
     const msayi = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mk-sayi`); return m ? +m.textContent || 0 : 0; };
     // K-697: Rehberlik'in sekmeleri (Formlar, Randevular, Yönlendirmeler, Soru takibi, Çalışma planları) grubun içinde ayrı düğmeler
