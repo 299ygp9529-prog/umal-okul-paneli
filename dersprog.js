@@ -698,6 +698,10 @@
           const neden = [nb ? 'nöbetçi' : '', ara ? 'iki dersinin arasında boş' : ok && !nb ? 'o gün okulda' : '', ok || nb ? '' : 'o gün dersi yok', ayni ? 'aynı branş' : '', bugunSay[o] ? `bugün ${bugunSay[o]} görev` : ''].filter(Boolean).join(' · ');
           return { o, p, neden, nb, ok: ok || nb, bs: bugunSay[o] || 0, kisa: (bugunSay[o] ? `bugün ${bugunSay[o]} görev · ` : '') + (nb ? 'nöbetçi' : ara ? 'arada boş' : ok ? 'okulda' : 'dersi yok') }; }).sort((a, b) => b.p - a.p || sira(a.o, b.o)); };
       const oneri = d => { const A = aday(d), nb = A.filter(x => x.nb); return nb.concat(A.filter(x => !x.nb).slice(0, Math.max(0, 3 - nb.length))); };   // o saatte boş tüm nöbetçiler görünür; 3'ten azsa diğer uygunlarla 3'e tamamlanır
+      // kurala uymayan eski atamalar (o saatte dersi var, nöbetçi değil, idareci, aynı saatte başka görevde) kendiliğinden kaldırılır ve yeniden dağıtılmak üzere boşa düşer
+      let kaldirilan = [];
+      for (const x of [...G.liste]) { if (!x.giren || !GEL.has(x.asil)) continue; const d = dersler.find(y => y.sinif === x.sinif && y.n === +x.saat); if (!d) continue;
+        if (!aday(d).some(c => c.o === x.giren)) { kaldirilan.push(x); G.liste = G.liste.filter(y => y !== x); delete atanan[x.sinif + '|' + x.saat]; if (bugunSay[x.giren] > 1) bugunSay[x.giren]--; else delete bugunSay[x.giren]; } }
       const ata = (d, giren) => { G.liste = G.liste.filter(x => !(x.sinif === d.sinif && +x.saat === d.n)); G.liste.push({ sinif: d.sinif, saat: d.n, ders: d.ders, asil: d.asil, giren }); };
       I.innerHTML = `<div class="ust"><div><h1>Boş Ders Görevlendirme</h1><div class="soluk kucuk">Gelmeyen öğretmeni seçin; Atlas her dersine o saatte boşta olanlardan öneri sunar. Görevli öğretmen dersi kendi panelinde görür ve yoklamayı alabilir.</div></div></div>
         <div class="kart"><div class="dp-bas"><b>Tarih</b><input type="date" class="dp-in" id="gvT" value="${iso(gun)}" style="width:auto"><span class="soluk">${GUN[g] || 'Hafta sonu'}</span></div>
@@ -709,7 +713,7 @@
             return `<div class="gv-nbs"><b>${esc(bas(o))}</b><span>${bos.map(n => `<i>${n}</i>`).join('') || '<small class="soluk">boş saati yok</small>'}</span>${dolu ? `<small class="iyi">${dolu} görev</small>` : ''}</div>`; }).join('')}</div>${BUL.length ? `<div class="soluk kucuk" style="margin-top:8px;color:#ffd166">Ders programında bulunamadı, öneriye alınmadı: ${BUL.map(a => esc(bas(a))).join(', ')} (nöbet listesindeki adı programdakiyle aynı yazılmalı).</div>` : ''}</div>`; })()}
         ${dersler.length ? `<div class="kart"><div class="dp-bas"><b>Görevlendirilecek dersler</b><span class="soluk kucuk">${dersler.length} ders · ${dersler.filter(d => (atanan[d.sinif + '|' + d.n] || {}).giren).length} atandı</span>
           <button class="birincil kucuk" id="gvOto">Adil dağıt</button><button class="birincil kucuk" id="gvKaydet">Kaydet ve bildir</button><button class="ikincil kucuk" id="gvYaz">Çizelge yazdır</button></div>
-          <div class="dp-tbl dp-gvt"><div class="dp-tr bas"><span>Saat</span><span>Sınıf</span><span>Ders</span><span>Gelmeyen</span><span>Görevli</span></div>
+          ${kaldirilan.length ? `<div class="gv-ad-u" style="margin:8px 0">Kurala uymayan ${kaldirilan.length} görev kaldırıldı (${kaldirilan.map(x => `${x.saat}. ders ${esc(bas(x.giren))}`).join(', ')}): o saatte dersi var ya da o gün nöbetçi değil. <b>Adil dağıt</b>'a basıp ardından <b>Kaydet ve bildir</b>'e basın.</div>` : ''}<div class="dp-tbl dp-gvt"><div class="dp-tr bas"><span>Saat</span><span>Sınıf</span><span>Ders</span><span>Gelmeyen</span><span>Görevli</span></div>
           ${dersler.map(d => { const a = atanan[d.sinif + '|' + d.n]; return `<div class="dp-tr"><span><b>${d.n}.</b></span><span>${esc(d.sinif)}</span><span class="soluk">${esc(d.ders)}</span><span class="soluk">${esc(bas(d.asil))}</span>
             <span>${a ? `<button class="dp-gv-sec ${a.giren ? 'dolu' : ''}" data-gvd="${esc(d.sinif)}|${d.n}">${a.giren ? esc(bas(a.giren)) : 'Boş geçer'}</button>`
               : `<span class="gv-oner">${oneri(d).map(x => `<button class="gv-cip ${x.nb ? 'nb' : ''}" data-gvh="${esc(d.sinif)}|${d.n}|${esc(x.o)}" title="${esc(x.neden)}">${x.nb ? '<i></i>' : ''}${esc(bas(x.o).split(' ').slice(0, 2).join(' '))}<small>${esc(x.kisa)}</small></button>`).join('')}<button class="gv-cip diger" data-gvd="${esc(d.sinif)}|${d.n}">Diğer…</button></span>`}</span></div>`; }).join('')}</div>
@@ -733,8 +737,10 @@
         $('#gvBos').onclick = () => { ata(d, ''); document.getElementById('pencere').classList.add('gizli'); ciz2(); }; });
       if ($('#gvDengele')) $('#gvDengele').onclick = async () => { if (!await X.onayla('Bugünkü görevler baştan, en dengeli şekilde yeniden dağıtılsın mı? (Boş geçsin dedikleriniz korunur.)')) return;
         G.liste = G.liste.filter(x => !x.giren); Object.keys(bugunSay).forEach(k => delete bugunSay[k]); ciz2(); $('#gvOto') && $('#gvOto').click(); };
-      if ($('#gvOto')) $('#gvOto').onclick = () => {   // adil dağıtım: kimse 2. görevi almadan, o saatte boş ve okulda olan herkes önce 1 görev alır (tur tur eşleştirme)
-        let kalan = dersler.filter(d => { const a = atanan[d.sinif + '|' + d.n]; return !a; });
+      if ($('#gvOto')) $('#gvOto').onclick = async (ev) => {   // adil dağıtım baştan yapılır (Boş geçsin dedikleri korunur): kimse 2. görevi almadan, o saatte boş her nöbetçi önce 1 görev alır (tur tur eşleştirme)
+        if (ev && ev.isTrusted && G.liste.some(x => x.giren && GEL.has(x.asil)) && !await X.onayla('Görevler baştan, en adil şekilde yeniden dağıtılsın mı? (Boş geçsin dedikleriniz korunur.)')) return;
+        G.liste = G.liste.filter(x => !x.giren || !GEL.has(x.asil)); Object.keys(bugunSay).forEach(k => delete bugunSay[k]); G.liste.forEach(x => { if (x.giren) bugunSay[x.giren] = (bugunSay[x.giren] || 0) + 1; });
+        let kalan = dersler.filter(d => !G.liste.some(x => x.sinif === d.sinif && +x.saat === d.n));
         for (let tur = 1; kalan.length && tur <= 8; tur++) {
           const C = new Map(kalan.map(d => [d, aday(d).filter(x => x.ok && (bugunSay[x.o] || 0) < tur).map(x => x.o)])), es = new Map();   // öğretmen → ders
           const dene = (d, gor) => { for (const o of C.get(d)) { if (gor.has(o)) continue; gor.add(o); if (!es.has(o) || dene(es.get(o), gor)) { es.set(o, d); return true; } } return false; };
