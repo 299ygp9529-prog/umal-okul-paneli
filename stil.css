@@ -2375,3 +2375,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .gt-logo { width: 52px; } .gt-ad1 { font-size: 11px; } .gt-ad2 { font-size: 28px; margin-top: 2px; }
   .giris > .kutu { margin-top: 104px; } .giris .atlas { font-size: 28px; }
 }
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .gt-ata { align-items: flex-end; gap: 20px; }
+  .gt-cerceve { width: auto; height: clamp(150px, 24vh, 260px); aspect-ratio: 1048 / 1008; border-radius: 14px; box-shadow: 0 0 0 1.5px rgba(230,194,122,.85), 0 14px 36px rgba(0,0,0,.6); }
+  .gt-ata figcaption { padding-bottom: 4px; }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-cerceve { height: 128px; } }
+@media (min-width: 1100px) and (max-width: 1500px) and (min-height: 600px) and (hover: hover) { .gt-ata figcaption { max-width: 21ch; } .gt-ata q { font-size: 17px; } }
