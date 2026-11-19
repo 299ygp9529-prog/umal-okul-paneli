@@ -2485,3 +2485,6 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ot-dug { display: grid; gap: 10px; } .ot-dug button { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; font-size: 17px; border-radius: 16px; } .ot-dug svg { width: 24px; height: 24px; }
 .ot-kapat { color: #ffb0b8 !important; border-color: #ff6b7a66 !important; } .ot-bos { text-align: center; padding: 22px; }
 .ogt-msj-yok { opacity: .75; }
+@media (max-width: 760px) { body.ogt-alt.klavye-acik #ogtAlt { display: none !important; } body.ogt-alt.klavye-acik main { padding-bottom: 12px !important; } }
+.msj-alt textarea { min-width: 0; }
+@media (max-width: 760px) { body.ogt-alt .msj-ekran { height: calc(100dvh - 150px - 96px - env(safe-area-inset-bottom)); min-height: 300px; } body.ogt-alt.klavye-acik .msj-ekran { height: calc(100dvh - 150px); } }

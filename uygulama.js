@@ -634,6 +634,11 @@
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; const id = b.dataset.oa; if (id === 'menu') { tumuAc(); } else { try { tumuKapat(); } catch (e) {} ac(id); } guncelle(); };
     const guncelle = () => { const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
     const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
+    // klavye açıkken alt sekmeler gizlenir (iOS'ta klavyenin üstüne oturmasın)
+    const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
+    document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });
+    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); }, 120));
+    if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (window.innerHeight - visualViewport.height < 120 && !yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); });
     setInterval(guncelle, 400); say(); setInterval(() => { if (!document.hidden) say(); }, 60000); window.addEventListener('hashchange', guncelle);
   }
   async function dyDerslerim() {   // ders programından öğretmenin bugünkü dersleri ve şu anki ders
