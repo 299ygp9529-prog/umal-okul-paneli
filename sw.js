@@ -14,7 +14,8 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close(); const u = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(L => {
-    for (const c of L) if (c.url.startsWith(u) && 'focus' in c) return c.focus();
+    const yol = new URL(u).pathname, c = L.find(x => new URL(x.url).pathname === yol) || null;
+    if (c) return c.focus().then(w => (w || c).navigate ? (w || c).navigate(u) : null).catch(() => self.clients.openWindow(u));
     return self.clients.openWindow(u);
   }));
 });

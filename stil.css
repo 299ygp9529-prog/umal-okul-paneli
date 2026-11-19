@@ -2255,3 +2255,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .gv-nbs small.iyi { color: var(--neon); }
 .gv-cip.nb { padding-right: 18px; }
 .ob-yon { margin: 12px 0 4px; padding: 12px; border-radius: 12px; border: 1px solid rgba(94,224,138,.45); background: rgba(94,224,138,.07); } .ob-yon b { display: block; } .ob-yon span { display: block; color: var(--soluk); font-size: 13px; margin: 3px 0 10px; } .ob-yon .birincil { width: 100%; }
+/* K-725 okundu bilgisi */
+.ob-ozet { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-top: 6px; }
+.ob-d { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; } .ob-d i { width: 8px; height: 8px; border-radius: 50%; }
+.ob-d.ok { color: #5ee08a; } .ob-d.ok i { background: #5ee08a; box-shadow: 0 0 6px #5ee08a; } .ob-d.tel { color: var(--neon); } .ob-d.tel i { background: var(--neon); } .ob-d.bek { color: var(--soluk); } .ob-d.bek i { background: transparent; border: 1.5px solid var(--soluk); }
+.ob-kisi { margin-top: 6px; } .ob-kisi summary { cursor: pointer; color: var(--neon); font-size: 13px; font-weight: 700; } .ob-kisi > div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--cizgi); font-size: 14px; } .ob-kisi > div:last-child { border-bottom: 0; }
+.ob-yeni { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; color: #04202a; background: var(--neon); border-radius: 6px; padding: 1px 6px; margin-right: 8px; vertical-align: 2px; }
+.ob-kisi .ob-d { white-space: nowrap; flex: none; } .ob-kisi > div > span:first-child { min-width: 0; }

@@ -987,7 +987,7 @@
     const L = (data.liste || []).filter(x => x.id > g).slice(0, 3);
     k.innerHTML = L.map(x => `<div class="kart obk ${x.onemli ? 'onemli' : ''}"><small>${x.onemli ? 'ÖNEMLİ · ' : ''}İDAREDEN</small><b></b><p></p><button class="ikincil" data-obok="${x.id}">Okudum</button></div>`).join('');
     k.querySelectorAll('.obk').forEach((el, i) => { el.querySelector('b').textContent = L[i].baslik; el.querySelector('p').textContent = L[i].metin; });
-    k.querySelectorAll('[data-obok]').forEach(b => b.onclick = () => { const m = Math.max(g, ...L.map(x => x.id).filter(id => id <= +b.dataset.obok)); try { localStorage.setItem('umalObil:' + S.no, String(Math.max(+b.dataset.obok, m))); } catch (e) {} obYukle(); });
+    k.querySelectorAll('[data-obok]').forEach(b => b.onclick = () => { sb.rpc('umal_obil_okudum_kod', { p_kim: 'ogrenci', p_no: S.no, p_kod: S.kod, p_idler: [+b.dataset.obok] }).then(() => {}, () => {}); const m = Math.max(g, ...L.map(x => x.id).filter(id => id <= +b.dataset.obok)); try { localStorage.setItem('umalObil:' + S.no, String(Math.max(+b.dataset.obok, m))); } catch (e) {} obYukle(); });
   }
   async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); }
   function tuAnaCiz() { const k = $('#gbAnaKart'); if (!k) return; if (!TU.L.length) { k.classList.add('gizli'); return; }

@@ -198,16 +198,20 @@
     const E = $('#obIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
     const { data, error } = await X.sb.rpc('umal_obil_liste', { p_gun: 60 }); if (!$('#obIc')) return;
     if (error || !data || !data.ok) { E.innerHTML = `<div class="kart">${esc(error ? X.hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
-    const ad = (k, h) => k === 'ogretmen' ? h.length + ' öğretmen' : h.length === 1 ? esc(bas(((X.D.ogrenciler || []).find(o => o.no === h[0]) || {}).ad || h[0])) + (k === 'veli' ? ' velisi' : '') : h.length + (k === 'veli' ? ' veli' : ' öğrenci');
-    E.innerHTML = `<div class="kart">${(data.liste || []).map(b => `<div class="ob-sat ${b.onemli ? 'onemli' : ''}"><div class="ob-ust"><b>${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>
-      <div class="soluk kucuk">${KIM_AD[b.kim]} · ${ad(b.kim, b.hedef || [])} · telefon bildirimi ${b.telefon}${b.gonderen_ad ? ' · ' + esc(bas(b.gonderen_ad)) : ''}</div></div>`).join('') || '<div class="soluk">Son 60 günde bildirim gönderilmedi.</div>'}</div>`;
+    const saat = t => { const d = new Date(t); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+    const durum = k => k.okundu ? `<span class="ob-d ok"><i></i>Okundu · ${saat(k.okundu)}</span>` : k.tel ? '<span class="ob-d tel"><i></i>Telefona iletildi</span>' : `<span class="ob-d bek"><i></i>${'Ekranında bekliyor'}</span>`;
+    E.innerHTML = `<div class="kart">${(data.liste || []).map(b => { const K = b.kisiler || [], ok = K.filter(k => k.okundu).length, tel = K.filter(k => k.tel && !k.okundu).length;
+      return `<div class="ob-sat ${b.onemli ? 'onemli' : ''}"><div class="ob-ust"><b>${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>
+      <div class="ob-ozet"><span class="soluk kucuk">${KIM_AD[b.kim]} · ${K.length} kişi${b.gonderen_ad ? ' · ' + esc(bas(b.gonderen_ad)) : ''}</span><span class="ob-d ok"><i></i>${ok}/${K.length} okundu</span>${tel ? `<span class="ob-d tel"><i></i>${tel} iletildi</span>` : ''}</div>
+      <details class="ob-kisi"><summary>Kim okudu?</summary>${K.map(k => `<div><span>${esc(bas(k.ad || k.no))}${b.kim === 'veli' ? ' <small class="soluk">velisi</small>' : ''}</span>${durum(k)}</div>`).join('')}</details></div>`; }).join('') || '<div class="soluk">Son 60 günde bildirim gönderilmedi.</div>'}</div>`;
   }
   async function gelenCiz() {
     const E = $('#obIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
     const { data, error } = await X.sb.rpc('umal_obil_benim'); if (!$('#obIc')) return;
     if (error) { E.innerHTML = `<div class="kart">${esc(X.hataYaz(error))}</div>`; return; }
     const L = data || []; try { if (L[0]) localStorage.setItem('obilGor:' + X.D.eposta, String(L[0].id)); } catch (e) {}
-    E.innerHTML = `<div class="kart">${L.map(b => `<div class="ob-sat ${b.onemli ? 'onemli' : ''}"><div class="ob-ust"><b>${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>${b.gonderen_ad ? `<div class="soluk kucuk">${esc(bas(b.gonderen_ad))}</div>` : ''}</div>`).join('') || '<div class="soluk">Size gelen bildirim yok.</div>'}</div>`;
+    const yeni = L.filter(b => !b.okundu).map(b => b.id); if (yeni.length) X.sb.rpc('umal_obil_okudum', { p_idler: yeni }).then(() => {}, () => {});   // K-725: idare "okundu" görür
+    E.innerHTML = `<div class="kart">${L.map(b => `<div class="ob-sat ${b.onemli ? 'onemli' : ''} ${b.okundu ? '' : 'yeni'}"><div class="ob-ust"><b>${b.okundu ? '' : '<i class="ob-yeni">YENİ</i>'}${esc(b.baslik)}</b><span class="soluk kucuk">${zaman(b.olusma)}</span></div><div>${esc(b.metin)}</div>${b.gonderen_ad ? `<div class="soluk kucuk">${esc(bas(b.gonderen_ad))}</div>` : ''}</div>`).join('') || '<div class="soluk">Size gelen bildirim yok.</div>'}</div>`;
   }
   window.UmalGB = { gb, veli, obil };
 })();

@@ -126,8 +126,9 @@ input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid 
       : sek === 'gb' ? (G.length ? G.map(x => `<div class="gb ${x.tur}"><span class="etk ${x.tur}">${x.tur === 'tebrik' ? 'TEBRİK' : 'UYARI'}</span><b>${esc(x.neden)}</b>${x.aciklama ? `<div class="soluk">${esc(x.aciklama)}</div>` : ''}<div class="soluk kucuk">${esc(bas(x.ogretmen || ''))} · ${esc(gun(x.tarih))}</div></div>`).join('') : '<div class="soluk">Henüz tebrik ya da uyarı yok.</div>')
       : ((V.duyurular || []).length ? V.duyurular.map(d => `<div class="gb duy"><b>${esc(d.baslik)}</b>${esc(d.metin || '')}<div class="soluk kucuk">${esc(gun(d.tarih))}</div></div>`).join('') : '<div class="soluk">Duyuru yok.</div>')}</div>
       <div class="not">Son güncelleme: ${new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })} · Sayfa açıkken 5 dakikada bir yenilenir.</div>`;
-    A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; if (sek === 'mes' && (V.mesajlar || [])[0]) { try { localStorage.setItem('umalVeliMes', String(V.mesajlar[0].id)); } catch (e) {} } ciz(); }); bldCiz();
-    const mt = $('#mesTamam'); if (mt) mt.onclick = () => { try { localStorage.setItem('umalVeliMes', String(V.mesajlar[0].id)); } catch (e) {} ciz(); };
+    const okudu = () => { const L = (V.mesajlar || []).map(x => x.id); if (L.length && O) sb.rpc('umal_obil_okudum_kod', { p_kim: 'veli', p_no: O.no, p_kod: O.kod, p_idler: L }).then(() => {}, () => {}); try { localStorage.setItem('umalVeliMes', String(V.mesajlar[0].id)); } catch (e) {} };   // K-725
+    A.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sek = b.dataset.s; if (sek === 'mes' && (V.mesajlar || [])[0]) okudu(); ciz(); }); bldCiz();
+    const mt = $('#mesTamam'); if (mt) mt.onclick = () => { okudu(); ciz(); };
   }
   let SF = null;
   function sifreAc(no, kod) { SF = { no, kod }; $('#giris').classList.add('gizli'); $('#sekme').classList.add('gizli'); $('#sifre').classList.remove('gizli'); $('#sfY').value = $('#sfT').value = ''; $('#sfBilgi').textContent = ''; setTimeout(() => $('#sfY').focus(), 60); }
