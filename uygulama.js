@@ -558,6 +558,7 @@
   function dyHatBagla() {   // K-756: yoklama almayan öğretmene telefon bildirimi ("Yoklama alınız")
     const I = $('#icerik');
     I.querySelectorAll('[data-dyeg]').forEach(b => b.onclick = () => { DY.eksG = b.dataset.dyeg; dersYoklamaBolumu(true); });
+    I.querySelectorAll('[data-dyetum]').forEach(b => b.onclick = () => { DY.eksTum = true; dersYoklamaBolumu(true); });
     const gonder = async (L_, dug) => { const H = L_.filter(x => x.ep); if (!H.length) return;
       if (!await onayla(H.length === 1 ? `${baslik(H[0].o.replace(/\s+\d+$/, ''))} öğretmenine "Yoklama alınız" bildirimi gönderilsin mi?` : `${H.length} öğretmene "Yoklama alınız" bildirimi gönderilsin mi?`)) return;
       if (dug) { dug.disabled = true; dug.textContent = 'Gönderiliyor…'; } let hata = '';
@@ -582,10 +583,15 @@
     const S_ = {}; O.forEach(([o, L2]) => L2.forEach(([n, sf]) => { (S_[sf] = S_[sf] || new Map()).set(n, [...((S_[sf].get(n)) || []), o]); }));
     const SL = Object.keys(S_).sort(sinifSira), gonderilen = DY.hat || (DY.hat = {}), gk = o => DY.gun + '|' + o;
     DY.eksik = O.map(([o, L2]) => ({ o, ep: EP.get(nk(o)) || '', L: L2.slice().sort((a, b) => a[0] - b[0]) }));
-    const ogtSat = x => `<div><b>${esc(baslik(x.o.replace(/\s+\d+$/, '')))}</b><span>${x.L.map(([n, sf]) => `${n}. ders ${esc(sf)}`).join(' · ')}</span>${bugun ? (x.ep ? `<button class="ikincil kucuk dy-hat ${gonderilen[gk(x.o)] ? 'gitti' : ''}" data-dyhat="${esc(x.o)}">${gonderilen[gk(x.o)] ? '✓ Hatırlatıldı' : 'Yoklama alınız'}</button>` : '<small class="soluk">e-postası eşleşmedi</small>') : ''}</div>`;
-    return `<div class="kart dy-eksik"><div class="dp-bas"><b>Yoklama alınmayan dersler</b><span class="soluk kucuk">${O.length} öğretmen · ${SL.length} sınıf · ${say} ders${bugun ? ' · başlamış dersler' : ''}</span></div>
-      <div class="dy-eks-sek"><button class="cip ${DY.eksG !== 'sinif' ? 'secili' : ''}" data-dyeg="ogt">Öğretmenler</button><button class="cip ${DY.eksG === 'sinif' ? 'secili' : ''}" data-dyeg="sinif">Sınıflar</button>${bugun && DY.eksik.some(x => x.ep) ? '<button class="birincil kucuk" id="dyHatHepsi">Hepsine "yoklama alınız" gönder</button>' : ''}</div>
-      ${DY.eksG === 'sinif' ? `<div class="dy-eks-l">${SL.map(sf => `<div><b>${esc(sf)}</b><span>${[...S_[sf].entries()].sort((a, b) => a[0] - b[0]).map(([n, oo]) => `${n}. ders · ${esc(oo.map(baslik).join(', '))}`).join('<br>')}</span></div>`).join('')}</div>` : `<div class="dy-eks-l">${DY.eksik.map(ogtSat).join('')}</div>`}</div>`;
+    const ad_ = o => baslik(String(o).replace(/\s+\d+$/, '')), bas2 = o => ad_(o).split(' ').filter(Boolean).map(z => z[0]).slice(0, 2).join('');
+    const ders_ = L2 => { const G = []; L2.forEach(([n, sf]) => { const g = G[G.length - 1]; if (g && g.sf === sf && g.b === n - 1) g.b = n; else G.push({ a: n, b: n, sf }); }); return G.map(g => `<i>${g.a === g.b ? g.a : g.a + '–' + g.b}<em>${esc(g.sf)}</em></i>`).join(''); };   // ardışık aynı sınıf: 1–2 9-D
+    const ZIL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg>', TIK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+    const ogtSat = x => `<div class="dye-sat"><span class="dye-av">${esc(bas2(x.o))}</span><div class="dye-m"><b>${esc(ad_(x.o))}</b><div class="dye-d">${ders_(x.L)}</div></div>${bugun ? (x.ep ? (gonderilen[gk(x.o)] ? `<span class="dye-z ok" title="Hatırlatıldı">${TIK}</span>` : `<button class="dye-z" data-dyhat="${esc(x.o)}" title="Yoklama alınız" aria-label="Yoklama alınız bildirimi gönder">${ZIL}</button>`) : '<span class="dye-yok" title="e-postası eşleşmedi">?</span>') : ''}</div>`;
+    const sinSat = sf => `<div class="dye-sat"><span class="dye-av s">${esc(sf)}</span><div class="dye-m">${[...S_[sf].entries()].sort((a, b) => a[0] - b[0]).map(([n, oo]) => `<div class="dye-sd"><i>${n}</i><span>${esc(oo.map(ad_).join(', '))}</span></div>`).join('')}</div></div>`;
+    const kalan = DY.eksik.filter(x => x.ep && !gonderilen[gk(x.o)]).length;
+    return `<div class="kart dy-eksik"><div class="dye-ust"><div><small>YOKLAMA ALINMAYAN</small><b>${say} ders</b><span>${O.length} öğretmen · ${SL.length} sınıf${bugun ? ' · başlamış dersler' : ''}</span></div>${bugun && kalan ? `<button class="dye-hep" id="dyHatHepsi">${ZIL}<span>Hepsine hatırlat</span></button>` : ''}</div>
+      <div class="dye-sek"><button class="${DY.eksG !== 'sinif' ? 'secili' : ''}" data-dyeg="ogt">Öğretmenler</button><button class="${DY.eksG === 'sinif' ? 'secili' : ''}" data-dyeg="sinif">Sınıflar</button></div>
+      <div class="dye-l">${(L_ => (DY.eksTum ? L_ : L_.slice(0, 8)).join('') + (L_.length > 8 && !DY.eksTum ? `<button class="dye-tum" data-dyetum="1">Tümünü göster · ${L_.length}</button>` : ''))(DY.eksG === 'sinif' ? SL.map(sinSat) : DY.eksik.map(ogtSat))}</div></div>`;
   }
   // K-690b: telefondan yoklama — tahta çalışmazsa öğretmen okuyarak alır. Hız: bu dersin sınıfı ders programından kendiliğinden seçilir,
   // herkes "var" başlar (yalnız gelmeyene dokunulur), bugün önceki derste gelmeyenler hazır işaretli gelir, numara yazarak da işaretlenir.
