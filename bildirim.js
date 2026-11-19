@@ -7,7 +7,7 @@
   const ekranda = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   const destek = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   let kayit = null;
-  async function sw() { if (kayit) return kayit; kayit = await navigator.serviceWorker.register('/sw.js', { scope: '/' }); await navigator.serviceWorker.ready; return kayit; }
+  async function sw() { if (kayit) return kayit; kayit = await navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }); try { kayit.update(); } catch (e) {} await navigator.serviceWorker.ready; return kayit; }
   const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
   async function durum() {
     if (ios && !ekranda()) return 'ios-ekle';   // iPhone: Safari sekmesinde bildirim olmaz, yalnız ana ekrana eklenen uygulamada

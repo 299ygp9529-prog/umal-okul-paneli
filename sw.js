@@ -6,11 +6,11 @@ self.addEventListener('fetch', () => {});
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { metin: e.data ? e.data.text() : '' }; }
   const acil = !!d.acil;
-  // Kilit ekranı: büyük simge okul logosu; durum çubuğundaki küçük simge tek renkli Atlas rozeti (renkli logo orada bozuk görünüyordu)
+  // Kilit ekranı: yalnız tek renkli Atlas rozeti (sağdaki büyük logo kaldırıldı; renkli logo küçük simgede beyaz kareye dönüşüyordu)
   // Uygulama simgesindeki sayı = okunmamış bildirim sayısı (d.sayi); bilinmiyorsa değiştirilmez
   const rozet = typeof d.sayi === 'number' && self.navigator.setAppBadge ? (d.sayi > 0 ? self.navigator.setAppBadge(d.sayi) : self.navigator.clearAppBadge()).catch(() => {}) : Promise.resolve();
   e.waitUntil(Promise.all([rozet, self.registration.showNotification(d.baslik || 'Atlas', {
-    body: d.metin || '', icon: '/simge-192.png', badge: '/rozet-96.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
+    body: d.metin || '', badge: '/rozet-96.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
     requireInteraction: acil, vibrate: acil ? [400, 150, 400, 150, 400, 150, 600] : [200, 100, 200], silent: false, data: { url: d.url || '/' }, lang: 'tr'
   })]));
 });
