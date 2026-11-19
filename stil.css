@@ -2412,3 +2412,6 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .kod-link.kayit-vurgu { border-color: var(--neon) !important; color: var(--neon) !important; font-weight: 800; box-shadow: 0 0 16px rgba(34,232,255,.35); }
 .kayit-bilgi, .kayit-bilgi li { text-align: left !important; } .kayit-bilgi li { display: list-item !important; margin: 2px 0; } .kayit-bilgi li b { display: inline !important; font-size: inherit !important; color: var(--neon); }
 .kayit-modu label[for="sifre"], .kayit-modu .sifre-kutu, .kayit-modu #sifreGiris { display: none !important; } .kayit-modu #kodGonder { width: 100%; padding: 15px; font-size: 16px; }
+/* K-734 eskiden girmiş, yeni kodla girmemiş öğrenci */
+[data-ogr].eski-girdi { position: relative; box-shadow: 0 0 0 2px #ffb867 inset; border-radius: 12px; }
+[data-ogr].eski-girdi::after { content: 'eski'; position: absolute; top: 4px; right: 4px; padding: 1px 6px; border-radius: 6px; background: #ffb867; color: #2a1600; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
