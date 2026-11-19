@@ -84,17 +84,19 @@
     document.querySelectorAll('[data-asg]').forEach(b => b.onclick = () => { S = { gorev: b.dataset.asg, metin: '', bicim: 'resmi', yazi: '', maske: null, bekle: false }; yazCiz(); });
   }
   function yazCiz() {
-    const g = G[S.gorev], M = gizle(S.metin), top = M.say.ad + M.say.tc + M.say.tel + M.say.no + M.say.ep;
-    const ozet = [M.say.ad && `${M.eslem.length} öğrenci adı`, M.say.no && 'numara', M.say.tc && 'T.C.', M.say.tel && 'telefon', M.say.ep && 'e-posta'].filter(Boolean).join(', ');
+    const g = G[S.gorev];
+    const canliHtml = () => { const M = gizle(S.metin), top = M.say.ad + M.say.tc + M.say.tel + M.say.no + M.say.ep;   // K-771: yazarken yalnız bu kısım yenilenir (yazı kutusu yeniden çizilmez: klavye kısayolları, kelime önerileri bozulmaz)
+      const ozet = [M.say.ad && `${M.eslem.length} öğrenci adı`, M.say.no && 'numara', M.say.tc && 'T.C.', M.say.tel && 'telefon', M.say.ep && 'e-posta'].filter(Boolean).join(', ');
+      return `${S.metin.trim() ? `<div class="as-onizle"><div class="as-onizle-bas">Yapay zekâya gidecek metin</div>${vurgula(M.t)}</div>` : ''}
+      <div class="as-kalkan ${top ? 'var' : ''}">${IK('<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9 4.6-.4 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>')}<span>${top ? `<b>${ozet} gizlendi.</b> Yapay zekâya yalnız sarı etiketler gider; cevapta öğrenci adları geri yazılır.` : 'Öğrenci adı, numarası, T.C., telefon yazarsanız gönderilmeden gizlenir. Okul listesinde olmayan adları kendiniz kısaltın.'}</span></div>`; };
     C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri" id="asGeri">← Hazır işler</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
-      <textarea id="asMetin" class="as-metin" rows="7" placeholder="${C.esc(g[2])}">${C.esc(S.metin)}</textarea>
-      ${S.metin.trim() ? `<div class="as-onizle"><div class="as-onizle-bas">Yapay zekâya gidecek metin</div>${vurgula(M.t)}</div>` : ''}
-      <div class="as-kalkan ${top ? 'var' : ''}">${IK('<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9 4.6-.4 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>')}<span>${top ? `<b>${ozet} gizlendi.</b> Yapay zekâya yalnız sarı etiketler gider; cevapta öğrenci adları geri yazılır.` : 'Öğrenci adı, numarası, T.C., telefon yazarsanız gönderilmeden gizlenir. Okul listesinde olmayan adları kendiniz kısaltın.'}</span></div>
+      <textarea id="asMetin" class="as-metin" rows="7" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-bicim="yok" placeholder="${C.esc(g[2])}">${C.esc(S.metin)}</textarea>
+      <div id="asCanli">${canliHtml()}</div>
       <div class="as-bas">NASIL OLSUN</div><div class="as-bicim">${[['resmi', 'Ayrıntılı'], ['kisa', 'Kısa'], ['madde', 'Maddeler']].map(([k, a]) => `<button class="${S.bicim === k ? 'secili' : ''}" data-asb="${k}">${a}</button>`).join('')}</div>
       <button class="birincil as-gonder" id="asGonder" ${S.bekle ? 'disabled' : ''}>${S.bekle ? 'Atlas yazıyor…' : 'Atlas\'a gönder'}</button>
       <p class="as-not">Atlas'ın cevabı bir taslaktır; kullanmadan önce okuyup düzeltin. Yazdıklarınız Atlas'ta saklanmaz.</p></div>`);
     const ta = document.getElementById('asMetin');
-    ta.oninput = () => { S.metin = ta.value; clearTimeout(yazCiz.z); yazCiz.z = setTimeout(() => { const p = ta.selectionStart; yazCiz(); const y = document.getElementById('asMetin'); y.focus(); y.setSelectionRange(p, p); }, 700); };
+    ta.oninput = () => { S.metin = ta.value; clearTimeout(yazCiz.z); yazCiz.z = setTimeout(() => { const k = document.getElementById('asCanli'); if (k) k.innerHTML = canliHtml(); }, 500); };
     document.getElementById('asGeri').onclick = anaCiz;
     document.querySelectorAll('[data-asb]').forEach(b => b.onclick = () => { S.metin = ta.value; S.bicim = b.dataset.asb; yazCiz(); });
     document.getElementById('asGonder').onclick = () => { S.metin = ta.value; gonder(); };
@@ -117,7 +119,7 @@
     C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri" id="asGeri">← Metne dön</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
       <div class="as-cevap">${bekliyor ? '<p class="soluk">Atlas yeniden yazıyor…</p>' : md(S.yazi)}</div>
       <div class="as-dug"><button class="birincil" id="asKopya">Kopyala</button><button class="ikincil" id="asYaz">Yazdır / PDF</button><button class="ikincil" id="asTekrar">Yeniden yaz</button></div>
-      <div class="as-takip"><input id="asEk" placeholder="&quot;Daha kısa yaz&quot;, &quot;veliye hitaben yaz&quot;…" autocomplete="off"><button id="asEkGonder" aria-label="Gönder">${IK('<path d="M4 12h15M13 6l6 6-6 6"/>')}</button></div></div>`);
+      <div class="as-takip"><input id="asEk" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-bicim="yok" placeholder="&quot;Daha kısa yaz&quot;, &quot;veliye hitaben yaz&quot;…"><button id="asEkGonder" aria-label="Gönder">${IK('<path d="M4 12h15M13 6l6 6-6 6"/>')}</button></div></div>`);
     document.getElementById('asGeri').onclick = yazCiz;
     document.getElementById('asKopya').onclick = async () => { try { await navigator.clipboard.writeText(S.yazi.replace(/^#+\s+/gm, '').replace(/\*\*(.+?)\*\*/g, '$1')); C.uyar('Kopyalandı.'); } catch (e) { C.uyar('Kopyalanamadı; metni seçip kopyalayın.'); } };
     document.getElementById('asYaz').onclick = () => C.raporYazdir(C.raporBant(C.esc(g[0]), 'Atlas asistanı · taslak') + (window.katex && matVar(S.yazi) ? `<link rel="stylesheet" href="${new URL('katex/katex.min.css', location.href).href}">` : '') + `<div style="margin:6mm 14mm;font-size:11pt;line-height:1.55">${md(S.yazi)}</div>`, g[0]);
