@@ -1655,4 +1655,23 @@
       if (n && k.length === 8) $('#girisBtn').click();
     }
   } catch (e) {}
+  // K-748: telefonda alt sekmeler (Ana sayfa · Program · Sınavlarım · Mesajlar) — hafif: bulanıklık ve animasyon yok
+  (function ogrAlt() {
+    const ik = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`, F = 'fill="currentColor" fill-opacity=".18" stroke="none"';
+    const T = [['liste', 'Ana sayfa', ik(`<path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z" ${F}/><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z"/>`)],
+      ['s-program', 'Program', ik(`<rect x="3.5" y="5" width="17" height="15.5" rx="3" ${F}/><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h2M12 14h2M8 17h2"/>`)],
+      ['s-sinav', 'Sınavlarım', ik(`<path d="M6.5 3.5h8l4 4v12a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19.5v-14.5a1.5 1.5 0 0 1 1.5-1.5z" ${F}/><path d="M6.5 3.5h8l4 4v12a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19.5v-14.5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M14.5 3.5v4h4M8.5 12.5l2 2 4-4.2M8.5 17.5h7"/>`)],
+      ['s-msj', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)]];
+    const n = document.createElement('nav'); n.id = 'ogrAlt'; n.setAttribute('aria-label', 'Öğrenci menüsü');
+    n.innerHTML = T.map(([id, ad, sv]) => `<button data-oa="${id}">${sv}<span>${ad}</span>${id === 's-msj' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n);
+    const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { msAc(); return; }
+      const b = document.createElement('button'); b.dataset.git = id; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } };
+    n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; if (b.dataset.oa === aktifEkran() && b.dataset.oa !== 's-msj') { window.scrollTo(0, 0); return; } git(b.dataset.oa); setTimeout(guncelle, 50); };
+    const guncelle = () => { const a = aktifEkran(), acik = !!S.kod && a && a !== 'giris'; document.body.classList.toggle('ogr-alt', acik);
+      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a)); const k = msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); };
+    setInterval(guncelle, 1000); guncelle();
+    const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
+    document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });
+    document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); }, 120));
+  })();
 })();
