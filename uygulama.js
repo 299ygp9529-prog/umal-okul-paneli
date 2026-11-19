@@ -2008,6 +2008,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }
     return new Blob([await yeni.save()], { type: 'application/pdf' });
   }
+  const YZ_SAGLIK = { kagit_az: 'kâğıt azaldı', kagit_yok: 'kâğıt yok — kâğıt konunca yazdırır', toner_az: 'toner azaldı', toner_yok: 'toner bitti', kapak_acik: 'kapağı açık', sikisma: 'kâğıt sıkışmış', cevrimdisi: 'yazıcı kapalı ya da ağda yok — açılınca yazdırır', servis: 'servis gerekiyor', cikis_dolu: 'çıkış tepsisi dolu' };   // K-732
   async function okuldaYazdir(k) {   // k: { ad, dosya?: Blob, uret?: async () => Blob, yol?: kısayolla yüklenmiş PDF }
     let L = [], sec = null, kopya = 1, sayfa = '', blob = k.dosya || null, A = { ...YZ_VARS };
     try { Object.assign(A, JSON.parse(localStorage.getItem(YZ_AYAR) || '{}')); } catch (e) {}
@@ -2019,7 +2020,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       const kay = $('#pencereIcerik .yz-pen'), ust = kay ? kay.scrollTop : 0;
       pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">Okulda yazdır</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(k.ad || 'Belge')}</b><small id="yzHazir">${blob ? 'PDF hazır · ' + Math.max(1, Math.round(blob.size / 1024)) + ' KB' : 'PDF hazırlanıyor…'}</small></span></div>
-        <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(y.cihaz_ad)} · ${esc(y.yazici)}</b><small>${y.acik ? (y.hazir ? 'açık' : 'açık · yazdırma programı eksik') : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span></button>`).join('')}</div>
+        <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(y.cihaz_ad)} · ${esc(y.yazici)}</b><small>${y.acik ? (y.hazir ? (YZ_SAGLIK[y.saglik] ? '<span class="yz-uyari">' + YZ_SAGLIK[y.saglik] + '</span>' : 'açık · hazır') : 'açık · yazdırma programı eksik') : y.yedek ? 'bilgisayar kapalı — aynı yazıcıya bağlı açık bilgisayardan yazdırılır' : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span></button>`).join('')}</div>
         <div class="yz-bas">Kopya · Sayfa aralığı</div><div class="yz-sat"><div class="yz-kopya"><button data-k="-1">−</button><b>${kopya}</b><button data-k="1">+</button></div><input id="yzSayfa" placeholder="Tümü · ya da 1-3,5" inputmode="numeric" value="${esc(sayfa)}"></div>
         ${seg('Hangi sayfalar', 'tc', [['tumu', 'Hepsi'], ['tek', 'Tek sayfalar'], ['cift', 'Çift sayfalar']])}
         ${seg('Renk', 'renk', [['renkli', 'Renkli'], ['siyah', 'Siyah-beyaz']])}
@@ -2071,14 +2072,14 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       <p class="cok-soluk kucuk" style="margin:10px 0 0">Atlas'taki listeler, biletler ve raporlarda da önizlemenin üstündeki <b>Okulda yazdır</b> düğmesi aynı işi yapar.</p></div>
       <div class="kart"><div class="ust" style="align-items:center"><h3 style="margin:0">Çıktılarım</h3><button class="ikincil" id="ckYenile">Yenile</button></div><div id="ckIsler" class="soluk">Yükleniyor…</div></div>`;
     $('#ckDosya').onchange = ev => { const f = ev.target.files[0]; ev.target.value = ''; if (!f) return; if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { uyar('Yalnız PDF dosyası yazdırılabilir.'); return; } if (f.size > 40 * 1024 * 1024) { uyar('Dosya 40 MB\'tan büyük.'); return; } okuldaYazdir({ ad: f.name, dosya: f }); };
-    const DUR = { sirada: ['Sırada', 'bek'], bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
+    const DUR = { sirada: ['Sırada', 'bek'], bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazicida: ['Yazıcıda bekliyor', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
     ciz_cikti = async () => {
       if (D.bolum !== 'cikti' || !$('#ckIsler')) return;
       const r = await sb.rpc('umal_panel_islerim'); const L = !r.error && Array.isArray(r.data) ? r.data : [];
       if (r.error) { $('#ckIsler').textContent = 'Yüklenemedi: ' + hataYaz(r.error); return; }
       $('#ckIsler').classList.toggle('soluk', !L.length);
-      $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(i.cihaz_ad)} · ${esc(i.yazici)} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.durum === 'hata' && i.hata ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
-      if (L.some(i => i.durum === 'sirada' || i.durum === 'bekliyor' || i.durum === 'yazdiriliyor')) setTimeout(ciz_cikti, 8000);
+      $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(i.cihaz_ad)} · ${esc(i.yazici)} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.hata && i.durum !== 'yazdirildi' ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
+      if (L.some(i => i.durum === 'sirada' || i.durum === 'bekliyor' || i.durum === 'yazdiriliyor' || i.durum === 'yazicida')) setTimeout(ciz_cikti, 8000);
     };
     $('#ckYenile').onclick = ciz_cikti; ciz_cikti();
     let bek = null; try { bek = JSON.parse(sessionStorage.getItem('atlasYazdir') || 'null'); sessionStorage.removeItem('atlasYazdir'); } catch (e) {}

@@ -2400,3 +2400,4 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 /* gezi programı: her satır alt alta birden çok madde alabilir */
 .gk2-pr { align-items: start; }
 .gk2-pr textarea { min-width: 0; box-sizing: border-box; width: 100%; min-height: 44px; resize: none; overflow: hidden; font: inherit; line-height: 1.45; padding: 10px 12px; }
+.yz-uyari { color: #ffb867; font-weight: 700; }
