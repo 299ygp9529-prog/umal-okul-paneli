@@ -6387,8 +6387,17 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   function raporluKarsilastir(tk, saat, dersYaz) {
     let satirlar = [];
     // K-738: sınıf içi yapılan sınavlar (idarenin girdiği tarih + ders saati) da raporlu listesiyle karşılaştırılır
-    sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle().then(({ data }) => { let K = {}; try { K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
-      const M = new Map(); Object.entries(K).forEach(([ders, S]) => Object.entries(S || {}).forEach(([sube, v]) => { if (!v || !v.t || !v.d) return; const k = v.t + '|' + v.d; if (!M.has(k)) M.set(k, { tarih: v.t, ders: v.d + '. Ders', subeler: {}, sinifIci: true }); M.get(k).subeler[sube] = ders; }));
+    sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle().then(async ({ data }) => { if (!D.program) try { await programYukle(); } catch (e) {} let K = {}; try { K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
+      const M = new Map(), ekle = (t, d, sube, ders) => { const k = t + '|' + d; if (!M.has(k)) M.set(k, { tarih: t, ders: d + '. Ders', subeler: {}, sinifIci: true }); const S = M.get(k).subeler; S[sube] = S[sube] && S[sube] !== ders ? S[sube] + ' / ' + ders : ders; };
+      Object.entries(K).forEach(([ders, S]) => Object.entries(S || {}).forEach(([sube, v]) => { if (v && v.t && v.d) ekle(v.t, v.d, sube, ders); }));
+      // tarihi girilmemiş sınıf içi dersler: sınav dönemindeki her iş gününde, şubenin ders programında o dersin olduğu saatler
+      const T = (tk.subeler || []).filter(x => !x.sinifIci).map(x => x.tarih).sort(), PS = (D.program || {}).siniflar || {};
+      const dk = a => String(a || '').toLocaleLowerCase(tr).replace(/\([^)]*\)/g, '').replace(/seçmeli|\bs\.\s*/g, '').replace(/[^a-zçğıöşüâî]/g, '');
+      const es = (a, b) => { a = dk(a); b = dk(b); return a && b && (a === b || (Math.min(a.length, b.length) >= 6 && (a.startsWith(b) || b.startsWith(a)))); };
+      if (T.length) (D._tfSI || []).forEach(({ ad, S }) => S.forEach(sube => { if ((K[ad] || {})[sube]) return; const P = PS[sube] || {};
+        const son = new Date(Math.min(Date.now(), D._tfIlk ? new Date(D._tfIlk + 'T00:00:00').getTime() - 1 : new Date(T[T.length - 1] + 'T23:00:00').getTime()));
+        for (let g = new Date(T[0] + 'T12:00:00'); g <= son; g.setDate(g.getDate() + 1)) { const gn = (g.getDay() + 6) % 7; if (gn > 4) continue; const t = g.toISOString().slice(0, 10);
+          for (let n = 1; n <= 10; n++) { const h = P[`${gn}-${n}`]; if (h && es(h.ders, ad)) ekle(t, n, sube, ad); } } }));
       if (M.size) tk = Object.assign({}, tk, { subeler: (tk.subeler || []).filter(x => !x.sinifIci).concat([...M.values()]) }); }).catch(() => {});
     pencereAc(`<h2 style="margin-top:0">Raporlu öğrenciler × sınav takvimi</h2>
       <div class="soluk kucuk" style="line-height:1.5">e-Okul'dan aldığınız raporlu / izinli öğrenci listesini yükleyin (.xls, .xlsx, .csv) ya da Excel'de seçip buraya yapıştırın. Her satırda <b>okul numarası</b> (ya da ad soyad) ve <b>rapor tarihleri</b> (tek gün ya da başlangıç–bitiş) olması yeter; sütun sırası önemli değil.<br>Liste yalnız bu ekranda işlenir, hiçbir yere kaydedilmez.</div>
@@ -6444,7 +6453,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const karsilastir = () => {
       const L = satirlar.length ? satirlar : $('#rpYapistir').value.split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : /[;,](?=(?:[^"]*"[^"]*")*[^"]*$)/).map(z => z.replace(/^"|"$/g, '')));
       const { K, bilinmeyen, tarihli, kodlu, turDisi } = coz(L), S = (tk.subeler || []).slice().sort((a, b) => (a.tarih + a.ders).localeCompare(b.tarih + b.ders, tr, { numeric: true })), E = [];
-      const sinavGunleri = new Set(S.map(x => x.tarih)), subesiz = new Map(); let yarimAtla = 0;   // K-713: tanı — sınav günü raporlu ama sınıfı o günün sınav listesinde yok
+      const sinavGunleri = new Set(S.filter(x => !x.sinifIci).map(x => x.tarih)), subesiz = new Map(); let yarimAtla = 0;   // K-713: tanı — sınav günü raporlu ama sınıfı o günün sınav listesinde yok
       for (const { o, A } of K.values()) for (const t of sinavGunleri) if (A.some(([b, e]) => t >= b && t <= e) && !S.some(x => x.tarih === t && (x.subeler || {})[o.sinif])) subesiz.set(o.no + '|' + t, { o, t });
       for (const { o, A } of K.values()) for (const x of S) { const ders = (x.subeler || {})[o.sinif]; if (!ders) continue; const a = A.filter(([b, e]) => x.tarih >= b && x.tarih <= e).sort((p, q) => p[2] - q[2])[0]; if (!a) continue; if (a[2] && !yarimAl) { yarimAtla++; continue; }
         E.push({ o, x, ders, a, yer: tkYer(tk, x.tarih, x.ders, seviye(o.sinif)) }); }
@@ -6605,6 +6614,12 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     const tfEs = (a, b) => { a = tfDk(a); b = tfDk(b); return a && b && (a === b || (Math.min(a.length, b.length) >= 4 && (a.startsWith(b) || b.startsWith(a)))); };
     const tfOturum = telafi ? telafi.gunler.filter(g => g.tarih && (g.slot || []).length).sort((a, b) => a.tarih.localeCompare(b.tarih)).flatMap(g => g.slot.map(x => ({ tarih: g.tarih, ...x }))) : [];
     // K-716cq: her telafi oturumuna, dersi ve şubesi tutan aktarılmış öğrenciler (şubesi yazılı satır önce)
+    // K-738: ortak takvimde olmayan (sınıfta yapılan) dersler — raporlu karşılaştırması bunları ders programındaki saatlerinden bulur
+    const tfSiDersler = () => { const ortak = (sube, ders) => (tk.subeler || []).some(y => !y.sinifIci && String((y.subeler || {})[sube] || '').split(/\s*\/\s*/).some(z => tfDk(z) && tfDk(z) === tfDk(ders))), DL = [];
+      tfOturum.forEach(x => ['9', '10', '11', '12'].forEach(v => String(x['s' + v] || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); if (!m) return; const ad = m[1].trim(), S = m[2].split(/[,;]\s*/).map(z => z.trim()).filter(z => z && !ortak(z, ad));
+        if (!S.length) return; const d = DL.find(q => q.ad === ad); if (d) S.forEach(z => { if (!d.S.includes(z)) d.S.push(z); }); else DL.push({ ad, S }); })));
+      DL.forEach(d => d.S.sort(sinifSira)); return DL; };
+    D._tfSI = tfOturum.length ? tfSiDersler() : []; D._tfIlk = tfOturum.length ? tfOturum[0].tarih : '';
     const tfLis = tfOturum.map(() => []), tfYok = [];
     const tfYerles = (y, asil, tur, bekle, en) => { const o = (D.ogrenciler || []).find(q => String(q.no) === String(y.no)); if (!o) return; const v = seviye(o.sinif);
       if (en == null) { en = -1; let puan = 0; tfOturum.forEach((x, i) => String(x['s' + v] || '').split('\n').forEach(l => { if (!tfEs(l, y.ders)) return; const p = /\(([^)]*)\)/.exec(l), sb_ = p ? p[1].split(/[,;\s]+/).includes(o.sinif) : false, pu = sb_ ? 2 : 1; if (pu > puan) { puan = pu; en = i; } })); }
@@ -6640,13 +6655,11 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       return tfBitti(x) ? '<span class="ch-tf gec">Yoklama yok</span>' : '<span class="ch-tf bek">Bekliyor</span>'; };
     const tfSinifIci = async () => {   // K-738: ortak takvimde olmayan (sınıfta yapılan) sınavların tarihi + ders saati, şube şube
       let K = {}; try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'sinif_ici_sinav').maybeSingle(); K = (data && data.deger ? JSON.parse(data.deger) : {}).kayit || {}; } catch (e) { K = {}; }
-      const ortak = (sube, ders) => (tk.subeler || []).some(y => !y.sinifIci && String((y.subeler || {})[sube] || '').split(/\s*\/\s*/).some(z => tfDk(z) && tfDk(z) === tfDk(ders))), DL = [];
-      tfOturum.forEach(x => ['9', '10', '11', '12'].forEach(v => String(x['s' + v] || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(l); if (!m) return; const ad = m[1].trim(), S = m[2].split(/[,;]\s*/).map(z => z.trim()).filter(z => z && !ortak(z, ad));
-        if (!S.length) return; const d = DL.find(q => q.ad === ad); if (d) S.forEach(z => { if (!d.S.includes(z)) d.S.push(z); }); else DL.push({ ad, S }); })));
+      const DL = tfSiDersler();
       if (!DL.length) { uyar('Telafi programındaki bütün dersler ortak sınav takviminde var.'); return; }
-      DL.forEach(d => { d.S.sort(sinifSira); K[d.ad] = K[d.ad] || {}; });
+      DL.forEach(d => { K[d.ad] = K[d.ad] || {}; });
       const saatSec = (id, v) => `<select data-sid="${esc(id)}" style="width:86px"><option value="">Saat</option>${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<option value="${n}" ${+v === n ? 'selected' : ''}>${n}. ders</option>`).join('')}</select>`;
-      pencereAc(`<div class="tfg tf-si"><h2 style="margin-top:0">Sınıf içi sınav tarihleri</h2><div class="soluk kucuk">Bu dersler ortak sınav takviminde yok. Her şubenin asıl sınav gününü ve ders saatini girin; Raporlu Öğrenciler karşılaştırması bu günleri de sayar. Kaydettikten sonra e-Okul listesini yeniden yükleyip "Telafi listelerine aktar"a basın (önceki kayıtlar korunur).</div>
+      pencereAc(`<div class="tfg tf-si"><h2 style="margin-top:0">Sınıf içi sınav tarihleri</h2><div class="soluk kucuk">Bu dersler ortak sınav takviminde yok. Tarih girmezseniz Raporlu Öğrenciler karşılaştırması, sınav döneminde şubenin ders programında bu dersin olduğu bütün saatleri sayar. Sınavın yapıldığı günü biliyorsanız girin; yalnız o gün sayılır.</div>
         <div style="max-height:60vh;overflow:auto;margin-top:10px">${DL.map((d, j) => `<div class="kart" style="padding:10px 12px;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="flex:1;min-width:180px">${esc(baslik(d.ad))}</b><span class="soluk kucuk">Hepsine:</span><input type="date" data-sh="${j}" style="width:150px">${saatSec('h' + j, '')}<button class="bag" data-shu="${j}">Uygula</button></div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px;margin-top:8px">${d.S.map(z => { const v = K[d.ad][z] || {}; return `<label style="display:flex;gap:6px;align-items:center"><b style="width:44px">${esc(z)}</b><input type="date" data-st="${j}|${esc(z)}" value="${esc(v.t || '')}" style="width:150px">${saatSec(j + '|' + z, v.d)}</label>`; }).join('')}</div></div>`).join('')}</div>
         <div class="dugmeler"><button class="birincil" id="tfsiKaydet">Kaydet</button></div></div>`);
