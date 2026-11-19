@@ -638,7 +638,9 @@
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
     document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });
     document.addEventListener('focusout', () => setTimeout(() => { if (!yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); }, 120));
-    if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (window.innerHeight - visualViewport.height < 120 && !yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik'); });
+    if (window.visualViewport) { const vv = () => { document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px'); if (window.innerHeight - visualViewport.height < 120 && !yaziMi(document.activeElement)) document.body.classList.remove('klavye-acik');
+      const m = document.body.classList.contains('klavye-acik') && document.querySelector('.msj-ekran'); if (m) setTimeout(() => { window.scrollTo(0, m.getBoundingClientRect().top + window.scrollY - (visualViewport.offsetTop || 0) - 6); }, 60); };
+      visualViewport.addEventListener('resize', vv); visualViewport.addEventListener('scroll', () => document.documentElement.style.setProperty('--vvh', Math.round(visualViewport.height) + 'px')); vv(); }
     setInterval(guncelle, 400); say(); setInterval(() => { if (!document.hidden) say(); }, 60000); window.addEventListener('hashchange', guncelle);
   }
   async function dyDerslerim() {   // ders programından öğretmenin bugünkü dersleri ve şu anki ders
