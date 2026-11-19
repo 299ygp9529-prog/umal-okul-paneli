@@ -2382,3 +2382,17 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 }
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-cerceve { height: 128px; } }
 @media (min-width: 1100px) and (max-width: 1500px) and (min-height: 600px) and (hover: hover) { .gt-ata figcaption { max-width: 21ch; } .gt-ata q { font-size: 17px; } }
+/* Atatürk köşesi: fotoğraf ve söz tek, dengeli bir cam kartta */
+@media (min-width: 1100px) and (min-height: 600px) and (hover: hover) {
+  .giris { background: radial-gradient(ellipse 40% 58% at 50% 56%, rgba(9,18,32,.9), rgba(9,18,32,.7) 50%, transparent 85%),
+      linear-gradient(180deg, rgba(9,18,32,.9) 0%, rgba(9,18,32,.45) 25%, rgba(9,18,32,.45) 68%, rgba(9,18,32,.95) 100%),
+      linear-gradient(rgba(9,18,32,.4), rgba(9,18,32,.4)), url('giris-bina.jpg') center 32% / cover no-repeat, #0b1626; }
+  .gt-ata { align-items: center; gap: 16px; padding: 12px 22px 12px 12px; border-radius: 18px; background: rgba(9,18,32,.72); border: 1px solid rgba(230,194,122,.35); box-shadow: 0 16px 40px rgba(0,0,0,.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .gt-cerceve { height: clamp(92px, 13vh, 136px); border-radius: 11px; box-shadow: 0 0 0 1px rgba(230,194,122,.7); }
+  .gt-ata figcaption { max-width: 23ch !important; padding: 0; }
+  .gt-ata q { font-size: clamp(17px, 1.2vw, 21px) !important; line-height: 1.25; }
+  .gt-ata cite { white-space: nowrap; font-size: 10.5px; letter-spacing: .18em; margin-top: 8px; }
+}
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover) { .gt-cerceve { height: 84px; } }
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 900px) and (hover: hover) { .gt-slogan { display: none; } }
+@media (min-width: 1100px) and (min-height: 761px) and (max-height: 900px) and (hover: hover) { .gt-yil { margin-top: 8px; } .giris > .kutu { margin-top: 150px; } .gt-logo { width: 74px; } .gt-ad2 { font-size: 38px; } }
