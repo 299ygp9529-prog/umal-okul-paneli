@@ -1044,8 +1044,9 @@
       if (document.hidden || !bu) return;
       let h = ''; try { h = await (await fetch('index.html?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }
       const yeni = surum(h); if (!yeni || yeni === bu) return;
-      if (canliGuvenli() && Date.now() - son > 20000) { location.reload(); return; }
-      if (!document.getElementById('surumUyari')) { const u = document.createElement('button'); u.id = 'surumUyari'; u.className = 'surum-uyari'; u.textContent = 'Yeni sürüm hazır · Yenile'; u.onclick = () => location.reload(); document.body.appendChild(u); }
+      const tazele = () => { const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };   // önbelleğe takılmadan yeni sürümü açar
+      if (canliGuvenli() && Date.now() - son > 20000) { tazele(); return; }
+      if (!document.getElementById('surumUyari')) { const u = document.createElement('button'); u.id = 'surumUyari'; u.className = 'surum-uyari'; u.textContent = 'Yeni sürüm hazır · Yenile'; u.onclick = tazele; document.body.appendChild(u); }
     }, 60000);
   })();
   function yenile(fn, sn) { const b = D.bolum; clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== b) return; if (!document.hidden) fn().catch(() => {}); }, sn * 1000); }
