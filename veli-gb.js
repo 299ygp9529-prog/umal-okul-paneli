@@ -27,7 +27,7 @@
     if (!GB.sinif || !S.includes(GB.sinif)) GB.sinif = S[0];
     I.innerHTML = `<div class="ust"><div><h1>Tebrik ve Uyarı</h1><div class="soluk kucuk">Öğrencinin paneline ve veli ekranına gider.</div></div></div>
       <div class="dya-sec gb-sek">${[['gonder', 'Gönder'], ['gecmis', X.rol === 'ogretmen' ? 'Gönderdiklerim' : 'Gönderilenler']].map(([k, a]) => `<button class="cip ${GB.sek === k ? 'secili' : ''}" data-gbs="${k}">${sekIk(k)}${a}</button>`).join('')}</div><div id="gbIc"></div>`;
-    I.querySelectorAll('[data-gbs]').forEach(b => b.onclick = () => { GB.sek = b.dataset.gbs; ciz(); });
+    I.querySelectorAll('[data-gbs]').forEach(b => b.onclick = () => { if (b.dataset.gbs === 'gonder' && GB.sek === 'gonder' && GB.gonder) { GB.gonder(); return; } GB.sek = b.dataset.gbs; ciz(); });   // Gönder sekmesindeyken üstteki Gönder tuşu gönderir
     if (GB.sek === 'gonder') gonderCiz(S); else gecmisCiz();
   }
   function gonderCiz(S) {
@@ -38,7 +38,7 @@
         <b class="gb-b">Öğrenci</b><div class="gb-bul"><select class="dp-in" id="gbSinif">${(() => { const B = GB.benS || [], o = s => `<option ${s === GB.sinif ? 'selected' : ''}>${esc(s)}</option>`, D = S.filter(s => !B.includes(s));
           return B.length && D.length ? `<optgroup label="Derse girdiklerim">${B.map(o).join('')}</optgroup><optgroup label="Diğer sınıflar">${D.map(o).join('')}</optgroup>` : S.map(o).join(''); })()}</select><input class="dp-in" id="gbAra" inputmode="search" autocomplete="off" placeholder="Numara ya da ad yazın" value="${esc(GB.ara)}"></div>
         <div id="gbIzgara"></div>
-        <button class="birincil gb-gonder ${GB.tur}" id="gbGonder" ${GB.sec.size && GB.neden ? '' : 'disabled'}>${GB.sec.size && GB.neden ? `${GB.sec.size} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönder` : 'Sebep ve öğrenci seçin'}</button></div>`;
+</div>`;
     izgara(); void ros;
     E.querySelectorAll('[data-gbt]').forEach(b => b.onclick = () => { GB.tur = b.dataset.gbt; GB.neden = ''; gonderCiz(S); });
     E.querySelectorAll('[data-gbn]').forEach(b => b.onclick = () => { GB.neden = b.dataset.gbn; gonderCiz(S); });
@@ -58,11 +58,19 @@
       X.fotolariYukle(L.map(o => o.no)).catch(() => {});
       Z.querySelectorAll('[data-gbo]').forEach(b => b.onclick = () => { const n = b.dataset.gbo; GB.sec.has(n) ? GB.sec.delete(n) : GB.sec.add(n); if (B) { GB.ara = ''; $('#gbAra').value = ''; } izgara(); });
       Z.querySelectorAll('[data-gbx]').forEach(b => b.onclick = () => { GB.sec.delete(b.dataset.gbx); izgara(); });
-      const d = $('#gbGonder'); if (d) { const ok = GB.sec.size && GB.neden; d.disabled = !ok; d.textContent = ok ? `${GB.sec.size} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönder` : GB.sec.size ? 'Sebep seçin' : 'Sebep ve öğrenci seçin'; } }
-    $('#gbGonder').onclick = async () => { const b = $('#gbGonder'); b.disabled = true;
+      etiket(); }
+    function etiket() { const t = document.querySelector('[data-gbs="gonder"]'); if (!t) return; const n = GB.sec.size; t.lastChild.textContent = n ? `Gönder · ${n}` : 'Gönder'; }
+    let gidiyor = false;
+    GB.gonder = async () => {
+      if (gidiyor) return;
+      if (!GB.neden) { X.uyar(`Önce ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} sebebini seçin.`); const r = E.querySelector('.gb-b'); const c = r && r.nextElementSibling; if (c) { c.classList.remove('gb-eksik'); void c.offsetWidth; c.classList.add('gb-eksik'); c.scrollIntoView({ block: 'center', behavior: 'smooth' }); } return; }
+      if (!GB.sec.size) { X.uyar('Önce öğrenci seçin.'); const g = $('#gbIzgara'); if (g) g.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+      gidiyor = true;
       const { data, error } = await X.sb.rpc('umal_gb_yaz', { p_nolar: [...GB.sec], p_tur: GB.tur, p_neden: GB.neden, p_aciklama: GB.not || null });
-      if (error || !data || !data.ok) { b.disabled = false; X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; }
+      gidiyor = false;
+      if (error || !data || !data.ok) { X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; }
       X.uyar(`${data.sayi} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönderildi. Öğrencinin paneline ve veli ekranına düştü.`); GB.sec = new Set(); GB.not = ''; gonderCiz(S); };
+    etiket();
   }
   async function gecmisCiz() {
     const E = $('#gbIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';

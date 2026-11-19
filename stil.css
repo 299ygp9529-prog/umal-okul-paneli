@@ -2307,3 +2307,5 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 @media (max-width: 700px) { .dya-sec.gb-sek { display: grid; width: 100%; box-sizing: border-box; } .dya-sec.gb-sek .cip { padding: 11px 6px; font-size: 14px; gap: 6px; } .dya-sec.gb-sek .cip svg { width: 16px; height: 16px; } }
 .dya-sec.gb-sek { grid-auto-columns: minmax(0, 1fr); } .dya-sec.gb-sek .cip { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 700px) { .dya-sec.gb-sek:has(.cip:nth-child(3)) .cip { font-size: 13px; gap: 5px; padding: 11px 4px; } .dya-sec.gb-sek:has(.cip:nth-child(3)) .cip svg { width: 14px; height: 14px; } }
+.gb-eksik { border-radius: 14px; animation: gbEksik .9s ease-out 1; }
+@keyframes gbEksik { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,84,112,0); } 20%, 60% { box-shadow: 0 0 0 2px #ff5470, 0 0 18px rgba(255,84,112,.55); } }
