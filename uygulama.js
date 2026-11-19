@@ -641,17 +641,15 @@
     const n = document.createElement('nav'); n.id = 'ogtAlt'; n.setAttribute('aria-label', 'Öğretmen menüsü');
     n.innerHTML = T.map(([id, ad, s]) => `<button data-oa="${id}">${s}<span>${ad}</span>${id === 'mesajlar' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n); document.body.classList.add('ogt-alt');
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; const id = b.dataset.oa; if (id === 'menu') { tumuAc(); } else { try { tumuKapat(); } catch (e) {} ac(id); } guncelle(); };
-    const boyut = () => {   // sohbet ekranı: normalde başlıktan alt çubuğa; klavye açıkken görünen alana sabitlenir (iOS sayfayı yukarı itmesin)
+    const boyut = () => {   // sohbet ekranı: başlıktan alt çubuğa kadar; klavye açılınca boy aynı kalır
       const e = document.querySelector('.msj-ekran'); if (!e || window.innerWidth > 760) return;
       const vv = window.visualViewport, ak = e.querySelector('.msj-akis'), dipte = !ak || ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80, kl = document.body.classList.contains('klavye-acik') && vv && window.innerHeight - vv.height > 120;
-      if (kl) { const ust = Math.round(vv.offsetTop) + 6, h = Math.round(vv.height) - 12;
-        if (e.dataset.sabit !== ust + '|' + h) { e.dataset.sabit = ust + '|' + h; e.classList.add('msj-sabit'); e.style.setProperty('top', ust + 'px'); e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; }
-        return; }
-      if (e.dataset.sabit) { delete e.dataset.sabit; e.classList.remove('msj-sabit'); e.style.removeProperty('top'); }
-      const alt = getComputedStyle(n).display === 'none' ? window.innerHeight : n.getBoundingClientRect().top;
+      if (e.classList.contains('msj-sabit')) { e.classList.remove('msj-sabit'); e.style.removeProperty('top'); delete e.dataset.sabit; }
+      if (kl) { if (ak && dipte) ak.scrollTop = ak.scrollHeight; return; }   // klavye açıkken boy değişmez; iPhone yazı kutusunu klavyenin üstüne kendisi getirir
+      const alt = n.getBoundingClientRect().top; if (!alt) { if (ak && dipte) ak.scrollTop = ak.scrollHeight; return; }   // çubuk gizliyken (klavye) boy korunur
       const h = Math.max(240, Math.round(alt - (e.getBoundingClientRect().top + window.scrollY) - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; } };
     let bz = 0; const boyutSonra = () => { cancelAnimationFrame(bz); bz = requestAnimationFrame(boyut); };   // tek karede bir kez
-    window.addEventListener('resize', boyutSonra); if (window.visualViewport) { visualViewport.addEventListener('resize', boyutSonra); visualViewport.addEventListener('scroll', boyutSonra); }
+    window.addEventListener('resize', boyutSonra); if (window.visualViewport) { visualViewport.addEventListener('resize', boyutSonra); }
     const guncelle = () => { boyut(); const sk = D.bolum === 'mesajlar' && !document.body.classList.contains('tm-acik') && !!document.querySelector('.msj-ekran'); if (sk !== document.body.classList.contains('ogt-sakin')) { document.body.classList.toggle('ogt-sakin', sk); if (sk) window.scrollTo(0, 0); } const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
     const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
     // klavye açıkken alt sekmeler gizlenir (iOS'ta klavyenin üstüne oturmasın)

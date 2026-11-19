@@ -2487,14 +2487,13 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ogt-msj-yok { opacity: .75; }
 @media (max-width: 760px) { body.ogt-alt.klavye-acik #ogtAlt { display: none !important; } body.ogt-alt.klavye-acik main { padding-bottom: 12px !important; } }
 .msj-alt textarea { min-width: 0; }
-@media (max-width: 760px) { body.ogt-alt .msj-ekran { height: calc(100dvh - 150px - 96px - env(safe-area-inset-bottom)); min-height: 300px; } body.ogt-alt.klavye-acik .msj-ekran { height: calc(100dvh - 150px); } }
+@media (max-width: 760px) { body.ogt-alt .msj-ekran { height: calc(100dvh - 150px - 96px - env(safe-area-inset-bottom)); min-height: 300px; } }
 /* K-744: elle yenile düğmesi */
 #yenileDug { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; background: #13243d; border: 1px solid rgba(34,232,255,.55); color: var(--neon); flex: none; }
 #yenileDug.donuyor svg { animation: yenileDon .8s linear infinite; } @keyframes yenileDon { to { transform: rotate(360deg); } }
 /* K-744b: iPhone yazı kutusuna dokununca yakınlaştırmasın (16px altı yazı tipinde Safari sayfayı büyütür) ve klavye açıkken sohbet görünen alana sığsın */
 @media (max-width: 760px) {
   body.ogt-alt input, body.ogt-alt textarea, body.ogt-alt select { font-size: 16px !important; }
-  body.ogt-alt.klavye-acik .msj-ekran { height: calc(var(--vvh, 100dvh) - 12px) !important; min-height: 0; }
 }
 
 /* K-745: öğretmen telefonunda sohbet akıcı — sohbet açıkken süs animasyonları durur, mesaj listesi kendi katmanında kayar */
