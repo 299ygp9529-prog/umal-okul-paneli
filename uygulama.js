@@ -6392,11 +6392,11 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false;
       const bi = L.findIndex(r => r.some(c => /öğr\.?\s*no|okul\s*no|öğrenci\s*no/i.test(c)) && r.some(c => /tarih/i.test(c)));
       const B = bi >= 0 ? L[bi].map(c => String(c || '').toLocaleLowerCase(tr)) : null, sut = re => B ? B.findIndex(c => re.test(c)) : -1;
-      const cNo = sut(/öğr\.?\s*no|okul\s*no|öğrenci\s*no/), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün sayı/), cN = sut(/neden|tür/);
+      const cNo = sut(/öğr\.?\s*no|okul\s*no|öğrenci\s*no/), cAd = sut(/ad[ıi]\s*soyad|ad soyad/), cT = sut(/^tarih|tarihi/), cBas = sut(/başla/), cBit = sut(/bitiş/), cM = sut(/miktar|gün\s*say|süre|kaç\s*gün|^\s*gün\b|\bgün\s*$/), cN = sut(/neden|tür/);
       for (const r of (bi >= 0 ? L.slice(bi + 1) : L)) { const H = r.map(x => String(x || '').trim()).filter(Boolean); if (!H.length) continue;
         let T, o = null, yarim = false, neden = '';
         if (B) { const g = k => k >= 0 ? String(r[k] || '').trim() : ''; const t0 = tarihBul(g(cBas) || g(cT)) || seri(g(cBas) || g(cT)); if (!t0) continue; const t1 = tarihBul(g(cBit)) || seri(g(cBit)) || t0;
-          const m = parseFloat(g(cM).replace(',', '.')) || 1; yarim = m > 0 && m < 1; T = [t0, m >= 2 && !g(cBit) ? isGunuSonra(t0, Math.ceil(m) - 1) : t1];
+          const m = parseFloat(g(cM).replace(',', '.')) || 1; yarim = m > 0 && m < 1; const t2 = m >= 2 ? isGunuSonra(t0, Math.ceil(m) - 1) : t0; T = [t0, t1 > t2 ? t1 : t2];   // 3 günlük rapor: başlangıçtan 3 okul günü (bitiş daha ilerideyse bitiş)
           neden = nKod(g(cN)); if (neden) kodlu = true; if (/Y$/.test(neden)) yarim = true;
           const no = g(cNo); if (/^\d{1,6}$/.test(no) && kisi.has(String(+no))) o = kisi.get(String(+no)); if (!o && g(cAd)) o = adla.get(g(cAd).toLocaleLowerCase(tr).replace(/\s+/g, ' ')) || null; }
         else { T = H.flatMap(h => { const t1 = tarihBul(h); if (t1 && !/\d{4}.*\d{1,2}[./]\d{1,2}[./]\d{4}/.test(h)) return [t1]; return String(h).split(/\s+[–—-]\s+|\s*[–—]\s*|\s+/).map(tarihBul).filter(Boolean); });
@@ -6404,6 +6404,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           if (o) T = T.concat(H.filter(h => h !== o.no).map(seri).filter(Boolean)).filter(Boolean);
           if (!o) for (const h of H) { const a = adla.get(h.toLocaleLowerCase(tr).replace(/\s+/g, ' ')); if (a) { o = a; break; } }
           if (o && !T.length) T = H.map(seri).filter(Boolean); if (!T.length) continue;
+          { const gs = H.map(h => /^(\d{1,2})\s*(iş\s*)?gün/i.exec(h)).find(Boolean); if (gs && +gs[1] >= 2) { const S0 = T.slice().sort(); T.push(isGunuSonra(S0[0], +gs[1] - 1)); } }
           { const nh = H.find(h => /rapor|izin|faaliyet|özürsüz|özürlü|nakil/i.test(h) || (/^[A-ZÇĞİÖŞÜ]{1,2}$/.test(h) && NEDEN[h])); if (nh) { neden = nKod(nh); kodlu = true; if (/Y$/.test(neden)) yarim = true; } } }
         tarihli++;
         if (!o) { bilinmeyen.push(H.slice(0, 4).join(' · ')); continue; }
