@@ -5101,8 +5101,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           const ad = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.jpg';
           let up = await sb.storage.from('umal-pdf').upload('gezi/afis/' + ad, jpg, { contentType: 'image/jpeg', upsert: false });
           if (!up.error) I.afis = `${URL_}/storage/v1/object/public/umal-pdf/gezi/afis/${ad}`;
-          else { const y2 = 'gezi/' + ad; up = await sb.storage.from('umal-resim').upload(y2, jpg, { contentType: 'image/jpeg', upsert: false });
-            if (up.error) { uyar('Afiş yüklenemedi: ' + hataYaz(up.error)); return; }
+          else { const ilkHata = up.error, y2 = 'gezi/' + ad; up = await sb.storage.from('umal-resim').upload(y2, jpg, { contentType: 'image/jpeg', upsert: false });
+            if (up.error) { uyar('Afiş yüklenemedi: ' + hataYaz(ilkHata)); return; }
             const sg = await sb.storage.from('umal-resim').createSignedUrl(y2, 60 * 60 * 24 * 730); if (sg.error || !sg.data) { uyar('Afiş yüklenemedi: ' + hataYaz(sg.error || {})); return; } I.afis = sg.data.signedUrl; }
           kay(); ciz_(); };
         if ($('#gkAfisSil')) $('#gkAfisSil').onclick = () => { delete I.afis; kay(); ciz_(); };
