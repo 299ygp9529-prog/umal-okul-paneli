@@ -426,14 +426,21 @@
         return ust + `<div class="msj"><div class="b">${b.sablon !== 'yoklama_oto' && b.baslik ? `<small>${esc(b.baslik)}</small>` : ''}<span class="t">${esc(b.metin || '')}</span><em>${esc(t.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}</em></div></div>`; }).join('')}</div>
       <div class="msj-alt msj-salt">Bu konuşmaya yanıt yazılmaz.</div></div>`;
     const ak = $('#msjAkis'); ak.scrollTop = ak.scrollHeight; if (MSJ.sk) MSJ.sk.olc();
-    MSJ.idare = true; $('#msjGeri').onclick = () => { MSJ.idare = false; msjRozet().then(msjListeCiz); };
+    OB.forEach(b => { b.okundu = true; });   // açıldı: rozet hemen düşer
+    MSJ.idare = true; $('#msjGeri').onclick = () => { MSJ.idare = false; msjListeCiz(); msjRozet().then(() => { if (!MSJ.acik && !MSJ.idare && D.bolum === 'mesajlar') ogtMesajListe(false); }, () => {}); };   // K-766: geri anında
   }
-  async function ogtMesajListe() {   // K-743: öğretmende Mesajlar = yalnız girdiği sınıflar (sınıf grupları)
-    const { siniflarim } = await dyDerslerim().catch(() => ({ siniflarim: [] })), S = (siniflarim || []).slice().sort(sinifSira), G = MSJ.L.filter(x => x.tur === 'grup'), I = $('#icerik');
+  async function ogtMesajListe(tazele = true) {   // K-743: öğretmende Mesajlar = yalnız girdiği sınıflar (sınıf grupları) · K-766: önce bellektekiyle hemen çizilir, sonra tazelenir
+    if (tazele && MSJ.sinifC && Date.now() - (MSJ.tZ || 0) < 30000) return ogtMesajListe(false);
+    if (tazele && MSJ.sinifC) { MSJ.tZ = Date.now(); await ogtMesajListe(false); const once = JSON.stringify([MSJ.sinifC, MSJ.obC]);
+      try { MSJ.sinifC = ((await dyDerslerim()).siniflarim || []).slice(); } catch (e) {} try { const { data } = await sb.rpc('umal_obil_benim'); if (Array.isArray(data)) MSJ.obC = data; } catch (e) {}
+      if (once !== JSON.stringify([MSJ.sinifC, MSJ.obC]) && D.bolum === 'mesajlar' && !MSJ.acik && !MSJ.idare && document.querySelector('.msj-liste')) ogtMesajListe(false); return; }
+    if (!MSJ.sinifC) { MSJ.tZ = Date.now(); try { MSJ.sinifC = ((await dyDerslerim()).siniflarim || []).slice(); } catch (e) { MSJ.sinifC = []; } }
+    if (!MSJ.obC) { try { const { data } = await sb.rpc('umal_obil_benim'); MSJ.obC = Array.isArray(data) ? data : []; } catch (e) { MSJ.obC = []; } }
+    const S = MSJ.sinifC.slice().sort(sinifSira), G = MSJ.L.filter(x => x.tur === 'grup'), I = $('#icerik');
     const sat = s => { const g = G.find(x => x.sinif === s), n = g ? +g.yeni || 0 : 0;
       return `<button class="msj-sat ${g ? '' : 'ogt-msj-yok'}" ${g ? `data-msjac="${esc(g.id)}"` : `data-ogtkur="${esc(s)}"`}><span class="msj-av g">${esc(s)}</span><span class="m"><b>${esc(s)} sınıfı</b><small>${g ? (g.son ? (g.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(g.son.metin) : 'Henüz mesaj yok') : (MSJ.kapali ? 'Mesajlaşma idare açınca kullanılabilir' : 'Grubu kurmak için dokunun')}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
     // K-765: idareden gelenler (yoklama hatırlatması, duyurular) e-Okul'daki gibi "İdare" konuşması olarak en üstte
-    let OB = []; try { const { data } = await sb.rpc('umal_obil_benim'); OB = Array.isArray(data) ? data : []; } catch (e) {}
+    const OB = MSJ.obC || [];
     const obYeni = OB.filter(b => !b.okundu).length, obSon = OB[0];
     const idareSat = OB.length ? `<button class="msj-sat" id="msjIdare"><span class="msj-av g" style="background:linear-gradient(160deg,#ff8a8a,#a83a4a);color:#fff">İ</span><span class="m"><b>İdare</b><small>${esc((obSon.metin || obSon.baslik || '').slice(0, 90))}</small></span>${obYeni ? `<span class="mk-sayi">${obYeni}</span>` : ''}</button>` : '';
     I.innerHTML = `<div class="msj-bas-ust"><div><h1>Mesajlar</h1></div></div>
@@ -491,7 +498,7 @@
     const ak = $('#msjAkis'); akisCiz(ak); ak.scrollTop = ak.scrollHeight;
     if (SK) SK.olc();   // boy ilk çizimde doğru gelir (sonradan sıçramaz)
     fotolariYukle([...new Set(MSJ.M.filter(m => m.kim.startsWith('o:')).map(m => m.kim.slice(2)).concat(x.ogrenci ? [x.ogrenci] : []))]);
-    $('#msjGeri').onclick = () => { MSJ.acik = null; msjRozet().then(msjListeCiz); };
+    $('#msjGeri').onclick = () => { MSJ.acik = null; msjListeCiz(); msjRozet().then(() => { if (!MSJ.acik && !MSJ.idare && D.bolum === 'mesajlar') msjListeCiz(); }, () => {}); };   // K-766: geri anında
     const y = $('#msjYaz'); y.oninput = () => { if (SK) SK.buyut(y, 140); else { y.style.height = 'auto'; y.style.height = Math.min(140, y.scrollHeight) + 'px'; } };
     y.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !telefon()) { e.preventDefault(); $('#msjGonder').click(); } };
     $('#msjGonder').addEventListener('pointerdown', e => e.preventDefault());   // dokununca yazı kutusu odağı kaybetmez, klavye kapanıp açılmaz
