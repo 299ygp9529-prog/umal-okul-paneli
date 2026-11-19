@@ -2262,3 +2262,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 .ob-kisi { margin-top: 6px; } .ob-kisi summary { cursor: pointer; color: var(--neon); font-size: 13px; font-weight: 700; } .ob-kisi > div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--cizgi); font-size: 14px; } .ob-kisi > div:last-child { border-bottom: 0; }
 .ob-yeni { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; color: #04202a; background: var(--neon); border-radius: 6px; padding: 1px 6px; margin-right: 8px; vertical-align: 2px; }
 .ob-kisi .ob-d { white-space: nowrap; flex: none; } .ob-kisi > div > span:first-child { min-width: 0; }
+/* K-727 Görevlendirmede günlük adalet */
+.gv-adalet { margin-top: 12px; padding: 12px; border-radius: 14px; border: 1px solid var(--cizgi); background: rgba(255,255,255,.02); } .gv-adalet > b { display: block; font-size: 13px; letter-spacing: .04em; color: var(--soluk); margin-bottom: 8px; }
+.gv-ad-l { display: flex; flex-wrap: wrap; gap: 6px; } .gv-ad-l span { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border-radius: 10px; border: 1px solid var(--cizgi); font-size: 13px; font-weight: 700; }
+.gv-ad-l i { font-style: normal; min-width: 20px; height: 20px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; background: rgba(34,232,255,.14); color: var(--neon); }
+.gv-ad-l span.cok { border-color: rgba(255,184,103,.6); } .gv-ad-l span.cok i { background: rgba(255,184,103,.18); color: #ffb867; }
+.gv-adalet.uyari { border-color: rgba(255,184,103,.55); background: rgba(255,184,103,.06); } .gv-ad-u { margin-top: 10px; font-size: 14px; line-height: 1.5; color: #ffe2bd; } .gv-ad-u .ikincil { margin-left: 6px; }
+.gv-ad-ok { margin-top: 8px; font-size: 13.5px; font-weight: 700; color: #5ee08a; }
