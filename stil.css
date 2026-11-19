@@ -2582,3 +2582,8 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .stb-ad { color: var(--soluk); font-size: 13px; margin-top: 4px; } .stb-d { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; } .stb-d button { text-transform: none; }
 /* K-764: telefonda sayfa başlığı ile ilk kutu arasında nefes payı */
 @media (max-width: 760px) { #icerik > .ust { margin-bottom: 16px; } #icerik > .ust .soluk.kucuk { margin-top: 4px; line-height: 1.45; } }
+/* K-765: otomatik yoklama hatırlatması + İdare konuşması */
+.dyo { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 11px 12px 11px 14px; border-radius: 14px; background: #0f1b2f; border: 1px solid var(--cizgi); } .dyo.acik { border-color: rgba(94,224,138,.35); background: rgba(94,224,138,.06); }
+.dyo > div { flex: 1; min-width: 0; } .dyo b { display: block; font-size: 14px; } .dyo small { display: block; color: var(--soluk); font-size: 12px; margin-top: 2px; line-height: 1.35; }
+.dyo select { flex: none; width: auto; padding: 6px 8px; border-radius: 9px; font-size: 13px; }
+.msj-salt { justify-content: center; color: var(--soluk); font-size: 12.5px; padding: 12px !important; }

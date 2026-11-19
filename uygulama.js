@@ -416,14 +416,29 @@
     const n = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), m = document.querySelector('#menu .menu-oge[data-b="mesajlar"]'); if (m) { let k = m.querySelector('.mk-sayi'); if (!n) { if (k) k.remove(); } else { if (!k) { k = document.createElement('span'); k.className = 'mk-sayi'; m.appendChild(k); } k.textContent = n; } } } catch (e) {} }
   async function mesajlarBolumu() {
     MSJ.acik = null; await Promise.all([msjRozet(), ogrencileriYukle().catch(() => [])]);
-    msjListeCiz(); yenile(async () => { await msjRozet(); if (MSJ.acik) await msjYukle(true); else msjListeCiz(); }, 8);
+    MSJ.idare = false; msjListeCiz(); yenile(async () => { await msjRozet(); if (MSJ.acik) await msjYukle(true); else if (!MSJ.idare) msjListeCiz(); }, 8);   // K-765: İdare konuşması açıkken liste üstüne çizilmez
+  }
+  function idareSohbet(OB) {   // K-765: idare bildirimleri sohbet görünümünde (yalnız okunur)
+    const I = $('#icerik'), L = OB.slice().reverse(); let gun = '';
+    const yeni = OB.filter(b => !b.okundu).map(b => b.id); if (yeni.length) sb.rpc('umal_obil_okudum', { p_idler: yeni }).then(r => r, () => ({}));
+    I.innerHTML = `<div class="msj-ekran msj-idare"><div class="msj-ust"><button class="ikincil kucuk" id="msjGeri">‹ Geri</button><span class="msj-av g" style="background:linear-gradient(160deg,#ff8a8a,#a83a4a);color:#fff">İ</span><div><b>İdare</b><small>Okul yönetiminden bildirimler</small></div></div>
+      <div class="msj-akis" id="msjAkis">${L.map(b => { const t = new Date(b.olusma), g = t.toLocaleDateString(tr, { day: 'numeric', month: 'long', weekday: 'long' }); const ust = g !== gun ? `<div class="msj-gun">${esc(gun = g)}</div>` : '';
+        return ust + `<div class="msj"><div class="b">${b.sablon !== 'yoklama_oto' && b.baslik ? `<small>${esc(b.baslik)}</small>` : ''}<span class="t">${esc(b.metin || '')}</span><em>${esc(t.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}</em></div></div>`; }).join('')}</div>
+      <div class="msj-alt msj-salt">Bu konuşmaya yanıt yazılmaz.</div></div>`;
+    const ak = $('#msjAkis'); ak.scrollTop = ak.scrollHeight; if (MSJ.sk) MSJ.sk.olc();
+    MSJ.idare = true; $('#msjGeri').onclick = () => { MSJ.idare = false; msjRozet().then(msjListeCiz); };
   }
   async function ogtMesajListe() {   // K-743: öğretmende Mesajlar = yalnız girdiği sınıflar (sınıf grupları)
     const { siniflarim } = await dyDerslerim().catch(() => ({ siniflarim: [] })), S = (siniflarim || []).slice().sort(sinifSira), G = MSJ.L.filter(x => x.tur === 'grup'), I = $('#icerik');
     const sat = s => { const g = G.find(x => x.sinif === s), n = g ? +g.yeni || 0 : 0;
       return `<button class="msj-sat ${g ? '' : 'ogt-msj-yok'}" ${g ? `data-msjac="${esc(g.id)}"` : `data-ogtkur="${esc(s)}"`}><span class="msj-av g">${esc(s)}</span><span class="m"><b>${esc(s)} sınıfı</b><small>${g ? (g.son ? (g.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(g.son.metin) : 'Henüz mesaj yok') : (MSJ.kapali ? 'Mesajlaşma idare açınca kullanılabilir' : 'Grubu kurmak için dokunun')}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
+    // K-765: idareden gelenler (yoklama hatırlatması, duyurular) e-Okul'daki gibi "İdare" konuşması olarak en üstte
+    let OB = []; try { const { data } = await sb.rpc('umal_obil_benim'); OB = Array.isArray(data) ? data : []; } catch (e) {}
+    const obYeni = OB.filter(b => !b.okundu).length, obSon = OB[0];
+    const idareSat = OB.length ? `<button class="msj-sat" id="msjIdare"><span class="msj-av g" style="background:linear-gradient(160deg,#ff8a8a,#a83a4a);color:#fff">İ</span><span class="m"><b>İdare</b><small>${esc((obSon.metin || obSon.baslik || '').slice(0, 90))}</small></span>${obYeni ? `<span class="mk-sayi">${obYeni}</span>` : ''}</button>` : '';
     I.innerHTML = `<div class="msj-bas-ust"><div><h1>Mesajlar</h1></div></div>
-      <div class="kart msj-liste">${S.map(sat).join('') || '<div class="soluk" style="padding:10px 4px">Ders programında girdiğiniz sınıf bulunamadı; idareye bildirin.</div>'}</div>`;
+      <div class="kart msj-liste">${idareSat}${S.map(sat).join('') || '<div class="soluk" style="padding:10px 4px">Ders programında girdiğiniz sınıf bulunamadı; idareye bildirin.</div>'}</div>`;
+    if ($('#msjIdare')) $('#msjIdare').onclick = () => idareSohbet(OB);
     I.querySelectorAll('[data-msjac]').forEach(b => b.onclick = () => msjAc(b.dataset.msjac));
     I.querySelectorAll('[data-ogtkur]').forEach(b => b.onclick = async () => { if (MSJ.kapali) { uyar('Sınıf mesajlaşması sizin için henüz açılmadı; idare açınca kullanabilirsiniz.'); return; }
       const s = b.dataset.ogtkur; if (!await onayla(`${s} sınıfının mesaj grubu kurulsun mu? Sınıftaki öğrenciler grubu sizin adınızla görür.`)) return;
@@ -518,7 +533,7 @@
     const OL = Object.values(O).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no)); OL.forEach(o => o.s.sort((a, b) => a - b));
     const sinifler = [...new Set(L.map(x => x.sinif))].sort(sinifSira);
     const ust = `<div class="dyu"><h1>Yoklama</h1>${DY.gun === bugunISO() ? '<button class="dyu-al" id="dyaAc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M11 18.5h2"/></svg><span>Telefondan al</span></button>' : ''}</div>
-      <div class="dyu-gun"><button data-dyg="-1" aria-label="Önceki gün">‹</button><b>${esc(gunAd)}</b>${DY.gun !== bugunISO() ? '<button class="dyu-bugun" data-dyg="0">Bugün</button>' : ''}<button data-dyg="1" aria-label="Sonraki gün" ${DY.gun >= bugunISO() ? 'disabled' : ''}>›</button></div>`;   // K-759: sade başlık
+      <div class="dyu-gun"><button data-dyg="-1" aria-label="Önceki gün">‹</button><b>${esc(gunAd)}</b>${DY.gun !== bugunISO() ? '<button class="dyu-bugun" data-dyg="0">Bugün</button>' : ''}<button data-dyg="1" aria-label="Sonraki gün" ${DY.gun >= bugunISO() ? 'disabled' : ''}>›</button></div>${idare ? '<div id="dyOto"></div>' : ''}`;   // K-759: sade başlık · K-765: otomatik hatırlatma anahtarı
     const eksik = idare ? await dyEksikHtml(L, sn) : '';   // K-720: yoklama almayan öğretmenler
     if (!L.length) { I.innerHTML = ust + eksik + `<div class="kart soluk">Bu gün için tahtadan gelen yoklama yok.${idare ? ' Öğretmen, tahtada Okul › Yoklama ile alır.' : ''}</div>`; dyBagla(kaydir); dyHatBagla(); return; }
     let h = ust + eksik;
@@ -554,8 +569,15 @@
     if ($('#dyPdf')) $('#dyPdf').onclick = () => raporYazdir(raporBant('Ders Yoklaması · Gelmeyenler', `${gunAd} · ${OL.length} öğrenci · ${sinifler.length} sınıf`)
       + `<table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Gelmediği dersler</th></tr></thead><tbody>${OL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>${EL.length ? `<h3 style="margin:8mm 0 3mm">Geç gelen · nöbetçi · izinli</h3><table class="liste"><thead><tr><th>#</th><th>No</th><th>Ad Soyad</th><th>Sınıf</th><th>Durum</th><th>Dersler</th></tr></thead><tbody>${EL.map((o, j) => `<tr><td class="s">${j + 1}</td><td class="mono">${esc(o.no)}</td><td class="ad">${esc(baslik(o.ad))}</td><td>${esc(o.sinif)}</td><td>${DADI[o.d]}</td><td>${o.s.map(n => n ? n + '. ders' : 'ders dışı').join(', ')}</td></tr>`).join('')}</tbody></table>` : ''}`, 'Devamsizlik-' + DY.gun);
   }
+  async function dyOtoCiz() {   // K-765: e-Okul'daki gibi otomatik "yoklama alınız" (ders başladıktan N dk sonra; hafta sonu ve tatilde gitmez)
+    const k = $('#dyOto'); if (!k) return; let d = null; try { ({ data: d } = await sb.rpc('umal_yoklama_hatirlat_durum')); } catch (e) {} if (!d || !d.ok || !$('#dyOto')) return;
+    k.innerHTML = `<div class="dyo ${d.acik ? 'acik' : ''}"><div><b>Otomatik hatırlatma</b><small>${d.acik ? `Yoklama almayan öğretmene ders başladıktan ${d.dk} dk sonra bildirim gider${d.bugun ? ` · bugün ${d.bugun}` : ''}` : 'Kapalı · açınca yoklama almayan öğretmene kendiliğinden bildirim gider'}</small></div>${d.acik ? `<select id="dyOtoDk" aria-label="Kaç dakika sonra">${[10, 15, 20, 30].map(m => `<option value="${m}" ${m === d.dk ? 'selected' : ''}>${m} dk</option>`).join('')}</select>` : ''}<button class="ob-anahtar ${d.acik ? '' : 'kapaniyor'}" id="dyOtoA" role="switch" aria-checked="${d.acik}" aria-label="Otomatik hatırlatma"><b></b></button></div>`;
+    const yaz = async (acik, dk) => { const { data: r, error } = await sb.rpc('umal_yoklama_hatirlat_ayar', { p_acik: acik, p_dk: dk }); if (error || !r || !r.ok) { uyar('Kaydedilemedi: ' + (error ? hataYaz(error) : r && r.hata)); } dyOtoCiz(); };
+    $('#dyOtoA').onclick = async () => { if (!d.acik && !await onayla('Otomatik hatırlatma açılsın mı? Hafta içi her derste, ders başladıktan ' + d.dk + ' dk sonra yoklaması alınmamış dersin öğretmenine "Yoklama alınız" bildirimi gider. Hafta sonu ve okulda hiç yoklama alınmayan günlerde (tatil) gitmez.')) return; yaz(!d.acik, d.dk); };
+    if ($('#dyOtoDk')) $('#dyOtoDk').onchange = e => yaz(true, +e.target.value);
+  }
   function dyHatBagla() {   // K-756: yoklama almayan öğretmene telefon bildirimi ("Yoklama alınız")
-    const I = $('#icerik');
+    const I = $('#icerik'); dyOtoCiz();
     I.querySelectorAll('[data-dyeg]').forEach(b => b.onclick = () => { DY.eksG = b.dataset.dyeg; dersYoklamaBolumu(true); });
     I.querySelectorAll('[data-dyetum]').forEach(b => b.onclick = () => { DY.eksTum = true; dersYoklamaBolumu(true); });
     const gonder = async (L_, dug) => { const H = L_.filter(x => x.ep); if (!H.length) return;
