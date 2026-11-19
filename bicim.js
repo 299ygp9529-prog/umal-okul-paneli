@@ -66,7 +66,13 @@
     if (y !== ham(el)) { hamYaz(el, y); try { el.setSelectionRange(y.length, y.length); } catch (x) {} }
   }
 
+  // Tarayıcının kişi/adres önerileri (Safari'nin telefon rehberi gibi) Atlas alanlarında çıkmaz: autocomplete'i açıkça verilmemiş her yazı alanı kapatılır; arama kutuları "search" adı alır
+  const ARAMA = /(^|[^a-zçğıöşü])ara\b|ara$|arama|search/i;
+  function oneriKapat(el) { if (!el || el.tagName !== 'INPUT' || el.hasAttribute('autocomplete')) return; const t = (el.getAttribute('type') || 'text').toLowerCase(); if (!['text', 'search', 'tel', 'email', 'url', ''].includes(t)) return;
+    el.setAttribute('autocomplete', 'off'); el.setAttribute('autocorrect', 'off'); el.setAttribute('data-1p-ignore', ''); el.setAttribute('data-lpignore', 'true');
+    if (!el.name && (ARAMA.test(el.id || '') || ARAMA.test(el.placeholder || ''))) el.name = 'search_' + (el.id || 'q'); }
   function tara(kok) {
+    oneriKapat(kok); (kok.querySelectorAll ? kok.querySelectorAll('input:not([autocomplete])') : []).forEach(oneriKapat);
     (kok.querySelectorAll ? kok.querySelectorAll('input[type="date"]') : []).forEach(tarihHazirla);
     (kok.querySelectorAll ? kok.querySelectorAll('input') : []).forEach(el => { if (telMi(el) && !el.dataset.tel) { el.dataset.tel = '1'; el.inputMode = 'tel'; if (!el.placeholder) el.placeholder = '05__ ___ __ __'; if (ham(el)) telMaske(el); } });
   }
