@@ -6389,7 +6389,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const TURLER = [['rapor', 'Raporlu', ['S', 'SY', 'R', 'RY']], ['izin', 'İzinli', ['İ', 'I', 'İY']], ['ozursuz', 'Özürsüz', ['D', 'G', 'Z', 'ZY']], ['diger', 'Diğer (faaliyet, özürlü…)', ['F', 'FY', 'N', 'Ö', 'ÖY']]];
     let secTur = new Set(['rapor', 'izin', 'diger']);   // raporlu, izinli, faaliyet varsayılan; özürsüz isteğe bağlı
     const isGunuSonra = (t, n) => { let d = new Date(t + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-    const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false;
+    const coz = L => { const K = new Map(), bilinmeyen = [], turDisi = {}; let tarihli = 0, kodlu = false, onceki = null;
       const NOB = /öğr\.?\s*no|okul\s*no|öğrenci\s*no|^\s*(no|numara|numarası|öğr\.?\s*numarası)\s*$/i;
       const bi = L.findIndex(r => r.some(c => NOB.test(String(c || ''))) && r.some(c => /tarih|başla/i.test(String(c || ''))));
       const B = bi >= 0 ? L[bi].map(c => String(c || '').toLocaleLowerCase(tr)) : null, sut = re => B ? B.findIndex(c => re.test(c)) : -1;
@@ -6397,13 +6397,20 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
       for (const r of (bi >= 0 ? L.slice(bi + 1) : L)) { const H = r.map(x => String(x || '').trim()).filter(Boolean); if (!H.length) continue;
         let T, o = null, yarim = false, neden = '';
         if (B) { const g = k => k >= 0 ? String(r[k] || '').trim() : ''; const t0 = tarihBul(g(cBas) || g(cT)) || seri(g(cBas) || g(cT)); if (!t0) continue; const t1 = tarihBul(g(cBit)) || seri(g(cBit)) || t0;
-          const m = parseFloat(g(cM).replace(',', '.')) || 1; yarim = m > 0 && m < 1; const t2 = m >= 2 ? isGunuSonra(t0, Math.ceil(m) - 1) : t0; T = [t0, t1 > t2 ? t1 : t2];   // 3 günlük rapor: başlangıçtan 3 okul günü (bitiş daha ilerideyse bitiş)
+          const gm = r.map(c => /(\d{1,2})\s*(iş\s*)?gün/i.exec(String(c || ''))).find(Boolean);
+          let m = parseFloat(g(cM).replace(',', '.')) || 0; if (!(m > 0) && gm) m = +gm[1]; if (!(m > 0)) m = 1; yarim = m > 0 && m < 1;
+          const ust = new Date(new Date(t0 + 'T12:00:00').getTime() + 90 * 864e5).toISOString().slice(0, 10);
+          const hepsi = B.map((h, k) => /tarih|başla|bitiş/.test(h) && !/doğum|kayıt|işlem|giriş|veriliş|yazdır/.test(h) ? r[k] : null).filter(c => c != null).flatMap(c => String(c || '').split(/\s+[–—-]\s+|\s*[–—]\s*|\s+/).concat([String(c || '')])).map(h => tarihBul(h) || seri(h)).filter(t => t && t >= t0 && t <= ust);
+          const t2 = m >= 2 ? isGunuSonra(t0, Math.ceil(m) - 1) : t0; T = [t0, [t1, t2, ...hepsi].sort().pop()];   // çok günlük rapor: gün sayısı, bitiş ya da satırdaki en geç tarih   // 3 günlük rapor: başlangıçtan 3 okul günü (bitiş daha ilerideyse bitiş)
           neden = nKod(g(cN)); if (neden) kodlu = true; if (/Y$/.test(neden)) yarim = true;
-          const no = g(cNo); if (/^\d{1,6}$/.test(no) && kisi.has(String(+no))) o = kisi.get(String(+no)); if (!o && g(cAd)) o = adla.get(g(cAd).toLocaleLowerCase(tr).replace(/\s+/g, ' ')) || null; }
+          const no = g(cNo); if (/^\d{1,6}$/.test(no) && kisi.has(String(+no))) o = kisi.get(String(+no)); if (!o && g(cAd)) o = adla.get(g(cAd).toLocaleLowerCase(tr).replace(/\s+/g, ' ')) || null;
+          if (!o && !no && !g(cAd)) o = onceki;   // birleştirilmiş hücre: numara/ad yalnız ilk satırda, sonraki günler altında
+          if (o) onceki = o; }
         else { T = H.flatMap(h => { const t1 = tarihBul(h); if (t1 && !/\d{4}.*\d{1,2}[./]\d{1,2}[./]\d{4}/.test(h)) return [t1]; return String(h).split(/\s+[–—-]\s+|\s*[–—]\s*|\s+/).map(tarihBul).filter(Boolean); });
           for (const h of H) { if (/^\d{1,5}$/.test(h) && kisi.has(String(+h))) { o = kisi.get(String(+h)); break; } }
           if (o) T = T.concat(H.filter(h => h !== o.no).map(seri).filter(Boolean)).filter(Boolean);
           if (!o) for (const h of H) { const a = adla.get(h.toLocaleLowerCase(tr).replace(/\s+/g, ' ')); if (a) { o = a; break; } }
+          if (!o && !H.some(h => /[a-zçğıöşü]{3}/i.test(h) && !/rapor|izin|faaliyet|özür|nakil|gün/i.test(h))) o = onceki; if (o) onceki = o;   // alt satırlar: aynı öğrencinin sonraki günleri
           if (o && !T.length) T = H.map(seri).filter(Boolean); if (!T.length) continue;
           { const gs = H.map(h => /^(\d{1,2})\s*(iş\s*)?gün/i.exec(h)).find(Boolean); if (gs && +gs[1] >= 2) { const S0 = T.slice().sort(); T.push(isGunuSonra(S0[0], +gs[1] - 1)); } }
           { const nh = H.find(h => /rapor|izin|faaliyet|özürsüz|özürlü|nakil/i.test(h) || (/^[A-ZÇĞİÖŞÜ]{1,2}$/.test(h) && NEDEN[h])); if (nh) { neden = nKod(nh); kodlu = true; if (/Y$/.test(neden)) yarim = true; } } }
