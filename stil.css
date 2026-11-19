@@ -2501,7 +2501,6 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
 @media (max-width: 760px) { body.ogt-alt .msj-ekran { contain: layout paint; } body.ogt-alt .msj-ekran > *:not(.msj-ust):not(.msj-alt) { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; will-change: scroll-position; transform: translateZ(0); } #ogtAlt { transform: translateZ(0); } }
 /* K-745b: sohbet açıkken sayfa kaymaz; yalnız mesaj listesi kayar (alt kutu titremez) */
 @media (max-width: 760px) {
-  html:has(body.ogt-sakin), body.ogt-sakin { overflow: hidden; overscroll-behavior: none; height: 100%; }
   body.ogt-alt.ogt-sakin main { padding-bottom: 0 !important; }
   body.ogt-sakin .msj-akis { overflow-y: auto; overscroll-behavior: contain; }
 }
@@ -2513,3 +2512,13 @@ body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-
   body.ogt-alt .msj-ekran.msj-sabit { position: fixed; left: 10px; right: 10px; z-index: 40; min-height: 0 !important; }
   body.ogt-alt .msj-akis > :first-child { margin-top: auto; }
 }
+/* K-742b: tahta kontrol — kendi dersiniz büyük ve neon (durağan parıltı, animasyon yok), diğer tahtalar sade liste */
+.ot-ben { border: 2px solid #22e8ff !important; box-shadow: 0 0 0 1px rgba(34,232,255,.25), 0 0 26px rgba(34,232,255,.35), inset 0 0 24px rgba(34,232,255,.08); background: linear-gradient(155deg, #123a5c, #0e2340) !important; }
+.ot-ben.kl { border-color: #ff6b7a !important; box-shadow: 0 0 0 1px rgba(255,107,122,.25), 0 0 26px rgba(255,107,122,.32), inset 0 0 24px rgba(255,107,122,.08); }
+.ot-et { color: #22e8ff; font-weight: 800; letter-spacing: .16em; font-size: 11.5px; } .ot-ben.kl .ot-et { color: #ff9aa5; }
+.ot-ben .ot-sinif { font-size: 54px; color: #fff; }
+.ot-bas { margin: 20px 4px 8px; color: #8fa3bf; font-weight: 800; letter-spacing: .14em; font-size: 12px; }
+.ot-liste { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.ot-sat { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 14px; background: #0f1b2f; border: 1px solid #ffffff12; }
+.ot-sat b { font-size: 17px; } .ot-sat span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #a9b8cd; }
+.ot-sat i { width: 8px; height: 8px; border-radius: 50%; background: #3ef08a; flex: none; } .ot-sat.ot-kl i { background: #ff6b7a; } .ot-sat.ot-kp i { background: #5d708c; } .ot-sat.ot-kp b { color: #8fa3bf; } .ot-sat { text-align: left; align-items: flex-start; }

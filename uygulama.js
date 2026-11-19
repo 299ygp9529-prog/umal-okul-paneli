@@ -579,22 +579,24 @@
     clearInterval(yenileZamanlayici); yenileZamanlayici = setInterval(() => { if (D.bolum !== 'dersyoklama' || document.hidden) return; const an = new Date(), t2 = an.getHours() * 60 + an.getMinutes(); if (D_.some(x => dk(x.bas) - 5 <= t2 && t2 < dk(x.bit) + 10)) { clearInterval(yenileZamanlayici); dyAl(); } }, 30000);
   }
   async function ogtEsle() { if (D.rol !== 'ogretmen') return ''; if (ogtEsle.v == null) { try { const { data } = await sb.rpc('umal_ogretmen_esle_benim'); ogtEsle.v = data || ''; } catch (e) { ogtEsle.v = ''; } } return ogtEsle.v; }
-  async function ogtTahta() {   // K-742: öğretmen, ders saatinde girdiği sınıfın tahtasını kilitler / açar / kapatır
+  async function ogtTahta() {   // K-742: üstte şu anki dersinizin tahtası (büyük, neon, kontrol düğmeleri); altta okuldaki bütün tahtaların durumu
     const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Tahta Kontrol</h1></div><div class="kart soluk">Yükleniyor…</div>';
-    const { D_, dk, t } = await dyDerslerim(), su = D_.filter(x => dk(x.bas) - 5 <= t && t < dk(x.bit) + 10);
-    if (!su.length) { const sn = D_.find(x => dk(x.bas) - 5 > t);
-      I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Dersinizin saatinde, o sınıfın tahtasını buradan kilitler, kilidini açar ya da kapatırsınız.</div></div></div><div class="kart soluk ot-bos">Şu an dersiniz yok.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; return; }
-    const x = su[0], { data, error } = await sb.rpc('umal_tahta_ogretmen', { p_sinif: x.sinif, p_islem: 'durum' });
-    if (error || !data || !data.ok) { I.innerHTML = `<div class="ust"><h1>Tahta Kontrol</h1></div><div class="kart">${esc(error ? hataYaz(error) : (data && data.hata) || 'Okunamadı')}</div>`; return; }
-    const e = data.erisim || {}, kilitli = e.durum === 'kilitli', KOD = { ders: 'Açık · ders', teneffus: 'Kilitli · teneffüs', bosders: 'Kilitli · boş ders', yonetim: 'Kilitli · ' + (e.kim || 'idare'), izin: 'Açık · ' + (e.kim || 'izin'), okul_disi: 'Kilitli · okul saati dışı', tatil: 'Kilitli · tatil' };
-    const durum = !data.var ? 'Bu sınıfın tahtası panele bağlı değil' : !data.acik ? 'Tahta kapalı' : (KOD[e.kod] || (kilitli ? 'Kilitli' : 'Açık'));
+    const [{ D_, dk, t }, lr] = await Promise.all([dyDerslerim(), sb.rpc('umal_tahta_ogretmen_liste').catch(() => ({}))]);
+    const su = D_.filter(x => dk(x.bas) - 5 <= t && t < dk(x.bit) + 10), x = su[0], TL = ((lr && lr.data && lr.data.liste) || []).sort((a, b) => sinifSira(a.sinif, b.sinif));
+    const KOD = e => ({ ders: 'Açık · ders', teneffus: 'Kilitli · teneffüs', bosders: 'Kilitli · boş ders', yonetim: 'Kilitli · ' + (e.kim || 'idare'), izin: 'Açık · ' + (e.kim || 'izin'), okul_disi: 'Kilitli · okul saati dışı', tatil: 'Kilitli · tatil', ertele: 'Açık · kapanış ertelendi' }[e.kod] || (e.durum === 'kilitli' ? 'Kilitli' : 'Açık'));
+    const dur = z => !z ? { s: 'kp', y: 'Panele bağlı değil' } : !z.acik ? { s: 'kp', y: 'Tahta kapalı' } : (z.erisim || {}).durum === 'kilitli' ? { s: 'kl', y: KOD(z.erisim || {}) } : { s: 'ac', y: KOD(z.erisim || {}) };
     const ik = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-    I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Yalnız şu anki dersinizin sınıfı</div></div></div>
-      <div class="ot-kart ${!data.acik ? 'kp' : kilitli ? 'kl' : 'ac'}"><div class="ot-ust"><span class="ot-sinif">${esc(x.sinif)}</span><span class="ot-ders">${x.n}. ders · ${esc(x.ders ? baslik(x.ders) : '')}</span></div>
-        <div class="ot-durum"><i></i>${esc(durum)}</div>
-        <div class="ot-dug">${data.acik ? (kilitli ? `<button class="birincil" data-oti="ac">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>')}Kilidi aç</button>` : `<button class="birincil" data-oti="kilitle">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9M12 14.5v2"/>')}Kilitle</button>`)
+    let ust = '';
+    if (x) { const z = TL.find(q => q.sinif === x.sinif), d = dur(z), kilitli = d.s === 'kl';
+      ust = `<div class="ot-kart ot-ben ${d.s}"><div class="ot-et">ŞU AN DERSİNİZ</div><div class="ot-ust"><span class="ot-sinif">${esc(x.sinif)}</span><span class="ot-ders">${x.n}. ders · ${esc(x.ders ? baslik(x.ders) : '')}</span></div>
+        <div class="ot-durum"><i></i>${esc(d.y)}</div>
+        <div class="ot-dug">${z && z.acik ? (kilitli ? `<button class="birincil" data-oti="ac">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>')}Kilidi aç</button>` : `<button class="birincil" data-oti="kilitle">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9M12 14.5v2"/>')}Kilitle</button>`)
           + `<button class="ikincil ot-kapat" data-oti="kapat">${ik('<path d="M12 3.5v8"/><path d="M7 6.5a7.5 7.5 0 1 0 10 0"/>')}Tahtayı kapat</button>` : '<div class="soluk kucuk">Tahta açılınca buradan kilitleyebilirsiniz.</div>'}</div>
-        <div class="soluk kucuk">Kilit ve açma ders bitince kendiliğinden kalkar. Kapat: tahta 2 dakika uyarı verip kapanır.</div><div id="otBilgi" class="kucuk"></div></div>`;
+        <div class="soluk kucuk">Kilit ve açma zil çalınca kendiliğinden kalkar. Kapat: tahta 2 dakika uyarı verip kapanır.</div><div id="otBilgi" class="kucuk"></div></div>`; }
+    else { const sn = D_.find(q => dk(q.bas) - 5 > t); ust = `<div class="kart soluk ot-bos">Şu an dersiniz yok; dersinizin saatinde o sınıfın tahtası burada en üstte çıkar.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; }
+    const diger = TL.filter(q => !x || q.sinif !== x.sinif);
+    I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1><div class="soluk kucuk">Dersinizdeki tahtayı yönetirsiniz; diğer tahtaların durumunu görürsünüz</div></div></div>${ust}
+      <div class="ot-bas">OKULDAKİ TAHTALAR</div><div class="ot-liste">${diger.map(q => { const d = dur(q); return `<div class="ot-sat ot-${d.s}"><b>${esc(q.sinif)}</b><span><i></i>${esc(d.y)}</span></div>`; }).join('') || '<div class="soluk kucuk" style="padding:10px">Tahta bilgisi yok.</div>'}</div>`;
     I.querySelectorAll('[data-oti]').forEach(b => b.onclick = async () => { const i = b.dataset.oti;
       if (i === 'kapat' && !await onayla(`${x.sinif} tahtası kapatılsın mı?`)) return;
       b.disabled = true; const { data: r, error: er } = await sb.rpc('umal_tahta_ogretmen', { p_sinif: x.sinif, p_islem: i });
@@ -645,7 +647,10 @@
       const e = document.querySelector('.msj-ekran'); if (!e || window.innerWidth > 760) return;
       const vv = window.visualViewport, ak = e.querySelector('.msj-akis'), dipte = !ak || ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80, kl = document.body.classList.contains('klavye-acik') && vv && window.innerHeight - vv.height > 120;
       if (e.classList.contains('msj-sabit')) { e.classList.remove('msj-sabit'); e.style.removeProperty('top'); delete e.dataset.sabit; }
-      const alt = document.body.classList.contains('klavye-acik') ? window.innerHeight - 4 : n.getBoundingClientRect().top; if (!alt) return;   // klavye açıkken kutu sayfanın dibine uzanır; iPhone yazı kutusunu klavyenin hemen üstüne getirir
+      if (kl) {   // klavye açık: kutu görünen alan kadar olur, sayfa bir kez kutunun başına kaydırılır (19.16'daki iyi çalışan düzen)
+        const h = Math.round(vv.height) - 12; if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; }
+        clearTimeout(boyut.s); boyut.s = setTimeout(() => { const y = Math.max(0, Math.round(e.getBoundingClientRect().top + window.scrollY - 6)); if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); }, 220); return; }
+      const alt = n.getBoundingClientRect().top; if (!alt) return;   // klavye açıkken kutu sayfanın dibine uzanır; iPhone yazı kutusunu klavyenin hemen üstüne getirir
       const h = Math.max(240, Math.round(alt - (e.getBoundingClientRect().top + window.scrollY) - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) { e.style.setProperty('height', h + 'px', 'important'); if (ak && dipte) ak.scrollTop = ak.scrollHeight; } };
     let bz = 0; const boyutSonra = () => { cancelAnimationFrame(bz); bz = requestAnimationFrame(boyut); };   // tek karede bir kez
     window.addEventListener('resize', boyutSonra); if (window.visualViewport) { visualViewport.addEventListener('resize', boyutSonra); }
