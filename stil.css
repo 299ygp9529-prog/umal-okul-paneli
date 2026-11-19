@@ -2575,3 +2575,4 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 /* K-762: veli kartları seviyece toplu */
 .vk-sv { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
 .vk-svb { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(34,232,255,.4); background: rgba(34,232,255,.07); color: #fff; font: inherit; cursor: pointer; text-align: left; } .vk-svb b { font-size: 15px; } .vk-svb small { color: var(--soluk); font-size: 12px; } .vk-svb:disabled { opacity: .5; cursor: default; }
+@media (max-width: 760px) { .tm-alt.iki > .tm-gk.tm-cikti:not(.tm-genis) { grid-column: auto; padding-right: 14px; } }
