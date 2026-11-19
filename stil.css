@@ -2500,3 +2500,9 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 /* K-745: öğretmen telefonunda sohbet akıcı — sohbet açıkken süs animasyonları durur, mesaj listesi kendi katmanında kayar */
 body.ogt-sakin *, body.ogt-sakin *::before, body.ogt-sakin *::after { animation-play-state: paused !important; }
 @media (max-width: 760px) { body.ogt-alt .msj-ekran { contain: layout paint; } body.ogt-alt .msj-ekran > *:not(.msj-ust):not(.msj-alt) { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; will-change: scroll-position; transform: translateZ(0); } #ogtAlt { transform: translateZ(0); } }
+/* K-745b: sohbet açıkken sayfa kaymaz; yalnız mesaj listesi kayar (alt kutu titremez) */
+@media (max-width: 760px) {
+  html:has(body.ogt-sakin), body.ogt-sakin { overflow: hidden; overscroll-behavior: none; height: 100%; }
+  body.ogt-alt.ogt-sakin main { padding-bottom: 0 !important; }
+  body.ogt-sakin .msj-akis { overflow-y: auto; overscroll-behavior: contain; }
+}

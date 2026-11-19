@@ -635,9 +635,9 @@
     const boyut = () => {   // sohbet ekranı: başlıktan alt çubuğa (klavye açıkken klavyeye) kadar tam dolar
       const e = document.querySelector('.msj-ekran'); if (!e || window.innerWidth > 760) return;
       const vv = window.visualViewport, alt = document.body.classList.contains('klavye-acik') || getComputedStyle(n).display === 'none' ? (vv ? vv.height + vv.offsetTop : window.innerHeight) : n.getBoundingClientRect().top;
-      const h = Math.max(240, Math.round(alt - e.getBoundingClientRect().top - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) e.style.setProperty('height', h + 'px', 'important'); };
+      const h = Math.max(240, Math.round(alt - (e.getBoundingClientRect().top + window.scrollY) - 10)); if (Math.abs((parseFloat(e.style.height) || 0) - h) > 2) e.style.setProperty('height', h + 'px', 'important'); };
     window.addEventListener('resize', boyut); if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(boyut, 80));
-    const guncelle = () => { boyut(); document.body.classList.toggle('ogt-sakin', D.bolum === 'mesajlar' && !document.body.classList.contains('tm-acik')); const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
+    const guncelle = () => { boyut(); const sk = D.bolum === 'mesajlar' && !document.body.classList.contains('tm-acik') && !!document.querySelector('.msj-ekran'); if (sk !== document.body.classList.contains('ogt-sakin')) { document.body.classList.toggle('ogt-sakin', sk); if (sk) window.scrollTo(0, 0); } const m = document.body.classList.contains('tm-acik'); n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', m ? b.dataset.oa === 'menu' : b.dataset.oa === D.bolum)); };
     const say = async () => { try { await msjRozet(); const k = MSJ.L.reduce((a, x) => a + (+x.yeni || 0), 0), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); } catch (e) {} };
     // klavye açıkken alt sekmeler gizlenir (iOS'ta klavyenin üstüne oturmasın)
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
