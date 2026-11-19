@@ -693,7 +693,8 @@
     // e-postadan ad eşleştirme: harfler sadeleştirilir (ü→u, ş→s…), yan yana aynı harf teke iner — muruvetacar81@… ↔ Mürüvvet ACAR, oozgurrcan@… ↔ Özgür CAN
     const sade = x => String(x || '').toLocaleLowerCase(tr).replace(/[çğıöşü]/g, c => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' })[c]).replace(/[^a-z]/g, '').replace(/(.)\1+/g, '$1');
     const IDARE_EP = [];
-    const IDARE = new Set(['mehmettatar']), idareci = o => IDARE.has(nk(o)) || (() => { const k = sade(o); return k.length >= 6 && IDARE_EP.some(e => e.includes(k)); })();   // idareciler boş derse görevlendirilmez (panelde rolü İdare olanlar + bilinen idareciler)
+    const OGRETMEN_SAY = new Set(['fatihserinol']);   // panel yetkisi İdare olsa da ders öğretmeni: boş derse girer
+    const IDARE = new Set(['mehmettatar']), idareci = o => !OGRETMEN_SAY.has(nk(o)) && (IDARE.has(nk(o)) || (() => { const k = sade(o); return k.length >= 6 && IDARE_EP.some(e => e.includes(k)); })());   // idareciler boş derse görevlendirilmez (panelde rolü İdare olanlar + bilinen idareciler)
     try { let R = null; try { const { data, error } = await X.sb.rpc('umal_roller_al'); if (!error && Array.isArray(data)) R = data; } catch (e) {} if (!R) { const r = await X.sb.from('umal_yoneticiler').select('eposta,rol'); R = r.data || []; }
       const ep = new Set(R.filter(x => (x.rol || 'yonetici') === 'yonetici').map(x => String(x.eposta))); if (ep.size) { const { data: OG } = await X.sb.from('umal_ogretmenler').select('eposta,ad'); (OG || []).forEach(x => { if (ep.has(String(x.eposta)) && x.ad) IDARE.add(nk(x.ad)); }); ep.forEach(e => IDARE_EP.push(sade(String(e).split('@')[0]))); } } catch (e) {}
     async function yukle() { const { data } = await X.sb.rpc('umal_gorev_liste', { p_tarih: iso(gun) }); G = (data && data.ok) ? data : { liste: [], say: {} }; GEL = new Set(G.liste.map(x => x.asil).filter(Boolean)); }
