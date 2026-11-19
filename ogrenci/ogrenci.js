@@ -546,7 +546,7 @@
     if ($('#ilKatil')) $('#ilKatil').onclick = () => gonder(true);
     if ($('#ilVaz')) $('#ilVaz').onclick = async () => { if (!await onayla('Gezi başvurunu geri çekmek istiyor musun?')) return; gonder(false); };
   }
-  function gzKutu() { return ilKutu() + (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
+  function gzKutu() { return (GZ.L || []).map((d, i) => gzKutu1(d, i)).join('') + ilKutu() + (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
   // K-716bx: gezi katılımcısı eksik bilgilerini (T.C., doğum tarihi, telefon) kendisi girer; idare panelinde hemen görünür
   let GB = { i: 0, mesaj: '', tur: '' };
   function gbAc(i) { GB = { i: i || 0, mesaj: '', tur: '' }; gbCiz(); goster('s-gbil'); window.scrollTo(0, 0); }
