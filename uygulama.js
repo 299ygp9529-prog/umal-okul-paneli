@@ -4037,7 +4037,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
-    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk" style="white-space:nowrap">Öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk" style="white-space:nowrap;font-size:min(14px,3.45vw)">Öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
     await girisKodlari();
   }
   async function girisKodlari() {
