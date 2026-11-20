@@ -53,7 +53,7 @@
           <div class="gb-yeni"><input class="dp-in" id="gbYeni" maxlength="120" placeholder="Yeni sebep yazın" autocomplete="off"><button class="ikincil" id="gbYeniE" type="button">Ekle</button></div>
           <div class="gb-duz-alt"><span class="soluk kucuk">Basılı tutup sürükleyerek sırayı değiştirin.</span><button class="bag" id="gbVars" type="button">Varsayılanlara dön</button></div>`
         : `<div class="dya-sec gb-sebl">${sebepler(GB.tur).map(n => `<button class="cip ${!GB.kendi && GB.neden === n ? 'secili' : ''}" data-gbn="${X.esc(n)}">${esc(n)}</button>`).join('')}<button class="cip gb-kendi ${GB.kendi ? 'secili' : ''}" data-gbkendi="1">+ Kendim yazayım</button></div>
-          ${GB.kendi ? `<div class="gb-kendi-k"><input class="dp-in" id="gbKendi" maxlength="120" placeholder="${GB.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'} sebebini yazın" value="${esc(GB.neden)}" autocomplete="off"><label class="gb-ekle"><input type="checkbox" id="gbEkle" ${GB.ekle ? 'checked' : ''}> Listeme ekle</label></div>` : ''}`}
+          ${GB.kendi ? `<div class="gb-kendi-k"><input class="dp-in" id="gbKendi" maxlength="120" placeholder="${GB.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'} sebebini yazın" value="${esc(GB.neden)}" autocomplete="off"><div class="gb-kendi-alt"><span class="soluk kucuk">Yazdığınız sebeple doğrudan gönderebilir ya da listenize ekleyebilirsiniz.</span><button class="ikincil" id="gbEkle" type="button">Listeme ekle</button></div></div>` : ''}`}
         <input class="dp-in gb-not" id="gbNot" maxlength="300" placeholder="Kısa not (isteğe bağlı)" value="${esc(GB.not)}">
         <b class="gb-b">Öğrenci</b>${(() => { const B = (GB.benS || []).filter(x => S.includes(x)), D = S.filter(x => !B.includes(x));   // K-768: derse girdiği sınıflar yan yana düğme; diğerleri "Diğer" listesinde
           if (!B.length) return `<div class="gb-bul"><select class="dp-in" id="gbSinif">${S.map(x => `<option ${x === GB.sinif ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
@@ -67,7 +67,11 @@
     sebepYukle(() => { if (!GB.duz && document.getElementById('gbIc') === E) gonderCiz(S); });
     { const kb = E.querySelector('[data-gbkendi]'); if (kb) kb.onclick = () => { GB.kendi = true; if (sebepler(GB.tur).includes(GB.neden)) GB.neden = ''; gonderCiz(S); const i = $('#gbKendi'); if (i) i.focus(); }; }
     if ($('#gbKendi')) $('#gbKendi').oninput = ev => { GB.neden = ev.target.value; };
-    if ($('#gbEkle')) $('#gbEkle').onchange = ev => { GB.ekle = ev.target.checked; };
+    if ($('#gbEkle')) $('#gbEkle').onclick = () => { const v = String(GB.neden || '').trim().replace(/\s+/g, ' ');   // K-785: hemen listeye ekler ve seçer (göndermeyi beklemez)
+      if (v.length < 3) { X.uyar('Sebep en az 3 harf olsun.'); const i = $('#gbKendi'); if (i) i.focus(); return; }
+      const l = sebepler(GB.tur).slice(), var_ = l.find(x => x.toLocaleLowerCase(tr) === v.toLocaleLowerCase(tr));
+      if (!var_) { l.push(v); SEB = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB[GB.tur] = l; sebepKaydet(); }
+      GB.neden = var_ || v; GB.kendi = false; gonderCiz(S); const y = document.querySelector('.gb-sebl .cip.secili'); if (y) { y.classList.add('gb-yeni-ek'); y.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } };
     $('#gbDuz').onclick = () => { GB.duz = !GB.duz; gonderCiz(S); };
     if (GB.duz) {
       const L = () => sebepler(GB.tur).slice(), yaz = async L_ => { SEB = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB[GB.tur] = L_; if (!L_.includes(GB.neden)) GB.neden = ''; gonderCiz(S); await sebepKaydet(); };
@@ -115,7 +119,6 @@
       const { data, error } = await X.sb.rpc('umal_gb_yaz', { p_nolar: [...GB.sec], p_tur: GB.tur, p_neden: GB.neden, p_aciklama: GB.not || null });
       gidiyor = false;
       if (error || !data || !data.ok) { X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; }
-      if (GB.kendi && GB.ekle && !sebepler(GB.tur).some(x => x.toLocaleLowerCase(tr) === GB.neden.toLocaleLowerCase(tr))) { SEB = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB[GB.tur].push(GB.neden); sebepKaydet(); GB.kendi = false; }   // K-782: listeye eklendi, bir dahaki sefere düğme olarak gelir
       X.uyar(`${data.sayi} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönderildi. Öğrencinin paneline ve veli ekranına düştü.`); GB.sec = new Set(); GB.not = ''; gonderCiz(S); };
     etiket();
   }

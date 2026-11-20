@@ -2705,3 +2705,5 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .dya-sec.gb-sebl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .gb-sebl .cip { width: 100%; min-width: 0; margin: 0; min-height: 44px; padding: 6px 10px; border-radius: 14px; font-size: 14px; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; text-align: center; }
 .gb-sebl .cip.gb-kendi { grid-column: 1 / -1; }
+.gb-kendi-alt { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gb-kendi-alt .ikincil { flex: none; white-space: nowrap; }
+.gb-sebl .cip.gb-yeni-ek { animation: gbYeniEk .9s ease-out; } @keyframes gbYeniEk { 0% { transform: scale(.85); box-shadow: 0 0 0 0 rgba(34,232,255,.7); } 60% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(34,232,255,0); } 100% { transform: scale(1); } }
