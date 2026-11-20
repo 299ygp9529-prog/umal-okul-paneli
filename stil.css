@@ -2652,3 +2652,6 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 
 /* K-777: telefonda çift dokunuşta sayfa yakınlaşıp yana kaymasın (iki parmakla büyütme kalır) */
 @media (max-width: 760px) { html, body, .tumu-menu, main, .yan { touch-action: manipulation; } }
+
+/* K-778: body grid; uzun tek satırlık mesaj önizlemesi sayfayı genişletip yana kaydırmasın */
+#uygulama { min-width: 0; max-width: 100%; }
