@@ -852,22 +852,30 @@
     };
     await tur(); setInterval(() => { if (!document.hidden) tur().catch(() => {}); }, 30000);
   }
+  const modSecHtml = () => `<span class="mod-sec" role="group" aria-label="Görev"><button type="button" data-mod="bas" class="${D.rol === 'bas' ? 'secili' : ''}">Kurucu</button><button type="button" data-mod="ogretmen" class="${D.rol === 'ogretmen' ? 'secili' : ''}">Öğretmen</button></span>`;
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-mod]'); if (!b || D.gercekRol !== 'bas') return; ev.preventDefault(); ev.stopPropagation();
+    const m = b.dataset.mod; if (m === D.rol) return; try { localStorage.setItem('umalMod', m === 'ogretmen' ? 'ogretmen' : ''); sessionStorage.setItem('atlasYenile', '1'); } catch (e) {}
+    location.replace(location.pathname + location.search); }, true);
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
     D.eposta = session.user.email || '';
-    const { data: rol, error } = await sb.rpc('umal_benim_rolum');
+    let { data: rol, error } = await sb.rpc('umal_benim_rolum');
     if (error || !rol) {
       girisGoster();
       if (error) { $('#girisBilgi').textContent = 'Sunucuya ulaşılamadı: ' + hataYaz(error); await sb.auth.signOut({ scope: 'local' }); return; }
       erisimIste(); return;   // K-684: e-posta kodla doğrulandı; adını yazıp erişim ister, idare tek dokunuşla onaylar
     }
+    D.gercekRol = rol;   // K-776: Kurucu aynı zamanda öğretmen — üstteki Kurucu/Öğretmen düğmesiyle panel öğretmen ekranına döner (yalnız görünüm; yetki sunucuda)
+    if (rol === 'bas') { let m = ''; try { m = localStorage.getItem('umalMod') || ''; } catch (e) {} if (m === 'ogretmen') rol = 'ogretmen'; }
+    document.body.classList.toggle('ikili', D.gercekRol === 'bas');
     D.rol = rol; document.body.classList.toggle('kurucu', rol === 'bas');
     asistanDugme();   // K-716ce: Atlas'a sor
     $('#giris').classList.add('gizli');
     $('#uygulama').classList.remove('gizli');
     $('#kim').textContent = D.eposta;
-    if (rol === 'bas') $('#rolEtiket').innerHTML = '<span class="kurucu-yazi">KURUCU</span>';   // K-716bg: baş yönetici her yerde KURUCU (Marcellus, altın)
+    if (D.gercekRol === 'bas') $('#rolEtiket').innerHTML = modSecHtml();
+    else if (rol === 'bas') $('#rolEtiket').innerHTML = '<span class="kurucu-yazi">KURUCU</span>';   // K-716bg: baş yönetici her yerde KURUCU (Marcellus, altın)
     else $('#rolEtiket').textContent = { yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
@@ -1194,6 +1202,7 @@
     document.body.classList.add('tm-acik'); window.scrollTo(0, 0); d.scrollTop = 0; d.style.top = Math.round(document.querySelector('.yan').getBoundingClientRect().bottom) + 'px';
     $('#telGeri').classList.toggle('gizli', !G);
     const h = G ? '#bolumler-' + grup : '#bolumler'; if (gecmis !== false && location.hash !== h) history.pushState(null, '', h);
+    if (!G && D.gercekRol === 'bas') d.insertAdjacentHTML('afterbegin', `<div class="mod-sat">${modSecHtml()}</div>`);   // K-776
     if (!G && TFG.L.length) { d.insertAdjacentHTML('afterbegin', tfgKartHtml()); d.querySelectorAll('.tfg-kartlar [data-tfgy]').forEach(b => b.onclick = ev => { ev.stopPropagation(); tfgAc(b.dataset.tfgy); }); }   // K-716cr
     D._tmGrup = G ? G[0] : ''; icGeriGuncelle();
     d.onclick = ev => { if (ev.target.closest('[data-icg]')) { history.replaceState(null, '', '#bolumler'); return tumuAc(false); } const g = ev.target.closest('[data-tg]'); if (g) return tumuAc(true, g.dataset.tg); const b = ev.target.closest('[data-tb]'); if (b) { D._gridGrup = D._tmGrup || ''; tumuKapat(); D._gridden = true; ac(b.dataset.tb); } };
