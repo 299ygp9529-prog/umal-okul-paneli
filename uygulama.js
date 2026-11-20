@@ -548,6 +548,7 @@
       islem: v => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: v }),
       kisi: no => r_('umal_gezi_telsiz_kisi', { p_anahtar: g.anahtar, p_no: no }),
       foto: fk => r_('umal_gezi_telsiz_fotolar', { p_anahtar: g.anahtar, p_fk: fk }),
+      konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
   }
   async function tzGeziKart(an) {   // Gezi Kaydı › Gezi günü: telsiz durumu; aç/kapat yalnız Kurucu

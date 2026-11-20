@@ -19,6 +19,7 @@
     gizle: '<path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A9.7 9.7 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.2 2.3-2.4 3.5M6.1 6.1C4.1 7.4 2.7 9.4 2 12c1 2.5 5 7 10 7 1.6 0 3.1-.4 4.4-1.1"/>',
     goster: '<path d="M2 12c1-2.5 5-7 10-7s9 4.5 10 7c-1 2.5-5 7-10 7S3 14.5 2 12Z"/><circle cx="12" cy="12" r="3"/>',
     konum: '<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/>',
+    pin: '<path d="M12 21.5s-7-6.3-7-11.5a7 7 0 0 1 14 0c0 5.2-7 11.5-7 11.5Z" fill="currentColor" fill-opacity=".25"/><circle cx="12" cy="10" r="2.6"/>',
     kisiler: '<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.5-3.3 2.8-5.3 6-5.3s5.5 2 6 5.3"/><path d="M15.5 5.6a3.2 3.2 0 0 1 0 5.8M17.5 14.6c2 .7 3.2 2.4 3.5 4.9"/>'
   };
   var CSS = [
@@ -49,6 +50,11 @@
     '.tz-hiz{display:flex;gap:7px;margin:0 -12px 9px;padding:0 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tz-hiz::-webkit-scrollbar{display:none}',
     '.tz-hiz button{flex:none;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;background:transparent;border:1px solid #24406a;border-radius:999px;padding:7px 13px;color:#b9c9e2;cursor:pointer}',
     '.tz-hiz button.secili{background:rgba(255,181,71,.16);border-color:rgba(255,181,71,.7);color:#ffc46b}',
+    '.tz-hiz button.tz-kon{display:inline-flex;align-items:center;gap:5px;border-color:rgba(34,232,255,.6);color:#7ff6ff;background:rgba(34,232,255,.08)}',
+    '.tz-harita{display:block;margin-top:4px;border-radius:12px;overflow:hidden;border:1px solid #24406a;background:#0b1424;color:#fff;text-decoration:none}',
+    '.tz-hk{position:relative;height:150px;overflow:hidden;background:#dfe6ec}.tz-hm{position:absolute;left:50%;top:50%;width:0;height:0}.tz-hm img{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none}',
+    '.tz-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-92%);color:#ff4d5e;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}.tz-osm{position:absolute;right:4px;bottom:3px;font-size:9px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:4px}',
+    '.tz-hal{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:13.5px;color:#7ff6ff}.tz-hal b{color:#fff;font-size:14px}.tz-hal small{color:#8aa0c2;font-size:12px}.tz-hal em{margin-left:auto;font-style:normal;font-weight:700;font-size:13px;color:#22e8ff}',
     '.tz-yaz{display:flex;gap:8px;align-items:flex-end}',
     '.tz-yaz textarea{flex:1;min-width:0;resize:none;min-height:44px;max-height:120px;border-radius:22px;background:#0b1424;border:1px solid #24406a;color:#fff;padding:11px 16px;font:inherit;font-size:16px;line-height:1.3;box-sizing:border-box}',
     '.tz-yaz textarea:focus{outline:none;border-color:#22e8ff;box-shadow:0 0 0 2px rgba(34,232,255,.18)}.tz-yaz.duyuru textarea{border-color:rgba(255,181,71,.7)}',
@@ -98,6 +104,16 @@
       var sd = ekran.querySelector('.tz-sus-dug'); if (sd) { sd.style.display = S.susL.length ? '' : 'none'; sd.querySelector('span').textContent = S.susL.length + ' öğrenci sessizde'; } }
 
     function adGoster(m) { var a = buyukHarf(m.ad || ''); return a || (m.rol === 'ogrenci' ? 'Öğrenci' : 'Öğretmen'); }
+    var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    function konumHtml(k) {   // o anki konum: küçük harita (OpenStreetMap karoları) + haritada aç
+      var z = 16, n = Math.pow(2, z), lr = k.lat * Math.PI / 180, px = (k.lng + 180) / 360 * n * 256, py = (1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n * 256;
+      var tx = Math.floor(px / 256), ty = Math.floor(py / 256), img = '';
+      for (var dy = -1; dy <= 1; dy++) for (var dx = -2; dx <= 2; dx++) { var x = tx + dx, y = ty + dy; if (y < 0 || y >= n) continue; x = ((x % n) + n) % n;
+        img += '<img alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" src="https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png" style="left:' + Math.round((tx + dx) * 256 - px) + 'px;top:' + Math.round((ty + dy) * 256 - py) + 'px">'; }
+      var url = IOS ? 'https://maps.apple.com/?ll=' + k.lat + ',' + k.lng + '&q=Konum' : 'https://www.google.com/maps/search/?api=1&query=' + k.lat + ',' + k.lng;
+      return '<a class="tz-harita" href="' + esc(url) + '" target="_blank" rel="noopener"><div class="tz-hk"><div class="tz-hm">' + img + '</div><span class="tz-pin">' + SVG(IK.pin, 34, 1.8) + '</span><span class="tz-osm">© OpenStreetMap</span></div>' +
+        '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<b>Bulunduğu yer</b>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
+    }
     function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
       return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(f) + '">' : esc(basHarf(ad))) + '</div>'; }
     function kunye(m, ad) { var og = m.rol !== 'ogrenci';
@@ -107,7 +123,7 @@
       var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
       if (m.duyuru) return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(IK.duyuru, 14, 2.4) + 'DUYURU</div>' + kunye(m, ad) + '<div class="tz-t">' + esc(m.metin) + '</div></div>';
       return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
-        '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div></div>';
+        (m.konum && m.konum.lat != null ? konumHtml(m.konum) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') : '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div>') + '</div>';
     }
     async function fotoYukle() { if (!cfg.foto) return;
       var L = []; S.M.forEach(function (m) { if (m.fk && !(m.fk in FOTO) && L.indexOf(m.fk) < 0) L.push(m.fk); }); if (!L.length) return;
@@ -127,7 +143,7 @@
       if (S.sessiz) { if (alt.dataset.d !== 'sus') { alt.dataset.d = 'sus'; alt.innerHTML = '<div class="tz-sus">' + SVG(IK.sessiz, 18) + '<span>Öğretmenin seni sessize aldı. Mesajları okuyabilirsin.</span></div>'; } return; }
       if (alt.dataset.d === 'yaz') { var y0 = alt.querySelector('.tz-yaz'); if (y0) y0.classList.toggle('duyuru', S.duyuru); return; }
       alt.dataset.d = 'yaz';
-      alt.innerHTML = '<div class="tz-hiz">' + (P ? '<button type="button" data-tzduy>' + 'Duyuru</button>' : '') + HIZ.map(function (h) { return '<button type="button" data-tzh="' + esc(h) + '">' + esc(h) + '</button>'; }).join('') + '</div>' +
+      alt.innerHTML = '<div class="tz-hiz">' + (cfg.konum ? '<button type="button" class="tz-kon" data-tzkon>' + SVG(IK.pin, 15, 2) + 'Konum gönder</button>' : '') + (P ? '<button type="button" data-tzduy>' + 'Duyuru</button>' : '') + HIZ.map(function (h) { return '<button type="button" data-tzh="' + esc(h) + '">' + esc(h) + '</button>'; }).join('') + '</div>' +
         '<div class="tz-yaz' + (S.duyuru ? ' duyuru' : '') + '"><textarea rows="1" maxlength="' + (P ? 500 : 300) + '" placeholder="' + (P ? 'Mesaj yaz…' : 'Mesaj yaz…') + '" enterkeyhint="send"></textarea><button class="tz-gon" type="button" aria-label="Gönder">' + SVG(IK.gonder, 20, 2.6) + '</button></div>';
       var y = alt.querySelector('textarea');
       y.oninput = function () { if (SK && SK.buyut) SK.buyut(y, 120); else { y.style.height = 'auto'; y.style.height = Math.min(120, y.scrollHeight) + 'px'; } };
@@ -135,7 +151,22 @@
       alt.querySelector('.tz-gon').addEventListener('pointerdown', function (e) { e.preventDefault(); });
       alt.querySelector('.tz-gon').onclick = function () { gonder(); };
       alt.querySelectorAll('[data-tzh]').forEach(function (b) { b.onclick = function () { gonder(b.dataset.tzh); }; });
+      var kb = alt.querySelector('[data-tzkon]'); if (kb) kb.onclick = konumGonder;
       var du = alt.querySelector('[data-tzduy]'); if (du) du.onclick = function () { S.duyuru = !S.duyuru; du.classList.toggle('secili', S.duyuru); alt.querySelector('.tz-yaz').classList.toggle('duyuru', S.duyuru); y.placeholder = S.duyuru ? 'Duyuru yaz (herkese öne çıkar)…' : 'Mesaj yaz…'; };
+    }
+    async function konumGonder() {
+      if (S.gonderiyor || !S.acik || S.sessiz) return;
+      if (!navigator.geolocation) { uyar('Bu telefon konum vermiyor.'); return; }
+      if (!await onayla('Şu an bulunduğun yerin konumu gruba gönderilsin mi? (Canlı konum değil, yalnız bu anki yer.)')) return;
+      S.gonderiyor = true; var gec = d.createElement('div'); gec.className = 'tz-sis'; gec.textContent = 'Konum alınıyor…'; ak.appendChild(gec); ak.scrollTop = ak.scrollHeight;
+      var p = null, hata = '';
+      try { p = await new Promise(function (ok, red) { navigator.geolocation.getCurrentPosition(ok, red, { enableHighAccuracy: true, timeout: 20000, maximumAge: 20000 }); }); }
+      catch (e) { hata = e && e.code === 1 ? 'Konum izni verilmedi. Telefonun Ayarlar › Gizlilik › Konum Servisleri bölümünden bu uygulamaya (ya da tarayıcıya) izin ver.' : 'Konum bulunamadı. Açık alanda yeniden dene.'; }
+      var r = null; if (p) { try { r = await cfg.konum(p.coords.latitude, p.coords.longitude, p.coords.accuracy); } catch (e) { r = null; } }
+      S.gonderiyor = false; gec.remove();
+      if (hata) { uyar(hata); return; }
+      if (!r || !r.ok) { if (r && r.sessiz) { S.sessiz = true; alt.dataset.d = ''; altCiz(); } else uyar('Konum gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); return; }
+      await yukle();
     }
     async function gonder(hazir) {
       if (S.gonderiyor || !S.acik || S.sessiz) return; var y = alt.querySelector('textarea'); var t = (hazir || (y ? y.value : '')).trim(); if (!t) return;
@@ -188,7 +219,7 @@
       perde('<div class="tz-bas">SESSİZDEKİLER</div>' + (S.susL.map(function (s) { var a = buyukHarf(s.ad || s.no); return '<div class="tz-li"><div class="tz-av">' + esc(basHarf(a)) + '</div><span>' + esc(a) + (s.sinif ? ' · ' + esc(s.sinif) : '') + '</span><button type="button" data-tzac="' + esc(s.no) + '">Sesi aç</button></div>'; }).join('') || '<div class="soluk kucuk">Sessizde kimse yok.</div>'),
         function (p, kapat) { p.querySelectorAll('[data-tzac]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.islem({ sessiz: b.dataset.tzac, kapali: false }); if (!r || !r.ok) { uyar('Yapılamadı'); b.disabled = false; return; } kapat(); S.surum = -1; yukle(); }; }); });
     }
-    if (P) { ak.onclick = function (e) { var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
+    if (P) { ak.onclick = function (e) { if (e.target.closest('.tz-harita')) return; var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
     function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(); dongu(); }, d.hidden ? 15000 : 4000); }
     function dur() { clearTimeout(S.zam); }
     var gor = function () { if (!d.hidden && !S.olu && S.acik) { yukle(); dongu(); } }; d.addEventListener('visibilitychange', gor);
