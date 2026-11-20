@@ -519,6 +519,11 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .tk-neden { margin: 14px 0 6px; padding: 14px 16px; border-radius: 18px; background: rgba(62,240,138,.10); border: 1px solid rgba(62,240,138,.45); font-size: 20px; font-weight: 800; color: #6ee7a8; line-height: 1.3; }
 .tk-not { font-size: 15px; color: #c8d6ea; margin: 8px 4px 0; font-style: italic; } .tk-kim { margin-top: 12px; font-size: 14px; color: #9fb3cf; } .tk-kim b { color: #e6eefb; }
 .tk-btn { margin-top: 18px; width: 100%; height: 52px; border: 0; border-radius: 16px; background: linear-gradient(180deg, #ffe08a, #f2b938); color: #2a1c00; font-size: 17px; font-weight: 800; font-family: inherit; cursor: pointer; }
+
+/* K-796: her ekranda sağ üstte Yenile */
+.ust2 .ust2-sag { justify-self: end; display: inline-flex; align-items: center; gap: 8px; }
+.ust2-yen { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; border: 1px solid rgba(34,232,255,.35); background: rgba(34,232,255,.08); color: #22e8ff; cursor: pointer; flex: none; padding: 0; }
+.ust2-sag .so-pdf { white-space: nowrap; padding: 8px 10px !important; font-size: 13px !important; } .ust2-yen svg { width: 21px; height: 21px; } .ust2-yen.donuyor svg { animation: ogrYenileDon .8s linear infinite; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -678,6 +683,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611200945"></script>
+<script src="ogrenci.js?v=202611200950"></script>
 </body>
 </html>

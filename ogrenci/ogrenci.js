@@ -1632,11 +1632,16 @@
         ${S.no !== '1907' ? `<button class="ay-sat" data-ay="sifre">${ayIk('anahtar', '#c99bff')}<span class="m"><b>Şifremi değiştir</b><small>6 haneli yeni şifre</small></span><span class="ok">›</span></button>` : ''}</div>
       <div class="ay-grup">Uygulama</div><div class="ay-liste">
         <button class="ay-sat" data-ay="sira">${ayIk('izgara', '#7fb2ff')}<span class="m"><b>Ana sayfa sırasını sıfırla</b><small>Kutular ilk düzenine döner</small></span><span class="ok">›</span></button>
-        <button class="ay-sat" data-ay="oneri">${ayIk('oneri', '#c99bff')}<span class="m"><b>Öneri ya da hata bildir</b><small>${bdYeni() ? (bdYeni() > 1 ? bdYeni() + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri · Atlas ekibine yaz'}</small></span>${bdYeni() ? `<span class="ay-rozet y">${bdYeni()} yeni</span>` : '<span class="ok">›</span>'}</button>
-        <button class="ay-sat" data-ay="yenile">${ayIk('yenile', '#22e8ff')}<span class="m"><b>Uygulamayı yenile</b><small>En yeni sürümü yükler</small></span><span class="ok">›</span></button></div>
+        <button class="ay-sat" data-ay="oneri">${ayIk('oneri', '#c99bff')}<span class="m"><b>Öneri ya da hata bildir</b><small>${bdYeni() ? (bdYeni() > 1 ? bdYeni() + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri · Atlas ekibine yaz'}</small></span>${bdYeni() ? `<span class="ay-rozet y">${bdYeni()} yeni</span>` : '<span class="ok">›</span>'}</button></div>
       <div class="ay-liste" style="margin-top:16px"><button class="ay-sat kirmizi" data-ay="cikis">${ayIk('cikis', '#ff6b72')}<span class="m"><b>Çıkış yap</b><small>Bu cihazdaki oturumu kapatır</small></span></button></div>
       ${v ? `<div class="ay-surum">Atlas · sürüm ${esc(v)}</div>` : ''}`;
   }
+  // K-796: her ekranın sağ üstünde Yenile (ana sayfadaki düğmeyle aynı iş)
+  document.querySelectorAll('section > .ust2').forEach(u => { if (u.querySelector('.ust2-yen')) return; const sag = document.createElement('span'); sag.className = 'ust2-sag';
+    const ek = [...u.children].slice(2); ek.forEach(e => sag.appendChild(e));
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'ust2-yen'; b.title = 'Yenile'; b.setAttribute('aria-label', 'Yenile');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5A8 8 0 1 1 17.3 5.6"/><path d="M20 4v5h-5"/></svg>';
+    b.onclick = () => { b.classList.add('donuyor'); const y = $('#yenileUst'); if (y) y.click(); }; sag.appendChild(b); u.appendChild(sag); });
   function ayAc() { ayCiz(); goster('s-ayar'); window.scrollTo(0, 0); }
   $('#ayIc') && ($('#ayIc').onclick = async ev => { const b = ev.target.closest('[data-ay]'); if (!b) return; const k = b.dataset.ay;
     if (k === 'bildirim') { const B = window.UmalBildirim; if (!B) return; const d = await B.durum(); if (d === 'acik') return; const r = await B.ac({ sb, kim: 'ogrenci', no: S.no, kod: S.kod }); if (!r.ok && r.hata) uyar(r.hata); ayCiz(); return; }
@@ -1645,7 +1650,6 @@
     if (k === 'sifre') return sifreDenetle(true);
     if (k === 'sira') { try { localStorage.removeItem(kSonAn()); } catch (e) {} uyar('Ana sayfa kutuları ilk düzenine döndü.'); return; }
     if (k === 'oneri') return bdAc();
-    if (k === 'yenile') { const y = $('#yenileUst'); if (y) y.click(); return; }
     if (k === 'cikis') { if (await onayla('Çıkış yapılsın mı?')) cikis(); } });
   function blAc() { BL.sec = new Set(); blCiz(); goster('s-bild'); window.scrollTo(0, 0); blYukle(); }
   // bildirim adresi (/ogrenci/#git=msj&s=… ) → uygulamadaki bölüm açılır
