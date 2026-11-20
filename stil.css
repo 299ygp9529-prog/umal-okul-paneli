@@ -2725,3 +2725,9 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .tz-bas-sat { display: flex; justify-content: flex-end; margin: -6px 0 8px; }
 .gk2-telsiz .gk2-ust { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 @media (max-width: 760px) { body.ogt-alt .tz-ekran { height: calc(100dvh - 150px - 80px - env(safe-area-inset-bottom)); } }
+/* K-819: Kurucu telsizi açma kartı */
+.tz-acK { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.tz-acU { display: flex; align-items: center; gap: 12px; flex: 1 1 240px; min-width: 0; }
+.tz-acU b { display: block; font-size: 16px; } .tz-acU small { font-size: 12.5px; }
+.tz-acB { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; margin: 0; flex: 0 0 auto; }
+.tz-acU .tz-kik { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,225,77,.15); color: #ffe14d; flex: none; }

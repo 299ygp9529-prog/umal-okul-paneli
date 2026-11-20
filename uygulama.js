@@ -527,7 +527,7 @@
     clearTimeout(tzDurum.z); tzDurum.z = setTimeout(() => tzDurum().catch(() => {}), 60000);
     let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_telsiz_benim')); } catch (e) { return; } if (!r || !r.ok) return;
     TZ.L = r.acik || []; TZ.H = r.hepsi || null; TZ.kurucu = !!r.kurucu;
-    const imza = TZ.L.map(x => x.anahtar).join('|'); if (imza === TZ.imza) return; TZ.imza = imza;
+    const imza = (TZ.kurucu ? 'k|' : '') + TZ.L.map(x => x.anahtar).join('|'); if (imza === TZ.imza) return; TZ.imza = imza;
     menuYaz(); if (document.body.classList.contains('tm-acik')) { const h = location.hash.slice(1); tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); }
     if (D.bolum === 'telsiz') telsizBolumu();
   }
@@ -536,6 +536,15 @@
   async function telsizBolumu() {
     if (TZ.ins) { TZ.ins.kapat(); TZ.ins = null; }
     const I = $('#icerik');
+    if (!TZ.L.length && TZ.kurucu) {   // K-819: Kurucu telsizi buradan açar
+      const H = (TZ.H || []).filter(x => x && x.anahtar);
+      I.innerHTML = `<h1>Gezi Telsizi</h1>${H.length ? H.map(x => `<div class="kart tz-acK"><div class="tz-acU"><span class="tz-kik"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MENU_IK.telsiz}</svg></span><span><b>${esc(x.ad || 'Gezi')}</b><small class="soluk">Kapalı · ${+x.ogrenci || 0} öğrenci, ${+x.ogretmen || 0} görevli öğretmen</small></span></div><button class="birincil tz-acB" data-tzac="${esc(x.anahtar)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>Telsizi aç</button></div>`).join('') : '<div class="kart soluk">Henüz gezi yok. Gezi Kaydı\'ndan gezi oluşturun.</div>'}`;
+      I.querySelectorAll('[data-tzac]').forEach(b => b.onclick = async () => { const x = H.find(h => h.anahtar === b.dataset.tzac);
+        if (!await onayla(`${x.ad || 'Gezi'} için Gezi Telsizi açılsın mı? Geziye katılan öğrenciler uygulamayı açınca telsize girer.`)) return;
+        b.disabled = true; const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: x.anahtar, p_acik: true }); b.disabled = false;
+        if (error || !data || !data.ok) { uyar('Açılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+        atlasOnay('Telsiz açıldı', 'Gezideki herkes içeride'); TZ.imza = '*'; await tzDurum(); telsizBolumu(); });
+      return; }
     if (!TZ.L.length) { I.innerHTML = `<h1>Gezi Telsizi</h1><div class="kart soluk">Şu an açık bir Gezi Telsizi yok. Kurucu gezi günü açar; görevli öğretmenler ve idare kendiliğinden içinde olur.</div>`; return; }
     if (TZ.i >= TZ.L.length) TZ.i = 0; const g = TZ.L[TZ.i];
     I.innerHTML = `
@@ -543,7 +552,7 @@
     I.querySelectorAll('[data-tzsec]').forEach(b => b.onclick = () => { TZ.i = +b.dataset.tzsec; telsizBolumu(); });
     const tzKapat = async () => { if (!await onayla(`${g.ad} için Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.`)) return;
       const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: g.anahtar, p_acik: false }); if (error || !data || !data.ok) { uyar('Kapatılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
-      atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); };
+      atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); telsizBolumu(); };
     if (!window.UmalTelsiz) { $('#tzKap').innerHTML = '<div class="kart soluk">Telsiz yüklenemedi; sayfayı yenileyin.</div>'; return; }
     const r_ = async (f, a) => { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: hataYaz(error) }; return data; };
     TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
@@ -1146,7 +1155,7 @@
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
     { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
     { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu() },   // K-702: otobüs koltuk yerleşimi + biletler
-    { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
+    { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 || TZ.kurucu },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
