@@ -5007,7 +5007,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${o_ ? o_.no + '. otobüs · ' : ''}${k}. koltuk</h2><div class="soluk kucuk">${esc(ON_AD[tur] || 'Görevli')} koltuğu · dokunduğunuz kişi geziye kaydedilir ve buraya oturur.</div>
         <input id="gzOkAra" class="gk2-kp-ara" placeholder="${tur === 'ogt' ? 'Öğretmen ara' : 'Ad soyad'}" autocomplete="off" enterkeyhint="search">${tur !== 'ogt' ? '<input id="gzOkTel" class="gk2-kp-ara" placeholder="Telefon (isteğe bağlı)" inputmode="tel" value="05" style="margin-top:6px">' : ''}
         <div class="gk2-kp-liste" id="gzOkL" style="max-height:52vh;overflow:auto"></div>
-        <button class="kod-link" id="gzOkTur" type="button" style="margin-top:10px">Bu koltuğun türünü değiştir (${esc(ON_AD[tur] || 'Görevli')})</button></div>`);
+        <button id="gzOkTur" type="button" style="margin-top:12px;background:none;border:0;padding:4px 0;color:var(--soluk);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer">Bu koltuğun türünü değiştir (${esc(ON_AD[tur] || 'Görevli')})</button></div>`);
       cizK(); const g = $('#gzOkAra'); g.oninput = () => { q = g.value; cizK(); };
       g.onkeydown = e => { if (e.key === 'Enter') { const L = $('#gzOkL').querySelectorAll('button'); if (L.length === 1) { e.preventDefault(); L[0].click(); } } };
       $('#gzOkTur').onclick = () => onSec(k);
