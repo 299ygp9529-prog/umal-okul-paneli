@@ -441,13 +441,18 @@
     const sat = s => { const g = G.find(x => x.sinif === s), n = g ? +g.yeni || 0 : 0;
       return `<button class="msj-sat ${g ? '' : 'ogt-msj-yok'}" ${g ? `data-msjac="${esc(g.id)}"` : `data-ogtkur="${esc(s)}"`}><span class="msj-av g">${esc(s)}</span><span class="m"><b>${esc(s)} sınıfı</b><small>${g ? (g.son ? (g.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(g.son.metin) : 'Henüz mesaj yok') : (MSJ.kapali ? 'Mesajlaşma idare açınca kullanılabilir' : 'Grubu kurmak için dokunun')}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
     // K-765: idareden gelenler (yoklama hatırlatması, duyurular) e-Okul'daki gibi "İdare" konuşması olarak en üstte
+    // K-816: birebir konuşmalar ve ders programında olmayan sınıf grupları da listede (okunmamış rozeti hangi mesajdan geldiği görünsün)
+    const B = MSJ.L.filter(x => x.tur === 'birebir').sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0)), GD = G.filter(x => !S.includes(x.sinif) && (x.son || +x.yeni)), diger = GD.concat(B);
+    const digerSat = x => { const n = +x.yeni || 0, grup = x.tur === 'grup';
+      return `<button class="msj-sat" data-msjac="${esc(x.id)}">${grup ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<span class="m"><b>${grup ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || x.ogrenci)) + (x.ogr_sinif ? ' · ' + esc(x.ogr_sinif) : '')}</b><small>${x.son ? (x.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
     const OB = MSJ.obC || [];
     const obYeni = OB.filter(b => !b.okundu).length, obSon = OB[0];
     const idareSat = OB.length ? `<button class="msj-sat" id="msjIdare"><span class="msj-av g" style="background:linear-gradient(160deg,#ff8a8a,#a83a4a);color:#fff">İ</span><span class="m"><b>İdare</b><small>${esc((obSon.metin || obSon.baslik || '').slice(0, 90))}</small></span>${obYeni ? `<span class="mk-sayi">${obYeni}</span>` : ''}</button>` : '';
     I.innerHTML = `<div class="msj-bas-ust"><div><h1>Mesajlar</h1></div></div>
-      <div class="kart msj-liste">${idareSat}${S.map(sat).join('') || '<div class="soluk" style="padding:10px 4px">Ders programında girdiğiniz sınıf bulunamadı; idareye bildirin.</div>'}</div>`;
+      <div class="kart msj-liste">${idareSat}${diger.filter(x => +x.yeni).map(digerSat).join('')}${S.map(sat).join('') || '<div class="soluk" style="padding:10px 4px">Ders programında girdiğiniz sınıf bulunamadı; idareye bildirin.</div>'}${diger.some(x => !+x.yeni) ? '<div class="msj-bas">' + (GD.length ? 'DİĞER KONUŞMALAR' : 'BİREBİR') + '</div>' + diger.filter(x => !+x.yeni).map(digerSat).join('') : ''}</div>`;
     if ($('#msjIdare')) $('#msjIdare').onclick = () => idareSohbet(OB);
     I.querySelectorAll('[data-msjac]').forEach(b => b.onclick = () => msjAc(b.dataset.msjac));
+    if (B.length) fotolariYukle(B.map(x => x.ogrenci));
     I.querySelectorAll('[data-ogtkur]').forEach(b => b.onclick = async () => { if (MSJ.kapali) { uyar('Sınıf mesajlaşması sizin için henüz açılmadı; idare açınca kullanabilirsiniz.'); return; }
       const s = b.dataset.ogtkur; if (!await onayla(`${s} sınıfının mesaj grubu kurulsun mu? Sınıftaki öğrenciler grubu sizin adınızla görür.`)) return;
       const { data, error } = await sb.rpc('umal_sohbet_grup_kur', { p_siniflar: [s] }); if (error || !data || !data.ok) { uyar('Kurulamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
