@@ -162,6 +162,7 @@
   }
   async function panelSelam() {
     if (panelSelam.oldu) return; panelSelam.oldu = true;   // her açılışta bir kez (sayfa içi gezinmede tekrar etmez)
+    { const k_ = 'umalSelam:' + String(D.eposta).toLowerCase(), g_ = bugunISO(); try { if (localStorage.getItem(k_) === g_) return; localStorage.setItem(k_, g_); } catch (e) {} }   // K-789: günde yalnız ilk açılışta
     await kisiAdlariYukle().catch(() => {});
     let tam = KISI.get(String(D.eposta).toLowerCase()) || '';
     if (!tam) try { const r = await sb.rpc('umal_adim'); const a = !r.error && r.data; if (typeof a === 'string' && a.length > 1 && !/@/.test(a) && !['bas', 'yonetici', 'ogretmen', 'rehberlik'].includes(a)) tam = a; } catch (e) {}
