@@ -6,8 +6,9 @@
   'use strict';
   var w = window, d = document;
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var buyukHarf = function (s) { return String(s || '').toLocaleLowerCase('tr').replace(/(^|[\s\-'])(\S)/g, function (m, a, b) { return a + b.toLocaleUpperCase('tr'); }); };
-  var basHarf = function (ad) { var p = String(ad || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p.length > 1 ? (p[p.length - 1] || '')[0] : '')).toLocaleUpperCase('tr'); };
+  var KISALTMA = /^[A-ZÇĞİÖŞÜ]{2,4}$/;   // AFC gibi kısaltmalar olduğu gibi kalır
+  var buyukHarf = function (s) { if (KISALTMA.test(String(s || '').trim())) return String(s).trim(); return String(s || '').toLocaleLowerCase('tr').replace(/(^|[\s\-'])(\S)/g, function (m, a, b) { return a + b.toLocaleUpperCase('tr'); }); };
+  var basHarf = function (ad) { if (KISALTMA.test(String(ad || '').trim())) return String(ad).trim(); var p = String(ad || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p.length > 1 ? (p[p.length - 1] || '')[0] : '')).toLocaleUpperCase('tr'); };
   var saat = function (t) { try { return new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
   var SVG = function (p, r, sw) { return '<svg viewBox="0 0 24 24" width="' + (r || 18) + '" height="' + (r || 18) + '" fill="none" stroke="currentColor" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; };
   var IK = {
