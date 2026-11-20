@@ -410,16 +410,21 @@
   function tzKutu() { const g = TZO.g; if (!g) return '';
     return `<button type="button" class="kart tz-ana" onclick="window.__tzoAc && window.__tzoAc()"><i class="tz-aik">${TZ_IK}</i><span class="tz-am"><b>Gezi Telsizi</b><small>${g.toplanma && g.toplanma.saat && g.toplanma.tarih === new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }) ? 'Toplanma ' + esc(g.toplanma.saat) + (g.toplanma.not ? ' · ' + esc(g.toplanma.not) : '') : esc(g.ad || 'Gezi') + (g.otobus ? ' · Otobüs ' + esc(g.otobus) + (g.koltuk ? ' · Sıra ' + esc(g.koltuk) : '') : '')}</small></span><span class="tz-acanli"><i></i>CANLI</span></button>`; }
   window.__tzoAc = () => tzoAc();
-  function tzoAc() {
+  async function tzoAc() {
     if (!TZO.g || !window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);
-    if (TZO.ins) TZO.ins.kapat();
+    if (TZO.ins) { TZO.ins.kapat(); TZO.ins = null; }
     const r_ = async (f, a) => { try { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: error.message }; return data; } catch (e) { return { ok: false, hata: 'bağlantı yok' }; } };
+    const yt = await r_('umal_ogrenci_sayim_yetki', { p_bilet: TZO.b });   // K-822: gezi başkanı kendi otobüsünün yoklamasını yapar
+    if (!TZO.g || TZO.ins) return;
+    const baskan = yt && yt.ok && yt.baskan ? { baslat: () => r_('umal_ogrenci_sayim_baslat', { p_bilet: TZO.b }), durum: () => r_('umal_ogrenci_sayim_durum', { p_bilet: TZO.b }),
+      isaret: (id, no, v) => r_('umal_ogrenci_sayim_isaret', { p_bilet: TZO.b, p_sayim: id, p_no: no, p_var: v }), ara: (id, no) => r_('umal_ogrenci_sayim_ara', { p_bilet: TZO.b, p_sayim: id, p_no: no }), otobus: yt.otobus } : null;
     TZO.ins = window.UmalTelsiz({ kap: $('#tzoIc'), personel: false, gezi: TZO.g, cubuk: '#ogrAlt', uyar, onayla,
       etkin: () => !$('#s-telsiz').classList.contains('gizli'),
       oku: (s, v) => r_('umal_ogrenci_telsiz_oku', { p_bilet: TZO.b, p_sonra: s, p_surum: v }),
       yaz: m => r_('umal_ogrenci_telsiz_yaz', { p_bilet: TZO.b, p_metin: m }),
       foto: fk => r_('umal_ogrenci_telsiz_fotolar', { p_bilet: TZO.b, p_fk: fk }),
       sayimVar: id => r_('umal_ogrenci_sayim_var', { p_bilet: TZO.b, p_sayim: id }),
+      sayim: baskan,
       konum: (la, lo, ac) => r_('umal_ogrenci_telsiz_konum', { p_bilet: TZO.b, p_lat: la, p_lng: lo, p_acc: ac }),
       kapandi: () => { TZO.g = null; TZO.b = ''; anaCiz(true); } });
   }
