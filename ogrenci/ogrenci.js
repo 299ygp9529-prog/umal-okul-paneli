@@ -25,7 +25,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
-  const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
+  const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
   const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
@@ -145,7 +145,7 @@
     try { sessionStorage.setItem('umalOturum', v); } catch (e) {}
     try { if (S.hatirla) localStorage.setItem('umalOturum', v); else localStorage.removeItem('umalOturum'); } catch (e) {}
   }
-  function oturumSil() { try { sessionStorage.removeItem('umalOturum'); sessionStorage.removeItem('umalSelam'); } catch (e) {} try { localStorage.removeItem('umalOturum'); } catch (e) {} S.hatirla = false; }
+  function oturumSil() { try { sessionStorage.removeItem('umalOturum'); sessionStorage.removeItem('umalSelam'); } catch (e) {} try { localStorage.removeItem('umalOturum'); } catch (e) {} S.hatirla = true; const h_ = document.getElementById('hatirla'); if (h_) h_.classList.add('secili'); }
   $('#hatirla').onclick = () => { S.hatirla = !S.hatirla; $('#hatirla').classList.toggle('secili', S.hatirla); };
 
   // ---- form listesi
@@ -1627,9 +1627,8 @@
       <div class="ay-grup">Bildirim ve ses</div><div class="ay-liste">
         <button class="ay-sat" data-ay="bildirim">${ayIk('zil', '#22e8ff')}<span class="m"><b>Telefon bildirimleri</b><small>${esc(BD[2])}</small></span><span class="ay-rozet ${BD[1]}">${esc(BD[0])}</span></button>
         <button class="ay-sat" data-ay="ses">${ayIk('ses', '#ffd166')}<span class="m"><b>Uyarı sesi</b><small>Yeni mesaj ve duyuruda kısa ses</small></span><span class="ay-sw ${SES.kapali ? '' : 'acik'}"></span></button></div>
-      <div class="ay-grup">Hesap</div><div class="ay-liste">
-        <button class="ay-sat" data-ay="hatirla">${ayIk('kilit', '#3ef08a')}<span class="m"><b>Bu cihazda açık kalsın</b><small>${S.hatirla ? 'Uygulamayı kapatınca da girişin hatırlanır' : 'Kapalıyken 15 dk işlem yapmazsan çıkış yapılır'}</small></span><span class="ay-sw ${S.hatirla ? 'acik' : ''}"></span></button>
-        ${S.no !== '1907' ? `<button class="ay-sat" data-ay="sifre">${ayIk('anahtar', '#c99bff')}<span class="m"><b>Şifremi değiştir</b><small>6 haneli yeni şifre</small></span><span class="ok">›</span></button>` : ''}</div>
+      ${S.no !== '1907' ? `<div class="ay-grup">Hesap</div><div class="ay-liste">
+        ${S.no !== '1907' ? `<button class="ay-sat" data-ay="sifre">${ayIk('anahtar', '#c99bff')}<span class="m"><b>Şifremi değiştir</b><small>6 haneli yeni şifre</small></span><span class="ok">›</span></button>` : ''}</div>` : ''}
       <div class="ay-grup">Uygulama</div><div class="ay-liste">
         <button class="ay-sat" data-ay="sira">${ayIk('izgara', '#7fb2ff')}<span class="m"><b>Ana sayfa sırasını sıfırla</b><small>Kutular ilk düzenine döner</small></span><span class="ok">›</span></button>
         <button class="ay-sat" data-ay="oneri">${ayIk('oneri', '#c99bff')}<span class="m"><b>Öneri ya da hata bildir</b><small>${bdYeni() ? (bdYeni() > 1 ? bdYeni() + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri · Atlas ekibine yaz'}</small></span>${bdYeni() ? `<span class="ay-rozet y">${bdYeni()} yeni</span>` : '<span class="ok">›</span>'}</button></div>
@@ -1646,7 +1645,6 @@
   $('#ayIc') && ($('#ayIc').onclick = async ev => { const b = ev.target.closest('[data-ay]'); if (!b) return; const k = b.dataset.ay;
     if (k === 'bildirim') { const B = window.UmalBildirim; if (!B) return; const d = await B.durum(); if (d === 'acik') return; const r = await B.ac({ sb, kim: 'ogrenci', no: S.no, kod: S.kod }); if (!r.ok && r.hata) uyar(r.hata); ayCiz(); return; }
     if (k === 'ses') { SES.kapali = !SES.kapali; try { localStorage.setItem('umalSes', SES.kapali ? '0' : '1'); } catch (e) {} sesDugme(); if (!SES.kapali) sesCal('yeni'); ayCiz(); return; }
-    if (k === 'hatirla') { S.hatirla = !S.hatirla; oturumYaz(S.no, S.kod); ayCiz(); return; }
     if (k === 'sifre') return sifreDenetle(true);
     if (k === 'sira') { try { localStorage.removeItem(kSonAn()); } catch (e) {} uyar('Ana sayfa kutuları ilk düzenine döndü.'); return; }
     if (k === 'oneri') return bdAc();
