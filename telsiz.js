@@ -181,7 +181,7 @@
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
       var kok = null, kapat_ = null;
       var ciz = function () { if (!kok) return; var s = D && D.sayim, K = (D && D.kisiler) || [], ek = K.filter(function (k) { return !k.var; }), gel = K.filter(function (k) { return k.var; });
-        var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" src="' + esc(k.foto) + '">' : esc(basHarf(a))) + '</div>'; };
+        var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" src="' + esc(fotoSrc(k.foto)) + '">' : esc(basHarf(a))) + '</div>'; };
         kok.innerHTML = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' +
           (!D ? '<div class="tz-kdur">Yükleniyor…</div>' :
           (s && !s.bitti ? '<div class="tz-sdur"><span class="tz-sbar"><i style="width:' + Math.round(100 * gel.length / Math.max(1, K.length)) + '%"></i></span><b>' + gel.length + '/' + K.length + '</b> geldi</div>' :
@@ -229,8 +229,9 @@
       return '<a class="tz-harita" href="' + esc(url) + '" target="_blank" rel="noopener"><div class="tz-hk"><div class="tz-hm">' + img + '</div><span class="tz-pin">' + SVG(IK.pin, 34, 1.8) + '</span><span class="tz-osm">© OpenStreetMap</span></div>' +
         '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<b>' + (k.saat ? 'Toplanma ' + esc(k.saat) + (k.not ? ' · ' + esc(k.not) : '') : 'Bulunduğu yer') + '</b>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
     }
+    function fotoSrc(f) { f = String(f || ''); return /^(data:|https?:|blob:)/.test(f) ? f : 'data:image/jpeg;base64,' + f; }   // K-821: veritabanında ham base64
     function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
-      return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(f) + '">' : esc(basHarf(ad))) + '</div>'; }
+      return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(fotoSrc(f)) + '">' : esc(basHarf(ad))) + '</div>'; }
     function kunye(m, ad) { var og = m.rol !== 'ogrenci';
       return '<div class="tz-kunye">' + avatar(m, ad) + '<div class="tz-kad"><b>' + esc(ad) + '</b>' + (og ? '<span class="tz-rozet">' + (m.rol === 'idare' ? 'İDARE' : 'ÖĞRETMEN') + '</span>' : '') +
         '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
