@@ -533,15 +533,15 @@
     const I = $('#icerik');
     if (!TZ.L.length) { I.innerHTML = `<h1>Gezi Telsizi</h1><div class="kart soluk">Şu an açık bir Gezi Telsizi yok. Kurucu gezi günü açar; görevli öğretmenler ve idare kendiliğinden içinde olur.</div>`; return; }
     if (TZ.i >= TZ.L.length) TZ.i = 0; const g = TZ.L[TZ.i];
-    I.innerHTML = `<h1>Gezi Telsizi</h1>${TZ.kurucu ? '<div class="tz-bas-sat"><button class="ikincil kucuk" id="tzKapat">Telsizi kapat</button></div>' : ''}
+    I.innerHTML = `
       ${TZ.L.length > 1 ? `<div class="cipler">${TZ.L.map((x, i) => `<button class="cip ${i === TZ.i ? 'secili' : ''}" data-tzsec="${i}">${esc(x.ad)}</button>`).join('')}</div>` : ''}<div id="tzKap"></div>`;
     I.querySelectorAll('[data-tzsec]').forEach(b => b.onclick = () => { TZ.i = +b.dataset.tzsec; telsizBolumu(); });
-    if ($('#tzKapat')) $('#tzKapat').onclick = async () => { if (!await onayla(`${g.ad} için Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.`)) return;
+    const tzKapat = async () => { if (!await onayla(`${g.ad} için Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.`)) return;
       const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: g.anahtar, p_acik: false }); if (error || !data || !data.ok) { uyar('Kapatılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
       atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); };
     if (!window.UmalTelsiz) { $('#tzKap').innerHTML = '<div class="kart soluk">Telsiz yüklenemedi; sayfayı yenileyin.</div>'; return; }
     const r_ = async (f, a) => { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: hataYaz(error) }; return data; };
-    TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla,
+    TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
       etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
       oku: (s, v) => r_('umal_gezi_telsiz_oku', { p_anahtar: g.anahtar, p_sonra: s, p_surum: v }),
       yaz: (m, du) => r_('umal_gezi_telsiz_yaz', { p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }),
