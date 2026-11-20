@@ -368,6 +368,7 @@
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
     if (id === 'bild') return blAc(); blUrlOku(id);
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+  const GERI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = geriGit);
@@ -911,7 +912,7 @@
       + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
     $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
-    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').textContent = '← Geri'; $('#rhKutular').classList.toggle('gizli', ozel());
+    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').innerHTML = GERI_SVG + 'Geri'; $('#rhKutular').classList.toggle('gizli', ozel());
     const yeniM = new Set(RH.mesajlar.filter(m => !m.okundu && !m.ben).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeniM]); rhMesajCiz(RH.yeniGor); $('#rhMesajlar').classList.remove('gizli');
     if (yeniM.size) rhYukle(true).then(() => rhMesajCiz(RH.yeniGor));   // okundu (zarf gider; bu ekranda YENİ etiketi kalır)
     goster('s-reh'); window.scrollTo(0, 0);
@@ -919,7 +920,7 @@
   $('#rhKutular').onclick = ev => { const b = ev.target.closest('[data-rh]'); if (!b) return; b.dataset.rh === 'mektup' ? mkAc() : rvAc(); };
   $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : geriGit();
   const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMesajlar').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
-    $('#rhBaslik').textContent = baslik_; $('#rhGeri').textContent = '← Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
+    $('#rhBaslik').textContent = baslik_; $('#rhGeri').innerHTML = GERI_SVG + 'Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
   function mkAc() { altAc('mektup', 'Mektup'); }
   function rvAc() {
     blUrlOku('rv'); altAc('randevu', 'Randevu'); rvCiz();
@@ -1513,7 +1514,7 @@
   function ddListeCiz() {
     const yk = ddYaklasan(), dersler = [...new Set(DD.L.map(d => d.ders))].sort((a, b) => a.localeCompare(b, tr));
     let L = DD.L.filter(d => !DD.suz || d.ders === DD.suz); if (DD.gun) L = L.filter(d => iso(new Date(d.zaman)) === DD.gun);
-    $('#ddBaslik').textContent = 'Atlas Sınıf'; $('#ddGeri').textContent = '← Geri';
+    $('#ddBaslik').textContent = 'Atlas Sınıf'; $('#ddGeri').innerHTML = GERI_SVG + 'Geri';
     $('#ddIc').innerHTML = (yk.map(y => `<div class="dd-uyari"><b>Sınava ${Math.max(0, Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5)) || 'bugün'}${Math.ceil((new Date(y.x.tarih + 'T12:00') - simdi()) / 864e5) > 0 ? ' gün kaldı' : ''} · ${esc(y.x.ad)}</b><span>Bu sınavın konularına bağlı ${y.D.length} dosya var${y.acilmamis ? `, ${y.acilmamis} tanesini henüz açmadın` : ''}.</span></div>`).join(''))
       + `<div class="dd-suz">${dersler.length > 1 ? `<button class="${!DD.suz ? 'secili' : ''}" data-ddsuz="">Hepsi</button>${dersler.map(x => `<button class="${DD.suz === x ? 'secili' : ''}" data-ddsuz="${esc(x)}">${esc(x)}</button>`).join('')}` : ''}</div>
       <label class="dd-gun"><span>Okula gelemediğin bir gün mü var? O gün gönderilenler:</span><input type="date" id="ddGun" value="${esc(DD.gun)}" max="${iso(simdi())}">${DD.gun ? '<button class="bag" id="ddGunSil">Tümünü göster</button>' : ''}</label>
@@ -1523,7 +1524,7 @@
   function ddDetayCiz() {
     const d = DD.L.find(x => x.id === DD.sec); if (!d) { DD.sec = null; return ddListeCiz(); }
     const b = d.ben || {}, A = d.ayar || {}, z = new Date(d.zaman), T = DD.test[d.id] || (DD.test[d.id] = []);
-    $('#ddBaslik').textContent = d.ders; $('#ddGeri').textContent = '← Atlas Sınıf';
+    $('#ddBaslik').textContent = d.ders; $('#ddGeri').innerHTML = GERI_SVG + 'Atlas Sınıf';
     const sorular = (d.sorular || []), benim = sorular.filter(s => s.benim), acik = sorular.filter(s => !s.benim);
     const test = d.test ? (b.test_cevap ? (() => { const a = b.test_anahtar || '', c = b.test_cevap || '';
         return `<div class="kart dd-testk"><h2>Test sonucun</h2><div class="dd-puan"><div><b>${b.test_puan.d}</b><small>doğru</small></div><div><b>${b.test_puan.y}</b><small>yanlış</small></div><div><b>${b.test_puan.b}</b><small>boş</small></div></div>

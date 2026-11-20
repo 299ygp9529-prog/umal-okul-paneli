@@ -89,7 +89,7 @@
       const ozet = [M.say.ad && `${M.eslem.length} öğrenci adı`, M.say.no && 'numara', M.say.tc && 'T.C.', M.say.tel && 'telefon', M.say.ep && 'e-posta'].filter(Boolean).join(', ');
       return `${S.metin.trim() ? `<div class="as-onizle"><div class="as-onizle-bas">Yapay zekâya gidecek metin</div>${vurgula(M.t)}</div>` : ''}
       <div class="as-kalkan ${top ? 'var' : ''}">${IK('<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9 4.6-.4 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>')}<span>${top ? `<b>${ozet} gizlendi.</b> Yapay zekâya yalnız sarı etiketler gider; cevapta öğrenci adları geri yazılır.` : 'Öğrenci adı, numarası, T.C., telefon yazarsanız gönderilmeden gizlenir. Okul listesinde olmayan adları kendiniz kısaltın.'}</span></div>`; };
-    C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri" id="asGeri">← Hazır işler</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
+    C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri geri-hap" id="asGeri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Hazır işler</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
       <textarea id="asMetin" class="as-metin" rows="7" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-bicim="yok" placeholder="${C.esc(g[2])}">${C.esc(S.metin)}</textarea>
       <div id="asCanli">${canliHtml()}</div>
       <div class="as-bas">NASIL OLSUN</div><div class="as-bicim">${[['resmi', 'Ayrıntılı'], ['kisa', 'Kısa'], ['madde', 'Maddeler']].map(([k, a]) => `<button class="${S.bicim === k ? 'secili' : ''}" data-asb="${k}">${a}</button>`).join('')}</div>
@@ -116,7 +116,7 @@
   }
   function sonucCiz(bekliyor) {
     const g = G[S.gorev];
-    C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri" id="asGeri">← Metne dön</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
+    C.pencereAc(`<div class="as"><button class="ikincil kucuk as-geri geri-hap" id="asGeri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Metne dön</button><div class="as-ust"><div><small>ATLAS · ${ROL_AD[C.rol] || ''}</small><h2>${g[0]}</h2></div></div>
       <div class="as-cevap">${bekliyor ? '<p class="soluk">Atlas yeniden yazıyor…</p>' : md(S.yazi)}</div>
       <div class="as-dug"><button class="birincil" id="asKopya">Kopyala</button><button class="ikincil" id="asYaz">Yazdır / PDF</button><button class="ikincil" id="asTekrar">Yeniden yaz</button></div>
       <div class="as-takip"><input id="asEk" autocapitalize="sentences" autocorrect="on" spellcheck="true" data-bicim="yok" placeholder="&quot;Daha kısa yaz&quot;, &quot;veliye hitaben yaz&quot;…"><button id="asEkGonder" aria-label="Gönder">${IK('<path d="M4 12h15M13 6l6 6-6 6"/>')}</button></div></div>`);

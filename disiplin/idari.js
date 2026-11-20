@@ -78,7 +78,7 @@
   function seviyeDersleri(v) { const M = new Map(); for (const s of siniflar().filter(x => seviye(x) === v)) for (const d of sinifDersleri(s)) (M.get(d) || M.set(d, new Set()).get(d)).add(s); return M; }
 
   // ---------------------------------------------------------------- ortak görünüm
-  const bas = (ad, alt, sag) => `<div class="ds-ust"><div><button class="bag" data-id-geri="1">← ${esc(geri.ad)}</button><h1 style="margin:2px 0 0">${esc(ad)}</h1>${alt ? `<span class="soluk kucuk">${alt}</span>` : ''}</div><div class="dugmeler id-bas-sag" style="margin:0">${sag || ''}</div></div>`;
+  const bas = (ad, alt, sag) => `<div class="ds-ust"><div><button class="bag geri-hap" data-id-geri="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>${esc(geri.ad)}</button><h1 style="margin:2px 0 0">${esc(ad)}</h1>${alt ? `<span class="soluk kucuk">${alt}</span>` : ''}</div><div class="dugmeler id-bas-sag" style="margin:0">${sag || ''}</div></div>`;
   const bilgi = (m, tur) => { const b = kok.querySelector('#idBilgi'); if (b) { b.className = 'id-bilgi ' + (tur || ''); b.textContent = m || ''; } };
   // K-627: idari çıktılar panelin rapor tasarımıyla (lacivert-camgöbeği bant, logo, ayak) — resmî disiplin formları ayrı, resmî düzende kalır
   const ID_CSS = `.id-belge{padding:5mm 14mm 0}.id-belge table{width:100%;border-collapse:collapse;font-size:9pt;margin:2mm 0 4mm}
@@ -210,7 +210,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (e === 'ana') ic = p ? SB_MENU.map(([b, L]) => `<section class="id-grup"><h2>${b}</h2><div class="id-kartlar">${L.map(([k, ad, alt]) => `<button data-sbe="${k}"><b>${ad}</b><small>${alt}</small></button>`).join('')}</div></section>`).join('')
       : '<div class="kart"><b>Önce bir sınav açın.</b><div class="soluk" style="margin-top:6px">"+ Yeni sınav" ile başlayın. Ders, öğrenci, oturum ve görevler bu sınavın içinde saklanır; sonra soldaki listeden yeniden açarsınız.</div></div>';
     else if (!p) { SB.ekran = 'ana'; return sbCiz(); }
-    else ic = `<div class="id-modbas"><button class="ikincil" data-sbe="ana">← Sınav menüsü</button><h2>${esc((SB_MENU.flatMap(x => x[1]).find(x => x[0] === e) || [])[1] || '')}</h2></div>` + ({ bilgi: sbBilgi, ogrenci: sbOgrenci, ogretmen: sbOgretmen, tarih: sbTarih, liste: sbListe, tablo: sbTablo, gorev: sbGorev }[e] || sbRapor)(p);
+    else ic = `<div class="id-modbas"><button class="ikincil geri-hap" data-sbe="ana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Sınav menüsü</button><h2>${esc((SB_MENU.flatMap(x => x[1]).find(x => x[0] === e) || [])[1] || '')}</h2></div>` + ({ bilgi: sbBilgi, ogrenci: sbOgrenci, ogretmen: sbOgretmen, tarih: sbTarih, liste: sbListe, tablo: sbTablo, gorev: sbGorev }[e] || sbRapor)(p);
     kok.innerHTML = bas('Sorumluluk ve Beceri Sınavı', p ? `${esc(p.yil)} · ${esc(p.donem)} · ${esc(p.tur)} SINAVI` : 'Sınav açın ya da seçin', '') + `<div class="id-sb">${yan}<section>${ic}<div id="idBilgi" class="id-bilgi"></div></section></div>`;
   }
   const secim = (ad, deger, L) => `<div class="cipler">${L.map(x => `<button class="cip ${deger === x ? 'secili' : ''}" data-sbalan="${ad}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;

@@ -485,6 +485,11 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   .pl-ozet { flex-wrap: wrap; gap: 8px 12px; } .pl-ozet .pl-bar { flex: 1 1 100%; } .pl-sayi { white-space: normal; flex: 1 1 100%; min-width: 0; line-height: 1.6; } .pl-seri { margin-left: 6px; }
 }
 #yenileUst.donuyor svg { animation: ogrYenileDon .8s linear infinite; } @keyframes ogrYenileDon { to { transform: rotate(360deg); } }
+
+/* K-774: Geri düğmeleri panelle aynı: koyu hap + ok */
+.geri-hap { display: inline-flex !important; align-items: center; gap: 4px; height: 36px; padding: 0 15px 0 9px !important; border-radius: 999px !important; background: linear-gradient(180deg, #1a2c48, #13213a) !important; border: 1px solid rgba(127,178,255,.38) !important; color: #d6e5ff !important; font-weight: 700; font-size: 15px !important; line-height: 1; box-shadow: 0 2px 10px rgba(0,0,0,.35); white-space: nowrap; }
+.geri-hap svg { width: 19px; height: 19px; color: #7fb2ff; flex: none; }
+.geri-hap:active { transform: scale(.96); }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
@@ -557,26 +562,26 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="soz" id="gununSozu"></div>
   </section>
 
-  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div><div id="snDd"></div></section>
-  <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
-  <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
-  <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
-  <section id="s-bild" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Bildirimler</h1></div><div id="blIc"></div></section>
-  <section id="s-msj" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="msBaslik">Mesajlar</h1></div><div id="msIc"></div></section>
-  <section id="s-bld" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Öneri ve sorun</h1></div><div id="bdIc"></div></section>
-  <section id="s-ilan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="ilBaslik">Gezi</h1></div><div id="ilIc"></div></section>
-  <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
-  <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
-  <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri" id="ddGeri">← Geri</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
-  <section id="s-gbl" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Tebrik ve uyarılar</h1></div><div id="gblListe"></div></section>
-  <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
-  <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Çalışma planım</h1></div>
+  <section id="s-sinav" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Sınavlarım</h1></div><div class="soluk kucuk" id="sinavAlt"></div><div id="snSekme"></div><div id="snHarita"></div><div id="sinavListe"></div><div id="snDd"></div></section>
+  <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
+  <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
+  <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-bild" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Bildirimler</h1></div><div id="blIc"></div></section>
+  <section id="s-msj" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="msBaslik">Mesajlar</h1></div><div id="msIc"></div></section>
+  <section id="s-bld" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Öneri ve sorun</h1></div><div id="bdIc"></div></section>
+  <section id="s-ilan" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="ilBaslik">Gezi</h1></div><div id="ilIc"></div></section>
+  <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
+  <section id="s-bsk" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="bskBaslik">Gezi Başkanı</h1></div><div id="bskIc"></div></section>
+  <section id="s-dd" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" id="ddGeri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="ddBaslik">Atlas Sınıf</h1></div><div id="ddIc"></div></section>
+  <section id="s-gbl" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Tebrik ve uyarılar</h1></div><div id="gblListe"></div></section>
+  <section id="s-duy" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Duyurular</h1></div><div id="duyListe"></div></section>
+  <section id="s-plan" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Çalışma planım</h1></div>
     <div id="ozMesaj"></div><div id="rplan"></div>
     <div class="kart pl-ust"><div class="pl-hafta"><button class="ikincil" id="plOnce" aria-label="Önceki hafta">‹</button><div><b id="plBaslik"></b><small id="plAlt"></small></div><button class="ikincil" id="plSonra" aria-label="Sonraki hafta">›</button></div>
       <div class="pl-ozet"><div class="pl-bar"><i id="plBar"></i></div><div class="pl-sayi" id="plSayi"></div></div><div class="pl-hedef" id="plHedef"></div></div>
     <div id="plSinav"></div><div id="plDd"></div><div id="plGunler"></div><div class="not" id="plKayit">Planını yalnız sen görürsün. Değişiklikler kendiliğinden kaydedilir.</div>
   </section>
-  <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
+  <section id="s-soru" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Soru takibi</h1><button class="ikincil so-pdf" id="soPdf">PDF rapor</button></div>
     <button class="mk-kutu so-izin" id="soIzin" type="button"><i></i><span>Rehberlik servisi haftalık soru özetimi görebilsin <small class="soluk" style="display:block;font-size:12.5px">Rehber öğretmenin sana daha iyi destek olabilir. İstediğin zaman kapatabilirsin.</small></span></button>
     <div class="so-donem" id="soDonem"></div>
     <div class="so-kartlar" id="soKartlar"></div>
@@ -588,10 +593,10 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
     <div class="kart" id="soKayitKart"><h2>Kayıtlar</h2><div id="soKayit"></div></div>
     <div class="not">Kayıtlarını yalnız sen görürsün; en üstteki izni verirsen rehberlik servisi de özetini görür. Net = doğru − yanlış ÷ 4 (YKS hesabı).</div>
   </section>
-  <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri" data-ana>← Geri</button><h1>Anketler</h1></div>
+  <section id="s-anket" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Anketler</h1></div>
     <div class="kart"><h2>Anketlerin ve formların</h2><div id="formlar"></div></div>
   </section>
-  <section id="s-reh" class="gizli"><div class="ust2"><button class="ikincil geri" id="rhGeri">← Geri</button><h1 id="rhBaslik">Rehberlik</h1></div>
+  <section id="s-reh" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" id="rhGeri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="rhBaslik">Rehberlik</h1></div>
     <div id="rhMesajlar"></div>
     <div class="izg" id="rhKutular"></div>
     <div id="rhMektup" class="gizli">
@@ -618,7 +623,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   </section>
 
   <section id="form" class="gizli">
-    <div class="kart"><button class="ikincil" id="geri">← Liste</button><h1 id="formAd" style="margin-top:12px"></h1><div class="soluk kucuk" id="formAciklama"></div></div>
+    <div class="kart"><button class="ikincil geri-hap" id="geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Liste</button><h1 id="formAd" style="margin-top:12px"></h1><div class="soluk kucuk" id="formAciklama"></div></div>
     <div id="sorular"></div>
     <div class="alt-cubuk"><button class="birincil" id="gonder">Gönder</button><div id="formBilgi" class="bilgi"></div></div>
   </section>
@@ -631,6 +636,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611192140"></script>
+<script src="ogrenci.js?v=202611200730"></script>
 </body>
 </html>
