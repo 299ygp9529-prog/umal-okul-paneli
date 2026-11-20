@@ -408,7 +408,7 @@
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kod) tzoKontrol(); });
   function tzKutu() { const g = TZO.g; if (!g) return '';
-    return `<button type="button" class="kart tz-ana" onclick="window.__tzoAc && window.__tzoAc()"><i class="tz-aik">${TZ_IK}</i><span class="tz-am"><b>Gezi Telsizi</b><small>${esc(g.ad || 'Gezi')}${g.otobus ? ' · Otobüs ' + esc(g.otobus) + (g.koltuk ? ' · Sıra ' + esc(g.koltuk) : '') : ''}</small></span><span class="tz-acanli"><i></i>CANLI</span></button>`; }
+    return `<button type="button" class="kart tz-ana" onclick="window.__tzoAc && window.__tzoAc()"><i class="tz-aik">${TZ_IK}</i><span class="tz-am"><b>Gezi Telsizi</b><small>${g.toplanma && g.toplanma.saat && g.toplanma.tarih === new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }) ? 'Toplanma ' + esc(g.toplanma.saat) + (g.toplanma.not ? ' · ' + esc(g.toplanma.not) : '') : esc(g.ad || 'Gezi') + (g.otobus ? ' · Otobüs ' + esc(g.otobus) + (g.koltuk ? ' · Sıra ' + esc(g.koltuk) : '') : '')}</small></span><span class="tz-acanli"><i></i>CANLI</span></button>`; }
   window.__tzoAc = () => tzoAc();
   function tzoAc() {
     if (!TZO.g || !window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);

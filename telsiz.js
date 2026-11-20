@@ -55,6 +55,20 @@
     '.tz-hk{position:relative;height:150px;overflow:hidden;background:#dfe6ec}.tz-hm{position:absolute;left:50%;top:50%;width:0;height:0}.tz-hm img{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none}',
     '.tz-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-92%);color:#ff4d5e;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}.tz-osm{position:absolute;right:4px;bottom:3px;font-size:9px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:4px}',
     '.tz-hal{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:13.5px;color:#7ff6ff}.tz-hal b{color:#fff;font-size:14px}.tz-hal small{color:#8aa0c2;font-size:12px}.tz-hal em{margin-left:auto;font-style:normal;font-weight:700;font-size:13px;color:#22e8ff}',
+    '.tz-top{display:flex;align-items:center;gap:12px;margin:8px 12px 0;padding:9px 12px;border-radius:16px;text-decoration:none;color:#fff;flex:none;background:linear-gradient(135deg,rgba(255,181,71,.22),rgba(255,122,61,.1));border:1px solid rgba(255,181,71,.75);box-shadow:0 0 18px rgba(255,181,71,.15)}',
+    '.tz-tsaat{font-size:30px;font-weight:900;letter-spacing:.5px;color:#ffc46b;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,181,71,.45)}',
+    '.tz-tm{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.tz-tm b{font-size:10.5px;letter-spacing:.12em;color:#ffc46b}.tz-tm>span{font-size:14px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tz-tm small{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#ffe2b0;font-weight:600}',
+    '.tz-tm small i{width:7px;height:7px;border-radius:50%;background:#ffb547;flex:none}',
+    '.tz-top em{display:flex;align-items:center;gap:4px;font-style:normal;font-size:12px;font-weight:800;color:#22e8ff;flex:none}',
+    '.tz-top.yakin{background:linear-gradient(135deg,rgba(255,77,94,.28),rgba(255,122,61,.12));border-color:#ff6b78;box-shadow:0 0 22px rgba(255,77,94,.3)}.tz-top.yakin .tz-tsaat{color:#ff9aa3;text-shadow:0 0 14px rgba(255,77,94,.6)}.tz-top.yakin .tz-tm small i{background:#ff4d5e;animation:tzNabiz 1s ease-in-out infinite}',
+    '.tz-top.gecti{opacity:.7}',
+    '.tz-kdur{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#7ff6ff;background:rgba(34,232,255,.07);border:1px solid rgba(34,232,255,.3);border-radius:12px;padding:9px 11px;margin-bottom:12px}.tz-kdur.hata{color:#ffb0b0;border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.07)}',
+    '.tz-lb{display:block;font-size:13px;font-weight:700;color:#cfe0ff;margin:4px 2px 6px}.tz-lb small{font-weight:500;color:#8aa0c2}',
+    '.tz-saat-sat{display:flex;gap:6px;margin-bottom:12px}.tz-saat-sat input{flex:1;min-width:0;height:46px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#fff;font:inherit;font-size:20px;font-weight:800;padding:0 10px;color-scheme:dark}',
+    '.tz-saat-sat button{flex:none;font:inherit;font-size:13px;font-weight:700;border:1px solid rgba(255,181,71,.6);background:rgba(255,181,71,.08);color:#ffc46b;border-radius:12px;padding:0 10px;cursor:pointer}',
+    '.tz-not{width:100%;box-sizing:border-box;height:46px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#fff;font:inherit;font-size:16px;padding:0 12px;margin-bottom:14px}',
+    '.tz-gonderb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border:0;border-radius:14px;background:#22e8ff;color:#06202a;font:inherit;font-size:16px;font-weight:800;cursor:pointer}.tz-gonderb.top{background:#ffb547;color:#2a1300}.tz-gonderb:disabled{opacity:.6}',
+    '.tz-bek{opacity:.6}.tz-m.tz-bek .tz-z{margin-top:3px}',
     '.tz-yaz{display:flex;gap:8px;align-items:flex-end}',
     '.tz-yaz textarea{flex:1;min-width:0;resize:none;min-height:44px;max-height:120px;border-radius:22px;background:#0b1424;border:1px solid #24406a;color:#fff;padding:11px 16px;font:inherit;font-size:16px;line-height:1.3;box-sizing:border-box}',
     '.tz-yaz textarea:focus{outline:none;border-color:#22e8ff;box-shadow:0 0 0 2px rgba(34,232,255,.18)}.tz-yaz.duyuru textarea{border-color:rgba(255,181,71,.7)}',
@@ -83,15 +97,16 @@
   w.UmalTelsiz = function (cfg) {
     stilKur();
     var FOTO = {};
+    var BEK = [], bekNo = 0;
     var S = { M: [], son: 0, surum: -1, sessiz: false, susL: [], acik: true, zam: null, calisiyor: false, duyuru: false, gonderiyor: false, olu: false };
     var P = !!cfg.personel, uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
     var kap = cfg.kap; kap.innerHTML = '';
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
     var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola 15 dk'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
-      '<span class="tz-canli"><i></i>CANLI</span></div>' + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
+      '<span class="tz-canli"><i></i>CANLI</span></div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>' + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
-    var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt');
+    var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt'), topEl = ekran.querySelector('.tz-top');
     // klavye/boy modülü sayfa başına bir kez kurulur (her açılışta yeni dinleyici eklenmesin); hep o anki telsiz ekranını gösterir
     AKTIF = { ekran: ekran, ak: ak, S: S, cfg: cfg };
     if (SKK === undefined) { SKK = null; try { if (w.UmalSohbetKlavye) SKK = w.UmalSohbetKlavye({ ekran: function () { return AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) ? AKTIF.ekran : null; }, akis: function () { return AKTIF && !AKTIF.S.olu ? AKTIF.ak : null; }, gonder: '.tz-gon', cubuk: cfg.cubuk, etkin: function () { return !!AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) && (!AKTIF.cfg.etkin || AKTIF.cfg.etkin()); } }); } catch (e) { SKK = null; } }
@@ -105,14 +120,26 @@
 
     function adGoster(m) { var a = buyukHarf(m.ad || ''); return a || (m.rol === 'ogrenci' ? 'Öğrenci' : 'Öğretmen'); }
     var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    function haritaUrl(k) { return IOS ? 'https://maps.apple.com/?ll=' + k.lat + ',' + k.lng + '&q=' + encodeURIComponent(k.saat ? 'Toplanma ' + k.saat : 'Konum') : 'https://www.google.com/maps/search/?api=1&query=' + k.lat + ',' + k.lng; }
+    var bugun = function () { try { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }); } catch (e) { return new Date().toISOString().slice(0, 10); } };
+    function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b) ? { konum: cfg.gezi.toplanma } : null; }
+    function topCiz() {   // toplanma şeridi: saat büyük, kalan süre; son 10 dakikada kırmızı ve yanıp sönen nokta (yalnız CSS opaklık; telefonu yormaz)
+      var m = topBul(); if (!m) { topEl.style.display = 'none'; return; }
+      var k = m.konum, p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); var dk = Math.round((h - Date.now()) / 60000);
+      if (dk < -30) { topEl.style.display = 'none'; return; }
+      var kalan = dk > 59 ? Math.floor(dk / 60) + ' sa ' + (dk % 60 ? dk % 60 + ' dk ' : '') + 'kaldı' : dk > 0 ? dk + ' dk kaldı' : dk === 0 ? 'Şimdi toplanıyoruz' : (-dk) + ' dk geçti';
+      var html = '<span class="tz-tsaat">' + esc(k.saat) + '</span><span class="tz-tm"><b>TOPLANMA</b><span>' + esc(k.not || 'Toplanma noktası') + '</span><small><i></i>' + esc(kalan) + '</small></span><em>' + SVG(IK.pin, 16, 2) + 'Haritada aç</em>';
+      if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; }
+      topEl.href = haritaUrl(k); topEl.classList.toggle('yakin', dk <= 10 && dk >= -5); topEl.classList.toggle('gecti', dk < -5); topEl.style.display = '';
+    }
     function konumHtml(k) {   // o anki konum: küçük harita (OpenStreetMap karoları) + haritada aç
       var z = 16, n = Math.pow(2, z), lr = k.lat * Math.PI / 180, px = (k.lng + 180) / 360 * n * 256, py = (1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n * 256;
       var tx = Math.floor(px / 256), ty = Math.floor(py / 256), img = '';
       for (var dy = -1; dy <= 1; dy++) for (var dx = -2; dx <= 2; dx++) { var x = tx + dx, y = ty + dy; if (y < 0 || y >= n) continue; x = ((x % n) + n) % n;
         img += '<img alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" src="https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png" style="left:' + Math.round((tx + dx) * 256 - px) + 'px;top:' + Math.round((ty + dy) * 256 - py) + 'px">'; }
-      var url = IOS ? 'https://maps.apple.com/?ll=' + k.lat + ',' + k.lng + '&q=Konum' : 'https://www.google.com/maps/search/?api=1&query=' + k.lat + ',' + k.lng;
+      var url = haritaUrl(k);
       return '<a class="tz-harita" href="' + esc(url) + '" target="_blank" rel="noopener"><div class="tz-hk"><div class="tz-hm">' + img + '</div><span class="tz-pin">' + SVG(IK.pin, 34, 1.8) + '</span><span class="tz-osm">© OpenStreetMap</span></div>' +
-        '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<b>Bulunduğu yer</b>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
+        '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<b>' + (k.saat ? 'Toplanma ' + esc(k.saat) + (k.not ? ' · ' + esc(k.not) : '') : 'Bulunduğu yer') + '</b>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
     }
     function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
       return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(f) + '">' : esc(basHarf(ad))) + '</div>'; }
@@ -121,7 +148,7 @@
         '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
     function mesajHtml(m) {
       var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
-      if (m.duyuru) return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(IK.duyuru, 14, 2.4) + 'DUYURU</div>' + kunye(m, ad) + '<div class="tz-t">' + esc(m.metin) + '</div></div>';
+      if (m.duyuru) { var tk = m.konum && m.konum.lat != null; return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(tk ? IK.pin : IK.duyuru, 14, 2.4) + (tk && m.konum.saat ? 'TOPLANMA NOKTASI · ' + esc(m.konum.saat) : 'DUYURU') + '</div>' + kunye(m, ad) + (tk ? konumHtml(m.konum) : '<div class="tz-t">' + esc(m.metin) + '</div>') + '</div>'; }
       return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
         (m.konum && m.konum.lat != null ? konumHtml(m.konum) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') : '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div>') + '</div>';
     }
@@ -134,7 +161,8 @@
       var Pr = [], g = cfg.gezi || {};
       if (g.acilis) Pr.push({ k: 'ac', h: '<div class="tz-sis">' + esc(saat(g.acilis)) + ' · Gezi Telsizi açıldı — gezideki herkes burada</div>' });
       S.M.forEach(function (m) { Pr.push({ k: 'm' + m.id, h: mesajHtml(m) }); });
-      if (!S.M.length) Pr.push({ k: 'bos', h: '<div class="tz-sis">' + (P ? 'Henüz mesaj yok. Duyuru ya da mesaj yazabilirsiniz.' : 'Henüz mesaj yok. Öğretmenlerin ve arkadaşların buraya yazar.') + '</div>' });
+      BEK.forEach(function (b) { Pr.push({ k: 'bek' + b.id, h: b.h }); });
+      if (!S.M.length && !BEK.length) Pr.push({ k: 'bos', h: '<div class="tz-sis">' + (P ? 'Henüz mesaj yok. Duyuru ya da mesaj yazabilirsiniz.' : 'Henüz mesaj yok. Öğretmenlerin ve arkadaşların buraya yazar.') + '</div>' });
       if (SK && SK.akisYaz) SK.akisYaz(ak, Pr);
       else { var dip = ak.scrollHeight - ak.scrollTop - ak.clientHeight < 70; ak.innerHTML = Pr.map(function (p) { return p.h; }).join(''); if (dip || !ak.__kur) { ak.scrollTop = ak.scrollHeight; ak.__kur = true; } }
     }
@@ -154,19 +182,47 @@
       var kb = alt.querySelector('[data-tzkon]'); if (kb) kb.onclick = konumGonder;
       var du = alt.querySelector('[data-tzduy]'); if (du) du.onclick = function () { S.duyuru = !S.duyuru; du.classList.toggle('secili', S.duyuru); alt.querySelector('.tz-yaz').classList.toggle('duyuru', S.duyuru); y.placeholder = S.duyuru ? 'Duyuru yaz (herkese öne çıkar)…' : 'Mesaj yaz…'; };
     }
+    function konumAl() { return new Promise(function (ok, red) { navigator.geolocation.getCurrentPosition(ok, red, { enableHighAccuracy: true, timeout: 20000, maximumAge: 20000 }); }); }
+    var konumHata = function (e) { return e && e.code === 1 ? 'Konum izni verilmedi. Telefonun Ayarlar › Gizlilik › Konum Servisleri bölümünden bu uygulamaya (ya da tarayıcıya) izin ver.' : 'Konum bulunamadı. Açık alanda yeniden dene.'; };
+    function toplanmaSayfa() {   // görevli öğretmen/idare: konum + (isteğe bağlı) toplanma saati ve not
+      var pos = null, hata = null, bitti = konumAl().then(function (p) { pos = p; }, function (e) { hata = e; });
+      var ileri = function (dk) { var h = new Date(Date.now() + dk * 60000); h.setMinutes(Math.ceil(h.getMinutes() / 5) * 5, 0, 0); return ('0' + h.getHours()).slice(-2) + ':' + ('0' + h.getMinutes()).slice(-2); };
+      perde('<div class="tz-bas">KONUM GÖNDER</div><div class="tz-kdur" data-kdur>' + SVG(IK.pin, 16, 2) + '<span>Konum alınıyor…</span></div>' +
+        '<label class="tz-lb">Toplanma saati <small>(boş bırakılırsa yalnız konum gider)</small></label><div class="tz-saat-sat"><input type="time" data-tsaat><button type="button" data-tek="15">+15 dk</button><button type="button" data-tek="30">+30 dk</button><button type="button" data-tek="60">+1 sa</button></div>' +
+        '<label class="tz-lb">Not <small>(isteğe bağlı)</small></label><input class="tz-not" data-tnot maxlength="80" placeholder="Ör. Otobüslerin önü, ana kapı">' +
+        '<button type="button" class="tz-gonderb" data-tgon>' + SVG(IK.pin, 18, 2) + '<span>Konumu gönder</span></button>',
+        function (p, kapat) {
+          var sa = p.querySelector('[data-tsaat]'), gb = p.querySelector('[data-tgon]'), du = p.querySelector('[data-kdur] span');
+          var etk = function () { gb.querySelector('span').textContent = sa.value ? 'Toplanma noktası gönder · ' + sa.value : 'Konumu gönder'; gb.classList.toggle('top', !!sa.value); };
+          p.querySelectorAll('input').forEach(function (i) { i.addEventListener('focus', function () { setTimeout(function () { try { gb.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 350); }); });
+          sa.oninput = etk; p.querySelectorAll('[data-tek]').forEach(function (b) { b.onclick = function () { sa.value = ileri(+b.dataset.tek); etk(); }; });
+          bitti.then(function () { du.textContent = pos ? 'Konum bulundu' + (pos.coords.accuracy ? ' · ±' + Math.round(pos.coords.accuracy) + ' m' : '') : konumHata(hata); du.parentNode.classList.toggle('hata', !pos); });
+          gb.onclick = async function () {
+            gb.disabled = true; du.textContent = pos ? du.textContent : 'Konum alınıyor…'; await bitti;
+            if (!pos) { gb.disabled = false; uyar(konumHata(hata)); return; }
+            var c = pos.coords, r = null;
+            try { r = sa.value ? await cfg.toplanma(c.latitude, c.longitude, c.accuracy, sa.value, p.querySelector('[data-tnot]').value) : await cfg.konum(c.latitude, c.longitude, c.accuracy); } catch (e) { r = null; }
+            if (!r || !r.ok) { gb.disabled = false; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); return; }
+            kapat(); await yukle();
+          };
+        });
+    }
+    function bekEkle(metin, h) { var b = { id: ++bekNo, metin: metin, h: h }; BEK.push(b); akisCiz(); ak.scrollTop = ak.scrollHeight; return b; }
+    function bekSil(b) { var i = BEK.indexOf(b); if (i >= 0) { BEK.splice(i, 1); akisCiz(); } }
+    async function yukleBekle() { for (var i = 0; i < 40 && S.calisiyor; i++) await new Promise(function (ok) { setTimeout(ok, 100); }); await yukle(); }
     async function konumGonder() {
       if (S.gonderiyor || !S.acik || S.sessiz) return;
       if (!navigator.geolocation) { uyar('Bu telefon konum vermiyor.'); return; }
+      if (P && cfg.toplanma) return toplanmaSayfa();
       if (!await onayla('Şu an bulunduğun yerin konumu gruba gönderilsin mi? (Canlı konum değil, yalnız bu anki yer.)')) return;
-      S.gonderiyor = true; var gec = d.createElement('div'); gec.className = 'tz-sis'; gec.textContent = 'Konum alınıyor…'; ak.appendChild(gec); ak.scrollTop = ak.scrollHeight;
+      S.gonderiyor = true; var gec = bekEkle('Konum', '<div class="tz-sis tz-bek">Konum alınıyor…</div>');
       var p = null, hata = '';
-      try { p = await new Promise(function (ok, red) { navigator.geolocation.getCurrentPosition(ok, red, { enableHighAccuracy: true, timeout: 20000, maximumAge: 20000 }); }); }
-      catch (e) { hata = e && e.code === 1 ? 'Konum izni verilmedi. Telefonun Ayarlar › Gizlilik › Konum Servisleri bölümünden bu uygulamaya (ya da tarayıcıya) izin ver.' : 'Konum bulunamadı. Açık alanda yeniden dene.'; }
+      try { p = await konumAl(); } catch (e) { hata = konumHata(e); }
       var r = null; if (p) { try { r = await cfg.konum(p.coords.latitude, p.coords.longitude, p.coords.accuracy); } catch (e) { r = null; } }
-      S.gonderiyor = false; gec.remove();
-      if (hata) { uyar(hata); return; }
-      if (!r || !r.ok) { if (r && r.sessiz) { S.sessiz = true; alt.dataset.d = ''; altCiz(); } else uyar('Konum gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); return; }
-      await yukle();
+      S.gonderiyor = false;
+      if (hata) { bekSil(gec); uyar(hata); return; }
+      if (!r || !r.ok) { bekSil(gec); if (r && r.sessiz) { S.sessiz = true; alt.dataset.d = ''; altCiz(); } else uyar('Konum gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); return; }
+      await yukleBekle(); bekSil(gec);
     }
     async function gonder(hazir) {
       if (S.gonderiyor || !S.acik || S.sessiz) return; var y = alt.querySelector('textarea'); var t = (hazir || (y ? y.value : '')).trim(); if (!t) return;
@@ -175,17 +231,17 @@
       var odakta = y && d.activeElement === y; S.gonderiyor = true; var b = alt.querySelector('.tz-gon'); if (b) b.disabled = true;
       var duy = P && S.duyuru && !hazir;
       if (!hazir && y) { y.value = ''; y.style.height = ''; }
-      var gec = d.createElement('div'); gec.className = 'tz-m ben'; gec.style.opacity = '.55'; gec.innerHTML = '<div class="tz-av">·</div><div><span class="tz-t">' + esc(t) + '</span><span class="tz-z">gönderiliyor…</span></div>'; ak.appendChild(gec); ak.scrollTop = ak.scrollHeight;
+      var gec = bekEkle(t, '<div class="tz-m ben tz-bek"><div class="tz-t">' + esc(t) + '</div><div class="tz-z">gönderiliyor…</div></div>');
       if (odakta && SK && SK.odakla && d.activeElement !== y) SK.odakla(y);
       var r = null;
       for (var den = 0; den < 4; den++) {   // ard arda basışta sunucu "hiz" der: kullanıcıya hata göstermeden kısa bekleyip yeniden gönderilir
         var bek = (S.sonGon || 0) + 1100 - Date.now(); if (bek > 0) await new Promise(function (ok) { setTimeout(ok, bek); });
         try { r = await cfg.yaz(t, duy); } catch (e) { r = { ok: false, hata: e && e.message }; }
         S.sonGon = Date.now(); if (!(r && !r.ok && (r.hata === 'hiz' || /yavaş/.test(r.hata || '')))) break; }
-      S.gonderiyor = false; if (b) b.disabled = false; gec.remove();
-      if (!r || !r.ok) { if (r && r.sessiz) { S.sessiz = true; altCiz(); } else { if (!hazir && y && !y.value) y.value = t; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); } return; }
+      S.gonderiyor = false; if (b) b.disabled = false;
+      if (!r || !r.ok) { bekSil(gec); if (r && r.sessiz) { S.sessiz = true; altCiz(); } else { if (!hazir && y && !y.value) y.value = t; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); } return; }
       if (duy) { S.duyuru = false; var du = alt.querySelector('[data-tzduy]'); if (du) du.classList.remove('secili'); var yz = alt.querySelector('.tz-yaz'); if (yz) yz.classList.remove('duyuru'); if (y) y.placeholder = 'Mesaj yaz…'; }
-      await yukle();
+      await yukleBekle(); bekSil(gec);
     }
     async function yukle() {
       if (S.calisiyor || S.olu) return; S.calisiyor = true;
@@ -193,6 +249,7 @@
       S.calisiyor = false; if (S.olu || !r) return;
       if (!r.ok) { if (r.kapali) { S.acik = false; gezCiz(); altCiz(); dur(); if (cfg.kapandi) cfg.kapandi(); } return; }
       var L = r.mesajlar || [];
+      L.forEach(function (m) { if (!m.ben) return; for (var i = 0; i < BEK.length; i++) if (BEK[i].metin === m.metin || (m.konum && BEK[i].metin === 'Konum')) { BEK.splice(i, 1); break; } });
       if (r.bastan) S.M = L; else if (L.length) S.M = S.M.concat(L);
       if (S.M.length > 300) S.M = S.M.slice(-300);
       if (S.M.length) S.son = S.M[S.M.length - 1].id;
@@ -200,7 +257,7 @@
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } }
       else if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); }
-      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
+      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); topCiz(); }
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
     }
     function perde(html, bagla) {
@@ -229,7 +286,8 @@
     function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(); dongu(); }, d.hidden ? 15000 : 4000); }
     function dur() { clearTimeout(S.zam); }
     var gor = function () { if (!d.hidden && !S.olu && S.acik) { yukle(); dongu(); } }; d.addEventListener('visibilitychange', gor);
-    gezCiz(); altCiz(); akisCiz(); if (SK && SK.olc) SK.olc();
+    gezCiz(); altCiz(); akisCiz(); topCiz(); if (SK && SK.olc) SK.olc();
+    var topZ = setInterval(function () { if (S.olu) { clearInterval(topZ); return; } if (!d.hidden) topCiz(); }, 20000);
     yukle().then(function () { if (SK && SK.olc) SK.olc(); }); dongu();
     [300, 900, 2000].forEach(function (ms) { setTimeout(function () { if (!S.olu && SK && SK.olc) SK.olc(); }, ms); });
     return { yukle: yukle, dur: dur, kapat: function () { S.olu = true; dur(); d.removeEventListener('visibilitychange', gor); try { if (SK && SK.olc) SK.olc(); } catch (e) {} } };
