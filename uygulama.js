@@ -4894,7 +4894,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#icerik').querySelectorAll('[data-ko]').forEach(b => b.onclick = async () => {
         const oid = b.dataset.ko, k = +b.dataset.kn, an = koltukta(oid, k);
         if (kapatMod) { const L = G.kapali[oid] || (G.kapali[oid] = []), i = L.indexOf(k); if (i >= 0) L.splice(i, 1); else { L.push(k); if (an) { delete G.yer[an]; if (sel === an) sel = null; } } kaydet(); ciz(); return; }   // K-716be: koltuk kapat/aç; kapanan koltuktaki kişi bekleyenlere döner
-        if (!sel && !an && k <= GZ_AYRILAN) { onSec(k); return; }   // K-716bn
+        if (!sel && !an && k <= GZ_AYRILAN && !kapatMod) { onKisi(oid, k); return; }   // K-818: boş öndeki koltuğa dokun → öğretmen seç, oturt
         if (kapaliMi(oid, k) && !an) { if (sel) uyar('Bu koltuk kapalı. Açmak için "Koltuk kapat"a basıp koltuğa dokunun.'); return; }
         if (esMod && sel && an && an !== sel) { esYap(sel, an); return; }
         if (!sel) { if (an) { sel = an; ciz(); } return; }
@@ -4982,6 +4982,37 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!o) { uyar('Öğrenci bulunamadı. Listeden seçin.'); return; } if (!G.baskan.nolar.includes(String(o.no))) G.baskan.nolar.push(String(o.no)); bskKatil(); kaydet(); ciz(); };
       oneriBagla($('#bskNo'), null, ekle); $('#bskNo').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ekle(); } }; $('#bskEkle').onclick = ekle;
       $('#icerik').querySelectorAll('[data-bskx]').forEach(b => b.onclick = () => { G.baskan.nolar = G.baskan.nolar.filter(x => x !== b.dataset.bskx); kaydet(); ciz(); }); };
+    // K-818: öndeki boş koltuğa dokununca kişi seçilir; öğretmen listeden tek dokunuşla geziye kaydedilir ve koltuğa oturur
+    const onKisi = async (oid, k) => {
+      const tur = onTur(k) || 'ogt', o_ = otoBul(oid); if (tur === 'ogt') await programYukle().catch(() => {});
+      const yerYaz = an => { const y = G.yer[an], ob = y && otoBul(y.o); return ob ? `${ob.no}. otobüs · ${y.k}. koltuk` : ''; };
+      const otur = (ad, tur_, tel) => { ad = baslik(String(ad || '').replace(/\s+/g, ' ').trim()); if (!ad) return;
+        let g = G.gorevli.find(x => gzAdK(x.ad) === gzAdK(ad)); if (!g) { g = { id: Date.now().toString(36), ad, tur: tur_, tel: tel && tel.length > 4 ? tel : '' }; G.gorevli.push(g); }
+        const an = 'g:' + g.id, eski = koltukta(oid, k); if (eski && eski !== an) delete G.yer[eski];
+        G.yer[an] = { o: oid, k }; $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
+      let q = '';
+      const cizK = () => {
+        const t = gzAdK(q), kayitli = G.gorevli.filter(g => (g.tur || 'ogt') === tur && (!t || gzAdK(g.ad).includes(t)));
+        const okul = tur === 'ogt' ? ogretmenListesi().filter(a => !G.gorevli.some(g => gzAdK(g.ad) === gzAdK(a)) && (!t || gzAdK(a).includes(t))) : [];
+        const ad_ = baslik(q.replace(/\s+/g, ' ').trim()), yeniVar = ad_.length > 2 && !okul.some(a => gzAdK(a) === gzAdK(ad_)) && !G.gorevli.some(g => gzAdK(g.ad) === gzAdK(ad_));
+        const satir = (ad, alt, data) => `<button class="gk2-kp-s" ${data}><span><b>${esc(baslik(ad))}</b><small>${esc(alt)}</small></span><em>Oturt</em></button>`;
+        $('#gzOkL').innerHTML = kayitli.map(g => satir(g.ad, G.yer['g:' + g.id] ? 'Gezide · ' + yerYaz('g:' + g.id) : 'Gezide · koltuğu yok', `data-okg="${esc(g.id)}"`)).join('')
+          + okul.slice(0, t ? 30 : 400).map(a => satir(a, 'Öğretmen', `data-oko="${esc(a)}"`)).join('')
+          + (yeniVar ? satir(ad_, 'Listede yok · yeni ' + (GZ_TUR[tur] || 'görevli').toLocaleLowerCase(tr), 'data-oky="1"') : '')
+          + (!kayitli.length && !okul.length && !yeniVar ? `<p class="soluk kucuk">${tur === 'ogt' ? 'Bu adla öğretmen bulunamadı.' : 'Adını ve soyadını yazın.'}</p>` : '');
+        $('#gzOkL').querySelectorAll('[data-okg]').forEach(b => b.onclick = () => { const g = G.gorevli.find(x => x.id === b.dataset.okg); if (g) otur(g.ad, g.tur); });
+        $('#gzOkL').querySelectorAll('[data-oko]').forEach(b => b.onclick = () => otur(b.dataset.oko, 'ogt'));
+        $('#gzOkL').querySelectorAll('[data-oky]').forEach(b => b.onclick = () => otur(ad_, tur, gzTel(($('#gzOkTel') || {}).value || '')));
+      };
+      pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${o_ ? o_.no + '. otobüs · ' : ''}${k}. koltuk</h2><div class="soluk kucuk">${esc(ON_AD[tur] || 'Görevli')} koltuğu · dokunduğunuz kişi geziye kaydedilir ve buraya oturur.</div>
+        <input id="gzOkAra" class="gk2-kp-ara" placeholder="${tur === 'ogt' ? 'Öğretmen ara' : 'Ad soyad'}" autocomplete="off" enterkeyhint="search">${tur !== 'ogt' ? '<input id="gzOkTel" class="gk2-kp-ara" placeholder="Telefon (isteğe bağlı)" inputmode="tel" value="05" style="margin-top:6px">' : ''}
+        <div class="gk2-kp-liste" id="gzOkL" style="max-height:52vh;overflow:auto"></div>
+        <button class="kod-link" id="gzOkTur" type="button" style="margin-top:10px">Bu koltuğun türünü değiştir (${esc(ON_AD[tur] || 'Görevli')})</button></div>`);
+      cizK(); const g = $('#gzOkAra'); g.oninput = () => { q = g.value; cizK(); };
+      g.onkeydown = e => { if (e.key === 'Enter') { const L = $('#gzOkL').querySelectorAll('button'); if (L.length === 1) { e.preventDefault(); L[0].click(); } } };
+      $('#gzOkTur').onclick = () => onSec(k);
+      if (window.matchMedia('(pointer:fine)').matches) g.focus();
+    };
     const onSec = k => {   // K-716bn: öndeki görevli koltuğunun kime ayrıldığı (tüm otobüslerde aynı)
       pencereAc(`<h2 style="margin-top:0">${k}. koltuk kimin?</h2><p class="soluk kucuk">Öndeki görevli koltukları tüm otobüslerde aynıdır. Otomatik yerleştirme bu koltuğa yalnız seçtiğiniz görevliyi oturtur.</p><div class="dugmeler" style="flex-wrap:wrap;justify-content:flex-start">${Object.keys(ON_AD).map(t => `<button class="${onTur(k) === t ? 'birincil' : 'ikincil'}" data-ont="${t}">${ON_AD[t]}</button>`).join('')}</div>`);
       $('#pencere').querySelectorAll('[data-ont]').forEach(b => b.onclick = () => { const L = [1, 2, 3, 4].slice(0, GZ_AYRILAN).map(onTur); L[k - 1] = b.dataset.ont; G.onKoltuk = L; onAdYenile(); $('#pencere').classList.add('gizli'); kaydet(); ciz(); });
