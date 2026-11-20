@@ -2660,3 +2660,23 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .dya-kd { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; color: #9fb0c8; background: #13213a; border: 1px solid #1d3150; white-space: nowrap; }
 .dya-kd.ok { color: #6ee7a8; border-color: rgba(110,231,168,.45); background: rgba(46,160,100,.12); }
 .dya-kd svg { width: 16px; height: 16px; }
+
+/* K-781: Atlas "Kaydedildi" kartı */
+.atl-onay { position: fixed; left: 50%; bottom: calc(108px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 12px; width: min(92vw, 380px); padding: 10px 20px 10px 10px; border-radius: 22px;
+  background: linear-gradient(180deg, rgba(22,40,66,.97), rgba(13,25,43,.97)); border: 1px solid rgba(110,231,168,.55); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(62,240,138,.22);
+  transform: translate(-50%, 30px) scale(.92); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
+.atl-onay.gor { transform: translate(-50%, 0) scale(1); opacity: 1; }
+body:not(.ogt-alt) .atl-onay { bottom: calc(28px + env(safe-area-inset-bottom)); }
+.ao-robot { width: 78px; height: 80px; flex: none; }
+.ao-robot svg { width: 100%; height: 100%; overflow: visible; }
+.ao-yazi { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ao-yazi b { font-size: 24px; font-weight: 800; color: #6ee7a8; letter-spacing: .01em; }
+.ao-yazi span { font-size: 14px; color: #c8d6ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atl-onay .govde { animation: atlSuz 1.8s ease-in-out infinite; transform-box: view-box; transform-origin: 192px 390px; }
+.atl-onay .mutlu { opacity: 0; } .atl-onay .el { transform-box: view-box; transform-origin: 262px 280px; transform: translateY(46px) rotate(24deg) scale(.7); opacity: 0; }
+.atl-onay .rozet { transform-box: fill-box; transform-origin: center; transform: scale(0); opacity: 0; }
+.atl-onay.tikli .el { animation: atlEl .55s cubic-bezier(.2,1.5,.45,1) .1s forwards; }
+.atl-onay.tikli .bas { transform-box: fill-box; transform-origin: 50% 100%; animation: atlBas .32s ease-out .6s 2 alternate; }
+.atl-onay.tikli .gozler { animation: atlSon .15s .4s forwards; } .atl-onay.tikli .mutlu { animation: atlGel .2s .4s forwards; }
+.atl-onay.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .5s forwards; }
+.atl-onay.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .75s forwards; }

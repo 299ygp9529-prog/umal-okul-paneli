@@ -777,6 +777,7 @@
         this.yaziyor = false;
         if (error || !data || !data.ok) { this.ok = false; this.goster(); uyar('Yoklama kaydedilemedi: ' + (error ? hataYaz(error) : data && data.hata) + ' · tekrar denenecek'); this.bekle = setTimeout(() => this.kaydet(), 8000); return; }
         this.ok = true; this.zaman = new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); kaynak = ''; this.goster();
+        { const c = say(); atlasOnay('Kaydedildi', `${sec.sinif} · ${sec.n}. ders · ${c.yok ? c.yok + ' gelmedi' : 'herkes var'}`); }
         if (this.tekrar) { this.tekrar = false; this.kaydet(); } } };
     const ciz = () => {
       I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div><div class="dya-ust-d"><button class="ikincil kucuk" id="dyaGb" style="text-transform:none">Tebrik · uyarı</button><button class="ikincil kucuk" id="dyaOzet" style="text-transform:none">Günün yoklamaları</button></div></div>${secim}
@@ -812,6 +813,11 @@
     }
     ciz();
   }
+  // K-781: Atlas başparmakla "Kaydedildi" der — alt sekmelerin hemen üstünde, 2,4 sn
+  function atlasOnay(baslik_, alt_) { const kay = document.querySelector('#acilis .atl'); let t = document.getElementById('atlOnay');
+    if (!t) { t = document.createElement('div'); t.id = 'atlOnay'; t.className = 'atl-onay'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
+    t.innerHTML = `<div class="ao-robot">${kay ? kay.outerHTML.replace(/(id="|url\(#)(elG|tkG|parla)/g, '$1ao$2') : ''}</div><div class="ao-yazi"><b>${esc(baslik_)}</b><span>${esc(alt_ || '')}</span></div>`;
+    t.classList.remove('tikli', 'gor'); void t.offsetWidth; t.classList.add('gor', 'tikli'); clearTimeout(atlasOnay.z); atlasOnay.z = setTimeout(() => t.classList.remove('gor'), 2400); }
   function dyKart(x, saatYaz, pencere) {   // numaraya göre sınıf listesi; tahtada işaretlenenler burada da işaretli
     const Ls = (x.liste || []).length ? x.liste : (x.gelmeyen || []).map(z => Object.assign({ v: false }, z)), g = Ls.filter(z => !z.v && z.d !== 'izin').length;
     const durum = x.onay ? `<em class="${g ? 'var' : 'tam'}">${g ? g + ' gelmedi' : 'Herkes vardı'}</em>` : '<em class="tas"><i class="dy-nok"></i>Başkan işaretliyor</em>';
