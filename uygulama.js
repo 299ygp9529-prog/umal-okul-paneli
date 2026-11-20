@@ -766,9 +766,9 @@
     } catch (e) {}
     const say = () => { const c = { var: 0, yok: 0, gec: 0, nobet: 0, izin: 0 }; ros.forEach(o => c[st[o.no]]++); return c; };
     const altYaz = () => { const c = say(); return `<b>${c.var + c.gec + c.nobet}</b> var · <b style="color:#ff8a8a">${c.yok}</b> gelmedi${c.gec ? ` · <b style="color:#ffd166">${c.gec}</b> geç` : ''}${c.nobet ? ` · <b style="color:#7fb2ff">${c.nobet}</b> nöbetçi` : ''}${c.izin ? ` · <b style="color:#c99bff">${c.izin}</b> izinli` : ''}`; };
-    // K-779: onay düğmesi yok — her değişiklikten 3 sn sonra kendiliğinden kaydedilir; hiç dokunulmazsa ekran 15 sn açık kaldığında olduğu gibi kaydedilir
+    // K-779: onay düğmesi yok — her değişiklikten 3 sn sonra kendiliğinden kaydedilir · K-790: dokunulmadıkça kaydetmez (herkes geldiyse "Herkes var")
     const OTO = { ok: false, zaman: '', bekle: null, ilkZ: null, yaziyor: false, tekrar: false,
-      yazi() { return this.yaziyor ? 'Kaydediliyor…' : this.ok ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Kaydedildi ${this.zaman}` : 'Otomatik kaydedilir'; },
+      yazi() { return this.yaziyor ? 'Kaydediliyor…' : this.ok ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Kaydedildi ${this.zaman}` : 'Dokununca kaydedilir'; },
       goster() { const e = document.getElementById('dyaKd'); if (e && I.contains(e)) { e.innerHTML = this.yazi(); e.classList.toggle('ok', this.ok && !this.yaziyor); } },
       degisti() { clearTimeout(this.ilkZ); clearTimeout(this.bekle); this.ok = false; this.goster(); this.bekle = setTimeout(() => this.kaydet(), 3000); },
       ilk() { if (this.ok || this.bekle) return; clearTimeout(this.ilkZ); this.ilkZ = setTimeout(() => { if (D.bolum === 'dersyoklama' && document.getElementById('dyaKd') && !this.ok && !this.bekle) this.kaydet(); }, 15000); },
@@ -783,7 +783,7 @@
     let ipucuGitti = false;   // K-786: açıklama kutusu 3 sn sonra kaybolur (yeniden çizimde gelmez)
     const ciz = () => {
       I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div><div class="dya-ust-d"><button class="ikincil kucuk" id="dyaGb" style="text-transform:none">Tebrik · uyarı</button><button class="ikincil kucuk" id="dyaOzet" style="text-transform:none">Günün yoklamaları</button></div></div>${secim}
-        ${ipucuGitti ? '' : `<div class="kart dya-ipucu" id="dyaIpucu">`}${ipucuGitti ? '' : `Herkes <b>var</b> başlar. Gelmeyenin adına <b>dokunun</b>; geç geldi, nöbetçi ya da izinli için satırı <b>yana kaydırın</b>. Değişiklikler kendiliğinden kaydedilir.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>`}
+        ${ipucuGitti ? '' : `<div class="kart dya-ipucu" id="dyaIpucu">`}${ipucuGitti ? '' : `Herkes <b>var</b> başlar. Gelmeyenin adına <b>dokunun</b>; geç geldi, nöbetçi ya da izinli için satırı <b>yana kaydırın</b>. Herkes geldiyse <b>Herkes var</b>'a dokunun. Dokunduğunuzda kendiliğinden kaydedilir.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>`}
         <div class="dya-no"><input id="dyaNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Numara yaz"><button class="ikincil" id="dyaHepsi" style="text-transform:none">Herkes var</button></div>
         <div class="dya-liste">${ros.map(o => `<div class="dya-sar" data-dyar="${esc(o.no)}"><button class="dya-o ${st[o.no]}" data-dyao="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${D.fotolar && D.fotolar[o.no] ? `<img alt="" src="${D.fotolar[o.no]}">` : esc(baslik(o.ad).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span><span class="n">${esc(o.no)}</span><span class="a">${esc(baslik(o.ad))}</span><em>${DUR[st[o.no]]}</em></button>
           <div class="dya-sec2 gizli">${['gec', 'nobet', 'izin', 'yok', 'var'].map(k => `<button class="cip dy-${k}" data-dyad="${k}">${DUR[k]}</button>`).join('')}</div></div>`).join('')}</div>
@@ -802,7 +802,7 @@
       $('#dyaHepsi').onclick = () => { ros.forEach(o => { st[o.no] = 'var'; }); ciz(); OTO.degisti(); };
       const no = $('#dyaNo'); no.onkeydown = ev => { if (ev.key !== 'Enter') return; const v = no.value.trim(), b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); if (b) { b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } else uyar(v + ' numara bu sınıfta yok.'); };
       no.oninput = () => { const v = no.value.trim(); if (v.length >= 3 && ros.some(o => o.no === v) && !ros.some(o => o.no !== v && o.no.startsWith(v))) { const b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } };
-      OTO.ilk();
+
     };
     function dyaSecBagla() {
       const dd = $('#dyaDersler'); if (dd) dd.onclick = () => { pencereAc(`<h2 style="margin-top:0">Bugünkü dersleriniz</h2><div class="dya-sec">${D_.map(x => `<button class="cip ${sec && sec.sinif === x.sinif && sec.n === x.n ? 'secili' : ''}" data-dyas="${esc(x.sinif)}|${x.n}">${x.n}. ders · ${esc(x.sinif)}</button>`).join('')}</div>`);
