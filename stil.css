@@ -2649,3 +2649,6 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .mod-sat { display: flex; justify-content: center; margin: 6px 0 12px; }
 .mod-sat .mod-sec { width: 100%; max-width: 360px; }
 .mod-sat .mod-sec button { flex: 1; font-size: 15px; padding: 9px 0; }
+
+/* K-777: telefonda çift dokunuşta sayfa yakınlaşıp yana kaymasın (iki parmakla büyütme kalır) */
+@media (max-width: 760px) { html, body, .tumu-menu, main, .yan { touch-action: manipulation; } }
