@@ -345,7 +345,7 @@
     const noK = NO.L.length ? (() => { const y = noYeni(), n = y[0] || NO.L[0];
       if (TEL()) return kutu('notlar', 'not', '#3ef08a', 'Notlarım', y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(noYaz(n.not)), true, !!y.length);   // K-750: telefonda küçük kutu
       return `<button data-git="notlar" class="genis no-ana ${y.length ? 'yeni' : ''}">${y.length ? ZARF : ''}<i class="ik" style="--c:#3ef08a">${svg('not')}</i><span><b>Notlarım</b><small>${y.length ? (y.length > 1 ? y.length + ' yeni not' : 'Yeni not: ' + esc(n.ders)) : esc(n.ders) + ' · ' + esc(n.sinav)}</small></span><span class="so-mini"><b style="color:${noRenk(n.not)}">${esc(noYaz(n.not))}</b><small>${esc(n.ders)}</small></span></button>`; })() : '';
-    $('#kutular').innerHTML = gzKutu() + noK + ddKutu() + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
+    const kHtml = gzKutu() + noK + ddKutu() + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
       + ((RH.mesajlar || []).length ? kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : 'Rehber öğretmenle mesajlar', true, rhMesajYeni()) : '')   // K-792: yalnız rehber öğretmenden mesaj varsa
@@ -353,15 +353,18 @@
       + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
-    $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu());   // K-794: Öneri bildir Ayarlar'da   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
+    const kUst = blKutu() + msKutu(), kAnah = kHtml + kUst, ayni = sessiz === true && ANA.son === kAnah && $('#kutular').children.length; ANA.son = kAnah;   // K-803: veri değişmediyse kutular yeniden çizilmez (pırpır olmasın)
+    if (!ayni) { $('#kutular').innerHTML = kHtml;
+    $('#kutular').insertAdjacentHTML('afterbegin', kUst);   // K-794: Öneri bildir Ayarlar'da   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
     if (TEL()) { const k = $('#kutular'); [...k.querySelectorAll(':scope > .gz-ana, :scope > .il-ana, :scope > .gb-uyari')].reverse().forEach(e => k.prepend(e)); }   // K-750: telefonda gezi en üstte tam satır, diğerleri ikişer kutu
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
     { const OK = '<svg class="k-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';   // K-800: renk, ok, tamamlandı işareti, açılış
       $('#kutular').querySelectorAll(':scope > button').forEach((b, i) => { const ik = b.querySelector('.ik'), c = ik && ik.style.getPropertyValue('--c'); if (c) b.style.setProperty('--c', c); b.style.setProperty('--i', i); if (!b.classList.contains('genis') && !b.querySelector('.k-ok')) b.insertAdjacentHTML('beforeend', OK); });
       const an = $('#kutular [data-git="s-anket"]'); if (an && !acikForm && S.formlar.length && !an.querySelector('.k-tik')) an.insertAdjacentHTML('beforeend', '<span class="k-tik" aria-label="Tamamlandı"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>');
-      if (sessiz !== true) { const k_ = $('#kutular'); k_.classList.remove('giris-an'); void k_.offsetWidth; k_.classList.add('giris-an'); }
-      zilCiz(); seriCiz(); }
+      if (sessiz !== true && !ANA.anim) { ANA.anim = true; const k_ = $('#kutular'); k_.classList.remove('giris-an'); void k_.offsetWidth; k_.classList.add('giris-an'); setTimeout(() => k_.classList.remove('giris-an'), 1200); }   // açılış süzülmesi yalnız uygulama ilk açılınca
+      } }
+    zilCiz(); seriCiz();
     rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
@@ -382,6 +385,7 @@
     if (!t) { t = document.createElement('div'); t.id = 'atlOnay'; t.className = 'atl-onay'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
     t.innerHTML = `<div class="ao-robot">${kay ? kay.outerHTML.replace(/(id="|url\(#)(elG|tkG|parla)/g, '$1ao$2') : ''}</div><div class="ao-yazi"><b>${esc(b_)}</b><span>${esc(a_ || '')}</span></div>`;
     t.classList.remove('tikli', 'gor'); void t.offsetWidth; t.classList.add('gor', 'tikli'); clearTimeout(atlasOnay.z); atlasOnay.z = setTimeout(() => t.classList.remove('gor'), 2400); }
+  const ANA = { son: '', anim: false };
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = geriGit);
@@ -1303,6 +1307,7 @@
     const L = window.SOZLER || [], k = $('#gununSozu'); if (!k || !L.length) return;
     const gun = Math.floor((Date.now() + 3 * 36e5) / 864e5), ist = new Date(Date.now() + 3 * 36e5), ad_ = String(ist.getUTCMonth() + 1).padStart(2, '0') + '-' + String(ist.getUTCDate()).padStart(2, '0');
     const AT = L.filter(x => x[1] === 'Mustafa Kemal Atatürk'), ozelGun = ['11-10', '10-29', '04-23', '05-19', '08-30'].includes(ad_) && AT.length;   // K-607: millî günlerde Atatürk'ten
+    if (k.dataset.gun === String(gun) && k.innerHTML) return; k.dataset.gun = String(gun);   // K-803
     const s_ = ozelGun ? AT[(ist.getUTCFullYear() * 7 + ist.getUTCMonth()) % AT.length] : L[(gun * 97) % L.length];
     k.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#22e8ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11H6.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/><path d="M18 11h-3.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/></svg><small>GÜNÜN SÖZÜ</small><p>${esc(s_[0])}</p><span>— ${esc(s_[1])}</span>`;
     k.insertAdjacentHTML('beforeend', TIRMAN);
@@ -1319,9 +1324,9 @@
     if (top) plVar = true; const yuz = top ? Math.round(ok * 100 / top) : 0;
     const ATES = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.5 2.5c.6 3.2-1.6 4.9-3 6.6-1.6 1.9-2.7 3.6-2.7 6a5.2 5.2 0 0 0 10.4 0c0-2.2-1-3.7-1.9-4.9-.3 1.4-1.1 2.5-2.2 2.9.6-3.2-.3-7.1-.6-10.6z" opacity=".95"/><path d="M12 21a2.8 2.8 0 0 1-2.8-2.8c0-1.6 1.3-2.6 2.1-3.7.3 1 .9 1.5 1.6 1.7.7-.6 1-1.4 1-2.3 1 1.1 1.7 2.2 1.7 3.6A2.8 2.8 0 0 1 12 21z" fill="#fff4c2"/></svg>';
     const HEDEF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="4.5"/><circle cx="11" cy="13" r="1.2" fill="currentColor"/><path d="M11 13 19 5M16 4.5V8h3.5"/></svg>';
-    k.innerHTML = `<button type="button" data-seri="seri" style="--c:#ffb340"><span class="ri">${ATES}</span><span><small>Çalışma serin</small><b class="${n ? '' : 'az'}" style="color:#ffd166">${n ? n + ' gün' : 'Bugün başla'}</b></span></button><span class="ay"></span>
+    const h_ = `<button type="button" data-seri="seri" style="--c:#ffb340"><span class="ri">${ATES}</span><span><small>Çalışma serin</small><b class="${n ? '' : 'az'}" style="color:#ffd166">${n ? n + ' gün' : 'Bugün başla'}</b></span></button><span class="ay"></span>
       <button type="button" data-seri="hedef" style="--c:#7fb2ff"><span class="ri">${HEDEF}</span><span style="flex:1;min-width:0"><small>Haftalık hedef</small>${plVar ? `<b style="color:#7fe9ff">%${yuz}</b><span class="cubuk"><i style="width:${yuz}%"></i></span>` : '<b class="az" style="color:#7fe9ff">Haftanı planla</b>'}</span></button>`;
-    k.classList.remove('gizli');
+    k.classList.remove('gizli'); if (k.dataset.h === h_) return; k.dataset.h = h_; k.innerHTML = h_;   // K-803: değişmediyse yeniden çizilmez
     k.querySelector('[data-seri="seri"]').onclick = () => { if (soAktif()) { const b = document.createElement('button'); b.dataset.git = 'soru'; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } } else plAc(); };
     k.querySelector('[data-seri="hedef"]').onclick = () => plAc(); }
   function zilCiz() { const z = $('#zilUst'); if (!z) return; z.classList.toggle('gizli', !S.kod); const n = (BL && BL.n) || 0; const d = z.querySelector('.zil-nokta'); if (d) d.classList.toggle('gizli', !n); }
@@ -1770,8 +1775,9 @@
       let h = ''; try { h = await (await fetch('./?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }
       const yeni = surum(h); if (!yeni || yeni === bu || yaziyor() || Date.now() - son < 20000) return;
       if (S.kod) { try { sessionStorage.setItem('umalYeniden', JSON.stringify({ no: S.no, kod: S.kod })); } catch (e) {} }   // girişli kalsın
-      location.reload();
+      bekleyen = true; if (document.hidden) location.reload();   // K-803: yeni sürüm, öğrenci ekrana bakarken değil, uygulamadan çıkınca yüklenir
     }, 60000);
+    let bekleyen = false; document.addEventListener('visibilitychange', () => { if (bekleyen && document.hidden) location.reload(); });
     let otoGiris = false;
     try { let g = JSON.parse(sessionStorage.getItem('umalYeniden') || 'null'); sessionStorage.removeItem('umalYeniden');
       if (!g) { try { g = JSON.parse(sessionStorage.getItem('umalOturum') || 'null'); } catch (e) {} }
