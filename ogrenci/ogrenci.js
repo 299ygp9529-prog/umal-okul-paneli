@@ -348,7 +348,7 @@
     $('#kutular').innerHTML = gzKutu() + noK + ddKutu() + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
-      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : 'Rehber öğretmenle mesajlar', true, rhMesajYeni())
+      + ((RH.mesajlar || []).length ? kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : 'Rehber öğretmenle mesajlar', true, rhMesajYeni()) : '')   // K-792: yalnız rehber öğretmenden mesaj varsa
       + kutu('mektup', 'zarf', '#b06bff', 'Rehberliğe mektup', 'Yalnız rehber öğretmenler okur')   // K-791: mektup ve randevu ana sayfada ayrı kutu
       + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
