@@ -524,6 +524,12 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .ust2 .ust2-sag { justify-self: end; display: inline-flex; align-items: center; gap: 8px; }
 .ust2-yen { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; border: 1px solid rgba(34,232,255,.35); background: rgba(34,232,255,.08); color: #22e8ff; cursor: pointer; flex: none; padding: 0; }
 .ust2-sag .so-pdf { white-space: nowrap; padding: 8px 10px !important; font-size: 13px !important; } .ust2-yen svg { width: 21px; height: 21px; } .ust2-yen.donuyor svg { animation: ogrYenileDon .8s linear infinite; }
+
+/* K-799: ana sayfadaki küçük kutular eşit boy (başlık ve alt yazı en çok 2 satır) */
+#kutular > button:not(.genis) { height: 104px; overflow: hidden; }
+#kutular > button:not(.genis) > b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#kutular > button:not(.genis) > small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; align-self: start; }
+#kutular > button:not(.genis) > small.ms-son { display: block; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -683,6 +689,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611200955"></script>
+<script src="ogrenci.js?v=202611201000"></script>
 </body>
 </html>
