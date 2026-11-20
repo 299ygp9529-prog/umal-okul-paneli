@@ -2275,6 +2275,23 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return new Blob([await yeni.save()], { type: 'application/pdf' });
   }
   const YZ_SAGLIK = { kagit_az: 'kâğıt azaldı', kagit_yok: 'kâğıt yok — kâğıt konunca yazdırır', toner_az: 'toner azaldı', toner_yok: 'toner bitti', kapak_acik: 'kapağı açık', sikisma: 'kâğıt sıkışmış', cevrimdisi: 'yazıcı kapalı ya da ağda yok — açılınca yazdırır', servis: 'servis gerekiyor', cikis_dolu: 'çıkış tepsisi dolu' };   // K-732
+  // K-787: yazıcı takma adı (idare verir; her yerde bu ad görünür, iş gerçek yazıcı adıyla gider)
+  const YZAD = { m: null, z: 0 };
+  async function yzAdlari() { if (YZAD.m && Date.now() - YZAD.z < 60000) return YZAD.m; try { const { data } = await sb.rpc('umal_yazici_adlari'); YZAD.m = data && typeof data === 'object' ? data : {}; YZAD.z = Date.now(); } catch (e) { YZAD.m = YZAD.m || {}; } return YZAD.m; }
+  const yzAd = (cihaz, yazici, cihazAd, takma) => takma || (YZAD.m && YZAD.m[cihaz + '|' + yazici]) || `${cihazAd || cihaz} · ${yazici}`;
+  const yzAdDuzen = () => D.rol === 'bas' || D.rol === 'yonetici';
+  async function yzAdDegistir(cihaz, yazici, eski, sonra) {   // küçük pencere: yeni ad yaz, kaydet (boş = gerçek ada dön)
+    const geri = document.getElementById('pencere') && !document.getElementById('pencere').classList.contains('gizli') ? document.getElementById('pencereIcerik').innerHTML : null;
+    const kapat = v => { if (sonra) sonra(v); };
+    pencereAc(`<h2 style="margin-top:0">Yazıcının adı</h2><div class="soluk kucuk" style="margin:-4px 0 10px">Gerçek adı: ${esc(yazici)}<br>Panelde, Print yönetiminde ve tahtalarda bu ad görünür.</div>
+      <input class="dp-in" id="yzAdIn" maxlength="60" value="${esc(eski || '')}" placeholder="Örn. Müdür yardımcısı odası yazıcısı" autocomplete="off">
+      <div class="dugmeler" style="margin-top:12px;justify-content:space-between"><button class="bag" id="yzAdSil" type="button">Gerçek ada dön</button><span style="display:flex;gap:8px"><button class="ikincil" id="yzAdVaz" type="button">Vazgeç</button><button class="birincil" id="yzAdKay" type="button">Kaydet</button></span></div>`);
+    const i = $('#yzAdIn'); setTimeout(() => { try { i.focus(); i.select(); } catch (e) {} }, 60);
+    const yaz = async v => { const { data, error } = await sb.rpc('umal_yazici_ad_yaz', { p_cihaz: cihaz, p_yazici: yazici, p_ad: v }).then(r => r, e => ({ error: e }));
+      if (error || !data || !data.ok) { uyar('Kaydedilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+      YZAD.m = YZAD.m || {}; if (data.ad) YZAD.m[cihaz + '|' + yazici] = data.ad; else delete YZAD.m[cihaz + '|' + yazici]; kapat(data.ad || null); };
+    $('#yzAdKay').onclick = () => yaz(i.value); i.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); yaz(i.value); } };
+    $('#yzAdSil').onclick = () => yaz(''); $('#yzAdVaz').onclick = () => kapat(undefined); void geri; }
   async function okuldaYazdir(k) {   // k: { ad, dosya?: Blob, uret?: async () => Blob, yol?: kısayolla yüklenmiş PDF }
     let L = [], sec = null, kopya = 1, sayfa = '', blob = k.dosya || null, A = { ...YZ_VARS };
     try { Object.assign(A, JSON.parse(localStorage.getItem(YZ_AYAR) || '{}')); } catch (e) {}
@@ -2286,7 +2303,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const ciz = () => {
       const kay = $('#pencereIcerik .yz-pen'), ust = kay ? kay.scrollTop : 0;
       pencereAc(`<div class="yz-pen"><h2 style="margin-top:0">Okulda yazdır</h2><div class="yz-belge">${KY_IK.dosya}<span><b>${esc(k.ad || 'Belge')}</b><small id="yzHazir">${blob ? 'PDF hazır · ' + Math.max(1, Math.round(blob.size / 1024)) + ' KB' : 'PDF hazırlanıyor…'}</small></span></div>
-        <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(y.cihaz_ad)} · ${esc(y.yazici)}</b><small>${y.acik ? (y.hazir ? (YZ_SAGLIK[y.saglik] ? '<span class="yz-uyari">' + YZ_SAGLIK[y.saglik] + '</span>' : 'açık · hazır') : 'açık · yazdırma programı eksik') : y.yedek ? 'bilgisayar kapalı — aynı yazıcıya bağlı açık bilgisayardan yazdırılır' : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span></button>`).join('')}</div>
+        <div class="yz-bas">Yazıcı</div><div class="yz-liste">${L.map((y, i) => `<button class="yz-y ${y === sec ? 'secili' : ''} ${y.acik ? '' : 'kapali'}" data-yi="${i}"><span class="yz-n"></span><span><b>${esc(yzAd(y.cihaz, y.yazici, y.cihaz_ad, y.takma))}</b><small>${y.acik ? (y.hazir ? (YZ_SAGLIK[y.saglik] ? '<span class="yz-uyari">' + YZ_SAGLIK[y.saglik] + '</span>' : 'açık · hazır') : 'açık · yazdırma programı eksik') : y.yedek ? 'bilgisayar kapalı — aynı yazıcıya bağlı açık bilgisayardan yazdırılır' : 'bilgisayar kapalı — açılınca yazdırır'}${y.cihaz + '|' + y.yazici === son ? ' · son kullandığın' : ''}</small></span>${yzAdDuzen() ? `<span class="yz-adla" data-yzad="${i}" role="button" aria-label="Yazıcının adını değiştir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="currentColor" fill-opacity=".16"/><path d="M13.5 6.5l4 4"/></svg></span>` : ''}</button>`).join('')}</div>
         <div class="yz-bas">Kopya · Sayfa aralığı</div><div class="yz-sat"><div class="yz-kopya"><button data-k="-1">−</button><b>${kopya}</b><button data-k="1">+</button></div><input id="yzSayfa" placeholder="Tümü · ya da 1-3,5" inputmode="numeric" value="${esc(sayfa)}"></div>
         ${seg('Hangi sayfalar', 'tc', [['tumu', 'Hepsi'], ['tek', 'Tek sayfalar'], ['cift', 'Çift sayfalar']])}
         ${seg('Renk', 'renk', [['renkli', 'Renkli'], ['siyah', 'Siyah-beyaz']])}
@@ -2300,7 +2317,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         <button class="birincil yz-gonder" id="yzGonder">${KY_IK.yazdir}Yazıcıya gönder</button></div>`);
       const P = $('#pencere'), yeni = $('#pencereIcerik .yz-pen'); if (yeni && ust) yeni.scrollTop = ust;
       const tut = () => { sayfa = $('#yzSayfa').value; };
-      P.querySelectorAll('[data-yi]').forEach(b => b.onclick = () => { tut(); sec = L[+b.dataset.yi]; ciz(); });
+      P.querySelectorAll('[data-yi]').forEach(b => b.onclick = ev => { const ad_ = ev.target.closest('[data-yzad]'); tut(); const y = L[+b.dataset.yi];
+        if (ad_) { ev.stopPropagation(); yzAdDegistir(y.cihaz, y.yazici, y.takma || '', yeni => { if (yeni !== undefined) y.takma = yeni; ciz(); }); return; }
+        sec = y; ciz(); });
       P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { tut(); kopya = Math.max(1, Math.min(100, kopya + +b.dataset.k)); ciz(); });
       P.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { tut(); const v = b.dataset.v; A[b.dataset.a] = v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? +v : v; try { localStorage.setItem(YZ_AYAR, JSON.stringify(A)); } catch (e) {} ciz(); });
       $('#yzGonder').onclick = gonder;
@@ -2322,7 +2341,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (r.error) throw r.error;
         try { localStorage.setItem(YZ_SON, sec.cihaz + '|' + sec.yazici); } catch (e) {}
         $('#pencere').classList.add('gizli');
-        uyar(`Gönderildi: ${sec.cihaz_ad} · ${sec.yazici}${sec.acik ? '' : ' (bilgisayar açılınca yazdırılacak)'}. Durumu Çıktı Al › Çıktılarım'da.`);
+        uyar(`Gönderildi: ${yzAd(sec.cihaz, sec.yazici, sec.cihaz_ad, sec.takma)}${sec.acik ? '' : ' (bilgisayar açılınca yazdırılacak)'}. Durumu Çıktı Al › Çıktılarım'da.`);
         if (D.bolum === 'cikti') ciz_cikti();
       } catch (e) { bt.disabled = false; bt.innerHTML = KY_IK.yazdir + 'Yazıcıya gönder'; uyar('Gönderilemedi: ' + hataYaz(e)); }
     };
@@ -2341,10 +2360,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const DUR = { sirada: ['Sırada', 'bek'], bekliyor: ['Sırada', 'bek'], yazdiriliyor: ['Yazdırılıyor…', 'bek'], yazicida: ['Yazıcıda bekliyor', 'bek'], yazdirildi: ['Yazdırıldı ✓', 'ok'], hata: ['Hata', 'hata'] };
     ciz_cikti = async () => {
       if (D.bolum !== 'cikti' || !$('#ckIsler')) return;
-      const r = await sb.rpc('umal_panel_islerim'); const L = !r.error && Array.isArray(r.data) ? r.data : [];
+      const [r] = await Promise.all([sb.rpc('umal_panel_islerim'), yzAdlari()]); const L = !r.error && Array.isArray(r.data) ? r.data : [];
       if (r.error) { $('#ckIsler').textContent = 'Yüklenemedi: ' + hataYaz(r.error); return; }
       $('#ckIsler').classList.toggle('soluk', !L.length);
-      $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(i.cihaz_ad)} · ${esc(i.yazici)} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.hata && i.durum !== 'yazdirildi' ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
+      $('#ckIsler').innerHTML = L.length ? L.map(i => { const d = DUR[i.durum] || [i.durum, 'bek']; return `<div class="yz-is">${KY_IK.yazdir}<span><b>${esc(i.ad)}${i.kopya > 1 ? ' · ' + i.kopya + ' kopya' : ''}</b><small>${esc(yzAd(i.cihaz, i.yazici, i.cihaz_ad))} · ${new Date(i.olusturma).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${i.hata && i.durum !== 'yazdirildi' ? ' · ' + esc(i.hata) : ''}</small></span><em class="${d[1]}">${d[0]}</em></div>`; }).join('') : 'Henüz çıktı göndermedin.';
       if (L.some(i => i.durum === 'sirada' || i.durum === 'bekliyor' || i.durum === 'yazdiriliyor' || i.durum === 'yazicida')) setTimeout(ciz_cikti, 8000);
     };
     $('#ckYenile').onclick = ciz_cikti; ciz_cikti();
@@ -7230,7 +7249,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     $('#prKopya').onclick = async () => { try { await navigator.clipboard.writeText(komut); $('#prKopya').textContent = 'Kopyalandı ✓'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#prKomut')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); } };
     const yukle = async () => {
       if (D.bolum !== 'print' || !$('#prListe')) return;
-      const { data, error } = await sb.from('umal_tahtalar').select('cihaz,durum,gorulme');
+      const [{ data, error }] = await Promise.all([sb.from('umal_tahtalar').select('cihaz,durum,gorulme'), yzAdlari()]);
       if (error) { $('#prListe').textContent = 'Yüklenemedi: ' + hataYaz(error); return; }
       const L = (data || []).filter(t => ((t.durum || {}).cihaz_turu || '').toLowerCase() === 'bilgisayar').sort((a, b) => String(a.durum.sinif || '').localeCompare(String(b.durum.sinif || ''), tr));
       const once = g => { const s = Math.max(0, (Date.now() - new Date(g).getTime()) / 1000); return s < 90 ? 'şimdi' : s < 3600 ? Math.round(s / 60) + ' dk önce' : s < 86400 ? Math.round(s / 3600) + ' saat önce' : Math.round(s / 86400) + ' gün önce'; };
@@ -7245,7 +7264,8 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       $('#prListe').classList.toggle('soluk', !L.length);
       $('#prListe').innerHTML = L.length ? L.map(t => { const d = t.durum || {}, acik = Date.now() - new Date(t.gorulme).getTime() < 5 * 60000, yz = d.kurulu_yazicilar || [], yeni = /^Print/i.test(d.surum || '');
         return `<div class="pr-pc ${acik ? 'acik' : ''}"><div class="pr-pc-ust"><span class="pr-nokta"></span><b>${esc(d.sinif || t.cihaz)}</b><span class="pr-surum ${yeni ? 'yeni' : ''}">${esc(yeni ? d.surum : 'Eski Ajan' + (d.surum ? ' ' + d.surum : ''))}</span><span class="soluk kucuk" style="margin-left:auto">${acik ? 'açık' : 'kapalı'} · ${esc(once(t.gorulme))}</span></div>
-          <div class="pr-yz">${yz.length ? yz.map(y => `<span>${esc(y.ad)}</span>`).join('') : '<span class="soluk">yazıcı bildirmedi</span>'}</div>${d.yazdirma_hazir === false ? '<div class="turuncu kucuk">Yazdırma programı eksik; kurulumu yeniden çalıştırın.</div>' : ''}${d.hata && d.hata.ozet ? `<div class="soluk kucuk">Son hata (${esc(d.hata.zaman || '')}): ${esc(d.hata.ozet)}</div>` : ''}</div>`; }).join('') : 'Henüz kurulu bilgisayar yok.';
+          <div class="pr-yz">${yz.length ? yz.map(y => { const ta = YZAD.m && YZAD.m[t.cihaz + '|' + y.ad]; return yzAdDuzen() ? `<button type="button" class="pr-yz-ad" data-pryz="${esc(t.cihaz)}|${esc(y.ad)}" title="Adını değiştir">${esc(ta || y.ad)}${ta ? `<small>${esc(y.ad)}</small>` : ''}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button>` : `<span>${esc(ta || y.ad)}</span>`; }).join('') : '<span class="soluk">yazıcı bildirmedi</span>'}</div>${d.yazdirma_hazir === false ? '<div class="turuncu kucuk">Yazdırma programı eksik; kurulumu yeniden çalıştırın.</div>' : ''}${d.hata && d.hata.ozet ? `<div class="soluk kucuk">Son hata (${esc(d.hata.zaman || '')}): ${esc(d.hata.ozet)}</div>` : ''}</div>`; }).join('') : 'Henüz kurulu bilgisayar yok.';
+      $('#prListe').querySelectorAll('[data-pryz]').forEach(b => b.onclick = () => { const [c, ...y_] = b.dataset.pryz.split('|'), y = y_.join('|'); yzAdDegistir(c, y, (YZAD.m || {})[c + '|' + y] || '', () => { $('#pencere').classList.add('gizli'); yukle(); }); });   // K-787
     };
     $('#prYenile').onclick = yukle;
     await yukle();

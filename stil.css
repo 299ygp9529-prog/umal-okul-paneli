@@ -2710,3 +2710,8 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 
 /* K-786 */
 .dya-ipucu { transition: opacity .3s, height .4s, margin .4s, padding .4s; overflow: hidden; } .dya-ipucu.kalk { opacity: 0; height: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0; }
+/* K-787: yazıcı takma adı */
+.yz-y { position: relative; } .yz-adla { margin-left: auto; flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #13213a; border: 1px solid #2a4468; color: #9fd8ff; }
+.yz-adla svg { width: 17px; height: 17px; }
+.pr-yz-ad { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2a4468; background: #13213a; color: inherit; font: inherit; border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.pr-yz-ad small { color: #7d8fa8; font-size: 11px; } .pr-yz-ad svg { width: 14px; height: 14px; color: #7fb2ff; }
