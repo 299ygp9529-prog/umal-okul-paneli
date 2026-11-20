@@ -106,7 +106,13 @@
     '.tz-hk{height:105px}.tz-hal{padding:5px 9px;font-size:12.5px;white-space:nowrap}.tz-hal b{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.tz-hal small,.tz-hal em{flex:none}.tz-harita{margin-top:3px;border-radius:10px}',
     '.tz-alt{padding:6px 8px 8px}.tz-hiz{margin:0 -8px 6px;padding:0 8px;gap:6px}.tz-hiz button{padding:5px 11px;font-size:12.5px}',
     '.tz-yaz textarea{min-height:40px;padding:9px 14px}.tz-gon{width:40px;height:40px}',
-    '.tz-sis{padding:3px 10px;font-size:11.5px}'
+    '.tz-sis{padding:3px 10px;font-size:11.5px}',
+    '.tz-obus{display:inline-block;background:#ffb547;color:#2a1300;font-size:10px;font-weight:900;letter-spacing:.04em;border-radius:6px;padding:1px 6px;margin-right:6px}',
+    '.tz-baska{align-self:stretch;padding:5px 10px;border-radius:10px;border:1px dashed #2a4468;color:#8aa0c2;font-size:12.5px}.tz-baska b{color:#cfe0ff}',
+    '.tz-ob{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.tz-ob button{height:38px;border-radius:11px;border:1px solid #24406a;background:transparent;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-ob button.h{grid-column:span 2}.tz-ob button.s{background:#ffb547;border-color:#ffb547;color:#2a1300}',
+    '.tz-top.tz-serit{display:flex;gap:5px;padding:0;background:none;border:0;box-shadow:none;overflow-x:auto;scrollbar-width:none}.tz-top.tz-serit::-webkit-scrollbar{display:none}',
+    '.tz-c{flex:1 0 50px;display:flex;flex-direction:column;align-items:center;padding:3px 4px;border-radius:10px;border:1px solid rgba(255,181,71,.6);background:rgba(255,181,71,.1);text-decoration:none;color:#fff}.tz-c b{font-size:9.5px;color:#ffc46b;letter-spacing:.04em}.tz-c span{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}',
+    '.tz-c.yakin{border-color:#ff6b78;background:rgba(255,77,94,.16)}.tz-c.yakin span{color:#ff9aa3}.tz-c.gecti{opacity:.6}.tz-c.yok{border-style:dashed;border-color:#2a4468;background:none}.tz-c.yok span{color:#5f7393}.tz-c.yok b{color:#5f7393}'
   ].join('\n');
   var AKTIF = null, SKK;
   function stilKur() { if (d.getElementById('tzStil')) return; var s = d.createElement('style'); s.id = 'tzStil'; s.textContent = CSS; d.head.appendChild(s); }
@@ -122,7 +128,7 @@
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
     var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola 15 dk'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
-      '<span class="tz-canli"><i></i>CANLI</span>' + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + '</button>' : '') + '</div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>' + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
+      '<span class="tz-canli"><i></i>CANLI</span>' + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + '</button>' : '') + '</div>' + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
     var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt'), topEl = ekran.querySelector('.tz-top');
     // klavye/boy modülü sayfa başına bir kez kurulur (her açılışta yeni dinleyici eklenmesin); hep o anki telsiz ekranını gösterir
@@ -140,13 +146,30 @@
     var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     function haritaUrl(k) { return IOS ? 'https://maps.apple.com/?ll=' + k.lat + ',' + k.lng + '&q=' + encodeURIComponent(k.saat ? 'Toplanma ' + k.saat : 'Konum') : 'https://www.google.com/maps/search/?api=1&query=' + k.lat + ',' + k.lng; }
     var bugun = function () { try { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }); } catch (e) { return new Date().toISOString().slice(0, 10); } };
-    function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b) ? { konum: cfg.gezi.toplanma } : null; }
+    var obListe = function (k) { return k && Array.isArray(k.otobusler) && k.otobusler.length ? k.otobusler : null; };
+    var benimOto = function () { return cfg.gezi && cfg.gezi.otobus ? +cfg.gezi.otobus : null; };
+    var bana = function (k) { var L = obListe(k); return !L || (benimOto() != null && L.indexOf(benimOto()) >= 0); };   // herkese ya da benim otobüsüme
+    var obYazi = function (k) { var L = obListe(k); return L ? 'OTOBÜS ' + L.join('–') : 'HERKES'; };
+    var dkHesap = function (k) { var p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); return Math.round((h - Date.now()) / 60000); };
+    function toplanmalar() { var b = bugun(); return S.M.filter(function (m) { return m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b); }); }
+    function seritCiz() {   // personel: her otobüsün geçerli toplanma saati tek şeritte
+      var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), var_ = false;
+      var html = L.map(function (o) { var m = null; for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
+        if (m && dkHesap(m.konum) < -30) m = null; if (m) var_ = true;
+        if (!m) return '<span class="tz-c yok"><b>OTO ' + o + '</b><span>—</span></span>';
+        var dk = dkHesap(m.konum);
+        return '<a class="tz-c' + (dk <= 10 && dk >= -5 ? ' yakin' : dk < -5 ? ' gecti' : '') + '" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener"><b>OTO ' + o + '</b><span>' + esc(m.konum.saat) + '</span></a>'; }).join('');
+      if (!var_) { topEl.style.display = 'none'; return; }
+      if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; } topEl.style.display = '';
+    }
+    function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b) && bana(m.konum)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b && bana(cfg.gezi.toplanma)) ? { konum: cfg.gezi.toplanma } : null; }
     function topCiz() {   // toplanma şeridi: saat büyük, kalan süre; son 10 dakikada kırmızı ve yanıp sönen nokta (yalnız CSS opaklık; telefonu yormaz)
+      if (P) return seritCiz();
       var m = topBul(); if (!m) { topEl.style.display = 'none'; return; }
       var k = m.konum, p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); var dk = Math.round((h - Date.now()) / 60000);
       if (dk < -30) { topEl.style.display = 'none'; return; }
       var kalan = dk > 59 ? Math.floor(dk / 60) + ' sa ' + (dk % 60 ? dk % 60 + ' dk ' : '') + 'kaldı' : dk > 0 ? dk + ' dk kaldı' : dk === 0 ? 'Şimdi toplanıyoruz' : (-dk) + ' dk geçti';
-      var html = '<span class="tz-tsaat">' + esc(k.saat) + '</span><span class="tz-tm"><b>TOPLANMA</b><span>' + esc(k.not || 'Haritadaki yer') + '</span><small><i></i>' + esc(kalan) + '</small></span><em>' + SVG(IK.pin, 16, 2) + 'Haritada aç</em>';
+      var html = '<span class="tz-tsaat">' + esc(k.saat) + '</span><span class="tz-tm"><b>' + (obListe(k) ? '<span class="tz-obus">' + esc(obYazi(k)) + '</span>' : '') + 'TOPLANMA</b><span>' + esc(k.not || 'Haritadaki yer') + '</span><small><i></i>' + esc(kalan) + '</small></span><em>' + SVG(IK.pin, 16, 2) + 'Haritada aç</em>';
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; }
       topEl.href = haritaUrl(k); topEl.classList.toggle('yakin', dk <= 10 && dk >= -5); topEl.classList.toggle('gecti', dk < -5); topEl.style.display = '';
     }
@@ -166,7 +189,8 @@
         '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
     function mesajHtml(m) {
       var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
-      if (m.duyuru) { var tk = m.konum && m.konum.lat != null; return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(tk ? IK.pin : IK.duyuru, 14, 2.4) + (tk && m.konum.saat ? 'TOPLANMA NOKTASI · ' + esc(m.konum.saat) : 'DUYURU') + '</div>' + kunye(m, ad) + (tk ? konumHtml(m.konum) : '<div class="tz-t">' + esc(m.metin) + '</div>') + '</div>'; }
+      if (m.duyuru && m.konum && m.konum.saat && !P && !bana(m.konum)) return '<div class="tz-baska"><b>' + esc(obYazi(m.konum).replace('OTOBÜS', 'Otobüs')) + '</b> ' + esc(m.konum.saat) + '\'te toplanacak · başka otobüs</div>';
+      if (m.duyuru) { var tk = m.konum && m.konum.lat != null; return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(tk ? IK.pin : IK.duyuru, 14, 2.4) + (tk && m.konum.saat ? esc(obYazi(m.konum)) + ' · TOPLANMA ' + esc(m.konum.saat) : 'DUYURU') + '</div>' + kunye(m, ad) + (tk ? konumHtml(m.konum) : '<div class="tz-t">' + esc(m.metin) + '</div>') + '</div>'; }
       return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
         (m.konum && m.konum.lat != null ? konumHtml(m.konum) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') : '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div>') + '</div>';
     }
@@ -206,12 +230,17 @@
       var pos = null, hata = null, bitti = konumAl().then(function (p) { pos = p; }, function (e) { hata = e; });
       var ileri = function (dk) { var h = new Date(Date.now() + dk * 60000); h.setMinutes(Math.ceil(h.getMinutes() / 5) * 5, 0, 0); return ('0' + h.getHours()).slice(-2) + ':' + ('0' + h.getMinutes()).slice(-2); };
       perde('<div class="tz-bas">KONUM GÖNDER</div><div class="tz-kdur" data-kdur>' + SVG(IK.pin, 16, 2) + '<span>Konum alınıyor…</span></div>' +
+        '<label class="tz-lb">Hangi otobüs? <small>(birden çok seçilebilir)</small></label><div class="tz-ob" data-tob><button type="button" class="h" data-o="0">Herkes</button>' + (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]).map(function (o) { return '<button type="button" data-o="' + o + '">' + o + '</button>'; }).join('') + '</div>' +
         '<label class="tz-lb">Toplanma saati <small>(boş bırakılırsa yalnız konum gider)</small></label><div class="tz-saat-sat"><input type="time" data-tsaat><button type="button" data-tek="15">+15 dk</button><button type="button" data-tek="30">+30 dk</button><button type="button" data-tek="60">+1 sa</button></div>' +
         '<label class="tz-lb">Not <small>(isteğe bağlı)</small></label><input class="tz-not" data-tnot maxlength="80" placeholder="Ör. Otobüslerin önü, ana kapı">' +
         '<button type="button" class="tz-gonderb" data-tgon>' + SVG(IK.pin, 18, 2) + '<span>Konumu gönder</span></button>',
         function (p, kapat) {
           var sa = p.querySelector('[data-tsaat]'), gb = p.querySelector('[data-tgon]'), du = p.querySelector('[data-kdur] span');
-          var etk = function () { gb.querySelector('span').textContent = sa.value ? 'Toplanma noktası gönder · ' + sa.value : 'Konumu gönder'; gb.classList.toggle('top', !!sa.value); };
+          var SEC = benimOto() ? [benimOto()] : [];   // öğretmenin kendi otobüsü seçili gelir; yoksa herkes
+          var obSec = function () { p.querySelectorAll('[data-tob] [data-o]').forEach(function (b) { var o = +b.dataset.o; b.classList.toggle('s', o === 0 ? !SEC.length : SEC.indexOf(o) >= 0); }); };
+          p.querySelectorAll('[data-tob] [data-o]').forEach(function (b) { b.onclick = function () { var o = +b.dataset.o; if (!o) SEC = []; else { var i = SEC.indexOf(o); if (i >= 0) SEC.splice(i, 1); else SEC.push(o); SEC.sort(function (a, c) { return a - c; }); } obSec(); etk(); }; });
+          var etk = function () { gb.querySelector('span').textContent = sa.value ? (SEC.length ? 'Otobüs ' + SEC.join('–') : 'Herkes') + ' · ' + sa.value + ' toplanma gönder' : 'Konumu gönder'; gb.classList.toggle('top', !!sa.value); };
+          obSec();
           p.querySelectorAll('input').forEach(function (i) { i.addEventListener('focus', function () { setTimeout(function () { try { gb.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 350); }); });
           sa.oninput = etk; p.querySelectorAll('[data-tek]').forEach(function (b) { b.onclick = function () { sa.value = ileri(+b.dataset.tek); etk(); }; });
           bitti.then(function () { du.textContent = pos ? 'Konum bulundu' + (pos.coords.accuracy ? ' · ±' + Math.round(pos.coords.accuracy) + ' m' : '') : konumHata(hata); du.parentNode.classList.toggle('hata', !pos); });
@@ -219,7 +248,7 @@
             gb.disabled = true; du.textContent = pos ? du.textContent : 'Konum alınıyor…'; await bitti;
             if (!pos) { gb.disabled = false; uyar(konumHata(hata)); return; }
             var c = pos.coords, r = null;
-            try { r = sa.value ? await cfg.toplanma(c.latitude, c.longitude, c.accuracy, sa.value, p.querySelector('[data-tnot]').value) : await cfg.konum(c.latitude, c.longitude, c.accuracy); } catch (e) { r = null; }
+            try { r = sa.value ? await cfg.toplanma(c.latitude, c.longitude, c.accuracy, sa.value, p.querySelector('[data-tnot]').value, SEC.length ? SEC.slice() : null) : await cfg.konum(c.latitude, c.longitude, c.accuracy); } catch (e) { r = null; }
             if (!r || !r.ok) { gb.disabled = false; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); return; }
             kapat(); await yukle();
           };
