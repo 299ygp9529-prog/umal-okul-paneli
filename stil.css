@@ -2655,3 +2655,8 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 
 /* K-778: body grid; uzun tek satırlık mesaj önizlemesi sayfayı genişletip yana kaydırmasın */
 #uygulama { min-width: 0; max-width: 100%; }
+
+/* K-779: yoklama otomatik kayıt durumu */
+.dya-kd { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; color: #9fb0c8; background: #13213a; border: 1px solid #1d3150; white-space: nowrap; }
+.dya-kd.ok { color: #6ee7a8; border-color: rgba(110,231,168,.45); background: rgba(46,160,100,.12); }
+.dya-kd svg { width: 16px; height: 16px; }

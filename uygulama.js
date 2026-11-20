@@ -765,16 +765,28 @@
     } catch (e) {}
     const say = () => { const c = { var: 0, yok: 0, gec: 0, nobet: 0, izin: 0 }; ros.forEach(o => c[st[o.no]]++); return c; };
     const altYaz = () => { const c = say(); return `<b>${c.var + c.gec + c.nobet}</b> var · <b style="color:#ff8a8a">${c.yok}</b> gelmedi${c.gec ? ` · <b style="color:#ffd166">${c.gec}</b> geç` : ''}${c.nobet ? ` · <b style="color:#7fb2ff">${c.nobet}</b> nöbetçi` : ''}${c.izin ? ` · <b style="color:#c99bff">${c.izin}</b> izinli` : ''}`; };
-    const onayYaz = () => { const c = say(); return c.yok ? `Onayla · ${c.yok} gelmedi` : 'Herkes burada · onayla'; };   // K-720: tek dokunuşta biter
+    // K-779: onay düğmesi yok — her değişiklikten 3 sn sonra kendiliğinden kaydedilir; hiç dokunulmazsa ekran 15 sn açık kaldığında olduğu gibi kaydedilir
+    const OTO = { ok: false, zaman: '', bekle: null, ilkZ: null, yaziyor: false, tekrar: false,
+      yazi() { return this.yaziyor ? 'Kaydediliyor…' : this.ok ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Kaydedildi ${this.zaman}` : 'Otomatik kaydedilir'; },
+      goster() { const e = document.getElementById('dyaKd'); if (e && I.contains(e)) { e.innerHTML = this.yazi(); e.classList.toggle('ok', this.ok && !this.yaziyor); } },
+      degisti() { clearTimeout(this.ilkZ); clearTimeout(this.bekle); this.ok = false; this.goster(); this.bekle = setTimeout(() => this.kaydet(), 3000); },
+      ilk() { if (this.ok || this.bekle) return; clearTimeout(this.ilkZ); this.ilkZ = setTimeout(() => { if (D.bolum === 'dersyoklama' && document.getElementById('dyaKd') && !this.ok && !this.bekle) this.kaydet(); }, 15000); },
+      async kaydet() { this.bekle = null; if (this.yaziyor) { this.tekrar = true; return; } this.yaziyor = true; this.goster();
+        const liste = ros.map(o => { const d = st[o.no], z = { no: o.no, ad: o.ad, v: d === 'var' || d === 'gec' || d === 'nobet' }; if (d === 'gec' || d === 'nobet' || d === 'izin') z.d = d; return z; });
+        const { data, error } = await sb.rpc('umal_ders_yoklama_ogretmen_yaz', { p_tarih: gunIso, p_sinif: sec.sinif, p_anahtar: anahtar, p_veri: { saat: sec.n + '.', ders: sat.ders || '', ogretmen: sat.ogretmen || [], liste } }).then(r => r, e => ({ error: e }));
+        this.yaziyor = false;
+        if (error || !data || !data.ok) { this.ok = false; this.goster(); uyar('Yoklama kaydedilemedi: ' + (error ? hataYaz(error) : data && data.hata) + ' · tekrar denenecek'); this.bekle = setTimeout(() => this.kaydet(), 8000); return; }
+        this.ok = true; this.zaman = new Date().toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); kaynak = ''; this.goster();
+        if (this.tekrar) { this.tekrar = false; this.kaydet(); } } };
     const ciz = () => {
       I.innerHTML = `<div class="ust"><div><h1>Yoklama al</h1><div class="soluk kucuk">${esc(sec.sinif)} · ${sec.n}. ders${sat.ders ? ' · ' + esc(baslik(sat.ders)) : ''}</div></div><div class="dya-ust-d"><button class="ikincil kucuk" id="dyaGb" style="text-transform:none">Tebrik · uyarı</button><button class="ikincil kucuk" id="dyaOzet" style="text-transform:none">Günün yoklamaları</button></div></div>${secim}
-        <div class="kart dya-ipucu">Herkes <b>var</b> başlar. Gelmeyenin adına <b>dokunun</b>; geç geldi, nöbetçi ya da izinli için satırı <b>yana kaydırın</b>.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>
+        <div class="kart dya-ipucu">Herkes <b>var</b> başlar. Gelmeyenin adına <b>dokunun</b>; geç geldi, nöbetçi ya da izinli için satırı <b>yana kaydırın</b>. Değişiklikler kendiliğinden kaydedilir.${kaynak ? `<br><span style="color:#ffd166">${esc(kaynak)}</span>` : ''}</div>
         <div class="dya-no"><input id="dyaNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Numara yaz"><button class="ikincil" id="dyaHepsi" style="text-transform:none">Herkes var</button></div>
         <div class="dya-liste">${ros.map(o => `<div class="dya-sar" data-dyar="${esc(o.no)}"><button class="dya-o ${st[o.no]}" data-dyao="${esc(o.no)}"><span class="msj-av" data-foto="${esc(o.no)}">${D.fotolar && D.fotolar[o.no] ? `<img alt="" src="${D.fotolar[o.no]}">` : esc(baslik(o.ad).split(' ').map(z => z[0]).slice(0, 2).join(''))}</span><span class="n">${esc(o.no)}</span><span class="a">${esc(baslik(o.ad))}</span><em>${DUR[st[o.no]]}</em></button>
           <div class="dya-sec2 gizli">${['gec', 'nobet', 'izin', 'yok', 'var'].map(k => `<button class="cip dy-${k}" data-dyad="${k}">${DUR[k]}</button>`).join('')}</div></div>`).join('')}</div>
-        <div class="dya-alt"><div>${altYaz()}</div><button class="birincil" id="dyaKaydet" style="text-transform:none">${onayYaz()}</button></div>`;
+        <div class="dya-alt"><div>${altYaz()}</div><span class="dya-kd ${OTO.ok ? 'ok' : ''}" id="dyaKd">${OTO.yazi()}</span></div>`;
       dyaSecBagla(); fotolariYukle(ros.map(o => o.no)).catch(() => {}); $('#dyaOzet').onclick = () => dersYoklamaBolumu('ozet'); $('#dyaGb').onclick = () => gbAc('gb', { sinif: sec.sinif });
-      const ata = (n, d) => { st[n] = d; const r = I.querySelector(`[data-dyar="${CSS.escape(n)}"]`), b = r.querySelector('.dya-o'); b.className = 'dya-o ' + d; b.querySelector('em').textContent = DUR[d]; r.querySelector('.dya-sec2').classList.add('gizli'); I.querySelector('.dya-alt > div').innerHTML = altYaz(); const kb = $('#dyaKaydet'); if (kb && !kb.disabled) kb.textContent = onayYaz(); };
+      const ata = (n, d) => { st[n] = d; const r = I.querySelector(`[data-dyar="${CSS.escape(n)}"]`), b = r.querySelector('.dya-o'); b.className = 'dya-o ' + d; b.querySelector('em').textContent = DUR[d]; r.querySelector('.dya-sec2').classList.add('gizli'); I.querySelector('.dya-alt > div').innerHTML = altYaz(); OTO.degisti(); };
       I.querySelectorAll('[data-dyar]').forEach(r => { const n = r.dataset.dyar, b = r.querySelector('.dya-o'); let x0 = null, y0 = 0, kay = false;
         b.addEventListener('pointerdown', ev => { x0 = ev.clientX; y0 = ev.clientY; kay = false; });
         b.addEventListener('pointermove', ev => { if (x0 === null) return; const dx = ev.clientX - x0; if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(ev.clientY - y0)) { kay = true; b.style.transform = `translateX(${Math.max(-70, Math.min(70, dx))}px)`; } });
@@ -783,14 +795,10 @@
         b.onclick = ev => { if (kay) { kay = false; return; } ata(n, st[n] === 'var' ? 'yok' : 'var'); };
         b.oncontextmenu = ev => { ev.preventDefault(); r.querySelector('.dya-sec2').classList.toggle('gizli'); };   // bilgisayarda sağ tık da açar
         r.querySelectorAll('[data-dyad]').forEach(c => c.onclick = () => ata(n, c.dataset.dyad)); });
-      $('#dyaHepsi').onclick = () => { ros.forEach(o => { st[o.no] = 'var'; }); ciz(); };
+      $('#dyaHepsi').onclick = () => { ros.forEach(o => { st[o.no] = 'var'; }); ciz(); OTO.degisti(); };
       const no = $('#dyaNo'); no.onkeydown = ev => { if (ev.key !== 'Enter') return; const v = no.value.trim(), b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); if (b) { b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } else uyar(v + ' numara bu sınıfta yok.'); };
       no.oninput = () => { const v = no.value.trim(); if (v.length >= 3 && ros.some(o => o.no === v) && !ros.some(o => o.no !== v && o.no.startsWith(v))) { const b = I.querySelector(`[data-dyao="${CSS.escape(v)}"]`); b.click(); b.scrollIntoView({ block: 'center' }); no.value = ''; } };
-      $('#dyaKaydet').onclick = async () => { const b = $('#dyaKaydet'); b.disabled = true; b.textContent = 'Kaydediliyor…';
-        const liste = ros.map(o => { const d = st[o.no], z = { no: o.no, ad: o.ad, v: d === 'var' || d === 'gec' || d === 'nobet' }; if (d === 'gec' || d === 'nobet' || d === 'izin') z.d = d; return z; });
-        const { data, error } = await sb.rpc('umal_ders_yoklama_ogretmen_yaz', { p_tarih: gunIso, p_sinif: sec.sinif, p_anahtar: anahtar, p_veri: { saat: sec.n + '.', ders: sat.ders || '', ogretmen: sat.ogretmen || [], liste } });
-        if (error || !data || !data.ok) { b.disabled = false; b.textContent = onayYaz(); uyar('Kaydedilemedi: ' + (error ? hataYaz(error) : data && data.hata)); return; }
-        DY.gun = gunIso; await dersYoklamaBolumu('ozet'); uyar(`Yoklama kaydedildi · ${sec.sinif} ${sec.n}. ders`); };
+      OTO.ilk();
     };
     function dyaSecBagla() {
       const dd = $('#dyaDersler'); if (dd) dd.onclick = () => { pencereAc(`<h2 style="margin-top:0">Bugünkü dersleriniz</h2><div class="dya-sec">${D_.map(x => `<button class="cip ${sec && sec.sinif === x.sinif && sec.n === x.n ? 'secili' : ''}" data-dyas="${esc(x.sinif)}|${x.n}">${x.n}. ders · ${esc(x.sinif)}</button>`).join('')}</div>`);
