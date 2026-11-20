@@ -2621,3 +2621,21 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
   .ic-geri:active, .geri-hap:active { transform: scale(.96); }
   .ic-geri-sat:not(.gizli) + main { padding-top: 10px !important; }
 }
+
+/* K-775: telefonda Geri solda, sayfa başlığı aynı satırda ortada (bütün iç ekranlar ve grup ekranı) */
+@media (max-width: 760px) {
+  .tm-ustsat { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 8px 0 12px; }
+  .tm-ustsat .tm-geri { margin: 0; justify-self: start; }
+  .tm-ustsat .tm-bas { grid-column: 2; margin: 0; font-size: 14px; line-height: 1.2; }
+  body.icg .ic-geri-sat:not(.gizli) { position: relative; z-index: 3; height: 0; padding: 0; }
+  body.icg .ic-geri-sat .ic-geri { position: absolute; left: 16px; top: 14px; }
+  body.icg .ic-geri-sat:not(.gizli) + main { padding-top: 16px !important; }
+  body.icg.icg-bos .ic-geri-sat:not(.gizli) + main { padding-top: 64px !important; }
+  body.icg.icg-ic .ic-geri-sat { display: none !important; }
+  body.icg .icg-kap { display: block !important; text-align: center; margin-left: 0 !important; margin-right: 0 !important; width: auto !important; max-width: none !important; }
+  body.icg .icg-kap > :not(.icg-baslik):not(.icg-kap) { margin-left: auto; margin-right: auto; justify-content: center; text-align: center; }
+  body.icg .icg-baslik { display: flex !important; align-items: center; justify-content: center; text-align: center; min-height: 36px; margin: 0 0 6px !important; padding: 0 var(--icg, 110px) !important; font-size: 21px !important; line-height: 1.2 !important; }
+  body.icg .icg-baslik.icg-uzun { padding: 0 6px 0 var(--icg, 110px) !important; font-size: 19px !important; }
+  body.icg .icg-baslik + p, body.icg .icg-baslik + .soluk, body.icg .icg-baslik + .kucuk { text-align: center; }
+  body.icg .icg-baslik.icg-orta { padding: 0 !important; }
+}

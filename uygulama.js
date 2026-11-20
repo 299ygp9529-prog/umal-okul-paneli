@@ -1184,7 +1184,7 @@
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
       const L = (t => gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g])).concat(izin.has('dosyalar') ? [['dosyalar', '#7fb2ff', '']] : []).concat(izin.has('cikti') ? [['cikti', '#22e8ff', '']] : []).sort((a, b) => (t[b[0]] || 0) - (t[a[0]] || 0) || vs(a[0]) - vs(b[0])))(menuSon());   // K-716da
       d.innerHTML = `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${L.filter(([id]) => !['dersyoklama', 'duyuru', 'oprogram', 'mesajlar', 'dosyalar'].includes(id)).map(([id, rk, g]) => `<button class="tm-gk ${id === sec ? 'secili' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span class="tm-yazi"><span class="tm-gad">${ad(id)}</span><small>${esc(id === 'dosyalar' ? 'Duyuru, dosya, video, test gönder' : OG_ACK[id] || g)}</small></span>${n_(id)}</button>`).join('')}</div></div>${surumSatiri()}`;   // K-716da: Atlas Sınıf da normal kutu
-    } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><button type="button" class="ic-geri tm-geri" data-icg aria-label="Menüye dön">${ICG_SVG}<span>Menü</span></button><div class="tm-bas">${G[0]}</div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
+    } else     if (G) d.innerHTML = `<div class="tm-grup" style="--g:${G[1]}"><div class="tm-ustsat"><button type="button" class="ic-geri tm-geri" data-icg aria-label="Menüye dön">${ICG_SVG}<span>Menü</span></button><div class="tm-bas">${G[0]}</div></div><div class="tm-izgara tm-ic ${G[2].length % 2 ? 'tek' : ''}">${G[2].map(id => kutu(id, G[1])).join('')}</div></div>`;
     else if (gruplar.reduce((a, x) => a + x[2].length, 0) <= 6) d.innerHTML = `<div class="tm-grup" style="--g:#22e8ff"><div class="tm-izgara">${gruplar.flatMap(x => x[2].map(id => kutu(id, x[1]))).concat(izin.has('cikti') ? [kutu('cikti', '#22e8ff')] : []).join('')}</div></div>`;   // az bölüm: hepsi tek ekranda
     else d.innerHTML = ''   // K-716dd: "Sık Kullanılanlar" kaldırıldı — son kullanılan zaten en üstte
       + `<div class="tm-grup" style="--g:#9fb3cf"><div class="tm-gruplar">${D.rol === 'yonetici' && izin.has('disiplin') ? `<button class="tm-gk tm-genis ${sec === 'disiplin' ? 'secili' : ''}" style="--g:#ff8a8a" data-tb="disiplin">${menuIk('disiplin')}<span class="tm-gad">${ad('disiplin')}</span><small>${esc(OG_ACK.disiplin)}</small>${n_('disiplin')}</button>` : ''}${gruplar.map(([g, rk, L]) => { if ((D.rol === 'yonetici' && (g === 'İdare' || g === 'Okul')) || (D.rol === 'rehberlik' && (g === 'Okul' || g === 'İdare' || g === 'Rehberlik' || g === 'Öğrenci'))) return L.filter(id => id !== 'disiplin').map(id => `<button class="tm-gk ${(altMi(id) ? id === D.bolum : id === sec) ? 'secili' : ''} ${id === 'acil' ? 'tm-genis' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id, altMi(id) ? ALT_IK[id] : undefined)}<span class="tm-gad">${altMi(id) ? esc(ALT_AD[id] || (BOLUMLER.find(b => b.id === id) || {}).ad || id) : ad(id)}</span><small>${esc(OG_ACK[id] || g)}</small>${n_(id)}</button>`).join('');   // K-716u: idarede İdare grubunun bölümleri ayrı kutu
@@ -1200,9 +1200,25 @@
   }
   function tumuKapat() { const d = document.querySelector('.tumu-menu'); if (d) d.remove(); document.body.classList.remove('tm-acik'); if (telefon()) $('#telGeri').classList.remove('gizli'); icGeriGuncelle(); }
   const ICG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
+  // K-775: sayfanın en üstteki başlığı Geri ile aynı satırda ortalanır; sayfanın kendi iç Geri'si varsa (alt seviye) Menü düğmesi gizlenir
+  function icgBaslik() { const m = document.getElementById('icerik'), B = document.body; if (!m) return;
+    m.querySelectorAll('.icg-baslik, .icg-kap').forEach(x => x.classList.remove('icg-baslik', 'icg-kap', 'icg-uzun', 'icg-orta'));
+    if (!B.classList.contains('icg')) { B.classList.remove('icg-bos', 'icg-ic'); return; }
+    const ust = m.getBoundingClientRect().top; let ilk = null; for (const el of m.children) if (el.offsetHeight > 0) { ilk = el; break; }
+    const yakin = el => el && el.getBoundingClientRect().top - ust < 110;
+    const ic = ilk && (ilk.matches('.geri-hap') ? ilk : ilk.querySelector('.geri-hap')); B.classList.toggle('icg-ic', !!(ic && yakin(ic) && ic.offsetHeight));
+    const h = ilk && (ilk.matches('h1, h2') ? ilk : ilk.querySelector('h1, h2')); const kk = h && h.closest('.kart, .sr-kart'), ok = !!h && yakin(h) && !B.classList.contains('icg-ic') && !(kk && m.contains(kk));
+    if (ok) { h.classList.add('icg-baslik'); for (let p = h.parentElement; p && p !== m; p = p.parentElement) p.classList.add('icg-kap');
+      h.classList.remove('icg-uzun'); if (h.getBoundingClientRect().height > 44) h.classList.add('icg-uzun'); }   // iki satıra taşarsa: sağdaki boşluk kalkar, tek satıra sığar
+    B.classList.toggle('icg-bos', !ok && !B.classList.contains('icg-ic'));
+    if (!ok && ilk && ilk.id === 'siradaki') { let n = ilk.nextElementSibling; while (n && !n.offsetHeight) n = n.nextElementSibling;   // üstte "Sıradaki dersiniz" kartı varsa: başlık kartın altında, yine ortada
+      const h2 = n && (n.matches('h1, h2') ? n : n.querySelector('h1, h2')); if (h2 && !h2.closest('.kart') && h2.getBoundingClientRect().top - n.getBoundingClientRect().top < 60) { h2.classList.add('icg-baslik', 'icg-orta'); for (let p = h2.parentElement; p && p !== m; p = p.parentElement) p.classList.add('icg-kap'); } } }
+  { let bekle = 0; const gozle = () => { const m = document.getElementById('icerik'); if (!m || !window.MutationObserver) return; new MutationObserver(() => { if (bekle) return; bekle = requestAnimationFrame(() => { bekle = 0; icgBaslik(); }); }).observe(m, { childList: true, subtree: true }); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gozle); else gozle(); }
   function icGeriGuncelle() { const e = document.getElementById('icGeri'); if (!e) return;   // K-774: alt sekmede olmayan ekranlarda görünür; gruptan gelindiyse grubun adı
     const g = !document.body.classList.contains('tm-acik') && !!D.bolum && !(ALT_SEKME[D.rol] || []).includes(D.bolum); e.classList.toggle('gizli', !g);
-    const t = e.querySelector('span'); if (t) t.textContent = D._gridden && D._gridGrup ? D._gridGrup : 'Menü'; }
+    const t = e.querySelector('span'); if (t) t.textContent = D._gridden && D._gridGrup ? D._gridGrup : 'Menü';
+    document.body.classList.toggle('icg', g); if (g) { const w = e.querySelector('.ic-geri').offsetWidth; if (w) document.body.style.setProperty('--icg', (w + 10) + 'px'); } icgBaslik(); }   // K-775: başlık Geri ile aynı satırda, ortada
   window.addEventListener('hashchange', () => { if (!telefon() || !D.rol) return; const h = location.hash.slice(1);
     if (h === 'bolumler') return tumuAc(false);
     if (h.startsWith('bolumler-')) return tumuAc(false, h.slice(9));
