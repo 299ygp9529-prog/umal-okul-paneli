@@ -15,7 +15,19 @@
   // tanıtım hesabı (Fahri Fenerli, 1907) okul listelerinde gizli; Tebrik-Uyarı ve Okul Bildirimleri'nde deneme için seçilebilir (gezideki gibi)
   const DEMO = { no: '1907', ad: 'FAHRİ FENERLİ', sinif: '12-A' };
   const gbOgr = () => { const L = (X && X.D && X.D.ogrenciler) || []; return L.some(o => String(o.no) === DEMO.no) ? L : L.concat([DEMO]); };
-  let GB = { sinif: null, tur: 'tebrik', neden: '', not: '', sec: new Set(), sek: 'gonder', ara: '' };
+  let GB = { sinif: null, tur: 'tebrik', neden: '', not: '', sec: new Set(), sek: 'gonder', ara: '', kendi: false, ekle: true, duz: false };
+  // K-782: öğretmenin kendi sebep listesi (ekle · çıkar · sırala · kendisi yaz) — sunucuda kişiye özel, telefonda ve bilgisayarda aynı
+  const SB_ANH = 'gb_sebep', SB_LS = 'umalGbSebep';
+  let SEB = (() => { try { const v = JSON.parse(localStorage.getItem(SB_LS) || 'null'); if (v && Array.isArray(v.tebrik) && Array.isArray(v.uyari)) return v; } catch (e) {} return null; })();
+  const sebepler = t => (SEB && Array.isArray(SEB[t]) ? SEB[t] : NEDEN[t]);
+  let sebYuklendi = false;
+  async function sebepYukle(sonra) { if (sebYuklendi || !X) return; sebYuklendi = true;
+    try { const { data } = await X.sb.rpc('umal_kisi_ayar_al', { p_anahtar: SB_ANH }); if (data && Array.isArray(data.tebrik) && Array.isArray(data.uyari)) { const eski = JSON.stringify(SEB); SEB = data; try { localStorage.setItem(SB_LS, JSON.stringify(SEB)); } catch (e) {} if (eski !== JSON.stringify(SEB) && sonra) sonra(); } } catch (e) {} }
+  async function sebepKaydet() { const v = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB = v; try { localStorage.setItem(SB_LS, JSON.stringify(v)); } catch (e) {}
+    const ayni = ['tebrik', 'uyari'].every(t => JSON.stringify(v[t]) === JSON.stringify(NEDEN[t]));
+    try { const { data, error } = await X.sb.rpc('umal_kisi_ayar_yaz', { p_anahtar: SB_ANH, p_deger: ayni ? null : v }); if (error || !data || !data.ok) X.uyar('Sebep listesi kaydedilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); } catch (e) {}
+    if (ayni) { SEB = null; try { localStorage.removeItem(SB_LS); } catch (e) {} } }
+  const KALEM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="currentColor" fill-opacity=".16"/><path d="M13.5 6.5l4 4"/></svg>';
   async function gb(ctx, on) {
     X = ctx; GB.ara = '';
     await X.ogrencileriYukle().catch(() => []);
@@ -36,7 +48,12 @@
   function gonderCiz(S) {
     const E = $('#gbIc'), ros = gbOgr().filter(o => o.sinif === GB.sinif).sort((a, b) => (+a.no) - (+b.no));
     E.innerHTML = `<div class="kart"><div class="gb-tur">${[['tebrik', 'Tebrik'], ['uyari', 'Uyarı']].map(([k, a]) => `<button class="gb-t ${k} ${GB.tur === k ? 'secili' : ''}" data-gbt="${k}">${a}</button>`).join('')}</div>
-        <b class="gb-b">Sebep</b><div class="dya-sec">${NEDEN[GB.tur].map(n => `<button class="cip ${GB.neden === n ? 'secili' : ''}" data-gbn="${X.esc(n)}">${esc(n)}</button>`).join('')}</div>
+        <div class="gb-bh"><b class="gb-b">Sebep</b><button class="gb-duz ${GB.duz ? 'acik' : ''}" id="gbDuz" type="button" aria-label="${GB.duz ? 'Düzenlemeyi bitir' : 'Sebepleri düzenle'}">${GB.duz ? 'Bitti' : KALEM + '<span>Düzenle</span>'}</button></div>
+        ${GB.duz ? `<div class="dya-sec gb-duzl" id="gbDuzL">${sebepler(GB.tur).map((n, i) => `<span class="cip gb-dc" data-gbi="${i}"><i class="gb-tut" aria-hidden="true">⋮⋮</i>${esc(n)}<button type="button" data-gbsil="${i}" aria-label="${esc(n)} sebebini kaldır">×</button></span>`).join('')}</div>
+          <div class="gb-yeni"><input class="dp-in" id="gbYeni" maxlength="120" placeholder="Yeni sebep yazın" autocomplete="off"><button class="ikincil" id="gbYeniE" type="button">Ekle</button></div>
+          <div class="gb-duz-alt"><span class="soluk kucuk">Basılı tutup sürükleyerek sırayı değiştirin.</span><button class="bag" id="gbVars" type="button">Varsayılanlara dön</button></div>`
+        : `<div class="dya-sec">${sebepler(GB.tur).map(n => `<button class="cip ${!GB.kendi && GB.neden === n ? 'secili' : ''}" data-gbn="${X.esc(n)}">${esc(n)}</button>`).join('')}<button class="cip gb-kendi ${GB.kendi ? 'secili' : ''}" data-gbkendi="1">+ Kendim yazayım</button></div>
+          ${GB.kendi ? `<div class="gb-kendi-k"><input class="dp-in" id="gbKendi" maxlength="120" placeholder="${GB.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'} sebebini yazın" value="${esc(GB.neden)}" autocomplete="off"><label class="gb-ekle"><input type="checkbox" id="gbEkle" ${GB.ekle ? 'checked' : ''}> Listeme ekle</label></div>` : ''}`}
         <input class="dp-in gb-not" id="gbNot" maxlength="300" placeholder="Kısa not (isteğe bağlı)" value="${esc(GB.not)}">
         <b class="gb-b">Öğrenci</b>${(() => { const B = (GB.benS || []).filter(x => S.includes(x)), D = S.filter(x => !B.includes(x));   // K-768: derse girdiği sınıflar yan yana düğme; diğerleri "Diğer" listesinde
           if (!B.length) return `<div class="gb-bul"><select class="dp-in" id="gbSinif">${S.map(x => `<option ${x === GB.sinif ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
@@ -45,8 +62,29 @@
         <div id="gbIzgara"></div>
 </div>`;
     izgara(); void ros;
-    E.querySelectorAll('[data-gbt]').forEach(b => b.onclick = () => { GB.tur = b.dataset.gbt; GB.neden = ''; gonderCiz(S); });
-    E.querySelectorAll('[data-gbn]').forEach(b => b.onclick = () => { GB.neden = b.dataset.gbn; gonderCiz(S); });
+    E.querySelectorAll('[data-gbt]').forEach(b => b.onclick = () => { GB.tur = b.dataset.gbt; GB.neden = ''; GB.kendi = false; gonderCiz(S); });
+    E.querySelectorAll('[data-gbn]').forEach(b => b.onclick = () => { GB.neden = b.dataset.gbn; GB.kendi = false; gonderCiz(S); });
+    sebepYukle(() => { if (!GB.duz && document.getElementById('gbIc') === E) gonderCiz(S); });
+    { const kb = E.querySelector('[data-gbkendi]'); if (kb) kb.onclick = () => { GB.kendi = true; if (sebepler(GB.tur).includes(GB.neden)) GB.neden = ''; gonderCiz(S); const i = $('#gbKendi'); if (i) i.focus(); }; }
+    if ($('#gbKendi')) $('#gbKendi').oninput = ev => { GB.neden = ev.target.value; };
+    if ($('#gbEkle')) $('#gbEkle').onchange = ev => { GB.ekle = ev.target.checked; };
+    $('#gbDuz').onclick = () => { GB.duz = !GB.duz; gonderCiz(S); };
+    if (GB.duz) {
+      const L = () => sebepler(GB.tur).slice(), yaz = async L_ => { SEB = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB[GB.tur] = L_; if (!L_.includes(GB.neden)) GB.neden = ''; gonderCiz(S); await sebepKaydet(); };
+      E.querySelectorAll('[data-gbsil]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const l = L(); l.splice(+b.dataset.gbsil, 1); yaz(l); });
+      const ekle = () => { const i = $('#gbYeni'), v = i.value.trim().replace(/\s+/g, ' '); if (v.length < 3) { X.uyar('Sebep en az 3 harf olsun.'); return; } const l = L(); if (l.some(x => x.toLocaleLowerCase(tr) === v.toLocaleLowerCase(tr))) { X.uyar('Bu sebep listede var.'); return; } l.push(v); yaz(l); };
+      $('#gbYeniE').onclick = ekle; $('#gbYeni').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ekle(); } };
+      $('#gbVars').onclick = async () => { if (!await X.onayla(`${GB.tur === 'tebrik' ? 'Tebrik' : 'Uyarı'} sebepleri varsayılan listeye dönsün mü? Eklediğiniz sebepler silinir.`)) return; yaz(NEDEN[GB.tur].slice()); };
+      // basılı tut + sürükle: sırayı değiştir
+      const kap = $('#gbDuzL'); let tut = null, zz = null;
+      kap.querySelectorAll('[data-gbi]').forEach(c => { c.addEventListener('pointerdown', ev => { if (ev.target.closest('[data-gbsil]')) return; clearTimeout(zz); const x0 = ev.clientX, y0 = ev.clientY;
+          zz = setTimeout(() => { tut = { el: c, i: +c.dataset.gbi }; c.classList.add('tutuldu'); try { c.setPointerCapture(ev.pointerId); } catch (e) {} if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {} }, 280);
+          c._ilk = [x0, y0]; });
+        c.addEventListener('pointermove', ev => { if (!tut) { if (c._ilk && Math.hypot(ev.clientX - c._ilk[0], ev.clientY - c._ilk[1]) > 8) clearTimeout(zz); return; } ev.preventDefault();
+          const h = document.elementFromPoint(ev.clientX, ev.clientY), hc = h && h.closest('[data-gbi]'); if (hc && hc !== tut.el && kap.contains(hc)) { const r = hc.getBoundingClientRect(), once = ev.clientX < r.left + r.width / 2; kap.insertBefore(tut.el, once ? hc : hc.nextSibling); } });
+        const bit = () => { clearTimeout(zz); if (!tut) return; tut.el.classList.remove('tutuldu'); const l0 = L(), yeni = [...kap.querySelectorAll('[data-gbi]')].map(x => l0[+x.dataset.gbi]); tut = null; if (JSON.stringify(yeni) !== JSON.stringify(l0)) yaz(yeni); };
+        c.addEventListener('pointerup', bit); c.addEventListener('pointercancel', bit); });
+    }
     $('#gbNot').oninput = ev => { GB.not = ev.target.value; };
     if ($('#gbSinif')) $('#gbSinif').onchange = ev => { if (!ev.target.value) return; GB.sinif = ev.target.value; GB.ara = ''; gonderCiz(S); };
     document.querySelectorAll('[data-gbsc]').forEach(b => b.onclick = () => { GB.sinif = b.dataset.gbsc; GB.ara = ''; gonderCiz(S); });
@@ -69,12 +107,15 @@
     let gidiyor = false;
     GB.gonder = async () => {
       if (gidiyor) return;
-      if (!GB.neden) { X.uyar(`Önce ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} sebebini seçin.`); const r = E.querySelector('.gb-b'); const c = r && r.nextElementSibling; if (c) { c.classList.remove('gb-eksik'); void c.offsetWidth; c.classList.add('gb-eksik'); c.scrollIntoView({ block: 'center', behavior: 'smooth' }); } return; }
+      if (GB.kendi) GB.neden = String(GB.neden || '').trim().replace(/\s+/g, ' ');
+      if (GB.kendi && GB.neden && GB.neden.length < 3) { X.uyar('Sebep en az 3 harf olsun.'); return; }
+      if (!GB.neden) { X.uyar(GB.kendi ? 'Sebebi yazın.' : `Önce ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} sebebini seçin.`); const r = E.querySelector('.gb-b'); const c = r && r.nextElementSibling; if (c) { c.classList.remove('gb-eksik'); void c.offsetWidth; c.classList.add('gb-eksik'); c.scrollIntoView({ block: 'center', behavior: 'smooth' }); } return; }
       if (!GB.sec.size) { X.uyar('Önce öğrenci seçin.'); const g = $('#gbIzgara'); if (g) g.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
       gidiyor = true;
       const { data, error } = await X.sb.rpc('umal_gb_yaz', { p_nolar: [...GB.sec], p_tur: GB.tur, p_neden: GB.neden, p_aciklama: GB.not || null });
       gidiyor = false;
       if (error || !data || !data.ok) { X.uyar('Gönderilemedi: ' + (error ? X.hataYaz(error) : data && data.hata)); return; }
+      if (GB.kendi && GB.ekle && !sebepler(GB.tur).some(x => x.toLocaleLowerCase(tr) === GB.neden.toLocaleLowerCase(tr))) { SEB = { tebrik: sebepler('tebrik').slice(), uyari: sebepler('uyari').slice() }; SEB[GB.tur].push(GB.neden); sebepKaydet(); GB.kendi = false; }   // K-782: listeye eklendi, bir dahaki sefere düğme olarak gelir
       X.uyar(`${data.sayi} öğrenciye ${GB.tur === 'tebrik' ? 'tebrik' : 'uyarı'} gönderildi. Öğrencinin paneline ve veli ekranına düştü.`); GB.sec = new Set(); GB.not = ''; gonderCiz(S); };
     etiket();
   }

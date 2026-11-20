@@ -2680,3 +2680,16 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .atl-onay.tikli .gozler { animation: atlSon .15s .4s forwards; } .atl-onay.tikli .mutlu { animation: atlGel .2s .4s forwards; }
 .atl-onay.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .5s forwards; }
 .atl-onay.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .75s forwards; }
+
+/* K-782: tebrik/uyarı sebep listesi — kendim yazayım, düzenle (çıkar · ekle · sırala) */
+.gb-bh { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0 6px; } .gb-bh .gb-b { margin: 0; }
+.gb-duz { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid #2a4468; background: #13213a; color: #b9cbe6; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.gb-duz svg { width: 16px; height: 16px; color: #7fb2ff; } .gb-duz.acik { background: #22e8ff; border-color: #22e8ff; color: #04121c; }
+.cip.gb-kendi { border-style: dashed; color: #9fd8ff; } .cip.gb-kendi.secili { border-style: solid; color: #04121c; }
+.gb-kendi-k { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; } .gb-ekle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #c8d6ea; } .gb-ekle input { width: 18px; height: 18px; accent-color: #22e8ff; }
+.gb-duzl .gb-dc { display: inline-flex; align-items: center; gap: 6px; padding-right: 4px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.gb-duzl .gb-dc .gb-tut { font-style: normal; color: #5f7896; letter-spacing: -2px; font-size: 12px; }
+.gb-duzl .gb-dc button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255,107,114,.16); color: #ff8a8a; font-size: 17px; line-height: 1; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+.gb-duzl .gb-dc.tutuldu { border-color: #22e8ff; box-shadow: 0 6px 18px rgba(34,232,255,.3); transform: scale(1.05); cursor: grabbing; }
+.gb-yeni { display: flex; gap: 8px; margin-top: 10px; } .gb-yeni input { flex: 1; min-width: 0; }
+.gb-duz-alt { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
