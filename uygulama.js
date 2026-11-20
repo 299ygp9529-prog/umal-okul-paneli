@@ -6970,7 +6970,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     D._tfSI = tfOturum.length ? tfSiDersler() : []; D._tfIlk = tfOturum.length ? tfOturum[0].tarih : '';
     const tfLis = tfOturum.map(() => []), tfYok = [];
     const tfYerles = (y, asil, tur, bekle, en) => { const o = (D.ogrenciler || []).find(q => String(q.no) === String(y.no)); if (!o) return; const v = seviye(o.sinif);
-      if (en == null) { en = -1; let puan = 0; tfOturum.forEach((x, i) => String(x['s' + v] || '').split('\n').forEach(l => { if (!tfEs(l, y.ders)) return; const p = /\(([^)]*)\)/.exec(l), sb_ = p ? p[1].split(/[,;\s]+/).includes(o.sinif) : false, pu = sb_ ? 2 : 1; if (pu > puan) { puan = pu; en = i; } })); }
+      if (en == null) { en = -1; let puan = 0; tfOturum.forEach((x, i) => String(x['s' + v] || '').split('\n').forEach(l => { if (!tfEs(l, y.ders)) return; const p = /\(([^)]*)\)/.exec(l), sb_ = p ? p[1].split(/[,;\s]+/).includes(o.sinif) : false, tam = tfDk(l) === tfDk(y.ders), pu = (tam ? 2 : 0) + (sb_ ? 1 : 0) + 1; if (pu > puan) { puan = pu; en = i; } })); }   // K-798: adı tam tutan ders önce ("Matematik Uygulamaları" Matematik'e düşmesin)
       if (en >= 0) { if (!tfLis[en].some(z => z.o.no === o.no)) tfLis[en].push({ o, ders: y.ders, asil, tur, bekle }); } else if (!bekle) tfYok.push({ o, ders: y.ders, asil }); };
     Object.entries(tfOg).forEach(([asil, L]) => { if (asil.startsWith('cikar|')) return; (L || []).forEach(y => tfYerles(y, asil, y.tur || (asil.startsWith('ek|') ? 'Elle eklendi' : ''), false)); });
     // K-736: salon yoklamasındaki 'gelmedi' kayıtları telafiye alınmaz — telafi yalnız raporlu/izinli listesi × sınav günü (idare kararı)
