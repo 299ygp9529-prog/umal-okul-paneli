@@ -90,6 +90,7 @@
     '.tz-li{display:flex;align-items:center;gap:10px;padding:9px 2px;font-size:14px;border-top:1px solid #1d3354}.tz-li:first-of-type{border-top:0}.tz-li .tz-av{width:30px;height:30px}',
     '.tz-li button{margin-left:auto;font:inherit;font-size:12.5px;font-weight:700;color:#22e8ff;background:transparent;border:1px solid rgba(34,232,255,.5);border-radius:999px;padding:5px 12px;cursor:pointer}',
     '.tz-bas{font-size:12px;color:#7f93b3;letter-spacing:.06em;font-weight:800;margin:2px 2px 6px}',
+    '.tz-mola{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}.tz-mola button{height:54px;border-radius:13px;border:1px solid #24406a;background:#0b1424;color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer}.tz-mola button:active{background:#ffb547;color:#2a1300;border-color:#ffb547}',
     '.tz-kapat{width:100%;margin-top:12px;font:inherit;font-weight:700;background:transparent;border:1px solid #2a4468;border-radius:13px;color:#b9c9e2;height:46px;cursor:pointer}',
     '.tz-gz{margin:6px 6px 0;padding:6px 8px;gap:9px;border-radius:13px}.tz-gz .tz-ik{width:30px;height:30px;border-radius:9px}.tz-gz .tz-ik svg{width:18px;height:18px}',
     '.tz-gz .tz-gm{display:flex;align-items:baseline;gap:7px;min-width:0}.tz-gz b{font-size:14px;flex:none}.tz-gz small{margin:0;font-size:11.5px;flex:1;min-width:0}',
@@ -137,7 +138,7 @@
     var P = !!cfg.personel, uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
     var kap = cfg.kap; kap.innerHTML = '';
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
-    var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola 15 dk'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
+    var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
       '<span class="tz-canli"><i></i>CANLI</span>' + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + 'Kapat</button>' : '') + '</div>' + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<div class="tz-say" style="display:none"></div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
@@ -267,7 +268,7 @@
       y.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey && (w.innerWidth > 760)) { e.preventDefault(); gonder(); } };
       alt.querySelector('.tz-gon').addEventListener('pointerdown', function (e) { e.preventDefault(); });
       alt.querySelector('.tz-gon').onclick = function () { gonder(); };
-      alt.querySelectorAll('[data-tzh]').forEach(function (b) { b.onclick = function () { gonder(b.dataset.tzh); }; });
+      alt.querySelectorAll('[data-tzh]').forEach(function (b) { b.onclick = function () { if (b.dataset.tzh === 'Mola') { molaSor(); return; } gonder(b.dataset.tzh); }; });
       var kb = alt.querySelector('[data-tzkon]'); if (kb) kb.onclick = konumGonder;
       var du = alt.querySelector('[data-tzduy]'); if (du) du.onclick = function () { S.duyuru = !S.duyuru; du.classList.toggle('secili', S.duyuru); alt.querySelector('.tz-yaz').classList.toggle('duyuru', S.duyuru); y.placeholder = S.duyuru ? 'Duyuru yaz (herkese öne çıkar)…' : 'Mesaj yaz…'; };
     }
@@ -354,6 +355,10 @@
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
+    }
+    function molaSor() {   // K-820: mola süresi seçilir
+      perde('<div class="tz-bas">MOLA SÜRESİ</div><div class="tz-mola">' + [10, 15, 20, 30, 45, 60].map(function (n) { return '<button type="button" data-mdk="' + n + '">' + (n === 60 ? '1 saat' : n + ' dk') + '</button>'; }).join('') + '</div>', function (p, kapat) {
+        p.querySelectorAll('[data-mdk]').forEach(function (b) { b.onclick = function () { var n = +b.dataset.mdk; kapat(); gonder('Mola ' + (n === 60 ? '1 saat' : n + ' dk')); }; }); });
     }
     function perde(html, bagla) {
       var p = d.createElement('div'); p.className = 'tz-perde'; p.innerHTML = '<div class="tz-sayfa" role="dialog" aria-modal="true"><div class="tz-tut"></div>' + html + '<button type="button" class="tz-kapat">Kapat</button></div>'; ekran.appendChild(p);
