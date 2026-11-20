@@ -170,12 +170,18 @@
     }
     async function gonder(hazir) {
       if (S.gonderiyor || !S.acik || S.sessiz) return; var y = alt.querySelector('textarea'); var t = (hazir || (y ? y.value : '')).trim(); if (!t) return;
+      if (hazir && S.sonHazir === hazir && Date.now() - (S.sonHazirZ || 0) < 8000) return;   // aynı hazır düğmeye iki kez basıldı: ikincisi gönderilmez
+      if (hazir) { S.sonHazir = hazir; S.sonHazirZ = Date.now(); }
       var odakta = y && d.activeElement === y; S.gonderiyor = true; var b = alt.querySelector('.tz-gon'); if (b) b.disabled = true;
       var duy = P && S.duyuru && !hazir;
       if (!hazir && y) { y.value = ''; y.style.height = ''; }
       var gec = d.createElement('div'); gec.className = 'tz-m ben'; gec.style.opacity = '.55'; gec.innerHTML = '<div class="tz-av">·</div><div><span class="tz-t">' + esc(t) + '</span><span class="tz-z">gönderiliyor…</span></div>'; ak.appendChild(gec); ak.scrollTop = ak.scrollHeight;
       if (odakta && SK && SK.odakla && d.activeElement !== y) SK.odakla(y);
-      var r = null; try { r = await cfg.yaz(t, duy); } catch (e) { r = { ok: false, hata: e && e.message }; }
+      var r = null;
+      for (var den = 0; den < 4; den++) {   // ard arda basışta sunucu "hiz" der: kullanıcıya hata göstermeden kısa bekleyip yeniden gönderilir
+        var bek = (S.sonGon || 0) + 1100 - Date.now(); if (bek > 0) await new Promise(function (ok) { setTimeout(ok, bek); });
+        try { r = await cfg.yaz(t, duy); } catch (e) { r = { ok: false, hata: e && e.message }; }
+        S.sonGon = Date.now(); if (!(r && !r.ok && (r.hata === 'hiz' || /yavaş/.test(r.hata || '')))) break; }
       S.gonderiyor = false; if (b) b.disabled = false; gec.remove();
       if (!r || !r.ok) { if (r && r.sessiz) { S.sessiz = true; altCiz(); } else { if (!hazir && y && !y.value) y.value = t; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); } return; }
       if (duy) { S.duyuru = false; var du = alt.querySelector('[data-tzduy]'); if (du) du.classList.remove('secili'); var yz = alt.querySelector('.tz-yaz'); if (yz) yz.classList.remove('duyuru'); if (y) y.placeholder = 'Mesaj yaz…'; }
