@@ -357,6 +357,11 @@
     if (TEL()) { const k = $('#kutular'); [...k.querySelectorAll(':scope > .gz-ana, :scope > .il-ana, :scope > .gb-uyari')].reverse().forEach(e => k.prepend(e)); }   // K-750: telefonda gezi en üstte tam satır, diğerleri ikişer kutu
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
+    { const OK = '<svg class="k-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';   // K-800: renk, ok, tamamlandı işareti, açılış
+      $('#kutular').querySelectorAll(':scope > button').forEach((b, i) => { const ik = b.querySelector('.ik'), c = ik && ik.style.getPropertyValue('--c'); if (c) b.style.setProperty('--c', c); b.style.setProperty('--i', i); if (!b.classList.contains('genis') && !b.querySelector('.k-ok')) b.insertAdjacentHTML('beforeend', OK); });
+      const an = $('#kutular [data-git="s-anket"]'); if (an && !acikForm && S.formlar.length && !an.querySelector('.k-tik')) an.insertAdjacentHTML('beforeend', '<span class="k-tik" aria-label="Tamamlandı"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>');
+      if (sessiz !== true) { const k_ = $('#kutular'); k_.classList.remove('giris-an'); void k_.offsetWidth; k_.classList.add('giris-an'); }
+      zilCiz(); seriCiz(); }
     rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
@@ -649,7 +654,7 @@
   }
   function gzKutu1(d, i) {
     const alt = d.koltuk ? (d.gun && d.otobus.tel ? `Bugün gezi günü · şoför telefonu burada` : (d.numarasiz ? `${d.otobus.no}. Otobüs · ${gzKonum(d.otobus.kapasite, d.koltuk).yazi}` : `${d.otobus.no}. Otobüs · ${d.koltuk} numara · ${gzYerAd(gzYer(d))}`)) : 'Koltuğun yakında belli olacak';
-    return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${gzYeni(d) ? 'yeni' : ''} ${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? 'gb-eksik' : ''}">${gzYeni(d) ? ZARF : ''}${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? '<span class="gb-rozet">Bilgi eksik</span>' : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.numarasiz ? gzKonum(d.otobus.kapasite, d.koltuk).sira + '.' : d.koltuk}</b><small>${d.numarasiz ? 'sıra' : d.otobus.no + '. otobüs'}</small></span>` : ''}</button>`;
+    return `<button data-git="gezi" data-gz="${i}" class="genis no-ana gz-ana ${/çanakkale/i.test(d.ad || '') ? 'gz-cnk' : ''} ${gzYeni(d) ? 'yeni' : ''} ${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? 'gb-eksik' : ''}">${gzYeni(d) ? ZARF : ''}${(GZ.E || []).some(x => x.anahtar === d.anahtar) ? '<span class="gb-rozet">Bilgi eksik</span>' : ''}<i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>${esc(d.ad || 'Gezi')}</b><small>${esc(alt)}</small></span>${d.koltuk ? `<span class="so-mini"><b style="color:#e8c66b">${d.numarasiz ? gzKonum(d.otobus.kapasite, d.koltuk).sira + '.' : d.koltuk}</b><small>${d.numarasiz ? 'sıra' : d.otobus.no + '. otobüs'}</small></span>` : ''}</button>`;
   }
   function gzAc(i) { if (i != null) GZ.i = i; gzCiz(); goster('s-gezi'); window.scrollTo(0, 0); const d = GZ.d; if (d && d.koltuk) { try { localStorage.setItem(gzAnah(d), d.otobus.no + ':' + d.koltuk); } catch (e) {} } }
   function gzCiz() {
@@ -1300,7 +1305,27 @@
     const AT = L.filter(x => x[1] === 'Mustafa Kemal Atatürk'), ozelGun = ['11-10', '10-29', '04-23', '05-19', '08-30'].includes(ad_) && AT.length;   // K-607: millî günlerde Atatürk'ten
     const s_ = ozelGun ? AT[(ist.getUTCFullYear() * 7 + ist.getUTCMonth()) % AT.length] : L[(gun * 97) % L.length];
     k.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#22e8ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11H6.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/><path d="M18 11h-3.5a.5.5 0 0 1-.5-.5V7.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V13c0 2-1.2 3.6-3.2 4.2"/></svg><small>GÜNÜN SÖZÜ</small><p>${esc(s_[0])}</p><span>— ${esc(s_[1])}</span>`;
+    k.insertAdjacentHTML('beforeend', TIRMAN);
   }
+  const TIRMAN = '<svg class="tirman" viewBox="0 0 170 110" aria-hidden="true"><defs><linearGradient id="trG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b4f86" stop-opacity=".0"/><stop offset="1" stop-color="#2b4f86" stop-opacity=".75"/></linearGradient></defs><path d="M0 110 L60 92 L95 70 L120 52 L150 30 L170 22 L170 110Z" fill="url(#trG)"/><g fill="#0b1426"><circle cx="128" cy="22" r="4.2"/><path d="M124 27h7l3 14 6 8-2 2-7-7-1 12 4 14h-4l-5-13-4 13h-4l4-17 0-14-3 3-4 9-3-1 5-11z"/><rect x="118" y="27" width="8" height="12" rx="2.5"/><path d="M140 40l7 28" stroke="#0b1426" stroke-width="1.6"/></g></svg>';   // K-800: günün sözünde tırmanan silüet
+  // K-800: çalışma serisi ve haftalık hedef (öğrencinin kendi verisinden)
+  function seriCiz() { const k = $('#seriKart'); if (!k || ozel() && !PL.veri) { if (k) k.classList.add('gizli'); return; }
+    const gunler = new Set((SO.L || []).map(x => x.t)), bugun = simdi(); let plVar = false;
+    const plGun = d => { try { const G = gunGorevleri(iso(pzt(d)), gunIdx(d)); if (G.length) plVar = true; return G.some(x => puan(x) > 0); } catch (e) { return false; } };
+    const aktif = d => gunler.has(iso(d)) || plGun(d);
+    let n = 0; const d = new Date(bugun); d.setHours(12, 0, 0, 0); if (!aktif(d)) d.setDate(d.getDate() - 1);
+    for (let i = 0; i < 60 && aktif(d); i++) { n++; d.setDate(d.getDate() - 1); }
+    let top = 0, ok = 0; try { const hk = iso(pzt(bugun)); for (let g = 0; g < 7; g++) { const G = gunGorevleri(hk, g); top += G.length; ok += G.filter(x => puan(x) > 0).length; } } catch (e) {}
+    if (top) plVar = true; const yuz = top ? Math.round(ok * 100 / top) : 0;
+    const ATES = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.5 2.5c.6 3.2-1.6 4.9-3 6.6-1.6 1.9-2.7 3.6-2.7 6a5.2 5.2 0 0 0 10.4 0c0-2.2-1-3.7-1.9-4.9-.3 1.4-1.1 2.5-2.2 2.9.6-3.2-.3-7.1-.6-10.6z" opacity=".95"/><path d="M12 21a2.8 2.8 0 0 1-2.8-2.8c0-1.6 1.3-2.6 2.1-3.7.3 1 .9 1.5 1.6 1.7.7-.6 1-1.4 1-2.3 1 1.1 1.7 2.2 1.7 3.6A2.8 2.8 0 0 1 12 21z" fill="#fff4c2"/></svg>';
+    const HEDEF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="4.5"/><circle cx="11" cy="13" r="1.2" fill="currentColor"/><path d="M11 13 19 5M16 4.5V8h3.5"/></svg>';
+    k.innerHTML = `<button type="button" data-seri="seri" style="--c:#ffb340"><span class="ri">${ATES}</span><span><small>Çalışma serin</small><b class="${n ? '' : 'az'}" style="color:#ffd166">${n ? n + ' gün' : 'Bugün başla'}</b></span></button><span class="ay"></span>
+      <button type="button" data-seri="hedef" style="--c:#7fb2ff"><span class="ri">${HEDEF}</span><span style="flex:1;min-width:0"><small>Haftalık hedef</small>${plVar ? `<b style="color:#7fe9ff">%${yuz}</b><span class="cubuk"><i style="width:${yuz}%"></i></span>` : '<b class="az" style="color:#7fe9ff">Haftanı planla</b>'}</span></button>`;
+    k.classList.remove('gizli');
+    k.querySelector('[data-seri="seri"]').onclick = () => { if (soAktif()) { const b = document.createElement('button'); b.dataset.git = 'soru'; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } } else plAc(); };
+    k.querySelector('[data-seri="hedef"]').onclick = () => plAc(); }
+  function zilCiz() { const z = $('#zilUst'); if (!z) return; z.classList.toggle('gizli', !S.kod); const n = (BL && BL.n) || 0; const d = z.querySelector('.zil-nokta'); if (d) d.classList.toggle('gizli', !n); }
+  if ($('#zilUst')) $('#zilUst').onclick = () => blAc();
   const plBugun = () => { if (!PL.veri && !RH.plan) return null; const G = gunGorevleri(iso(pzt(simdi())), gunIdx(simdi())); return { n: G.length, ok: G.filter(x => puan(x) > 0).length }; };
 
   // ---- K-572: Soru takibi (11 ve 12. sınıflar; YKS dersleri + Paragraf ve Problemler ayrı)
@@ -1580,7 +1605,7 @@
   const BL = { L: [], n: 0, sec: new Set(), yuklendi: false };
   const BL_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="currentColor" fill-opacity=".2"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/><path d="M12 3v2"/></svg>';
   const blSwTag = t => /^(acil|ozel)\|/.test(t) ? t : 'ogr|' + t;
-  function blRozet(okunanTaglar) {
+  function blRozet(okunanTaglar) { try { zilCiz(); } catch (e) {}
     try { if (navigator.setAppBadge) (BL.n > 0 ? navigator.setAppBadge(BL.n) : navigator.clearAppBadge()).catch(() => {}); } catch (e) {}
     try { const m = { tur: 'bildirim-durum', sayi: BL.n, hepsi: BL.n === 0, taglar: (okunanTaglar || BL.L.filter(x => x.okundu).map(x => x.tag)).map(blSwTag) };
       if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage(m);
