@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [] };
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -72,24 +72,24 @@
     else { k.setAttribute('inputmode', 'numeric'); k.setAttribute('pattern', '[0-9]*'); k.type = 'text'; k.classList.add('pin-gizli'); k.setAttribute('autocapitalize', 'off'); k.placeholder = '6 haneli şifren'; $('#kodGec').textContent = 'Eski harfli kodum var'; }
     k.value = ''; k.blur(); setTimeout(() => k.focus(), 60); };
   // K-609: okulun verdiği kod geçicidir; ilk girişte öğrenci kendi şifresini belirler (unutana yeni kod verilir)
-  async function sifreDenetle() {
+  async function sifreDenetle(zorla) {
     if (!S.kod || S.no === '1907' || document.getElementById('sifreEkran')) return;
-    let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_kod_gecici', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
-    if (!data || !data.ok || !data.gecici || !S.kod) return;
+    if (!zorla) { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_kod_gecici', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
+      if (!data || !data.ok || !data.gecici || !S.kod) return; }
     const el = document.createElement('div'); el.id = 'sifreEkran'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     el.innerHTML = `<div class="sf-ic"><div class="sf-ik"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></div>
-      <h1>Kendi şifreni belirle</h1><p>Sana verilen kod yalnız ilk giriş içindi. Bundan sonra numaran ve burada belirlediğin şifreyle gireceksin.</p>
+      <h1>${zorla ? 'Şifreni değiştir' : 'Kendi şifreni belirle'}</h1><p>${zorla ? 'Yeni şifren 6 haneli olsun. Bundan sonra numaran ve yeni şifrenle gireceksin.' : 'Sana verilen kod yalnız ilk giriş içindi. Bundan sonra numaran ve burada belirlediğin şifreyle gireceksin.'}</p>
       <label for="sfY">Yeni şifren</label><input id="sfY" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" maxlength="6">
       <label for="sfT">Yeni şifren (tekrar)</label><input id="sfT" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other" maxlength="6" spellcheck="false">
       <button type="button" class="mk-kutu" id="sfGor"><i></i><span>Şifreyi göster</span></button>
       <div class="sf-not">6 haneli bir sayı. Doğum tarihin ya da 123456 gibi kolay şifre seçme. Unutursan yeni bir kod verilir.</div>
       <div class="bilgi" id="sfBilgi"></div>
-      <button class="birincil" id="sfKaydet">Şifremi kaydet</button><button class="ikincil" id="sfCik">Çıkış</button></div>`;
+      <button class="birincil" id="sfKaydet">Şifremi kaydet</button><button class="ikincil" id="sfCik">${zorla ? 'Vazgeç' : 'Çıkış'}</button></div>`;
     document.body.appendChild(el);
     const y = el.querySelector('#sfY'), t = el.querySelector('#sfT'), b = el.querySelector('#sfBilgi'), temiz = v => v.toUpperCase().replace(/[^A-Z0-9]/g, '');
     const hata = m => { b.textContent = m; b.classList.add('hata'); };
     el.querySelector('#sfGor').onclick = ev => { const d = ev.currentTarget.classList.toggle('secili'); y.type = t.type = d ? 'text' : 'password'; };
-    el.querySelector('#sfCik').onclick = () => { el.remove(); cikis(); };
+    el.querySelector('#sfCik').onclick = () => { el.remove(); if (!zorla) cikis(); };
     const kaydet = async () => {
       const yeni = temiz(y.value); b.classList.remove('hata');
       if (/\D/.test(y.value)) return hata('Şifren yalnız rakamlardan oluşsun.');   // K-716bz: rakam şifre
@@ -353,7 +353,7 @@
       + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
-    $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
+    $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu());   // K-794: Öneri bildir Ayarlar'da   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
     if (TEL()) { const k = $('#kutular'); [...k.querySelectorAll(':scope > .gz-ana, :scope > .il-ana, :scope > .gb-uyari')].reverse().forEach(e => k.prepend(e)); }   // K-750: telefonda gezi en üstte tam satır, diğerleri ikişer kutu
     kutuSirala();   // K-716da: son açılan kutu en üste
     sozCiz();
@@ -1023,7 +1023,32 @@
     k.querySelectorAll('.obk').forEach((el, i) => { el.querySelector('b').textContent = L[i].baslik; el.querySelector('p').textContent = L[i].metin; });
     k.querySelectorAll('[data-obok]').forEach(b => b.onclick = () => { sb.rpc('umal_obil_okudum_kod', { p_kim: 'ogrenci', p_no: S.no, p_kod: S.kod, p_idler: [+b.dataset.obok] }).then(() => {}, () => {}); const m = Math.max(g, ...L.map(x => x.id).filter(id => id <= +b.dataset.obok)); try { localStorage.setItem('umalObil:' + S.no, String(Math.max(+b.dataset.obok, m))); } catch (e) {} obYukle(); });
   }
-  async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); }
+  async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); setTimeout(kutlamaDenetle, 900); }
+  // K-795: tebrik gelince öğrenci uygulamayı açtığında konfeti + alkış ekranı (her tebrikte bir kez; son 3 gün)
+  const tkAn = () => 'gbKutla:' + S.no;
+  const tkGor = () => { try { return new Set(JSON.parse(localStorage.getItem(tkAn()) || '[]')); } catch (e) { return new Set(); } };
+  function kutlamaDenetle() {
+    if (!S.kod || document.getElementById('tkOrt') || document.getElementById('sifreEkran') || document.documentElement.classList.contains('oturumlu')) return;
+    const g = tkGor(), L = TU.L.filter(x => x.tur === 'tebrik' && x.id && !g.has(x.id) && x.zaman && Date.now() - new Date(x.zaman).getTime() < 3 * 864e5).reverse();
+    if (L.length) kutlamaGoster(L[0], L.length - 1);
+  }
+  function kutlamaGoster(x, kalan) {
+    const ad = baslik(String(S.ad || '').split(/\s+/)[0] || ''), z = new Date(x.zaman), bugun = z.toDateString() === new Date().toDateString();
+    const zaman = (bugun ? 'bugün ' : z.toLocaleDateString(tr, { day: 'numeric', month: 'long' }) + ' ') + z.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' });
+    const el = document.createElement('div'); el.id = 'tkOrt'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = `<canvas class="tk-kon" aria-hidden="true"></canvas><div class="tk-kart"><div class="tk-alkis"><svg viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g stroke="#7a4a00" stroke-width="2.4"><path d="M22 50c-6-4-10-11-10-18l1-11c.3-2.4 3.8-2.6 4.3-.2l1.4 7" fill="#fff6dc"/><path d="M18.7 27.8 15 14.5c-.6-2.4 2.8-3.5 3.8-1.2l5 12" fill="#fff6dc"/><path d="M23.8 25.3 21 10.8c-.4-2.5 3.1-3.2 3.8-.8l4.4 14.4" fill="#fff6dc"/><path d="M29.2 24.4 28 13.5c-.2-2.4 3.300-2.800 3.700-.4l2.6 15" fill="#fff6dc"/><path d="M34.3 28.1 35 21c.3-2.4 3.7-2.3 3.8.1L38 34c-.6 8-4.6 13.6-11 16" fill="#fff6dc"/><path d="M44 50c5-4.5 8-11 8-17l-.5-10c-.2-2.4-3.6-2.5-4.1-.1l-1.2 7" fill="#ffe8b0"/><path d="M46.2 29.8 49.3 16c.5-2.4-2.8-3.4-3.8-1.1l-4.6 12.5" fill="#ffe8b0"/><path d="M40.9 27.4 43 13c.3-2.5-3.2-3-3.8-.6L35.4 27" fill="#ffe8b0"/></g><g stroke="#fff" stroke-width="2.6"><path d="M8 10l3 4M5 20l4 1M14 4l1 4"/><path d="M56 10l-3 4M59 20l-4 1M50 4l-1 4"/></g></svg></div>
+      <div class="tk-ust">TEBRİK</div><h2 class="tk-bas">Tebrikler${ad ? ' ' + esc(ad) : ''}!</h2><div class="tk-neden">${esc(x.neden || '')}</div>${x.aciklama ? `<div class="tk-not">“${esc(x.aciklama)}”</div>` : ''}
+      <div class="tk-kim">${x.ogretmen ? `<b>${esc(baslik(x.ogretmen))}</b> · ` : ''}${esc(zaman)}</div><button class="tk-btn" type="button">${kalan ? 'Teşekkürler · sıradaki' : 'Teşekkürler'}</button></div>`;
+    document.body.appendChild(el);
+    const c = el.querySelector('canvas'), cx = c.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1); let W = 0, H = 0, bitti = false;
+    const boy = () => { W = c.width = innerWidth * dpr; H = c.height = innerHeight * dpr; }; boy();
+    const az = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, R = ['#ffd166', '#22e8ff', '#ff6b8a', '#3ef08a', '#c99bff', '#ffffff', '#ff9a3a'], P = [];
+    const patla = () => { for (let i = 0; i < (az ? 0 : 150); i++) { const sol = i % 2 === 0; P.push({ x: sol ? 0 : W, y: H * .62, vx: (sol ? 1 : -1) * (6 + Math.random() * 16) * dpr / 2, vy: -(20 + Math.random() * 22) * dpr / 2, w: (8 + Math.random() * 12) * dpr / 2, h: (5 + Math.random() * 7) * dpr / 2, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: R[i % R.length], d: Math.random() < .25 }); } };
+    patla(); setTimeout(patla, 900); let t = 0;
+    const ciz = () => { if (bitti) return; cx.clearRect(0, 0, W, H); let canli = 0; for (const p of P) { p.vy += .55 * dpr / 2; p.vx *= .985; p.vy *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; if (p.y < H + 40) canli++; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; if (p.d) { cx.beginPath(); cx.arc(0, 0, p.w / 2.4, 0, 7); cx.fill(); } else cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(t / 8 + p.r))); cx.restore(); } t++; if (canli || t < 70) requestAnimationFrame(ciz); };
+    requestAnimationFrame(ciz); if (!SES.kapali) try { sesCal('yeni'); } catch (e) {}
+    el.querySelector('.tk-btn').onclick = () => { bitti = true; const g = tkGor(); g.add(x.id); try { localStorage.setItem(tkAn(), JSON.stringify([...g].slice(-60))); } catch (e) {} el.classList.add('kalk'); setTimeout(() => { el.remove(); kutlamaDenetle(); }, 260); };
+  }
   function tuAnaCiz() { const k = $('#gbAnaKart'); if (!k) return; if (!TU.L.length) { k.classList.add('gizli'); return; }
     let gor = 0; try { gor = +localStorage.getItem(tuAn()) || 0; } catch (e) {} const yeni = Math.max(0, TU.L.length - gor), d = TU.L[0], t = TU.L.filter(x => x.tur === 'tebrik').length;
     k.className = 'kart gbana ' + (d.tur === 'tebrik' ? 'tebrik' : 'uyari');
@@ -1587,6 +1612,41 @@
       if (!x.okundu) { x.okundu = true; BL.n = Math.max(0, BL.n - 1); blRozet([x.tag]); blIsle('oku', [x.id]).then(() => blRozet()); }
       if (!blGit(x.url)) blCiz(); });
   }
+  // K-793: Ayarlar — profil, bildirimler, ses, oturum, şifre, ana sayfa düzeni, öneri, sürüm, çıkış
+  const AY_IK = { zil: '<path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/>', ses: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+    kilit: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>', anahtar: '<circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5 19 4M16 7l2.5 2.5M14 9l2 2"/>',
+    izgara: '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
+    oneri: '<path d="M12 3.5a6 6 0 0 0-3.5 10.9V17h7v-2.6A6 6 0 0 0 12 3.5z"/><path d="M9.5 20h5"/>', yenile: '<path d="M20 11.5A8 8 0 1 1 17.3 5.6"/><path d="M20 4v5h-5"/>', cikis: '<path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M10 16.5 5.5 12 10 7.5M5.5 12H15"/>' };
+  const ayIk = (k, c) => `<i class="ik" style="--c:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AY_IK[k]}</svg></i>`;
+  async function ayCiz() {
+    const E = $('#ayIc'); if (!E) return; const B = window.UmalBildirim; let bd = 'yok'; try { if (B) bd = await B.durum(); } catch (e) {}
+    const BD = { acik: ['Açık', 'y', 'Acil duyurular ve mesajlar telefonuna gelir'], kapali: ['Kapalı', 's', 'Açmak için dokun'], red: ['Engellendi', 'k', 'Telefonun ayarlarından bu site için izin ver'], 'ios-ekle': ['Ana ekrana ekle', 's', 'Paylaş › Ana Ekrana Ekle, sonra oradan aç'], yok: ['Desteklenmiyor', 'k', 'Bu tarayıcı bildirim göndermiyor'] }[bd] || ['?', 's', ''];
+    const ad = S.ad || '', bas = ad.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('');
+    let v = ''; try { const m = ((document.querySelector('script[src*="ogrenci.js"]') || {}).src || '').match(/v=(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)/); if (m) v = `${m[3]}.${m[2]} · ${m[4]}.${m[5]}`; } catch (e) {}
+    E.innerHTML = `<div class="ay-prof"><span class="av">${esc(bas)}</span><span><b>${esc(baslik(ad))}</b><small>${esc(S.sinif || '')}${S.no ? ' · ' + esc(S.no) : ''}</small></span></div>
+      <div class="ay-grup">Bildirim ve ses</div><div class="ay-liste">
+        <button class="ay-sat" data-ay="bildirim">${ayIk('zil', '#22e8ff')}<span class="m"><b>Telefon bildirimleri</b><small>${esc(BD[2])}</small></span><span class="ay-rozet ${BD[1]}">${esc(BD[0])}</span></button>
+        <button class="ay-sat" data-ay="ses">${ayIk('ses', '#ffd166')}<span class="m"><b>Uyarı sesi</b><small>Yeni mesaj ve duyuruda kısa ses</small></span><span class="ay-sw ${SES.kapali ? '' : 'acik'}"></span></button></div>
+      <div class="ay-grup">Hesap</div><div class="ay-liste">
+        <button class="ay-sat" data-ay="hatirla">${ayIk('kilit', '#3ef08a')}<span class="m"><b>Bu cihazda açık kalsın</b><small>${S.hatirla ? 'Uygulamayı kapatınca da girişin hatırlanır' : 'Kapalıyken 15 dk işlem yapmazsan çıkış yapılır'}</small></span><span class="ay-sw ${S.hatirla ? 'acik' : ''}"></span></button>
+        ${S.no !== '1907' ? `<button class="ay-sat" data-ay="sifre">${ayIk('anahtar', '#c99bff')}<span class="m"><b>Şifremi değiştir</b><small>6 haneli yeni şifre</small></span><span class="ok">›</span></button>` : ''}</div>
+      <div class="ay-grup">Uygulama</div><div class="ay-liste">
+        <button class="ay-sat" data-ay="sira">${ayIk('izgara', '#7fb2ff')}<span class="m"><b>Ana sayfa sırasını sıfırla</b><small>Kutular ilk düzenine döner</small></span><span class="ok">›</span></button>
+        <button class="ay-sat" data-ay="oneri">${ayIk('oneri', '#c99bff')}<span class="m"><b>Öneri ya da hata bildir</b><small>${bdYeni() ? (bdYeni() > 1 ? bdYeni() + ' yanıt geldi' : 'Yanıt geldi') : 'Hata, istek, öneri · Atlas ekibine yaz'}</small></span>${bdYeni() ? `<span class="ay-rozet y">${bdYeni()} yeni</span>` : '<span class="ok">›</span>'}</button>
+        <button class="ay-sat" data-ay="yenile">${ayIk('yenile', '#22e8ff')}<span class="m"><b>Uygulamayı yenile</b><small>En yeni sürümü yükler</small></span><span class="ok">›</span></button></div>
+      <div class="ay-liste" style="margin-top:16px"><button class="ay-sat kirmizi" data-ay="cikis">${ayIk('cikis', '#ff6b72')}<span class="m"><b>Çıkış yap</b><small>Bu cihazdaki oturumu kapatır</small></span></button></div>
+      ${v ? `<div class="ay-surum">Atlas · sürüm ${esc(v)}</div>` : ''}`;
+  }
+  function ayAc() { ayCiz(); goster('s-ayar'); window.scrollTo(0, 0); }
+  $('#ayIc') && ($('#ayIc').onclick = async ev => { const b = ev.target.closest('[data-ay]'); if (!b) return; const k = b.dataset.ay;
+    if (k === 'bildirim') { const B = window.UmalBildirim; if (!B) return; const d = await B.durum(); if (d === 'acik') return; const r = await B.ac({ sb, kim: 'ogrenci', no: S.no, kod: S.kod }); if (!r.ok && r.hata) uyar(r.hata); ayCiz(); return; }
+    if (k === 'ses') { SES.kapali = !SES.kapali; try { localStorage.setItem('umalSes', SES.kapali ? '0' : '1'); } catch (e) {} sesDugme(); if (!SES.kapali) sesCal('yeni'); ayCiz(); return; }
+    if (k === 'hatirla') { S.hatirla = !S.hatirla; oturumYaz(S.no, S.kod); ayCiz(); return; }
+    if (k === 'sifre') return sifreDenetle(true);
+    if (k === 'sira') { try { localStorage.removeItem(kSonAn()); } catch (e) {} uyar('Ana sayfa kutuları ilk düzenine döndü.'); return; }
+    if (k === 'oneri') return bdAc();
+    if (k === 'yenile') { const y = $('#yenileUst'); if (y) y.click(); return; }
+    if (k === 'cikis') { if (await onayla('Çıkış yapılsın mı?')) cikis(); } });
   function blAc() { BL.sec = new Set(); blCiz(); goster('s-bild'); window.scrollTo(0, 0); blYukle(); }
   // bildirim adresi (/ogrenci/#git=msj&s=… ) → uygulamadaki bölüm açılır
   function blGit(url) { const i = String(url || '').indexOf('#'); if (i < 0) return false; return hedefAc(new URLSearchParams(String(url).slice(i + 1))); }
@@ -1703,14 +1763,16 @@
     const T = [['liste', 'Ana sayfa', ik(`<path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z" ${F}/><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z"/>`)],
       ['s-program', 'Program', ik(`<rect x="3.5" y="5" width="17" height="15.5" rx="3" ${F}/><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h2M12 14h2M8 17h2"/>`)],
       ['s-sinav', 'Sınavlarım', ik(`<path d="M6.5 3.5h8l4 4v12a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19.5v-14.5a1.5 1.5 0 0 1 1.5-1.5z" ${F}/><path d="M6.5 3.5h8l4 4v12a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19.5v-14.5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M14.5 3.5v4h4M8.5 12.5l2 2 4-4.2M8.5 17.5h7"/>`)],
-      ['s-msj', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)]];
+      ['s-msj', 'Mesajlar', ik(`<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" ${F}/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/>`)],
+      ['s-ayar', 'Ayarlar', ik(`<path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" ${F}/><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4.9a7.5 7.5 0 0 0-2.6-1.5L14 2.4h-4l-.4 2.5A7.5 7.5 0 0 0 7 6.4l-2.4-.9-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-.9a7.5 7.5 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 2.6-1.5l2.4.9 2-3.4z"/>`)]];
     const n = document.createElement('nav'); n.id = 'ogrAlt'; n.setAttribute('aria-label', 'Öğrenci menüsü');
-    n.innerHTML = T.map(([id, ad, sv]) => `<button data-oa="${id}">${sv}<span>${ad}</span>${id === 's-msj' ? '<i class="oa-sayi gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n);
-    const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { msAc(); return; }
+    n.innerHTML = T.map(([id, ad, sv]) => `<button data-oa="${id}">${sv}<span>${ad}</span>${id === 's-msj' ? '<i class="oa-sayi gizli"></i>' : id === 's-ayar' ? '<i class="oa-sayi oa-ay gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n);
+    const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { msAc(); return; } if (id === 's-ayar') { ayAc(); return; }
       const b = document.createElement('button'); b.dataset.git = id; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } };
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; if (b.dataset.oa === aktifEkran() && b.dataset.oa !== 's-msj') { window.scrollTo(0, 0); return; } git(b.dataset.oa); setTimeout(guncelle, 50); };
     const guncelle = () => { const a = aktifEkran(), acik = !!S.kod && a && a !== 'giris'; document.body.classList.toggle('ogr-alt', acik);
-      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a)); const k = msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k); };
+      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a)); const k = msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k);
+      const a_ = n.querySelector('.oa-ay'), y_ = bdYeni(); if (a_) { a_.textContent = String(y_); a_.classList.toggle('gizli', !y_); } };
     setInterval(guncelle, 1000); guncelle();
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
     document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });

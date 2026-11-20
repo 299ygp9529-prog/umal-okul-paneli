@@ -460,7 +460,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 /* K-748: telefonda alt sekmeler */
 #ogrAlt { display: none; }
 @media (max-width: 760px) {
-  body.ogr-alt #ogrAlt { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; padding: 6px; border-radius: 26px; background: #0c1628; border: 1px solid rgba(120, 200, 255, .16); box-shadow: 0 8px 26px rgba(0, 0, 0, .5); transform: translateZ(0); }
+  body.ogr-alt #ogrAlt { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; padding: 6px; border-radius: 26px; background: #0c1628; border: 1px solid rgba(120, 200, 255, .16); box-shadow: 0 8px 26px rgba(0, 0, 0, .5); transform: translateZ(0); }
   #ogrAlt button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; border: 0; border-radius: 20px; background: none; color: #9fb3cf; font: inherit; font-size: 11.5px; font-weight: 700; white-space: nowrap; cursor: pointer; touch-action: manipulation; }
   #ogrAlt button svg { width: 25px; height: 25px; }
   #ogrAlt button.secili { color: #22e8ff; background: rgba(34, 232, 255, .1); }
@@ -490,6 +490,35 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .geri-hap { display: inline-flex !important; align-items: center; gap: 4px; height: 36px; padding: 0 15px 0 9px !important; border-radius: 999px !important; background: linear-gradient(180deg, #1a2c48, #13213a) !important; border: 1px solid rgba(127,178,255,.38) !important; color: #d6e5ff !important; font-weight: 700; font-size: 15px !important; line-height: 1; box-shadow: 0 2px 10px rgba(0,0,0,.35); white-space: nowrap; }
 .geri-hap svg { width: 19px; height: 19px; color: #7fb2ff; flex: none; }
 .geri-hap:active { transform: scale(.96); }
+
+/* K-793: öğrenci Ayarlar ekranı; üstte yalnız Yenile */
+@media (max-width: 760px) { body.ogr-alt #sesUst, body.ogr-alt #cikisUst { display: none !important; } body.ogr-alt #yenileUst { margin-left: auto !important; } #ogrAlt button span { font-size: 11.5px; } }
+.ay-prof { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 20px; background: linear-gradient(180deg, #172a46, #121f36); border: 1px solid #23395a; margin-bottom: 14px; }
+.ay-prof .av { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 19px; color: #04121c; background: linear-gradient(180deg, #7fe9ff, #22c8e8); flex: none; overflow: hidden; } .ay-prof .av img { width: 100%; height: 100%; object-fit: cover; }
+.ay-prof b { display: block; font-size: 18px; } .ay-prof small { color: #9fb3cf; font-size: 14px; }
+.ay-grup { margin: 16px 0 6px 4px; font-size: 12.5px; font-weight: 800; letter-spacing: .12em; color: #7f97b8; text-transform: uppercase; }
+.ay-liste { border-radius: 18px; background: #131f35; border: 1px solid #22385a; overflow: hidden; }
+.ay-sat { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 0; border-bottom: 1px solid #ffffff0d; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ay-sat:last-child { border-bottom: 0; } .ay-sat .ik { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); } .ay-sat .ik svg { width: 20px; height: 20px; }
+.ay-sat .m { flex: 1; min-width: 0; } .ay-sat .m b { display: block; font-size: 15.5px; font-weight: 700; } .ay-sat .m small { display: block; color: #9fb3cf; font-size: 13px; margin-top: 2px; }
+.ay-sat .ok { color: #5f7896; font-size: 20px; } .ay-sat.kirmizi .m b { color: #ff8a8a; }
+.ay-sw { position: relative; width: 50px; height: 30px; border-radius: 999px; background: #2a3a55; flex: none; transition: background .2s; } .ay-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.ay-sw.acik { background: #22c8e8; } .ay-sw.acik::after { transform: translateX(20px); }
+.ay-rozet { font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; flex: none; } .ay-rozet.y { background: rgba(62,240,138,.15); color: #6ee7a8; } .ay-rozet.k { background: rgba(255,107,114,.15); color: #ff9ca1; } .ay-rozet.s { background: rgba(255,209,102,.15); color: #ffd166; }
+.ay-surum { text-align: center; color: #5f7896; font-size: 12.5px; margin: 18px 0 6px; }
+
+/* K-795: tebrik kutlama ekranı */
+#tkOrt { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 70px 16px 20px; background: rgba(5,10,20,.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: tkGir .25s ease-out; } #tkOrt.kalk { opacity: 0; transition: opacity .25s; }
+@keyframes tkGir { from { opacity: 0; } } #tkOrt .tk-kon { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.tk-kart { position: relative; z-index: 1; box-sizing: border-box; width: min(100%, 360px); padding: 30px 22px 22px; border-radius: 28px; text-align: center; color: #fff; background: linear-gradient(180deg, rgba(24,44,72,.98), rgba(12,22,40,.98)); border: 1.5px solid rgba(255,209,102,.6); box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(255,209,102,.25); animation: tkKart .6s cubic-bezier(.2,1.5,.4,1); }
+@keyframes tkKart { from { transform: scale(.6) translateY(40px); opacity: 0; } }
+.tk-alkis { width: 118px; height: 118px; margin: -92px auto 8px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff1c2, #ffd166 45%, #e0a632); box-shadow: 0 0 0 8px rgba(255,209,102,.18), 0 12px 30px rgba(255,190,60,.45); animation: tkAlk .5s ease-in-out .5s 4 alternate; }
+@keyframes tkAlk { to { transform: scale(1.08) rotate(-4deg); } } .tk-alkis svg { width: 92px; height: 92px; }
+.tk-ust { font-size: 13px; letter-spacing: .3em; color: #ffd166; font-weight: 700; margin-top: 6px; }
+.tk-bas { margin: 6px 0 4px; font-size: 32px; font-weight: 800; line-height: 1.15; background: linear-gradient(90deg, #fff, #ffe9a8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tk-neden { margin: 14px 0 6px; padding: 14px 16px; border-radius: 18px; background: rgba(62,240,138,.10); border: 1px solid rgba(62,240,138,.45); font-size: 20px; font-weight: 800; color: #6ee7a8; line-height: 1.3; }
+.tk-not { font-size: 15px; color: #c8d6ea; margin: 8px 4px 0; font-style: italic; } .tk-kim { margin-top: 12px; font-size: 14px; color: #9fb3cf; } .tk-kim b { color: #e6eefb; }
+.tk-btn { margin-top: 18px; width: 100%; height: 52px; border: 0; border-radius: 16px; background: linear-gradient(180deg, #ffe08a, #f2b938); color: #2a1c00; font-size: 17px; font-weight: 800; font-family: inherit; cursor: pointer; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -578,6 +607,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-program" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Ders programım</h1></div><div class="gunsec" id="gunSec"></div><div id="programListe"></div></section>
   <section id="s-notlar" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Notlarım</h1></div><div id="notListe"></div><div class="not">Notlarını yalnız sen görürsün. Resmî notların e-Okul'dadır; bir yanlışlık görürsen dersin öğretmenine söyle.</div></section>
   <section id="s-gezi" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="gzBaslik">Gezi</h1></div><div id="gzIc"></div></section>
+  <section id="s-ayar" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Ayarlar</h1></div><div id="ayIc"></div></section>
   <section id="s-bild" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Bildirimler</h1></div><div id="blIc"></div></section>
   <section id="s-msj" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="msBaslik">Mesajlar</h1></div><div id="msIc"></div></section>
   <section id="s-bld" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Öneri ve sorun</h1></div><div id="bdIc"></div></section>
@@ -648,6 +678,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611200935"></script>
+<script src="ogrenci.js?v=202611200945"></script>
 </body>
 </html>
