@@ -516,6 +516,52 @@
       else if (s) { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { engel: s.dataset.msjeng, engelli: s.dataset.v === '1' } }); msjYukle(); } };
     if ($('#msjSik')) $('#msjSik').onclick = async () => { if (!await onayla('Bu konuşma rehberlik servisine iletilsin mi? Rehberlik yalnız bu konuşmayı görür.')) return; const { data } = await sb.rpc('umal_sohbet_sikayet_et', { p_sohbet: x.id, p_aciklama: 'Öğretmen iletti' }); if (data && data.ok) uyar('Konuşma rehberlik servisine iletildi.'); };
   }
+  // K-808: Gezi Telsizi — Kurucu açar/kapatır; geziye katılan öğrenciler, görevli öğretmenler ve idare içeride. Ekran telsiz.js'te (öğrenci paneliyle ortak).
+  const TZ = { L: [], H: null, kurucu: false, ins: null, i: 0, imza: '' };
+  async function tzDurum() {
+    clearTimeout(tzDurum.z); tzDurum.z = setTimeout(() => tzDurum().catch(() => {}), 60000);
+    let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_telsiz_benim')); } catch (e) { return; } if (!r || !r.ok) return;
+    TZ.L = r.acik || []; TZ.H = r.hepsi || null; TZ.kurucu = !!r.kurucu;
+    const imza = TZ.L.map(x => x.anahtar).join('|'); if (imza === TZ.imza) return; TZ.imza = imza;
+    menuYaz(); if (document.body.classList.contains('tm-acik')) { const h = location.hash.slice(1); tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); }
+    if (D.bolum === 'telsiz') telsizBolumu();
+  }
+  function tzKartHtml() { const g = TZ.L[0];
+    return `<button type="button" class="tz-kart"><span class="tz-kik"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MENU_IK.telsiz}</svg></span><span class="tz-km"><b>Gezi Telsizi</b><small>${esc(g.ad || 'Gezi')} · gezideki herkes burada</small></span><span class="tz-kcanli"><i></i>CANLI</span></button>`; }
+  async function telsizBolumu() {
+    if (TZ.ins) { TZ.ins.kapat(); TZ.ins = null; }
+    const I = $('#icerik');
+    if (!TZ.L.length) { I.innerHTML = `<h1>Gezi Telsizi</h1><div class="kart soluk">Şu an açık bir Gezi Telsizi yok. Kurucu gezi günü açar; görevli öğretmenler ve idare kendiliğinden içinde olur.</div>`; return; }
+    if (TZ.i >= TZ.L.length) TZ.i = 0; const g = TZ.L[TZ.i];
+    I.innerHTML = `<h1>Gezi Telsizi</h1>${TZ.kurucu ? '<div class="tz-bas-sat"><button class="ikincil kucuk" id="tzKapat">Telsizi kapat</button></div>' : ''}
+      ${TZ.L.length > 1 ? `<div class="cipler">${TZ.L.map((x, i) => `<button class="cip ${i === TZ.i ? 'secili' : ''}" data-tzsec="${i}">${esc(x.ad)}</button>`).join('')}</div>` : ''}<div id="tzKap"></div>`;
+    I.querySelectorAll('[data-tzsec]').forEach(b => b.onclick = () => { TZ.i = +b.dataset.tzsec; telsizBolumu(); });
+    if ($('#tzKapat')) $('#tzKapat').onclick = async () => { if (!await onayla(`${g.ad} için Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.`)) return;
+      const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: g.anahtar, p_acik: false }); if (error || !data || !data.ok) { uyar('Kapatılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
+      atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); };
+    if (!window.UmalTelsiz) { $('#tzKap').innerHTML = '<div class="kart soluk">Telsiz yüklenemedi; sayfayı yenileyin.</div>'; return; }
+    const r_ = async (f, a) => { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: hataYaz(error) }; return data; };
+    TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla,
+      etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
+      oku: (s, v) => r_('umal_gezi_telsiz_oku', { p_anahtar: g.anahtar, p_sonra: s, p_surum: v }),
+      yaz: (m, du) => r_('umal_gezi_telsiz_yaz', { p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }),
+      islem: v => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: v }),
+      kisi: no => r_('umal_gezi_telsiz_kisi', { p_anahtar: g.anahtar, p_no: no }),
+      kapandi: () => { TZ.imza = '*'; tzDurum(); } });
+  }
+  async function tzGeziKart(an) {   // Gezi Kaydı › Gezi günü: telsiz durumu; aç/kapat yalnız Kurucu
+    const k = document.getElementById('gkTelsiz'); if (!k) return;
+    let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_telsiz_benim')); } catch (e) {}
+    const x = r && r.ok ? (r.hepsi || []).find(h => h.anahtar === an) || (r.acik || []).find(h => h.anahtar === an) : null, acik = !!(x && x.acik), kur = !!(r && r.kurucu);
+    k.innerHTML = `<div class="gk2-ust"><h3 style="margin:0">Gezi Telsizi</h3>${acik ? '<span class="tz-kcanli"><i></i>CANLI</span>' : '<span class="soluk kucuk">Kapalı</span>'}</div>
+      <p class="soluk kucuk" style="margin:8px 0 10px">Gezi günü yazılı canlı grup: geziye katılan öğrenciler${x ? ' (' + x.ogrenci + ')' : ''}, görevli öğretmenler${x ? ' (' + x.ogretmen + ')' : ''} ve idare kendiliğinden içinde. Görevli öğretmenler öğrenciyi sessize alabilir, mesaj gizleyebilir.</p>
+      ${kur ? `<div class="gk2-sat"><button class="${acik ? 'ikincil' : 'birincil'}" id="gkTzAc" style="margin:0">${acik ? 'Telsizi kapat' : 'Telsizi aç'}</button>${acik ? '<button class="birincil" id="gkTzGit" style="margin:0">Telsize git</button>' : ''}</div>` : `<p class="soluk kucuk" style="margin:0">Telsizi Kurucu açar.</p>`}`;
+    const a = $('#gkTzAc'); if (a) a.onclick = async () => { if (!await onayla(acik ? 'Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.' : 'Gezi Telsizi açılsın mı? Geziye katılan öğrenciler uygulamayı açınca telsize girer.')) return;
+      a.disabled = true; const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: an, p_acik: !acik }); a.disabled = false;
+      if (error || !data || !data.ok) { uyar((acik ? 'Kapatılamadı: ' : 'Açılamadı: ') + (error ? hataYaz(error) : data && data.hata)); return; }
+      atlasOnay(acik ? 'Telsiz kapatıldı' : 'Telsiz açıldı', acik ? 'Mesajlar kayıtta kalır' : 'Gezideki herkes içeride'); TZ.imza = '*'; await tzDurum(); tzGeziKart(an); };
+    const gt = $('#gkTzGit'); if (gt) gt.onclick = () => ac('telsiz');
+  }
   // K-690: Ders yoklaması — tahtada başkan işaretler, öğretmen onaylar; idare günün devamsızlığını, öğretmen kendi derslerini görür
   const DY = { gun: '' };
   async function dersYoklamaBolumu(sessiz) {
@@ -903,6 +949,7 @@
     if (rol !== 'ogretmen') komutOnar();
     if (rol === 'bas') { erisimRozet(); bdRozet(); msjRozet(); }
     tfgYukle().catch(() => {});   // K-716cr: telafi görevleri
+    tzDurum().catch(() => {});   // K-808: açık Gezi Telsizi var mı (gezideysem menüde ve ana ekranda görünür)
   }
   // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
   async function erisimRozet() {
@@ -1089,6 +1136,7 @@
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
     { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
     { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu() },   // K-702: otobüs koltuk yerleşimi + biletler
+    { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
@@ -1140,6 +1188,7 @@
     mesajsikayet: '<path d="M12 3.5 4.5 6.5v5.5c0 4.6 3.2 7.8 7.5 8.5 4.3-.7 7.5-3.9 7.5-8.5V6.5z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M12 3.5 4.5 6.5v5.5c0 4.6 3.2 7.8 7.5 8.5 4.3-.7 7.5-3.9 7.5-8.5V6.5z"/><path d="M12 8.5v4.5M12 15.6v.1"/>',
     bildirim: '<path d="M4 5h16v11H9.5L4 20z" fill="currentColor" fill-opacity=".22" stroke="none"/><path d="M4 5h16v11H9.5L4 20z"/><path d="M12 8.2v3.6M12 14.4v.1"/>',
     gezikayit: '<rect x="4.500" y="4" width="15" height="17" rx="2.600" fill="currentColor" fill-opacity=".22" stroke="none"/><rect x="4.500" y="4" width="15" height="17" rx="2.600"/><path d="M9 2.800h6v2.600H9z"/><path d="M8.300 10.500h7.400M8.300 13.800h4.600"/><circle cx="15.600" cy="16.800" r="2.300"/><path d="m14.600 16.800.7.7 1.300-1.400"/>',
+    telsiz: '<rect x="7" y="7.500" width="10" height="13.500" rx="2.200" fill="currentColor" fill-opacity=".2"/><rect x="7" y="7.500" width="10" height="13.500" rx="2.200"/><path d="M9.500 7.500V3M10 11.500h4M10 14.500h4"/><path d="M4.200 5.500a5 5 0 0 0 0 6M19.800 5.500a5 5 0 0 1 0 6"/>',
     gezi: '<rect x="4" y="3.500" width="16" height="15" rx="3"/><path d="M4 11h16M8 3.500v7.500M16 3.500v7.500"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M6.500 18.500V21M17.500 18.500V21"/>',
     // K-697: Rehberlik'in alt bölümleri (telefonda grup içinde ayrı düğme)
     rehform: '<rect x="5" y="4" width="14" height="17" rx="2.500"/><path d="M9 4V3h6v1M8.500 9.500h7M8.500 13h7M8.500 16.500h4"/>',
@@ -1182,11 +1231,11 @@
     return v ? `<div class="tm-surum">Atlas · sürüm ${v}${esc(k)}</div>` : ''; }
   function tumuAc(gecmis, grup) {
     if (!telefon()) return;
-    const izin = new Set(BOLUMLER.filter(b => b.roller.includes(D.rol) && !b.ust && !altta(b.id)).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
+    const izin = new Set(BOLUMLER.filter(b => bolIzin(b) && !b.ust && !altta(b.id)).map(b => b.id)), sec = (BOLUMLER.find(b => b.id === D.bolum) || {}).ust || D.bolum;
     const ad = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mad`); return m ? m.innerHTML : esc((BOLUMLER.find(b => b.id === id) || {}).ad || id); };
     const msayi = id => { const m = document.querySelector(`#menu .menu-oge[data-b="${id}"] .mk-sayi`); return m ? +m.textContent || 0 : 0; };
     // K-697: Rehberlik'in sekmeleri (Formlar, Randevular, Yönlendirmeler, Soru takibi, Çalışma planları) grubun içinde ayrı düğmeler
-    const altVar = id => BOLUMLER.some(b => b.id === id && b.roller.includes(D.rol));
+    const altVar = id => BOLUMLER.some(b => b.id === id && bolIzin(b));
     const ALT = { rehberlik: ['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan'].filter(altVar) };
     const ALT_AD = { rehberlik: 'Formlar & Anketler' }, ALT_IK = { rehberlik: 'rehform' };
     const sayi = id => id === 'randevu' ? (MK.nr || 0) : id === 'yonlendirme' ? (MK.ny || 0) : id === 'rehberlik' && ALT.rehberlik.length > 1 ? Math.max(0, msayi(id) - (MK.nr || 0) - (MK.ny || 0)) : msayi(id);
@@ -1219,6 +1268,7 @@
     $('#telGeri').classList.toggle('gizli', !G);
     const h = G ? '#bolumler-' + grup : '#bolumler'; if (gecmis !== false && location.hash !== h) history.pushState(null, '', h);
     if (!G && D.gercekRol === 'bas') d.insertAdjacentHTML('afterbegin', `<div class="mod-sat">${modSecHtml()}</div>`);   // K-776
+    if (!G && TZ.L.length) { d.insertAdjacentHTML('afterbegin', tzKartHtml()); const k = d.querySelector('.tz-kart'); if (k) k.onclick = ev => { ev.stopPropagation(); tumuKapat(); D._gridden = true; ac('telsiz'); }; }   // K-808
     if (!G && TFG.L.length) { d.insertAdjacentHTML('afterbegin', tfgKartHtml()); d.querySelectorAll('.tfg-kartlar [data-tfgy]').forEach(b => b.onclick = ev => { ev.stopPropagation(); tfgAc(b.dataset.tfgy); }); }   // K-716cr
     D._tmGrup = G ? G[0] : ''; icGeriGuncelle();
     d.onclick = ev => { if (ev.target.closest('[data-icg]')) { history.replaceState(null, '', '#bolumler'); return tumuAc(false); } const g = ev.target.closest('[data-tg]'); if (g) return tumuAc(true, g.dataset.tg); const b = ev.target.closest('[data-tb]'); if (b) { D._gridGrup = D._tmGrup || ''; tumuKapat(); D._gridden = true; ac(b.dataset.tb); } };
@@ -1250,13 +1300,15 @@
     if (document.querySelector('.tumu-menu') && h) { tumuKapat(); if (h !== D.bolum) ac(h); } });
   setInterval(() => { if (document.body.classList.contains('tm-acik') && !document.hidden) { const h = location.hash.slice(1), st = (document.querySelector('.tumu-menu') || {}).scrollTop; tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); const d = document.querySelector('.tumu-menu'); if (d && st) d.scrollTop = st; } }, 15000);   // bildirim sayıları güncel kalsın
   window.matchMedia('(max-width: 760px)').addEventListener('change', e => { if (!e.matches) { tumuKapat(); $('#telGeri').classList.add('gizli'); } else if (!document.querySelector('.tumu-menu')) $('#telGeri').classList.remove('gizli'); });
+  const bolIzin = b => b.roller.includes(D.rol) && (!b.kosul || b.kosul());   // K-808: bazı bölümler yalnız koşul varken (ör. açık Gezi Telsizi)
+  function menuYaz() { let sira = BOLUMLER.filter(b => bolIzin(b) && !b.ust);
+    if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
+    $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''} ${b.id === D.bolum ? 'secili' : ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join(''); }
   function menuKur() {
     if (!document.getElementById('icGeri')) { const g = document.createElement('div'); g.id = 'icGeri'; g.className = 'ic-geri-sat gizli'; g.innerHTML = `<button type="button" class="ic-geri" aria-label="Geri">${ICG_SVG}<span>Menü</span></button>`; $('#icerik').before(g);   // K-774: telefonda menüden açılan bütün iç ekranlarda Geri
       g.onclick = ev => { if (!ev.target.closest('.ic-geri')) return; if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); }; }
-    const izinli = BOLUMLER.filter(b => b.roller.includes(D.rol));
-    let sira = izinli.filter(b => !b.ust);
-    if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
-    $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join('');
+    const izinli = BOLUMLER.filter(bolIzin);
+    menuYaz();
     $('#menu').onclick = ev => { const b = ev.target.closest('[data-b]'); if (b) ac(b.dataset.b); };
     $('#telGeri').onclick = () => { const h = location.hash.slice(1); if (h.startsWith('bolumler-')) return history.back();
       if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); };
@@ -1269,7 +1321,7 @@
   let yenileZamanlayici = null;
   window.umalTelafiGorevAc = (tarih, ders) => { D._tfGorevAc = tarih + '|' + parseInt(ders, 10); ac('takvim'); };   // K-716cs: telafi programından görevli seçimi
   function ac(id) {
-    const b = BOLUMLER.find(x => x.id === id && x.roller.includes(D.rol));
+    const b = BOLUMLER.find(x => x.id === id && bolIzin(x));
     if (!b) return;
     D.bolum = id; location.hash = id; menuSayArt(id, b.ust);
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
@@ -5292,6 +5344,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             : `<div class="kart"><h3 style="margin-top:0">Gezi günü</h3><p class="soluk">${G.tarih ? trT(G.tarih, true) + (G.saat ? ' · hareket ' + esc(G.saat) : '') + (I.donus ? ' · dönüş ' + esc(I.donus) : '') : 'Tarih girilmedi.'}</p>
               <ul class="gk2-gun"><li>Biletler öğrenci panelinde gezi günü şoför telefonuyla birlikte görünür; gezi bitince kalkar.</li><li>Yoklama ve oturma planı çıktısı Gezi Otobüsleri › Listeler'de.</li><li>Acil durum için veli telefonları T.C. listesinde.</li></ul>
               <div class="gk2-sat"><button class="birincil" data-gkgit="gezi">${KY_IK.bilet}Biletler ve listeler</button><button class="ikincil" data-gkbelge="liste">Acil telefon listesi</button></div></div>
+            <div class="kart gk2-telsiz" id="gkTelsiz"><h3 style="margin:0">Gezi Telsizi</h3></div>
             ${(() => { const bas = G.tarih ? gunEkle(G.tarih, 1) : '', basladi = bas && bugun >= bas, n = gzAnketOgr().length;
               return `<div class="kart gk2-anket"><div class="gk2-ust"><h3 style="margin:0">Gezi sonrası anket</h3><label class="gk2-tik ${G.sonAnketKapali ? '' : 'acik'}"><input type="checkbox" id="gkAnket" ${G.sonAnketKapali ? '' : 'checked'} ${basladi && G.sonAnket ? 'disabled' : ''}><span></span>${G.sonAnketKapali ? 'Kapalı' : 'Açık'}</label></div>
                 <p class="soluk" style="margin:8px 0">${G.sonAnketKapali ? 'Bu gezi için anket gönderilmeyecek.' : !G.tarih ? 'Gezi tarihi girilince hazırlanır.' : basladi ? (G.sonAnket ? `Anket ${esc(trT(bas))} günü ${G.sonAnketSayi || n} öğrencinin telefon paneline gönderildi; ${esc(trT(gunEkle(G.tarih, 8)))} gününe kadar açık.` : 'Anket hazırlanıyor…') : `<b>${esc(trT(bas, true))}</b> sabahı yalnız geziye katılan ${n} öğrencinin telefon paneline düşer; bir hafta açık kalır. Katılımcı listesi değişirse kendiliğinden güncellenir.`}</p>
@@ -5399,6 +5452,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         ciz(); };
       const bagla = () => {
         const R = $('#icerik');
+        if (document.getElementById('gkTelsiz')) tzGeziKart(GZ_ANAH);   // K-808
         R.querySelectorAll('[data-gkadim]').forEach(b => b.onclick = () => { adim = b.dataset.gkadim; acikAn = ekAn = null; if (adim === 'otobus' || adim === 'gun') { ciz_(); return; } ciz_(); });
         R.querySelectorAll('[data-gksec]').forEach(b => b.onclick = () => { try { localStorage.setItem('gezi_sec:' + D.eposta, b.dataset.gksec); } catch (e) {} geziBolumu('kayit'); });
         R.querySelectorAll('[data-gkgit]').forEach(b => b.onclick = () => ac(b.dataset.gkgit));

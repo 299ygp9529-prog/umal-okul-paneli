@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -64,7 +64,7 @@
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    anaCiz(); tuYukle(); bldCiz(); obYukle(); blYukle().then(() => { if (!hashGit()) anaCiz(true); }); if (window.UmalBildirim && S.kod && S.no !== '1907') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    anaCiz(); tuYukle(); bldCiz(); obYukle(); tzoKontrol(true); blYukle().then(() => { if (!hashGit()) anaCiz(true); }); if (window.UmalBildirim && S.kod && S.no !== '1907') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
@@ -353,6 +353,7 @@
       + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
+    { const tk = $('#tzAnaKart'), th = tzKutu(); if (tk && tk.dataset.h !== th) { tk.dataset.h = th; tk.innerHTML = th; } }   // K-808: gezi günü en üstte
     const kUst = blKutu() + msKutu(), kAnah = kHtml + kUst, ayni = sessiz === true && ANA.son === kAnah && $('#kutular').children.length; ANA.son = kAnah;   // K-803: veri değişmediyse kutular yeniden çizilmez (pırpır olmasın)
     if (!ayni) { $('#kutular').innerHTML = kHtml;
     $('#kutular').insertAdjacentHTML('afterbegin', kUst);   // K-794: Öneri bildir Ayarlar'da   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
@@ -378,7 +379,7 @@
     const ph = sl.map(e => { const c = document.createComment(''); e.before(c); return c; }); ph.forEach((c, i) => c.replaceWith(sr[i])); }
   $('#kutular').addEventListener('click', ev => { const e = ev.target.closest('#kutular > *'); if (!e || e.disabled || e.classList.contains('genis')) return; const a = kAnahtar(e); if (!a) return; try { const t = kSon(); t[a] = Date.now(); localStorage.setItem(kSonAn(), JSON.stringify(t)); } catch (x) {} }, true);
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 'bild') return blAc(); blUrlOku(id);
+    if (id === 'bild') return blAc(); if (id === 'telsiz') return tzoAc(); blUrlOku(id);
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'mektup') { RV.dis = true; return mkAc(); } if (id === 'randevu') { RV.dis = true; return rvAc(); } if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   const GERI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   function atlasOnay(b_, a_) { const kay = document.querySelector('#acilis .atl'); let t = document.getElementById('atlOnay');   // K-788: Atlas başparmakla kısa onay kartı
@@ -390,6 +391,35 @@
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = geriGit);
   $('#s-msj [data-ana]').onclick = async () => { if (!MS.acik) { geriGit(); return; } MS.acik = null; await msYukle(); msListeCiz(); anaCiz(true); goster('s-msj'); window.scrollTo(0, 0); };   // sohbetteyken Geri → sohbet listesi
+
+  // K-808: Gezi Telsizi — Kurucu açınca geziye katılan öğrenci uygulamayı açtığında telsize girer (oturum başına bir kez); ana sayfada üstte canlı kart.
+  // Şifre bir kez doğrulanır, sonra bilet ile okunur/yazılır (her 4 sn'de şifre denetimi yok). Ekran ../telsiz.js'te (öğretmen paneliyle ortak).
+  const TZO = { b: '', g: null, ins: null, z: null };
+  const TZ_IK = '<svg class="ik-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7.5" width="10" height="13.5" rx="2.2" fill="currentColor" fill-opacity=".2"/><path d="M9.5 7.5V3M10 11.5h4M10 14.5h4M4.2 5.5a5 5 0 0 0 0 6M19.8 5.5a5 5 0 0 1 0 6"/></svg>';
+  async function tzoKontrol(ilk) {
+    clearTimeout(TZO.z); TZO.z = setTimeout(() => tzoKontrol(), 5 * 60000);
+    if (!S.kod || document.hidden || !$('#s-telsiz').classList.contains('gizli')) return;
+    let d = null; try { ({ data: d } = await sb.rpc('umal_ogrenci_telsiz', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!d || !d.ok) return;
+    const once = TZO.g ? TZO.g.anahtar : ''; TZO.g = d.telsiz || null; TZO.b = d.bilet || '';
+    if ((TZO.g ? TZO.g.anahtar : '') !== once && !$('#liste').classList.contains('gizli')) anaCiz(true);
+    if (!TZO.g) return; let ac = false; const k = 'tzAcildi:' + S.no + ':' + TZO.g.anahtar + ':' + (TZO.g.acilis || '');
+    try { if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); ac = true; } } catch (e) { ac = !!ilk; }
+    if (ac && !$('#liste').classList.contains('gizli')) tzoAc();   // gezi modu: uygulama açılınca telsiz
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kod) tzoKontrol(); });
+  function tzKutu() { const g = TZO.g; if (!g) return '';
+    return `<button type="button" class="kart tz-ana" onclick="window.__tzoAc && window.__tzoAc()"><i class="tz-aik">${TZ_IK}</i><span class="tz-am"><b>Gezi Telsizi</b><small>${esc(g.ad || 'Gezi')}${g.otobus ? ' · Otobüs ' + esc(g.otobus) + (g.koltuk ? ' · Sıra ' + esc(g.koltuk) : '') : ''}</small></span><span class="tz-acanli"><i></i>CANLI</span></button>`; }
+  window.__tzoAc = () => tzoAc();
+  function tzoAc() {
+    if (!TZO.g || !window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);
+    if (TZO.ins) TZO.ins.kapat();
+    const r_ = async (f, a) => { try { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: error.message }; return data; } catch (e) { return { ok: false, hata: 'bağlantı yok' }; } };
+    TZO.ins = window.UmalTelsiz({ kap: $('#tzoIc'), personel: false, gezi: TZO.g, cubuk: '#ogrAlt', uyar, onayla,
+      etkin: () => !$('#s-telsiz').classList.contains('gizli'),
+      oku: (s, v) => r_('umal_ogrenci_telsiz_oku', { p_bilet: TZO.b, p_sonra: s, p_surum: v }),
+      yaz: m => r_('umal_ogrenci_telsiz_yaz', { p_bilet: TZO.b, p_metin: m }),
+      kapandi: () => { TZO.g = null; TZO.b = ''; anaCiz(true); } });
+  }
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür
   const GZ = { L: [], i: 0, j: '' };

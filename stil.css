@@ -2715,3 +2715,13 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .yz-adla svg { width: 17px; height: 17px; }
 .pr-yz-ad { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2a4468; background: #13213a; color: inherit; font: inherit; border-radius: 999px; padding: 4px 10px; cursor: pointer; }
 .pr-yz-ad small { color: #7d8fa8; font-size: 11px; } .pr-yz-ad svg { width: 14px; height: 14px; color: #7fb2ff; }
+
+/* K-808: Gezi Telsizi — menüde canlı kart, Gezi günü kartı (ekranın kendisi telsiz.js'te) */
+.tz-kart { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; margin: 0 0 12px; padding: 12px 14px; border-radius: 18px; border: 1px solid rgba(255,225,77,.45); background: linear-gradient(135deg, rgba(255,225,77,.12), rgba(255,122,61,.06)); color: #fff; font: inherit; cursor: pointer; box-shadow: 0 0 24px rgba(255,225,77,.08); }
+.tz-kart .tz-kik { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: rgba(255,225,77,.15); color: #ffe14d; flex: none; } .tz-kart .tz-kik .mi { margin: 0; }
+.tz-kart .tz-km { flex: 1; min-width: 0; } .tz-kart b { display: block; font-size: 16px; } .tz-kart small { display: block; color: #ffe14d; font-size: 12.5px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tz-kcanli { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,77,94,.14); border: 1px solid rgba(255,77,94,.5); color: #ff8a95; font-size: 11px; font-weight: 800; letter-spacing: .06em; padding: 4px 9px; border-radius: 999px; flex: none; }
+.tz-kcanli i { width: 7px; height: 7px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 8px #ff4d5e; }
+.tz-bas-sat { display: flex; justify-content: flex-end; margin: -6px 0 8px; }
+.gk2-telsiz .gk2-ust { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+@media (max-width: 760px) { body.ogt-alt .tz-ekran { height: calc(100dvh - 150px - 80px - env(safe-area-inset-bottom)); } }

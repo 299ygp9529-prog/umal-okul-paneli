@@ -471,6 +471,13 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   body.ogr-alt input, body.ogr-alt textarea, body.ogr-alt select { font-size: 16px !important; }
   body.ogr-alt button, body.ogr-alt a { touch-action: manipulation; }
   html, body, #ogrAlt, #ogrAlt * { touch-action: manipulation; }   /* çift dokunuşta yakınlaştırma yok (iki parmakla büyütme kalır) */
+  /* K-808: Gezi Telsizi ana sayfa kartı (ekran ../telsiz.js'te) */
+  .tz-ana { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: #fff; cursor: pointer; border: 1px solid rgba(255,225,77,.5) !important; background: linear-gradient(135deg, rgba(255,225,77,.13), rgba(255,122,61,.06)) !important; }
+  .tz-ana .tz-aik { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: rgba(255,225,77,.15); color: #ffe14d; flex: none; } .tz-ana .tz-aik svg { width: 26px; height: 26px; }
+  .tz-ana .tz-am { flex: 1; min-width: 0; } .tz-ana b { display: block; font-size: 17px; } .tz-ana small { display: block; color: #ffe14d; font-size: 13px; margin-top: 2px; }
+  .tz-acanli { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,77,94,.14); border: 1px solid rgba(255,77,94,.5); color: #ff8a95; font-size: 11px; font-weight: 800; letter-spacing: .06em; padding: 4px 9px; border-radius: 999px; flex: none; }
+  .tz-acanli i { width: 7px; height: 7px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 8px #ff4d5e; }
+  body.ogr-alt .tz-ekran { height: calc(100dvh - 120px - 96px - env(safe-area-inset-bottom)); min-height: 0; }
   /* K-749: telefonda sohbet — boy ve klavye ../sohbet-klavye.js'te. Kutu alt sekmelerin üstünde biter; klavye açılınca klavyenin hemen üstünde durur; sayfa kaymaz */
   body.ogr-alt .ms-ekran { height: calc(100dvh - 120px - 96px - env(safe-area-inset-bottom)); min-height: 0; }
   body.sohbet-acik main { padding-bottom: 0 !important; }
@@ -650,6 +657,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 
   <section id="liste" class="gizli">
     <div class="kart selam gizli" id="selam"></div>
+    <div id="tzAnaKart"></div>
     <div class="kart bugun gizli" id="bugunKart"></div>
     <div class="kart gizli" id="dersKart"><h2>Bugünkü derslerin</h2><div class="dersler" id="bugunDersler"></div></div>
     <button class="kart rvana gizli" id="rvAnaKart"></button>
@@ -668,6 +676,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
   <section id="s-ayar" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Ayarlar</h1></div><div id="ayIc"></div></section>
   <section id="s-bild" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Bildirimler</h1></div><div id="blIc"></div></section>
   <section id="s-msj" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="msBaslik">Mesajlar</h1></div><div id="msIc"></div></section>
+  <section id="s-telsiz" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Gezi Telsizi</h1></div><div id="tzoIc"></div></section>
   <section id="s-bld" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Öneri ve sorun</h1></div><div id="bdIc"></div></section>
   <section id="s-ilan" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1 id="ilBaslik">Gezi</h1></div><div id="ilIc"></div></section>
   <section id="s-gbil" class="gizli"><div class="ust2"><button class="ikincil geri geri-hap" data-ana><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Geri</button><h1>Gezi bilgilerim</h1></div><div id="gbIc"></div></section>
@@ -736,6 +745,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611201025"></script>
+<script src="../telsiz.js?v=202611201130"></script>
+<script src="ogrenci.js?v=202611201150"></script>
 </body>
 </html>
