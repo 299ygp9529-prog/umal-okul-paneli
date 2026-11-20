@@ -540,7 +540,8 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 @media (max-width: 760px) { body.ogr-alt #zilUst + #yenileUst { margin-left: 8px !important; } }
 /* gezi kartında anıt */
 .izg button.genis.gz-ana.gz-cnk { overflow: hidden; isolation: isolate; }
-.izg button.genis.gz-ana.gz-cnk::before { content: ''; position: absolute; right: 70px; top: 0; bottom: 0; width: 96px; z-index: -1; background: url('img/gezi-abide-k.webp') center 25% / cover no-repeat; opacity: .3; filter: saturate(.9) brightness(.8); -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%, #000 70%, transparent); mask-image: linear-gradient(90deg, transparent, #000 40%, #000 70%, transparent); }
+.izg button.genis.gz-ana.gz-cnk::before { content: ''; position: absolute; right: 86px; top: 0; bottom: 0; width: 112px; z-index: -1; background: url('img/gezi-abide-gun.webp') center center / cover no-repeat; opacity: 1; -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.6) 22%, #000 45%, #000 85%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.6) 22%, #000 45%, #000 85%, transparent 100%); }   /* K-804: gün batımında abide ve bayrak */
+.izg button.genis.gz-ana.gz-cnk > span b, .izg button.genis.gz-ana.gz-cnk > span small { text-shadow: 0 1px 6px rgba(5,10,20,.9); }
 .izg button.genis.gz-ana .so-mini { border-left: 1px solid rgba(232,198,107,.3); padding-left: 14px; }
 /* küçük kutular: tek tip, solda büyük simge, sağda ok */
 #kutular > button:not(.genis) { height: 96px; grid-template-columns: 40px minmax(0, 1fr) 9px !important; grid-template-rows: auto auto; column-gap: 9px !important; row-gap: 2px !important; align-content: center !important; padding: 10px 9px 10px 11px !important; border-radius: 18px !important; background: linear-gradient(180deg, #172944, #111e34) !important; border-color: #22385a !important; transition: transform .12s ease; }
@@ -733,6 +734,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611201015"></script>
+<script src="ogrenci.js?v=202611201020"></script>
 </body>
 </html>
