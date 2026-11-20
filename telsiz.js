@@ -90,7 +90,23 @@
     '.tz-li{display:flex;align-items:center;gap:10px;padding:9px 2px;font-size:14px;border-top:1px solid #1d3354}.tz-li:first-of-type{border-top:0}.tz-li .tz-av{width:30px;height:30px}',
     '.tz-li button{margin-left:auto;font:inherit;font-size:12.5px;font-weight:700;color:#22e8ff;background:transparent;border:1px solid rgba(34,232,255,.5);border-radius:999px;padding:5px 12px;cursor:pointer}',
     '.tz-bas{font-size:12px;color:#7f93b3;letter-spacing:.06em;font-weight:800;margin:2px 2px 6px}',
-    '.tz-kapat{width:100%;margin-top:12px;font:inherit;font-weight:700;background:transparent;border:1px solid #2a4468;border-radius:13px;color:#b9c9e2;height:46px;cursor:pointer}'
+    '.tz-kapat{width:100%;margin-top:12px;font:inherit;font-weight:700;background:transparent;border:1px solid #2a4468;border-radius:13px;color:#b9c9e2;height:46px;cursor:pointer}',
+    '.tz-gz{margin:6px 6px 0;padding:6px 8px;gap:9px;border-radius:13px}.tz-gz .tz-ik{width:30px;height:30px;border-radius:9px}.tz-gz .tz-ik svg{width:18px;height:18px}',
+    '.tz-gz .tz-gm{display:flex;align-items:baseline;gap:7px;min-width:0}.tz-gz b{font-size:14px;flex:none}.tz-gz small{margin:0;font-size:11.5px;flex:1;min-width:0}',
+    '.tz-canli{padding:3px 7px;font-size:10px;gap:5px}.tz-canli i{width:6px;height:6px}.tz-kapa{width:28px;height:28px}.tz-kapa svg{width:15px;height:15px}',
+    '.tz-sus-dug{margin:5px 6px 0;padding:5px 10px;font-size:12px;border-radius:10px}',
+    '.tz-top{margin:5px 6px 0;padding:5px 10px;gap:9px;border-radius:12px}.tz-tsaat{font-size:22px}',
+    '.tz-tm{flex-direction:row;align-items:baseline;gap:7px;flex-wrap:wrap;row-gap:0}.tz-tm b{font-size:10px}.tz-tm>span{font-size:13px;-webkit-line-clamp:1}.tz-tm small{font-size:12px}',
+    '.tz-top em{font-size:0;gap:0;width:30px;height:30px;justify-content:center;border-radius:50%;border:1px solid rgba(34,232,255,.5);background:rgba(34,232,255,.08)}',
+    '.tz-akis{padding:8px;gap:6px}',
+    '.tz-m{padding:6px 9px;font-size:14.5px;line-height:1.38;border-radius:12px}.tz-duyuru{padding:6px 9px;border-radius:12px;font-size:14.5px}.tz-duyuru .tz-dbt{margin-bottom:3px;font-size:10.5px}',
+    '.tz-kunye{gap:7px;margin-bottom:2px}.tz-av{width:26px;height:26px;font-size:10px}',
+    '.tz-kad{flex-wrap:nowrap;overflow:hidden;column-gap:5px}.tz-kad b{font-size:13px;white-space:nowrap}.tz-kad small{flex-basis:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;min-width:0}',
+    '.tz-rozet{font-size:9px;padding:0 5px;margin:0;flex:none}.tz-kunye .tz-z{align-self:center}',
+    '.tz-hk{height:105px}.tz-hal{padding:5px 9px;font-size:12.5px;white-space:nowrap}.tz-hal b{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.tz-hal small,.tz-hal em{flex:none}.tz-harita{margin-top:3px;border-radius:10px}',
+    '.tz-alt{padding:6px 8px 8px}.tz-hiz{margin:0 -8px 6px;padding:0 8px;gap:6px}.tz-hiz button{padding:5px 11px;font-size:12.5px}',
+    '.tz-yaz textarea{min-height:40px;padding:9px 14px}.tz-gon{width:40px;height:40px}',
+    '.tz-sis{padding:3px 10px;font-size:11.5px}'
   ].join('\n');
   var AKTIF = null, SKK;
   function stilKur() { if (d.getElementById('tzStil')) return; var s = d.createElement('style'); s.id = 'tzStil'; s.textContent = CSS; d.head.appendChild(s); }
@@ -130,7 +146,7 @@
       var k = m.konum, p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); var dk = Math.round((h - Date.now()) / 60000);
       if (dk < -30) { topEl.style.display = 'none'; return; }
       var kalan = dk > 59 ? Math.floor(dk / 60) + ' sa ' + (dk % 60 ? dk % 60 + ' dk ' : '') + 'kaldı' : dk > 0 ? dk + ' dk kaldı' : dk === 0 ? 'Şimdi toplanıyoruz' : (-dk) + ' dk geçti';
-      var html = '<span class="tz-tsaat">' + esc(k.saat) + '</span><span class="tz-tm"><b>TOPLANMA</b><span>' + esc(k.not || 'Toplanma noktası') + '</span><small><i></i>' + esc(kalan) + '</small></span><em>' + SVG(IK.pin, 16, 2) + 'Haritada aç</em>';
+      var html = '<span class="tz-tsaat">' + esc(k.saat) + '</span><span class="tz-tm"><b>TOPLANMA</b><span>' + esc(k.not || 'Haritadaki yer') + '</span><small><i></i>' + esc(kalan) + '</small></span><em>' + SVG(IK.pin, 16, 2) + 'Haritada aç</em>';
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; }
       topEl.href = haritaUrl(k); topEl.classList.toggle('yakin', dk <= 10 && dk >= -5); topEl.classList.toggle('gecti', dk < -5); topEl.style.display = '';
     }
