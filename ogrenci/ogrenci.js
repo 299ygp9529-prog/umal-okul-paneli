@@ -53,7 +53,8 @@
     const { data, error } = await sb.rpc('umal_ogrenci_giris', { p_no: no, p_kod: kod });
     $('#girisBtn').disabled = false;
     const otoAcik = document.documentElement.classList.contains('oturumlu');
-    if (otoAcik && !error && data && data.ok) {   // K-582: oturum doğrulandı → tik, sonra ana sayfa
+    if (otoAcik && !error && data && data.ok && document.documentElement.classList.contains('ogr-yenile')) { document.documentElement.classList.remove('oturumlu', 'ogr-yenile'); setTimeout(() => atlasOnay('Yenilendi', 'Atlas güncel'), 450); }   // K-788
+    else if (otoAcik && !error && data && data.ok) {   // K-582: oturum doğrulandı → tik, sonra ana sayfa
       const ac_ = $('#acilis'); ac_.classList.add('tikli');
       document.documentElement.classList.remove('oturumlu'); setTimeout(() => { ac_.classList.add('kalk'); setTimeout(() => ac_.classList.remove('tikli', 'kalk'), 320); }, 1250);   // K-594: Atlas başparmak + tik
     } else document.documentElement.classList.remove('oturumlu');   // K-581: yenilemede giriş ekranı görünmesin; sonuç gelince kalkar
@@ -133,6 +134,7 @@
   const cikis = () => { if (S.no && window.UmalBildirim) UmalBildirim.kapat({ sb, kim: 'ogrenci', no: S.no }); BLD.d = null; BLD.taze = false; SES.bilinen = null; const sfE = document.getElementById('sifreEkran'); if (sfE) sfE.remove(); oturumSil(); mkSifirla(); Object.assign(S, { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], program: null, yerler: [], takvim: null }); Object.assign(RV, { L: [], M: [], sec: null, tercih: new Set() }); DY.L = []; NO.L = []; Object.assign(RH, { plan: null, mesajlar: [], yuklendi: false, yeniGor: null }); Object.assign(PL, { veri: null, hafta: null, form: null }); Object.assign(SO, { L: null, ref: null, form: null }); $('#no').value = ''; $('#sorular').innerHTML = ''; S.selamlandi = false; $('#selam').classList.add('gizli'); goster('giris'); ustBilgi(); };
   $('#cikisUst').onclick = cikis;
   if ($('#yenileUst')) $('#yenileUst').onclick = async () => { const b = $('#yenileUst'); b.classList.add('donuyor');   // K-754: elle yenile (yeni sürüm ve güncel veriler)
+    try { sessionStorage.setItem('ogrYenile', '1'); } catch (e) {}
     try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {} const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };
   $('#sesUst').onclick = () => { SES.kapali = !SES.kapali; try { localStorage.setItem('umalSes', SES.kapali ? '0' : '1'); } catch (e) {} sesDugme(); if (!SES.kapali) sesCal('yeni'); };
   let bosta = null;   // 15 dk hareketsiz kalınca çıkış (ortak bilgisayar)
@@ -369,6 +371,10 @@
     if (id === 'bild') return blAc(); blUrlOku(id);
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   const GERI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
+  function atlasOnay(b_, a_) { const kay = document.querySelector('#acilis .atl'); let t = document.getElementById('atlOnay');   // K-788: Atlas başparmakla kısa onay kartı
+    if (!t) { t = document.createElement('div'); t.id = 'atlOnay'; t.className = 'atl-onay'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.innerHTML = `<div class="ao-robot">${kay ? kay.outerHTML.replace(/(id="|url\(#)(elG|tkG|parla)/g, '$1ao$2') : ''}</div><div class="ao-yazi"><b>${esc(b_)}</b><span>${esc(a_ || '')}</span></div>`;
+    t.classList.remove('tikli', 'gor'); void t.offsetWidth; t.classList.add('gor', 'tikli'); clearTimeout(atlasOnay.z); atlasOnay.z = setTimeout(() => t.classList.remove('gor'), 2400); }
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
   document.querySelectorAll('[data-ana]').forEach(b => b.onclick = geriGit);

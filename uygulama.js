@@ -869,7 +869,7 @@
   }
   const modSecHtml = () => `<span class="mod-sec" role="group" aria-label="Görev"><button type="button" data-mod="bas" class="${D.rol === 'bas' ? 'secili' : ''}">Kurucu</button><button type="button" data-mod="ogretmen" class="${D.rol === 'ogretmen' ? 'secili' : ''}">Öğretmen</button></span>`;
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-mod]'); if (!b || D.gercekRol !== 'bas') return; ev.preventDefault(); ev.stopPropagation();
-    const m = b.dataset.mod; if (m === D.rol) return; try { localStorage.setItem('umalMod', m === 'ogretmen' ? 'ogretmen' : ''); sessionStorage.setItem('atlasYenile', '1'); } catch (e) {}
+    const m = b.dataset.mod; if (m === D.rol) return; try { localStorage.setItem('umalMod', m === 'ogretmen' ? 'ogretmen' : ''); sessionStorage.setItem('atlasYenile', 'mod:' + m); } catch (e) {}
     location.replace(location.pathname + location.search); }, true);
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
@@ -1301,10 +1301,10 @@
     const bu = surum(document.documentElement.innerHTML); let son = Date.now();
     ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { son = Date.now(); }, { passive: true }));
     const tazeleHemen = async () => { try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {} const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };
-    const yd = document.getElementById('yenileDug'); if (yd) yd.onclick = () => { yd.classList.add('donuyor'); try { sessionStorage.setItem('atlasYenile', '1'); } catch (e) {} document.documentElement.classList.add('atlas-yenile'); tazeleHemen(); };   // K-744: elle yenile · K-755: Atlas açılışı
-    if (document.documentElement.classList.contains('atlas-yenile')) { const ac_ = document.getElementById('acilis'), t0 = Date.now();   // K-755: panel hazır olunca Atlas başparmak + tik, sonra kalkar
-      const bit = () => { if (!ac_) return; ac_.classList.add('tikli'); document.documentElement.classList.remove('atlas-yenile'); setTimeout(() => { ac_.classList.add('kalk'); setTimeout(() => ac_.classList.remove('tikli', 'kalk'), 320); }, 1250); };
-      const bak = () => { const u = document.getElementById('uygulama'), hazir = (u && !u.classList.contains('gizli') && (document.querySelector('#icerik > *') || document.body.classList.contains('tm-acik'))) || (u && u.classList.contains('gizli') && Date.now() - t0 > 2500); if (hazir || Date.now() - t0 > 5000) bit(); else setTimeout(bak, 150); }; setTimeout(bak, 300); }
+    const yd = document.getElementById('yenileDug'); if (yd) yd.onclick = () => { yd.classList.add('donuyor'); try { sessionStorage.setItem('atlasYenile', '1'); } catch (e) {} tazeleHemen(); };   // K-744: elle yenile · K-755: Atlas açılışı
+    if (window.__atlasYenile) { const v = window.__atlasYenile, t0 = Date.now(); window.__atlasYenile = null;   // K-788: yenileyince tam ekran açılış yok; panel hazır olunca Atlas başparmakla "Yenilendi" der (yoklamadaki kart)
+      const bit = () => { const s_ = surumSatiri().replace(/<[^>]+>/g, '').replace(/^Atlas · /, '').replace(/ · k.*$/, ''); atlasOnay(v === 'mod:ogretmen' ? 'Öğretmen modu' : v === 'mod:bas' ? 'Kurucu modu' : 'Yenilendi', v.startsWith('mod:') ? 'Panel bu görevle açıldı' : (s_ ? 'Atlas güncel · ' + s_ : 'Atlas güncel')); };
+      const bak = () => { const u = document.getElementById('uygulama'), hazir = u && !u.classList.contains('gizli') && (document.querySelector('#icerik > *:not(#siradaki)') || document.body.classList.contains('tm-acik')); if (hazir || Date.now() - t0 > 6000) setTimeout(bit, 250); else setTimeout(bak, 150); }; setTimeout(bak, 300); }
     const denetle = async () => {
       if (document.hidden || !bu) return;
       let h = ''; try { h = await (await fetch('index.html?t=' + Date.now(), { cache: 'no-store' })).text(); } catch (e) { return; }

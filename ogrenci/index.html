@@ -492,6 +492,17 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .geri-hap:active { transform: scale(.96); }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
+html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
+.atl-onay { position: fixed; left: 50%; top: calc(104px + env(safe-area-inset-top)); z-index: 60; display: flex; align-items: center; gap: 12px; width: min(92vw, 380px); padding: 10px 20px 10px 10px; border-radius: 22px; background: linear-gradient(180deg, rgba(22,40,66,.97), rgba(13,25,43,.97)); border: 1px solid rgba(110,231,168,.55); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(62,240,138,.22); transform: translate(-50%, -30px) scale(.92); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
+.atl-onay.gor { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.ao-robot { width: 78px; height: 80px; flex: none; } .ao-robot svg { width: 100%; height: 100%; overflow: visible; }
+.ao-yazi { display: flex; flex-direction: column; gap: 3px; min-width: 0; } .ao-yazi b { font-size: 24px; font-weight: 800; color: #6ee7a8; } .ao-yazi span { font-size: 14px; color: #c8d6ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atl-onay .govde { animation: atlSuz 1.8s ease-in-out infinite; transform-box: view-box; transform-origin: 192px 390px; }
+.atl-onay .mutlu { opacity: 0; } .atl-onay .el { transform-box: view-box; transform-origin: 262px 280px; transform: translateY(46px) rotate(24deg) scale(.7); opacity: 0; }
+.atl-onay .rozet { transform-box: fill-box; transform-origin: center; transform: scale(0); opacity: 0; }
+.atl-onay.tikli .el { animation: atlEl .55s cubic-bezier(.2,1.5,.45,1) .1s forwards; } .atl-onay.tikli .bas { transform-box: fill-box; transform-origin: 50% 100%; animation: atlBas .32s ease-out .6s 2 alternate; }
+.atl-onay.tikli .gozler { animation: atlSon .15s .4s forwards; } .atl-onay.tikli .mutlu { animation: atlGel .2s .4s forwards; }
+.atl-onay.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .5s forwards; } .atl-onay.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .75s forwards; }
 html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0d1726; z-index: 50; transition: opacity .3s; } #acilis.kalk { opacity: 0; }
 #acilis .atl { width: min(62vw, 250px); height: auto; overflow: visible; }
 #acilis .govde { animation: atlSuz 1.8s ease-in-out infinite; transform-box: view-box; transform-origin: 192px 390px; }
@@ -507,6 +518,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 #acilis.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .45s forwards; } @keyframes atlRozet { to { transform: scale(1); opacity: 1; } }
 #acilis.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .7s forwards; } @keyframes atlHalka { to { transform: scale(1.9); opacity: 0; } }
 </style>
+<script>try { if (sessionStorage.getItem('ogrYenile')) { sessionStorage.removeItem('ogrYenile'); document.documentElement.classList.add('ogr-yenile'); } } catch (e) {}</script>
 <script>try { if (sessionStorage.getItem('umalYeniden') || sessionStorage.getItem('umalOturum') || ((j => j && Date.now() - (j.t || 0) < 30 * 864e5)(JSON.parse(localStorage.getItem('umalOturum') || 'null')))) document.documentElement.classList.add('oturumlu'); } catch (e) {}</script>
 </head>
 <body>
@@ -636,6 +648,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611200730"></script>
+<script src="ogrenci.js?v=202611200915"></script>
 </body>
 </html>
