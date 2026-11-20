@@ -418,6 +418,7 @@
       etkin: () => !$('#s-telsiz').classList.contains('gizli'),
       oku: (s, v) => r_('umal_ogrenci_telsiz_oku', { p_bilet: TZO.b, p_sonra: s, p_surum: v }),
       yaz: m => r_('umal_ogrenci_telsiz_yaz', { p_bilet: TZO.b, p_metin: m }),
+      foto: fk => r_('umal_ogrenci_telsiz_fotolar', { p_bilet: TZO.b, p_fk: fk }),
       kapandi: () => { TZO.g = null; TZO.b = ''; anaCiz(true); } });
   }
 

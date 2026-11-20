@@ -32,16 +32,18 @@
     '.tz-sus-dug{display:flex;align-items:center;gap:8px;margin:8px 12px 0;border:1px solid rgba(255,107,107,.5);background:rgba(255,107,107,.08);color:#ffb0b0;border-radius:12px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;flex:none;text-align:left}.tz-sus-dug em{margin-left:auto;font-style:normal;font-weight:600;color:#ff8a95;font-size:12px}',
     '.tz-akis{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}',
     '.tz-akis>:first-child{margin-top:auto}',
-    '.tz-m{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere;border-radius:12px}',
+    '.tz-m{font-size:15px;line-height:1.42;overflow-wrap:anywhere;border-radius:14px;padding:8px 10px;background:#0f1d33;border:1px solid #1a3050}.tz-m.og{background:rgba(255,181,71,.06);border-color:rgba(255,181,71,.28)}.tz-m.ben{border-color:rgba(34,232,255,.35)}',
+    '.tz-kunye{display:flex;align-items:center;gap:9px;margin-bottom:5px}.tz-kad{min-width:0;flex:1;display:flex;flex-wrap:wrap;align-items:center;column-gap:6px}.tz-kad b{font-size:14px;color:#cfe0ff}.tz-m.og .tz-kad b,.tz-duyuru .tz-kad b{color:#ffc46b}.tz-m.ben .tz-kad b{color:#7ff6ff}.tz-kad small{flex-basis:100%;font-size:12px;color:#ffe14d;opacity:.9}.tz-kunye .tz-z{align-self:flex-start;margin-left:auto}',
+    '.tz-t{padding-left:2px;color:#fff}',
     '.tz-m.dok{cursor:pointer}.tz-m.dok:active{background:rgba(34,232,255,.07)}',
-    '.tz-av{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11.5px;font-weight:800;background:#1b2f4f;color:#b9c9e2}',
-    '.tz-m .tz-ad{font-weight:800;font-size:13px;margin-right:6px;color:#9ec3ff}.tz-m.ben .tz-ad{color:#7ff6ff}',
-    '.tz-m.og .tz-av{background:linear-gradient(135deg,#ffb547,#ff7a3d);color:#2a1300}.tz-m.og .tz-ad{color:#ffc46b}',
+    '.tz-av{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12.5px;font-weight:800;background:#1b2f4f;color:#b9c9e2;overflow:hidden}.tz-av.foto{background:#0b1424}.tz-av img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}',
+    
+    '.tz-m.og .tz-av,.tz-duyuru .tz-av{background:linear-gradient(135deg,#ffb547,#ff7a3d);color:#2a1300}',
     '.tz-rozet{display:inline-block;font-size:10px;font-weight:800;color:#2a1300;background:#ffc46b;border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px;letter-spacing:.03em}',
-    '.tz-m .tz-z{color:#5f7393;font-size:11px;margin-left:5px;white-space:nowrap}',
+    '.tz-z{color:#5f7393;font-size:11px;white-space:nowrap}',
     '.tz-m.tz-gizlenen{opacity:.5}.tz-m.tz-gizlenen .tz-t{text-decoration:line-through}.tz-gizetk{font-size:10.5px;font-weight:800;color:#ff8a95;border:1px solid rgba(255,107,107,.5);border-radius:6px;padding:0 5px;margin-left:6px}',
     '.tz-duyuru{background:linear-gradient(135deg,rgba(255,181,71,.16),rgba(255,122,61,.08));border:1px solid rgba(255,181,71,.55);border-radius:14px;padding:10px 12px;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere}',
-    '.tz-duyuru .tz-dbt{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:#ffc46b;letter-spacing:.04em;margin-bottom:4px}.tz-duyuru .tz-z{color:#9b8a6a;font-size:11px;margin-left:auto;font-weight:600;letter-spacing:0}',
+    '.tz-duyuru .tz-dbt{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:#ffc46b;letter-spacing:.04em;margin-bottom:6px}',
     '.tz-sis{align-self:center;font-size:12px;color:#7f93b3;background:#101d33;border:1px solid #1a3050;border-radius:999px;padding:5px 12px;text-align:center}',
     '.tz-alt{flex:none;padding:10px 12px 12px;border-top:1px solid #1a3050;background:#0d182b}',
     '.tz-hiz{display:flex;gap:7px;margin:0 -12px 9px;padding:0 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tz-hiz::-webkit-scrollbar{display:none}',
@@ -74,6 +76,7 @@
   // cfg: { kap, personel, gezi:{ad, otobus, koltuk, ogrenci, ogretmen, acilis}, oku(sonra, surum), yaz(metin, duyuru), islem(veri), kisi(no), etkin(), cubuk, kapandi(), uyar(m), onayla(m) }
   w.UmalTelsiz = function (cfg) {
     stilKur();
+    var FOTO = {};
     var S = { M: [], son: 0, surum: -1, sessiz: false, susL: [], acik: true, zam: null, calisiyor: false, duyuru: false, gonderiyor: false, olu: false };
     var P = !!cfg.personel, uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
     var kap = cfg.kap; kap.innerHTML = '';
@@ -95,14 +98,22 @@
       var sd = ekran.querySelector('.tz-sus-dug'); if (sd) { sd.style.display = S.susL.length ? '' : 'none'; sd.querySelector('span').textContent = S.susL.length + ' öğrenci sessizde'; } }
 
     function adGoster(m) { var a = buyukHarf(m.ad || ''); return a || (m.rol === 'ogrenci' ? 'Öğrenci' : 'Öğretmen'); }
+    function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
+      return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(f) + '">' : esc(basHarf(ad))) + '</div>'; }
+    function kunye(m, ad) { var og = m.rol !== 'ogrenci';
+      return '<div class="tz-kunye">' + avatar(m, ad) + '<div class="tz-kad"><b>' + esc(ad) + '</b>' + (og ? '<span class="tz-rozet">' + (m.rol === 'idare' ? 'İDARE' : 'ÖĞRETMEN') + '</span>' : '') +
+        '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
     function mesajHtml(m) {
-      var og = m.rol !== 'ogrenci', ad = adGoster(m), rozet = og ? '<span class="tz-rozet">' + (m.rol === 'idare' ? 'İDARE' : 'ÖĞRETMEN') + '</span>' : '';
-      if (m.duyuru) return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(IK.duyuru, 14, 2.4) + 'DUYURU · ' + esc(ad) + '<span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>' + esc(m.metin) + '</div>';
-      var no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '';
-      var dok = P && no && !m.ben;
-      return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '><div class="tz-av">' + esc(basHarf(ad)) + '</div><div>' + rozet +
-        '<span class="tz-ad">' + esc(ad) + (P && m.sinif ? ' · ' + esc(m.sinif) : '') + '</span><span class="tz-t">' + esc(m.metin) + '</span>' + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '<span class="tz-z">' + esc(saat(m.zaman)) + '</span></div></div>';
+      var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
+      if (m.duyuru) return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(IK.duyuru, 14, 2.4) + 'DUYURU</div>' + kunye(m, ad) + '<div class="tz-t">' + esc(m.metin) + '</div></div>';
+      return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
+        '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div></div>';
     }
+    async function fotoYukle() { if (!cfg.foto) return;
+      var L = []; S.M.forEach(function (m) { if (m.fk && !(m.fk in FOTO) && L.indexOf(m.fk) < 0) L.push(m.fk); }); if (!L.length) return;
+      L = L.slice(0, 40); L.forEach(function (k) { FOTO[k] = ''; });
+      var r = null; try { r = await cfg.foto(L); } catch (e) {} if (!r || !r.ok) { L.forEach(function (k) { delete FOTO[k]; }); return; }
+      var var_ = false; Object.keys(r.foto || {}).forEach(function (k) { FOTO[k] = r.foto[k]; var_ = true; }); if (var_ && !S.olu) akisCiz(); }
     function akisCiz() {
       var Pr = [], g = cfg.gezi || {};
       if (g.acilis) Pr.push({ k: 'ac', h: '<div class="tz-sis">' + esc(saat(g.acilis)) + ' · Gezi Telsizi açıldı — gezideki herkes burada</div>' });
@@ -152,7 +163,7 @@
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } }
       else if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); }
-      if (degisti) { gezCiz(); akisCiz(); }
+      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
     }
     function perde(html, bagla) {
