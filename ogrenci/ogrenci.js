@@ -1387,6 +1387,7 @@
     goster('s-soru'); window.scrollTo(0, 0); if (!SO.ref) SO.ref = simdi(); $('#soIzin').classList.toggle('gizli', ozel());
     if (!SO.L) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Yükleniyor…</div>'; if (!(await soYukle())) { $('#soKartlar').innerHTML = '<div class="kart soluk" style="grid-column:1/-1">Kayıtlar yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.</div>'; return; } }
     soCiz();
+    if (!SO.form) { const g = $('#soGirBtn'); if (g) g.click(); }   // K-801: ekran doğrudan bugünün soru girişiyle açılır
   }
   function soOneriler(s, o, per, a, b) {
     const R = [], bugun = iso(simdi()), son = b < bugun ? b : bugun, gecen = Math.max(1, Math.round((new Date(son + 'T12:00') - new Date(a + 'T12:00')) / 864e5) + 1), gunAd = per === 'gun' ? 'bugün' : per === 'hafta' ? 'bu hafta' : 'bu ay';
@@ -1495,8 +1496,13 @@
       ${SO.per !== 'gun' ? `<h2>Günlere göre soru sayısı</h2><div class="g">${G.map(g => { const v = (s.gunluk[g] || {}).n || 0, d = new Date(g + 'T12:00'); return `<div><small>${v || ''}</small><span style="height:${v * 26 / mx}mm"></span>${SO.per === 'hafta' ? ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'][gunIdx(d)] : d.getDate()}</div>`; }).join('')}</div>` : ''}
       <h2>Derslere göre</h2>${L.length ? `<table><tr><th>Ders</th><th>Soru</th><th>D</th><th>Y</th><th>B</th><th>Net</th><th>Doğruluk</th><th style="width:28%">Dağılım (doğru / yanlış / boş)</th></tr>${L.map(([d, x]) => `<tr><td><b>${esc(d)}</b></td><td>${x.n}</td><td>${x.d}</td><td>${x.y}</td><td>${x.b}</td><td><b>${sayi1(x.net)}</b></td><td>%${Math.round(x.d * 100 / x.n)}</td><td><div class="bar"><i style="width:${x.d * 100 / x.n}%;background:#2bb673"></i><i style="width:${x.y * 100 / x.n}%;background:#e5484d"></i><i style="width:${x.b * 100 / x.n}%;background:#b8c2cc"></i></div></td></tr>`).join('')}</table>` : '<p>Bu dönemde kayıt yok.</p>'}
       <h2>Öneriler</h2><ul>${O.map(([t, m]) => `<li><b style="color:${t === 'iyi' ? '#1f8f55' : t === 'uyari' ? '#c66a00' : '#0b7c99'}">${t === 'iyi' ? '✓' : t === 'uyari' ? '!' : 'i'}</b> ${esc(m)}</li>`).join('')}</ul>
-      <div class="alt">Ümraniye Merkez Anadolu Lisesi · Öğrenci paneli · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })} · Net = doğru − yanlış ÷ 4</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>`;
-    const w = window.open('', '_blank'); if (!w) { uyar('Raporu açmak için açılır pencerelere izin ver.'); return; } w.document.open(); w.document.write(html); w.document.close();
+      <div class="alt">Ümraniye Merkez Anadolu Lisesi · Öğrenci paneli · ${new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' })} · Net = doğru − yanlış ÷ 4</div>`;
+    // K-802: rapor uygulamanın içinde açılır (ayrı pencere yok; telefonda geri dönüş kalmıyordu) · Kapat + Yazdır / PDF
+    let el = document.getElementById('soRapor'); if (el) el.remove(); el = document.createElement('div'); el.id = 'soRapor'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = `<div class="sr-bar"><button type="button" class="ikincil geri geri-hap" data-srk>${GERI_SVG}Kapat</button><b>Soru takibi raporu</b><button type="button" class="birincil" data-srp>Yazdır / PDF</button></div><iframe title="Soru takibi raporu"></iframe>`;
+    document.body.appendChild(el); const f = el.querySelector('iframe'); f.srcdoc = html;
+    el.querySelector('[data-srk]').onclick = () => el.remove();
+    el.querySelector('[data-srp]').onclick = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { uyar('Yazdırma açılamadı.'); } };
   }
 
   // ---- K-716: Ders Dosyaları — öğretmenin gönderdiği dosya / link / test; dosyalar Atlas Drive köprüsünden okunur, açılan bu cihazda saklanır

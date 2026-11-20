@@ -568,6 +568,11 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .seri-kart .cubuk { display: block; height: 7px; border-radius: 99px; background: #26375a; margin-top: 6px; overflow: hidden; } .seri-kart .cubuk i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #22c8e8, #7fe9ff); }
 #ogrAlt button.secili { background: linear-gradient(180deg, rgba(34,232,255,.2), rgba(34,232,255,.06)) !important; box-shadow: inset 0 0 0 1px rgba(34,232,255,.3); }
 @media (prefers-reduced-motion: reduce) { #kutular.giris-an > button { animation: none; } }
+
+/* K-802: soru takibi raporu uygulama içinde */
+#soRapor { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; background: #0b1424; padding-top: env(safe-area-inset-top); }
+#soRapor .sr-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #22385a; } #soRapor .sr-bar b { flex: 1; text-align: center; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#soRapor .sr-bar .birincil { width: auto; padding: 9px 14px; font-size: 14px; margin: 0; } #soRapor iframe { flex: 1; width: 100%; border: 0; background: #fff; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -728,6 +733,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611201005"></script>
+<script src="ogrenci.js?v=202611201010"></script>
 </body>
 </html>
