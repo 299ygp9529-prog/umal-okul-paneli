@@ -348,7 +348,9 @@
     $('#kutular').innerHTML = gzKutu() + noK + ddKutu() + soK + kutu('s-sinav', 'sinav', '#22e8ff', 'Sınavlarım', SV.length ? (kalan.length ? kalan.length + ' sınav kaldı' : 'Sınavlar bitti') : 'Takvim yok')
       + kutu('duy', 'duy', '#ff9a3a', 'Duyurular', DY.L.length ? (DY.L[0].baslik.length > 26 ? DY.L[0].baslik.slice(0, 25) + '…' : DY.L[0].baslik) : 'Duyuru yok', true, dyYeni())
       + kutu('s-program', 'ders', '#3ef08a', 'Ders programım', S.program && Object.keys(S.program).length ? 'Haftalık' : 'Henüz yok', !!(S.program && Object.keys(S.program).length))
-      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : 'Mektup · randevu', true, rvYeni() || rhMesajYeni())
+      + kutu('s-reh', 'reh', '#b06bff', 'Rehberlik', rhMesajYeni() ? 'Yeni mesajın var' : 'Rehber öğretmenle mesajlar', true, rhMesajYeni())
+      + kutu('mektup', 'zarf', '#b06bff', 'Rehberliğe mektup', 'Yalnız rehber öğretmenler okur')   // K-791: mektup ve randevu ana sayfada ayrı kutu
+      + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
     $('#kutular').insertAdjacentHTML('afterbegin', blKutu() + msKutu() + bdKutu());   // K-716cx: en üst sıra — Mesajlar solda, Öneri bildir sağda
@@ -369,7 +371,7 @@
   $('#kutular').addEventListener('click', ev => { const e = ev.target.closest('#kutular > *'); if (!e || e.disabled || e.classList.contains('genis')) return; const a = kAnahtar(e); if (!a) return; try { const t = kSon(); t[a] = Date.now(); localStorage.setItem(kSonAn(), JSON.stringify(t)); } catch (x) {} }, true);
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
     if (id === 'bild') return blAc(); blUrlOku(id);
-    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
+    if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'mektup') { RV.dis = true; return mkAc(); } if (id === 'randevu') { RV.dis = true; return rvAc(); } if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   const GERI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   function atlasOnay(b_, a_) { const kay = document.querySelector('#acilis .atl'); let t = document.getElementById('atlOnay');   // K-788: Atlas başparmakla kısa onay kartı
     if (!t) { t = document.createElement('div'); t.id = 'atlOnay'; t.className = 'atl-onay'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
@@ -911,22 +913,20 @@
     k.innerHTML = `<i class="ik">${svg('saat')}</i><div><b>${x.durum === 'davet' ? 'Rehberlik servisi seni davet etti' : 'Rehberlik randevun'}</b><span>${esc(rvGunAd(x.zaman))} · ${rvSaat(x.zaman)} · ${esc(x.yer || 'Rehberlik servisi')}${x.durum === 'davet' ? ' · cevabını bekliyor' : ''}</span></div>`;
     k.classList.remove('gizli');
   }
-  $('#rvAnaKart').onclick = () => { rehAc(); rvAc(); };
+  $('#rvAnaKart').onclick = () => { RV.dis = true; rvAc(); };
   function rehAc() {
     RV.gorunum = '';
-    $('#rhKutular').innerHTML = `<button data-rh="mektup"><i class="ik" style="--c:#b06bff">${svg('zarf')}</i><b>Rehberlik servisine mektup</b><small>Paylaşmak istediğini yaz; yalnız rehber öğretmenler okur</small></button>`
-      + `<button data-rh="randevu">${rvYeni() ? ZARF : ''}<i class="ik" style="--c:#22e8ff">${svg('saat')}</i><b>Rehberlik randevusu</b><small>${rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + esc(rvKisa(rvYakin().zaman)) : RV.M.length ? 'Boş saat seç ya da randevu iste' : 'Randevu iste'}</small></button>`;
-    $('#rhKutular').innerHTML += `<a class="rh-link" href="https://meslekirehberlik.meb.gov.tr/" target="_blank" rel="noopener"><i class="ik" style="--c:#3ef08a">${svg('plan')}</i><b>Meslek rehberliği</b><small>MEB meslek tanıtımları ve envanterler ↗</small></a>`;
+    RV.dis = false; $('#rhKutular').innerHTML = '';   // K-791: mektup ve randevu ana sayfada; meslek rehberliği kaldırıldı
     ['rhMektup', 'rhRandevu'].forEach(i => $('#' + i).classList.add('gizli')); $('#rhKutular').classList.remove('gizli');
-    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').innerHTML = GERI_SVG + 'Geri'; $('#rhKutular').classList.toggle('gizli', ozel());
+    $('#rhBaslik').textContent = ozel() ? 'Mesajlar' : 'Rehberlik'; $('#rhGeri').innerHTML = GERI_SVG + 'Geri'; $('#rhKutular').classList.add('gizli');
     const yeniM = new Set(RH.mesajlar.filter(m => !m.okundu && !m.ben).map(m => m.id)); RH.yeniGor = new Set([...(RH.yeniGor || []), ...yeniM]); rhMesajCiz(RH.yeniGor); $('#rhMesajlar').classList.remove('gizli');
     if (yeniM.size) rhYukle(true).then(() => rhMesajCiz(RH.yeniGor));   // okundu (zarf gider; bu ekranda YENİ etiketi kalır)
     goster('s-reh'); window.scrollTo(0, 0);
   }
   $('#rhKutular').onclick = ev => { const b = ev.target.closest('[data-rh]'); if (!b) return; b.dataset.rh === 'mektup' ? mkAc() : rvAc(); };
-  $('#rhGeri').onclick = () => RV.gorunum ? rehAc() : geriGit();
+  $('#rhGeri').onclick = () => { if (RV.gorunum && !RV.dis) return rehAc(); RV.gorunum = ''; RV.dis = false; geriGit(); };
   const altAc = (g, baslik_) => { RV.gorunum = g; $('#rhKutular').classList.add('gizli'); $('#rhMesajlar').classList.add('gizli'); $('#rhMektup').classList.toggle('gizli', g !== 'mektup'); $('#rhRandevu').classList.toggle('gizli', g !== 'randevu');
-    $('#rhBaslik').textContent = baslik_; $('#rhGeri').innerHTML = GERI_SVG + 'Rehberlik'; goster('s-reh'); window.scrollTo(0, 0); };
+    $('#rhBaslik').textContent = baslik_; $('#rhGeri').innerHTML = GERI_SVG + (RV.dis ? 'Geri' : 'Rehberlik'); goster('s-reh'); window.scrollTo(0, 0); };
   function mkAc() { altAc('mektup', 'Mektup'); }
   function rvAc() {
     blUrlOku('rv'); altAc('randevu', 'Randevu'); rvCiz();
@@ -1596,7 +1596,7 @@
     blUrlOku(git);
     if (git === 'msj') { msAc().then(() => { const s_ = p.get('s'); if (s_ && MS.L.some(z => z.id === s_)) msSohbet(s_); }); return true; }
     if (git === 'dd') { const id = p.get('id'); if (id && !DD.L.some(x => x.id === id)) { ddYukle().then(() => ddAc(DD.L.some(x => x.id === id) ? id : undefined)); return true; } ddAc(id || undefined); return true; }
-    if (git === 'rv') { rehAc(); rvAc(); return true; }
+    if (git === 'rv') { RV.dis = true; rvAc(); return true; }
     if (git === 'gb') { tuAc(); return true; }
     if (git === 'bld') { bdAc('benim'); return true; }
     if (git === 'bild') { blAc(); return true; }
