@@ -2662,11 +2662,11 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .dya-kd svg { width: 16px; height: 16px; }
 
 /* K-781: Atlas "Kaydedildi" kartı */
-.atl-onay { position: fixed; left: 50%; bottom: calc(108px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 12px; width: min(92vw, 380px); padding: 10px 20px 10px 10px; border-radius: 22px;
+.atl-onay { position: fixed; left: 50%; top: calc(84px + env(safe-area-inset-top)); z-index: 60; display: flex; align-items: center; gap: 12px; width: min(92vw, 380px); padding: 10px 20px 10px 10px; border-radius: 22px;
   background: linear-gradient(180deg, rgba(22,40,66,.97), rgba(13,25,43,.97)); border: 1px solid rgba(110,231,168,.55); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(62,240,138,.22);
-  transform: translate(-50%, 30px) scale(.92); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
+  transform: translate(-50%, -30px) scale(.92); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
 .atl-onay.gor { transform: translate(-50%, 0) scale(1); opacity: 1; }
-body:not(.ogt-alt) .atl-onay { bottom: calc(28px + env(safe-area-inset-bottom)); }
+@media (min-width: 761px) { .atl-onay { top: 24px; } }
 .ao-robot { width: 78px; height: 80px; flex: none; }
 .ao-robot svg { width: 100%; height: 100%; overflow: visible; }
 .ao-yazi { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
