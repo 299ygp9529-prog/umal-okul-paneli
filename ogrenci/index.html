@@ -540,7 +540,9 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 @media (max-width: 760px) { body.ogr-alt #zilUst + #yenileUst { margin-left: 8px !important; } }
 /* gezi kartında anıt */
 .izg button.genis.gz-ana.gz-cnk { overflow: hidden; isolation: isolate; }
-.izg button.genis.gz-ana.gz-cnk::before { content: ''; position: absolute; right: 86px; top: 0; bottom: 0; width: 112px; z-index: -1; background: url('img/gezi-abide-gun.webp') center center / cover no-repeat; opacity: 1; -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.6) 22%, #000 45%, #000 85%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.6) 22%, #000 45%, #000 85%, transparent 100%); }   /* K-804: gün batımında abide ve bayrak */
+.izg button.genis.gz-ana.gz-cnk::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 104px; z-index: -1; background: url('img/gezi-abide-gun.webp') right center / contain no-repeat; opacity: 1; -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.7) 30%, #000 55%); mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.7) 30%, #000 55%); }   /* K-804: gün batımında abide ve bayrak */
+.izg button.genis.gz-ana > .so-mini { display: none !important; } .izg button.genis.gz-ana.gz-cnk { min-height: 88px; } .izg button.genis.gz-ana.gz-cnk > span { padding-right: 70px; }   /* K-805: sağdaki sıra yazısı yok; fotoğraf sağa dayalı */
+.izg button.genis.gz-ana > span small { color: #ffe14d !important; font-weight: 600; text-shadow: 0 0 8px rgba(255,225,77,.55), 0 1px 6px rgba(5,10,20,.9) !important; }   /* K-806: otobüs · sıra yazısı neon sarı */
 .izg button.genis.gz-ana.gz-cnk > span b, .izg button.genis.gz-ana.gz-cnk > span small { text-shadow: 0 1px 6px rgba(5,10,20,.9); }
 .izg button.genis.gz-ana .so-mini { border-left: 1px solid rgba(232,198,107,.3); padding-left: 14px; }
 /* küçük kutular: tek tip, solda büyük simge, sağda ok */
@@ -734,6 +736,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="ogrenci.js?v=202611201020"></script>
+<script src="ogrenci.js?v=202611201025"></script>
 </body>
 </html>
