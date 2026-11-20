@@ -112,7 +112,18 @@
     '.tz-ob{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.tz-ob button{height:38px;border-radius:11px;border:1px solid #24406a;background:transparent;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-ob button.h{grid-column:span 2}.tz-ob button.s{background:#ffb547;border-color:#ffb547;color:#2a1300}',
     '.tz-top.tz-serit{display:flex;gap:5px;padding:0;background:none;border:0;box-shadow:none;overflow-x:auto;scrollbar-width:none}.tz-top.tz-serit::-webkit-scrollbar{display:none}',
     '.tz-c{flex:1 0 50px;display:flex;flex-direction:column;align-items:center;padding:3px 4px;border-radius:10px;border:1px solid rgba(255,181,71,.6);background:rgba(255,181,71,.1);text-decoration:none;color:#fff}.tz-c b{font-size:9.5px;color:#ffc46b;letter-spacing:.04em}.tz-c span{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}',
-    '.tz-c.yakin{border-color:#ff6b78;background:rgba(255,77,94,.16)}.tz-c.yakin span{color:#ff9aa3}.tz-c.gecti{opacity:.6}.tz-c.yok{border-style:dashed;border-color:#2a4468;background:none}.tz-c.yok span{color:#5f7393}.tz-c.yok b{color:#5f7393}'
+    '.tz-c.yakin{border-color:#ff6b78;background:rgba(255,77,94,.16)}.tz-c.yakin span{color:#ff9aa3}.tz-c.gecti{opacity:.6}.tz-c.yok{border-style:dashed;border-color:#2a4468;background:none}.tz-c.yok span{color:#5f7393}.tz-c.yok b{color:#5f7393}',
+    '.tz-c{font:inherit;cursor:pointer}.tz-c.say{border-color:#ffb547;background:rgba(255,181,71,.2)}.tz-c.say span{color:#ffe2b0}.tz-c.tam{border-color:rgba(62,240,138,.7);background:rgba(62,240,138,.12)}.tz-c.tam b{color:#3ef08a}.tz-c.tam span{color:#bff7d6}',
+    '.tz-obb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.tz-obb b{font-size:18px}.tz-obt{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#ffc46b;text-decoration:none;border:1px solid rgba(255,181,71,.5);border-radius:999px;padding:4px 10px}',
+    '.tz-sdur{display:flex;align-items:center;gap:10px;font-size:14px;color:#cfe0ff;margin-bottom:10px}.tz-sdur b{font-size:18px;color:#fff}.tz-sbar{flex:1;height:8px;border-radius:4px;background:#1d3354;overflow:hidden}.tz-sbar i{display:block;height:100%;background:linear-gradient(90deg,#ffb547,#3ef08a)}.tz-sdur.tam{color:#3ef08a}.tz-sdur.tam b{color:#3ef08a}',
+    '.tz-gonderb.say{background:#3ef08a;color:#05210f}',
+    '.tz-ek{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid #1d3354}.tz-ek .tz-av{width:40px;height:40px;font-size:13px}.tz-ekm{flex:1;min-width:0}.tz-ekm b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tz-ekm small{display:block;font-size:12px;color:#8aa0c2}',
+    '.tz-ara,.tz-geldi,.tz-geri{flex:none;font:inherit;font-size:12.5px;font-weight:800;border-radius:10px;padding:8px 10px;cursor:pointer}.tz-ara{background:transparent;border:1px solid rgba(255,107,107,.6);color:#ffb0b0}.tz-geldi{background:#3ef08a;border:0;color:#05210f}.tz-geri{background:transparent;border:1px solid #2a4468;color:#9fb2cf}.tz-ek.gel{opacity:.75}',
+    '.tz-gelac{width:100%;text-align:left;margin-top:10px;font:inherit;font-size:13px;font-weight:700;color:#9fb2cf;background:transparent;border:0;padding:6px 0;cursor:pointer}',
+    '.tz-say{margin:5px 6px 0;flex:none}.tz-saybtn{width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:14px;border:0;background:linear-gradient(135deg,#3ef08a,#1fc06a);color:#05210f;font:inherit;cursor:pointer;box-shadow:0 0 20px rgba(62,240,138,.35)}',
+    '.tz-sayu{font-size:11px;font-weight:800;letter-spacing:.04em;opacity:.85}.tz-saybtn b{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:900;letter-spacing:.04em}.tz-saybtn:disabled{opacity:.6}',
+    '.tz-sayok{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;border:1px solid rgba(62,240,138,.5);background:rgba(62,240,138,.1);color:#3ef08a;font-size:13px;font-weight:700}',
+    '.tz-sis.tz-sistam{color:#3ef08a;border-color:rgba(62,240,138,.45);background:rgba(62,240,138,.08);font-weight:700}'
   ].join('\n');
   var AKTIF = null, SKK;
   function stilKur() { if (d.getElementById('tzStil')) return; var s = d.createElement('style'); s.id = 'tzStil'; s.textContent = CSS; d.head.appendChild(s); }
@@ -128,9 +139,9 @@
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
     var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola 15 dk'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
-      '<span class="tz-canli"><i></i>CANLI</span>' + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + '</button>' : '') + '</div>' + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
+      '<span class="tz-canli"><i></i>CANLI</span>' + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + '</button>' : '') + '</div>' + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<div class="tz-say" style="display:none"></div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
-    var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt'), topEl = ekran.querySelector('.tz-top');
+    var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt'), topEl = ekran.querySelector('.tz-top'), sayEl = ekran.querySelector('.tz-say');
     // klavye/boy modülü sayfa başına bir kez kurulur (her açılışta yeni dinleyici eklenmesin); hep o anki telsiz ekranını gösterir
     AKTIF = { ekran: ekran, ak: ak, S: S, cfg: cfg };
     if (SKK === undefined) { SKK = null; try { if (w.UmalSohbetKlavye) SKK = w.UmalSohbetKlavye({ ekran: function () { return AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) ? AKTIF.ekran : null; }, akis: function () { return AKTIF && !AKTIF.S.olu ? AKTIF.ak : null; }, gonder: '.tz-gon', cubuk: cfg.cubuk, etkin: function () { return !!AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) && (!AKTIF.cfg.etkin || AKTIF.cfg.etkin()); } }); } catch (e) { SKK = null; } }
@@ -152,15 +163,50 @@
     var obYazi = function (k) { var L = obListe(k); return L ? 'OTOBÜS ' + L.join('–') : 'HERKES'; };
     var dkHesap = function (k) { var p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); return Math.round((h - Date.now()) / 60000); };
     function toplanmalar() { var b = bugun(); return S.M.filter(function (m) { return m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b); }); }
-    function seritCiz() {   // personel: her otobüsün geçerli toplanma saati tek şeritte
-      var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), var_ = false;
+    function seritCiz() {   // personel: altı otobüs tek şeritte — sayım (37/40, tam) ya da toplanma saati; dokununca otobüs sayfası
+      var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), SY = S.sayimlar || [];
       var html = L.map(function (o) { var m = null; for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-        if (m && dkHesap(m.konum) < -30) m = null; if (m) var_ = true;
-        if (!m) return '<span class="tz-c yok"><b>OTO ' + o + '</b><span>—</span></span>';
+        if (m && dkHesap(m.konum) < -30) m = null;
+        var sy = SY.filter(function (x) { return x.otobus === o; })[0], tazeTam = sy && sy.bitti && (Date.now() - new Date(sy.bitti)) < 90 * 60000;
+        if (sy && !sy.bitti) return '<button type="button" class="tz-c say" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + sy.gelen + '/' + sy.toplam + '</span></button>';
+        if (tazeTam) return '<button type="button" class="tz-c tam" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>✓ ' + sy.toplam + '</span></button>';
+        if (!m) return '<button type="button" class="tz-c yok" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>—</span></button>';
         var dk = dkHesap(m.konum);
-        return '<a class="tz-c' + (dk <= 10 && dk >= -5 ? ' yakin' : dk < -5 ? ' gecti' : '') + '" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener"><b>OTO ' + o + '</b><span>' + esc(m.konum.saat) + '</span></a>'; }).join('');
-      if (!var_) { topEl.style.display = 'none'; return; }
+        return '<button type="button" class="tz-c' + (dk <= 10 && dk >= -5 ? ' yakin' : dk < -5 ? ' gecti' : '') + '" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + esc(m.konum.saat) + '</span></button>'; }).join('');
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; } topEl.style.display = '';
+    }
+    function otobusSayfa(o) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
+      var D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null;
+      for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
+      var kok = null, kapat_ = null;
+      var ciz = function () { if (!kok) return; var s = D && D.sayim, K = (D && D.kisiler) || [], ek = K.filter(function (k) { return !k.var; }), gel = K.filter(function (k) { return k.var; });
+        var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" src="' + esc(k.foto) + '">' : esc(basHarf(a))) + '</div>'; };
+        kok.innerHTML = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' +
+          (!D ? '<div class="tz-kdur">Yükleniyor…</div>' :
+          (s && !s.bitti ? '<div class="tz-sdur"><span class="tz-sbar"><i style="width:' + Math.round(100 * gel.length / Math.max(1, K.length)) + '%"></i></span><b>' + gel.length + '/' + K.length + '</b> geldi</div>' :
+            (s && s.bitti ? '<div class="tz-sdur tam"><b>Tam · ' + K.length + '/' + K.length + '</b> · ' + esc(saat(s.bitti)) + '</div>' : '')) +
+          '<button type="button" class="tz-gonderb say" data-sbas>' + (s ? (s.bitti ? 'Yeniden say' : 'Sayımı baştan başlat') : 'Sayım başlat') + ' · ' + K.length + ' öğrenci</button>' +
+          (s && !s.bitti && ek.length ? '<div class="tz-bas" style="margin-top:12px">EKSİKLER · ' + ek.length + '</div>' + ek.map(function (k) { return '<div class="tz-ek">' + av(k) + '<span class="tz-ekm"><b>' + esc(buyukHarf(k.ad || k.no)) + '</b><small>' + esc(k.sinif || '') + (k.koltuk ? ' · Koltuk ' + k.koltuk : '') + '</small></span><button type="button" class="tz-ara" data-sara="' + esc(k.no) + '">Neredesin?</button><button type="button" class="tz-geldi" data-svar="' + esc(k.no) + '">Geldi</button></div>'; }).join('') : '') +
+          (s && gel.length ? '<button type="button" class="tz-gelac" data-sgel>' + (gelenAcik ? '▾' : '▸') + ' Gelenler · ' + gel.length + '</button>' + (gelenAcik ? gel.map(function (k) { return '<div class="tz-ek gel">' + av(k) + '<span class="tz-ekm"><b>' + esc(buyukHarf(k.ad || k.no)) + '</b><small>' + (k.kim === 'ogretmen' ? 'öğretmen işaretledi' : 'kendisi bildirdi') + (k.zaman ? ' · ' + esc(saat(k.zaman)) : '') + '</small></span><button type="button" class="tz-geri" data-syok="' + esc(k.no) + '">Geri al</button></div>'; }).join('') : '') : ''));
+        var sb = kok.querySelector('[data-sbas]'); if (sb) sb.onclick = async function () { if (D && D.sayim && !D.sayim.bitti && !await onayla('Otobüs ' + o + ' sayımı baştan başlasın mı? Şimdiye kadar sayılanlar sıfırlanır.')) return;
+          sb.disabled = true; var r = await cfg.sayim.baslat(o); if (!r || !r.ok) { sb.disabled = false; uyar((r && r.hata) || 'Başlatılamadı'); return; } await yenile(); yukle(); };
+        kok.querySelectorAll('[data-svar]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var k = K.filter(function (x) { return x.no === b.dataset.svar; })[0]; if (k) { k.var = true; k.kim = 'ogretmen'; } ciz(); var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.svar, true); if (!r || !r.ok) uyar((r && r.hata) || 'Kaydedilemedi'); await yenile(); yukle(); }; });
+        kok.querySelectorAll('[data-syok]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.syok, false); if (!r || !r.ok) uyar((r && r.hata) || 'Kaydedilemedi'); await yenile(); yukle(); }; });
+        kok.querySelectorAll('[data-sara]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.sayim.ara(D.sayim.id, b.dataset.sara); b.textContent = r && r.ok ? (r.tekrar ? 'Az önce gitti' : 'Gönderildi') : 'Gitmedi'; }; });
+        var gc = kok.querySelector('[data-sgel]'); if (gc) gc.onclick = function () { gelenAcik = !gelenAcik; ciz(); };
+      };
+      var yenile = async function () { var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { D = r; ciz(); } };
+      kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); } }); });
+      ciz(); yenile(); zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden) yenile(); }, 4000);
+    }
+    function sayCiz() {   // öğrenci: kendi otobüsünün açık sayımı — büyük "Otobüsteyim" ya da "Sayıldın"
+      if (P || !sayEl) return; var s = S.sayim;
+      if (!s) { sayEl.style.display = 'none'; sayEl.__h = ''; return; }
+      var sayildi = s.var || S.sayildi === s.id;
+      var html = sayildi ? '<div class="tz-sayok">' + SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 18, 2.6) + '<span>Otobüs ' + s.otobus + ' sayımında sayıldın</span></div>'
+        : '<button type="button" class="tz-saybtn" data-sayvar><span class="tz-sayu">OTOBÜS ' + s.otobus + ' SAYIMI · otobüse bindiysen dokun</span><b>' + SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 22, 2.8) + 'OTOBÜSTEYİM</b></button>';
+      if (sayEl.__h !== html) { sayEl.__h = html; sayEl.innerHTML = html; var b = sayEl.querySelector('[data-sayvar]'); if (b) b.onclick = async function () { b.disabled = true; var r = null; try { r = await cfg.sayimVar(s.id); } catch (e) {} if (!r || !r.ok) { b.disabled = false; uyar((r && r.hata) || 'Gönderilemedi, yeniden dokun.'); return; } S.sayildi = s.id; sayCiz(); }; }
+      sayEl.style.display = '';
     }
     function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b) && bana(m.konum)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b && bana(cfg.gezi.toplanma)) ? { konum: cfg.gezi.toplanma } : null; }
     function topCiz() {   // toplanma şeridi: saat büyük, kalan süre; son 10 dakikada kırmızı ve yanıp sönen nokta (yalnız CSS opaklık; telefonu yormaz)
@@ -189,6 +235,7 @@
         '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
     function mesajHtml(m) {
       var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
+      if (m.sayim) return m.sayim.tur === 'tam' ? '<div class="tz-sis tz-sistam">' + SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 13, 2.8) + ' ' + esc(m.metin) + ' · ' + esc(saat(m.zaman)) + '</div>' : '<div class="tz-sis">' + esc(m.metin) + ' · ' + esc(adGoster(m)) + ' · ' + esc(saat(m.zaman)) + '</div>';
       if (m.duyuru && m.konum && m.konum.saat && !P && !bana(m.konum)) return '<div class="tz-baska"><b>' + esc(obYazi(m.konum).replace('OTOBÜS', 'Otobüs')) + '</b> ' + esc(m.konum.saat) + '\'te toplanacak · başka otobüs</div>';
       if (m.duyuru) { var tk = m.konum && m.konum.lat != null; return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(tk ? IK.pin : IK.duyuru, 14, 2.4) + (tk && m.konum.saat ? esc(obYazi(m.konum)) + ' · TOPLANMA ' + esc(m.konum.saat) : 'DUYURU') + '</div>' + kunye(m, ad) + (tk ? konumHtml(m.konum) : '<div class="tz-t">' + esc(m.metin) + '</div>') + '</div>'; }
       return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
@@ -302,9 +349,10 @@
       if (S.M.length) S.son = S.M[S.M.length - 1].id;
       var degisti = r.bastan || L.length || S.surum !== r.surum; S.surum = r.surum;
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
-      if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } }
-      else if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); }
-      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); topCiz(); }
+      if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
+      else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
+      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
+      topCiz();
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
     }
     function perde(html, bagla) {
@@ -330,6 +378,7 @@
         function (p, kapat) { p.querySelectorAll('[data-tzac]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.islem({ sessiz: b.dataset.tzac, kapali: false }); if (!r || !r.ok) { uyar('Yapılamadı'); b.disabled = false; return; } kapat(); S.surum = -1; yukle(); }; }); });
     }
     var kp = ekran.querySelector('.tz-kapa'); if (kp) kp.onclick = function () { cfg.kapat(); };
+    if (P && cfg.sayim) topEl.onclick = function (e) { var b = e.target.closest('[data-tzob]'); if (b) otobusSayfa(+b.dataset.tzob); };
     if (P) { ak.onclick = function (e) { if (e.target.closest('.tz-harita')) return; var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
     function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(); dongu(); }, d.hidden ? 15000 : 4000); }
     function dur() { clearTimeout(S.zam); }

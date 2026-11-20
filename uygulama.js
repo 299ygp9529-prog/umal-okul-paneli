@@ -553,6 +553,8 @@
       islem: v => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: v }),
       kisi: no => r_('umal_gezi_telsiz_kisi', { p_anahtar: g.anahtar, p_no: no }),
       foto: fk => r_('umal_gezi_telsiz_fotolar', { p_anahtar: g.anahtar, p_fk: fk }),
+      sayim: { baslat: o => r_('umal_gezi_sayim_baslat', { p_anahtar: g.anahtar, p_otobus: o }), durum: o => r_('umal_gezi_sayim_durum', { p_anahtar: g.anahtar, p_otobus: o }),
+        isaret: (id, no, v) => r_('umal_gezi_sayim_isaret', { p_sayim: id, p_no: no, p_var: v }), ara: (id, no) => r_('umal_gezi_sayim_ara', { p_sayim: id, p_no: no }) },   // K-817
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });

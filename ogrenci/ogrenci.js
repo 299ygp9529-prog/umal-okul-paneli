@@ -419,6 +419,7 @@
       oku: (s, v) => r_('umal_ogrenci_telsiz_oku', { p_bilet: TZO.b, p_sonra: s, p_surum: v }),
       yaz: m => r_('umal_ogrenci_telsiz_yaz', { p_bilet: TZO.b, p_metin: m }),
       foto: fk => r_('umal_ogrenci_telsiz_fotolar', { p_bilet: TZO.b, p_fk: fk }),
+      sayimVar: id => r_('umal_ogrenci_sayim_var', { p_bilet: TZO.b, p_sayim: id }),
       konum: (la, lo, ac) => r_('umal_ogrenci_telsiz_konum', { p_bilet: TZO.b, p_lat: la, p_lng: lo, p_acc: ac }),
       kapandi: () => { TZO.g = null; TZO.b = ''; anaCiz(true); } });
   }
