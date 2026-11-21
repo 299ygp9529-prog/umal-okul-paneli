@@ -15,22 +15,22 @@
     '.ak-bant .ak-lg { width: 8.6mm; height: 8.6mm; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; } .ak-bant .ak-lg img { width: 7.8mm; height: 7.8mm; }' +
     '.ak-bant .ak-bt { flex: 1; min-width: 0; } .ak-bant b { display: block; font-size: 8.8pt; letter-spacing: .5pt; } .ak-bant small { display: block; font-size: 6.2pt; color: #bfe9f2; white-space: nowrap; }' +
     '.ak-bant .ak-ms { width: 9.6mm; height: 9.6mm; border-radius: 50%; overflow: hidden; flex: none; box-shadow: 0 0 0 .4mm #22e8ff; background: #0b1424; } .ak-bant .ak-ms img { width: 100%; height: 100%; object-fit: cover; display: block; }' +
-    '.ak-ic { padding: 1.6mm 2.6mm 0 3.2mm; display: flex; gap: 2.2mm; flex: 1; min-height: 0; } .ak-sol { flex: 1; min-width: 0; display: flex; flex-direction: column; }' +
+    '.ak-ic { padding: 1.6mm 2.6mm 0 3.2mm; display: flex; gap: 2.2mm; flex: 1; min-height: 0; } .ak-sol { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ak-sol > * { flex-shrink: 0; }' +
     '.ak-qr { width: 22mm; flex: none; text-align: center; padding-top: .4mm; } .ak-qr img { width: 22mm; height: 22mm; display: block; image-rendering: pixelated; } .ak-qr small { display: block; font-size: 6pt; font-weight: 800; color: #0f7f90; margin-top: .2mm; }' +
     '.ak-ad { font-weight: 800; font-size: 10.4pt; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ak-s { font-size: 7pt; color: #5d6f88; line-height: 1.2; }' +
     '.ak-kk { margin: .9mm 0 1mm; border: .4mm solid #0fa3b8; background: #e6f7fa; border-radius: 1.8mm; display: flex; align-items: center; justify-content: space-between; padding: .5mm 2.2mm; }' +
     '.ak-kk small { font-size: 5.8pt; font-weight: 800; letter-spacing: .4pt; color: #0f7f90; } .ak-kk span { font: 800 13pt/1.1 Menlo, Consolas, "Courier New", monospace; letter-spacing: 1.2pt; color: #0d2a4a; }' +
-    '.ak-ol { margin: 0; padding: 0; list-style: none; font-size: 6.1pt; line-height: 1.28; } .ak-.ak-ol li { display: flex; gap: 1.2mm; margin-bottom: .35mm; } .ak-ol li i { flex: none; width: 3.1mm; height: 3.1mm; border-radius: 50%; background: #0d2a4a; color: #fff; font-style: normal; font-weight: 800; font-size: 5.4pt; display: grid; place-items: center; margin-top: .1mm; } .ak-ol b { color: #0f7f90; }' +
+    '.ak-ol { margin: 0; padding: 0; list-style: none; font-size: 6.1pt; line-height: 1.28; } .ak-ol li { display: flex; gap: 1.2mm; margin-bottom: .35mm; } .ak-ol li i { flex: none; width: 3.1mm; height: 3.1mm; border-radius: 50%; background: #0d2a4a; color: #fff; font-style: normal; font-weight: 800; font-size: 5.4pt; display: grid; place-items: center; margin-top: .1mm; } .ak-ol b { color: #0f7f90; }' +
     '.ak-n { padding: 0 3.2mm 1.3mm; font-size: 5.7pt; color: #5d6f88; flex: none; line-height: 1.25; } .ak-n b { color: #0d2a4a; }';
 
   function belge(L, opt) {
     opt = opt || {};
     var kok = opt.kok || location.href;
-    var logo = new URL('okul-logo.png', kok).href, maskot = new URL('atlas-mutlu.jpg', kok).href;
+    var logo = opt.logoVeri || new URL('okul-logo.png', kok).href, maskot = opt.maskotVeri || new URL('atlas-mutlu.jpg', kok).href;
     var qr = function (r) { try { return window.UmalQR ? '<img alt="QR" src="' + window.UmalQR.png('https://umalatlas.com.tr/ogrenci/#n=' + encodeURIComponent(r.no) + '&k=' + String(r.kod).replace(/[^A-Z0-9]/gi, ''), 10) + '">' : ''; } catch (e) { return ''; } };
     var kart = function (r) {
       return '<div class="ak-f"><div class="ak-bant"><span class="ak-lg"><img src="' + logo + '" alt=""></span><div class="ak-bt"><b>ATLAS\'A HOŞ GELDİN</b><small>Ümraniye Merkez Anadolu Lisesi</small></div><span class="ak-ms"><img src="' + maskot + '" alt=""></span></div>' +
-        '<div class="ak-ic"><div class="ak-sol"><div class="ak-ad">' + esc(buyuk(r.ad)) + '</div><div class="ak-s">' + esc(r.sinif) + ' · Okul no ' + esc(r.no) + '</div>' +
+        '<div class="ak-ic"><div class="ak-sol"><div class="ak-ad"' + (String(r.ad || '').length > 24 ? ' style="font-size:' + (String(r.ad).length > 30 ? '8.2' : '9') + 'pt"' : '') + '>' + esc(buyuk(r.ad)) + '</div><div class="ak-s">' + esc(r.sinif) + ' · Okul no ' + esc(r.no) + '</div>' +
         '<div class="ak-kk"><small>KODUN</small><span>' + esc(r.kod) + '</span></div>' +
         '<ol class="ak-ol"><li><i>1</i><span>QR\'ı okut ya da <b>umalatlas.com.tr/ogrenci</b> adresine numaranla ve kodunla gir.</span></li>' +
         '<li><i>2</i><span>Ana ekrana ekle: iPhone <b>Paylaş › Ana Ekrana Ekle</b> · Android <b>⋮ › Uygulamayı yükle</b></span></li>' +
@@ -46,28 +46,33 @@
     return { css: CSS, sayfalar: sayfalar, html: '<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>' + esc(opt.baslik || 'Atlas giriş kartları') + '</title><style>' + CSS + '</style></head><body>' + sayfalar.join('') + '</body></html>' };
   }
 
-  // Gerçek A4 PDF: her sayfa ayrı tuvale (QR keskin kalsın), sonra tek dosya
+  // Gerçek A4 PDF. Her sayfa tarayıcının kendi çizimiyle (SVG foreignObject) 3 kat çözünürlükte resme çevrilir — sayfanın stilleri karışmaz, QR keskin kalır.
+  var veriUrl = function (u) { return fetch(u).then(function (r) { return r.blob(); }).then(function (bl) { return new Promise(function (ok) { var f = new FileReader(); f.onload = function () { ok(f.result); }; f.readAsDataURL(bl); }); }); };
   async function pdf(L, opt) {
     opt = opt || {};
-    var b = belge(L, opt);
-    if (!window.html2pdf) await new Promise(function (ok, red) { var s = document.createElement('script'); s.src = new URL('html2pdf.bundle.min.js?v=0101', opt.kok || location.href).href; s.onload = ok; s.onerror = function () { red(new Error('PDF aracı yüklenemedi')); }; document.head.appendChild(s); });
-    var kap = document.createElement('div'); kap.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;pointer-events:none';
-    kap.innerHTML = '<style>' + b.css.replace(/@page[^}]*}/, '').replace(/html, body \{[^}]*}/, '').replace(/body \{/, '.akk {').replace(/\* \{/, '.akk * {') + ' .akk .ak-sayfa + .ak-sayfa{break-before:auto}</style><div class="akk"></div>';
-    document.body.appendChild(kap);
-    var ic = kap.querySelector('.akk');
-    try {
-      var ayar = { margin: 0, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } };
-      var sayfaEl = function (h) { ic.innerHTML = h; var el = ic.firstChild; return Promise.all([].map.call(el.querySelectorAll('img'), function (im) { return im.complete ? 0 : new Promise(function (r) { im.onload = im.onerror = r; }); })).then(function () { return el; }); };
-      var el0 = await sayfaEl(b.sayfalar[0]);
-      var w = window.html2pdf().set(ayar).from(el0).toPdf();
-      for (var i = 1; i < b.sayfalar.length; i++) {
-        var eli = await w.then(function () { return sayfaEl(b.sayfalar[i]); });
-        w = w.get('pdf').then(function (p) { p.addPage(); }).from(eli).toContainer().toCanvas().toPdf();
-        if (opt.ilerle) await w.then(function () { opt.ilerle(i + 1, b.sayfalar.length); });
-      }
-      var blob = await w.output('blob');
-      return blob;
-    } finally { kap.remove(); }
+    var kok = opt.kok || location.href, logo = await veriUrl(new URL('okul-logo.png', kok).href), maskot = await veriUrl(new URL('atlas-mutlu.jpg', kok).href);
+    var b = belge(L, Object.assign({}, opt, { logoVeri: logo, maskotVeri: maskot }));
+    if (!window.html2pdf) await new Promise(function (ok, red) { var s = document.createElement('script'); s.src = new URL('html2pdf.bundle.min.js?v=0101', kok).href; s.onload = ok; s.onerror = function () { red(new Error('PDF aracı yüklenemedi')); }; document.head.appendChild(s); });
+    var W = 794, H = 1123, K = 3, css = b.css.replace(/@page[^}]*}/, '').replace(/html, body \{[^}]*}/, '').replace(/body \{/, '.ak-kok {').replace(/\* \{/, '.ak-kok * {') +
+      '.ak-sayfa{width:' + W + 'px;height:' + H + 'px;padding:40px 38px 0;grid-template-columns:359px 359px;grid-auto-rows:208px}';
+    var resim = async function (sayfaHtml) {
+      var d = document.createElement('div'); d.className = 'ak-kok'; d.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml'); d.innerHTML = '<style>' + css + '</style>' + sayfaHtml;
+      var x = new XMLSerializer().serializeToString(d);
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W * K + '" height="' + H * K + '" viewBox="0 0 ' + W + ' ' + H + '"><foreignObject x="0" y="0" width="' + W + '" height="' + H + '">' + x + '</foreignObject></svg>';
+      var im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      await new Promise(function (ok, red) { im.onload = ok; im.onerror = function () { red(new Error('Sayfa çizilemedi')); }; });
+      if (im.decode) { try { await im.decode(); } catch (e) {} }
+      var c = document.createElement('canvas'); c.width = W * K; c.height = H * K; var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+      return c;
+    };
+    var ayar = { margin: 0, image: { type: 'jpeg', quality: 0.93 }, jsPDF: { unit: 'px', format: [W, H], orientation: 'portrait', compress: true, hotfixes: ['px_scaling'] } };
+    var w = window.html2pdf().set(ayar).from(await resim(b.sayfalar[0]), 'canvas').toPdf();
+    for (var i = 1; i < b.sayfalar.length; i++) {
+      var c = await resim(b.sayfalar[i]);
+      w = w.get('pdf').then(function (p) { p.addPage([W, H], 'portrait'); }).from(c, 'canvas').toPdf();
+      if (opt.ilerle) opt.ilerle(i + 1, b.sayfalar.length);
+    }
+    return await w.output('blob');
   }
   window.UmalAtlasKart = { belge: belge, pdf: pdf };
 })();
