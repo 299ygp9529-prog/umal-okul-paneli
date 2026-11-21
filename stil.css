@@ -2985,3 +2985,7 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
   #dpKF > .dp-iz .dp-h { min-height: 46px; }
   #dpKF > .dp-al { grid-column: 2; } #dpKF > .dp-al:first-of-type { margin-top: 0; }
 }
+/* K-89x: Boş Ders Görevlendirme — öğretmen seçimi düzenli ızgara; nöbetçiler geniş ekranda çok sütun */
+.dp-gv-o { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.dp-gv-o .cip { display: flex; justify-content: space-between; align-items: center; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 1100px) { .gv-nb { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); column-gap: 28px; } .gv-nbs:last-child { border-bottom: 1px solid var(--cizgi); } }
