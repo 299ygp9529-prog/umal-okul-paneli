@@ -2941,3 +2941,7 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .msj-tik input[type="checkbox"]:checked { background: rgba(34, 232, 255, .2); border-color: #22e8ff; box-shadow: 0 0 12px rgba(34, 232, 255, .45), inset 0 0 8px rgba(34, 232, 255, .2); }
 .msj-tik input[type="checkbox"]:checked::after { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
 .msj-tik input[type="checkbox"]:focus-visible { outline: 2px solid #7ff6ff; outline-offset: 2px; }
+/* Sohbet başlığında sınıf: düzeyin renginde daire içinde grup simgesi */
+.msj-ust .msj-av.g.sr.yuv { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 60%, transparent) !important; box-shadow: 0 0 12px color-mix(in srgb, var(--c) 35%, transparent); }
+.msj-ust .msj-av.g.sr.yuv::before { display: none; }
+.msj-ust .msj-av.g.sr.yuv svg { width: 23px; height: 23px; margin-left: 0; }
