@@ -970,6 +970,8 @@
   async function basla() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return girisGoster();
+    let sg = null; try { sg = localStorage.getItem('atlas-sifre-gerek'); } catch (e) {}
+    if (sg) { girisGoster(); $('#adim1').classList.add('gizli'); const kk = $('#kurKodKutu'); if (kk) kk.classList.add('gizli'); $('#sifreGec').classList.add('gizli'); sifreAdimi(session.user.email); return; }   // K-854: karekodla gelen şifresini belirlemeden giremez
     D.eposta = session.user.email || '';
     let { data: rol, error } = await sb.rpc('umal_benim_rolum');
     if (error || !rol) {
@@ -1044,7 +1046,7 @@
   function girisGoster() {
     $('#uygulama').classList.add('gizli');
     $('#giris').classList.remove('gizli');
-    $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#adim3').classList.add('gizli');
+    $('#adim1').classList.remove('gizli'); $('#adim2').classList.add('gizli'); $('#adim3').classList.add('gizli'); $('#sifreGec').classList.remove('gizli');
     try { const son = localStorage.getItem('atlas-son-eposta'); if (son && !$('#eposta').value) $('#eposta').value = son; } catch (e) {}
     kurKodFormu(KUR_IOS() && KUR_UYG());   // K-850: iPhone ana ekran uygulamasında kurulum kodu açık gelir
     if (/[?&]kayit\b/.test(location.search) && !$('#kayitBilgi')) {   // K-733: umalatlas.com.tr/kayit
@@ -1096,6 +1098,7 @@
     const { error } = await sb.auth.updateUser({ password: p1, data: { sifre_var: true } });
     $('#sifreKaydet').disabled = false;
     if (error && !/different from the old|same password|should be different/i.test(error.message || '')) { const en = (String(error.message || '').match(/at least (\d+)/i) || [])[1]; $('#girisBilgi').textContent = en ? `Şifre en az ${en} rakam olmalı.` : /weak|pwned|leaked|characters/i.test(error.message || '') ? 'Bu şifre çok kolay ya da sızmış listelerde var; başka rakamlar seçin.' : 'Şifre kaydedilemedi: ' + hataYaz(error); return; }
+    try { localStorage.removeItem('atlas-sifre-gerek'); } catch (e) {}
     $('#girisBilgi').textContent = ''; $('#adim3').classList.add('gizli'); basla();
   };
   $('#sifreGec').onclick = () => { $('#adim3').classList.add('gizli'); $('#girisBilgi').textContent = ''; basla(); };
@@ -4438,7 +4441,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <div class="zm-izgara">${ZL.map(([z, H, P]) => `<button class="zm-k" style="--g:${zRenk(z)}" data-zsec="${esc(z)}"><b>${esc(z)}</b><small>${H.length} kullanıcı${P.length ? ' · ' + P.length + ' panelde yok' : ''}</small><span class="zm-s">${H.length + P.length}</span></button>`).join('')}<button class="zm-k zm-tum" style="--g:#9fb3cf" data-zsec="*"><b>Tüm kullanıcılar</b><small>${T.length} kişi</small><span class="zm-s">${T.length}</span></button></div>`
           : `<div class="zm-ust"><button class="ikincil" data-zsec="">‹ Zümreler</button><b class="neon" style="--g:${zRenk(zSec)}">${zSec === '*' ? 'Tüm kullanıcılar' : esc(zSec)} · ${G.length}</b></div>
           <div class="satirlar" style="margin-top:10px">${G.length ? G.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + kisiHtml(r.ekleyen, (L.find(x => x.eposta === r.ekleyen) || {}).ad) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
-          <div class="og-rol">${rolu(r.eposta) === 'bas' ? '<span class="kurucu-yazi kurucu-rozet">KURUCU</span>' : Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(PZ.get(zAnah(r.ad)) || {}).zumre ? ' (' + esc(PZ.get(zAnah(r.ad)).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
+          <div class="og-rol">${rolu(r.eposta) === 'bas' ? '<span class="kurucu-yazi kurucu-rozet">KURUCU</span>' : Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(PZ.get(zAnah(r.ad)) || {}).zumre ? ' (' + esc(PZ.get(zAnah(r.ad)).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div>${D.gercekRol === 'bas' && rolu(r.eposta) !== 'bas' ? `<button class="ikincil kucuk-d" data-epd="${esc(r.eposta)}">E-postayı düzelt</button>` : ''}<button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
       { const ka = $('#kurAra'); if (ka) {   // K-850 · K-852: listede olmayan öğretmen de buradan eklenir (ders programındaki adlar önerilir)
         const kurYeni = (ad0, ep0) => { const so = $('#kurSonuc');
           so.innerHTML = `<div class="kur-yeni"><b>Yeni öğretmen</b><label>Ad Soyad<input id="kurYAd" value="${esc(baslik(ad0 || ''))}" maxlength="80" autocomplete="off"></label><label>E-posta<input id="kurYEp" type="email" value="${esc(ep0 || '')}" placeholder="ornek@gmail.com" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"></label><button class="birincil" id="kurYEkle">Ekle ve karekod ver</button><small class="soluk">Öğretmen olarak eklenir; idare ya da rehberlik yetkisini sonra listeden verebilirsiniz.</small></div>`;
@@ -4495,6 +4498,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         };
         g.onblur = kaydet; g.onkeydown = ev => { if (ev.key === 'Enter') g.blur(); };
       });
+      $('#icerik').querySelectorAll('[data-epd]').forEach(b => b.onclick = async () => {   // K-854: yanlış yazılmış e-postayı düzelt (hesap, şifre ve geçmiş korunur)
+        const eski = b.dataset.epd, yeni = await girdiAl(`${eski} adresi düzeltilsin. Doğru e-posta:`, eski); if (yeni == null) return;
+        const n = String(yeni).trim().toLowerCase(); if (!n || n === eski) return;
+        const { data, error } = await sb.rpc('umal_eposta_duzelt', { p_eski: eski, p_yeni: n });
+        if (error || !data || !data.ok) { uyar('Düzeltilemedi: ' + ((data && data.hata) || hataYaz(error))); return; }
+        const x = L.find(r_ => r_.eposta === eski); if (x) x.eposta = n; if (yRol.has(eski)) { yRol.set(n, yRol.get(eski)); yRol.delete(eski); }
+        atlasOnay('E-posta düzeltildi', n + ' · öğretmen bundan sonra bu adresle girer'); ciz(); });
       $('#icerik').querySelectorAll('[data-sil]').forEach(b => b.onclick = async () => {
         if (!await onayla(b.dataset.sil + ' kaldırılsın mı? Panele bir daha giremez.')) return;
         const { error } = await sb.from('umal_ogretmenler').delete().eq('eposta', b.dataset.sil);
@@ -7904,8 +7914,8 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     try { await sb.auth.signOut({ scope: 'local' }); } catch (e) {}
     const { error } = await israrla(() => sb.auth.signInWithPassword({ email: data.eposta, password: data.sifre }));
     if (error) { bi.textContent = 'Giriş yapılamadı: ' + hataYaz(error); return false; }
-    try { localStorage.setItem('atlas-hatirla', '1'); localStorage.setItem('atlas-son-eposta', data.eposta); localStorage.setItem('atlas-kurulum', String(Date.now())); } catch (e) {}
-    bi.textContent = ''; const ki = $('#kurIos'); if (ki) ki.remove(); const ke = $('#kurEp'); if (ke) ke.remove(); $('#adim1').classList.add('gizli'); $('#eposta').value = data.eposta; sifreAdimi(data.eposta);
+    try { localStorage.setItem('atlas-hatirla', '1'); localStorage.setItem('atlas-son-eposta', data.eposta); localStorage.setItem('atlas-kurulum', String(Date.now())); localStorage.setItem('atlas-sifre-gerek', '1'); } catch (e) {}
+    bi.textContent = ''; const ki = $('#kurIos'); if (ki) ki.remove(); const ke = $('#kurEp'); if (ke) ke.remove(); $('#sifreGec').classList.add('gizli');   // K-854: karekodla gelende şifre zorunlu $('#adim1').classList.add('gizli'); $('#eposta').value = data.eposta; sifreAdimi(data.eposta);
     const sb3 = $('#adim3 .sifre-bas b'); if (sb3) sb3.textContent = 'Hoş geldiniz! Kendi şifrenizi belirleyin';
     return true;
   }
@@ -7921,7 +7931,11 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     $('#kurEpGir').onclick = async () => { const ad = baslik($('#kurEpAd').value.trim()), ep = $('#kurEpEp').value.trim().toLowerCase();
       if (!ad) { $('#girisBilgi').textContent = 'Adınızı ve soyadınızı yazın.'; return; }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ep)) { $('#girisBilgi').textContent = 'E-posta adresinizi yazın (şifrenizi unutursanız buraya kod gelir).'; return; }
-      $('#kurEpGir').disabled = true; await kurulumGir(Object.assign({}, arg, { p_eposta: ep, p_ad: ad })); const g = $('#kurEpGir'); if (g) g.disabled = false; };
+      const f = $('#kurEp'), eskiH = f.innerHTML;   // K-854: e-postayı büyük gösterip onaylat (yanlış yazılırsa şifre yenileme kodu başka adrese gider)
+      f.innerHTML = `<b class="kur-bas">E-postanız doğru mu?</b><p>Şifrenizi unutursanız kod bu adrese gelir.</p><div class="kur-ep-buyuk">${esc(ep)}</div><button type="button" class="birincil" id="kurEpEvet">Evet, doğru</button><button type="button" class="ikincil" id="kurEpDuz">Düzelt</button>`;
+      $('#kurEpDuz').onclick = () => { f.innerHTML = eskiH; kurEpostaSor(arg, { ad }); setTimeout(() => { const i = $('#kurEpEp'); if (i) { i.value = ep; i.focus(); } }, 80); };
+      $('#kurEpEvet').onclick = async () => { $('#kurEpEvet').disabled = true; $('#kurEpDuz').disabled = true; const ok = await kurulumGir(Object.assign({}, arg, { p_eposta: ep, p_ad: ad }));
+        if (!ok && $('#kurEpEvet')) { $('#kurEpEvet').disabled = false; $('#kurEpDuz').disabled = false; } }; };
   }
   async function kurulumHash() {   // karekod: umalatlas.com.tr/#kur=<bilet>
     const m = location.hash.match(/kur=([0-9a-f]{36})/); if (!m) return false;
