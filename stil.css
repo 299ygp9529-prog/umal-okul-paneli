@@ -2931,5 +2931,6 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .gz-kk .gb-dug { margin-top: 14px; } .gz-kk .gb-dug .birincil { flex: 1; width: 100%; min-width: 0; min-height: 46px; font-size: inherit; margin: 0; }   /* K-871: kartın altındaki Bilgileri kaydet de üstteki düğmelerle aynı boy, tam genişlik */
 .msj-ust .ic-geri, .zm-ust .ic-geri { flex: none; }   /* K-882: geri düğmesi her yerde aynı (ic-geri), sıkışıp alt alta kaymaz */
 /* K-883: Mesajlar sınıf grubu rozeti — düzey rakamı, düzey rengi, solda şerit */
-.msj-av.g.sr { position: relative; border-radius: 12px; background: var(--z) !important; color: var(--c) !important; font-size: 19px !important; font-weight: 800; border: 1px solid color-mix(in srgb, var(--c) 30%, transparent) !important; overflow: hidden; }
+.msj-av.g.sr { position: relative; border-radius: 12px; background: var(--z) !important; color: var(--c) !important; font-size: 19px !important; display: grid; place-items: center; font-weight: 800; border: 1px solid color-mix(in srgb, var(--c) 30%, transparent) !important; overflow: hidden; }
 .msj-av.g.sr::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+.msj-av.g.sr svg { width: 24px; height: 24px; margin-left: 4px; }   /* K-884 */

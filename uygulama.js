@@ -523,7 +523,8 @@
   }
   // K-883: sınıf grubunun rozeti — düzey rakamı, düzey renginde, solunda şerit (Harita/Öğrenciler'deki sınıf kutularıyla aynı dil); şube başlıkta yazar
   const MSJ_DZ = { '9': ['#22e8ff', '#0b2a36'], '10': ['#3ef08a', '#0c2a1c'], '11': ['#b06bff', '#221637'], '12': ['#ff9a3a', '#2e1c0b'] };
-  function msjSinifRozet(s) { const d = String(s || '').split('-')[0], r = MSJ_DZ[d] || ['#7fb2ff', '#13213a']; return `<span class="msj-av g sr" style="--c:${r[0]};--z:${r[1]}" aria-hidden="true">${esc(MSJ_DZ[d] ? d : String(s || '?').slice(0, 3))}</span>`; }
+  function msjSinifRozet(s) { const d = String(s || '').split('-')[0], r = MSJ_DZ[d] || ['#7fb2ff', '#13213a']; return `<span class="msj-av g sr" style="--c:${r[0]};--z:${r[1]}" aria-hidden="true">${MSJ_GRUP_IK}</span>`; }   // K-884: rozette yazı yok (sınıf adı yalnız başlıkta)
+  const MSJ_GRUP_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2" fill="currentColor" fill-opacity=".22"/><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8" fill="currentColor" fill-opacity=".22"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.2 14.6c1.8.6 3 2.2 3.3 4.4"/></svg>';
   function msjYeniBirebir() { let q = '';
     const ciz_ = () => { const t = q.trim().toLocaleLowerCase(tr), L = (D.ogrenciler || []).filter(o => MSJ_SINIF.includes(o.sinif) && (!t || (o.ad + ' ' + o.sinif + ' ' + o.no).toLocaleLowerCase(tr).includes(t))).slice(0, 40);
       pencereAc(`<h2 style="margin-top:0">Öğrenciye yaz</h2><div class="soluk kucuk">Sınıflarınızdaki öğrenciler (${esc(MSJ_SINIF.join(', '))}). Birebir mesajlar 08.00–20.00 arası iletilir.</div>
@@ -546,7 +547,7 @@
       if (!P.length) P.push({ k: 'bos', h: '<div class="soluk kucuk msj-bos" style="text-align:center;margin-top:20px">Henüz mesaj yok. İlk mesajı siz yazın.</div>' }); return P; };
     const akisCiz = ak => { if (SK) { SK.akisYaz(ak, parcalar()); return; } const dip = ak.scrollHeight - ak.scrollTop - ak.clientHeight < 80; ak.innerHTML = parcalar().map(p => p.h).join(''); if (dip) ak.scrollTop = ak.scrollHeight; };
     const var_ = I.querySelector('.msj-ekran'); if (var_ && var_.dataset.id === String(x.id)) {   // K-745c: açık sohbette yalnız mesaj listesi yenilenir (yazı kutusu, klavye ve odak yerinde kalır)
-      akisCiz($('#msjAkis')); const sm = var_.querySelector('.msj-ust small'); if (sm && grup) sm.textContent = MSJ.uye + ' öğrenci'; return; }
+      akisCiz($('#msjAkis')); const sm = var_.querySelector('.msj-ust small'); if (sm && grup) sm.textContent = 'Sınıf grubu · ' + MSJ.uye + ' öğrenci'; return; }
     I.innerHTML = `<div class="msj-ekran" data-id="${esc(String(x.id))}"><div class="msj-ust"><button type="button" class="ic-geri" id="msjGeri">${ICG_SVG}<span>Geri</span></button>${grup ? `${msjSinifRozet(x.sinif)}` : msjAvatar(x.ogrenci, x.ad)}<div><b>${grup ? esc(x.sinif) : esc(baslik(x.ad || ''))}</b><small>${grup ? 'Sınıf grubu · ' + MSJ.uye + ' öğrenci' : esc(x.ogr_sinif || '') + ' · birebir · 08.00–20.00'}</small></div>
         ${grup ? `<label class="msj-tik"><input type="checkbox" id="msjYazabilir" ${MSJ.yazabilir ? 'checked' : ''}> Öğrenciler yazabilir</label>` : '<button class="bag" id="msjSik" style="margin-left:auto;color:#ff8a8a">Rehberliğe ilet</button><button class="bag" id="msjSil" style="color:#ff8a8a">Sil</button>'}</div>
       <div class="msj-akis" id="msjAkis"></div>
