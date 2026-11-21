@@ -2892,3 +2892,16 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .hz-izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .hz-k { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--g) 45%, transparent); background: color-mix(in srgb, var(--g) 9%, #0f1d33); color: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
 .hz-k i { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--g); background: color-mix(in srgb, var(--g) 16%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--g) 30%, transparent); }
+/* K-861: hızlı geçişi düzenle */
+.hz-sec { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.hz-cip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px 4px 6px; border-radius: 999px; border: 1px solid #22e8ff; background: rgba(34, 232, 255, .1); font-size: 13px; font-weight: 700; }
+.hz-cip b { width: 20px; height: 20px; border-radius: 50%; background: #22e8ff; color: #06202a; display: grid; place-items: center; font-size: 11px; }
+.hz-cip button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #2a4468; background: #0b1424; color: #cfe0ff; font: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+.hz-cip button:disabled { opacity: .3; }
+.hz-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 46vh; overflow-y: auto; text-align: left; }
+.hz-l { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 12px; border: 1px solid #24406a; background: #0f1d33; color: #dfe9f7; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; min-width: 0; }
+.hz-l i { color: #8fa6c8; display: grid; flex: none; } .hz-l span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hz-l em { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: #22e8ff; color: #06202a; font-weight: 800; font-size: 12px; display: grid; place-items: center; flex: none; }
+.hz-l.secili { border-color: #22e8ff; background: rgba(34, 232, 255, .1); } .hz-l.secili i { color: #22e8ff; }
+.hz-tus { display: flex; gap: 8px; } .hz-tus button { flex: 1; }
+.hz-menu #hzDuz { align-self: center; }

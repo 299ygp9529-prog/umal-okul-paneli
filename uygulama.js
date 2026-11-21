@@ -253,12 +253,39 @@
     telsiz: '<rect x="6" y="8" width="12" height="13" rx="3" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="6" y="8" width="12" height="13" rx="3"/><path d="M9 3l6 5M9.5 13h5M9.5 16.5h5"/>',
     mesajlar: '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9h7M8.5 12.5h4.5"/>',
     harita: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.5"/>' };
-  function hizliMenu() {
-    { const yut = e => { e.stopPropagation(); e.preventDefault(); }; document.addEventListener('click', yut, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', yut, true), 700); }   // basılı tutup bırakınca gelen tıklama pencereyi kapatmasın
-    const L_ = [['dersyoklama', 'Yoklama al', '#22e8ff'], ['telsiz', 'Gezi Telsizi', '#ffb547'], ['mesajlar', 'Mesajlar', '#c99bff'], ['harita', 'Kim nerede', '#5ee08a']].filter(([id]) => { const b = BOLUMLER.find(x => x.id === id); return b && b.roller.includes(D.rol) && (!b.kosul || b.kosul()); });
-    if (!L_.length) return;
-    pencereAc(`<div class="hz-menu"><b class="hz-bas">Hızlı geçiş</b><div class="hz-izgara">${L_.map(([id, ad, c]) => `<button type="button" class="hz-k" style="--g:${c}" data-hz="${id}"><i><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HZ_IK[id]}</svg></i><span>${ad}</span></button>`).join('')}</div><small class="soluk">Atlas simgesine basılı tutunca açılır</small></div>`);
-    document.querySelectorAll('[data-hz]').forEach(b => b.onclick = () => { $('#pencere').classList.add('gizli'); ac(b.dataset.hz); });
+  const HZ_VARSAYILAN = ['dersyoklama', 'telsiz', 'mesajlar', 'harita'], HZ_RENK = ['#22e8ff', '#ffb547', '#c99bff', '#5ee08a', '#ff8a8a', '#7fb2ff', '#ffe14d', '#66f0c8'];
+  const hzAl = () => { try { const u = (D.kullanici || {}).hizli; if (Array.isArray(u) && u.length) return u; const l = JSON.parse(localStorage.getItem('atlas-hizli') || 'null'); if (Array.isArray(l) && l.length) return l; } catch (e) {} return HZ_VARSAYILAN; };
+  const hzIzinli = id => { const b = BOLUMLER.find(x => x.id === id); return b && b.roller.includes(D.rol) && (!b.kosul || b.kosul()) ? b : null; };
+  const hzIk = id => HZ_IK[id] || (typeof MENU_IK !== 'undefined' && MENU_IK[id]) || '<circle cx="12" cy="12" r="7"/>';
+  function hizliMenu(duzenle) {   // K-859 · K-861: Atlas'a basılı tut → hızlı geçiş; "Düzenle" ile istediğin bölümleri seç, sırala (hesabına kaydedilir, her cihazda aynı)
+    if (!duzenle) { const yut = e => { e.stopPropagation(); e.preventDefault(); }; document.addEventListener('click', yut, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', yut, true), 700); }   // basılı tutup bırakınca gelen tıklama pencereyi kapatmasın
+    let SEC = hzAl().slice();
+    const ciz = () => {
+      if (!duzenle) {
+        const L_ = SEC.map(id => hzIzinli(id)).filter(Boolean);
+        pencereAc(`<div class="hz-menu"><b class="hz-bas">Hızlı geçiş</b><div class="hz-izgara">${L_.map((b, k) => `<button type="button" class="hz-k" style="--g:${HZ_RENK[k % HZ_RENK.length]}" data-hz="${b.id}"><i><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${hzIk(b.id)}</svg></i><span>${esc(b.ad)}</span></button>`).join('') || '<div class="soluk">Seçili bölüm yok.</div>'}</div>
+          <button type="button" class="ikincil" id="hzDuz">Düzenle</button><small class="soluk">Atlas simgesine basılı tutunca açılır</small></div>`);
+        document.querySelectorAll('[data-hz]').forEach(b => b.onclick = () => { $('#pencere').classList.add('gizli'); ac(b.dataset.hz); });
+        $('#hzDuz').onclick = () => { duzenle = true; ciz(); };
+        return;
+      }
+      const T_ = BOLUMLER.filter(b => b.roller.includes(D.rol) && !['menu'].includes(b.id)).filter((b, k, a) => a.findIndex(x => x.id === b.id) === k);
+      const sira = id => SEC.indexOf(id);
+      pencereAc(`<div class="hz-menu"><b class="hz-bas">Hızlı geçişi düzenle</b><small class="soluk">Dokunarak seçin (en çok 8). Seçtiğiniz sırayla dizilir; numaraya göre sıralanır.</small>
+        <div class="hz-sec">${SEC.map((id, k) => { const b = BOLUMLER.find(x => x.id === id); return b ? `<span class="hz-cip"><b>${k + 1}</b>${esc(b.ad)}<button type="button" data-hzyuk="${k}" aria-label="Öne al" ${k ? '' : 'disabled'}>‹</button><button type="button" data-hzat="${k}" aria-label="Arkaya al" ${k < SEC.length - 1 ? '' : 'disabled'}>›</button></span>` : ''; }).join('')}</div>
+        <div class="hz-liste">${T_.map(b => `<button type="button" class="hz-l ${sira(b.id) >= 0 ? 'secili' : ''}" data-hzsec="${b.id}"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${hzIk(b.id)}</svg></i><span>${esc(b.ad)}</span>${sira(b.id) >= 0 ? `<em>${sira(b.id) + 1}</em>` : ''}</button>`).join('')}</div>
+        <div class="hz-tus"><button type="button" class="ikincil" id="hzVars">Varsayılana dön</button><button type="button" class="birincil" id="hzKay">Kaydet</button></div></div>`);
+      document.querySelectorAll('[data-hzsec]').forEach(b => b.onclick = () => { const id = b.dataset.hzsec, k = SEC.indexOf(id); if (k >= 0) SEC.splice(k, 1); else { if (SEC.length >= 8) { uyar('En çok 8 bölüm seçilebilir.'); return; } SEC.push(id); } ciz(); });
+      document.querySelectorAll('[data-hzyuk]').forEach(b => b.onclick = () => { const k = +b.dataset.hzyuk; [SEC[k - 1], SEC[k]] = [SEC[k], SEC[k - 1]]; ciz(); });
+      document.querySelectorAll('[data-hzat]').forEach(b => b.onclick = () => { const k = +b.dataset.hzat; [SEC[k + 1], SEC[k]] = [SEC[k], SEC[k + 1]]; ciz(); });
+      $('#hzVars').onclick = () => { SEC = HZ_VARSAYILAN.slice(); ciz(); };
+      $('#hzKay').onclick = async () => { if (!SEC.length) { uyar('En az bir bölüm seçin.'); return; }
+        try { localStorage.setItem('atlas-hizli', JSON.stringify(SEC)); } catch (e) {}
+        D.kullanici = Object.assign({}, D.kullanici, { hizli: SEC.slice() });
+        try { await sb.auth.updateUser({ data: { hizli: SEC.slice() } }); } catch (e) {}
+        atlasOnay('Hızlı geçiş kaydedildi', 'Her cihazınızda aynı'); duzenle = false; ciz(); };
+    };
+    ciz();
   }
   function asistanDugme() {
     if (!['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol) || document.getElementById('asFab')) return;
@@ -992,7 +1019,7 @@
     if (!session) return girisGoster();
     let sg = null; try { sg = localStorage.getItem('atlas-sifre-gerek'); } catch (e) {}
     if (sg) { girisGoster(); $('#adim1').classList.add('gizli'); const kk = $('#kurKodKutu'); if (kk) kk.classList.add('gizli'); $('#sifreGec').classList.add('gizli'); sifreAdimi(session.user.email); return; }   // K-854: karekodla gelen şifresini belirlemeden giremez
-    D.eposta = session.user.email || '';
+    D.eposta = session.user.email || ''; D.kullanici = session.user.user_metadata || {};
     let { data: rol, error } = await sb.rpc('umal_benim_rolum');
     if (error || !rol) {
       girisGoster();
