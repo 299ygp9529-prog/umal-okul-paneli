@@ -146,6 +146,7 @@
     '.tz-pgeldi,.tz-pgeri{display:flex;align-items:center;justify-content:center;width:100%;margin-top:8px;font:inherit;font-weight:800;font-size:14px;height:40px;border-radius:11px;cursor:pointer}.tz-pgeldi{border:0;background:#3ef08a;color:#05210f}.tz-pgeri{border:1px solid rgba(62,240,138,.55);background:transparent;color:#3ef08a}',
     '.tz-ek[data-skol]{cursor:pointer}',
     '.tz-pbtn{display:flex;align-items:center;justify-content:center;width:100%;height:40px;padding:0 10px;border-radius:11px;border:1px solid rgba(34,232,255,.6);background:transparent;color:#7ff6ff;font:inherit;font-size:14px;font-weight:800;cursor:pointer}',
+    '.tz-pbtn.kirmizi{border-color:rgba(255,107,107,.6);color:#ffb0b0}',
     '.tz-ptel[data-ptgir]{font-family:inherit;font-weight:800;cursor:pointer}',
     '.tz-tasi{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:14px;border:1.5px dashed #22e8ff;background:rgba(34,232,255,.07);margin-bottom:10px}.tz-tasi small{color:#9db0cf}.tz-tasi button{height:40px;border-radius:11px;border:1px solid #2a4468;background:transparent;color:#b9c9e2;font:inherit;font-weight:800;cursor:pointer}',
     '.tz-tform{display:flex;flex-direction:column;gap:10px}.tz-tform label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:#9db0cf}.tz-tform input{font:inherit;font-size:17px;padding:11px 12px;border-radius:12px;border:1px solid #2a4468;background:#0b1424;color:#fff}',
@@ -246,10 +247,11 @@
         if (cfg.mesaj && P) B.push('<button type="button" class="tz-pmsj" data-pmsj>Mesaj gönder</button>');
         if (dz && (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length > 1)) B.push('<button type="button" class="tz-pbtn" data-poto>Başka otobüse al</button>');
         if (dz) B.push('<button type="button" class="tz-pbtn" data-pcik>Koltuktan çıkar</button>');
+        if (dz && !ogr) B.push('<button type="button" class="tz-pbtn kirmizi" data-pgsil>' + (k.tur === 'ogt' || k.tur === 'idr' ? 'Görevden çıkar' : 'Geziden çıkar') + '</button>');   // K-876
         if (cfg.yonet && P && ogr) B.push('<button type="button" class="tz-pbskd' + (k.baskan ? ' var' : '') + '" data-pbsk="' + esc(k.no) + '">' + (k.baskan ? 'Başkanlıktan al' : 'Otobüs başkanı yap') + '</button>');
         return '<div class="tz-pkart"><div class="tz-pkb">' + PL.foto(k, 56) + '<div><b>' + esc(buyukHarf(k.ad || '')) + '</b><small>' + esc(ogr ? [k.sinif, k.no ? 'No ' + k.no : ''].filter(Boolean).join(' · ') : k.turAd) + ' · ' + secK + '. koltuk</small></div></div><div class="tz-pkg">' + B.join('') + '</div></div>'; };
       var dzYap = async function (islem, b) { if (b) b.disabled = true; var r = null; try { r = await cfg.duzenle(o, islem); } catch (e) { r = { ok: false, hata: 'bağlantı yok' }; }
-        if (!r || !r.ok) { if (b) b.disabled = false; uyar((r && r.hata) || 'Kaydedilemedi'); return false; } delete PLC[o]; if (r.k != null && !islem.o2) secK = r.k; else if (islem.tur === 'cikar' || islem.o2) secK = null; await planYukle(); planCiz(); return true; };
+        if (!r || !r.ok) { if (b) b.disabled = false; uyar((r && r.hata) || 'Kaydedilemedi'); return false; } delete PLC[o]; if (r.k != null && !islem.o2) secK = r.k; else if (islem.tur === 'cikar' || islem.tur === 'gsil' || islem.o2) secK = null; await planYukle(); planCiz(); return true; };
       var telForm = function (k) { var ogr = k.tur === 'ogr';
         perde('<div class="tz-bas">' + esc(buyukHarf(k.ad || '')) + ' · telefon</div><div class="tz-tform">' + (ogr ? '<label>Öğrenci telefonu<input data-tf="ogrTel" inputmode="tel" value="' + esc(k.ogrTel || '05') + '"></label><label>Veli telefonu<input data-tf="tel" inputmode="tel" value="' + esc(k.tel || '05') + '"></label>' : '<label>Telefon<input data-tf="tel" inputmode="tel" value="' + esc(k.tel || '05') + '"></label>') + '<button type="button" class="tz-pmsj" data-tfk>Kaydet</button></div>', function (p, kapat) {
           var bic = function (v) { var x = String(v || '').replace(/\D/g, ''); if (!x) return ''; if (x[0] !== '0') x = '0' + x; x = x.slice(0, 11); return [x.slice(0, 4), x.slice(4, 7), x.slice(7, 9), x.slice(9, 11)].filter(Boolean).join(' '); };
@@ -272,6 +274,7 @@
         var pt = kok.querySelector('[data-ptasi]'); if (pt) pt.onclick = function () { tasiK = secK; planCiz(); };
         var ptv = kok.querySelector('[data-ptvaz]'); if (ptv) ptv.onclick = function () { tasiK = null; planCiz(); };
         kok.querySelectorAll('[data-ptgir]').forEach(function (b) { b.onclick = function () { var kk = PL.kisi[secK]; if (kk) telForm(kk); }; });
+        var pg = kok.querySelector('[data-pgsil]'); if (pg) pg.onclick = async function () { var kk = PL.kisi[secK]; if (!kk || !await onayla(buyukHarf(kk.ad || '') + ' bu geziden çıkarılsın mı? Koltuğu boşalır, görevli listesinden silinir.')) return; dzYap({ tur: 'gsil', k: secK }, pg); };
         var po = kok.querySelector('[data-poto]'); if (po) po.onclick = otoSec;
         var pc = kok.querySelector('[data-pcik]'); if (pc) pc.onclick = async function () { var kk = PL.kisi[secK]; if (!kk || !await onayla(buyukHarf(kk.ad || '') + ' koltuktan çıkarılsın mı? Panelde bekleyenlere döner.')) return; dzYap({ tur: 'cikar', k: secK }, pc); };
         var pm = kok.querySelector('[data-pmsj]'); if (pm) pm.onclick = function () { var kk = PL.kisi[secK]; if (kk) cfg.mesaj(kk); };   // K-869

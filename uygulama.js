@@ -639,6 +639,7 @@
       const bas = ogr ? ayr + 1 : 1; for (let n = bas; n <= (+ob.kapasite || 0); n++) if (!kapali(ob.id, n) && !anOf(ob.id, n)) { k = n; break; }
       if (!k) return { ok: false, hata: ob.no + '. otobüste boş koltuk yok.' }; G.yer[an] = { o: ob.id, k }; yeniK = k; }
     else if (x.tur === 'cikar') delete G.yer[an];
+    else if (x.tur === 'gsil') { if (ogr) return { ok: false, hata: 'Öğrenci buradan geziden çıkarılmaz.' }; G.gorevli = G.gorevli.filter(y => 'g:' + y.id !== an); delete G.yer[an]; G.gorevliZaman = Date.now(); }   // K-876
     else if (x.tur === 'tel') { if (ogr) G.bilgi[an] = Object.assign({}, G.bilgi[an], { tel: x.tel || '', ogrTel: x.ogrTel || '', z: Date.now(), kim: 'idare' });
       else { const g_ = G.gorevli.find(y => 'g:' + y.id === an); if (g_) { g_.tel = x.tel || ''; G.gorevliZaman = Date.now(); } } }
     else return { ok: false, hata: 'Bilinmeyen işlem' };
@@ -4923,7 +4924,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!G0) G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
       if ((+S_.baskanZaman || 0) > (+G.baskanZaman || 0)) { if (JSON.stringify(G.baskan || {}) === G0.b) G.baskan = S_.baskan || G.baskan; else { const L_ = new Set((G.baskan.nolar || []).map(String)); (S_.baskan && S_.baskan.nolar || []).forEach(n => L_.add(String(n))); G.baskan.nolar = [...L_]; } G.baskanZaman = S_.baskanZaman; d_ = true; }
       if ((+S_.gorevliZaman || 0) > (+G.gorevliZaman || 0)) { const var_ = new Set((G.gorevli || []).map(x => x.id)), dolu = new Set(Object.values(G.yer || {}).map(y => y.o + ':' + y.k));
-        if (JSON.stringify(G.gorevli || []) === G0.g) (S_.gorevli || []).forEach(x => { const i = G.gorevli.findIndex(y => y.id === x.id); if (i >= 0) G.gorevli[i] = x; });   // K-875: telsizden girilen telefon da gelsin (panelde değişmediyse)
+        if (JSON.stringify(G.gorevli || []) === G0.g) { const S_id = new Set((S_.gorevli || []).map(y => y.id)); G.gorevli.filter(y => !S_id.has(y.id)).forEach(y => delete G.yer['g:' + y.id]); G.gorevli = (S_.gorevli || []).filter(y => var_.has(y.id)).map(y => Object.assign({}, y)); }   // K-875/876: telsizden girilen telefon ve çıkarılan görevli de gelsin (panelde değişmediyse)
         (S_.gorevli || []).forEach(x => { if (var_.has(x.id)) return; G.gorevli.push(x); const y = (S_.yer || {})['g:' + x.id]; if (y && !dolu.has(y.o + ':' + y.k)) { G.yer['g:' + x.id] = y; dolu.add(y.o + ':' + y.k); const kp = (G.kapali || {})[y.o]; if (Array.isArray(kp)) G.kapali[y.o] = kp.filter(n => +n !== +y.k); } });
         G.gorevliZaman = S_.gorevliZaman; d_ = true; }
       G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
