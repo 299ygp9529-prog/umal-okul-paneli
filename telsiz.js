@@ -31,6 +31,7 @@
     '.tz-canli{display:inline-flex;align-items:center;gap:6px;background:rgba(255,77,94,.14);border:1px solid rgba(255,77,94,.5);color:#ff8a95;font-size:11px;font-weight:800;letter-spacing:.06em;padding:4px 9px;border-radius:999px;flex:none}',
     '.tz-yokb{height:34px;border-radius:999px;border:1px solid rgba(94,224,138,.55);background:rgba(94,224,138,.12);color:#7ee8a2;display:inline-flex;align-items:center;gap:5px;padding:0 11px 0 9px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex:none}',
     '.tz-c.sec{border:1.5px solid #f2c14e!important;background:rgba(242,193,78,.16)!important;box-shadow:0 0 0 1px rgba(242,193,78,.35)}.tz-c.sec b{color:#f2c14e}',
+    '@media (max-width:760px){body.klavye-acik .tz-ekran .tz-gz,body.klavye-acik .tz-ekran .tz-serit,body.klavye-acik .tz-obs1{display:none!important}body.klavye-acik .tz-obbant{margin:0;border-radius:0;border-width:0 0 1px;padding:6px 10px}}.tz-obs1{flex-wrap:nowrap!important}.tz-obs1 b{white-space:nowrap}',
     '.tz-obbant{margin:6px 0 2px;padding:8px 10px;border-radius:14px;background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.45);display:flex;flex-direction:column;gap:6px;flex:none}.tz-obs1,.tz-obs2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.tz-obs1 b{display:flex;align-items:center;gap:6px;color:#f2c14e;font-size:14px;margin-right:auto}',
     '.tz-obbant button{height:30px;padding:0 10px;border-radius:9px;border:1px solid #2a4468;background:#0b1424;color:#cfe0ff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}.tz-obbant button.x{color:#ffb3b3;border-color:#5a2f3a}.tz-obs2 span{font-size:12px;color:#9db0cf}.tz-obbant button.secili{background:#f2c14e;border-color:#f2c14e;color:#2a1d00}',
     '.tz-c.kilit{opacity:.42;cursor:default;border-style:dashed}.tz-c.yok{border-style:solid;border-color:#2a4468;background:rgba(127,246,255,.04)}.tz-c.yok span{color:#9db0cf}',
@@ -172,8 +173,8 @@
       var y = alt.querySelector('textarea'); if (y) y.placeholder = phYaz();
       if (!o) { obEl.style.display = 'none'; obEl.innerHTML = ''; return; }
       obEl.style.display = '';
-      obEl.innerHTML = '<div class="tz-obs1"><b>' + SVG(IK.otobus, 15, 2.2) + 'Otobüs ' + o + ' telsizi</b>' + (cfg.plan ? '<button type="button" data-obp="plan">Oturma planı</button>' : '') + '<button type="button" data-obp="say">Sayım</button><button type="button" class="x" data-obx aria-label="Bütün gezi">✕ Tümü</button></div>' +
-        '<div class="tz-obs2"><span>Yazdıkların:</span><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">Yalnız Otobüs ' + o + '</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></div>';
+      obEl.innerHTML = '<div class="tz-obs1"><b>' + SVG(IK.otobus, 15, 2.2) + 'Otobüs ' + o + '</b>' + (cfg.plan ? '<button type="button" data-obp="plan">Oturma planı</button>' : '') + '<button type="button" data-obp="say">Sayım</button><button type="button" class="x" data-obx aria-label="Bütün gezi">✕ Tümü</button></div>' +
+        '<div class="tz-obs2"><span>Yazdıkların</span><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">Yalnız Otobüs ' + o + '</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></div>';
       obEl.querySelectorAll('[data-obp]').forEach(function (b) { b.onclick = function () { otobusSayfa(o, b.dataset.obp); }; });
       obEl.querySelector('[data-obx]').onclick = function () { obSec(0); };
       obEl.querySelectorAll('[data-obh]').forEach(function (b) { b.onclick = function () { S.obHerkes = b.dataset.obh === '1'; obBantCiz(); }; }); }
