@@ -35,6 +35,7 @@
   const gunAdi = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(tr, { weekday: 'short', day: 'numeric', month: 'long' }); };
 
   // K-716f: iPhone "Atlas'a gönder" kısayolundan gelen dosya → Ders Dosyaları › Yeni paylaşım
+  const ILK_HASH = location.hash.slice(1);   // K-859: Android kısayolu (#telsiz) — telsiz durumu gelince açılır
   try { const m = location.hash.match(/^#yazdir=([^|]+)\|?(.*)$/); if (m) { sessionStorage.setItem('atlasYazdir', JSON.stringify({ yol: decodeURIComponent(m[1]), ad: decodeURIComponent(m[2] || '') || 'Belge.pdf' })); history.replaceState(null, '', '#cikti'); } } catch (e) {}   // K-716bo: iPhone "Atlas ile Yazdır" kısayolu
   try { const m = location.hash.match(/^#(gelen|gelenhata)=(.+)$/); if (m) { sessionStorage.setItem('atlasGelen', JSON.stringify({ tur: m[1], v: decodeURIComponent(m[2]) })); history.replaceState(null, '', '#dosyalar'); } } catch (e) {}
   const D = { rol: null, eposta: '', bolum: null, ogrenciler: [], fotolar: {}, istenenFoto: new Set(), program: null, anketler: [], cevaplar: {}, durumlar: {}, tahtalar: [], planlar: [] };
@@ -247,6 +248,18 @@
     $('#psAdK').onclick = kaydet; $('#psAd').onkeydown = e => { if (e.key === 'Enter') kaydet(); };
   }
   // K-716ce: Atlas asistanı — her ekranda sağ altta "Atlas'a sor"
+  // K-859: hızlı geçiş (Atlas'a basılı tut) — Android ana ekran kısayollarıyla aynı dört yer; iPhone'da da çalışır
+  const HZ_IK = { dersyoklama: '<rect x="4" y="3.5" width="16" height="17" rx="3" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="m8.5 12.3 2.4 2.4 4.8-5"/>',
+    telsiz: '<rect x="6" y="8" width="12" height="13" rx="3" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="6" y="8" width="12" height="13" rx="3"/><path d="M9 3l6 5M9.5 13h5M9.5 16.5h5"/>',
+    mesajlar: '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 9h7M8.5 12.5h4.5"/>',
+    harita: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.5"/>' };
+  function hizliMenu() {
+    { const yut = e => { e.stopPropagation(); e.preventDefault(); }; document.addEventListener('click', yut, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', yut, true), 700); }   // basılı tutup bırakınca gelen tıklama pencereyi kapatmasın
+    const L_ = [['dersyoklama', 'Yoklama al', '#22e8ff'], ['telsiz', 'Gezi Telsizi', '#ffb547'], ['mesajlar', 'Mesajlar', '#c99bff'], ['harita', 'Kim nerede', '#5ee08a']].filter(([id]) => { const b = BOLUMLER.find(x => x.id === id); return b && b.roller.includes(D.rol) && (!b.kosul || b.kosul()); });
+    if (!L_.length) return;
+    pencereAc(`<div class="hz-menu"><b class="hz-bas">Hızlı geçiş</b><div class="hz-izgara">${L_.map(([id, ad, c]) => `<button type="button" class="hz-k" style="--g:${c}" data-hz="${id}"><i><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HZ_IK[id]}</svg></i><span>${ad}</span></button>`).join('')}</div><small class="soluk">Atlas simgesine basılı tutunca açılır</small></div>`);
+    document.querySelectorAll('[data-hz]').forEach(b => b.onclick = () => { $('#pencere').classList.add('gizli'); ac(b.dataset.hz); });
+  }
   function asistanDugme() {
     if (!['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol) || document.getElementById('asFab')) return;
     const b = document.createElement('button'); b.id = 'asFab'; b.className = 'as-fab'; b.type = 'button';
@@ -259,19 +272,26 @@
     // K-716dh: "Atlas'a sor" sürüklenebilir; bırakılan yer hatırlanır (bir şeyin üstüne gelirse kenara çekilir)
     let sur = null, surDi = false;
     const yer = () => { try { const y = JSON.parse(localStorage.getItem('asFabYer') || 'null'); if (y && isFinite(y.x) && isFinite(y.y)) { const x = Math.min(Math.max(8, y.x), innerWidth - b.offsetWidth - 8), yy = Math.min(Math.max(8, y.y), innerHeight - b.offsetHeight - 8); Object.assign(b.style, { left: x + 'px', top: yy + 'px', right: 'auto', bottom: 'auto' }); } } catch (e) {} };
-    b.addEventListener('pointerdown', ev => { const r = b.getBoundingClientRect(); sur = { dx: ev.clientX - r.left, dy: ev.clientY - r.top, x0: ev.clientX, y0: ev.clientY }; surDi = false; b.setPointerCapture(ev.pointerId); });
+    let uzun = false, uzT = 0;   // K-859: basılı tut → hızlı geçiş menüsü
+    b.addEventListener('pointerdown', ev => { const r = b.getBoundingClientRect(); sur = { dx: ev.clientX - r.left, dy: ev.clientY - r.top, x0: ev.clientX, y0: ev.clientY }; surDi = false; b.setPointerCapture(ev.pointerId); uzun = false; clearTimeout(uzT); uzT = setTimeout(() => { if (sur && !surDi) { uzun = true; sur = null; try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} hizliMenu(); } }, 480); });
+    b.addEventListener('contextmenu', ev => ev.preventDefault());
     b.addEventListener('pointermove', ev => { if (!sur) return; if (!surDi && Math.hypot(ev.clientX - sur.x0, ev.clientY - sur.y0) < 6) return; surDi = true; b.classList.add('suruk');
       const x = Math.min(Math.max(8, ev.clientX - sur.dx), innerWidth - b.offsetWidth - 8), y = Math.min(Math.max(8, ev.clientY - sur.dy), innerHeight - b.offsetHeight - 8);
       Object.assign(b.style, { left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' }); });
-    b.addEventListener('pointerup', () => { if (sur && surDi) { const r = b.getBoundingClientRect(); try { localStorage.setItem('asFabYer', JSON.stringify({ x: r.left, y: r.top })); } catch (e) {} } sur = null; b.classList.remove('suruk'); });
-    b.onclick = ev => { if (surDi) { surDi = false; ev.preventDefault(); return; } ac(); };
-    b.title = "Atlas'a sor · sürükleyerek yerini değiştirebilirsiniz";
+    b.addEventListener('pointerup', () => { clearTimeout(uzT); if (sur && surDi) { const r = b.getBoundingClientRect(); try { localStorage.setItem('asFabYer', JSON.stringify({ x: r.left, y: r.top })); } catch (e) {} } sur = null; b.classList.remove('suruk'); });
+    b.onclick = ev => { if (uzun) { uzun = false; ev.preventDefault(); return; } if (surDi) { surDi = false; ev.preventDefault(); return; } ac(); };
+    b.title = "Atlas'a sor · basılı tutun: hızlı geçiş · sürükleyerek yerini değiştirebilirsiniz";
     window.addEventListener('resize', yer); setTimeout(yer, 0);
     document.body.appendChild(b);
     // K-716cf: telefonda yüzen düğme yerine üst çubukta, Çıkış'ın yanında küçük "Atlas" düğmesi
     const u = document.createElement('button'); u.id = 'asUst'; u.className = 'as-tepe'; u.type = 'button'; u.setAttribute('aria-label', "Atlas'a sor");
     u.innerHTML = '<svg class="as-kafa" viewBox="0 -39 293 293" aria-hidden="true"><defs><clipPath id="asKafaK"><rect x="0" y="0" width="293" height="214"/></clipPath><filter id="asKafaP" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g clip-path="url(#asKafaK)"><image href="ogrenci/img/atlas-govde.png" width="384" height="390"/></g><g filter="url(#asKafaP)" fill="none" stroke="#7ff0ff" stroke-width="12" stroke-linecap="round"><path d="M106 136q18-22 36 0"/><path d="M174 136q18-22 36 0"/></g></svg><span>Atlas</span>';   // K-716cz: Atlas'ın kafası
-    u.onclick = ac;
+    { let uz = false, t = 0, x0 = 0, y0 = 0; const iptal = () => clearTimeout(t);   // K-859: telefonda üstteki Atlas'a basılı tut → hızlı geçiş
+      u.addEventListener('pointerdown', ev => { uz = false; x0 = ev.clientX; y0 = ev.clientY; iptal(); t = setTimeout(() => { uz = true; try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} hizliMenu(); }, 480); });
+      u.addEventListener('pointermove', ev => { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 8) iptal(); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(o => u.addEventListener(o, iptal));
+      u.addEventListener('contextmenu', ev => ev.preventDefault()); u.style.webkitTouchCallout = 'none'; u.style.userSelect = 'none';
+      u.onclick = ev => { if (uz) { uz = false; ev.preventDefault(); return; } ac(); }; }
     const cik = document.getElementById('cikis'); if (cik) cik.parentNode.insertBefore(u, cik);
   }
 
@@ -1003,7 +1023,7 @@
     if (rol === 'bas') { erisimRozet(); bdRozet(); msjRozet(); }
     tfgYukle().catch(() => {});   // K-716cr: telafi görevleri
     tatilYukle();   // K-841: okul tatil takvimi
-    tzDurum().catch(() => {});   // K-808: açık Gezi Telsizi var mı (gezideysem menüde ve ana ekranda görünür)
+    tzDurum().then(() => { if (ILK_HASH === 'telsiz' && D.bolum !== 'telsiz' && (TZ.L.length || TZ.kurucu)) ac('telsiz'); }).catch(() => {});   // K-808: açık Gezi Telsizi var mı (gezideysem menüde ve ana ekranda görünür)
   }
   // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
   async function erisimRozet() {

@@ -2886,3 +2886,9 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .kd-roz .kirmizi { color: #ff9aa3; border-color: rgba(255, 107, 120, .5); background: rgba(255, 107, 120, .08); }
 .kd-roz .gri { color: #8fa6c8; border-color: #2a4468; }
 .kd-tam { display: block; margin-top: 2px; font-size: 11px; font-weight: 700; color: #7ff6ff; text-decoration: underline; text-underline-offset: 2px; }
+/* K-859: hızlı geçiş */
+.hz-menu { display: flex; flex-direction: column; gap: 12px; text-align: center; }
+.hz-bas { font-size: 18px; }
+.hz-izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hz-k { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--g) 45%, transparent); background: color-mix(in srgb, var(--g) 9%, #0f1d33); color: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
+.hz-k i { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--g); background: color-mix(in srgb, var(--g) 16%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--g) 30%, transparent); }

@@ -23,12 +23,48 @@
   ],
   "shortcuts": [
     {
-      "name": "Not Yükle",
-      "short_name": "Not Yükle",
-      "url": "./#notlar",
+      "name": "Yoklama al",
+      "short_name": "Yoklama",
+      "url": "./#dersyoklama",
       "icons": [
         {
-          "src": "simge-192.png",
+          "src": "kisayol-yoklama.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Gezi Telsizi",
+      "short_name": "Telsiz",
+      "url": "./#telsiz",
+      "icons": [
+        {
+          "src": "kisayol-telsiz.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mesajlar",
+      "short_name": "Mesajlar",
+      "url": "./#mesajlar",
+      "icons": [
+        {
+          "src": "kisayol-mesaj.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Kim nerede",
+      "short_name": "Kim nerede",
+      "url": "./#harita",
+      "icons": [
+        {
+          "src": "kisayol-harita.png",
           "sizes": "192x192",
           "type": "image/png"
         }
