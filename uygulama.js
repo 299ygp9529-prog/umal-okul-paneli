@@ -4439,9 +4439,24 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           : `<div class="zm-ust"><button class="ikincil" data-zsec="">‹ Zümreler</button><b class="neon" style="--g:${zRenk(zSec)}">${zSec === '*' ? 'Tüm kullanıcılar' : esc(zSec)} · ${G.length}</b></div>
           <div class="satirlar" style="margin-top:10px">${G.length ? G.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + kisiHtml(r.ekleyen, (L.find(x => x.eposta === r.ekleyen) || {}).ad) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
           <div class="og-rol">${rolu(r.eposta) === 'bas' ? '<span class="kurucu-yazi kurucu-rozet">KURUCU</span>' : Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(PZ.get(zAnah(r.ad)) || {}).zumre ? ' (' + esc(PZ.get(zAnah(r.ad)).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div><button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
-      { const ka = $('#kurAra'); if (ka) { const kc = () => { const q = ka.value.trim().toLocaleLowerCase(tr); const S_ = !q ? [] : L.filter(r => (r.ad || '').toLocaleLowerCase(tr).includes(q) || r.eposta.includes(q)).slice(0, 8);
-          $('#kurSonuc').innerHTML = S_.map(r => `<button type="button" class="kur-kisi" data-kur="${esc(r.eposta)}" data-kurad="${esc(r.ad || '')}"><b>${esc(baslik(r.ad || '') || r.eposta)}</b><small>${esc(r.eposta)}</small></button>`).join('') + (q && !S_.length ? '<div class="soluk kucuk">Bulunamadı. Önce aşağıdan öğretmeni ekleyin.</div>' : '');
-          $('#kurSonuc').querySelectorAll('[data-kur]').forEach(b => b.onclick = () => kurQR(b.dataset.kur, b.dataset.kurad)); };
+      { const ka = $('#kurAra'); if (ka) {   // K-850 · K-852: listede olmayan öğretmen de buradan eklenir (ders programındaki adlar önerilir)
+        const kurYeni = (ad0, ep0) => { const so = $('#kurSonuc');
+          so.innerHTML = `<div class="kur-yeni"><b>Yeni öğretmen</b><label>Ad Soyad<input id="kurYAd" value="${esc(baslik(ad0 || ''))}" maxlength="80" autocomplete="off"></label><label>E-posta<input id="kurYEp" type="email" value="${esc(ep0 || '')}" placeholder="ornek@gmail.com" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"></label><button class="birincil" id="kurYEkle">Ekle ve karekod ver</button><small class="soluk">Öğretmen olarak eklenir; idare ya da rehberlik yetkisini sonra listeden verebilirsiniz.</small></div>`;
+          setTimeout(() => (ad0 ? $('#kurYEp') : $('#kurYAd')).focus(), 50);
+          $('#kurYEkle').onclick = async () => { const ad = baslik($('#kurYAd').value.trim()), ep = $('#kurYEp').value.trim().toLowerCase();
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ep)) { uyar('Öğretmenin e-posta adresini yazın (giriş ve şifre yenileme için gerekli).'); return; }
+            $('#kurYEkle').disabled = true; const { error } = await sb.from('umal_ogretmenler').upsert([{ eposta: ep, ekleyen: D.eposta, ...(adVar ? { ad: ad || null } : {}) }], { onConflict: 'eposta' });
+            $('#kurYEkle').disabled = false; if (error) { uyar('Eklenemedi: ' + hataYaz(error)); return; }
+            if (!L.some(r => r.eposta === ep)) L.push({ eposta: ep, ad, ekleyen: D.eposta, eklendi: new Date().toISOString() });
+            kurQR(ep, ad); ka.value = ''; so.innerHTML = ''; };
+        };
+        const kc = () => { const q = ka.value.trim().toLocaleLowerCase(tr); const S_ = !q ? [] : L.filter(r => (r.ad || '').toLocaleLowerCase(tr).includes(q) || r.eposta.includes(q)).slice(0, 8);
+          const var_ = new Set(L.map(r => zAnah(r.ad))), PY = !q ? [] : [...PZ.values()].filter(v => v.ad && !var_.has(zAnah(v.ad)) && v.ad.toLocaleLowerCase(tr).includes(q)).slice(0, 6);
+          $('#kurSonuc').innerHTML = S_.map(r => `<button type="button" class="kur-kisi" data-kur="${esc(r.eposta)}" data-kurad="${esc(r.ad || '')}"><b>${esc(baslik(r.ad || '') || r.eposta)}</b><small>${esc(r.eposta)}</small></button>`).join('')
+            + PY.map(v => `<button type="button" class="kur-kisi yok" data-kurye="${esc(v.ad)}"><b>${esc(baslik(v.ad))}</b><small>Panelde yok · e-posta ekle</small></button>`).join('')
+            + (q ? `<button type="button" class="kur-kisi ekle" data-kurye="${/@/.test(q) ? '' : esc(ka.value.trim())}" data-kurep="${/@/.test(q) ? esc(q) : ''}"><b>+ Yeni öğretmen ekle</b><small>Listede yoksa: ad ve e-posta</small></button>` : '');
+          $('#kurSonuc').querySelectorAll('[data-kur]').forEach(b => b.onclick = () => kurQR(b.dataset.kur, b.dataset.kurad));
+          $('#kurSonuc').querySelectorAll('[data-kurye]').forEach(b => b.onclick = () => kurYeni(b.dataset.kurye, b.dataset.kurep)); };
         ka.oninput = kc; } }
       { const k = $('#ogDvKopya'); if (k) k.onclick = async () => { try { await navigator.clipboard.writeText('https://umalatlas.com.tr/kayit'); k.textContent = 'Kopyalandı'; } catch (e) { uyar('Bağlantı: https://umalatlas.com.tr/kayit'); } }; }
       $('#icerik').querySelectorAll('[data-eron],[data-erred]').forEach(b => b.onclick = async () => {
@@ -5500,8 +5515,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
               <label class="genis">Öğrencilere not<textarea data-gi="aciklama" rows="2" placeholder="Yanınıza alacaklarınız, kıyafet vb.">${esc(I.aciklama || '')}</textarea></label>
             </div>
             <div class="gk2-tikler"><label><input type="checkbox" id="gkUcretsiz" ${G.ucretsiz ? 'checked' : ''}> Ücretsiz gezi</label><label><input type="checkbox" id="gkIlDisi" ${ilDisi() ? 'checked' : ''}> İl dışı gezi (kaymakamlık onayı)</label></div>
-            <div class="yz-bas">Program</div><div id="gkProg">${pr.map((x, i) => `<div class="gk2-pr"><input type="time" data-prs="${i}" value="${esc(x.s || '')}"><textarea data-prt="${i}" rows="1" placeholder="Ne yapılacak (ör. Şehitler Abidesi) · alt satıra geçmek için Enter">${esc(x.t || '')}</textarea><button class="bag" data-prsil="${i}" aria-label="Sil">×</button></div>`).join('')}</div>
-            <button class="ikincil kucuk" id="gkPrEkle" style="margin-top:6px">+ Program satırı</button>
+            <div class="yz-bas">Program</div><div id="gkProg">${pr.map((x, i) => `${i ? `<button type="button" class="gk2-prara" data-prara="${i}" aria-label="Buraya satır ekle"><i></i><b>+</b><i></i></button>` : ''}<div class="gk2-pr" data-pri="${i}"><button type="button" class="gk2-tut" data-prtut="${i}" aria-label="Sürükleyerek sırasını değiştir" title="Basılı tutup sürükleyin"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><input type="time" data-prs="${i}" value="${esc(x.s || '')}"><textarea data-prt="${i}" rows="1" placeholder="Ne yapılacak (ör. Şehitler Abidesi) · alt satıra geçmek için Enter">${esc(x.t || '')}</textarea><button class="bag" data-prsil="${i}" aria-label="Sil">×</button></div>`).join('')}</div>
+            <div class="gk2-prtus"><button class="ikincil kucuk" id="gkPrEkle">+ Program satırı</button>${I.program.some(x => x.s || x.t) ? '<button class="bag kirmizi kucuk" id="gkPrKaldir">Programı kaldır</button>' : ''}</div>
             <div class="yz-bas">Afiş (isteğe bağlı)</div><div class="gk2-afis">${I.afis ? `<img src="${esc(I.afis)}" alt="">` : '<span class="soluk kucuk">Afiş yoksa ilan, gezinin adıyla süslü bir kartla görünür.</span>'}<label class="ikincil kucuk" style="cursor:pointer">${I.afis ? 'Değiştir' : 'Afiş yükle'}<input type="file" id="gkAfis" accept="image/*" hidden></label>${I.afis ? '<button class="bag" id="gkAfisSil">Kaldır</button>' : ''}</div>
           </div>`;
         } else if (adim === 'kayit') {
@@ -5717,11 +5732,30 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const tik = (id, f) => { const e = $('#' + id); if (e) e.onchange = () => { f(e.checked); kay(); ciz_(); }; };
         tik('gkAcik', v => { if (v && !G.tarih) uyar('İlan yayında. Öğrenciler tarih görmesin diye eksik kalmasın: tarihi de girin.'); I.acik = v; });
         tik('gkUcretsiz', v => { G.ucretsiz = v; }); tik('gkIlDisi', v => { I.ilDisi = v; });
-        const prOku = () => { I.program = [...R.querySelectorAll('[data-prt]')].map((e, i) => ({ s: (R.querySelector(`[data-prs="${i}"]`) || {}).value || '', t: e.value.trim() })).filter(x => x.s || x.t); };
+        const prOku = () => { I.program = [...R.querySelectorAll('[data-prt]')].map((e, i) => ({ s: (R.querySelector(`[data-prs="${i}"]`) || {}).value || '', t: e.value.trim() })); };   // K-851: boş satır da yerinde kalır (gösterimde boşlar atlanır)
         R.querySelectorAll('[data-prs],[data-prt]').forEach(e => e.onchange = () => { prOku(); kay(); });
         const prBoy = e => { e.style.height = 'auto'; e.style.height = Math.max(e.scrollHeight + 2, 44) + 'px'; };   // program satırı yazdıkça alta doğru uzar (alt alta madde yazılabilir)
         R.querySelectorAll('textarea[data-prt]').forEach(e => { prBoy(e); e.addEventListener('input', () => prBoy(e)); });
         R.querySelectorAll('[data-prsil]').forEach(b => b.onclick = () => { prOku(); I.program.splice(+b.dataset.prsil, 1); kay(); ciz_(); });
+        R.querySelectorAll('[data-prara]').forEach(b => b.onclick = () => { prOku(); const i = +b.dataset.prara; I.program.splice(i, 0, { s: '', t: '' }); ciz_(); const t = R.querySelector(`[data-prs="${i}"]`); if (t) t.focus(); });   // K-851: araya satır
+        if ($('#gkPrKaldir')) $('#gkPrKaldir').onclick = async () => { if (!await onayla('Programın tamamı kaldırılsın mı? İlanda Program bölümü görünmez.')) return; I.program = []; kay(); ciz_(); };
+        { const kap = $('#gkProg'); if (kap) kap.querySelectorAll('[data-prtut]').forEach(tut => {   // K-851: tutamaktan sürükle-bırak (telefonda dokunuşla, bilgisayarda fareyle)
+          const basla_ = (y0, dokunus) => { const sat = tut.closest('.gk2-pr'), L_ = [...kap.querySelectorAll('.gk2-pr')], bas = L_.indexOf(sat);
+            const rs = L_.map(e => e.getBoundingClientRect()), h = rs[bas].height + 22; let hedef = bas;
+            kap.classList.add('surukle'); sat.classList.add('tutulan');
+            const hareket = y => { const dy = y - y0; sat.style.transform = `translateY(${dy}px)`; const orta = rs[bas].top + rs[bas].height / 2 + dy;
+              hedef = bas; rs.forEach((q, k) => { if (k < bas && orta < q.top + q.height / 2) hedef = Math.min(hedef, k); if (k > bas && orta > q.top + q.height / 2) hedef = Math.max(hedef, k); });
+              L_.forEach((el, k) => { if (el === sat) return; el.style.transform = k >= Math.min(bas, hedef) && k <= Math.max(bas, hedef) ? `translateY(${hedef > bas ? -h : h}px)` : ''; }); };
+            const tm = e => { if (e.cancelable) e.preventDefault(); if (e.touches[0]) hareket(e.touches[0].clientY); }, mm = e => hareket(e.clientY);
+            const bitir = () => { document.removeEventListener('touchmove', tm, { capture: true }); document.removeEventListener('touchend', bitir, true); document.removeEventListener('touchcancel', bitir, true);
+              document.removeEventListener('mousemove', mm, true); document.removeEventListener('mouseup', bitir, true);
+              kap.classList.remove('surukle'); L_.forEach(el => { el.style.transform = ''; el.classList.remove('tutulan'); });
+              if (hedef !== bas) { prOku(); const [x] = I.program.splice(bas, 1); I.program.splice(hedef, 0, x); kay(); ciz_(); } };
+            if (dokunus) { document.addEventListener('touchmove', tm, { capture: true, passive: false }); document.addEventListener('touchend', bitir, true); document.addEventListener('touchcancel', bitir, true); }
+            else { document.addEventListener('mousemove', mm, true); document.addEventListener('mouseup', bitir, true); } };
+          tut.addEventListener('touchstart', e => { if (e.touches.length !== 1) return; if (e.cancelable) e.preventDefault(); basla_(e.touches[0].clientY, true); }, { passive: false });
+          tut.addEventListener('mousedown', e => { if (e.button) return; e.preventDefault(); basla_(e.clientY, false); });
+        }); }
         if ($('#gkPrEkle')) $('#gkPrEkle').onclick = () => { prOku(); I.program.push({ s: '', t: '' }); ciz_(); const t = R.querySelectorAll('[data-prt]'); if (t.length) t[t.length - 1].focus(); };
         if ($('#gkAfis')) $('#gkAfis').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; if (f.size > 15 * 1024 * 1024) { uyar('Afiş 15 MB\'tan küçük olsun.'); return; }
           // afiş her biçimde (PNG, HEIC, WEBP…) seçilebilir: yüklemeden önce JPEG'e çevrilir ve en çok 1800 piksele küçültülür
