@@ -145,6 +145,8 @@
     '.tz-pk.sv{border-color:#3ef08a;box-shadow:0 0 0 2px rgba(62,240,138,.55);background:rgba(62,240,138,.13)}.tz-pk.sy{border-color:#ff4d5e;box-shadow:0 0 0 2px rgba(255,77,94,.6);background:rgba(255,77,94,.15)}',
     '.tz-pgeldi,.tz-pgeri{display:flex;align-items:center;justify-content:center;width:100%;margin-top:8px;font:inherit;font-weight:800;font-size:14px;height:40px;border-radius:11px;cursor:pointer}.tz-pgeldi{border:0;background:#3ef08a;color:#05210f}.tz-pgeri{border:1px solid rgba(62,240,138,.55);background:transparent;color:#3ef08a}',
     '.tz-ek[data-skol]{cursor:pointer}',
+    '.tz-tzr{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:6px;display:grid;place-items:center;color:#6c7f99;background:rgba(8,16,30,.72);border:1px solid rgba(140,160,190,.28)}.tz-tzr .dl{opacity:.35}.tz-tzr.acik{color:#3ef08a;border-color:rgba(62,240,138,.6);background:rgba(10,40,26,.85);box-shadow:0 0 8px rgba(62,240,138,.45)}.tz-tzr.acik .dl{opacity:1}.tz-pk.bsk .tz-tzr{right:26px}',
+    '.tz-tzsay{margin-left:10px;font-size:13px;font-weight:700;color:#3ef08a}.tz-tzsay:empty{display:none}',
     '.tz-pmsj{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:8px;font:inherit;font-weight:800;font-size:14px;height:40px;border-radius:11px;border:0;background:#22e8ff;color:#04121f;cursor:pointer}',
     '.tz-sis.tz-sistam{color:#3ef08a;border-color:rgba(62,240,138,.45);background:rgba(62,240,138,.08);font-weight:700}'
   ].join('\n');
@@ -227,7 +229,7 @@
       var D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null, PL0 = PLC[o] || null;
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
       var kok = null, kapat_ = null, PL = PL0, secK = null, gorSec = null, sek = cfg.plan ? 'plan' : 'say', Dimza = '';   // K-873: plan ve sayım tek sayfada
-      var planCiz = function () { var bas = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml();
+      var planCiz = function () { var bas = '<div class="tz-obb"><b>Otobüs ' + o + '</b><span class="tz-tzsay" data-tzsay></span>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml();
         if (!PL) { kok.innerHTML = bas + '<div class="tz-kdur">Yükleniyor…</div>'; return; }
         if (!PL.ok) { kok.innerHTML = bas + '<div class="tz-kdur">' + esc(PL.hata || 'Plan alınamadı') + '</div>'; return; }
         var k = secK != null && PL.kisi[secK];
@@ -258,7 +260,16 @@
           (s && V.gel.length ? '<button type="button" class="tz-gelac" data-sgel>' + (gelenAcik ? '▾' : '▸') + ' Gelenler · ' + V.gel.length + '</button>' + (gelenAcik ? V.gel.map(function (k) { return '<div class="tz-ek gel">' + av(k) + '<span class="tz-ekm"><b>' + esc(buyukHarf(k.ad || k.no)) + '</b><small>' + (k.kim === 'ogretmen' ? 'öğretmen işaretledi' : k.kim === 'baskan' ? 'başkan işaretledi' : 'kendisi bildirdi') + (k.zaman ? ' · ' + esc(saat(k.zaman)) : '') + '</small></span><button type="button" class="tz-geri" data-syok="' + esc(k.no) + '">Geri al</button></div>'; }).join('') : '') : ''); };
       var sayKart = function (k) { var V = sayV(); if (!k || k.tur !== 'ogr' || !V.s || V.s.bitti) return ''; var x = V.K.filter(function (y) { return String(y.no) === String(k.no); })[0]; if (!x) return '';
         return x.var ? '<button type="button" class="tz-pgeri" data-syok="' + esc(k.no) + '">Yoklamada geldi ✓ · geri al</button>' : '<button type="button" class="tz-pgeldi" data-svar="' + esc(k.no) + '">Geldi say</button>'; };
-      var planBoya = function () { var V = sayV(); if (!V.aktif || !PL || !PL.ok) return; var M = {}; V.K.forEach(function (x) { M[String(x.no)] = !!x.var; });
+      var tzSade = function (x) { return String(x || '').toLocaleLowerCase('tr').replace(/[^a-zçğıöşü]/g, ''); };
+      var VR = null, vrIz = null;   // K-874: telsizi o an açık olanlar (panel cfg.varlikIzle verir)
+      var tzBoya = function () { if (!kok || !PL || !PL.ok) return; var hazir = !!(VR && VR.hazir), nolar = {}, adlar = {};
+        if (hazir) VR.L.forEach(function (x) { if (x.t === 'ogr' && x.no) nolar[String(x.no)] = 1; else if (x.ad) adlar[tzSade(x.ad)] = 1; });
+        kok.querySelectorAll('[data-tzk]').forEach(function (b) { var x = PL.kisi[b.dataset.tzk], r = b.querySelector('.tz-tzr'); if (!hazir || !x) { if (r) r.remove(); return; }
+          if (!r) { r = d.createElement('b'); r.className = 'tz-tzr'; r.innerHTML = SVG('<rect x="7.5" y="8" width="9" height="13" rx="2"/><path d="M10 8V3.5M10 12h4M10 15h4"/><path class="dl" d="M4.6 6a5 5 0 0 0 0 6M19.4 6a5 5 0 0 1 0 6"/>', 12, 2); b.appendChild(r); }
+          var ac = x.tur === 'ogr' ? !!nolar[String(x.no)] : !!adlar[tzSade(x.ad)]; r.classList.toggle('acik', ac); r.title = ac ? 'Telsiz açık' : 'Telsiz kapalı'; });
+        var e_ = kok.querySelector('[data-tzsay]'); if (e_) { if (!hazir) e_.textContent = ''; else { var n = 0, t = 0; for (var kk in PL.kisi) { var x = PL.kisi[kk]; t++; if (x.tur === 'ogr' ? nolar[String(x.no)] : adlar[tzSade(x.ad)]) n++; } e_.textContent = n + '/' + t + ' telsizde'; } } };
+      if (cfg.varlikIzle) vrIz = cfg.varlikIzle(function (v) { VR = v; if (!kapali) tzBoya(); });
+      var planBoya = function () { tzBoya(); var V = sayV(); if (!V.aktif || !PL || !PL.ok) return; var M = {}; V.K.forEach(function (x) { M[String(x.no)] = !!x.var; });
         kok.querySelectorAll('[data-tzk]').forEach(function (b) { var x = PL.kisi[b.dataset.tzk]; if (!x || x.tur !== 'ogr' || !(String(x.no) in M)) return; b.classList.add(M[String(x.no)] ? 'sv' : 'sy'); }); };
       var yeniden = function () { if (sek === 'plan') planCiz(); else ciz(); };
       var sayBagla = function () { var V = sayV();
@@ -276,10 +287,10 @@
         sayBagla();
       };
       var yenile = async function () { if (!cfg.sayim) return; var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { var im = JSON.stringify(r); D = r; if (im !== Dimza) { Dimza = im; if (kok && !kapali) yeniden(); } } };
-      kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); if (cfg.plan) { var sy_ = p.querySelector('.tz-sayfa'); if (sy_) sy_.classList.add('tam'); } var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); } }); });
+      kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); if (cfg.plan) { var sy_ = p.querySelector('.tz-sayfa'); if (sy_) sy_.classList.add('tam'); } var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); } }); });
       ciz();   // önbellekte plan varsa anında; yenisi arka planda (pencerenin açılışı takılmasın)
       setTimeout(function () { if (kapali) return; if (cfg.plan) planYukle(); yenile(); }, 260);
-      zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden) yenile(); }, 4000);
+      zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); if (vrIz) { vrIz.kapat(); vrIz = null; } return; } if (!d.hidden) yenile(); }, 4000);
 
     }
     function sayCiz() {   // öğrenci: kendi otobüsünün açık sayımı — büyük "Otobüsteyim" ya da "Sayıldın"

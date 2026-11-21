@@ -617,6 +617,7 @@
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       plan: o => tzPlanYukle(g.anahtar, o),   // K-845: fotoğraflı oturma planı
+      varlikIzle: cb => window.UmalTelsizIzle ? window.UmalTelsizIzle(sb, g.anahtar, cb) : null,   // K-874: otobüs sayfasında telsizi açık olanlar
       mesaj: k => gzMesajAc({ tur: k.tur, no: k.no, ad: k.ad, tel: k.tel, eposta: k.eposta || '' }),   // K-869: telsizde koltuktaki kişiye özel mesaj
       yonet: (o, v) => r_('umal_gezi_telsiz_yonet', { p_anahtar: g.anahtar, p_otobus: o, p_veri: v }),   // K-862: görevli öğretmen başkan seçer, görevli ekler
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
