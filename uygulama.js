@@ -4904,6 +4904,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const oid = b.dataset.ko, k = +b.dataset.kn, an = koltukta(oid, k);
         if (kapatMod) { const L = G.kapali[oid] || (G.kapali[oid] = []), i = L.indexOf(k); if (i >= 0) L.splice(i, 1); else { L.push(k); if (an) { delete G.yer[an]; if (sel === an) sel = null; } } kaydet(); ciz(); return; }   // K-716be: koltuk kapat/aç; kapanan koltuktaki kişi bekleyenlere döner
         if (!sel && !an && k <= GZ_AYRILAN && !kapatMod) { onKisi(oid, k); return; }   // K-818: boş öndeki koltuğa dokun → öğretmen seç, oturt
+        if (!sel && !an && !kapaliMi(oid, k)) { ogrSec(oid, k); return; }   // K-824: boş koltuğa dokun → öğrenci seç, oturt
         if (kapaliMi(oid, k) && !an) { if (sel) uyar('Bu koltuk kapalı. Açmak için "Koltuk kapat"a basıp koltuğa dokunun.'); return; }
         if (esMod && sel && an && an !== sel) { esYap(sel, an); return; }
         if (!sel) { if (an) { sel = an; ciz(); } return; }
@@ -5020,6 +5021,32 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       cizK(); const g = $('#gzOkAra'); g.oninput = () => { q = g.value; cizK(); };
       g.onkeydown = e => { if (e.key === 'Enter') { const L = $('#gzOkL').querySelectorAll('button'); if (L.length === 1) { e.preventDefault(); L[0].click(); } } };
       $('#gzOkTur').onclick = () => onSec(k);
+      if (window.matchMedia('(pointer:fine)').matches) g.focus();
+    };
+    // K-824: boş öğrenci koltuğuna dokununca öğrenci seçilir; bekleyenler başta, yerleşmiş biri seçilirse buraya taşınır
+    const ogrSec = (oid, k) => {
+      const M_ = kisiler(), o_ = otoBul(oid), L = [...M_.values()].filter(p => p.tur === 'ogr');
+      const yerYaz = an => { const y = G.yer[an], ob = y && otoBul(y.o); return ob ? `${ob.no}. otobüs · ${y.k}. koltuk` : ''; };
+      const sira = (a, b) => String(a.sinif || '').localeCompare(String(b.sinif || ''), tr, { numeric: true }) || String(a.ad).localeCompare(String(b.ad), tr);
+      let q = '';
+      const otur = async an => {
+        const y = komsuKoltuk(oid, k), kom = y && koltukta(oid, y), a = M_.get(an), c = kom && kom !== an && M_.get(kom);
+        if (a && c && c.tur === 'ogr' && a.cins && c.cins && a.cins !== c.cins && !await onayla('Kız ve erkek öğrenci yan yana oturacak. Yine de yerleştirilsin mi?')) return;
+        G.yer[an] = { o: oid, k }; $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
+      const cizL = () => {
+        const t = q.toLocaleLowerCase(tr).trim(), uy = p => !t || [p.ad, p.sinif, p.no].join(' ').toLocaleLowerCase(tr).includes(t);
+        const bek = L.filter(p => !G.yer[p.an] && uy(p)).sort(sira), yerli = t ? L.filter(p => G.yer[p.an] && uy(p)).sort(sira) : [];
+        const satir = (p, alt) => `<button class="gk2-kp-s" data-oos="${esc(p.an)}"><span><b>${esc(baslik(p.ad))}</b><small>${esc(alt)}</small></span><em>${G.yer[p.an] ? 'Buraya al' : 'Oturt'}</em></button>`;
+        $('#gzOsL').innerHTML = (bek.length ? `<div class="soluk kucuk" style="margin:8px 2px 2px">Bekleyen · ${bek.length}</div>` + bek.map(p => satir(p, [p.sinif, p.cins === 'K' ? 'Kız' : p.cins === 'E' ? 'Erkek' : ''].filter(Boolean).join(' · '))).join('') : '')
+          + (yerli.length ? `<div class="soluk kucuk" style="margin:10px 2px 2px">Yerleşmiş · ${yerli.length}</div>` + yerli.map(p => satir(p, [p.sinif, yerYaz(p.an)].filter(Boolean).join(' · '))).join('') : '')
+          + (!bek.length && !yerli.length ? `<p class="soluk kucuk">${t ? 'Bu adla öğrenci bulunamadı.' : 'Bekleyen öğrenci yok. Başka koltuktan birini almak için adını yazın.'}</p>` : '');
+        $('#gzOsL').querySelectorAll('[data-oos]').forEach(b => b.onclick = () => otur(b.dataset.oos));
+      };
+      pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${o_ ? o_.no + '. otobüs · ' : ''}${k}. koltuk</h2><div class="soluk kucuk">Bekleyen öğrenciler aşağıda. Başka koltuktaki birini buraya almak için adını yazın.</div>
+        <input id="gzOsAra" class="gk2-kp-ara" placeholder="Öğrenci ara (ad, sınıf, numara)" autocomplete="off" enterkeyhint="search">
+        <div class="gk2-kp-liste" id="gzOsL" style="max-height:52vh;overflow:auto"></div></div>`);
+      cizL(); const g = $('#gzOsAra'); g.oninput = () => { q = g.value; cizL(); };
+      g.onkeydown = e => { if (e.key === 'Enter') { const B = $('#gzOsL').querySelectorAll('button'); if (B.length === 1) { e.preventDefault(); B[0].click(); } } };
       if (window.matchMedia('(pointer:fine)').matches) g.focus();
     };
     const onSec = k => {   // K-716bn: öndeki görevli koltuğunun kime ayrıldığı (tüm otobüslerde aynı)
