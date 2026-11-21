@@ -1355,7 +1355,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
-    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3', 'gz-adimli');
+    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3', 'gz-adimli'); $('#icerik').style.minHeight = ''; delete $('#icerik').dataset.mh;
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     icGeriGuncelle();
     b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
@@ -5429,7 +5429,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const adimDurum = id => ({ ilan: I.acik ? 'ok' : '', kayit: ogrL().length ? 'ok' : '', odeme: ogrL().length && ogrL().every(p => durumOf(p) === 'kesin') ? 'ok' : '', belge: Object.keys(G.belge).length >= 4 ? 'ok' : '', otobus: Object.keys(G.yer).length ? 'ok' : '', gun: G.tarih && bugun > G.tarih ? 'ok' : '' })[id];
       const ADIMLAR = [['ilan', 'İlan'], ['kayit', G.ucretsiz ? 'Kayıt' : 'Kayıt · Ödeme'], ['belge', 'Belgeler'], ['otobus', 'Otobüsler'], ['gun', 'Telsiz']];
       const kay = () => { kaydet(); };
-      const ciz_ = () => {
+      const ciz_ = () => { const I_ = $('#icerik'), y_ = window.scrollY; if (araq) { if (!I_.dataset.mh) { I_.style.minHeight = I_.offsetHeight + 'px'; I_.dataset.mh = '1'; } } else if (I_.dataset.mh) { I_.style.minHeight = ''; delete I_.dataset.mh; }   // arama sürerken sayfa kısalıp zıplamasın
+        ciz0_(); if (Math.abs(window.scrollY - y_) > 1) window.scrollTo(0, y_); };   // K-838: yeniden çizimde sayfa yerinde kalır
+      const ciz0_ = () => {
         try { sessionStorage.setItem('gk_adim:' + GZ_ANAH, adim); } catch (e) {}
         const L = ogrL(), say = { kesin: 0, bek: 0, ek: 0, doldu: 0 }; L.forEach(p => say[durumOf(p)]++);
         const Y = Object.keys(G.kayit).filter(an => G.kayit[an].d === 'y'), kg = kalanGun(I.sonOdeme);
@@ -5569,7 +5571,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const yedek = K && dolu >= K; if (yedek && !await onayla(`Kontenjan dolu (${dolu} / ${K}). ${baslik(o.ad)} yedek listesine alınsın mı?`)) return;
         if (!G.ekOgr.some(x => String(x.no) === String(o.no) && x.sinif === o.sinif)) G.ekOgr.push({ no: String(o.no), ad: o.ad, sinif: o.sinif });
         G.cikar = G.cikar.filter(x => x !== an); G.kayit[an] = Object.assign({}, G.kayit[an], { d: yedek ? 'y' : 'k', z: Date.now(), kim: 'panel' }); delete (G.kayit[an] || {}).vz;
-        kay(); suz = ''; araq = ''; ciz_(); atlasOnay(yedek ? 'Yedeğe alındı' : 'Geziye eklendi', baslik(o.ad) + ' · ' + o.sinif); const e = $('#gkAra'); if (e) e.focus(); };
+        kay(); suz = ''; araq = ''; { const y = window.scrollY; ciz_(); window.scrollTo(0, y); } atlasOnay(yedek ? 'Yedeğe alındı' : 'Geziye eklendi', baslik(o.ad) + ' · ' + o.sinif); const e = $('#gkAra'); if (e) e.focus({ preventScroll: true }); };
       const kayitPenceresi = async (q = '', mesaj = '') => {   // K-716bx: öğrenciyi geziye kaydet — ad/numara/sınıf ile ara, dokun, kaydet
         if (kpTur === 'ogt') await programYukle().catch(() => {});
         const K = +G.kontenjan || 0, dolu = () => kisiler().size;
@@ -5659,7 +5661,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         R.querySelectorAll('[data-gksuz]').forEach(b => b.onclick = () => { suz = b.dataset.gksuz; ciz_(); });
         R.querySelectorAll('[data-gkekle]').forEach(b => b.onclick = () => gkOgrEkle(b.dataset.gkekle));
         if ($('#gkAra')) $('#gkAra').onkeydown = e => { if (e.key !== 'Enter') return; const E = R.querySelectorAll('[data-gkekle]'); if (E.length === 1 && !R.querySelector('.gk2-liste .gk2-s')) { e.preventDefault(); gkOgrEkle(E[0].dataset.gkekle); } };   // K-836: numara + Enter → tek eşleşen öğrenci geziye
-        if ($('#gkAra')) $('#gkAra').oninput = ev => { araq = ev.target.value.trim().toLocaleLowerCase(tr); const p = ev.target.selectionStart; ciz_(); const e = $('#gkAra'); e.focus(); e.setSelectionRange(p, p); };
+        if ($('#gkAra')) $('#gkAra').oninput = ev => { araq = ev.target.value.trim().toLocaleLowerCase(tr); const p = ev.target.selectionStart, y = window.scrollY; ciz_(); window.scrollTo(0, y); const e = $('#gkAra'); e.focus({ preventScroll: true }); e.setSelectionRange(p, p); };   // K-838: yazarken sayfa kaymaz
         if ($('#gkKaydetAc')) $('#gkKaydetAc').onclick = () => { kpTur = 'ogr'; kayitPenceresi(); };
         if ($('#gkNo')) $('#gkNo').onkeydown = ev => { if (ev.key !== 'Enter') return; const v = ev.target.value.trim(), o = gzOgr().find(x => String(x.no) === v); if (!o) { uyar('Bu numarada öğrenci bulunamadı.'); return; }
           const an = 'o:' + o.sinif + ':' + o.no; if (kisiler().has(an)) { uyar(`${baslik(o.ad)} zaten kayıtlı.`); return; }
