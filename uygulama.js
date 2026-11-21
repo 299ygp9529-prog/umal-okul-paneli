@@ -663,6 +663,14 @@
     const G = JSON.parse(data.deger); ['yer', 'bilgi', 'kapali'].forEach(k => { if (!G[k] || typeof G[k] !== 'object') G[k] = {}; }); if (!Array.isArray(G.gorevli)) G.gorevli = [];
     const oto = no => (G.otobusler || []).find(b => +b.no === +no), bus = oto(otobusNo); if (!bus) return { ok: false, hata: 'Otobüs bulunamadı' };
     const ayr = G.ayrilan === 4 ? 4 : 2, anOf = (oid, k) => Object.keys(G.yer).find(a => G.yer[a].o === oid && +G.yer[a].k === +k), kapali = (oid, k) => (G.kapali[oid] || []).map(Number).includes(+k);
+    if (x.tur === 'kapat' || x.tur === 'ac') {   // K-89x: telsizden boş koltuğu kilitle / kapalı koltuğu aç (Otobüsler'deki gibi)
+      const k = +x.k; if (!k || k > (+bus.kapasite || 0)) return { ok: false, hata: 'Koltuk bulunamadı' };
+      const L = (G.kapali[bus.id] || []).map(Number).filter(n => n !== k);
+      if (x.tur === 'kapat') { if (anOf(bus.id, k)) return { ok: false, hata: 'Bu koltukta biri oturuyor; önce yerini değiştirin.' }; L.push(k); }
+      G.kapali[bus.id] = L; G.yerZaman = Date.now();
+      const { error: e3 } = await sb.from('umal_ayarlar').upsert({ anahtar, deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
+      if (e3) return { ok: false, hata: /permission|policy|rls/i.test(e3.message || '') ? 'Bu işlem için yetkiniz yok (idare yapabilir).' : hataYaz(e3) };
+      return { ok: true, k: null }; }
     const an = anOf(bus.id, x.k); if (!an) return { ok: false, hata: 'Bu koltukta kimse yok; plan yenilendi.' };
     const ogr = an.startsWith('o:'); let yeniK = null;
     if (x.tur === 'tasi') { const k2 = +x.k2; if (!k2 || k2 > (+bus.kapasite || 0)) return { ok: false, hata: 'Koltuk bulunamadı' }; if (kapali(bus.id, k2)) return { ok: false, hata: 'Bu koltuk kapalı.' };
@@ -700,7 +708,7 @@
     const P = gzPlan(r.kapasite);
     const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
       if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc(x.tur === 'ogr' ? String(x.ad || '').split(/\s+/)[0] : bas(x.ad))}</em></button>`;
-      return `<span class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}"><i>${s.n}</i>${s.n <= ayr ? '<em>Görevli</em>' : ''}</span>`; };
+      return `<button type="button" class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}" data-tzbos="${s.n}" data-kap="${kap.has(s.n) ? 1 : ''}"><i>${s.n}</i>${kap.has(s.n) ? '' : s.n <= ayr ? '<em>Görevli</em>' : ''}</button>`; };   // K-89x: boş/kapalı koltuğa da dokunulur
     const ogr = (r.kisiler || []).filter(x => x.tur === 'ogr').length, gor = (r.kisiler || []).length - ogr;
     const html = `<div class="tz-plan"><div class="tz-pon"><span>Ön · şoför${r.plaka ? ' · ' + esc(r.plaka) : ''}</span><span>${ogr} öğrenci · ${gor} görevli</span></div>${P.map(row => `<div class="tz-psira">${row.map(kh).join('')}</div>`).join('')}</div>`;
     return { ok: true, kisi, foto, html };
@@ -1073,7 +1081,7 @@
       else if (sonraki && (!simdi || alinan.has(simdi.sinif + '|ders-' + simdi.n)) && dk(sonraki.bas) - t <= 45) { k = 's' + sonraki.sinif + sonraki.n; const kal = dk(sonraki.bas) - t;
         h = kart(sonraki, `SIRADAKİ DERSİNİZ${sonraki.gorev ? ' · GÖREVLENDİRME' : ''}`, kal <= 0 ? 'şimdi başlıyor' : `${kal} dk sonra`, null, ''); }
       if (!h || kapali().includes(k)) { el.classList.add('gizli'); return; }
-      el.innerHTML = h + `<button class="sr-x" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`; el.classList.remove('gizli'); yerles();
+      el.innerHTML = h + `<button class="sr-x x-kapat" aria-label="Kapat" title="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`; el.classList.remove('gizli'); yerles();
       el.querySelector('.sr-x').onclick = () => { try { sessionStorage.setItem('srKapali', JSON.stringify(kapali().concat([k]).slice(-20))); } catch (e) {} el.classList.add('gizli'); };
       const y = el.querySelector('[data-sry]'); if (y) y.onclick = () => { const [sf, n] = y.dataset.sry.split('|'); el.classList.add('gizli'); aZ = 0; try { tumuKapat(); } catch (e) {} ac('dersyoklama'); };
     };
@@ -2083,7 +2091,7 @@
   };
   const biletGoster = (o, sec) => {
     const tum = sinavlari(o.no), x = (sec && tum.find(y => D.planlar.indexOf(y.p) === sec[0] && y.s === sec[1])) || tum[0] || null;
-    kutu.innerHTML = `<div class="bilet-cerceve"><button class="bilet-kapat" data-kapat="1" title="Kapat (Esc)">✕</button>${bilet(o, x, tum.filter(y => y !== x))}</div>`;
+    kutu.innerHTML = `<div class="bilet-cerceve"><button class="bilet-kapat x-kapat" data-kapat="1" title="Kapat (Esc)" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>${bilet(o, x, tum.filter(y => y !== x))}</div>`;
     kutu.dataset.no = o.no;
     fotolariYukle([o.no]);
   };
@@ -2094,7 +2102,7 @@
     const tam = D.ogrenciler.find(o => o.no === q);
     const L = tam ? [tam] : (/^\d+$/.test(q) ? D.ogrenciler.filter(o => o.no.startsWith(q)) : D.ogrenciler.filter(o => o.ad.toLocaleLowerCase(tr).includes(q))).slice(0, 20);
     if (L.length === 1) return biletGoster(L[0]);
-    kutu.innerHTML = L.length ? `<div class="bilet-cerceve"><button class="bilet-kapat" data-kapat="1" title="Kapat (Esc)">✕</button><div class="satirlar" style="margin:8px 0">${L.map(o => { const n = sinavlari(o.no).length; return `<button class="satir" data-ob="${esc(o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)};color:${seviyeRenk(o.sinif)}"></span><div class="ana"><b>${esc(baslik(o.ad))} · ${esc(o.sinif)} · ${esc(o.no)}</b><small>${n ? `${n} sınavı var` : 'Sınava girmeyecek'}</small></div><span class="neon">Bilet ›</span></button>`; }).join('')}</div></div>` : '<div class="soluk" style="margin:8px 0">Bulunamadı.</div>';
+    kutu.innerHTML = L.length ? `<div class="bilet-cerceve"><button class="bilet-kapat x-kapat" data-kapat="1" title="Kapat (Esc)" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="satirlar" style="margin:8px 0">${L.map(o => { const n = sinavlari(o.no).length; return `<button class="satir" data-ob="${esc(o.no)}"><span class="sv-nokta" style="background:${seviyeRenk(o.sinif)};color:${seviyeRenk(o.sinif)}"></span><div class="ana"><b>${esc(baslik(o.ad))} · ${esc(o.sinif)} · ${esc(o.no)}</b><small>${n ? `${n} sınavı var` : 'Sınava girmeyecek'}</small></div><span class="neon">Bilet ›</span></button>`; }).join('')}</div></div>` : '<div class="soluk" style="margin:8px 0">Bulunamadı.</div>';
   };
   const biletKapat = () => { kutu.innerHTML = ''; giris.value = ''; };
   giris.onkeydown = ev => { if (ev.key === 'Escape') biletKapat(); };
