@@ -616,6 +616,13 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 
 /* K-89x: uyarı sesi düğmesi hoparlör simgesi (zil yalnız Bildirimler için) */
 #sesUst .ses-cizgi { display: none; } #sesUst.kapali .ses-cizgi { display: inline; } #sesUst.kapali { opacity: .75; }
+
+/* K-89x: masaüstünde ekran boyu "Gönder/Kaydet" düğmesi yok — normal boyda düğme */
+@media (min-width: 1000px) {
+  main .birincil:not(.ms-alt .birincil):not(.sor-dug .birincil):not(.ms-skd .birincil):not(#sifreEkran .birincil) { width: auto; min-width: 240px; max-width: 100%; padding: 14px 40px; }
+  main .alt-cubuk { display: flex; justify-content: flex-end; background: none; pointer-events: none; } main .alt-cubuk > * { pointer-events: auto; }
+  main .alt-cubuk .birincil { box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+}
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */

@@ -2994,3 +2994,7 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .tk-tf .tk-sinav { row-gap: 14px; padding: 16px 18px; } .tk-tf .tk-dersler { gap: 12px 18px; } .tk-tf .tk-tf-d small { margin-top: 2px; }
 .tk-tf .tf-gorev { flex-wrap: nowrap; gap: 10px; padding-top: 12px; margin-top: 4px; } .tk-tf .tf-gorev .tf-gk { flex: 1; min-width: 0; } .tk-tf .tf-gorev > button { flex: none; white-space: nowrap; margin-top: 0; }
 @media (max-width: 760px) { .tk-tf .tf-gorev { flex-wrap: wrap; } }
+/* K-89x: masaüstü sayfalarında ekran boyu düğme yok — normal boyda (pencerelerde dar olduğu için tam genişlik kalır) */
+@media (min-width: 1000px) {
+  #icerik .yz-gonder, #icerik .gk2-kaydet, #icerik .tfy-gonder, #icerik .gb-gonder, #icerik #obGonder, #icerik .as-gonder { width: auto; min-width: 240px; padding-left: 40px; padding-right: 40px; }
+}
