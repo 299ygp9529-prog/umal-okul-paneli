@@ -57,7 +57,7 @@
     '.tz-harita{display:block;margin-top:4px;border-radius:12px;overflow:hidden;border:1px solid #24406a;background:#0b1424;color:#fff;text-decoration:none}',
     '.tz-hk{position:relative;height:150px;overflow:hidden;background:#dfe6ec}.tz-hm{position:absolute;left:50%;top:50%;width:0;height:0}.tz-hm img{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none}',
     '.tz-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-92%);color:#ff4d5e;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}.tz-osm{position:absolute;right:4px;bottom:3px;font-size:9px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:4px}',
-    '.tz-hal{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:13.5px;color:#7ff6ff}.tz-hal b{color:#fff;font-size:14px}.tz-hal small{color:#8aa0c2;font-size:12px}.tz-hal em{margin-left:auto;font-style:normal;font-weight:700;font-size:13px;color:#22e8ff}',
+    '.tz-hal{display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:13.5px;color:#7ff6ff}.tz-hal b{color:#fff;font-size:14px}.tz-hal small{color:#8aa0c2;font-size:12px}.tz-hal em{margin-left:auto;font-style:normal;font-weight:700;font-size:13px;color:#22e8ff}.tz-hmet{flex:1;min-width:0;display:flex;flex-direction:column}.tz-hnot{font-style:normal;font-size:13px;font-weight:600;color:#ffe2b0;line-height:1.3;overflow-wrap:anywhere}',
     '.tz-top{display:flex;align-items:center;gap:12px;margin:8px 12px 0;padding:9px 12px;border-radius:16px;text-decoration:none;color:#fff;flex:none;background:linear-gradient(135deg,rgba(255,181,71,.22),rgba(255,122,61,.1));border:1px solid rgba(255,181,71,.75);box-shadow:0 0 18px rgba(255,181,71,.15)}',
     '.tz-tsaat{font-size:30px;font-weight:900;letter-spacing:.5px;color:#ffc46b;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,181,71,.45)}',
     '.tz-tm{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.tz-tm b{font-size:10.5px;letter-spacing:.12em;color:#ffc46b}.tz-tm>span{font-size:14px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tz-tm small{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#ffe2b0;font-weight:600}',
@@ -98,14 +98,14 @@
     '.tz-canli{padding:3px 7px;font-size:10px;gap:5px}.tz-canli i{width:6px;height:6px}.tz-kapa{height:30px;font-size:12px}.tz-kapa svg{width:15px;height:15px}',
     '.tz-sus-dug{margin:5px 6px 0;padding:5px 10px;font-size:12px;border-radius:10px}',
     '.tz-top{margin:5px 6px 0;padding:5px 10px;gap:9px;border-radius:12px}.tz-tsaat{font-size:22px}',
-    '.tz-tm{flex-direction:row;align-items:baseline;gap:7px;flex-wrap:wrap;row-gap:0}.tz-tm b{font-size:10px}.tz-tm>span{font-size:13px;-webkit-line-clamp:1}.tz-tm small{font-size:12px}',
+    '.tz-tm{flex-direction:row;align-items:baseline;gap:7px;flex-wrap:wrap;row-gap:0}.tz-tm b{font-size:10px}.tz-tm>span{font-size:13px;-webkit-line-clamp:3;flex-basis:100%}.tz-tm small{font-size:12px}',
     '.tz-top em{font-size:0;gap:0;width:30px;height:30px;justify-content:center;border-radius:50%;border:1px solid rgba(34,232,255,.5);background:rgba(34,232,255,.08)}',
     '.tz-akis{padding:8px;gap:6px}',
     '.tz-m{padding:6px 9px;font-size:14.5px;line-height:1.38;border-radius:12px}.tz-duyuru{padding:6px 9px;border-radius:12px;font-size:14.5px}.tz-duyuru .tz-dbt{margin-bottom:3px;font-size:10.5px}',
     '.tz-kunye{gap:7px;margin-bottom:2px}.tz-av{width:26px;height:26px;font-size:10px}',
     '.tz-kad{flex-wrap:nowrap;overflow:hidden;column-gap:5px}.tz-kad b{font-size:13px;white-space:nowrap}.tz-kad small{flex-basis:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;min-width:0}',
     '.tz-rozet{font-size:9px;padding:0 5px;margin:0;flex:none}.tz-kunye .tz-z{align-self:center}',
-    '.tz-hk{height:105px}.tz-hal{padding:5px 9px;font-size:12.5px;white-space:nowrap}.tz-hal b{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.tz-hal small,.tz-hal em{flex:none}.tz-harita{margin-top:3px;border-radius:10px}',
+    '.tz-hk{height:105px}.tz-hal{padding:5px 9px;font-size:12.5px;white-space:nowrap}.tz-hal b{font-size:13px}.tz-hmet{flex:1;min-width:0;display:flex;flex-direction:column;white-space:normal}.tz-hnot{font-style:normal;font-size:12.5px;font-weight:600;color:#ffe2b0;line-height:1.3;overflow-wrap:anywhere}.tz-hal small,.tz-hal em{flex:none}.tz-harita{margin-top:3px;border-radius:10px}',
     '.tz-alt{padding:6px 8px 8px}.tz-hiz{margin:0 -8px 6px;padding:0 8px;gap:6px}.tz-hiz button{padding:5px 11px;font-size:12.5px}',
     '.tz-yaz textarea{min-height:40px;padding:9px 14px}.tz-gon{width:40px;height:40px}',
     '.tz-sis{padding:3px 10px;font-size:11.5px}',
@@ -228,7 +228,7 @@
         img += '<img alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" src="https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png" style="left:' + Math.round((tx + dx) * 256 - px) + 'px;top:' + Math.round((ty + dy) * 256 - py) + 'px">'; }
       var url = haritaUrl(k);
       return '<a class="tz-harita" href="' + esc(url) + '" target="_blank" rel="noopener"><div class="tz-hk"><div class="tz-hm">' + img + '</div><span class="tz-pin">' + SVG(IK.pin, 34, 1.8) + '</span><span class="tz-osm">© OpenStreetMap</span></div>' +
-        '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<b>' + (k.saat ? 'Toplanma ' + esc(k.saat) + (k.not ? ' · ' + esc(k.not) : '') : 'Bulunduğu yer') + '</b>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
+        '<div class="tz-hal">' + SVG(IK.pin, 18, 2) + '<span class="tz-hmet"><b>' + (k.saat ? 'Toplanma ' + esc(k.saat) : 'Bulunduğu yer') + '</b>' + (k.saat && k.not ? '<i class="tz-hnot">' + esc(k.not) + '</i>' : '') + '</span>' + (k.acc ? '<small>±' + Math.round(k.acc) + ' m</small>' : '') + '<em>Haritada aç</em></div></a>';
     }
     function fotoSrc(f) { f = String(f || ''); return /^(data:|https?:|blob:)/.test(f) ? f : 'data:image/jpeg;base64,' + f; }   // K-821: veritabanında ham base64
     function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
