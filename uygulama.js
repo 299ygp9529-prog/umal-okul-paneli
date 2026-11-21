@@ -5037,7 +5037,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-826: rehbere geçici telsiz bağlantısı (karekod); yalnız telsiz açıkken çalışır, iptal edilebilir
     const rehberBag = async (gid, yeni) => {
       const g = G.gorevli.find(x => x.id === gid); if (!g) return;
-      const r = await sb.rpc('umal_gezi_rehber_bilet', { p_anahtar: GZ_ANAH, p_gid: gid, p_islem: yeni ? 'ver' : 'durum' }).catch(e => ({ error: e }));
+      let r = null; try { r = await sb.rpc('umal_gezi_rehber_bilet', { p_anahtar: GZ_ANAH, p_gid: gid, p_islem: yeni ? 'ver' : 'durum' }); } catch (e) { r = { error: e }; }   // supabase sorgusu .catch desteklemez
       const d = r && r.data; if (!d || !d.ok) { uyar('Bağlantı alınamadı: ' + ((r && r.error && hataYaz(r.error)) || (d && d.hata) || '')); return; }
       if (!yeni) { if (!d.var) return rehberBag(gid, true);
         pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${esc(baslik(g.ad))} · rehber</h2><p class="soluk">Bu rehberin geçerli bir telsiz bağlantısı var (${esc(new Date(d.verildi).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}${d.son ? ' · son giriş ' + esc(new Date(d.son).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) : ' · henüz girmedi'}). Karekod yalnız verildiği anda gösterilir.</p>
