@@ -2752,3 +2752,36 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .gz-adimbar button.canli i { width: 8px; height: 8px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 8px #ff4d5e; }
 #icerik.gz-adimli .tz-ekran { height: calc(100dvh - 162px); }
 @media (max-width: 760px) { body.ogt-alt #icerik.gz-adimli .tz-ekran { height: calc(100dvh - 150px - 80px - 52px - env(safe-area-inset-bottom)); } }
+/* K-829: Otobüsler — fotoğraflı oturma planı, kişi kartı, katlı ayarlar */
+.gz-k .foto { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; margin: 1px 0 2px; font-size: 10px; font-weight: 800; display: grid; place-items: center; overflow: hidden; background: #1b2f4f; color: #cfe0ff; box-shadow: 0 0 0 2px var(--c, #5cb8ff); }
+.gz-k .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gz-k .gz-gf, .gz-kk .gz-gf { background: linear-gradient(135deg, #ffb547, #ff7a3d); color: #2a1300; }
+.gz-ayar > summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 2px 28px 2px 0; position: relative; }
+.gz-ayar > summary::-webkit-details-marker { display: none; }
+.gz-ayar > summary::after { content: ""; position: absolute; right: 6px; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--soluk); border-bottom: 2px solid var(--soluk); transform: translateY(-70%) rotate(45deg); transition: transform .15s; }
+.gz-ayar[open] > summary::after { transform: translateY(-30%) rotate(225deg); }
+.gz-ayar[open] > summary { margin-bottom: 12px; }
+.gz-ayar { margin-top: 14px; }
+.gz-ayar > .kart { margin: 10px 0 0; }
+.gz-kk-ust { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.gz-kk-ust .foto { width: 76px; height: 76px; min-width: 76px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-size: 22px; font-weight: 800; background: #1b2f4f; color: #cfe0ff; box-shadow: 0 0 0 3px var(--c); }
+.gz-kk-ust .foto img { width: 100%; height: 100%; object-fit: cover; }
+.gz-kk-ust b { display: block; font-size: 19px; margin-bottom: 3px; }
+.gz-kk-ust small { display: block; color: var(--soluk); font-size: 13.5px; line-height: 1.45; }
+.gz-kk-dug { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gz-kk-dug > * { margin: 0; min-height: 46px; display: flex; align-items: center; justify-content: center; text-decoration: none; text-align: center; }
+@media (min-width: 761px) { .gz-sira { grid-template-rows: 68px 68px 40px 68px 68px; } .gz-k { padding-top: 12px; } }
+@media (max-width: 760px) {
+  .gz-izgara > .gz-oto { order: -1; }
+  .gz-k { min-height: 64px; padding: 13px 2px 4px; }
+  .gz-k .foto { width: 32px; height: 32px; min-width: 32px; }
+  .gz-sekmeler { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+  .gz-ot { padding: 6px 2px 9px; gap: 2px; } .gz-ot b { display: none; } .gz-ot small { font-size: 10.5px; }
+}
+@media (min-width: 761px) {   /* K-829: masaüstünde otobüs tam genişlik, fotoğraflı koltuklar sığsın; bekleyen/görevli listesi altta */
+  .gz-izgara { grid-template-columns: 1fr; }
+  .gz-izgara > .gz-oto { order: -1; }
+  .gz-izgara > .gz-havuz { position: static; max-height: none; }
+  .gz-izgara > .gz-havuz .gz-liste { max-height: 320px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-content: start; }
+  .gz-k .foto { width: 30px; height: 30px; min-width: 30px; }
+}
