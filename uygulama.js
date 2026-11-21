@@ -615,6 +615,7 @@
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       plan: o => tzPlanYukle(g.anahtar, o),   // K-845: fotoğraflı oturma planı
+      yonet: (o, v) => r_('umal_gezi_telsiz_yonet', { p_anahtar: g.anahtar, p_otobus: o, p_veri: v }),   // K-862: görevli öğretmen başkan seçer, görevli ekler
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
   }
   // K-845: telsizde otobüse dokununca oturma planı (yalnız görmek için; değişiklik Gezi › Otobüsler'de)
@@ -630,7 +631,7 @@
     const kap = new Set((r.kapali || []).map(Number)), ayr = +r.ayrilan || 2;
     const P = gzPlan(r.kapasite);
     const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
-      if (x) return `<button type="button" class="tz-pk" data-tzk="${s.n}"><i>${s.n}</i>${foto(x)}<em>${esc(x.tur === 'ogr' ? String(x.ad || '').split(/\s+/)[0] : bas(x.ad))}</em></button>`;
+      if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc(x.tur === 'ogr' ? String(x.ad || '').split(/\s+/)[0] : bas(x.ad))}</em></button>`;
       return `<span class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}"><i>${s.n}</i>${s.n <= ayr ? '<em>Görevli</em>' : ''}</span>`; };
     const ogr = (r.kisiler || []).filter(x => x.tur === 'ogr').length, gor = (r.kisiler || []).length - ogr;
     const html = `<div class="tz-plan"><div class="tz-pon"><span>Ön · şoför${r.plaka ? ' · ' + esc(r.plaka) : ''}</span><span>${ogr} öğrenci · ${gor} görevli</span></div>${P.map(row => `<div class="tz-psira">${row.map(kh).join('')}</div>`).join('')}</div>`;
@@ -4853,9 +4854,16 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: GZ_ANAH, deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
       if (!error && (GZ_K.ad !== G.ad)) { GZ_K.ad = G.ad; await sb.from('umal_ayarlar').upsert({ anahtar: 'gezi_liste', deger: JSON.stringify(GL) }, { onConflict: 'anahtar' }); }
       durum = error ? 'Kaydedilemedi: ' + hataYaz(error) : 'Kaydedildi ✓'; durumYaz(); if (!error) { clearTimeout(kaydet.ank); kaydet.ank = setTimeout(() => gzAnketSenk().catch(() => {}), 3000); } }, 500); };
+    let G0 = null;   // K-862: telsizden görevli öğretmenin yaptığı başkan / görevli değişiklikleri — panelde aynı alan değişmediyse sunucudaki alınır
     const sunucuAl = S_ => {   // K-716bx: başkanın yerleşimi (yerZaman) ve öğrencilerin girdiği bilgiler (kayıt başına z) sunucudan alınır; panelde sonradan düzeltilen korunur
       let d_ = false; if (!S_) return d_;
       if ((+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; d_ = true; }
+      if (!G0) G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
+      if ((+S_.baskanZaman || 0) > (+G.baskanZaman || 0)) { if (JSON.stringify(G.baskan || {}) === G0.b) G.baskan = S_.baskan || G.baskan; else { const L_ = new Set((G.baskan.nolar || []).map(String)); (S_.baskan && S_.baskan.nolar || []).forEach(n => L_.add(String(n))); G.baskan.nolar = [...L_]; } G.baskanZaman = S_.baskanZaman; d_ = true; }
+      if ((+S_.gorevliZaman || 0) > (+G.gorevliZaman || 0)) { const var_ = new Set((G.gorevli || []).map(x => x.id)), dolu = new Set(Object.values(G.yer || {}).map(y => y.o + ':' + y.k));
+        (S_.gorevli || []).forEach(x => { if (var_.has(x.id)) return; G.gorevli.push(x); const y = (S_.yer || {})['g:' + x.id]; if (y && !dolu.has(y.o + ':' + y.k)) { G.yer['g:' + x.id] = y; dolu.add(y.o + ':' + y.k); const kp = (G.kapali || {})[y.o]; if (Array.isArray(kp)) G.kapali[y.o] = kp.filter(n => +n !== +y.k); } });
+        G.gorevliZaman = S_.gorevliZaman; d_ = true; }
+      G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
       Object.entries(S_.bilgi || {}).forEach(([an, b]) => { const y = G.bilgi[an]; if (b && (+b.z || 0) > (+(y && y.z) || 0)) { G.bilgi[an] = b; d_ = true; } });
       Object.entries(S_.kayit || {}).forEach(([an, k]) => { const y = G.kayit[an]; if (!k || k.kim !== 'ogrenci' || (+k.oz || 0) <= (+(y && y.oz) || 0)) return;   // K-716bt: öğrencinin panelden başvurusu / vazgeçmesi
         G.kayit[an] = k; d_ = true; if (k.d === 'v') { delete G.yer[an]; return; } G.cikar = G.cikar.filter(x => x !== an);
