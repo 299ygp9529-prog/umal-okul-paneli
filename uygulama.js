@@ -5208,9 +5208,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const tzvGuncelle = () => { const kok = document.querySelector('.gz-oto'); if (!kok) return; const V = window.__gzTzvSon, hazir = !!(V && V.hazir) && TZ.L.some(x => x.anahtar === GZ_ANAH);
       kok.classList.toggle('tzv-hazir', hazir); const say = $('#gzTzSay'); if (!hazir) { if (say) say.innerHTML = ''; return; }
       const nolar = new Set(), adlar = new Set(); V.L.forEach(m => { if (m.t === 'ogr' && m.no) nolar.add(String(m.no)); else if (m.ad) adlar.add(gzSade(m.ad)); });
-      const M_ = kisiler(); let n = 0, t = 0;
-      kok.querySelectorAll('[data-tzr]').forEach(b => { const p = M_.get(b.dataset.tzr), a_ = !!p && (p.tur === 'ogr' ? nolar.has(String(p.no)) : adlar.has(gzSade(p.ad))); b.classList.toggle('acik', a_); b.title = a_ ? 'Telsiz açık' : 'Telsiz kapalı'; t++; if (a_) n++; });
-      if (say) say.innerHTML = `${GZ_TZ_IK}<b>${n}</b>/${t} telsizde`; };
+      const M_ = kisiler(); let on = 0, ot = 0, gn = 0, gt = 0;
+      kok.querySelectorAll('[data-tzr]').forEach(b => { const p = M_.get(b.dataset.tzr), a_ = !!p && (p.tur === 'ogr' ? nolar.has(String(p.no)) : adlar.has(gzSade(p.ad))); b.classList.toggle('acik', a_); b.title = a_ ? 'Telsiz açık' : 'Telsiz kapalı'; if (p && p.tur === 'ogr') { ot++; if (a_) on++; } else { gt++; if (a_) gn++; } });
+      if (say) say.innerHTML = `${GZ_TZ_IK}Telsiz açık <b>${on}</b>/${ot} öğrenci${gt ? ` · <b>${gn}</b>/${gt} görevli` : ''}`; };   // K-877
     if (window.UmalTelsizIzle && (!window.__gzTzv || window.__gzTzv.a !== GZ_ANAH)) { if (window.__gzTzv) window.__gzTzv.k.kapat(); window.__gzTzvSon = null;
       window.__gzTzv = { a: GZ_ANAH, k: window.UmalTelsizIzle(sb, GZ_ANAH, v => { window.__gzTzvSon = v; if (D.bolum === 'gezi' && window.__gzTzvF) window.__gzTzvF(); }) }; }
     window.__gzTzvF = tzvGuncelle;
