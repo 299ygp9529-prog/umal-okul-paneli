@@ -2944,3 +2944,10 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 /* Sohbet başlığında sınıf: düzeyin renginde yuvarlak top içinde sınıf adı (9-D) */
 .msj-sinif-top { width: 46px; height: 46px; min-width: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--z); color: var(--c); font-weight: 900; font-size: 15px; letter-spacing: -.02em;
   border: 1.5px solid color-mix(in srgb, var(--c) 65%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 35%, transparent); white-space: nowrap; }
+/* Sınıf sohbeti başlığı: düzenli — Geri solda, sınıf topu tam ortada, "yazabilir" sağda; hepsi sınıfın düzey renginde */
+.msj-ust.grup { position: relative; min-height: 50px; }
+.msj-ust.grup .msj-sinif-top { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.msj-ust.grup .msj-tik { color: #c9d6ea; font-size: 12px; font-weight: 700; line-height: 1.15; text-align: left; gap: 8px; }
+.msj-ust.grup .msj-tik input[type="checkbox"] { width: 28px; height: 28px; background: var(--z); border-color: color-mix(in srgb, var(--c) 55%, transparent); box-shadow: none; }
+.msj-ust.grup .msj-tik input[type="checkbox"]::after { border-color: var(--c); width: 6px; height: 12px; }
+.msj-ust.grup .msj-tik input[type="checkbox"]:checked { border-color: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 40%, transparent); }
