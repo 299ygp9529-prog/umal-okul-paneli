@@ -2867,9 +2867,11 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .kd-kart { margin-top: 14px; }
 .kd-ust { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .kd-ozet { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
-.kd-ozet span { padding: 5px 10px; border-radius: 999px; border: 1px solid #24406a; background: #0b1424; font-size: 12.5px; color: #b9c9e2; }
-.kd-ozet span b { color: #fff; margin-right: 3px; }
+.kd-ozet button { padding: 6px 11px; border-radius: 999px; border: 1px solid #24406a; background: #0b1424; font: inherit; font-size: 12.5px; color: #b9c9e2; cursor: pointer; }
+.kd-ozet button b { color: #fff; margin-right: 3px; }
 .kd-ozet .yesil { border-color: rgba(62, 240, 138, .45); } .kd-ozet .yesil b { color: #6ff5a6; }
+.kd-ozet button.secili { background: #22e8ff; border-color: #22e8ff; color: #06202a; } .kd-ozet button.secili b { color: #06202a; }
+.kd-fil { font-size: 12.5px; color: #9db0cf; margin: -2px 0 8px; }
 .kd-ozet .gri { opacity: .75; }
 .kd-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (min-width: 1100px) { .kd-liste { grid-template-columns: 1fr 1fr 1fr; } }
