@@ -2934,3 +2934,10 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .msj-av.g.sr { position: relative; border-radius: 12px; background: var(--z) !important; color: var(--c) !important; font-size: 19px !important; display: grid; place-items: center; font-weight: 800; border: 1px solid color-mix(in srgb, var(--c) 30%, transparent) !important; overflow: hidden; }
 .msj-av.g.sr::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
 .msj-av.g.sr svg { width: 24px; height: 24px; margin-left: 4px; }   /* K-884 */
+/* Sohbet başlığı "Öğrenciler yazabilir": sade mavi kutu yerine camgöbeği neon daire */
+.msj-tik input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; margin: 0; flex: none; border-radius: 50%; cursor: pointer; position: relative;
+  background: rgba(34, 232, 255, .12); border: 1.5px solid rgba(34, 232, 255, .55); box-shadow: inset 0 0 8px rgba(34, 232, 255, .15); transition: background .15s, box-shadow .15s; }
+.msj-tik input[type="checkbox"]::after { content: ''; position: absolute; left: 50%; top: 46%; width: 7px; height: 13px; border: solid #22e8ff; border-width: 0 2.6px 2.6px 0; transform: translate(-50%, -50%) rotate(45deg) scale(0); transition: transform .15s; }
+.msj-tik input[type="checkbox"]:checked { background: rgba(34, 232, 255, .2); border-color: #22e8ff; box-shadow: 0 0 12px rgba(34, 232, 255, .45), inset 0 0 8px rgba(34, 232, 255, .2); }
+.msj-tik input[type="checkbox"]:checked::after { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+.msj-tik input[type="checkbox"]:focus-visible { outline: 2px solid #7ff6ff; outline-offset: 2px; }
