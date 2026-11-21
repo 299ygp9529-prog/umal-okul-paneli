@@ -545,7 +545,7 @@
     const var_ = I.querySelector('.msj-ekran'); if (var_ && var_.dataset.id === String(x.id)) {   // K-745c: açık sohbette yalnız mesaj listesi yenilenir (yazı kutusu, klavye ve odak yerinde kalır)
       akisCiz($('#msjAkis')); const sm = var_.querySelector('.msj-ust small'); if (sm && grup) sm.textContent = MSJ.uye + ' öğrenci'; return; }
     I.innerHTML = `<div class="msj-ekran" data-id="${esc(String(x.id))}"><div class="msj-ust"><button class="ikincil kucuk" id="msjGeri">‹ Geri</button>${grup ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<div><b>${grup ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || ''))}</b><small>${grup ? MSJ.uye + ' öğrenci' : esc(x.ogr_sinif || '') + ' · birebir · 08.00–20.00'}</small></div>
-        ${grup ? `<label class="msj-tik"><input type="checkbox" id="msjYazabilir" ${MSJ.yazabilir ? 'checked' : ''}> Öğrenciler yazabilir</label>` : '<button class="bag" id="msjSik" style="margin-left:auto;color:#ff8a8a">Rehberliğe ilet</button>'}</div>
+        ${grup ? `<label class="msj-tik"><input type="checkbox" id="msjYazabilir" ${MSJ.yazabilir ? 'checked' : ''}> Öğrenciler yazabilir</label>` : '<button class="bag" id="msjSik" style="margin-left:auto;color:#ff8a8a">Rehberliğe ilet</button><button class="bag" id="msjSil" style="color:#ff8a8a">Sil</button>'}</div>
       <div class="msj-akis" id="msjAkis"></div>
       <div class="msj-alt"><textarea id="msjYaz" rows="1" maxlength="1000" placeholder="Mesaj yaz…">${esc(taslak)}</textarea><button class="birincil" id="msjGonder" data-klavye-kalsin aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div></div>`;
     const ak = $('#msjAkis'); akisCiz(ak); ak.scrollTop = ak.scrollHeight;
@@ -566,6 +566,9 @@
     ak.onclick = async ev => { const g = ev.target.closest('[data-msjgiz]'), s = ev.target.closest('[data-msjeng]');   // tek dinleyici: satırlar yeniden yazılsa da çalışır
       if (g) { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { gizle: +g.dataset.msjgiz, gizli: g.dataset.v === '1' } }); msjYukle(); }
       else if (s) { await sb.rpc('umal_sohbet_ayar', { p_sohbet: x.id, p_veri: { engel: s.dataset.msjeng, engelli: s.dataset.v === '1' } }); msjYukle(); } };
+    if ($('#msjSil')) $('#msjSil').onclick = async () => { if (!await onayla(`${baslik(x.ad || 'Öğrenci')} ile birebir konuşma silinsin mi? Bütün mesajlar iki taraftan da silinir, geri alınamaz.`)) return;   // K-881
+      const { data, error } = await sb.rpc('umal_sohbet_sil', { p_id: x.id }); if (error || !data || !data.ok) { uyar('Silinemedi: ' + (error ? hataYaz(error) : (data && data.hata) || '')); return; }
+      MSJ.L = MSJ.L.filter(z => z.id !== x.id); MSJ.acik = null; atlasOnay('Konuşma silindi', baslik(x.ad || '')); msjListeCiz(); };
     if ($('#msjSik')) $('#msjSik').onclick = async () => { if (!await onayla('Bu konuşma rehberlik servisine iletilsin mi? Rehberlik yalnız bu konuşmayı görür.')) return; const { data } = await sb.rpc('umal_sohbet_sikayet_et', { p_sohbet: x.id, p_aciklama: 'Öğretmen iletti' }); if (data && data.ok) uyar('Konuşma rehberlik servisine iletildi.'); };
   }
   // K-808: Gezi Telsizi — Kurucu açar/kapatır; geziye katılan öğrenciler, görevli öğretmenler ve idare içeride. Ekran telsiz.js'te (öğrenci paneliyle ortak).
