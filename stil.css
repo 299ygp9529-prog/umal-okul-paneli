@@ -2905,3 +2905,4 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .hz-l.secili { border-color: #22e8ff; background: rgba(34, 232, 255, .1); } .hz-l.secili i { color: #22e8ff; }
 .hz-tus { display: flex; gap: 8px; } .hz-tus button { flex: 1; }
 .hz-menu #hzDuz { align-self: center; }
+.bsk-ac { display: inline-flex; align-items: center; justify-content: center; }   /* K-864 */
