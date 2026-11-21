@@ -538,18 +538,19 @@
     const I = $('#icerik');
     if (!TZ.L.length && TZ.kurucu) {   // K-819: Kurucu telsizi buradan açar
       const H = (TZ.H || []).filter(x => x && x.anahtar);
-      I.innerHTML = `<h1>Gezi Telsizi</h1>${H.length ? H.map(x => `<div class="kart tz-acK"><div class="tz-acU"><span class="tz-kik"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MENU_IK.telsiz}</svg></span><span><b>${esc(x.ad || 'Gezi')}</b><small class="soluk">Kapalı · ${+x.ogrenci || 0} öğrenci, ${+x.ogretmen || 0} görevli öğretmen</small></span></div><button class="birincil tz-acB" data-tzac="${esc(x.anahtar)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>Telsizi aç</button></div>`).join('') : '<div class="kart soluk">Henüz gezi yok. Gezi Kaydı\'ndan gezi oluşturun.</div>'}`;
+      I.innerHTML = `${['bas', 'yonetici'].includes(D.rol) ? gzAdimBar('gun') : ''}<h1>Gezi Telsizi</h1>${H.length ? H.map(x => `<div class="kart tz-acK"><div class="tz-acU"><span class="tz-kik"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MENU_IK.telsiz}</svg></span><span><b>${esc(x.ad || 'Gezi')}</b><small class="soluk">Kapalı · ${+x.ogrenci || 0} öğrenci, ${+x.ogretmen || 0} görevli öğretmen</small></span></div><button class="birincil tz-acB" data-tzac="${esc(x.anahtar)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>Telsizi aç</button></div>`).join('') : '<div class="kart soluk">Henüz gezi yok. Gezi Kaydı\'ndan gezi oluşturun.</div>'}`;
       I.querySelectorAll('[data-tzac]').forEach(b => b.onclick = async () => { const x = H.find(h => h.anahtar === b.dataset.tzac);
         if (!await onayla(`${x.ad || 'Gezi'} için Gezi Telsizi açılsın mı? Geziye katılan öğrenciler uygulamayı açınca telsize girer.`)) return;
         b.disabled = true; const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: x.anahtar, p_acik: true }); b.disabled = false;
         if (error || !data || !data.ok) { uyar('Açılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
         atlasOnay('Telsiz açıldı', 'Gezideki herkes içeride'); TZ.imza = '*'; await tzDurum(); telsizBolumu(); });
-      return; }
+      gzAdimBagla(I); return; }
     if (!TZ.L.length) { I.innerHTML = `<h1>Gezi Telsizi</h1><div class="kart soluk">Şu an açık bir Gezi Telsizi yok. Kurucu gezi günü açar; görevli öğretmenler ve idare kendiliğinden içinde olur.</div>`; return; }
     if (TZ.i >= TZ.L.length) TZ.i = 0; const g = TZ.L[TZ.i];
-    I.innerHTML = `
+    const adimli = ['bas', 'yonetici'].includes(D.rol); I.classList.toggle('gz-adimli', adimli);
+    I.innerHTML = `${adimli ? gzAdimBar('gun') : ''}
       ${TZ.L.length > 1 ? `<div class="cipler">${TZ.L.map((x, i) => `<button class="cip ${i === TZ.i ? 'secili' : ''}" data-tzsec="${i}">${esc(x.ad)}</button>`).join('')}</div>` : ''}<div id="tzKap"></div>`;
-    I.querySelectorAll('[data-tzsec]').forEach(b => b.onclick = () => { TZ.i = +b.dataset.tzsec; telsizBolumu(); });
+    I.querySelectorAll('[data-tzsec]').forEach(b => b.onclick = () => { TZ.i = +b.dataset.tzsec; telsizBolumu(); }); gzAdimBagla(I);
     const tzKapat = async () => { if (!await onayla(`${g.ad} için Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.`)) return;
       const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: g.anahtar, p_acik: false }); if (error || !data || !data.ok) { uyar('Kapatılamadı: ' + (error ? hataYaz(error) : data && data.hata)); return; }
       atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); telsizBolumu(); };
@@ -568,13 +569,21 @@
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
   }
+  // K-827: Gezi tek yer — İlan · Kayıt · Belgeler · Otobüsler · Telsiz; Otobüsler ve Telsiz sayfalarının üstünde de aynı adım şeridi
+  function gzAdimBar(aktif) { const canli = TZ.L.length > 0;
+    return `<div class="gz-adimbar" role="tablist" aria-label="Gezi adımları">${[['ilan', 'İlan'], ['kayit', 'Kayıt'], ['belge', 'Belgeler'], ['otobus', 'Otobüsler'], ['gun', 'Telsiz']].map(([id, ad]) => `<button type="button" role="tab" aria-selected="${id === aktif}" class="${id === aktif ? 'secili' : ''}${id === 'gun' && canli ? ' canli' : ''}" data-gzadim="${id}">${id === 'gun' && canli ? '<i></i>' : ''}${ad}</button>`).join('')}</div>`; }
+  function gzAdimGit(id) { window.__gzAdimdan = 1;
+    if (id === 'otobus') return ac('gezi');
+    if (id === 'gun' && TZ.L.length) return ac('telsiz');
+    window.__gkAdim = id; ac('gezikayit'); }
+  function gzAdimBagla(kok) { kok.querySelectorAll('[data-gzadim]').forEach(b => b.onclick = () => gzAdimGit(b.dataset.gzadim)); }
   async function tzGeziKart(an) {   // Gezi Kaydı › Gezi günü: telsiz durumu; aç/kapat yalnız Kurucu
     const k = document.getElementById('gkTelsiz'); if (!k) return;
     let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_telsiz_benim')); } catch (e) {}
     const x = r && r.ok ? (r.hepsi || []).find(h => h.anahtar === an) || (r.acik || []).find(h => h.anahtar === an) : null, acik = !!(x && x.acik), kur = !!(r && r.kurucu);
     k.innerHTML = `<div class="gk2-ust"><h3 style="margin:0">Gezi Telsizi</h3>${acik ? '<span class="tz-kcanli"><i></i>CANLI</span>' : '<span class="soluk kucuk">Kapalı</span>'}</div>
       <p class="soluk kucuk" style="margin:8px 0 10px">Gezi günü yazılı canlı grup: geziye katılan öğrenciler${x ? ' (' + x.ogrenci + ')' : ''}, görevli öğretmenler${x ? ' (' + x.ogretmen + ')' : ''} ve idare kendiliğinden içinde. Görevli öğretmenler öğrenciyi sessize alabilir, mesaj gizleyebilir.</p>
-      ${kur ? `<div class="gk2-sat"><button class="${acik ? 'ikincil' : 'birincil'}" id="gkTzAc" style="margin:0">${acik ? 'Telsizi kapat' : 'Telsizi aç'}</button>${acik ? '<button class="birincil" id="gkTzGit" style="margin:0">Telsize git</button>' : ''}</div>` : `<p class="soluk kucuk" style="margin:0">Telsizi Kurucu açar.</p>`}`;
+      ${kur ? `<div class="gk2-sat"><button class="${acik ? 'ikincil' : 'birincil'}" id="gkTzAc" style="margin:0">${acik ? 'Telsizi kapat' : 'Telsizi aç'}</button>${acik ? '<button class="birincil" id="gkTzGit" style="margin:0">Telsize git</button>' : ''}</div>` : `${acik ? '<div class="gk2-sat"><button class="birincil" id="gkTzGit" style="margin:0">Telsize git</button></div>' : '<p class="soluk kucuk" style="margin:0">Telsizi Kurucu açar.</p>'}`}`;
     const a = $('#gkTzAc'); if (a) a.onclick = async () => { if (!await onayla(acik ? 'Gezi Telsizi kapatılsın mı? Öğrenciler artık yazamaz; mesajlar kayıtta kalır.' : 'Gezi Telsizi açılsın mı? Geziye katılan öğrenciler uygulamayı açınca telsize girer.')) return;
       a.disabled = true; const { data, error } = await sb.rpc('umal_gezi_telsiz_ac', { p_anahtar: an, p_acik: !acik }); a.disabled = false;
       if (error || !data || !data.ok) { uyar((acik ? 'Kapatılamadı: ' : 'Açılamadı: ') + (error ? hataYaz(error) : data && data.hata)); return; }
@@ -1153,9 +1162,9 @@
     { id: 'mesajlar', ad: 'Mesajlar', roller: ['bas', 'ogretmen'], ciz: () => mesajlarBolumu() },   // K-716cw: sınıf grupları ve birebir (deneme: yalnız Kurucu)
     { id: 'mesajsikayet', ad: 'Mesaj Şikâyetleri', roller: ['bas', 'rehberlik'], ciz: () => mesajSikayetBolumu() },   // K-716cw: grup → Kurucu, birebir → rehberlik
     { id: 'bildirim', ad: 'Öğrenci Bildirimleri', roller: ['bas'], ciz: () => bildirimBolumu() },   // K-716cv: öneri ve sorun bildirimleri (yalnız Kurucu)
-    { id: 'gezikayit', ad: 'Gezi Kaydı', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
-    { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu() },   // K-702: otobüs koltuk yerleşimi + biletler
-    { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 || TZ.kurucu },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
+    { id: 'gezikayit', ad: 'Gezi', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-827: Gezi tek başlık: İlan → Kayıt → Belgeler → Otobüsler → Telsiz   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
+    { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu(), ust: 'gezikayit' },   // K-702: otobüs koltuk yerleşimi + biletler
+    { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 || TZ.kurucu, get ust() { return ['bas', 'yonetici'].includes(D.rol) ? 'gezikayit' : undefined; } },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
@@ -1346,7 +1355,7 @@
     document.querySelectorAll('.menu-oge').forEach(m => m.classList.toggle('secili', m.dataset.b === (b.ust || id)));
     const sec = document.querySelector('.menu-oge.secili'); if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'nearest', inline: 'center' });
     clearInterval(yenileZamanlayici); $('#icerik').onclick = null;
-    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3');
+    $('#icerik').classList.remove('salon-acik', 'sinif-acik', 'reh-acik', 'k-ekran', 'sm-sikisik', 'tk-s1', 'tk-s2', 'tk-s3', 'gz-adimli');
     $('#icerik').innerHTML = '<div class="soluk">Yükleniyor…</div>';
     icGeriGuncelle();
     b.ciz().catch(e => { if (D.bolum !== id) return;   // bu arada başka sayfaya geçildiyse eski sayfanın hatası yeni sayfayı bozmasın
@@ -4690,6 +4699,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     return gzSatirlardan(satirlar);
   }
   async function geziBolumu(mod) {   // mod 'kayit': Gezi Kaydı (K-716bt)
+    if (mod === 'kayit') { const adimdan = window.__gzAdimdan; window.__gzAdimdan = 0; if (!adimdan && TZ.L.length) { ac('telsiz'); return; } }   // K-827: gezi günü Gezi doğrudan telsizi açar
     await anketVerisi(); await ogrencileriYukle().catch(() => []);
     let G = null, GL = null;   // K-715: birden çok gezi — her gezi ayrı anahtarda (ilk/Çanakkale: 'gezi_otobus', diğerleri 'gezi_otobus:<id>'), kendi biletiyle
     try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'gezi_liste').maybeSingle(); GL = data && data.deger ? JSON.parse(data.deger) : null; } catch (e) { GL = null; }
@@ -4851,7 +4861,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         return `<button class="gz-k ${p ? 'dolu' : ''} ${ayr ? 'ayrilan' : ''} ${an && an === sel ? 'secili' : ''} ${karisik.has(o.id + ':' + s.n) ? 'karisik' : ''} gz-${s.yer}" data-ko="${o.id}" data-kn="${s.n}" title="${s.n} · ${gzYerAd(s.yer)}${p ? ' · ' + esc(baslik(p.ad)) + (p.sinif ? ' (' + esc(p.sinif) + ')' : ' · ' + esc(GZ_TUR[p.tur] || '')) : ayr ? ' · ' + GZ_AYRILAN_AD[s.n - 1].toLocaleLowerCase(tr) + ' koltuğu' : ''}" ${p ? `style="--c:${renk(p)}"` : ''}><i>${s.n}</i>${p && esOf(an) ? `<em class="gz-kes ${yanyana(an, esOf(an)) ? '' : 'ayri'}" title="Arkadaşı: ${esc(baslik((M.get(esOf(an)) || {}).ad || ''))}">🤝</em>` : ''}${p ? `<b>${esc(kisaAd(p.ad))}</b><small>${esc(p.sinif || GZ_TUR[p.tur] || '')}</small>` : ayr ? `<small class="gz-og">${GZ_AYRILAN_AD[s.n - 1]}</small>` : ''}</button>`;
       };
       const oi = G.otobusler.findIndex(o => o.id === aktif), o = G.otobusler[oi], rk = GZ_RENK[oi % GZ_RENK.length], P = gzPlan(o.kapasite), B = bilgiSatiri(o, M);
-      $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Gezi Otobüsleri</h1><span class="soluk" id="gzDurum">${esc(durum)}</span></div>
+      $('#icerik').innerHTML = `${gzAdimBar('otobus')}<div class="ust" style="align-items:center"><h1>Gezi · Otobüsler</h1><span class="soluk" id="gzDurum">${esc(durum)}</span></div>
         <div class="gz-geziler">${GL.map(x => `<button class="gz-gz ${x.a === GZ_ANAH ? 'secili' : ''}" data-gezi="${esc(x.a)}">${x.tema === 'canakkale' ? '🇹🇷 ' : '🚌 '}${esc(x.ad)}</button>`).join('')}<button class="gz-gz yeni" id="gzYeniGezi">+ Yeni gezi</button>${GL.length > 1 && GZ_ANAH !== 'gezi_otobus' ? '<button class="bag kirmizi kucuk" id="gzGeziSil">Bu geziyi sil</button>' : ''}</div>
         <div class="kart gz-bilgi"><div class="gz-alan"><label>Gezi adı<input data-g="ad" value="${esc(G.ad)}"></label><label>Tarih<input type="date" data-g="tarih" value="${esc(G.tarih)}"></label><label>Kalkış saati<input type="time" data-g="saat" value="${esc(G.saat)}"></label><label>Kalkış yeri<input data-g="kalkis" value="${esc(G.kalkis || '')}"></label><label>Güzergâh (bilette)<input data-g="guzergah" value="${esc(G.guzergah == null ? (canak ? 'İstanbul → Çanakkale' : '') : G.guzergah)}" placeholder="İstanbul → …"></label><label>Önde ayrılan koltuk<select id="gzAyr"><option value="2" ${GZ_AYRILAN === 2 ? 'selected' : ''}>2 · öğretmenler</option><option value="4o" ${GZ_AYRILAN === 4 && G.onOgt ? 'selected' : ''}>4 · hepsi öğretmen</option><option value="4" ${GZ_AYRILAN === 4 && !G.onOgt ? 'selected' : ''}>4 · öğretmen, belediye, rehber</option></select></label>
           <div class="gz-alan-k">Katılımcı listesi · PDF / Excel<span class="gz-dosya"><label class="ikincil gz-ikli">${KY_IK.dosya}${LST.liste.length ? 'Değiştir' : 'Dosya seç'}<input type="file" id="gzDosya" accept=".pdf,.xlsx,.xls,.csv,application/pdf" hidden></label><small id="gzDosyaBilgi">${LST.liste.length ? esc(LST.ad || 'Liste') + ' · ' + LST.liste.length + ' kişi <a href="#" id="gzDosyaSil">kaldır</a>' : 'yüklenmedi'}</small></span></div><label>Katılım formu (anket)<select data-g="anket"><option value="">— seçilmedi —</option>${D.anketler.filter(a => a.durum !== 'taslak').map(a => `<option value="${esc(a.id)}" ${a.id === G.anket ? 'selected' : ''}>${esc(a.tanim.ad)}</option>`).join('')}</select></label></div>
@@ -4867,7 +4877,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         ${selP ? `<div class="gz-secim" style="--c:${renk(selP)}"><b>${esc(baslik(selP.ad))}</b><span>${selP.sinif ? esc(selP.sinif) + ' · No ' + esc(selP.no) : esc(GZ_TUR[selP.tur] || '')}${G.yer[sel] ? ' · ' + (otoBul(G.yer[sel].o) || {}).no + '. otobüs, ' + G.yer[sel].k + ' numara' : ''}</span><small>Bir koltuğa dokunun (başka otobüs için üstten otobüsü seçin): boşsa oraya geçer, doluysa yer değiştirirler.</small><span style="flex:1"></span>${selP.tur === 'ogr' ? (esOf(sel) && M.get(esOf(sel)) ? `<span class="gz-es">🤝 ${esc(baslik(M.get(esOf(sel)).ad))} ile yan yana${G.yer[sel] && G.yer[esOf(sel)] && !yanyana(sel, esOf(sel)) ? ' <b class="kirmizi-yazi">(şu an ayrı)</b>' : ''}</span><button class="ikincil" id="gzEsAyir">Eşi ayır</button>` : `<button class="${esMod ? 'birincil' : 'ikincil'}" id="gzEsSec">${esMod ? '🤝 Şimdi arkadaşına dokun…' : '🤝 Yanına arkadaşını seç'}</button>`) : ''}${selP.tur === 'ogr' ? `<button class="ikincil" id="gzBilgi">🪪 Bilgiler${!selP.tc || !selP.dogum || !selP.tel ? ' <b class="kirmizi-yazi">· eksik</b>' : ''}</button>` : ''}${G.yer[sel] ? '<button class="ikincil" id="gzHavuza">Koltuktan kaldır</button>' : ''}<button class="ikincil" id="gzVazgec">Vazgeç</button></div>` : ''}
         <div class="gz-izgara"><div class="kart gz-havuz"><div class="gz-sekme"><button class="${sekme === 'ogr' ? 'secili' : ''}" data-gs="ogr">Bekleyen öğrenci · ${ogrL.filter(p => !G.yer[p.an]).length}</button><button class="${sekme === 'gor' ? 'secili' : ''}" data-gs="gor">Görevliler · ${hepsiP.filter(p => p.tur !== 'ogr').length}</button></div>
           <input id="gzAra" placeholder="Ara: ad, sınıf, no" value="${esc(ara)}">
-          <div class="gz-liste">${(sekme === 'gor' ? hepsiP.filter(p => p.tur !== 'ogr') : havuz).map(p => `<div class="gz-kisi ${p.an === sel ? 'secili' : ''} ${G.yer[p.an] ? 'yerli' : ''}" data-kisi="${esc(p.an)}" style="--c:${renk(p)}"><b>${esc(baslik(p.ad))}</b><small>${p.sinif ? esc(p.sinif) + ' · ' + esc(p.no) : esc(GZ_TUR[p.tur] || '')}${G.yer[p.an] ? ' · ' + (otoBul(G.yer[p.an].o) || {}).no + '. otobüs, ' + G.yer[p.an].k : ''}</small>${cinsYaz(p)}${esOf(p.an) && M.get(esOf(p.an)) ? `<span class="gz-esr" title="Yan yana: ${esc(baslik(M.get(esOf(p.an)).ad))}">🤝</span>` : ''}${p.tur === 'ogr' ? `<span class="gz-x" data-cikar="${esc(p.an)}" title="Geziden çıkar">×</span>` : `<span class="gz-x" data-gsil="${esc(p.an)}" title="Sil">×</span>`}</div>`).join('') || `<div class="soluk kucuk">${sekme === 'ogr' ? (G.anket ? 'Bekleyen öğrenci yok — hepsi yerleşti.' : 'Yukarıdan katılım formunu seçin ya da aşağıdan öğrenci ekleyin.') : 'Görevli eklenmedi.'}</div>`}</div>
+          <div class="gz-liste">${(sekme === 'gor' ? hepsiP.filter(p => p.tur !== 'ogr') : havuz).map(p => `<div class="gz-kisi ${p.an === sel ? 'secili' : ''} ${G.yer[p.an] ? 'yerli' : ''}" data-kisi="${esc(p.an)}" style="--c:${renk(p)}"><b>${esc(baslik(p.ad))}</b><small>${p.sinif ? esc(p.sinif) + ' · ' + esc(p.no) : esc(GZ_TUR[p.tur] || '')}${G.yer[p.an] ? ' · ' + (otoBul(G.yer[p.an].o) || {}).no + '. otobüs, ' + G.yer[p.an].k : ''}</small>${cinsYaz(p)}${esOf(p.an) && M.get(esOf(p.an)) ? `<span class="gz-esr" title="Yan yana: ${esc(baslik(M.get(esOf(p.an)).ad))}">🤝</span>` : ''}${p.tur === 'ogr' ? `<span class="gz-x" data-cikar="${esc(p.an)}" title="Geziden çıkar">×</span>` : `${p.tur === 'reh' ? `<span class="gz-rb" data-grb="${esc(p.an)}" title="Rehbere telsiz bağlantısı ver">Telsiz bağlantısı</span>` : ''}<span class="gz-x" data-gsil="${esc(p.an)}" title="Sil">×</span>`}</div>`).join('') || `<div class="soluk kucuk">${sekme === 'ogr' ? (G.anket ? 'Bekleyen öğrenci yok — hepsi yerleşti.' : 'Yukarıdan katılım formunu seçin ya da aşağıdan öğrenci ekleyin.') : 'Görevli eklenmedi.'}</div>`}</div>
           ${sekme === 'ogr' ? `<div class="gz-ekle"><input id="gzONo" placeholder="Öğrenci ekle: no ya da ad" autocomplete="off" enterkeyhint="done"><button class="ikincil" id="gzOEkle">Ekle</button></div>${G.cikar.length ? `<button class="bag kucuk" id="gzGeriAl">Çıkarılan ${G.cikar.length} öğrenciyi geri al</button>` : ''}`
             : `<div class="gz-ekle gz-gekle"><input id="gzGAd" placeholder="Ad Soyad"><select id="gzGTur">${Object.entries(GZ_TUR).map(([k, a]) => `<option value="${k}">${a}</option>`).join('')}</select><input id="gzGTel" placeholder="Telefon" value="05" inputmode="tel"><button class="ikincil" id="gzGEkle">Ekle</button></div>`}</div>
           <div class="gz-oto" style="--g:${rk}"><div class="gz-oto-bas"><span class="gz-no">${o.no}</span><div class="gz-ob-bilgi"><b>${o.no}. Otobüs</b><small class="gz-ob-say"><span>${B.L.length} / ${o.kapasite} dolu</span><span class="gz-pk">${B.k} kız</span><span class="gz-pe">${B.e} erkek</span>${B.g ? `<span>${B.g} görevli</span>` : ''}</small>${o.plaka || o.sofor ? `<span class="gz-ob-ek">${o.plaka ? `<span class="gz-cip">🚌 ${esc(o.plaka)}</span>` : ''}${o.sofor ? `<span class="gz-cip">👤 ${esc(o.sofor)}${o.tel ? ` · ${esc(o.tel)}` : ''}</span>` : ''}</span>` : ''}</div><div class="gz-ob-sag"><label class="gz-kap" title="Bu otobüsün koltuk sayısı (şoför hariç)">Kapasite<input type="number" min="10" max="80" id="gzKap" value="${o.kapasite}"></label><button class="ikincil" data-oayar="${o.id}">Otobüs bilgileri</button></div></div>
@@ -4889,6 +4899,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         await sb.from('umal_ayarlar').delete().in('anahtar', [GZ_ANAH, GZ_LST]); try { localStorage.removeItem('gezi_sec:' + D.eposta); } catch (e) {} geziBolumu(); };
       $('#gzAyr').onchange = ev => { const v = ev.target.value; G.ayrilan = v === '2' ? 2 : 4; G.onOgt = v === '4o'; G.onKoltuk = null; GZ_AYRILAN = G.ayrilan; onAdYenile(); kaydet(); ciz(); };
       $('#gzAra').oninput = ev => { ara = ev.target.value; const c = ev.target.selectionStart; ciz(); const x = $('#gzAra'); x.focus(); x.setSelectionRange(c, c); };
+      gzAdimBagla($('#icerik'));
       $('#icerik').querySelectorAll('[data-gs]').forEach(b => b.onclick = () => { sekme = b.dataset.gs; ciz(); });
       $('#icerik').querySelectorAll('[data-akt]').forEach(b => b.onclick = () => { aktif = b.dataset.akt; ciz(); });
       if ($('#gzBelirsiz')) $('#gzBelirsiz').onclick = () => sorunListe('cins');
@@ -4897,6 +4908,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const t = ev.target.dataset;
         if (t.cdeg) { const p = M.get(t.cdeg); G.cins[t.cdeg] = p.cins === 'K' ? 'E' : 'K'; kaydet(); ciz(); return; }
         if (t.cikar) { G.cikar.push(t.cikar); G.kayit[t.cikar] = Object.assign({}, G.kayit[t.cikar], { d: 'v', vz: Date.now() }); delete G.yer[t.cikar]; if (sel === t.cikar) sel = null; kaydet(); ciz(); return; }
+        if (t.grb) { rehberBag(t.grb.slice(2)); return; }   // K-826
         if (t.gsil) { const id = t.gsil.slice(2); G.gorevli = G.gorevli.filter(g => g.id !== id); delete G.yer[t.gsil]; if (sel === t.gsil) sel = null; kaydet(); ciz(); return; }
         if (esMod && sel) { esYap(sel, b.dataset.kisi); return; }
         sel = sel === b.dataset.kisi ? null : b.dataset.kisi; esMod = false; if (sel && G.yer[sel]) aktif = G.yer[sel].o; ciz(); });
@@ -4992,6 +5004,27 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (!o) { uyar('Öğrenci bulunamadı. Listeden seçin.'); return; } if (!G.baskan.nolar.includes(String(o.no))) G.baskan.nolar.push(String(o.no)); bskKatil(); kaydet(); ciz(); };
       oneriBagla($('#bskNo'), null, ekle); $('#bskNo').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ekle(); } }; $('#bskEkle').onclick = ekle;
       $('#icerik').querySelectorAll('[data-bskx]').forEach(b => b.onclick = () => { G.baskan.nolar = G.baskan.nolar.filter(x => x !== b.dataset.bskx); kaydet(); ciz(); }); };
+    // K-826: rehbere geçici telsiz bağlantısı (karekod); yalnız telsiz açıkken çalışır, iptal edilebilir
+    const rehberBag = async (gid, yeni) => {
+      const g = G.gorevli.find(x => x.id === gid); if (!g) return;
+      const r = await sb.rpc('umal_gezi_rehber_bilet', { p_anahtar: GZ_ANAH, p_gid: gid, p_islem: yeni ? 'ver' : 'durum' }).catch(e => ({ error: e }));
+      const d = r && r.data; if (!d || !d.ok) { uyar('Bağlantı alınamadı: ' + ((r && r.error && hataYaz(r.error)) || (d && d.hata) || '')); return; }
+      if (!yeni) { if (!d.var) return rehberBag(gid, true);
+        pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${esc(baslik(g.ad))} · rehber</h2><p class="soluk">Bu rehberin geçerli bir telsiz bağlantısı var (${esc(new Date(d.verildi).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}${d.son ? ' · son giriş ' + esc(new Date(d.son).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' })) : ' · henüz girmedi'}). Karekod yalnız verildiği anda gösterilir.</p>
+          <div class="dugmeler"><button class="birincil" id="rbYeni">Yeni karekod ver (eskisi geçersiz olur)</button><button class="ikincil" id="rbIptal">Bağlantıyı iptal et</button></div></div>`);
+        $('#rbYeni').onclick = () => rehberBag(gid, true);
+        $('#rbIptal').onclick = async () => { const x = await sb.rpc('umal_gezi_rehber_bilet', { p_anahtar: GZ_ANAH, p_gid: gid, p_islem: 'iptal' }); if (x.error || !x.data || !x.data.ok) { uyar('İptal edilemedi'); return; } $('#pencere').classList.add('gizli'); atlasOnay('Bağlantı iptal edildi', baslik(g.ad)); };
+        return; }
+      const url = 'https://umalatlas.com.tr/rehber/#b=' + d.bilet;
+      let qr_ = ''; try { qr_ = window.UmalQR ? `<img alt="Karekod" src="${window.UmalQR.png(url, 8)}" style="width:min(260px,70vw);height:auto;background:#fff;padding:10px;border-radius:14px">` : ''; } catch (e) {}
+      pencereAc(`<div class="gk2-kp" style="text-align:center"><h2 style="margin-top:0">${esc(baslik(g.ad))} · telsiz bağlantısı</h2>
+        <p class="soluk kucuk" style="margin:0 0 12px">Rehber telefonunun kamerasıyla okutsun; uygulama ya da şifre gerekmez.${d.acik ? '' : ' <b>Telsiz şu an kapalı:</b> açılınca çalışır.'}</p>${qr_}
+        <div class="dugmeler" style="justify-content:center;margin-top:12px"><button class="ikincil" id="rbKopya">Bağlantıyı kopyala</button>${navigator.share ? '<button class="ikincil" id="rbPay">Paylaş</button>' : ''}<button class="ikincil" id="rbIptal">İptal et</button></div>
+        <p class="soluk kucuk" style="margin:12px 0 0;text-align:left">Rehber öğretmen ve idare mesajlarını, duyuruları ve toplanmaları görür; mesaj, konum ve toplanma saati gönderebilir. Öğrenci mesajlarını, öğrenci adlarını, fotoğrafları ve telefonları görmez. Bağlantı telsiz kapanınca, en geç 3 gün sonra ya da iptal edince biter.</p></div>`);
+      $('#rbKopya').onclick = async () => { try { await navigator.clipboard.writeText(url); atlasOnay('Bağlantı kopyalandı', 'Rehbere gönderin'); } catch (e) { uyar(url); } };
+      if ($('#rbPay')) $('#rbPay').onclick = () => navigator.share({ title: 'Gezi Telsizi', text: (G.ad || 'Gezi') + ' telsizine rehber girişi', url }).catch(() => {});
+      $('#rbIptal').onclick = async () => { const x = await sb.rpc('umal_gezi_rehber_bilet', { p_anahtar: GZ_ANAH, p_gid: gid, p_islem: 'iptal' }); if (x.error || !x.data || !x.data.ok) { uyar('İptal edilemedi'); return; } $('#pencere').classList.add('gizli'); atlasOnay('Bağlantı iptal edildi', baslik(g.ad)); };
+    };
     // K-825: boş koltuk penceresinin üstünde kim oturacak: Öğrenci · Öğretmen · İdareci · Rehber · Belediye
     const KS_TUR = [['ogr', 'Öğrenci'], ['ogt', 'Öğretmen'], ['idr', 'İdareci'], ['reh', 'Rehber'], ['bel', 'Belediye']];
     const ksekHtml = a => `<div class="gz-ksek" role="tablist">${KS_TUR.map(([t, ad]) => `<button type="button" role="tab" aria-selected="${t === a}" class="${t === a ? 'secili' : ''}" data-ksek="${t}">${ad}</button>`).join('')}</div>`;
@@ -5345,7 +5378,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!G.ilan || typeof G.ilan !== 'object') G.ilan = { acik: false, program: [] }; if (!Array.isArray(G.ilan.program)) G.ilan.program = [];
       ['ekSure', 'izin', 'belge'].forEach(x => { if (!G[x] || typeof G[x] !== 'object') G[x] = {}; });
       const bugun = bugunISO(), I = G.ilan;
-      let adim = (() => { try { return sessionStorage.getItem('gk_adim:' + GZ_ANAH) || ''; } catch (e) { return ''; } })() || (I.acik || [...kisiler().values()].some(p => p.tur === 'ogr') ? 'kayit' : 'ilan');
+      let adim = (() => { const a = window.__gkAdim; window.__gkAdim = ''; if (a) return a; try { return sessionStorage.getItem('gk_adim:' + GZ_ANAH) || ''; } catch (e) { return ''; } })() || (I.acik || [...kisiler().values()].some(p => p.tur === 'ogr') ? 'kayit' : 'ilan');
       let suz = '', araq = '', acikAn = null, ekAn = null;
       const trT = (iso, gun) => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') ? new Date(iso + 'T12:00:00').toLocaleDateString(tr, gun ? { day: 'numeric', month: 'long', weekday: 'long' } : { day: 'numeric', month: 'long' }) : '—';
       const kalanGun = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') ? Math.round((new Date(iso + 'T12:00:00') - new Date(bugun + 'T12:00:00')) / 864e5) : null;
@@ -5358,7 +5391,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const T = m.split(/[^a-zçğıöşüâî]+/).filter(Boolean); return GZ_ILLER.some(il => T.some(t => t.startsWith(il))); };
       const kesinL = () => ogrL().filter(p => durumOf(p) === 'kesin');
       const adimDurum = id => ({ ilan: I.acik ? 'ok' : '', kayit: ogrL().length ? 'ok' : '', odeme: ogrL().length && ogrL().every(p => durumOf(p) === 'kesin') ? 'ok' : '', belge: Object.keys(G.belge).length >= 4 ? 'ok' : '', otobus: Object.keys(G.yer).length ? 'ok' : '', gun: G.tarih && bugun > G.tarih ? 'ok' : '' })[id];
-      const ADIMLAR = [['ilan', 'İlan'], ['kayit', G.ucretsiz ? 'Kayıt' : 'Kayıt · Ödeme'], ['belge', 'Belgeler'], ['otobus', 'Otobüs'], ['gun', 'Gezi günü']];
+      const ADIMLAR = [['ilan', 'İlan'], ['kayit', G.ucretsiz ? 'Kayıt' : 'Kayıt · Ödeme'], ['belge', 'Belgeler'], ['otobus', 'Otobüsler'], ['gun', 'Telsiz']];
       const kay = () => { kaydet(); };
       const ciz_ = () => {
         try { sessionStorage.setItem('gk_adim:' + GZ_ANAH, adim); } catch (e) {}
@@ -5423,10 +5456,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         } else {
           const kat = Object.keys(G.yer).length, K = kesinL().length;
           govde = adim === 'otobus' ? `<div class="kart"><h3 style="margin-top:0">Otobüs</h3><p class="soluk">${K} kesin kayıtlı öğrenci · ${kat} kişi otobüslere yerleşti.</p><p class="soluk kucuk">Otobüs sayısı, plaka, şoför, koltuk yerleşimi ve biletler Gezi Otobüsleri bölümünde.</p><button class="birincil" data-gkgit="gezi">${KY_IK.otobus}Gezi Otobüsleri'ni aç</button></div>`
-            : `<div class="kart"><h3 style="margin-top:0">Gezi günü</h3><p class="soluk">${G.tarih ? trT(G.tarih, true) + (G.saat ? ' · hareket ' + esc(G.saat) : '') + (I.donus ? ' · dönüş ' + esc(I.donus) : '') : 'Tarih girilmedi.'}</p>
+            : `<div class="kart gk2-telsiz" id="gkTelsiz"><h3 style="margin:0">Gezi Telsizi</h3></div>
+<div class="kart"><h3 style="margin-top:0">Gezi günü</h3><p class="soluk">${G.tarih ? trT(G.tarih, true) + (G.saat ? ' · hareket ' + esc(G.saat) : '') + (I.donus ? ' · dönüş ' + esc(I.donus) : '') : 'Tarih girilmedi.'}</p>
               <ul class="gk2-gun"><li>Biletler öğrenci panelinde gezi günü şoför telefonuyla birlikte görünür; gezi bitince kalkar.</li><li>Yoklama ve oturma planı çıktısı Gezi Otobüsleri › Listeler'de.</li><li>Acil durum için veli telefonları T.C. listesinde.</li></ul>
               <div class="gk2-sat"><button class="birincil" data-gkgit="gezi">${KY_IK.bilet}Biletler ve listeler</button><button class="ikincil" data-gkbelge="liste">Acil telefon listesi</button></div></div>
-            <div class="kart gk2-telsiz" id="gkTelsiz"><h3 style="margin:0">Gezi Telsizi</h3></div>
             ${(() => { const bas = G.tarih ? gunEkle(G.tarih, 1) : '', basladi = bas && bugun >= bas, n = gzAnketOgr().length;
               return `<div class="kart gk2-anket"><div class="gk2-ust"><h3 style="margin:0">Gezi sonrası anket</h3><label class="gk2-tik ${G.sonAnketKapali ? '' : 'acik'}"><input type="checkbox" id="gkAnket" ${G.sonAnketKapali ? '' : 'checked'} ${basladi && G.sonAnket ? 'disabled' : ''}><span></span>${G.sonAnketKapali ? 'Kapalı' : 'Açık'}</label></div>
                 <p class="soluk" style="margin:8px 0">${G.sonAnketKapali ? 'Bu gezi için anket gönderilmeyecek.' : !G.tarih ? 'Gezi tarihi girilince hazırlanır.' : basladi ? (G.sonAnket ? `Anket ${esc(trT(bas))} günü ${G.sonAnketSayi || n} öğrencinin telefon paneline gönderildi; ${esc(trT(gunEkle(G.tarih, 8)))} gününe kadar açık.` : 'Anket hazırlanıyor…') : `<b>${esc(trT(bas, true))}</b> sabahı yalnız geziye katılan ${n} öğrencinin telefon paneline düşer; bir hafta açık kalır. Katılımcı listesi değişirse kendiliğinden güncellenir.`}</p>
@@ -5434,7 +5467,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
                 <p class="soluk kucuk" style="margin:8px 0 0">8 kısa soru, yaklaşık 1 dakika. İsimsiz: sonuçlarda öğrencinin adı görünmez.${G.sonAnket ? ' Sonuçlar Anketler bölümünde.' : ''}</p>
                 ${G.sonAnket ? '<div class="gk2-sat"><button class="ikincil" data-gkgit="anket">Sonuçları gör</button></div>' : ''}</div>`; })()}`;
         }
-        $('#icerik').innerHTML = `<div class="kart gk2-bas"><div class="ust" style="align-items:flex-start"><div><h2 style="margin:0">Gezi Kaydı</h2><div class="soluk kucuk">${G.ucretsiz ? 'İlan → Kayıt → Belgeler → Otobüs → Gezi günü' : 'İlan → Kayıt → Ödeme → Belgeler → Otobüs → Gezi günü'}</div></div><span id="gzDurum" class="soluk kucuk" style="margin-left:auto">${esc(durum)}</span></div>
+        $('#icerik').innerHTML = `<div class="kart gk2-bas"><div class="ust" style="align-items:flex-start"><div><h2 style="margin:0">Gezi</h2><div class="soluk kucuk">${G.ucretsiz ? 'İlan → Kayıt → Belgeler → Otobüsler → Telsiz' : 'İlan → Kayıt → Ödeme → Belgeler → Otobüsler → Telsiz'}</div></div><span id="gzDurum" class="soluk kucuk" style="margin-left:auto">${esc(durum)}</span></div>
             <div class="gk2-geziler">${GL.map(x => `<button class="${x.a === GZ_ANAH ? 'secili' : ''}" data-gksec="${esc(x.a)}">${esc(x.ad || 'Gezi')}</button>`).join('')}<button data-gkyeni="1">+ Yeni gezi</button></div>
             <div class="gk2-kart gk2-gezi"><div class="gk2-afisk" ${I.afis ? `style="background-image:url('${esc(I.afis)}');background-size:cover"` : ''}>${I.afis ? '' : KY_IK.otobus}</div><div><b>${esc(G.ad || 'Gezi')}</b><div class="soluk kucuk">${[G.tarih ? trT(G.tarih, true) : 'tarih yok', G.ucretsiz ? 'ücretsiz' : G.ucret ? (+G.ucret).toLocaleString(tr) + ' ₺' : '', ilDisi() ? 'il dışı' : 'il içi', G.kontenjan ? 'kontenjan ' + G.kontenjan : ''].filter(Boolean).join(' · ')}</div></div>
               ${!G.ucretsiz && I.sonOdeme ? `<div class="gk2-sag"><div class="gk2-geri">${kg > 0 ? kg + ' gün' : kg === 0 ? 'Bugün' : 'Doldu'}</div><div class="soluk kucuk">son ödeme ${trT(I.sonOdeme)}</div></div>` : ''}</div>
@@ -5535,7 +5568,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const bagla = () => {
         const R = $('#icerik');
         if (document.getElementById('gkTelsiz')) tzGeziKart(GZ_ANAH);   // K-808
-        R.querySelectorAll('[data-gkadim]').forEach(b => b.onclick = () => { adim = b.dataset.gkadim; acikAn = ekAn = null; if (adim === 'otobus' || adim === 'gun') { ciz_(); return; } ciz_(); });
+        R.querySelectorAll('[data-gkadim]').forEach(b => b.onclick = () => { const a = b.dataset.gkadim; if (a === 'otobus' || (a === 'gun' && TZ.L.length)) { try { sessionStorage.setItem('gk_adim:' + GZ_ANAH, adim); } catch (e) {} gzAdimGit(a); return; } adim = a; acikAn = ekAn = null; ciz_(); });   // K-827: Otobüsler ve canlı Telsiz kendi sayfasında
         R.querySelectorAll('[data-gksec]').forEach(b => b.onclick = () => { try { localStorage.setItem('gezi_sec:' + D.eposta, b.dataset.gksec); } catch (e) {} geziBolumu('kayit'); });
         R.querySelectorAll('[data-gkgit]').forEach(b => b.onclick = () => ac(b.dataset.gkgit));
         if ($('#gkAnket')) $('#gkAnket').onchange = async ev => { G.sonAnketKapali = !ev.target.checked; G.sonAnketImza = '';

@@ -2736,3 +2736,15 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .gz-ksek::-webkit-scrollbar { display: none; }
 .gz-ksek button { flex: none; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cizgi, #24406a); background: transparent; color: inherit; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .gz-ksek button.secili { background: var(--neon); border-color: var(--neon); color: #06202a; }
+/* K-826: rehber telsiz bağlantısı */
+.gz-rb { flex: none; font-size: 11.5px; font-weight: 700; color: #7ff6ff; border: 1px solid rgba(34,232,255,.45); background: rgba(34,232,255,.08); border-radius: 999px; padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+/* K-827: Gezi adım şeridi (Gezi · Otobüsler · Telsiz aynı yerde) */
+.gz-adimbar { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 12px; padding-bottom: 2px; scrollbar-width: none; }
+.gz-adimbar::-webkit-scrollbar { display: none; }
+.gz-adimbar button { flex: 1 1 0; min-width: max-content; min-height: 40px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--cizgi); background: var(--koyu); color: #b9c9e2; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+@media (max-width: 480px) { .gz-adimbar { gap: 4px; } .gz-adimbar button { padding: 0 6px; font-size: 12.5px; min-width: 0; border-radius: 10px; } .gz-adimbar button.canli i { width: 6px; height: 6px; } }
+.gz-adimbar button.secili { border-color: var(--neon); color: #fff; background: rgba(34,232,255,.1); }
+.gz-adimbar button.canli { border-color: rgba(255,77,94,.65); }
+.gz-adimbar button.canli i { width: 8px; height: 8px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 8px #ff4d5e; }
+#icerik.gz-adimli .tz-ekran { height: calc(100dvh - 162px); }
+@media (max-width: 760px) { body.ogt-alt #icerik.gz-adimli .tz-ekran { height: calc(100dvh - 150px - 80px - 52px - env(safe-area-inset-bottom)); } }

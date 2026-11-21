@@ -136,10 +136,10 @@
     var FOTO = {};
     var BEK = [], bekNo = 0;
     var S = { M: [], son: 0, surum: -1, sessiz: false, susL: [], acik: true, zam: null, calisiyor: false, duyuru: false, gonderiyor: false, olu: false };
-    var P = !!cfg.personel, uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
+    var P = !!cfg.personel, R = cfg.rol === 'rehber', uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
     var kap = cfg.kap; kap.innerHTML = '';
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
-    var HIZ = P ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
+    var HIZ = P || R ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
       '<span class="tz-canli"><i></i>CANLI</span>' + (!P && cfg.sayim ? '<button type="button" class="tz-yokb" data-tzyok>' + SVG('<path d="M9 5h6M9 3h6v4H9z"/><path d="M8 5H6v16h12V5h-2"/><path d="M9 13l2 2 4-4"/>', 16, 2.1) + 'Yoklama</button>' : '') + (cfg.kapat ? '<button type="button" class="tz-kapa" aria-label="Telsizi kapat" title="Telsizi kapat">' + SVG('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>', 18, 2.2) + 'Kapat</button>' : '') + '</div>' + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<div class="tz-say" style="display:none"></div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
@@ -151,11 +151,11 @@
 
     function gezCiz() { var g = cfg.gezi || {};
       ekran.querySelector('.tz-gad').textContent = g.ad || 'Gezi';
-      ekran.querySelector('.tz-galt').textContent = P ? ((g.ogrenci || 0) + ' öğrenci · ' + (g.ogretmen || 0) + ' öğretmen') : (g.otobus ? 'Otobüs ' + g.otobus + (g.koltuk ? ' · Sıra ' + g.koltuk : '') : 'Gezi grubu');
+      ekran.querySelector('.tz-galt').textContent = R ? 'Rehber · ' + (g.otobusler ? g.otobusler.length + ' otobüs' : '') : P ? ((g.ogrenci || 0) + ' öğrenci · ' + (g.ogretmen || 0) + ' öğretmen') : (g.otobus ? 'Otobüs ' + g.otobus + (g.koltuk ? ' · Sıra ' + g.koltuk : '') : 'Gezi grubu');
       var c = ekran.querySelector('.tz-canli'); c.classList.toggle('kapali', !S.acik); c.lastChild.textContent = S.acik ? 'CANLI' : 'KAPALI';
       var sd = ekran.querySelector('.tz-sus-dug'); if (sd) { sd.style.display = S.susL.length ? '' : 'none'; sd.querySelector('span').textContent = S.susL.length + ' öğrenci sessizde'; } }
 
-    function adGoster(m) { var a = buyukHarf(m.ad || ''); return a || (m.rol === 'ogrenci' ? 'Öğrenci' : 'Öğretmen'); }
+    function adGoster(m) { var a = buyukHarf(m.ad || ''); return a || (m.rol === 'ogrenci' ? 'Öğrenci' : m.rol === 'rehber' ? 'Rehber' : 'Öğretmen'); }
     var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     function haritaUrl(k) { return IOS ? 'https://maps.apple.com/?ll=' + k.lat + ',' + k.lng + '&q=' + encodeURIComponent(k.saat ? 'Toplanma ' + k.saat : 'Konum') : 'https://www.google.com/maps/search/?api=1&query=' + k.lat + ',' + k.lng; }
     var bugun = function () { try { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }); } catch (e) { return new Date().toISOString().slice(0, 10); } };
@@ -202,7 +202,7 @@
       ciz(); yenile(); zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden) yenile(); }, 4000);
     }
     function sayCiz() {   // öğrenci: kendi otobüsünün açık sayımı — büyük "Otobüsteyim" ya da "Sayıldın"
-      if (P || !sayEl) return; var s = S.sayim;
+      if (P || R || !sayEl) return; var s = S.sayim;
       if (!s) { sayEl.style.display = 'none'; sayEl.__h = ''; return; }
       var sayildi = s.var || S.sayildi === s.id;
       var html = sayildi ? '<div class="tz-sayok">' + SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 18, 2.6) + '<span>Otobüs ' + s.otobus + ' sayımında sayıldın</span></div>'
@@ -212,7 +212,7 @@
     }
     function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b) && bana(m.konum)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b && bana(cfg.gezi.toplanma)) ? { konum: cfg.gezi.toplanma } : null; }
     function topCiz() {   // toplanma şeridi: saat büyük, kalan süre; son 10 dakikada kırmızı ve yanıp sönen nokta (yalnız CSS opaklık; telefonu yormaz)
-      if (P) return seritCiz();
+      if (P || R) return seritCiz();
       var m = topBul(); if (!m) { topEl.style.display = 'none'; return; }
       var k = m.konum, p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); var dk = Math.round((h - Date.now()) / 60000);
       if (dk < -30) { topEl.style.display = 'none'; return; }
@@ -234,12 +234,12 @@
     function avatar(m, ad) { var f = m.fk && FOTO[m.fk];
       return '<div class="tz-av' + (f ? ' foto' : '') + '">' + (f ? '<img alt="" src="' + esc(fotoSrc(f)) + '">' : esc(basHarf(ad))) + '</div>'; }
     function kunye(m, ad) { var og = m.rol !== 'ogrenci';
-      return '<div class="tz-kunye">' + avatar(m, ad) + '<div class="tz-kad"><b>' + esc(ad) + '</b>' + (og ? '<span class="tz-rozet">' + (m.rol === 'idare' ? 'İDARE' : 'ÖĞRETMEN') + '</span>' : '') +
+      return '<div class="tz-kunye">' + avatar(m, ad) + '<div class="tz-kad"><b>' + esc(ad) + '</b>' + (og ? '<span class="tz-rozet">' + (m.rol === 'idare' ? 'İDARE' : m.rol === 'rehber' ? 'REHBER' : 'ÖĞRETMEN') + '</span>' : '') +
         '<small>' + [m.otobus ? 'Otobüs ' + m.otobus : '', m.sinif && !og ? esc(m.sinif) : ''].filter(Boolean).join(' · ') + '</small></div><span class="tz-z">' + esc(saat(m.zaman)) + '</span></div>'; }
     function mesajHtml(m) {
       var og = m.rol !== 'ogrenci', ad = adGoster(m), no = m.kim && m.kim.indexOf('o:') === 0 ? m.kim.slice(2) : '', dok = P && no && !m.ben;
       if (m.sayim) return m.sayim.tur === 'tam' ? '<div class="tz-sis tz-sistam">' + SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 13, 2.8) + ' ' + esc(m.metin) + ' · ' + esc(saat(m.zaman)) + '</div>' : '<div class="tz-sis">' + esc(m.metin) + ' · ' + esc(adGoster(m)) + ' · ' + esc(saat(m.zaman)) + '</div>';
-      if (m.duyuru && m.konum && m.konum.saat && !P && !bana(m.konum)) return '<div class="tz-baska"><b>' + esc(obYazi(m.konum).replace('OTOBÜS', 'Otobüs')) + '</b> ' + esc(m.konum.saat) + '\'te toplanacak · başka otobüs</div>';
+      if (m.duyuru && m.konum && m.konum.saat && !P && !R && !bana(m.konum)) return '<div class="tz-baska"><b>' + esc(obYazi(m.konum).replace('OTOBÜS', 'Otobüs')) + '</b> ' + esc(m.konum.saat) + '\'te toplanacak · başka otobüs</div>';
       if (m.duyuru) { var tk = m.konum && m.konum.lat != null; return '<div class="tz-duyuru"><div class="tz-dbt">' + SVG(tk ? IK.pin : IK.duyuru, 14, 2.4) + (tk && m.konum.saat ? esc(obYazi(m.konum)) + ' · TOPLANMA ' + esc(m.konum.saat) : 'DUYURU') + '</div>' + kunye(m, ad) + (tk ? konumHtml(m.konum) : '<div class="tz-t">' + esc(m.metin) + '</div>') + '</div>'; }
       return '<div class="tz-m' + (og ? ' og' : '') + (m.ben ? ' ben' : '') + (m.gizli ? ' tz-gizlenen' : '') + (dok ? ' dok' : '') + '"' + (dok ? ' data-tzm="' + m.id + '"' : '') + '>' + kunye(m, ad) +
         (m.konum && m.konum.lat != null ? konumHtml(m.konum) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') : '<div class="tz-t">' + esc(m.metin) + (m.gizli ? '<span class="tz-gizetk">GİZLİ</span>' : '') + '</div>') + '</div>';
@@ -310,7 +310,7 @@
     async function konumGonder() {
       if (S.gonderiyor || !S.acik || S.sessiz) return;
       if (!navigator.geolocation) { uyar('Bu telefon konum vermiyor.'); return; }
-      if (P && cfg.toplanma) return toplanmaSayfa();
+      if ((P || R) && cfg.toplanma) return toplanmaSayfa();
       if (!await onayla('Şu an bulunduğun yerin konumu gruba gönderilsin mi? (Canlı konum değil, yalnız bu anki yer.)')) return;
       S.gonderiyor = true; var gec = bekEkle('Konum', '<div class="tz-sis tz-bek">Konum alınıyor…</div>');
       var p = null, hata = '';
@@ -352,7 +352,8 @@
       if (S.M.length) S.son = S.M[S.M.length - 1].id;
       var degisti = r.bastan || L.length || S.surum !== r.surum; S.surum = r.surum;
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
-      if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
+      if (R) { if (r.ozet) cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); }
+      else if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();

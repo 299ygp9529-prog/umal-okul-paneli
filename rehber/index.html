@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0b1424">
+<title>Gezi Telsizi · Rehber</title>
+<link rel="icon" href="../atlas-kafa.png">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #070d18; color: #fff; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; -webkit-text-size-adjust: 100%; }
+  .rb-ust { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 14px 8px; }
+  .rb-ust img { width: 34px; height: 34px; border-radius: 50%; }
+  .rb-ust b { font-size: 16px; display: block; }
+  .rb-ust small { font-size: 12px; color: #8fa6c8; }
+  #rbIc { padding: 0 10px calc(10px + env(safe-area-inset-bottom)); }
+  #rbIc .tz-ekran { height: calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .rb-kart { margin: 30px 14px; padding: 22px 18px; border-radius: 18px; background: #0f1d33; border: 1px solid #1d3354; text-align: center; line-height: 1.5; }
+  .rb-kart b { display: block; font-size: 18px; margin-bottom: 6px; }
+  .rb-kart p { margin: 0; color: #b9c9e2; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="rb-ust"><img src="../atlas-kafa.png" alt=""><div><b id="rbAd">Gezi Telsizi</b><small>Ümraniye Merkez Anadolu Lisesi · Rehber girişi</small></div></div>
+<div id="rbIc"><div class="rb-kart"><p>Bağlanıyor…</p></div></div>
+<script src="../supabase.min.js?v=2.45.4"></script>
+<script src="../sohbet-klavye.js?v=202611192105"></script>
+<script src="../telsiz.js?v=202611210740"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var sb = window.supabase.createClient('https://ceqdghykweubeaokwadt.supabase.co', 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ', { auth: { persistSession: false, autoRefreshToken: false } });
+  // bilet adres çubuğunun # kısmında gelir (sunucuya gitmez); bir kez alınıp cihazda saklanır, adresten silinir
+  var b = ''; var m = location.hash.match(/b=([0-9a-f]{36})/); if (m) { b = m[1]; try { localStorage.setItem('umalRehber', b); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  if (!b) { try { b = localStorage.getItem('umalRehber') || ''; } catch (e) {} }
+  var kart = function (baslik, metin) { $('#rbIc').innerHTML = '<div class="rb-kart"><b>' + esc(baslik) + '</b><p>' + esc(metin) + '</p></div>'; };
+  var r_ = async function (f, a) { try { var x = await sb.rpc(f, a); if (x.error) return { ok: false, hata: x.error.message }; return x.data; } catch (e) { return { ok: false, hata: 'bağlantı yok' }; } };
+  async function ac() {
+    if (!b) { kart('Bağlantı yok', 'Öğretmenin gösterdiği karekodu okutun.'); return; }
+    var g = await r_('umal_rehber_telsiz', { p_bilet: b });
+    if (!g || !g.ok) { kart('Telsize girilemedi', (g && g.hata) || 'Bağlantının süresi doldu ya da telsiz kapalı. Öğretmenden yeni bağlantı isteyin.'); return; }
+    $('#rbAd').textContent = (g.gezi && g.gezi.ad ? g.gezi.ad : 'Gezi') + ' · ' + g.ad;
+    $('#rbIc').innerHTML = '<div id="rbKap"></div>';
+    window.UmalTelsiz({ kap: $('#rbKap'), personel: false, rol: 'rehber', gezi: g.gezi,
+      uyar: function (t) { alert(t); }, onayla: function (t) { return Promise.resolve(confirm(t)); }, etkin: function () { return true; },
+      oku: function (s, v) { return r_('umal_rehber_telsiz_oku', { p_bilet: b, p_sonra: s, p_surum: v }); },
+      yaz: function (t) { return r_('umal_rehber_telsiz_yaz', { p_bilet: b, p_metin: t }); },
+      konum: function (la, lo, acc) { return r_('umal_rehber_telsiz_konum', { p_bilet: b, p_lat: la, p_lng: lo, p_acc: acc }); },
+      toplanma: function (la, lo, acc, saat, not, ob) { return r_('umal_rehber_telsiz_toplanma', { p_bilet: b, p_lat: la, p_lng: lo, p_acc: acc, p_saat: saat, p_not: not || null, p_otobusler: ob && ob.length ? ob : null }); },
+      kapandi: function () { kart('Telsiz kapandı', 'Gezi telsizi kapatıldı. Teşekkürler.'); } });
+  }
+  ac();
+})();
+</script>
+</body>
+</html>
