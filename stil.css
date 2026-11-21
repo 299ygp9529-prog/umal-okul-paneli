@@ -2798,3 +2798,12 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 /* K-837: bütün otobüslerde koltuk kutucukları aynı boy (uzun ad kutuyu büyütmez) */
 @media (max-width: 760px) { .gz-k { height: 76px; min-height: 76px; max-height: 76px; } .gz-sira > .gz-bosluk, .gz-sira > .gz-kapi { height: 76px; } }
 .gz-k b.gz-tam { max-height: 2.2em; overflow: hidden; }
+/* K-842: ders olmayan gün / tatil kartı — sıcak, sade, animasyonsuz */
+.gb-kart { display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 14px; border-radius: 18px; background: linear-gradient(135deg, rgba(255,196,107,.13), rgba(255,122,61,.05) 55%, rgba(34,232,255,.05)); border: 1px solid rgba(255,196,107,.38); }
+.gb-kart .gb-atlas { width: 54px; height: 54px; flex: none; border-radius: 50%; background: rgba(255,255,255,.06); }
+.gb-kart .gb-m { flex: 1; min-width: 0; }
+.gb-kart .gb-m b { display: block; font-size: 17px; color: #ffd68a; margin-bottom: 3px; }
+.gb-kart .gb-m p { margin: 0; font-size: 14.5px; line-height: 1.45; color: #e7eefc; }
+.gb-kart .gb-m small { display: block; margin-top: 5px; font-size: 12.5px; color: #9db0cf; }
+.gb-kart .gb-ik { flex: none; color: #ffc46b; opacity: .9; }
+@media (max-width: 420px) { .gb-kart .gb-ik { display: none; } }

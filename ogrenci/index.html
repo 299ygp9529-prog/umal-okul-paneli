@@ -610,6 +610,15 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 @keyframes atlSon { to { opacity: 0; } } @keyframes atlGel { to { opacity: 1; } }
 #acilis.tikli .rozet { animation: atlRozet .42s cubic-bezier(.2,1.6,.4,1) .45s forwards; } @keyframes atlRozet { to { transform: scale(1); opacity: 1; } }
 #acilis.tikli .halka { transform-box: fill-box; transform-origin: center; animation: atlHalka .7s ease-out .7s forwards; } @keyframes atlHalka { to { transform: scale(1.9); opacity: 0; } }
+/* K-842: ders olmayan gün / tatil kartı — sıcak, sade, animasyonsuz */
+.gb-kart { display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 14px; border-radius: 18px; background: linear-gradient(135deg, rgba(255,196,107,.13), rgba(255,122,61,.05) 55%, rgba(34,232,255,.05)); border: 1px solid rgba(255,196,107,.38); }
+.gb-kart .gb-atlas { width: 54px; height: 54px; flex: none; border-radius: 50%; background: rgba(255,255,255,.06); }
+.gb-kart .gb-m { flex: 1; min-width: 0; }
+.gb-kart .gb-m b { display: block; font-size: 17px; color: #ffd68a; margin-bottom: 3px; }
+.gb-kart .gb-m p { margin: 0; font-size: 14.5px; line-height: 1.45; color: #e7eefc; }
+.gb-kart .gb-m small { display: block; margin-top: 5px; font-size: 12.5px; color: #9db0cf; }
+.gb-kart .gb-ik { flex: none; color: #ffc46b; opacity: .9; }
+@media (max-width: 420px) { .gb-kart .gb-ik { display: none; } }
 </style>
 <script>try { if (sessionStorage.getItem('ogrYenile')) { sessionStorage.removeItem('ogrYenile'); document.documentElement.classList.add('ogr-yenile'); } } catch (e) {}</script>
 <script>try { if (sessionStorage.getItem('umalYeniden') || sessionStorage.getItem('umalOturum') || ((j => j && Date.now() - (j.t || 0) < 30 * 864e5)(JSON.parse(localStorage.getItem('umalOturum') || 'null')))) document.documentElement.classList.add('oturumlu'); } catch (e) {}</script>
@@ -745,7 +754,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611192105"></script>
-<script src="../telsiz.js?v=202611210740"></script>
-<script src="ogrenci.js?v=202611210005"></script>
+<script src="../telsiz.js?v=202611210850"></script>
+<script src="ogrenci.js?v=202611210850"></script>
 </body>
 </html>

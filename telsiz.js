@@ -82,7 +82,7 @@
     '@keyframes tzGel{from{opacity:0}}',
     '.tz-sayfa{width:100%;background:#122440;border-top:1px solid #2a4a74;border-radius:22px 22px 0 0;padding:10px 14px 16px;box-shadow:0 -20px 60px rgba(0,0,0,.6);max-height:85%;overflow-y:auto;animation:tzCik .2s cubic-bezier(.2,1,.4,1)}',
     '@keyframes tzCik{from{transform:translateY(40px)}}',
-    '.tz-tut{width:40px;height:5px;border-radius:3px;background:#2f4d78;margin:0 auto 12px}',
+    '.tz-tut{width:40px;height:5px;border-radius:3px;background:#2f4d78;margin:0 auto 12px;position:relative;touch-action:none}.tz-tut::before{content:"";position:absolute;inset:-14px -80px}',
     '.tz-sk{display:flex;align-items:center;gap:12px;margin-bottom:10px}.tz-sk .tz-av{width:42px;height:42px;font-size:14px}.tz-sk b{font-size:16px;display:block}.tz-sk small{display:block;color:#8aa0c2;font-size:12.5px;margin-top:2px}',
     '.tz-alinti{font-size:13.5px;color:#b9c9e2;background:#0d1a2e;border-radius:12px;padding:8px 11px;margin-bottom:6px;overflow-wrap:anywhere}',
     '.tz-sec{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:14px;border:1px solid #24406a;background:transparent;color:#fff;margin-top:8px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}',
@@ -365,7 +365,14 @@
     }
     function perde(html, bagla) {
       var p = d.createElement('div'); p.className = 'tz-perde'; p.innerHTML = '<div class="tz-sayfa" role="dialog" aria-modal="true"><div class="tz-tut"></div>' + html + '<button type="button" class="tz-kapat">Kapat</button></div>'; ekran.appendChild(p);
-      var kapat = function () { p.remove(); }; p.onclick = function (e) { if (e.target === p || e.target.closest('.tz-kapat')) kapat(); }; if (bagla) bagla(p, kapat); return kapat;
+      var kapat = function () { p.remove(); }; p.onclick = function (e) { if (e.target === p || e.target.closest('.tz-kapat')) kapat(); };
+      (function () {   // K-844: aşağı çekince kapanır (tutamaktan ya da en üstteyken sayfadan); yalnız transform, telefonu yormaz
+        var sy = p.querySelector('.tz-sayfa'), y0 = null, dy = 0, aktif = false;
+        sy.addEventListener('touchstart', function (e) { var t = e.target; if (t.closest('input,textarea,select')) return; y0 = e.touches[0].clientY; dy = 0; aktif = !!t.closest('.tz-tut') || sy.scrollTop <= 0; }, { passive: true });
+        sy.addEventListener('touchmove', function (e) { if (!aktif || y0 == null) return; dy = e.touches[0].clientY - y0; if (dy <= 0) { sy.style.transform = ''; return; } if (sy.scrollTop > 0 && !e.target.closest('.tz-tut')) { aktif = false; sy.style.transform = ''; return; } sy.style.transition = 'none'; sy.style.transform = 'translateY(' + dy + 'px)'; if (e.cancelable) e.preventDefault(); }, { passive: false });
+        sy.addEventListener('touchend', function () { if (!aktif) return; sy.style.transition = 'transform .18s ease-out'; if (dy > 90) { sy.style.transform = 'translateY(100%)'; setTimeout(kapat, 170); } else sy.style.transform = ''; y0 = null; aktif = false; }, { passive: true });
+      })();
+      if (bagla) bagla(p, kapat); return kapat;
     }
     async function kisiAc(id) {
       var m = S.M.find(function (x) { return String(x.id) === String(id); }); if (!m || !m.kim) return; var no = m.kim.slice(2);

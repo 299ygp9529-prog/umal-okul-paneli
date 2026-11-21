@@ -825,6 +825,14 @@
     }).join('') : '<div class="kart soluk">Bu takvimde sınıfının sınavı yok.</div>');
   }
   let PGUN = null;
+  // K-842: ders olmayan gün / tatil için sıcak kart (animasyon yok)
+  let OTATIL = null; (async () => { try { const { data } = await sb.rpc('umal_okul_tatil_durum'); if (data && data.ok) { OTATIL = data; if (!$('#programListe') || !$('#programListe').querySelector('.gb-kart')) return; programCiz(); } } catch (e) {} })();
+  function ogrBosKart() {
+    const t = OTATIL && OTATIL.tatil && PGUN === gunIdx(simdi()) ? OTATIL.tatil : null, tohum = new Date().getDate();
+    const L = t ? ['Tatil! Kitap da olur, uyku da olur, ikisi birden de olur.', 'Okul seni özledi ama dinlenmen daha önemli. İyi tatiller!', 'Tahtalar uyuyor, Atlas nöbette. Keyfine bak.']
+      : ['Bugün ders yok. Biraz dinlen, biraz oku, çokça gül.', 'Ders yok ama hayaller açık. Güzel bir gün geçir.', 'Bugün tebeşir tozu yok. Kendine iyi bak.'];
+    return `<div class="kart gb-kart"><img class="gb-atlas" src="../atlas-kafa.png" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(t ? t.ad : 'Bugün ders yok')}</b><p>${esc(L[tohum % L.length])}</p></div></div>`;
+  }
   function programCiz() {
     const s = simdi(), bg = gunIdx(s); if (PGUN == null) PGUN = bg > 4 ? 0 : bg;
     $('#gunSec').innerHTML = GUN.slice(0, 5).map((g, i) => `<button class="${i === PGUN ? 'secili' : ''} ${i === bg ? 'bugun_' : ''}" data-g="${i}">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum'][i]}${i === bg ? ' •' : ''}</button>`).join('');
@@ -835,7 +843,7 @@
       const [a, b] = zil(PGUN, n); let d = bu ? (t >= dk(b) ? 'bit' : t >= dk(a) ? 'sr' : '') : '';
       if (bu && !d && !sira && t < dk(a)) { d = 'sr'; sira = true; } else if (d === 'sr') sira = true;
       return `<div class="ps ${d}" style="--r:${dersRenk(c.ders)}"><div class="no">${n}. Ders<small>${a.replace(':', '.')} – ${b.replace(':', '.')}</small></div><div><b>${esc(c.ders)}</b><span>${esc((c.ogretmen || []).map(hoca).join(', '))}</span></div></div>`;
-    }).join('') || '<div class="kart soluk">Bu gün ders yok.</div>';
+    }).join('') || ogrBosKart();
   }
 
   // ---- K-543: rehberlik servisine mektup

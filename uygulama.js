@@ -723,6 +723,7 @@
         <div class="ot-dug">${z && z.acik ? (kilitli ? `<button class="birincil" data-oti="ac">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>')}Kilidi aç</button>` : `<button class="birincil" data-oti="kilitle">${ik('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9M12 14.5v2"/>')}Kilitle</button>`)
           + `<button class="ikincil ot-kapat" data-oti="kapat">${ik('<path d="M12 3.5v8"/><path d="M7 6.5a7.5 7.5 0 1 0 10 0"/>')}Tahtayı kapat</button>` : '<div class="soluk kucuk">Tahta açılınca buradan kilitleyebilirsiniz.</div>'}</div>
         <div class="soluk kucuk">Kilit ve açma zil çalınca kendiliğinden kalkar. Kapat: tahta 2 dakika uyarı verip kapanır.</div><div id="otBilgi" class="kucuk"></div></div>`; }
+    else if ((() => { const i = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }), g = new Date().getDay(); return g === 0 || g === 6 || tatilOf(i); })()) ust = gunBosKart();   // K-842
     else { const sn = D_.find(q => dk(q.bas) - 5 > t); ust = `<div class="kart soluk ot-bos">Şu an dersiniz yok; dersinizin saatinde o sınıfın tahtası burada en üstte çıkar.${sn ? ` Sıradaki: <b>${esc(sn.sinif)}</b> · ${sn.n}. ders (${esc(String(sn.bas).replace(':', '.'))}).` : ''}</div>`; }
     const diger = TL.filter(q => !x || q.sinif !== x.sinif);
     I.innerHTML = `<div class="ust"><div><h1>Tahta Kontrol</h1></div></div>${ust}
@@ -758,7 +759,7 @@
     I.querySelectorAll('[data-opk]').forEach(b => b.onclick = () => kay(+b.dataset.opk));
     const { ben, L, zil } = await ogtDersleriGun(OP.tarih); const E = $('#opListe'); if (!E) return;
     if (!ben) { E.innerHTML = '<div class="kart soluk">Adınız ders programında bulunamadı; idareye bildirin.</div>'; return; }
-    if (!L.length) { E.innerHTML = '<div class="kart soluk op-bos">Bu gün dersiniz yok.</div>'; return; }
+    if (!L.length) { if (!TATIL) await tatilYukle(); E.innerHTML = gunBosKart(OP.tarih); return; }
     const an = new Date(), t = an.getHours() * 60 + an.getMinutes(), dk = x => { const [h, m] = String(x).split(':').map(Number); return h * 60 + m; }, bugun = OP.tarih === bug;
     const satir = x => { const su = bugun && dk(x.bas) - 5 <= t && t < dk(x.bit) + 10, gecti = OP.tarih < bug || (bugun && dk(x.bit) + 10 <= t);
       if (x.bos) return `<div class="op-ders op-bosd ${gecti ? 'gecti' : ''}"><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>Boş</b></span></div>`;
@@ -820,7 +821,7 @@
     const kilit = D.rol === 'ogretmen' && D_.length > 0, acikMi = x => dk(x.bas) - 5 <= t && t < dk(x.bit) + 10;
     if (kilit && (!sec || !D_.some(x => x.sinif === sec.sinif && x.n === +sec.n && acikMi(x)))) { const ac_ = D_.filter(acikMi); if (ac_.length) sec = { sinif: ac_[0].sinif, n: ac_[0].n }; else return ogtDersArasi(D_, dk, t); }
     const secim = kilit ? '' : `<div class="dya-sec">${D_.length ? '<button class="cip" id="dyaDersler">Başka ders</button>' : ''}<button class="cip" id="dyaBaska">${D_.length ? 'Başka sınıf' : 'Sınıf seç'}</button></div>`;
-    if (!sec) { I.innerHTML = `<div class="ust"><h1>Yoklama al</h1></div>${secim}<div class="kart soluk">Ders programında bugün size ait ders bulunamadı. Sınıf seçerek alabilirsiniz.</div>`; dyaSecBagla(); return; }
+    if (!sec) { I.innerHTML = `<div class="ust"><h1>Yoklama al</h1></div>${secim}${gunBosKart('', 'Yine de yoklama almanız gerekirse yukarıdan sınıf seçebilirsiniz.')}`; dyaSecBagla(); return; }
     const sat = D_.find(x => x.sinif === sec.sinif && x.n === sec.n) || { sinif: sec.sinif, n: sec.n, ders: (((p.siniflar || {})[sec.sinif] || {})[`${gun}-${sec.n}`] || {}).ders || '', ogretmen: [] };
     const anahtar = 'ders-' + sec.n, gunIso = bugunISO();
     const ros = (D.ogrenciler || []).filter(o => o.sinif === sec.sinif).sort((a, b) => (+a.no) - (+b.no));
@@ -977,6 +978,7 @@
     if (rol !== 'ogretmen') komutOnar();
     if (rol === 'bas') { erisimRozet(); bdRozet(); msjRozet(); }
     tfgYukle().catch(() => {});   // K-716cr: telafi görevleri
+    tatilYukle();   // K-841: okul tatil takvimi
     tzDurum().catch(() => {});   // K-808: açık Gezi Telsizi var mı (gezideysem menüde ve ana ekranda görünür)
   }
   // K-684: bekleyen erişim isteği sayısı Öğretmenler menüsünde (dakikada bir)
@@ -1437,6 +1439,23 @@
         if (s && !el.querySelector('img')) el.innerHTML = `<img alt="" src="${s}">`;
       });
     }
+  }
+  // K-841/K-842: okul tatil takvimi (Tahta Kontrol › Tatil günleri + resmî tatiller) ve ders olmayan günün sıcak kartı
+  const TATIL_RESMI = { '01-01': 'Yılbaşı', '04-23': '23 Nisan', '05-01': '1 Mayıs', '05-19': '19 Mayıs', '07-15': '15 Temmuz', '08-30': '30 Ağustos', '10-29': 'Cumhuriyet Bayramı' };
+  let TATIL = null;
+  async function tatilYukle() { try { const { data } = await sb.rpc('umal_okul_tatil_durum'); if (data && data.ok) TATIL = data; } catch (e) {} return TATIL; }
+  function tatilOf(iso) { if (!iso) return null; const md = iso.slice(5, 10); if (TATIL_RESMI[md]) return { ad: TATIL_RESMI[md], bas: iso, bit: iso };
+    return ((TATIL && TATIL.liste) || []).find(x => x && x.bas && iso >= x.bas && iso <= (x.bit || x.bas)) || null; }
+  const GB_IK = '<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 6c-2 3 2 4 0 7M24 5c-2 3 2 4 0 7M31 6c-2 3 2 4 0 7" opacity=".55"/><path d="M9 19h28v9a12 12 0 0 1-12 12h-4A12 12 0 0 1 9 28z" fill="currentColor" fill-opacity=".18"/><path d="M37 22h2.5a4.5 4.5 0 0 1 0 9H36"/><path d="M6 43h34"/></svg>';
+  function gunBosKart(iso, ek) {   // tatil · hafta sonu · dersi olmayan gün: Atlas'ın sıcak bir cümlesi, kahve; animasyon yok
+    iso = iso || new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+    const d = new Date(iso + 'T12:00:00'), hs = d.getDay() === 0 || d.getDay() === 6, t = tatilOf(iso), tohum = +iso.replace(/\D/g, '') % 97;
+    const sec = L => L[tohum % L.length], kisa = x => new Date(x + 'T12:00:00').toLocaleDateString(tr, { day: 'numeric', month: 'long' });
+    const [bas, metin] = t ? [t.ad, sec(['Tahtalar uyuyor, Atlas nöbette. Sen keyfine bak.', 'Bu hafta ders yerine kahve molası programı uygulanıyor.', 'Okulu düşünme, ben bakarım. İyi tatiller!', 'Kırmızı kalem tatilde; sen de öyle ol.', 'Zil çalmıyor, sadece çaydanlık. Afiyet olsun.'])]
+      : hs ? ['Hafta sonu', sec(['Kahveni yavaş iç; kâğıtlar pazartesi de orada olacak.', 'Bugün zil çalmıyor, sadece çaydanlık.', 'Yoklama yok, nöbet yok. Sen ve sıcak bir kahve.', 'Kırmızı kalem dinleniyor, sen de dinlen.', 'Tahtalar kapalı, Atlas bekçide. İyi hafta sonları!'])]
+      : ['Bugün dersin yok', sec(['Programında bugün ders görünmüyor. Bir kahve iyi gider.', 'Boş gün! Hak edilmiş bir mola.', 'Bugün tebeşir tozu yok; biraz nefes al.', 'Dersin yok ama Atlas burada; bir şey lazım olursa yaz.'])];
+    const alt = t && t.bas !== t.bit ? kisa(t.bas) + ' – ' + kisa(t.bit) : t ? kisa(t.bas) : '';
+    return `<div class="kart gb-kart"><img class="gb-atlas" src="atlas-kafa.png" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(bas)}</b><p>${esc(metin)}</p>${alt ? `<small>${esc(alt)}</small>` : ''}${ek ? `<small>${ek}</small>` : ''}</div><span class="gb-ik">${GB_IK}</span></div>`;
   }
   function foto(no, ad) {
     const s = !FOTO_GIZLI.has(no) && D.fotolar[no];
