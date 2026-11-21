@@ -473,7 +473,7 @@
   const gzYeni = d => { if (!d || !d.koltuk) return false; try { return localStorage.getItem(gzAnah(d)) !== d.otobus.no + ':' + d.koltuk; } catch (e) { return false; } };
   const gzTarih = t => t ? t.split('-').reverse().join('.') : '';
   const GB_AD = { tc: 'T.C. kimlik numarası', dogum: 'doğum tarihi', tel: 'telefon' };
-  const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'telefon' };
+  const GB_KISA = { tc: 'T.C.', dogum: 'doğum tarihi', tel: 'veli telefonu', ogrtel: 'kendi telefonun', vtel: 'veli telefonu' };
   const UYARI_IK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5v4.5M12 16.6h.01"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
 
 
