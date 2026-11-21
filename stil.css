@@ -2860,3 +2860,4 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .kur-yeni { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; border: 1px solid #24406a; background: #0f1d33; }
 .kur-yeni label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #9db0cf; }
 .kur-yeni input { width: 100%; box-sizing: border-box; }
+.kur-yenib { width: 100%; margin-top: 10px; }

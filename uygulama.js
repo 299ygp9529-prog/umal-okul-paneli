@@ -4429,7 +4429,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const G = zSec === '*' ? T : zSec ? ZM.get(zSec)[0] : [], GP = zSec && zSec !== '*' ? ZM.get(zSec)[1] : [];
       const davet = `<div class="kart og-davet"><div class="og-dv-ust"><span class="og-dv-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="currentColor" fill-opacity=".16"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/></svg></span><div><b>Öğretmenleri hızlıca ekleyin</b><span>Bağlantıyı öğretmen grubuna gönderin. Her öğretmen e-postasını, adını ve soyadını kendisi yazar; istekler aşağıda birikir, <b>Hepsini onayla</b> ile tek dokunuşta eklenir.</span></div></div>
         <div class="og-dv-bag"><code>umalatlas.com.tr/kayit</code><button class="ikincil" id="ogDvKopya">Kopyala</button><a class="birincil" id="ogDvWa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Değerli hocalarım, Atlas okul paneline kaydınız için bu bağlantıya girip e-posta adresinizi, adınızı ve soyadınızı yazmanız yeterli (1 dakika): https://umalatlas.com.tr/kayit')}">WhatsApp'ta paylaş</a></div></div>`;   // K-733
-      const kurKart = D.gercekRol === 'bas' ? `<div class="kart kur-kart"><div class="og-dv-ust"><span class="og-dv-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3" fill="currentColor" fill-opacity=".16"/><path d="M10 18.5h4"/><path d="M9.5 9.5l2 2 3.5-4"/></svg></span><div><b>Telefona Atlas kur</b><span>Yanınızdaki öğretmeni seçin, karekodu okutsun; e-posta kodu beklemeden girer, kendi şifresini belirler.</span></div></div><input id="kurAra" placeholder="Öğretmen adı ya da e-posta" autocomplete="off" autocapitalize="off" spellcheck="false"><div id="kurSonuc" class="kur-sonuc"></div></div>` : '';   // K-850
+      const kurKart = D.gercekRol === 'bas' ? `<div class="kart kur-kart"><div class="og-dv-ust"><span class="og-dv-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3" fill="currentColor" fill-opacity=".16"/><path d="M10 18.5h4"/><path d="M9.5 9.5l2 2 3.5-4"/></svg></span><div><b>Telefona Atlas kur</b><span>Yanınızdaki öğretmeni seçin, karekodu okutsun; e-posta kodu beklemeden girer, kendi şifresini belirler.</span></div></div><input id="kurAra" placeholder="Öğretmen adı ya da e-posta" autocomplete="off" autocapitalize="off" spellcheck="false"><div id="kurSonuc" class="kur-sonuc"></div><button type="button" class="ikincil kur-yenib" id="kurYeniQR">Listede olmayan öğretmen için karekod</button></div>` : '';   // K-850
       $('#icerik').innerHTML = `<h1>Öğretmenler</h1>${kurKart}${davet}${IST.length ? `<div class="kart er-liste"><b class="neon">Erişim istekleri · ${IST.length}</b><span class="soluk kucuk"> E-posta koduyla doğrulanmış adresler. Onaylayınca öğretmen olarak eklenir.</span>${IST.map(x => `<div class="er-satir"><div><b>${esc(baslik(x.ad))}</b><small>${esc(x.eposta)} · ${esc(new Date(x.zaman).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small></div><button class="birincil" data-eron="${esc(x.eposta)}">Onayla</button><button class="bag kirmizi" data-erred="${esc(x.eposta)}">Reddet</button></div>`).join('')}${IST.length > 1 ? '<div style="text-align:right;margin-top:8px"><button class="ikincil" data-eron="*">Hepsini onayla</button></div>' : ''}</div>` : ''}<div class="og-izgara">
         <div class="kart"><b class="neon">Kullanıcı ekle</b><div class="og-rol" id="ogRol">${Object.entries(ROL_AD).map(([k, a]) => `<button class="cip ${yeniRol === k ? 'secili' : ''}" data-yrol="${k}">${a}</button>`).join('')}</div>
           <p class="soluk kucuk">${{ ogretmen: 'Öğretmen: yalnız <b class="neon">Test Hazırla</b> ve <b class="neon">Testler</b>; öğrenci, sınav, anket ve tahta bilgilerine erişemez.', rehberlik: 'Rehberlik: Kim Nerede, Anketler, <b class="neon">Rehberlik</b> (mahrem form cevapları dahil) ve Öğrenci Girişi kodları.', yonetici: 'İdare: Kim Nerede, Tahta Kontrol, Sınav, Nöbet, Anketler, Disiplin; rehberlik cevaplarını görmez.' }[yeniRol]} Her satıra ad soyad ve e-posta yazın (örnek: <i>Ayşe Yılmaz ayse@okul.k12.tr</i>); yalnız e-posta da olur. Panele e-postalarına gelen kodla girerler.</p>
@@ -4453,11 +4453,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         const kc = () => { const q = ka.value.trim().toLocaleLowerCase(tr); const S_ = !q ? [] : L.filter(r => (r.ad || '').toLocaleLowerCase(tr).includes(q) || r.eposta.includes(q)).slice(0, 8);
           const var_ = new Set(L.map(r => zAnah(r.ad))), PY = !q ? [] : [...PZ.values()].filter(v => v.ad && !var_.has(zAnah(v.ad)) && v.ad.toLocaleLowerCase(tr).includes(q)).slice(0, 6);
           $('#kurSonuc').innerHTML = S_.map(r => `<button type="button" class="kur-kisi" data-kur="${esc(r.eposta)}" data-kurad="${esc(r.ad || '')}"><b>${esc(baslik(r.ad || '') || r.eposta)}</b><small>${esc(r.eposta)}</small></button>`).join('')
-            + PY.map(v => `<button type="button" class="kur-kisi yok" data-kurye="${esc(v.ad)}"><b>${esc(baslik(v.ad))}</b><small>Panelde yok · e-posta ekle</small></button>`).join('')
-            + (q ? `<button type="button" class="kur-kisi ekle" data-kurye="${/@/.test(q) ? '' : esc(ka.value.trim())}" data-kurep="${/@/.test(q) ? esc(q) : ''}"><b>+ Yeni öğretmen ekle</b><small>Listede yoksa: ad ve e-posta</small></button>` : '');
+            + PY.map(v => `<button type="button" class="kur-kisi yok" data-kurye="${esc(v.ad)}"><b>${esc(baslik(v.ad))}</b><small>Panelde yok · karekodla ekle</small></button>`).join('')
+            + (q ? `<button type="button" class="kur-kisi ekle" data-kurye="${/@/.test(q) ? '' : esc(ka.value.trim())}" data-kurep="${/@/.test(q) ? esc(q) : ''}"><b>+ Yeni öğretmen</b><small>Karekodu okutsun; e-postasını kendi yazar</small></button>` : '');
           $('#kurSonuc').querySelectorAll('[data-kur]').forEach(b => b.onclick = () => kurQR(b.dataset.kur, b.dataset.kurad));
-          $('#kurSonuc').querySelectorAll('[data-kurye]').forEach(b => b.onclick = () => kurYeni(b.dataset.kurye, b.dataset.kurep)); };
-        ka.oninput = kc; } }
+          $('#kurSonuc').querySelectorAll('[data-kurye]').forEach(b => b.onclick = () => b.dataset.kurep ? kurYeni(b.dataset.kurye, b.dataset.kurep) : (kurQR(null, b.dataset.kurye || ''), ka.value = '', $('#kurSonuc').innerHTML = '')); };
+        ka.oninput = kc; const yq = $('#kurYeniQR'); if (yq) yq.onclick = () => kurQR(null, ''); } }
       { const k = $('#ogDvKopya'); if (k) k.onclick = async () => { try { await navigator.clipboard.writeText('https://umalatlas.com.tr/kayit'); k.textContent = 'Kopyalandı'; } catch (e) { uyar('Bağlantı: https://umalatlas.com.tr/kayit'); } }; }
       $('#icerik').querySelectorAll('[data-eron],[data-erred]').forEach(b => b.onclick = async () => {
         if (b.dataset.erred) { if (!await onayla(b.dataset.erred + ' isteği reddedilsin mi?')) return; await sb.from('umal_erisim_talep').delete().eq('eposta', b.dataset.erred); await istYukle(); ciz(); return; }
@@ -7899,14 +7899,29 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     const bi = $('#girisBilgi'); bi.textContent = 'Atlas kuruluyor…';
     let r = null; try { r = await sb.rpc('umal_kurulum_gir', Object.assign({ p_bilet: null, p_kod: null }, arg)); } catch (e) { r = { error: e }; }
     const data = r && r.data;
+    if (data && data.eposta_gerek) { bi.textContent = ''; kurEpostaSor(arg, data); return false; }   // K-853: açık karekod — öğretmen kendi e-postasını yazar
     if (!data || !data.ok) { bi.textContent = (data && data.hata) || ('Kurulamadı: ' + (r && r.error ? hataYaz(r.error) : 'bağlantı yok')); return false; }
     try { await sb.auth.signOut({ scope: 'local' }); } catch (e) {}
     const { error } = await israrla(() => sb.auth.signInWithPassword({ email: data.eposta, password: data.sifre }));
     if (error) { bi.textContent = 'Giriş yapılamadı: ' + hataYaz(error); return false; }
     try { localStorage.setItem('atlas-hatirla', '1'); localStorage.setItem('atlas-son-eposta', data.eposta); localStorage.setItem('atlas-kurulum', String(Date.now())); } catch (e) {}
-    bi.textContent = ''; const ki = $('#kurIos'); if (ki) ki.remove(); $('#adim1').classList.add('gizli'); $('#eposta').value = data.eposta; sifreAdimi(data.eposta);
+    bi.textContent = ''; const ki = $('#kurIos'); if (ki) ki.remove(); const ke = $('#kurEp'); if (ke) ke.remove(); $('#adim1').classList.add('gizli'); $('#eposta').value = data.eposta; sifreAdimi(data.eposta);
     const sb3 = $('#adim3 .sifre-bas b'); if (sb3) sb3.textContent = 'Hoş geldiniz! Kendi şifrenizi belirleyin';
     return true;
+  }
+  function kurEpostaSor(arg, d) {
+    ['#adim1', '#adim2', '#adim3', '#kurKodKutu'].forEach(x => { const e = $(x); if (e) e.classList.add('gizli'); }); const ki = $('#kurIos'); if (ki) ki.remove();
+    let k = $('#kurEp'); if (!k) { k = document.createElement('form'); k.id = 'kurEp'; k.className = 'kur-ios'; k.setAttribute('onsubmit', 'return false'); $('#girisBilgi').before(k); }
+    k.innerHTML = `<b class="kur-bas">Atlas'a hoş geldiniz</b><p>Kurucu sizi davet etti. Adınızı ve e-postanızı yazın; hemen girersiniz.</p>
+      <label for="kurEpAd">Adınız Soyadınız</label><input id="kurEpAd" maxlength="80" autocomplete="name" value="${esc(baslik(d.ad || ''))}">
+      <label for="kurEpEp">E-posta adresiniz</label><input id="kurEpEp" type="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ornek@gmail.com">
+      <button type="submit" class="birincil" id="kurEpGir">Devam</button>`;
+    if (d.hata) $('#girisBilgi').textContent = d.hata;
+    setTimeout(() => ($('#kurEpAd').value ? $('#kurEpEp') : $('#kurEpAd')).focus(), 60);
+    $('#kurEpGir').onclick = async () => { const ad = baslik($('#kurEpAd').value.trim()), ep = $('#kurEpEp').value.trim().toLowerCase();
+      if (!ad) { $('#girisBilgi').textContent = 'Adınızı ve soyadınızı yazın.'; return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ep)) { $('#girisBilgi').textContent = 'E-posta adresinizi yazın (şifrenizi unutursanız buraya kod gelir).'; return; }
+      $('#kurEpGir').disabled = true; await kurulumGir(Object.assign({}, arg, { p_eposta: ep, p_ad: ad })); const g = $('#kurEpGir'); if (g) g.disabled = false; };
   }
   async function kurulumHash() {   // karekod: umalatlas.com.tr/#kur=<bilet>
     const m = location.hash.match(/kur=([0-9a-f]{36})/); if (!m) return false;
@@ -7947,13 +7962,13 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     };
     if (kurulum) goster(); else setTimeout(goster, 2500);
   }
-  async function kurQR(ep, ad) {   // Kurucu: öğretmenin telefonu için karekod
-    const { data, error } = await sb.rpc('umal_kurulum_bilet_ver', { p_eposta: ep });
+  async function kurQR(ep, ad) {   // Kurucu: öğretmenin telefonu için karekod (ep yoksa: yeni öğretmen, e-postasını kendi telefonunda yazar)
+    const { data, error } = await sb.rpc('umal_kurulum_bilet_ver', { p_eposta: ep || null, p_ad: ad || null });
     if (error || !data || !data.ok) { uyar((data && data.hata) || ('Karekod hazırlanamadı: ' + hataYaz(error))); return; }
     const url = 'https://umalatlas.com.tr/#kur=' + data.bilet; let qr = '';
     try { qr = window.UmalQR ? window.UmalQR.png(url, 8) : ''; } catch (e) {}
     const bit = Date.now() + 15 * 60000;
-    pencereAc(`<div class="kur-qr" id="kurQR"><h2>Telefona Atlas kur</h2><b class="kur-kim">${esc(baslik(ad || data.ad || '') || ep)}</b><small class="soluk">${esc(ep)}</small>
+    pencereAc(`<div class="kur-qr" id="kurQR"><h2>Telefona Atlas kur</h2><b class="kur-kim">${esc(baslik(ad || data.ad || '') || ep || 'Yeni öğretmen')}</b><small class="soluk">${ep ? esc(ep) : 'Listede yok · adını ve e-postasını kendi telefonunda yazacak'}</small>
       ${qr ? `<img src="${qr}" alt="Kurulum karekodu" class="kur-qrimg">` : ''}<p>Öğretmen telefonunun kamerasıyla okutsun.</p>
       <div class="kur-kod">${esc(kurKodYaz(data.kod))}</div><small class="soluk" id="kurDurum">iPhone'da ana ekrandaki Atlas bu kodu sorar · <span id="kurSure">15:00</span></small>
       <div class="kur-tus"><button class="ikincil" id="kurYeni">Yeni karekod</button></div></div>`);
@@ -7964,7 +7979,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       const kal = Math.max(0, bit - Date.now()), sr = $('#kurSure'); if (sr) sr.textContent = kal ? Math.floor(kal / 60000) + ':' + String(Math.floor(kal / 1000) % 60).padStart(2, '0') : 'süresi doldu';
       if (!kal) { clearInterval(zam); return; }
       if (Date.now() - son < 3000) return; son = Date.now();
-      try { const { data: d } = await sb.rpc('umal_kurulum_bilet_durum', { p_bilet: data.bilet }); if (d && d.ok && d.kullanim > 0) { const du = $('#kurDurum'); if (du && !du.dataset.ok) { du.dataset.ok = '1'; du.innerHTML = '<b class="yesil">✓ Öğretmen giriş yaptı</b> · şimdi kendi şifresini belirliyor'; } } } catch (e) {}
+      try { const { data: d } = await sb.rpc('umal_kurulum_bilet_durum', { p_bilet: data.bilet }); if (d && d.ok && d.kullanim > 0) { const du = $('#kurDurum'); if (du && !du.dataset.ok) { du.dataset.ok = '1'; du.innerHTML = `<b class="yesil">✓ ${!ep && d.eposta ? esc(d.eposta) + ' eklendi ve' : 'Öğretmen'} giriş yaptı</b> · şimdi kendi şifresini belirliyor`; } } } catch (e) {}
     }, 1000);
   }
   function pencereAc(html) {
