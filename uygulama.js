@@ -1105,7 +1105,7 @@
     }
     D.gercekRol = rol;   // K-776: Kurucu aynı zamanda öğretmen — üstteki Kurucu/Öğretmen düğmesiyle panel öğretmen ekranına döner (yalnız görünüm; yetki sunucuda)
     if (rol === 'bas') { let m = ''; try { m = localStorage.getItem('umalMod') || ''; } catch (e) {} if (m === 'ogretmen') rol = 'ogretmen'; }
-    document.body.classList.toggle('ikili', D.gercekRol === 'bas');
+    document.body.classList.toggle('cift-rol', D.gercekRol === 'bas');   // K-89x: 'ikili' sayfa düzeni sınıfıyla çakışıp Kurucu'da sağda 320 px boşluk açıyordu
     D.rol = rol; document.body.classList.toggle('kurucu', rol === 'bas');
     asistanDugme();   // K-716ce: Atlas'a sor
     $('#giris').classList.add('gizli');
