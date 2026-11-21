@@ -4380,6 +4380,11 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
 
   // ------------------------------------------------------------------ K-498: Öğretmenler (yalnız Soru Hazırla)
+  // K-857: eksik/fazla adla yazılmış aynı kişi ("Ezgi Acınan" = "Asuman Ezgi Acınan"): soyad aynı, kısa adın bütün kelimeleri uzun adda var
+  function adParca(a) { return String(a || '').toLocaleUpperCase('tr').split(/[^A-ZÇĞİÖŞÜ]+/).filter(Boolean); }
+  function adEslesir(a, b) { const x = adParca(a), y = adParca(b); if (!x.length || !y.length) return false; if (x.join(' ') === y.join(' ')) return true;
+    if (x.length < 2 || y.length < 2 || x[x.length - 1] !== y[y.length - 1]) return false; const [k, u] = x.length <= y.length ? [x, y] : [y, x]; return k.every(w => u.includes(w)); }
+  function pzBul(PZ, ad, zAnah) { const t = PZ.get(zAnah(ad)); if (t) return t; for (const v of PZ.values()) if (adEslesir(v.ad, ad)) return v; return null; }
   async function ogretmenlerBolumu() {
     let adVar = true;   // K-517: 'ad' sütunu (SQL çalıştırılmadıysa eski hâli)
     const yukle = async () => {
@@ -4414,7 +4419,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     } catch (e) {}
     let ZE = {}; const zeYukle = async () => { try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'zumre_elle').maybeSingle(); ZE = data && data.deger ? JSON.parse(data.deger) || {} : {}; } catch (e) { ZE = {}; } }; await zeYukle();
     const BELIRSIZ = 'Branşı belirsiz';
-    const zumresi = r => { const ro = typeof rolu === 'function' ? rolu(r.eposta) : ''; if (ro === 'rehberlik') return 'Rehberlik'; if (ro === 'yonetici') return 'İdare'; return ZE[r.eposta] || ((PZ.get(zAnah(r.ad)) || {}).zumre) || BELIRSIZ; };   // K-716aj: rehberlik ve idare kendi klasöründe
+    const zumresi = r => { const ro = typeof rolu === 'function' ? rolu(r.eposta) : ''; if (ro === 'rehberlik') return 'Rehberlik'; if (ro === 'yonetici') return 'İdare'; return ZE[r.eposta] || ((pzBul(PZ, r.ad, zAnah) || {}).zumre) || BELIRSIZ; };   // K-716aj: rehberlik ve idare kendi klasöründe
     let zSec = null;   // açık zümre (null: zümre kartları)
     let IST = []; const istYukle = async () => { if (!['bas', 'yonetici'].includes(D.rol)) return; try { const r = await sb.from('umal_erisim_talep').select('*').order('zaman'); IST = r.error ? [] : (r.data || []); } catch (e) { IST = []; } }; await istYukle();   // K-684
     const yalnizY = () => [...yRol.keys()].filter(ep => !L.some(r => r.eposta === ep)).map(ep => ({ eposta: ep, ad: '', ekleyen: '', eklendi: null }));
@@ -4427,7 +4432,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const T = L.concat(yalnizY());
       const ZM = new Map(), hesapli = new Set(T.map(r => zAnah(r.ad)).filter(Boolean));
       T.forEach(r => { const z = zumresi(r); if (!ZM.has(z)) ZM.set(z, [[], []]); ZM.get(z)[0].push(r); });
-      PZ.forEach((v, a) => { if (hesapli.has(a) || !v.zumre) return; if (!ZM.has(v.zumre)) ZM.set(v.zumre, [[], []]); ZM.get(v.zumre)[1].push(v); });
+      PZ.forEach((v, a) => { if (hesapli.has(a) || !v.zumre || T.some(r => adEslesir(r.ad, v.ad))) return; if (!ZM.has(v.zumre)) ZM.set(v.zumre, [[], []]); ZM.get(v.zumre)[1].push(v); });
       const ZL = [...ZM].map(([z, [H, P]]) => [z, H, P.sort((x, y) => x.ad.localeCompare(y.ad, tr))]).sort((x, y) => (x[0] === BELIRSIZ) - (y[0] === BELIRSIZ) || x[0].localeCompare(y[0], tr));
       const ZADLAR = [...new Set(ZKURAL.map(r => r[1]).concat(Object.values(ZE)))].sort((a, b) => a.localeCompare(b, tr));
       const zRenk = z => z === BELIRSIZ ? '#9fb3cf' : ZRENK[Math.max(0, ZADLAR.indexOf(z)) % ZRENK.length];
@@ -4443,7 +4448,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <div class="zm-izgara">${ZL.map(([z, H, P]) => `<button class="zm-k" style="--g:${zRenk(z)}" data-zsec="${esc(z)}"><b>${esc(z)}</b><small>${H.length} kullanıcı${P.length ? ' · ' + P.length + ' panelde yok' : ''}</small><span class="zm-s">${H.length + P.length}</span></button>`).join('')}<button class="zm-k zm-tum" style="--g:#9fb3cf" data-zsec="*"><b>Tüm kullanıcılar</b><small>${T.length} kişi</small><span class="zm-s">${T.length}</span></button></div>`
           : `<div class="zm-ust"><button class="ikincil" data-zsec="">‹ Zümreler</button><b class="neon" style="--g:${zRenk(zSec)}">${zSec === '*' ? 'Tüm kullanıcılar' : esc(zSec)} · ${G.length}</b></div>
           <div class="satirlar" style="margin-top:10px">${G.length ? G.map(r => `<div class="satir og-satir"><div class="ana">${adVar ? `<input class="og-ad" data-ad="${esc(r.eposta)}" value="${esc(r.ad || '')}" placeholder="Adını yazın" maxlength="80">` : ''}<b class="og-ep">${esc(r.eposta)}</b><small>${r.ekleyen ? 'Ekleyen: ' + kisiHtml(r.ekleyen, (L.find(x => x.eposta === r.ekleyen) || {}).ad) : ''}${r.eklendi ? ' · ' + esc(new Date(r.eklendi).toLocaleDateString(tr, { day: 'numeric', month: 'long' })) : ''}</small>
-          <div class="og-rol">${rolu(r.eposta) === 'bas' ? '<span class="kurucu-yazi kurucu-rozet">KURUCU</span>' : Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(PZ.get(zAnah(r.ad)) || {}).zumre ? ' (' + esc(PZ.get(zAnah(r.ad)).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div>${D.gercekRol === 'bas' && rolu(r.eposta) !== 'bas' ? `<button class="ikincil kucuk-d" data-epd="${esc(r.eposta)}">E-postayı düzelt</button>` : ''}<button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
+          <div class="og-rol">${rolu(r.eposta) === 'bas' ? '<span class="kurucu-yazi kurucu-rozet">KURUCU</span>' : Object.entries(ROL_AD).map(([k, a]) => `<button class="cip kucuk ${rolu(r.eposta) === k ? 'secili' : ''}" data-rolde="${esc(r.eposta)}" data-r="${k}">${a}</button>`).join('')}</div>${zSec !== '*' ? '' : `<span class="og-zet" style="--g:${zRenk(zumresi(r))}">${esc(zumresi(r))}</span>`}<label class="og-zs kucuk soluk">Zümre <select data-zum="${esc(r.eposta)}"><option value="">Otomatik${(pzBul(PZ, r.ad, zAnah) || {}).zumre ? ' (' + esc(pzBul(PZ, r.ad, zAnah).zumre) + ')' : ''}</option>${ZADLAR.map(z => `<option ${ZE[r.eposta] === z ? 'selected' : ''}>${esc(z)}</option>`).join('')}</select></label></div>${D.gercekRol === 'bas' && rolu(r.eposta) !== 'bas' ? `<button class="ikincil kucuk-d" data-epd="${esc(r.eposta)}">E-postayı düzelt</button>` : ''}<button class="tehlike" data-sil="${esc(r.eposta)}">Kaldır</button></div>`).join('') : '<div class="soluk">Bu zümrede panel kullanıcısı yok.</div>'}${GP.length ? `<div class="zm-yok"><b class="kucuk soluk">Ders programında var, panel hesabı yok · ${GP.length}</b>${GP.map(x => `<span>${esc(baslik(x.ad))}</span>`).join('')}</div>` : ''}</div>`}</div></div>`;
       { const k = $('#ogDvKopya'); if (k) k.onclick = async () => { try { await navigator.clipboard.writeText('https://umalatlas.com.tr/kayit'); k.textContent = 'Kopyalandı'; } catch (e) { uyar('Bağlantı: https://umalatlas.com.tr/kayit'); } }; }
       $('#icerik').querySelectorAll('[data-eron],[data-erred]').forEach(b => b.onclick = async () => {
         if (b.dataset.erred) { if (!await onayla(b.dataset.erred + ' isteği reddedilsin mi?')) return; await sb.from('umal_erisim_talep').delete().eq('eposta', b.dataset.erred); await istYukle(); ciz(); return; }
@@ -7893,7 +7898,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     // K-856: Kurulum durumu — kim ana ekrana ekledi, kimde bildirim açık
     const kd = document.createElement('div'); kd.className = 'kart kd-kart'; kd.innerHTML = '<b class="neon">Kurulum durumu</b><div class="soluk kucuk">Yükleniyor…</div>'; $('#icerik').appendChild(kd);
     let OZ = []; try { const { data } = await sb.rpc('umal_kurulum_ozet'); OZ = (data && data.liste) || []; } catch (e) {}
-    const varA = new Set(OZ.map(x => zAnah(x.ad))), YOK = [...PZ.values()].filter(v => v.ad && !varA.has(zAnah(v.ad))).map(v => ({ ad: v.ad, panelYok: true }));
+    const varA = new Set(OZ.map(x => zAnah(x.ad))), YOK = [...PZ.values()].filter(v => v.ad && !varA.has(zAnah(v.ad)) && !OZ.some(x => adEslesir(x.ad, v.ad))).map(v => ({ ad: v.ad, panelYok: true }));
     let eksik = false;
     const zaman = t => { if (!t) return ''; const d = new Date(t), g = Math.floor((Date.now() - d) / 864e5); return g < 1 ? 'bugün ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : g < 2 ? 'dün' : g + ' gün önce'; };
     const durum = x => { if (x.panelYok) return { u: ['gri', 'Panelde yok'], b: ['gri', '—'], tam: false };
@@ -7904,8 +7909,11 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       const G_ = eksik ? H.filter(x => !durum(x).tam) : H;
       kd.innerHTML = `<div class="kd-ust"><b class="neon">Kurulum durumu</b><button class="ikincil kucuk-d" id="kdEksik">${eksik ? 'Hepsini göster' : 'Yalnız eksikleri göster'}</button></div>
         <div class="kd-ozet"><span><b>${T}</b> panelde</span><span class="yesil"><b>${ana}</b> ana ekranda</span><span class="yesil"><b>${bil}</b> bildirim açık</span><span><b>${hic}</b> hiç girmedi</span>${YOK.length ? `<span class="gri"><b>${YOK.length}</b> panelde yok</span>` : ''}</div>
-        <div class="kd-liste">${G_.map(x => { const d = durum(x); return `<button type="button" class="kd-kisi ${d.tam ? 'tam' : ''}" ${x.panelYok ? `data-kdyok="${esc(x.ad)}"` : `data-kdep="${esc(x.eposta)}" data-kdad="${esc(x.ad || '')}"`}><b>${esc(baslik(x.ad || '') || x.eposta)}</b><span class="kd-roz"><i class="${d.u[0]}">${d.u[1]}</i>${x.panelYok ? '' : `<i class="${d.b[0]}">${d.b[1]}</i>`}</span><small>${x.panelYok ? 'Ders programında var · dokun: karekodla ekle' : [x.platform, x.son ? 'son ' + zaman(x.son) : x.giris ? 'son giriş ' + zaman(x.giris) : ''].filter(Boolean).join(' · ')}</small></button>`; }).join('') || '<div class="soluk">Eksik yok.</div>'}</div>`;
+        <div class="kd-liste">${G_.map(x => { const d = durum(x); return `<button type="button" class="kd-kisi ${d.tam ? 'tam' : ''}" ${x.panelYok ? `data-kdyok="${esc(x.ad)}"` : `data-kdep="${esc(x.eposta)}" data-kdad="${esc(x.ad || '')}"`}><b>${esc(baslik(x.ad || '') || x.eposta)}</b><span class="kd-roz"><i class="${d.u[0]}">${d.u[1]}</i>${x.panelYok ? '' : `<i class="${d.b[0]}">${d.b[1]}</i>`}</span><small>${x.panelYok ? 'Ders programında var · dokun: karekodla ekle' : [x.platform, x.son ? 'son ' + zaman(x.son) : x.giris ? 'son giriş ' + zaman(x.giris) : ''].filter(Boolean).join(' · ')}</small>${(() => { if (x.panelYok) return ''; const v = [...PZ.values()].find(v => adEslesir(v.ad, x.ad) && adParca(v.ad).length > adParca(x.ad).length); return v ? `<span class="kd-tam" role="button" tabindex="0" data-kdtam="${esc(x.eposta)}" data-kdtamad="${esc(baslik(v.ad))}">Ders programında: ${esc(baslik(v.ad))} · adı tamamla</span>` : ''; })()}</button>`; }).join('') || '<div class="soluk">Eksik yok.</div>'}</div>`;
       $('#kdEksik').onclick = () => { eksik = !eksik; kdCiz(); };
+      kd.querySelectorAll('[data-kdtam]').forEach(b => b.onclick = async ev => { ev.stopPropagation(); const ep = b.dataset.kdtam, ad = b.dataset.kdtamad;
+        if (!await onayla(`Paneldeki adı "${ad}" olarak düzeltilsin mi?`)) return; const { error } = await sb.from('umal_ogretmenler').update({ ad }).eq('eposta', ep);
+        if (error) { uyar('Düzeltilemedi: ' + hataYaz(error)); return; } const x = OZ.find(z => z.eposta === ep); if (x) x.ad = ad; atlasOnay('Ad düzeltildi', ad); kdCiz(); });
       kd.querySelectorAll('[data-kdep]').forEach(b => b.onclick = () => kurQR(b.dataset.kdep, b.dataset.kdad));
       kd.querySelectorAll('[data-kdyok]').forEach(b => b.onclick = () => kurQR(null, b.dataset.kdyok)); };
     kdCiz();
@@ -7921,7 +7929,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
             kurQR(ep, ad); ka.value = ''; so.innerHTML = ''; };
         };
         const kc = () => { const q = ka.value.trim().toLocaleLowerCase(tr); const S_ = !q ? [] : L.filter(r => (r.ad || '').toLocaleLowerCase(tr).includes(q) || r.eposta.includes(q)).slice(0, 8);
-          const var_ = new Set(L.map(r => zAnah(r.ad))), PY = !q ? [] : [...PZ.values()].filter(v => v.ad && !var_.has(zAnah(v.ad)) && v.ad.toLocaleLowerCase(tr).includes(q)).slice(0, 6);
+          const var_ = new Set(L.map(r => zAnah(r.ad))), PY = !q ? [] : [...PZ.values()].filter(v => v.ad && !var_.has(zAnah(v.ad)) && !L.some(r => adEslesir(r.ad, v.ad)) && v.ad.toLocaleLowerCase(tr).includes(q)).slice(0, 6);
           $('#kurSonuc').innerHTML = S_.map(r => `<button type="button" class="kur-kisi" data-kur="${esc(r.eposta)}" data-kurad="${esc(r.ad || '')}"><b>${esc(baslik(r.ad || '') || r.eposta)}</b><small>${esc(r.eposta)}</small></button>`).join('')
             + PY.map(v => `<button type="button" class="kur-kisi yok" data-kurye="${esc(v.ad)}"><b>${esc(baslik(v.ad))}</b><small>Panelde yok · karekodla ekle</small></button>`).join('')
             + (q ? `<button type="button" class="kur-kisi ekle" data-kurye="${/@/.test(q) ? '' : esc(ka.value.trim())}" data-kurep="${/@/.test(q) ? esc(q) : ''}"><b>+ Yeni öğretmen</b><small>Karekodu okutsun; e-postasını kendi yazar</small></button>` : '');

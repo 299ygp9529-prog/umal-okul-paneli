@@ -2883,3 +2883,4 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .kd-roz .sari { color: #ffc46b; border-color: rgba(255, 196, 107, .5); background: rgba(255, 196, 107, .08); }
 .kd-roz .kirmizi { color: #ff9aa3; border-color: rgba(255, 107, 120, .5); background: rgba(255, 107, 120, .08); }
 .kd-roz .gri { color: #8fa6c8; border-color: #2a4468; }
+.kd-tam { display: block; margin-top: 2px; font-size: 11px; font-weight: 700; color: #7ff6ff; text-decoration: underline; text-underline-offset: 2px; }
