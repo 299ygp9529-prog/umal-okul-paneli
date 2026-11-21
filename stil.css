@@ -2909,3 +2909,11 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 button.gz-sofor { background: none; border: 0; padding: 4px 6px; margin: -4px -6px; border-radius: 10px; cursor: pointer; font: inherit; }   /* K-865 */
 button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .gz-kk-ust .foto.gz-sf { background: rgba(34,232,255,.12); color: #22e8ff; } .gz-kk-ust .foto.gz-sf svg { width: 40px; height: 40px; }
+/* K-867: koltukta minik telsiz — telsizi o an açık olan yeşil yanar */
+.gz-k { position: relative; }
+.gz-k .gz-tzr { display: none; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 7px; place-items: center; color: #6c7f99; background: rgba(8,16,30,.72); border: 1px solid rgba(140,160,190,.28); }
+.gz-k .gz-tzr svg { width: 14px; height: 14px; } .gz-k .gz-tzr .d { opacity: .35; }
+.gz-oto.tzv-hazir .gz-k .gz-tzr { display: grid; }
+.gz-k .gz-tzr.acik { color: #3ef08a; border-color: rgba(62,240,138,.6); background: rgba(10,40,26,.85); box-shadow: 0 0 8px rgba(62,240,138,.45); } .gz-k .gz-tzr.acik .d { opacity: 1; }
+.gz-tzs:empty { display: none; } .gz-tzs { display: inline-flex; align-items: center; gap: 4px; color: #3ef08a; } .gz-tzs svg { width: 14px; height: 14px; }
+@media (max-width: 760px) { .gz-k .gz-tzr { width: 17px; height: 17px; top: 4px; right: 4px; border-radius: 6px; } .gz-k .gz-tzr svg { width: 12px; height: 12px; } }

@@ -413,6 +413,8 @@
   async function tzoAc() {
     if (!TZO.g || !window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);
     if (TZO.ins) { TZO.ins.kapat(); TZO.ins = null; }
+    if (TZO.vr) { TZO.vr.kapat(); TZO.vr = null; }
+    if (window.UmalTelsizVarlik) TZO.vr = window.UmalTelsizVarlik(sb, TZO.g.anahtar, { t: 'ogr', no: String(S.no) });   // K-867: panelde telsizi açık görünür
     const r_ = async (f, a) => { try { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: error.message }; return data; } catch (e) { return { ok: false, hata: 'bağlantı yok' }; } };
     const yt = await r_('umal_ogrenci_sayim_yetki', { p_bilet: TZO.b });   // K-822: gezi başkanı kendi otobüsünün yoklamasını yapar
     if (!TZO.g || TZO.ins) return;
@@ -426,7 +428,7 @@
       sayimVar: id => r_('umal_ogrenci_sayim_var', { p_bilet: TZO.b, p_sayim: id }),
       sayim: baskan,
       konum: (la, lo, ac) => r_('umal_ogrenci_telsiz_konum', { p_bilet: TZO.b, p_lat: la, p_lng: lo, p_acc: ac }),
-      kapandi: () => { TZO.g = null; TZO.b = ''; anaCiz(true); } });
+      kapandi: () => { TZO.g = null; TZO.b = ''; if (TZO.vr) { TZO.vr.kapat(); TZO.vr = null; } anaCiz(true); } });
   }
 
   // K-708: Gezi koltuğum — idare panelde "Öğrencilere yayınla" deyince öğrenci kendi otobüsünü ve koltuğunu görür

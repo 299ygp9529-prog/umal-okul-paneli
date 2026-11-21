@@ -464,4 +464,31 @@
     [300, 900, 2000].forEach(function (ms) { setTimeout(function () { if (!S.olu && SK && SK.olc) SK.olc(); }, ms); });
     return { yukle: yukle, dur: dur, kapat: function () { S.olu = true; dur(); d.removeEventListener('visibilitychange', gor); try { if (SK && SK.olc) SK.olc(); } catch (e) {} } };
   };
+
+  // K-867: telsiz varlığı — telsizi o an açık olanlar (Supabase Realtime presence; veritabanına yazmaz, sunucuyu yormaz).
+  // Telsiz açıkken kişi kendini kanala bildirir (uygulama arka plana geçince düşer); panel oturma planında kimde açık olduğunu görür.
+  var TZV = {};
+  function tzvKanal(sb, anahtar) {
+    var x = TZV[anahtar]; if (x) return x;
+    var ch = sb.channel('tzv:' + anahtar);
+    x = TZV[anahtar] = { ch: ch, hazir: false, ben: null, dinle: [], ref: 0 };
+    x.bildir = function () { var L = [], st = {}; try { st = ch.presenceState() || {}; } catch (e) {} Object.keys(st).forEach(function (k) { (st[k] || []).forEach(function (m) { L.push(m); }); });
+      x.dinle.slice().forEach(function (f) { try { f({ hazir: x.hazir, L: L }); } catch (e) {} }); };
+    x.izle = function () { if (!x.hazir) return; try { if (x.ben && !d.hidden) ch.track(x.ben); else ch.untrack(); } catch (e) {} };
+    ch.on('presence', { event: 'sync' }, x.bildir).subscribe(function (st) { x.hazir = st === 'SUBSCRIBED'; if (x.hazir) x.izle(); x.bildir(); });
+    d.addEventListener('visibilitychange', x.izle);
+    return x;
+  }
+  function tzvBirak(anahtar) { var x = TZV[anahtar]; if (!x || --x.ref > 0) return; d.removeEventListener('visibilitychange', x.izle); try { x.ch.untrack(); } catch (e) {} try { x.ch.unsubscribe(); } catch (e) {} delete TZV[anahtar]; }
+  // kim: { t: 'ogr' | 'ogt' | 'reh', no?, ad? }
+  w.UmalTelsizVarlik = function (sb, anahtar, kim) {
+    if (!sb || !sb.channel || !anahtar || !kim) return { kapat: function () {} };
+    var x = tzvKanal(sb, anahtar), olu = false; x.ref++; x.ben = kim; x.izle();
+    return { kapat: function () { if (olu) return; olu = true; if (x.ben === kim) { x.ben = null; x.izle(); } tzvBirak(anahtar); } };
+  };
+  w.UmalTelsizIzle = function (sb, anahtar, cb) {
+    if (!sb || !sb.channel || !anahtar) return { kapat: function () {} };
+    var x = tzvKanal(sb, anahtar), olu = false; x.ref++; x.dinle.push(cb); setTimeout(x.bildir, 0);
+    return { kapat: function () { if (olu) return; olu = true; x.dinle = x.dinle.filter(function (f) { return f !== cb; }); tzvBirak(anahtar); } };
+  };
 })();
