@@ -637,7 +637,7 @@
     const E = new Set(d.eksik);
     const alan = (k, et, ic) => `<div class="gb-alan ${E.has(k) ? 'eks' : 'ok'}"><div class="gb-et">${et}<b>${E.has(k) ? 'EKSİK' : 'TAMAM'}</b></div>${E.has(k) ? ic : '<div class="gb-dolu">Kayıtlı</div>'}</div>`;
     el.innerHTML = `<div class="gb-bas2"><div class="soluk">${esc(d.ad || 'Gezi')}${d.tarih ? ' · ' + esc(gzTarih(d.tarih)) : ''}</div></div>${GB.mesaj ? `<div class="bk-mesaj ${GB.tur}">${esc(GB.mesaj)}</div>` : ''}
-      <div class="kart gb-kart"><p>Belediye ve ulaşım listesi için bu bilgiler gerekiyor. Kırmızı olanları doldurman yeterli.</p>
+      <div class="kart gb-form"><p>Belediye ve ulaşım listesi için bu bilgiler gerekiyor. Kırmızı olanları doldurman yeterli.</p>
         ${alan('tc', 'T.C. kimlik no', '<input id="gbTc" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="11 hane">')}
         ${alan('dogum', 'Doğum tarihi', '<input id="gbDg" inputmode="numeric" maxlength="10" placeholder="gg.aa.yyyy">')}
         ${alan('tel', 'Velinin telefonu', '<input id="gbTl" inputmode="tel" value="05">')}

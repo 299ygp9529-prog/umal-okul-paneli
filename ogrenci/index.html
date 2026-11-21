@@ -329,7 +329,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gb-kvkk { display: flex; gap: 8px; font-size: 11.5px; color: #6f86a6; line-height: 1.45; } .gb-kvkk svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
 @media (prefers-reduced-motion: reduce) { .izg button.genis.gb-uyari { animation: none; } }
 .izg button.genis.gb-ana { border-color: #ffb86799; background: linear-gradient(120deg, rgba(255,184,103,.12), transparent 70%); }
-.gb-kart { display: flex; flex-direction: column; gap: 12px; } .gb-kart p { margin: 0; line-height: 1.5; } .gb-kart label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #9fb3cf; } .gb-kart input { font-size: 18px; padding: 12px 14px; border-radius: 12px; border: 1px solid #ffffff22; background: rgba(4,12,24,.6); color: #fff; } .gb-kart .birincil { min-height: 50px; font-size: 17px; }
+.gb-form { display: flex; flex-direction: column; gap: 14px; } .gb-form p { margin: 0; line-height: 1.5; } .gb-form label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #9fb3cf; } .gb-form input { font-size: 18px; padding: 12px 14px; border-radius: 12px; border: 1px solid #ffffff22; background: rgba(4,12,24,.6); color: #fff; } .gb-form .birincil { min-height: 50px; font-size: 17px; }
 /* K-716bp: gezi başkanı */
 .bk-gezi { color: #e8c66b; font-weight: 700; letter-spacing: .04em; margin: -4px 0 10px; }
 .izg button.genis.bsk-ana { border-color: #ffd16677; background: linear-gradient(120deg, rgba(255,209,102,.12), transparent 70%); }
@@ -602,6 +602,16 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   .izg button.genis { grid-column: 1 / -1; }
 }
 .izg button.gz-ana.gb-eksik .gb-rozet { right: 118px; left: auto; width: auto !important; max-width: max-content; }
+
+/* K-89x: Gezi bilgilerim formu — 'gb-kart' adı başka kartla çakışıp her şeyi ortaya sıkıştırıyordu */
+.gb-form p { margin: 0; line-height: 1.5; } .gb-form .gb-alan { width: 100%; }
+.gb-form .gb-et { gap: 12px; } .gb-form .gb-yok { flex-direction: row; justify-content: flex-start; }
+.gb-form #gbGonder { width: 100%; }
+@media (min-width: 1000px) {
+  .gb-form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; max-width: 980px; padding: 26px 28px; }
+  .gb-form > p, .gb-form > .gb-kvkk { grid-column: 1 / -1; }
+  .gb-form #gbGonder { grid-column: 1 / -1; justify-self: start; width: auto; min-width: 260px; padding-left: 40px; padding-right: 40px; }
+}
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -774,6 +784,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611211330"></script>
 <script src="../telsiz.js?v=20261121223357"></script>
-<script src="ogrenci.js?v=20261121225508"></script>
+<script src="ogrenci.js?v=20261121230604"></script>
 </body>
 </html>
