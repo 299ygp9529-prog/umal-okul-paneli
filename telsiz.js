@@ -164,8 +164,8 @@
       if (m.hedef) return +m.hedef === o;
       if (m.sayim) return +(m.sayim.otobus || m.otobus) === o;
       if (m.konum && m.konum.saat) { var Lk = obListe(m.konum); return !Lk || Lk.indexOf(o) >= 0; }
-      if (m.otobus) return +m.otobus === o || !!m.duyuru;
-      return true; }
+      if (m.rol !== 'ogrenci') return true;   // görevli/idare/rehber mesajı (hedefsiz) herkese gider: her otobüsün telsizinde görünür
+      return !m.otobus || +m.otobus === o; }
     function phYaz() { return S.duyuru ? 'Duyuru yaz (' + (S.obSec && !S.obHerkes ? 'Otobüs ' + S.obSec : 'herkese') + ' öne çıkar)…' : S.obSec && !S.obHerkes ? 'Otobüs ' + S.obSec + '\'e yaz…' : 'Mesaj yaz…'; }
     function obBantCiz() { if (!obEl) return; var o = S.obSec;
       topEl.querySelectorAll('[data-tzob]').forEach(function (b) { b.classList.toggle('sec', +b.dataset.tzob === o); });
@@ -314,7 +314,7 @@
       if (alt.dataset.d === 'yaz') { var y0 = alt.querySelector('.tz-yaz'); if (y0) y0.classList.toggle('duyuru', S.duyuru); return; }
       alt.dataset.d = 'yaz';
       alt.innerHTML = '<div class="tz-hiz">' + (cfg.konum ? '<button type="button" class="tz-kon" data-tzkon>' + SVG(IK.pin, 15, 2) + 'Konum gönder</button>' : '') + (P ? '<button type="button" data-tzduy>' + 'Duyuru</button>' : '') + HIZ.map(function (h) { return '<button type="button" data-tzh="' + esc(h) + '">' + esc(h) + '</button>'; }).join('') + '</div>' +
-        '<div class="tz-yaz' + (S.duyuru ? ' duyuru' : '') + '"><textarea rows="1" maxlength="' + (P ? 500 : 300) + '" placeholder="' + esc(P ? phYaz() : 'Mesaj yaz…') + '" enterkeyhint="send"></textarea><button class="tz-gon" type="button" aria-label="Gönder">' + SVG(IK.gonder, 20, 2.6) + '</button></div>';
+        '<div class="tz-yaz' + (S.duyuru ? ' duyuru' : '') + '"><textarea rows="1" maxlength="' + (P ? 500 : 300) + '" placeholder="' + esc(P ? phYaz() : 'Mesaj yaz…') + '" enterkeyhint="send"></textarea><button class="tz-gon" type="button" aria-label="Gönder" data-klavye-kalsin>' + SVG(IK.gonder, 20, 2.6) + '</button></div>';
       var y = alt.querySelector('textarea');
       y.oninput = function () { if (SK && SK.buyut) SK.buyut(y, 120); else { y.style.height = 'auto'; y.style.height = Math.min(120, y.scrollHeight) + 'px'; } };
       y.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey && (w.innerWidth > 760)) { e.preventDefault(); gonder(); } };
