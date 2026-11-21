@@ -559,7 +559,7 @@
     TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
       etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
       oku: (s, v) => r_('umal_gezi_telsiz_oku', { p_anahtar: g.anahtar, p_sonra: s, p_surum: v }),
-      yaz: (m, du) => r_('umal_gezi_telsiz_yaz', { p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }),
+      yaz: (m, du, h) => r_('umal_gezi_telsiz_yaz', Object.assign({ p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }, h ? { p_hedef: h } : {})),   // K-848: h = yalnız bu otobüse
       islem: v => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: v }),
       kisi: no => r_('umal_gezi_telsiz_kisi', { p_anahtar: g.anahtar, p_no: no }),
       foto: fk => r_('umal_gezi_telsiz_fotolar', { p_anahtar: g.anahtar, p_fk: fk }),
