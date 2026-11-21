@@ -603,21 +603,13 @@
       atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); telsizBolumu(); };
     if (!window.UmalTelsiz) { $('#tzKap').innerHTML = '<div class="kart soluk">Telsiz yüklenemedi; sayfayı yenileyin.</div>'; return; }
     const r_ = async (f, a) => { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: hataYaz(error) }; return data; };
-    // K-878: Kurucu "Mesajları sil" / "Öğrencileri kilitle" — gezi ayarında saklanır (tzTemizId, tzKilit); kilit = gezideki bütün öğrenciler sessizde
-    let GA = null; try { const { data: a_ } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', g.anahtar).maybeSingle(); GA = a_ && a_.deger ? JSON.parse(a_.deger) : null; } catch (e) {}
-    const gaYaz = async f => { const { data: a_, error: e1 } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', g.anahtar).maybeSingle(); if (e1 || !a_) return { ok: false, hata: e1 ? hataYaz(e1) : 'Gezi bulunamadı' };
-      const G_ = JSON.parse(a_.deger); f(G_); const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: g.anahtar, deger: JSON.stringify(G_) }, { onConflict: 'anahtar' }); return error ? { ok: false, hata: hataYaz(error) } : { ok: true, G: G_ }; };
-    const tzKilit = async (ac, sessizdeOlan) => { const r0 = await gaYaz(G_ => { if (ac) G_.tzKilit = { z: Date.now(), onceki: sessizdeOlan }; }); if (!r0.ok) return r0;
-      const G_ = r0.G, onceki = new Set((ac ? sessizdeOlan : ((G_.tzKilit && G_.tzKilit.onceki) || [])).map(String));
-      const nolar = [...new Set(Object.keys(G_.yer || {}).filter(a => a.startsWith('o:')).map(a => a.split(':')[2]))].filter(no => !onceki.has(String(no)));
-      let hata = ''; for (let i = 0; i < nolar.length; i += 10) { const R = await Promise.all(nolar.slice(i, i + 10).map(no => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: { sessiz: no, kapali: ac } }).catch(() => null))); R.forEach(x => { if (!x || !x.ok) hata = (x && x.hata) || 'bazı öğrencilerde olmadı'; }); }
-      if (!ac) { const r1 = await gaYaz(G2 => { delete G2.tzKilit; }); if (!r1.ok) return r1; }
-      return hata ? { ok: false, hata: 'Kilit tam olmadı: ' + hata } : { ok: true }; };
-    const tzTemizle = async son => gaYaz(G_ => { G_.tzTemizId = son; });
+    // K-879: Kurucu — telsizi kilitle (öğrenciler okur, yazamaz; sunucu reddeder) ve mesajları kalıcı sil
+    const tzKilit = ac => r_('umal_gezi_telsiz_kilit', { p_anahtar: g.anahtar, p_kilit: !!ac });
+    const tzTemizle = () => r_('umal_gezi_telsiz_temizle', { p_anahtar: g.anahtar });
     if (TZ.vr) { TZ.vr.kapat(); TZ.vr = null; }
     if (window.UmalTelsizVarlik) { const g_ = g; kisiAdlariYukle().catch(() => {}).then(() => { if (TZ.vr || TZ.L[TZ.i] !== g_) return; TZ.vr = window.UmalTelsizVarlik(sb, g_.anahtar, { t: 'ogt', ad: KISI.get(String(D.eposta).toLowerCase()) || '', e: D.eposta }); }); }   // K-867
     TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
-      temizId: (GA && GA.tzTemizId) || 0, kilitli: !!(GA && GA.tzKilit), kilit: tzKilit, temizle: tzTemizle,   // K-878
+      kilitli: false, kilit: tzKilit, temizle: tzTemizle,   // K-879 (durum telsizin okumasından gelir)
       etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
       oku: (s, v) => r_('umal_gezi_telsiz_oku', { p_anahtar: g.anahtar, p_sonra: s, p_surum: v }),
       yaz: (m, du, h) => r_('umal_gezi_telsiz_yaz', Object.assign({ p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }, h ? { p_hedef: h } : {})),   // K-848: h = yalnız bu otobüse
@@ -5290,7 +5282,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       pencereAc(`<div class="gz-kk" style="--c:${renk(p)}"><div class="gz-kk-ust">${ogr ? foto(String(p.no), p.ad) : `<div class="foto gz-gf">${esc(bas_)}</div>`}<div><b>${esc(baslik(p.ad))}</b>
           <small>${ogr ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</small><small>${o_.no}. otobüs · ${y.k}. koltuk${yerAd ? ', ' + esc(yerAd.toLocaleLowerCase(tr)) : ''}</small>
           ${yan ? `<small>Yanında: ${esc(baslik(yan.ad))}${yan.sinif ? ' (' + esc(yan.sinif) + ')' : ''}</small>` : ''}${es ? `<small>Arkadaşı: ${esc(baslik(es.ad))}</small>` : ''}${ogr ? (d_ => d_ === true ? '<small class="gz-kk-syv">Yoklamada: geldi ✓</small>' : d_ === false ? '<small class="gz-kk-syy">Yoklamada: gelmedi</small>' : '')(sayDurum(y.o, p.no)) : ''}</div></div>
-        <div class="gz-kk-dug"><button class="birincil" id="kkTasi">Yerini değiştir</button>${ogr ? (ot_ => ot_.length > 4 ? `<a class="ikincil" href="tel:${esc(ot_.replace(/\s+/g, ''))}">Öğrenciyi ara</a>` : '<button class="ikincil" id="kkOtGir">Öğrenci telefonu gir</button>')(gzTel(p.ogrTel || '')) : ''}${tel.length > 4 ? `<a class="ikincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">${ogr ? 'Veliyi ara' : 'Ara'}</a>` : (ogr ? '<button class="ikincil" id="kkVtGir">Veli telefonu gir</button>' : '<button class="ikincil" disabled>Telefon yok</button>')}
+        <div class="gz-kk-dug"><button class="birincil" id="kkTasi">Yerini değiştir</button>${ogr ? (ot_ => ot_.length > 4 ? `<a class="ikincil" href="tel:${esc(ot_.replace(/\s+/g, ''))}">Öğrenciyi ara</a>` : p.ogrTel === 'yok' ? '<button class="ikincil" disabled>Öğrencinin telefonu yok</button>' : '<button class="ikincil" id="kkOtGir">Öğrenci telefonu gir</button>')(gzTel(p.ogrTel === 'yok' ? '' : p.ogrTel || '')) : ''}${tel.length > 4 ? `<a class="ikincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">${ogr ? 'Veliyi ara' : 'Ara'}</a>` : (ogr ? '<button class="ikincil" id="kkVtGir">Veli telefonu gir</button>' : '<button class="ikincil" disabled>Telefon yok</button>')}
           <button class="ikincil" id="kkMsj">Mesaj gönder</button><button class="ikincil" id="kkOto">Başka otobüse al</button><button class="ikincil" id="kkCik">Koltuktan çıkar</button>${p.tur === 'reh' ? '<button class="ikincil" id="kkRb">Telsiz bağlantısı</button>' : ''}</div>${gbBilgiMi(p) ? gbAlanlar(p) : ''}</div>`);
       if (gbBilgiMi(p)) gbBagla(an);
       fotolariYukle(ogr ? [String(p.no)] : []).catch(() => {});

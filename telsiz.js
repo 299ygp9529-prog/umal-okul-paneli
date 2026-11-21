@@ -242,7 +242,7 @@
         var tel = function (n, ad) { return '<a class="tz-ptel" href="tel:' + esc(String(n).replace(/\s+/g, '')) + '" title="' + esc(n) + '">' + ad + '</a>'; };
         var gir = function (ad) { return dz ? '<button type="button" class="tz-ptel" data-ptgir>' + ad + '</button>' : '<button type="button" class="tz-ptel" disabled style="opacity:.5">' + ad.replace(' gir', ' yok') + '</button>'; };
         if (dz) B.push('<button type="button" class="tz-pbtn" data-ptasi>Yerini değiştir</button>');
-        if (ogr) { B.push(k.ogrTel ? tel(k.ogrTel, 'Öğrenciyi ara') : gir('Öğrenci telefonu gir')); B.push(k.tel ? tel(k.tel, 'Veliyi ara') : gir('Veli telefonu gir')); }
+        if (ogr) { B.push(k.ogrTel === 'yok' ? '<button type="button" class="tz-ptel" disabled style="opacity:.5">Öğrencinin telefonu yok</button>' : k.ogrTel ? tel(k.ogrTel, 'Öğrenciyi ara') : gir('Öğrenci telefonu gir')); B.push(k.tel ? tel(k.tel, 'Veliyi ara') : gir('Veli telefonu gir')); }
         else B.push(k.tel ? tel(k.tel, 'Ara') : gir('Telefon gir'));
         var sk = sayKart(k); if (sk) B.push(sk);
         if (cfg.mesaj && P) B.push('<button type="button" class="tz-pmsj" data-pmsj>Mesaj gönder</button>');
@@ -393,6 +393,7 @@
     }
     function altCiz() {
       if (!S.acik) { alt.innerHTML = '<div class="tz-kap-not">' + SVG(IK.sessiz, 18) + 'Gezi Telsizi kapandı. Mesajlar okunabilir.</div>'; return; }
+      if (S.kilit && !P && !R) { if (alt.dataset.d !== 'kilit') { alt.dataset.d = 'kilit'; alt.innerHTML = '<div class="tz-sus">' + SVG('<rect x="5" y="11" width="14" height="9.5" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', 18) + '<span>Telsiz şu an kilitli. Öğretmenlerin yazdıklarını okuyabilirsin.</span></div>'; } return; }   // K-879
       if (S.sessiz) { if (alt.dataset.d !== 'sus') { alt.dataset.d = 'sus'; alt.innerHTML = '<div class="tz-sus">' + SVG(IK.sessiz, 18) + '<span>Öğretmenin seni sessize aldı. Mesajları okuyabilirsin.</span></div>'; } return; }
       if (alt.dataset.d === 'yaz') { var y0 = alt.querySelector('.tz-yaz'); if (y0) y0.classList.toggle('duyuru', S.duyuru); return; }
       alt.dataset.d = 'yaz';
@@ -469,7 +470,7 @@
         try { r = await cfg.yaz(t, duy, P && S.obSec && !S.obHerkes ? S.obSec : null); } catch (e) { r = { ok: false, hata: e && e.message }; }
         S.sonGon = Date.now(); if (!(r && !r.ok && (r.hata === 'hiz' || /yavaş/.test(r.hata || '')))) break; }
       S.gonderiyor = false; if (b) b.disabled = false;
-      if (!r || !r.ok) { bekSil(gec); if (r && r.sessiz) { S.sessiz = true; altCiz(); } else { if (!hazir && y && !y.value) y.value = t; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); } return; }
+      if (!r || !r.ok) { bekSil(gec); if (r && r.kilit) { S.kilit = true; alt.dataset.d = ''; altCiz(); } else if (r && r.sessiz) { S.sessiz = true; altCiz(); } else { if (!hazir && y && !y.value) y.value = t; uyar('Gönderilemedi: ' + ((r && r.hata) || 'bağlantı yok')); } return; }
       if (duy) { S.duyuru = false; var du = alt.querySelector('[data-tzduy]'); if (du) du.classList.remove('secili'); var yz = alt.querySelector('.tz-yaz'); if (yz) yz.classList.remove('duyuru'); if (y) y.placeholder = phYaz(); }
       await yukleBekle(); bekSil(gec);
     }
@@ -488,7 +489,8 @@
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (R) { if (r.ozet) cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); }
       else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } if (r.obsay) S.obsay = r.obsay; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
-      else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
+      else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz || !!r.kilit !== !!S.kilit) { S.sessiz = !!r.sessiz; S.kilit = !!r.kilit; alt.dataset.d = ''; altCiz(); } }
+      if (P && typeof r.kilit === 'boolean' && r.kilit !== !!cfg.kilitli) { cfg.kilitli = r.kilit; if (typeof kilitYaz === 'function') kilitYaz(); }   // K-879
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
@@ -533,16 +535,13 @@
     kilitYaz();
     if (kb) kb.onclick = async function () { var ac = !cfg.kilitli;
       if (!await onayla(ac ? 'Telsiz kilitlensin mi? Öğrenciler mesajları okur ama yazamaz. Öğretmenler yazmaya devam eder.' : 'Telsizin kilidi açılsın mı? Öğrenciler yeniden yazabilir (tek tek sessize aldıklarınız sessizde kalır).')) return;
-      kb.disabled = true; kb.textContent = ac ? 'Kilitleniyor…' : 'Açılıyor…'; var r = null; try { r = await cfg.kilit(ac, (S.susL || []).map(function (x) { return String(x.no); })); } catch (e) { r = { ok: false, hata: 'bağlantı yok' }; }
+      kb.disabled = true; kb.textContent = ac ? 'Kilitleniyor…' : 'Açılıyor…'; var r = null; try { r = await cfg.kilit(ac); } catch (e) { r = { ok: false, hata: 'bağlantı yok' }; }
       kb.disabled = false; if (!r || !r.ok) { uyar((r && r.hata) || 'Yapılamadı'); kilitYaz(); return; } cfg.kilitli = ac; kilitYaz(); S.surum = -1; yukle(); };
-    if (sb_) sb_.onclick = async function () { var L = S.M.slice(); if (!L.length) { uyar('Silinecek mesaj yok.'); return; }
-      if (!await onayla('Telsizdeki ' + L.length + ' mesaj silinsin mi? Öğrencilerden ve öğretmenlerden kalkar.')) return;
-      sb_.disabled = true; sb_.textContent = 'Siliniyor…'; var son = L.reduce(function (a, m) { return Math.max(a, +m.id || 0); }, 0), hata = '';
-      for (var i = 0; i < L.length; i += 8) { var P_ = L.slice(i, i + 8).filter(function (m) { return !m.gizli; }).map(function (m) { return cfg.islem({ gizle: m.id, gizli: true }).catch(function () { return null; }); });
-        var R_ = await Promise.all(P_); R_.forEach(function (r) { if (!r || !r.ok) hata = (r && r.hata) || 'bazıları silinemedi'; }); }
-      var r2 = null; try { r2 = await cfg.temizle(son); } catch (e) { r2 = { ok: false, hata: 'bağlantı yok' }; }
-      sb_.disabled = false; sb_.textContent = 'Mesajları sil'; if (!r2 || !r2.ok) { uyar((r2 && r2.hata) || 'Silinemedi'); return; } if (hata) uyar('Bazı mesajlar öğrencilerden gizlenemedi: ' + hata);
-      cfg.temizId = son; S.M = []; S.son = null; S.surum = -1; akisCiz(); topCiz(); yukle(); };
+    if (sb_) sb_.onclick = async function () { var n = S.M.length;
+      if (!await onayla(n ? 'Telsizdeki bütün mesajlar (' + n + ') kalıcı olarak silinsin mi? Herkesin telsizinden kalkar, geri alınamaz.' : 'Telsizde mesaj görünmüyor. Yine de sunucudaki bütün telsiz mesajları silinsin mi?')) return;
+      sb_.disabled = true; sb_.textContent = 'Siliniyor…'; var r2 = null; try { r2 = await cfg.temizle(); } catch (e) { r2 = { ok: false, hata: 'bağlantı yok' }; }
+      sb_.disabled = false; sb_.textContent = 'Mesajları sil'; if (!r2 || !r2.ok) { uyar((r2 && r2.hata) || 'Silinemedi'); return; }
+      S.M = []; S.son = null; S.surum = -1; akisCiz(); topCiz(); yukle(); };   // K-879: sunucuda kalıcı silme
     var yb = ekran.querySelector('[data-tzyok]'); if (yb) yb.onclick = function () { otobusSayfa(benimOto() || +cfg.sayim.otobus || 0); };   // K-822: gezi başkanı
     if (P && cfg.sayim) topEl.onclick = function (e) { var b = e.target.closest('[data-tzob]'); if (b) { var o = +b.dataset.tzob; obSec(S.obSec === o ? 0 : o); } };   // K-848: dokun → o otobüsün telsizi; tekrar dokun → bütün gezi
     if (P) { ak.onclick = function (e) { if (e.target.closest('.tz-harita')) return; var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
