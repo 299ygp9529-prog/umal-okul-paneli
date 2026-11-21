@@ -603,10 +603,15 @@
     clearTimeout(tzDurum.z); tzDurum.z = setTimeout(() => tzDurum().catch(() => {}), 60000);
     let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_telsiz_benim')); } catch (e) { return; } if (!r || !r.ok) return;
     TZ.L = r.acik || []; TZ.H = r.hepsi || null; TZ.kurucu = !!r.kurucu;
+    tzVarlikKur();   // K-89x: telsiz açıkken panel açık olan her görevli telsizde 'açık' görünür (yalnız telsiz sayfasındayken değil)
     const imza = (TZ.kurucu ? 'k|' : '') + TZ.L.map(x => x.anahtar).join('|'); if (imza === TZ.imza) return; TZ.imza = imza;
     menuYaz(); if (document.body.classList.contains('tm-acik')) { const h = location.hash.slice(1); tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); }
     if (D.bolum === 'telsiz') telsizBolumu();
   }
+  function tzVarlikKur() { const g = TZ.L[TZ.i] || TZ.L[0];
+    if (!g || !window.UmalTelsizVarlik) { if (TZ.vr && !g) { TZ.vr.kapat(); TZ.vr = null; TZ.vrA = null; } return; }
+    if (TZ.vr && TZ.vrA === g.anahtar) return; if (TZ.vr) { TZ.vr.kapat(); TZ.vr = null; }
+    TZ.vrA = g.anahtar; kisiAdlariYukle().catch(() => {}).then(() => { if (TZ.vr || TZ.vrA !== g.anahtar) return; TZ.vr = window.UmalTelsizVarlik(sb, g.anahtar, { t: 'ogt', ad: KISI.get(String(D.eposta).toLowerCase()) || '', e: D.eposta }); }); }
   function tzKartHtml() { const g = TZ.L[0];
     return `<button type="button" class="tz-kart"><span class="tz-kik"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MENU_IK.telsiz}</svg></span><span class="tz-km"><b>Gezi Telsizi</b><small>${esc(g.ad || 'Gezi')} · gezideki herkes burada</small></span><span class="tz-kcanli"><i></i>CANLI</span></button>`; }
   async function telsizBolumu() {
@@ -635,8 +640,7 @@
     // K-879: Kurucu — telsizi kilitle (öğrenciler okur, yazamaz; sunucu reddeder) ve mesajları kalıcı sil
     const tzKilit = ac => r_('umal_gezi_telsiz_kilit', { p_anahtar: g.anahtar, p_kilit: !!ac });
     const tzTemizle = () => r_('umal_gezi_telsiz_temizle', { p_anahtar: g.anahtar });
-    if (TZ.vr) { TZ.vr.kapat(); TZ.vr = null; }
-    if (window.UmalTelsizVarlik) { const g_ = g; kisiAdlariYukle().catch(() => {}).then(() => { if (TZ.vr || TZ.L[TZ.i] !== g_) return; TZ.vr = window.UmalTelsizVarlik(sb, g_.anahtar, { t: 'ogt', ad: KISI.get(String(D.eposta).toLowerCase()) || '', e: D.eposta }); }); }   // K-867
+    tzVarlikKur();   // K-867
     TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
       kilitli: false, kilit: tzKilit, temizle: tzTemizle,   // K-879 (durum telsizin okumasından gelir)
       etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
