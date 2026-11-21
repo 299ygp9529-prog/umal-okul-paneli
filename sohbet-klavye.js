@@ -173,6 +173,21 @@
     ['pointerdown', 'mousedown'].forEach(function (o) { d.addEventListener(o, function (ev) {
       if (!cfg.gonder || !ev.target || !ev.target.closest) return; var g = ev.target.closest(cfg.gonder);
       if (g && etkin() && girdiMi(d.activeElement)) ev.preventDefault(); }, true); });
+    // Telefonda gönder düğmesine ilk dokunuşta klavye inip düğme yer değiştiriyor, mesaj ikinci dokunuşta gidiyordu.
+    // Yazı kutusu odaktayken düğmeye dokunuş doğrudan yakalanır: odak yerinde kalır, parmak kalkınca mesaj tek dokunuşta gider.
+    var gonT = null;
+    d.addEventListener('touchstart', function (ev) {
+      gonT = null; if (!cfg.gonder || !ev.target || !ev.target.closest || ev.touches.length !== 1) return;
+      var g = ev.target.closest(cfg.gonder); if (!g || g.disabled || !etkin() || !girdiMi(d.activeElement)) return;
+      if (ev.cancelable) ev.preventDefault(); gonT = { g: g, x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+    }, { capture: true, passive: false });
+    d.addEventListener('touchend', function (ev) {
+      var k = gonT; gonT = null; if (!k) return; var p = ev.changedTouches && ev.changedTouches[0]; if (!p) return;
+      var r = k.g.getBoundingClientRect(), pay = 14;
+      if (p.clientX < r.left - pay || p.clientX > r.right + pay || p.clientY < r.top - pay || p.clientY > r.bottom + pay) return;   // parmak düğmeden kaydı: gönderme
+      if (ev.cancelable) ev.preventDefault(); if (!k.g.disabled) k.g.click();
+    }, { capture: true, passive: false });
+    d.addEventListener('touchcancel', function () { gonT = null; }, { capture: true, passive: true });
     // odak
     d.addEventListener('focusin', function (ev) { if (!girdiMi(ev.target) || !etkin()) return; if (D.durum === 'aciliyor' || D.durum === 'acik') izle(900); else hazirla(); }, true);
     // odakta ama klavye kapalıyken (Android geri tuşu) yeniden dokunuldu: dokunuş tamamlandıktan sonra hazırlan (önce hazırlanırsa kutu parmağın altından kaçar)
