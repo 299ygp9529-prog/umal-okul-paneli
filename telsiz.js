@@ -139,7 +139,12 @@
   // cfg: { kap, personel, gezi:{ad, otobus, koltuk, ogrenci, ogretmen, acilis}, oku(sonra, surum), yaz(metin, duyuru), islem(veri), kisi(no), etkin(), cubuk, kapandi(), uyar(m), onayla(m) }
   w.UmalTelsiz = function (cfg) {
     stilKur();
-    var FOTO = {};
+    var FOTO = {}, PLC = {}, plOn = false;   // K-847: oturma planı önbelleği (otobüse dokununca anında açılsın)
+    function planOnYukle() { if (plOn || !cfg.plan || !P) return; plOn = true;
+      setTimeout(async function () { var y = S.yetki, liste = [];
+        for (var i = 1; i <= 20; i++) if (y && (y.tum || +y.otobus === i)) liste.push(i);
+        for (var j = 0; j < liste.length; j++) { if (S.olu) return; if (PLC[liste[j]]) continue; await new Promise(function (ok) { (w.requestIdleCallback || function (f) { setTimeout(f, 300); })(ok, { timeout: 2000 }); });
+          try { var x = await cfg.plan(liste[j]); if (x && x.ok) PLC[liste[j]] = x; else if (x && x.hata && /yetki|bulunamad/i.test(x.hata)) { if (/bulunamad/.test(x.hata)) break; } } catch (e) {} } }, 2500); }
     var BEK = [], bekNo = 0;
     var S = { M: [], son: 0, surum: -1, sessiz: false, susL: [], acik: true, zam: null, calisiyor: false, duyuru: false, gonderiyor: false, olu: false };
     var P = !!cfg.personel, R = cfg.rol === 'rehber', uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
@@ -186,9 +191,9 @@
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; } topEl.style.display = '';
     }
     function otobusSayfa(o) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
-      var D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null;
+      var D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null, PL0 = PLC[o] || null;
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-      var kok = null, kapat_ = null, PL = null, secK = null, sek = (S.sayimlar || []).some(function (x) { return x.otobus === o && !x.bitti; }) || !cfg.plan ? 'say' : 'plan';
+      var kok = null, kapat_ = null, PL = PL0, secK = null, sek = (S.sayimlar || []).some(function (x) { return x.otobus === o && !x.bitti; }) || !cfg.plan ? 'say' : 'plan';
       var planCiz = function () { var bas = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml();
         if (!PL) { kok.innerHTML = bas + '<div class="tz-kdur">Yükleniyor…</div>'; return; }
         if (!PL.ok) { kok.innerHTML = bas + '<div class="tz-kdur">' + esc(PL.hata || 'Plan alınamadı') + '</div>'; return; }
@@ -198,9 +203,9 @@
         kok.querySelectorAll('[data-tzk]').forEach(function (b) { b.onclick = function () { secK = +b.dataset.tzk; planCiz(); }; }); sekBagla(); };
       var sekHtml = function () { return cfg.plan ? '<div class="tz-psek"><button type="button" data-psek="plan" class="' + (sek === 'plan' ? 'secili' : '') + '">Oturma planı</button><button type="button" data-psek="say" class="' + (sek === 'say' ? 'secili' : '') + '">Sayım</button></div>' : ''; };
       var sekBagla = function () { kok.querySelectorAll('[data-psek]').forEach(function (b) { b.onclick = function () { sek = b.dataset.psek; if (sek === 'plan') { planCiz(); if (!PL) planYukle(); } else { ciz(); yenile(); } }; }); };
-      var planYukle = async function () { try { PL = await cfg.plan(o); } catch (e) { PL = { ok: false, hata: 'bağlantı yok' }; } if (sek === 'plan' && kok) planCiz(); };
+      var planYukle = async function () { var x = null; try { x = await cfg.plan(o); } catch (e) { x = { ok: false, hata: 'bağlantı yok' }; } if (x && x.ok) PLC[o] = x; else if (PL && PL.ok) return; var deg = !PL || !x || PL.html !== x.html; PL = x; if (deg && sek === 'plan' && kok && !kapali) planCiz(); };
       var ciz = function () { if (!kok) return; if (sek === 'plan') return planCiz(); var s = D && D.sayim, K = (D && D.kisiler) || [], ek = K.filter(function (k) { return !k.var; }), gel = K.filter(function (k) { return k.var; });
-        var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" src="' + esc(fotoSrc(k.foto)) + '">' : esc(basHarf(a))) + '</div>'; };
+        var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" decoding="async" src="' + esc(fotoSrc(k.foto)) + '">' : esc(basHarf(a))) + '</div>'; };
         kok.innerHTML = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml() +
           (!D ? '<div class="tz-kdur">Yükleniyor…</div>' :
           (s && !s.bitti ? '<div class="tz-sdur"><span class="tz-sbar"><i style="width:' + Math.round(100 * gel.length / Math.max(1, K.length)) + '%"></i></span><b>' + gel.length + '/' + K.length + '</b> geldi</div>' :
@@ -218,7 +223,9 @@
       };
       var yenile = async function () { var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { D = r; if (sek === 'say') ciz(); } };
       kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); } }); });
-      ciz(); if (sek === 'plan') planYukle(); yenile(); zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden && sek === 'say') yenile(); }, 4000);
+      ciz();   // önbellekte plan varsa anında; yenisi arka planda (pencerenin açılışı takılmasın)
+      setTimeout(function () { if (kapali) return; if (sek === 'plan') planYukle(); else yenile(); }, 260);
+      zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden && sek === 'say') yenile(); }, 4000);
     }
     function sayCiz() {   // öğrenci: kendi otobüsünün açık sayımı — büyük "Otobüsteyim" ya da "Sayıldın"
       if (P || R || !sayEl) return; var s = S.sayim;
@@ -372,7 +379,7 @@
       var degisti = r.bastan || L.length || S.surum !== r.surum; S.surum = r.surum;
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (R) { if (r.ozet) cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); }
-      else if (P) { if (r.yetki) S.yetki = r.yetki; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
+      else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();

@@ -579,7 +579,7 @@
     const kisi = {}; (r.kisiler || []).forEach(x => { x.turAd = TA[x.tur] || 'Görevli'; kisi[x.k] = x; });
     const bas = ad => String(ad || '?').trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 3).toLocaleUpperCase('tr');
     const fs = f => !f ? '' : /^(data:|https?:)/.test(f) ? f : 'data:image/jpeg;base64,' + f;
-    const foto = (x, n) => `<span class="tz-pf" style="--c:${RN[x.tur] || '#5cb8ff'}">${x.foto ? `<img src="${esc(fs(x.foto))}" alt="" loading="lazy">` : esc(bas(x.ad))}</span>`;
+    const foto = (x, n) => `<span class="tz-pf" style="--c:${RN[x.tur] || '#5cb8ff'}">${x.foto ? `<img src="${esc(fs(x.foto))}" alt="" decoding="async">` : esc(bas(x.ad))}</span>`;
     const kap = new Set((r.kapali || []).map(Number)), ayr = +r.ayrilan || 2;
     const P = gzPlan(r.kapasite);
     const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
