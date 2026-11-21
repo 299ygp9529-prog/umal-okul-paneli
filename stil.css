@@ -2785,3 +2785,5 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
   .gz-izgara > .gz-havuz .gz-liste { max-height: 320px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-content: start; }
   .gz-k .foto { width: 30px; height: 30px; min-width: 30px; }
 }
+.gz-kkilit { width: 100%; margin: 12px 0 0; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.gz-kkilit svg { width: 18px; height: 18px; }

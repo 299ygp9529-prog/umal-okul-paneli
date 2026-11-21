@@ -5058,7 +5058,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-825: boş koltuk penceresinin üstünde kim oturacak: Öğrenci · Öğretmen · İdareci · Rehber · Belediye
     const KS_TUR = [['ogr', 'Öğrenci'], ['ogt', 'Öğretmen'], ['idr', 'İdareci'], ['reh', 'Rehber'], ['bel', 'Belediye']];
     const ksekHtml = a => `<div class="gz-ksek" role="tablist">${KS_TUR.map(([t, ad]) => `<button type="button" role="tab" aria-selected="${t === a}" class="${t === a ? 'secili' : ''}" data-ksek="${t}">${ad}</button>`).join('')}</div>`;
-    const ksekBagla = (oid, k) => $('#pencere').querySelectorAll('[data-ksek]').forEach(b => b.onclick = () => { const t = b.dataset.ksek; if (t === 'ogr') ogrSec(oid, k); else onKisi(oid, k, t); });
+    const ksekBagla = (oid, k) => { $('#pencere').querySelectorAll('[data-ksek]').forEach(b => b.onclick = () => { const t = b.dataset.ksek; if (t === 'ogr') ogrSec(oid, k); else onKisi(oid, k, t); });
+      const kl = $('#pencere').querySelector('[data-kkilit]'); if (kl) kl.onclick = () => { const L = G.kapali[oid] || (G.kapali[oid] = []); if (!L.includes(k)) L.push(k); $('#pencere').classList.add('gizli'); kaydet(); ciz(); atlasOnay('Koltuk kilitlendi', k + '. koltuk boş kalır'); }; };   // K-831: boş koltuğu kilitle
+    const kilitDug = (oid, k) => koltukta(oid, k) ? '' : `<button type="button" class="ikincil gz-kkilit" data-kkilit="1">${KY_IK.kilit}Bu koltuğu kilitle · boş kalsın</button>`;
     // K-818: öndeki boş koltuğa dokununca kişi seçilir; öğretmen listeden tek dokunuşla geziye kaydedilir ve koltuğa oturur
     const onKisi = async (oid, k, turZ) => {
       const tur = turZ || onTur(k) || 'ogt', o_ = otoBul(oid), okulL = tur === 'ogt' || tur === 'idr'; if (okulL) await programYukle().catch(() => {});
@@ -5083,7 +5085,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       };
       pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${o_ ? o_.no + '. otobüs · ' : ''}${k}. koltuk</h2>${ksekHtml(tur)}<div class="soluk kucuk">Dokunduğunuz kişi geziye ${esc((GZ_TUR[tur] || 'görevli').toLocaleLowerCase(tr))} olarak kaydedilir ve buraya oturur.</div>
         <input id="gzOkAra" class="gk2-kp-ara" placeholder="${okulL ? 'Ad yazın, okul listesinden seçin' : 'Ad soyad'}" autocomplete="off" enterkeyhint="search">${!okulL ? '<input id="gzOkTel" class="gk2-kp-ara" placeholder="Telefon (isteğe bağlı)" inputmode="tel" value="05" style="margin-top:6px">' : ''}
-        <div class="gk2-kp-liste" id="gzOkL" style="max-height:52vh;overflow:auto"></div>
+        <div class="gk2-kp-liste" id="gzOkL" style="max-height:48vh;overflow:auto"></div>${kilitDug(oid, k)}
         ${k <= GZ_AYRILAN ? '' : '<!--'}<button id="gzOkTur" type="button" style="margin-top:12px;background:none;border:0;padding:4px 0;color:var(--soluk);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer">Öndeki koltuğun türünü değiştir (${esc(ON_AD[onTur(k)] || 'Görevli')})</button>${k <= GZ_AYRILAN ? '' : '-->'}</div>`);
       ksekBagla(oid, k);
       cizK(); const g = $('#gzOkAra'); g.oninput = () => { q = g.value; cizK(); };
@@ -5112,7 +5114,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       };
       pencereAc(`<div class="gk2-kp"><h2 style="margin-top:0">${o_ ? o_.no + '. otobüs · ' : ''}${k}. koltuk</h2>${ksekHtml('ogr')}<div class="soluk kucuk">Bekleyen öğrenciler aşağıda. Başka koltuktaki birini buraya almak için adını yazın.</div>
         <input id="gzOsAra" class="gk2-kp-ara" placeholder="Öğrenci ara (ad, sınıf, numara)" autocomplete="off" enterkeyhint="search">
-        <div class="gk2-kp-liste" id="gzOsL" style="max-height:52vh;overflow:auto"></div></div>`);
+        <div class="gk2-kp-liste" id="gzOsL" style="max-height:48vh;overflow:auto"></div>${kilitDug(oid, k)}</div>`);
       ksekBagla(oid, k); cizL(); const g = $('#gzOsAra'); g.oninput = () => { q = g.value; cizL(); };
       g.onkeydown = e => { if (e.key === 'Enter') { const B = $('#gzOsL').querySelectorAll('button'); if (B.length === 1) { e.preventDefault(); B[0].click(); } } };
       if (window.matchMedia('(pointer:fine)').matches) g.focus();
