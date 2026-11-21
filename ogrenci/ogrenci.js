@@ -1399,6 +1399,12 @@
     k.classList.remove('gizli'); if (k.dataset.h === h_) return; k.dataset.h = h_; k.innerHTML = h_;   // K-803: değişmediyse yeniden çizilmez
     k.querySelector('[data-seri="seri"]').onclick = () => { if (soAktif()) { const b = document.createElement('button'); b.dataset.git = 'soru'; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } } else plAc(); };
     k.querySelector('[data-seri="hedef"]').onclick = () => plAc(); }
+  // K-89x: masaüstünde 3 sütunlu ana sayfada son satırdaki tek/çift kutu satırı doldurur (yarım boşluk kalmaz)
+  function izgDoldur(el) { if (!el) return; const L = [...el.children].filter(c => !c.classList.contains('genis') && c.offsetParent !== null);
+    el.querySelectorAll(':scope > .iz-2, :scope > .iz-3').forEach(c => c.classList.remove('iz-2', 'iz-3')); const r = L.length % 3, son = L[L.length - 1];
+    if (son && r === 1) son.classList.add('iz-3'); else if (son && r === 2) son.classList.add('iz-2'); }
+  ['kutular', 'rhKutular'].forEach(id => { const el = document.getElementById(id); if (!el) return; let z = 0; const f = () => { cancelAnimationFrame(z); z = requestAnimationFrame(() => izgDoldur(el)); };
+    try { new MutationObserver(m => { if (m.some(x => x.type === 'childList')) f(); }).observe(el, { childList: true }); } catch (e) {} f(); });
   function zilCiz() { const z = $('#zilUst'); if (!z) return; z.classList.toggle('gizli', !S.kod); const n = (BL && BL.n) || 0; const d = z.querySelector('.zil-nokta'); if (d) d.classList.toggle('gizli', !n); }
   if ($('#zilUst')) $('#zilUst').onclick = () => blAc();
   const plBugun = () => { if (!PL.veri && !RH.plan) return null; const G = gunGorevleri(iso(pzt(simdi())), gunIdx(simdi())); return { n: G.length, ok: G.filter(x => puan(x) > 0).length }; };
