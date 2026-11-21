@@ -30,9 +30,11 @@
     '.tz-gz .tz-gm{min-width:0;flex:1}.tz-gz b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tz-gz small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffe14d;font-size:12px;margin-top:2px;text-shadow:0 0 8px rgba(255,225,77,.4)}',
     '.tz-canli{display:inline-flex;align-items:center;gap:6px;background:rgba(255,77,94,.14);border:1px solid rgba(255,77,94,.5);color:#ff8a95;font-size:11px;font-weight:800;letter-spacing:.06em;padding:4px 9px;border-radius:999px;flex:none}',
     '.tz-yokb{height:34px;border-radius:999px;border:1px solid rgba(94,224,138,.55);background:rgba(94,224,138,.12);color:#7ee8a2;display:inline-flex;align-items:center;gap:5px;padding:0 11px 0 9px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex:none}',
-    '.tz-c.sec{border:1.5px solid #f2c14e!important;background:rgba(242,193,78,.16)!important;box-shadow:0 0 0 1px rgba(242,193,78,.35)}.tz-c.sec b{color:#f2c14e}',
-    '@media (max-width:760px){body.klavye-acik .tz-ekran .tz-gz,body.klavye-acik .tz-ekran .tz-serit,body.klavye-acik .tz-obs1{display:none!important}body.klavye-acik .tz-obbant{margin:0;border-radius:0;border-width:0 0 1px;padding:6px 10px}}.tz-obs1{flex-wrap:nowrap!important}.tz-obs1 b{white-space:nowrap}',
-    '.tz-obbant{margin:6px 0 2px;padding:8px 10px;border-radius:14px;background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.45);display:flex;flex-direction:column;gap:6px;flex:none}.tz-obs1,.tz-obs2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.tz-obs1 b{display:flex;align-items:center;gap:6px;color:#f2c14e;font-size:14px;margin-right:auto}',
+    '.tz-c.ben{border-color:#22e8ff;background:rgba(34,232,255,.12);box-shadow:0 0 10px rgba(34,232,255,.45),inset 0 0 6px rgba(34,232,255,.15)}.tz-c.ben b{color:#7ff6ff}.tz-c.ben span{color:#dffcff;text-shadow:0 0 8px rgba(34,232,255,.6)}.tz-c.tam span{color:#7dffb0}',
+    '.tz-c.sec{border-width:2px!important;background:rgba(242,193,78,.24)!important;box-shadow:0 0 0 2px rgba(242,193,78,.25)}.tz-c.ben.sec{background:rgba(34,232,255,.22)!important;box-shadow:0 0 14px rgba(34,232,255,.6)}',
+    '@media (max-width:760px){body.klavye-acik .tz-ekran .tz-gz,body.klavye-acik .tz-ekran .tz-serit{display:none!important}body.klavye-acik .tz-obbant{margin:0;border-radius:0;border-width:0 0 1px}}.tz-obs1{flex-wrap:nowrap!important}.tz-obs1 b{white-space:nowrap}',
+    '.tz-obbant{margin:6px 0 2px;padding:5px 6px 5px 10px;border-radius:12px;background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.45);flex:none}.tz-obs1{display:flex;align-items:center;gap:5px}.tz-obs1 b{display:flex;align-items:center;gap:5px;color:#f2c14e;font-size:13.5px}.tz-obb-bos{flex:1}',
+    '.tz-seg{display:flex;padding:2px;border-radius:9px;background:#0b1424;border:1px solid #2a4468}.tz-obbant .tz-seg button{height:26px;border:0;background:none;padding:0 9px;border-radius:7px;font-size:12px;color:#9db0cf}.tz-obbant .tz-seg button.secili{background:#f2c14e;color:#2a1d00}.tz-obbant button.ik{width:32px;padding:0;display:grid;place-items:center}',
     '.tz-obbant button{height:30px;padding:0 10px;border-radius:9px;border:1px solid #2a4468;background:#0b1424;color:#cfe0ff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}.tz-obbant button.x{color:#ffb3b3;border-color:#5a2f3a}.tz-obs2 span{font-size:12px;color:#9db0cf}.tz-obbant button.secili{background:#f2c14e;border-color:#f2c14e;color:#2a1d00}',
     '.tz-c.kilit{opacity:.42;cursor:default;border-style:dashed}.tz-c.yok{border-style:solid;border-color:#2a4468;background:rgba(127,246,255,.04)}.tz-c.yok span{color:#9db0cf}',
     '.tz-psek{display:flex;gap:6px;margin:4px 0 12px}.tz-psek button{flex:1;height:40px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-psek button.secili{background:#22e8ff;border-color:#22e8ff;color:#06202a}',
@@ -173,8 +175,10 @@
       var y = alt.querySelector('textarea'); if (y) y.placeholder = phYaz();
       if (!o) { obEl.style.display = 'none'; obEl.innerHTML = ''; return; }
       obEl.style.display = '';
-      obEl.innerHTML = '<div class="tz-obs1"><b>' + SVG(IK.otobus, 15, 2.2) + 'Otobüs ' + o + '</b>' + (cfg.plan ? '<button type="button" data-obp="plan">Oturma planı</button>' : '') + '<button type="button" data-obp="say">Sayım</button><button type="button" class="x" data-obx aria-label="Bütün gezi">✕ Tümü</button></div>' +
-        '<div class="tz-obs2"><span>Yazdıkların</span><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">Yalnız Otobüs ' + o + '</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></div>';
+      var IKP = '<path d="M7 4h7a2 2 0 0 1 2 2v7H9a2 2 0 0 1-2-2z"/><path d="M5 11v4a2 2 0 0 0 2 2h11"/><path d="M8 17v3M16 17v3"/>', IKS = '<path d="M9 4h6v3H9z"/><path d="M8 5H6v15h12V5h-2"/><path d="M9 13l2 2 4-4"/>';
+      obEl.innerHTML = '<div class="tz-obs1"><b>' + SVG(IK.otobus, 14, 2.2) + 'Oto ' + o + '</b><span class="tz-seg"><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">Bu otobüse</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></span><i class="tz-obb-bos"></i>' +
+        (cfg.plan ? '<button type="button" class="ik" data-obp="plan" title="Oturma planı" aria-label="Oturma planı">' + SVG(IKP, 17, 2) + '</button>' : '') + '<button type="button" class="ik" data-obp="say" title="Sayım" aria-label="Sayım">' + SVG(IKS, 17, 2) + '</button><button type="button" class="ik x" data-obx title="Bütün gezi" aria-label="Bütün gezi">' + SVG('<path d="M6 6l12 12M18 6L6 18"/>', 15, 2.4) + '</button></div>';
+
       obEl.querySelectorAll('[data-obp]').forEach(function (b) { b.onclick = function () { otobusSayfa(o, b.dataset.obp); }; });
       obEl.querySelector('[data-obx]').onclick = function () { obSec(0); };
       obEl.querySelectorAll('[data-obh]').forEach(function (b) { b.onclick = function () { S.obHerkes = b.dataset.obh === '1'; obBantCiz(); }; }); }
@@ -202,16 +206,12 @@
     function toplanmalar() { var b = bugun(); return S.M.filter(function (m) { return m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b); }); }
     function seritCiz() {   // personel: altı otobüs tek şeritte — sayım (37/40, tam) ya da toplanma saati; dokununca otobüs sayfası
       var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), SY = S.sayimlar || [];
+      var ben = benimOto ? +benimOto() || 0 : 0;
       var izin = function (o) { var y = S.yetki; return R || !y || y.tum || +y.otobus === o; };   // K-845: Kurucu ve gezi sorumlusu bütün otobüsler, diğerleri kendi otobüsü
       var html = L.map(function (o) { if (!izin(o)) { var mk = null; for (var j = T.length - 1; j >= 0; j--) { var Lj = obListe(T[j].konum); if (!Lj || Lj.indexOf(o) >= 0) { mk = T[j]; break; } } return '<span class="tz-c kilit" title="Bu otobüs başka görevlide"><b>OTO ' + o + '</b><span>' + (mk && dkHesap(mk.konum) >= -30 ? esc(mk.konum.saat) : '—') + '</span></span>'; }
-        var m = null; for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-        if (m && dkHesap(m.konum) < -30) m = null;
         var sy = SY.filter(function (x) { return x.otobus === o; })[0], tazeTam = sy && sy.bitti && (Date.now() - new Date(sy.bitti)) < 90 * 60000;
-        if (sy && !sy.bitti) return '<button type="button" class="tz-c say" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + sy.gelen + '/' + sy.toplam + '</span></button>';
-        if (tazeTam) return '<button type="button" class="tz-c tam" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>✓ ' + sy.toplam + '</span></button>';
-        if (!m) return '<button type="button" class="tz-c yok" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>—</span></button>';
-        var dk = dkHesap(m.konum);
-        return '<button type="button" class="tz-c' + (dk <= 10 && dk >= -5 ? ' yakin' : dk < -5 ? ' gecti' : '') + '" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + esc(m.konum.saat) + '</span></button>'; }).join('');
+        var top = sy && sy.toplam != null ? sy.toplam : (S.obsay && S.obsay[o] != null ? S.obsay[o] : null), gel = sy && !sy.bitti ? sy.gelen : tazeTam ? sy.toplam : 0;   // K-849: hepsi gelen/toplam
+        return '<button type="button" class="tz-c' + (o === ben ? ' ben' : '') + (tazeTam ? ' tam' : '') + '" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + (tazeTam ? '✓ ' : '') + gel + '/' + (top == null ? '–' : top) + '</span></button>'; }).join('');
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; if (S.obSec) obBantCiz(); } topEl.style.display = '';
     }
     function otobusSayfa(o, sek0) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
@@ -404,7 +404,7 @@
       var degisti = r.bastan || L.length || S.surum !== r.surum; S.surum = r.surum;
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (R) { if (r.ozet) cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); }
-      else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
+      else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } if (r.obsay) S.obsay = r.obsay; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();
