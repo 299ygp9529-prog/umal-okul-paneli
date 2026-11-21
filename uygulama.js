@@ -567,7 +567,27 @@
         isaret: (id, no, v) => r_('umal_gezi_sayim_isaret', { p_sayim: id, p_no: no, p_var: v }), ara: (id, no) => r_('umal_gezi_sayim_ara', { p_sayim: id, p_no: no }) },   // K-817
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
+      plan: o => tzPlanYukle(g.anahtar, o),   // K-845: fotoğraflı oturma planı
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
+  }
+  // K-845: telsizde otobüse dokununca oturma planı (yalnız görmek için; değişiklik Gezi › Otobüsler'de)
+  async function tzPlanYukle(anahtar, o) {
+    const { data: r, error } = await sb.rpc('umal_gezi_telsiz_plan', { p_anahtar: anahtar, p_otobus: o });
+    if (error) return { ok: false, hata: /does not exist|could not find/i.test(error.message || '') ? 'Oturma planı henüz hazır değil.' : hataYaz(error) };
+    if (!r || !r.ok) return { ok: false, hata: (r && r.hata) || 'Plan alınamadı' };
+    const TA = { ogr: 'Öğrenci', ogt: 'Öğretmen', idr: 'İdareci', reh: 'Rehber', bel: 'Belediye', sof: 'Şoför' }, RN = { ogr: '#5cb8ff', ogt: '#ffb347', idr: '#c792ff', reh: '#5fe3a1', bel: '#ff8a8a' };
+    const kisi = {}; (r.kisiler || []).forEach(x => { x.turAd = TA[x.tur] || 'Görevli'; kisi[x.k] = x; });
+    const bas = ad => String(ad || '?').trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 3).toLocaleUpperCase('tr');
+    const fs = f => !f ? '' : /^(data:|https?:)/.test(f) ? f : 'data:image/jpeg;base64,' + f;
+    const foto = (x, n) => `<span class="tz-pf" style="--c:${RN[x.tur] || '#5cb8ff'}">${x.foto ? `<img src="${esc(fs(x.foto))}" alt="" loading="lazy">` : esc(bas(x.ad))}</span>`;
+    const kap = new Set((r.kapali || []).map(Number)), ayr = +r.ayrilan || 2;
+    const P = gzPlan(r.kapasite);
+    const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
+      if (x) return `<button type="button" class="tz-pk" data-tzk="${s.n}"><i>${s.n}</i>${foto(x)}<em>${esc(x.tur === 'ogr' ? String(x.ad || '').split(/\s+/)[0] : bas(x.ad))}</em></button>`;
+      return `<span class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}"><i>${s.n}</i>${s.n <= ayr ? '<em>Görevli</em>' : ''}</span>`; };
+    const ogr = (r.kisiler || []).filter(x => x.tur === 'ogr').length, gor = (r.kisiler || []).length - ogr;
+    const html = `<div class="tz-plan"><div class="tz-pon"><span>Ön · şoför${r.plaka ? ' · ' + esc(r.plaka) : ''}</span><span>${ogr} öğrenci · ${gor} görevli</span></div>${P.map(row => `<div class="tz-psira">${row.map(kh).join('')}</div>`).join('')}</div>`;
+    return { ok: true, kisi, foto, html };
   }
   // K-827: Gezi tek yer — İlan · Kayıt · Belgeler · Otobüsler · Telsiz; Otobüsler ve Telsiz sayfalarının üstünde de aynı adım şeridi
   function gzAdimBar(aktif) { const canli = TZ.L.length > 0;
@@ -1455,7 +1475,7 @@
       : hs ? ['Hafta sonu', sec(['Kahveni yavaş iç; kâğıtlar pazartesi de orada olacak.', 'Bugün zil çalmıyor, sadece çaydanlık.', 'Yoklama yok, nöbet yok. Sen ve sıcak bir kahve.', 'Kırmızı kalem dinleniyor, sen de dinlen.', 'Tahtalar kapalı, Atlas bekçide. İyi hafta sonları!'])]
       : ['Bugün dersin yok', sec(['Programında bugün ders görünmüyor. Bir kahve iyi gider.', 'Boş gün! Hak edilmiş bir mola.', 'Bugün tebeşir tozu yok; biraz nefes al.', 'Dersin yok ama Atlas burada; bir şey lazım olursa yaz.'])];
     const alt = t && t.bas !== t.bit ? kisa(t.bas) + ' – ' + kisa(t.bit) : t ? kisa(t.bas) : '';
-    return `<div class="kart gb-kart"><img class="gb-atlas" src="atlas-kafa.png" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(bas)}</b><p>${esc(metin)}</p>${alt ? `<small>${esc(alt)}</small>` : ''}${ek ? `<small>${ek}</small>` : ''}</div><span class="gb-ik">${GB_IK}</span></div>`;
+    return `<div class="kart gb-kart"><img class="gb-atlas" src="atlas-maskot-foto.jpg" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(bas)}</b><p>${esc(metin)}</p>${alt ? `<small>${esc(alt)}</small>` : ''}${ek ? `<small>${ek}</small>` : ''}</div><span class="gb-ik">${GB_IK}</span></div>`;
   }
   function foto(no, ad) {
     const s = !FOTO_GIZLI.has(no) && D.fotolar[no];

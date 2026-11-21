@@ -2800,7 +2800,7 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .gz-k b.gz-tam { max-height: 2.2em; overflow: hidden; }
 /* K-842: ders olmayan gün / tatil kartı — sıcak, sade, animasyonsuz */
 .gb-kart { display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 14px; border-radius: 18px; background: linear-gradient(135deg, rgba(255,196,107,.13), rgba(255,122,61,.05) 55%, rgba(34,232,255,.05)); border: 1px solid rgba(255,196,107,.38); }
-.gb-kart .gb-atlas { width: 54px; height: 54px; flex: none; border-radius: 50%; background: rgba(255,255,255,.06); }
+.gb-kart .gb-atlas { width: 58px; height: 58px; flex: none; border-radius: 50%; object-fit: cover; object-position: 50% 22%; box-shadow: 0 0 0 2px rgba(255,196,107,.55); }
 .gb-kart .gb-m { flex: 1; min-width: 0; }
 .gb-kart .gb-m b { display: block; font-size: 17px; color: #ffd68a; margin-bottom: 3px; }
 .gb-kart .gb-m p { margin: 0; font-size: 14.5px; line-height: 1.45; color: #e7eefc; }

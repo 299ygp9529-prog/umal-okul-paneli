@@ -30,6 +30,12 @@
     '.tz-gz .tz-gm{min-width:0;flex:1}.tz-gz b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tz-gz small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffe14d;font-size:12px;margin-top:2px;text-shadow:0 0 8px rgba(255,225,77,.4)}',
     '.tz-canli{display:inline-flex;align-items:center;gap:6px;background:rgba(255,77,94,.14);border:1px solid rgba(255,77,94,.5);color:#ff8a95;font-size:11px;font-weight:800;letter-spacing:.06em;padding:4px 9px;border-radius:999px;flex:none}',
     '.tz-yokb{height:34px;border-radius:999px;border:1px solid rgba(94,224,138,.55);background:rgba(94,224,138,.12);color:#7ee8a2;display:inline-flex;align-items:center;gap:5px;padding:0 11px 0 9px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex:none}',
+    '.tz-c.kilit{opacity:.42;cursor:default;border-style:dashed}.tz-c.yok{border-style:solid;border-color:#2a4468;background:rgba(127,246,255,.04)}.tz-c.yok span{color:#9db0cf}',
+    '.tz-psek{display:flex;gap:6px;margin:4px 0 12px}.tz-psek button{flex:1;height:40px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-psek button.secili{background:#22e8ff;border-color:#22e8ff;color:#06202a}',
+    '.tz-pip{font-size:12.5px;color:#8fa6c8;text-align:center;margin:0 0 8px}.tz-pkart{display:flex;gap:12px;align-items:center;padding:10px;border-radius:14px;background:#0f1d33;border:1px solid #2a4a74;margin-bottom:10px}.tz-pkart b{display:block;font-size:16px}.tz-pkart small{display:block;color:#9db0cf;font-size:12.5px}.tz-ptel{display:inline-block;margin-top:6px;padding:7px 12px;border-radius:10px;background:#22e8ff;color:#06202a;font-weight:800;font-size:13px;text-decoration:none}',
+    '.tz-plan{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:20px 20px 12px 12px;border:1.5px solid #2a4a74;background:#0d192c}.tz-pon{display:flex;justify-content:space-between;font-size:10.5px;color:#8fa6c8;margin:0 4px 4px}.tz-psira{display:grid;grid-template-columns:1fr 1fr 10px 1fr 1fr;gap:4px}',
+    '.tz-pk{height:64px;border-radius:10px;border:1px solid #24406a;background:#0f1d33;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;padding:12px 2px 3px;font:inherit;min-width:0;cursor:pointer}.tz-pk i{position:absolute;top:2px;left:5px;font-style:normal;font-size:9px;color:#6f86a8}.tz-pk em{font-style:normal;font-size:9.5px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tz-pk.bos{border-style:dashed;cursor:default}.tz-pk.kap{background:repeating-linear-gradient(135deg,#0c1729 0 6px,#16233a 6px 12px);border-style:dashed;cursor:default}.tz-pk.sec{outline:2px solid #22e8ff}',
+    '.tz-pf{width:30px;height:30px;min-width:30px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#1b2f4f;color:#cfe0ff;font-size:9.5px;font-weight:800;box-shadow:0 0 0 2px var(--c,#5cb8ff)}.tz-pf img{width:100%;height:100%;object-fit:cover}.tz-pkart .tz-pf{width:56px;height:56px;min-width:56px;font-size:16px}',
     '.tz-kapa{height:36px;border-radius:999px;gap:5px;padding:0 12px 0 9px !important;font:inherit;font-size:13px;font-weight:700;display:inline-flex !important;align-items:center;border:1px solid rgba(255,107,107,.5);background:rgba(255,107,107,.08);color:#ff8a95;display:grid;place-items:center;flex:none;cursor:pointer;padding:0}',
     '.tz-canli i{width:7px;height:7px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 8px #ff4d5e;animation:tzNabiz 1.6s ease-in-out infinite}.tz-canli.kapali{background:rgba(159,178,207,.12);border-color:#2a4468;color:#9fb2cf}.tz-canli.kapali i{background:#6f819c;box-shadow:none;animation:none}',
     '@keyframes tzNabiz{50%{opacity:.35}}',
@@ -167,7 +173,9 @@
     function toplanmalar() { var b = bugun(); return S.M.filter(function (m) { return m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b); }); }
     function seritCiz() {   // personel: altı otobüs tek şeritte — sayım (37/40, tam) ya da toplanma saati; dokununca otobüs sayfası
       var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), SY = S.sayimlar || [];
-      var html = L.map(function (o) { var m = null; for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
+      var izin = function (o) { var y = S.yetki; return R || !y || y.tum || +y.otobus === o; };   // K-845: Kurucu ve gezi sorumlusu bütün otobüsler, diğerleri kendi otobüsü
+      var html = L.map(function (o) { if (!izin(o)) { var mk = null; for (var j = T.length - 1; j >= 0; j--) { var Lj = obListe(T[j].konum); if (!Lj || Lj.indexOf(o) >= 0) { mk = T[j]; break; } } return '<span class="tz-c kilit" title="Bu otobüs başka görevlide"><b>OTO ' + o + '</b><span>' + (mk && dkHesap(mk.konum) >= -30 ? esc(mk.konum.saat) : '—') + '</span></span>'; }
+        var m = null; for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
         if (m && dkHesap(m.konum) < -30) m = null;
         var sy = SY.filter(function (x) { return x.otobus === o; })[0], tazeTam = sy && sy.bitti && (Date.now() - new Date(sy.bitti)) < 90 * 60000;
         if (sy && !sy.bitti) return '<button type="button" class="tz-c say" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + sy.gelen + '/' + sy.toplam + '</span></button>';
@@ -180,10 +188,20 @@
     function otobusSayfa(o) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
       var D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null;
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-      var kok = null, kapat_ = null;
-      var ciz = function () { if (!kok) return; var s = D && D.sayim, K = (D && D.kisiler) || [], ek = K.filter(function (k) { return !k.var; }), gel = K.filter(function (k) { return k.var; });
+      var kok = null, kapat_ = null, PL = null, secK = null, sek = (S.sayimlar || []).some(function (x) { return x.otobus === o && !x.bitti; }) || !cfg.plan ? 'say' : 'plan';
+      var planCiz = function () { var bas = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml();
+        if (!PL) { kok.innerHTML = bas + '<div class="tz-kdur">Yükleniyor…</div>'; return; }
+        if (!PL.ok) { kok.innerHTML = bas + '<div class="tz-kdur">' + esc(PL.hata || 'Plan alınamadı') + '</div>'; return; }
+        var k = secK != null && PL.kisi[secK];
+        kok.innerHTML = bas + (k ? '<div class="tz-pkart">' + PL.foto(k, 56) + '<div><b>' + esc(buyukHarf(k.ad || '')) + '</b><small>' + esc(k.tur === 'ogr' ? (k.sinif || '') + (k.no ? ' · No ' + k.no : '') : k.turAd) + ' · ' + secK + '. koltuk</small>' + (k.tel ? '<a class="tz-ptel" href="tel:' + esc(String(k.tel).replace(/\s+/g, '')) + '">' + (k.tur === 'ogr' ? 'Veliyi ara · ' : 'Ara · ') + esc(k.tel) + '</a>' : '<small>' + (k.tur === 'ogr' ? 'Veli telefonu girilmemiş' : '') + '</small>') + '</div></div>' : '<div class="tz-pip">Bir koltuğa dokunun: kim olduğu ve telefonu</div>') + PL.html;
+        var sx = secK != null && kok.querySelector('[data-tzk="' + secK + '"]'); if (sx) sx.classList.add('sec');
+        kok.querySelectorAll('[data-tzk]').forEach(function (b) { b.onclick = function () { secK = +b.dataset.tzk; planCiz(); }; }); sekBagla(); };
+      var sekHtml = function () { return cfg.plan ? '<div class="tz-psek"><button type="button" data-psek="plan" class="' + (sek === 'plan' ? 'secili' : '') + '">Oturma planı</button><button type="button" data-psek="say" class="' + (sek === 'say' ? 'secili' : '') + '">Sayım</button></div>' : ''; };
+      var sekBagla = function () { kok.querySelectorAll('[data-psek]').forEach(function (b) { b.onclick = function () { sek = b.dataset.psek; if (sek === 'plan') { planCiz(); if (!PL) planYukle(); } else { ciz(); yenile(); } }; }); };
+      var planYukle = async function () { try { PL = await cfg.plan(o); } catch (e) { PL = { ok: false, hata: 'bağlantı yok' }; } if (sek === 'plan' && kok) planCiz(); };
+      var ciz = function () { if (!kok) return; if (sek === 'plan') return planCiz(); var s = D && D.sayim, K = (D && D.kisiler) || [], ek = K.filter(function (k) { return !k.var; }), gel = K.filter(function (k) { return k.var; });
         var av = function (k) { var a = buyukHarf(k.ad || k.no); return '<div class="tz-av' + (k.foto ? ' foto' : '') + '">' + (k.foto ? '<img alt="" src="' + esc(fotoSrc(k.foto)) + '">' : esc(basHarf(a))) + '</div>'; };
-        kok.innerHTML = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' +
+        kok.innerHTML = '<div class="tz-obb"><b>Otobüs ' + o + '</b>' + (m ? '<a class="tz-obt" href="' + esc(haritaUrl(m.konum)) + '" target="_blank" rel="noopener">' + SVG(IK.pin, 14, 2) + 'Toplanma ' + esc(m.konum.saat) + (m.konum.not ? ' · ' + esc(m.konum.not) : '') + '</a>' : '') + '</div>' + sekHtml() +
           (!D ? '<div class="tz-kdur">Yükleniyor…</div>' :
           (s && !s.bitti ? '<div class="tz-sdur"><span class="tz-sbar"><i style="width:' + Math.round(100 * gel.length / Math.max(1, K.length)) + '%"></i></span><b>' + gel.length + '/' + K.length + '</b> geldi</div>' :
             (s && s.bitti ? '<div class="tz-sdur tam"><b>Tam · ' + K.length + '/' + K.length + '</b> · ' + esc(saat(s.bitti)) + '</div>' : '')) +
@@ -196,10 +214,11 @@
         kok.querySelectorAll('[data-syok]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.syok, false); if (!r || !r.ok) uyar((r && r.hata) || 'Kaydedilemedi'); await yenile(); yukle(); }; });
         kok.querySelectorAll('[data-sara]').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await cfg.sayim.ara(D.sayim.id, b.dataset.sara); b.textContent = r && r.ok ? (r.tekrar ? 'Az önce gitti' : 'Gönderildi') : 'Gitmedi'; }; });
         var gc = kok.querySelector('[data-sgel]'); if (gc) gc.onclick = function () { gelenAcik = !gelenAcik; ciz(); };
+        sekBagla();
       };
-      var yenile = async function () { var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { D = r; ciz(); } };
+      var yenile = async function () { var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { D = r; if (sek === 'say') ciz(); } };
       kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); } }); });
-      ciz(); yenile(); zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden) yenile(); }, 4000);
+      ciz(); if (sek === 'plan') planYukle(); yenile(); zam = setInterval(function () { if (kapali || S.olu || !d.body.contains(kok)) { clearInterval(zam); return; } if (!d.hidden && sek === 'say') yenile(); }, 4000);
     }
     function sayCiz() {   // öğrenci: kendi otobüsünün açık sayımı — büyük "Otobüsteyim" ya da "Sayıldın"
       if (P || R || !sayEl) return; var s = S.sayim;
@@ -353,7 +372,7 @@
       var degisti = r.bastan || L.length || S.surum !== r.surum; S.surum = r.surum;
       if (typeof r.acik === 'boolean' && r.acik !== S.acik) { S.acik = r.acik; altCiz(); degisti = true; }
       if (R) { if (r.ozet) cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); }
-      else if (P) { S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
+      else if (P) { if (r.yetki) S.yetki = r.yetki; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz) { S.sessiz = !!r.sessiz; alt.dataset.d = ''; altCiz(); } }
       if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
       topCiz();
