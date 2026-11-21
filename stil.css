@@ -2316,7 +2316,7 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
 
 /* Bilgisayar giriş ekranı: tam ekran okul binası, ortada çerçevesiz giriş; üstte okul adı, altta Atatürk sözü. Ekrana tam oturur (telefon görünümü değişmez) */
 .gt { display: none; }
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px), (min-width: 740px) and (min-height: 700px) {
   .giris { height: 100vh; height: 100dvh; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(ellipse 40% 58% at 50% 56%, rgba(9,18,32,.93), rgba(9,18,32,.82) 45%, rgba(9,18,32,.5) 80%, rgba(9,18,32,.4) 100%),
                 linear-gradient(180deg, rgba(9,18,32,.92) 0%, rgba(9,18,32,.35) 22%, rgba(9,18,32,.35) 70%, rgba(9,18,32,.95) 100%),
@@ -2357,10 +2357,10 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .giris > .kutu .not { display: none; }
   .kurlink { margin-top: clamp(8px, 1.6vh, 16px); }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) {
   .gt-yil { display: none; } .gt-ad2 { font-size: 34px; } .giris > .kutu { margin-top: 56px; }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px), (min-width: 740px) and (min-height: 700px) {
   .gt-slogan { margin-top: 8px; font-family: 'UMAL Cormorant', serif; font-style: italic; font-size: clamp(15px, 1.1vw, 19px); color: rgba(255,255,255,.82); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
   .gt-alt { gap: 10px; max-width: none; }
   .gt-baglar { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
@@ -2368,26 +2368,26 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .gt-baglar a:hover { border-color: var(--neon); background: rgba(34,232,255,.12); }
   .gt-baglar svg { width: 17px; height: 17px; color: var(--neon); flex: none; }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) and (pointer: coarse) { .gt-slogan { display: none; } }
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) { .gt-slogan { display: none; } }
+@media (min-width: 1100px) and (min-height: 600px), (min-width: 740px) and (min-height: 700px) {
   .gt-baglar svg.ig { width: 20px; height: 20px; color: inherit; }
   .gt-logo { display: block; width: clamp(64px, 9.5vh, 100px); height: auto; border-radius: 50%; box-shadow: 0 0 0 2px rgba(230,194,122,.7), 0 0 26px rgba(34,232,255,.35), 0 8px 24px rgba(0,0,0,.5); }
   .gt-ust { gap: clamp(8px, 1.4vh, 14px); top: clamp(16px, 3vh, 34px); }
   .giris > .kutu { margin-top: clamp(110px, 17vh, 170px); }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) {
   .gt-logo { width: 52px; } .gt-ad1 { font-size: 11px; } .gt-ad2 { font-size: 28px; margin-top: 2px; }
   .giris > .kutu { margin-top: 104px; } .giris .atlas { font-size: 28px; }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px), (min-width: 740px) and (min-height: 700px) {
   .gt-ata { align-items: flex-end; gap: 20px; }
   .gt-cerceve { width: auto; height: clamp(150px, 24vh, 260px); aspect-ratio: 1048 / 1008; border-radius: 14px; box-shadow: 0 0 0 1.5px rgba(230,194,122,.85), 0 14px 36px rgba(0,0,0,.6); }
   .gt-ata figcaption { padding-bottom: 4px; }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) and (pointer: coarse) { .gt-cerceve { height: 128px; } }
-@media (min-width: 1100px) and (max-width: 1500px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (max-width: 1500px) and (min-height: 700px) and (pointer: coarse) { .gt-ata figcaption { max-width: 21ch; } .gt-ata q { font-size: 17px; } }
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) { .gt-cerceve { height: 128px; } }
+@media (min-width: 1100px) and (max-width: 1500px) and (min-height: 600px), (min-width: 740px) and (max-width: 1500px) and (min-height: 700px) { .gt-ata figcaption { max-width: 21ch; } .gt-ata q { font-size: 17px; } }
 /* Atatürk köşesi: fotoğraf ve söz tek, dengeli bir cam kartta */
-@media (min-width: 1100px) and (min-height: 600px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (pointer: coarse) {
+@media (min-width: 1100px) and (min-height: 600px), (min-width: 740px) and (min-height: 700px) {
   .giris { background: radial-gradient(ellipse 40% 58% at 50% 56%, rgba(9,18,32,.9), rgba(9,18,32,.7) 50%, transparent 85%),
       linear-gradient(180deg, rgba(9,18,32,.9) 0%, rgba(9,18,32,.45) 25%, rgba(9,18,32,.45) 68%, rgba(9,18,32,.95) 100%),
       linear-gradient(rgba(9,18,32,.4), rgba(9,18,32,.4)), url('giris-bina.jpg') center 32% / cover no-repeat, #0b1626; }
@@ -2397,9 +2397,9 @@ button.dy-sat { width: 100%; font: inherit; color: inherit; text-align: left; cu
   .gt-ata q { font-size: clamp(17px, 1.2vw, 21px) !important; line-height: 1.25; }
   .gt-ata cite { white-space: nowrap; font-size: 10.5px; letter-spacing: .18em; margin-top: 8px; }
 }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) and (pointer: coarse) { .gt-cerceve { height: 84px; } }
-@media (min-width: 1100px) and (min-height: 600px) and (max-height: 900px) and (hover: hover), (min-width: 740px) and (min-height: 700px) and (max-height: 900px) and (pointer: coarse) { .gt-slogan { display: none; } }
-@media (min-width: 1100px) and (min-height: 761px) and (max-height: 900px) and (hover: hover), (min-width: 740px) and (min-height: 761px) and (max-height: 900px) and (pointer: coarse) { .gt-yil { margin-top: 8px; } .giris > .kutu { margin-top: 150px; } .gt-logo { width: 74px; } .gt-ad2 { font-size: 38px; } }
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 760px), (min-width: 740px) and (min-height: 700px) and (max-height: 760px) { .gt-cerceve { height: 84px; } }
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 900px), (min-width: 740px) and (min-height: 700px) and (max-height: 900px) { .gt-slogan { display: none; } }
+@media (min-width: 1100px) and (min-height: 761px) and (max-height: 900px), (min-width: 740px) and (min-height: 761px) and (max-height: 900px) { .gt-yil { margin-top: 8px; } .giris > .kutu { margin-top: 150px; } .gt-logo { width: 74px; } .gt-ad2 { font-size: 38px; } }
 
 /* gezi programı: her satır alt alta birden çok madde alabilir */
 .gk2-pr { align-items: start; }
