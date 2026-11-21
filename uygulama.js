@@ -19,6 +19,19 @@
   const tr = 'tr-TR';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const baslik = s => UmalZip.baslik(s);
+  // K-89x: Düğme/hap yazılarında Türkçe doğru büyük harf (CSS capitalize "ile"→"Ile", "ya da"→"Ya Da" yapıyordu)
+  const TC_KUCUK = new Set(['ve', 'ile', 'ya', 'da', 'de', 'veya', 'ki', 'ama', 'için', 'mi', 'mı', 'mu', 'mü', 'yada']);
+  const TC_SEC = '.cip, .birincil, .ikincil, .tehlike, .menu-oge, .t-neon, .tm-oge, .k-tahta b, .tahta > b, .salon .s-ust b, .pj-ust b, .kb-ust b, .sk-kutu b';
+  const tcKelime = (w, ilk) => { const m = /^([^A-Za-zÇĞİÖŞÜçğıöşü]*)([A-Za-zÇĞİÖŞÜçğıöşü])(.*)$/.exec(w); if (!m) return w;
+    if (/[A-ZÇĞİÖŞÜ]/.test(m[3]) || /\d/.test(w)) return w;   // PDF, e-Okul, 9-A gibi: dokunma
+    if (!ilk && !m[1] && TC_KUCUK.has((m[2] + m[3]).toLocaleLowerCase('tr-TR').replace(/[^a-zçğıöşü]/g, ''))) return w;
+    return m[1] + m[2].toLocaleUpperCase('tr-TR') + m[3]; };
+  const tcMetin = t => { let ilk = true; return t.replace(/\S+/g, w => { const r = tcKelime(w, ilk); ilk = false; return r; }); };
+  const tcIsle = el => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const v = n.nodeValue; if (!v.trim() || n.parentElement.closest('input,textarea,small,code,.nw-tc')) continue; const y = tcMetin(v); if (y !== v) n.nodeValue = y; } };
+  let tcBekleyen = new Set(), tcZaman = 0;
+  const tcCalis = () => { tcZaman = 0; const L = [...tcBekleyen]; tcBekleyen.clear(); L.forEach(k => { if (!k.isConnected) return; if (k.matches && k.matches(TC_SEC)) tcIsle(k); else if (k.closest && k.closest(TC_SEC)) tcIsle(k.closest(TC_SEC)); if (k.querySelectorAll) k.querySelectorAll(TC_SEC).forEach(tcIsle); }); };
+  try { new MutationObserver(M => { M.forEach(m => { const t = m.target.nodeType === 1 ? m.target : m.target.parentElement; if (t) tcBekleyen.add(t); }); if (!tcZaman) tcZaman = requestAnimationFrame(tcCalis); }).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', () => { tcBekleyen.add(document.body); tcCalis(); }); } catch (e) {}
   const sinifSira = (a, b) => a.localeCompare(b, tr, { numeric: true });
   const yuzde = (a, b) => b > 0 ? Math.round(a * 100 / b) : 0;
   const virgul = x => x.toFixed(1).replace('.', ',');
@@ -309,6 +322,15 @@
     b.onclick = ev => { if (uzun) { uzun = false; ev.preventDefault(); return; } if (surDi) { surDi = false; ev.preventDefault(); return; } ac(); };
     b.title = "Atlas'a sor · basılı tutun: hızlı geçiş · sürükleyerek yerini değiştirebilirsiniz";
     window.addEventListener('resize', yer); setTimeout(yer, 0);
+    // K-89x: kaydedilen yer o sayfada bir yazının/düğmenin üstüne geliyorsa düğme köşeye çekilir (yazı üstüne binmez)
+    const cakisiyor = () => { const r = b.getBoundingClientRect(); if (!r.width) return false; const eski = b.style.pointerEvents; b.style.pointerEvents = 'none';
+      let var_ = false; try { for (const [x, y] of [[r.left + 4, r.top + 4], [r.right - 4, r.top + 4], [r.left + 4, r.bottom - 4], [r.right - 4, r.bottom - 4], [(r.left + r.right) / 2, (r.top + r.bottom) / 2]]) {
+        const e = document.elementFromPoint(x, y); if (!e || e === b || b.contains(e)) continue;
+        if (e.closest('button, a, input, textarea, select, label, h1, h2, h3, p, li, .cip, .soluk, small, b') || [...e.childNodes].some(c => c.nodeType === 3 && c.nodeValue.trim())) { var_ = true; break; } } } finally { b.style.pointerEvents = eski; }
+      return var_; };
+    const yerKontrol = () => { if (sur) return; yer(); if (b.style.left && cakisiyor()) Object.assign(b.style, { left: '', top: '', right: '', bottom: '' }); };
+    let ykZ = 0; try { new MutationObserver(() => { clearTimeout(ykZ); ykZ = setTimeout(yerKontrol, 120); }).observe(document.getElementById('icerik') || document.body, { childList: true }); } catch (e) {}
+    setTimeout(yerKontrol, 300);
     document.body.appendChild(b);
     // K-716cf: telefonda yüzen düğme yerine üst çubukta, Çıkış'ın yanında küçük "Atlas" düğmesi
     const u = document.createElement('button'); u.id = 'asUst'; u.className = 'as-tepe'; u.type = 'button'; u.setAttribute('aria-label', "Atlas'a sor");
@@ -3552,7 +3574,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <label>Öğrenci</label>${T.sec ? `<div class="yn-sec"><b>${esc(baslik(T.sec.ad))}</b><span>${esc(T.sec.sinif)} · ${esc(T.sec.no)}</span><button class="bag" data-yd="degis">Değiştir</button></div>` : `<input id="ynAra" placeholder="Ad, okul numarası ya da sınıf (ör. 10-C)" value="${esc(T.ara)}" autocomplete="off"><div class="rv-secim">${L.map(o => `<button data-yo="${esc(o.no)}"><b>${esc(o.sinif)}</b>${esc(baslik(o.ad))} <small>· ${esc(o.no)}</small></button>`).join('')}</div>`}
           <label>Neden (birden çok seçilebilir)</label><div class="cipler">${YN_NEDEN.map(n => `<button class="cip ${T.nedenler.has(n) ? 'secili' : ''} ${/istismar/.test(n) ? 'yn-kritik' : ''}" data-yn="${esc(n)}">${esc(n)}</button>`).join('')}</div>
           ${T.nedenler.has('İhmal ya da istismar şüphesi') ? '<div class="yn-uyari">İhmal ya da istismar şüphesinde formu beklemeden rehberlik servisine ve okul müdürüne <b>hemen sözlü olarak</b> da bildirin. Öğrenciyle ayrıntılı konuşmayın, soru sormayın; gördüğünüzü ve duyduğunuzu olduğu gibi yazın.</div>' : ''}
-          <label>Aciliyet</label><div class="cipler">${Object.entries(YN_ACIL).map(([k, [a]]) => `<button class="cip ${T.aciliyet === k ? 'secili' : ''} yn-a-${k}" data-ya="${k}">${a}</button>`).join('')}</div>
+          <label>Aciliyet</label><div class="cipler yn-acil">${Object.entries(YN_ACIL).map(([k, [a]]) => `<button class="cip ${T.aciliyet === k ? 'secili' : ''} yn-a-${k}" data-ya="${k}">${a}</button>`).join('')}</div>
           <label>Gözlemleriniz</label><textarea id="ynAcik" rows="5" maxlength="3000" placeholder="Ne zamandan beri, nerede, neyi gözlemlediniz? Yorum değil gözlem yazın.">${esc(T.aciklama)}</textarea>
           <label>Daha önce neler yapıldı</label><div class="cipler">${YN_YAPILAN.map(n => `<button class="cip ${T.yapilan.has(n) ? 'secili' : ''}" data-yy="${esc(n)}">${esc(n)}</button>`).join('')}</div>
           <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="ynGonder">Rehberliğe gönder</button></div><div class="kucuk" id="ynBilgi"></div></div>

@@ -401,7 +401,7 @@ input::placeholder { color: #8fa6c4; opacity: 1; }
 #icerik.sinif-acik .sinav-ust { margin-top: 0; }
 #sinifGeri { white-space: nowrap; flex: none; }
 /* Düğme ve çip yazılarında her kelimenin ilk harfi büyük (Türkçe: lang="tr") */
-.cip, .birincil, .ikincil, .tehlike, .menu-oge, .t-neon { text-transform: capitalize; }
+.cip, .birincil, .ikincil, .tehlike, .menu-oge, .t-neon { text-transform: none; }   /* K-89x: büyük harf JS ile (Türkçe doğru) */
 
 /* Yan menü saati */
 #menu { flex: none; }
@@ -864,7 +864,7 @@ span.tk-gel.neon { color: var(--neon); }
 }
 /* K-413: Öğretmenler Odası simgesi; kutu başlıklarında her kelime büyük harfle (Öğretmenler Odası) */
 .k-oda-sev { background: linear-gradient(160deg, #1b3a5c, #12263f) !important; border: 1.5px solid #5cc8ff; box-shadow: 0 0 10px rgba(92,200,255,.35); }
-.k-tahta b, .tahta > b, .salon .s-ust b, .pj-ust b, .kb-ust b, .sk-kutu b { text-transform: capitalize; }
+.k-tahta b, .tahta > b, .salon .s-ust b, .pj-ust b, .kb-ust b, .sk-kutu b { text-transform: none; }
 .k-oda-yer { display: flex; } .k-oda-yer .k-tahta { flex: 1; }
 .k-tahta.k-oda { display: flex; align-items: center; gap: 8px; border-color: rgba(92,200,255,.55); }
 .k-oda-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #1b3a5c, #12263f); border: 1px solid #5cc8ff; }
@@ -1359,7 +1359,7 @@ a.dugme { display: inline-block; text-decoration: none; padding: 9px 16px; borde
   .tm-grup { margin-top: 14px; }
   .tm-bas { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--g); padding-left: 10px; border-left: 4px solid var(--g); margin-bottom: 8px; }
   .tm-izgara { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .tm-oge { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 78px; padding: 10px 4px 8px; border-radius: 14px; background: var(--kart); border: 1px solid var(--cizgi); color: #dbe6f5; font-size: 12.5px; font-weight: 600; line-height: 1.15; text-align: center; text-transform: capitalize; }
+  .tm-oge { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 78px; padding: 10px 4px 8px; border-radius: 14px; background: var(--kart); border: 1px solid var(--cizgi); color: #dbe6f5; font-size: 12.5px; font-weight: 600; line-height: 1.15; text-align: center; text-transform: none; }
   .tm-oge .mi { display: grid; place-items: center; color: var(--g); } .tm-oge .mi svg { width: 24px; height: 24px; }
   .tm-oge.secili { border-color: var(--g); box-shadow: 0 0 12px color-mix(in srgb, var(--g) 45%, transparent); color: #fff; }
   .tm-oge.acil { color: #ffb867; } .tm-oge.acil .mi { color: #ff9a3a; }
@@ -2965,3 +2965,8 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .tk-tf .tk-sag { grid-column: 1 / -1; flex-direction: row !important; align-items: center !important; justify-content: space-between; flex-wrap: wrap; gap: 8px !important; }
 .tk-tf .tk-tf-yer { text-align: left; line-height: 1.4; }
 .tk-tf .tf-gorev, .tk-tf .tk-liste { grid-column: 1 / -1; }
+
+/* K-89x: Rehberliğe Yönlendir — seçenekler dağınık hap yığını değil, düzenli ızgara */
+.yn-form .cipler { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.yn-form .cipler .cip { width: 100%; min-height: 40px; justify-content: flex-start; text-align: left; white-space: normal; overflow-wrap: normal; word-break: normal; line-height: 1.25; padding: 8px 14px; }
+.yn-form .cipler.yn-acil { grid-template-columns: repeat(3, minmax(0, 1fr)); } .yn-form .cipler.yn-acil .cip { justify-content: center; text-align: center; }
