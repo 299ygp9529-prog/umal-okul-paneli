@@ -489,7 +489,7 @@
       return `<button class="msj-sat ${g ? '' : 'ogt-msj-yok'}" ${g ? `data-msjac="${esc(g.id)}"` : `data-ogtkur="${esc(s)}"`}><span class="msj-av g">${esc(s)}</span><span class="m"><b>${esc(s)} sınıfı</b><small>${g ? (g.son ? (g.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(g.son.metin) : 'Henüz mesaj yok') : (MSJ.kapali ? 'Mesajlaşma idare açınca kullanılabilir' : 'Grubu kurmak için dokunun')}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
     // K-765: idareden gelenler (yoklama hatırlatması, duyurular) e-Okul'daki gibi "İdare" konuşması olarak en üstte
     // K-816: birebir konuşmalar ve ders programında olmayan sınıf grupları da listede (okunmamış rozeti hangi mesajdan geldiği görünsün)
-    const B = MSJ.L.filter(x => x.tur === 'birebir').sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0)), GD = G.filter(x => !S.includes(x.sinif) && (x.son || +x.yeni)), diger = GD.concat(B);
+    const B = MSJ.L.filter(x => x.tur === 'birebir' && (x.son || +x.yeni)).sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0)), GD = G.filter(x => !S.includes(x.sinif) && (x.son || +x.yeni)), diger = GD.concat(B);
     const digerSat = x => { const n = +x.yeni || 0, grup = x.tur === 'grup';
       return `<button class="msj-sat" data-msjac="${esc(x.id)}">${grup ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<span class="m"><b>${grup ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || x.ogrenci)) + (x.ogr_sinif ? ' · ' + esc(x.ogr_sinif) : '')}</b><small>${x.son ? (x.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span>${n ? `<span class="mk-sayi">${n}</span>` : ''}</button>`; };
     const OB = MSJ.obC || [];
@@ -507,7 +507,7 @@
   }
   function msjListeCiz() {
     if (D.rol === 'ogretmen') return ogtMesajListe();
-    const G = MSJ.L.filter(x => x.tur === 'grup'), B = MSJ.L.filter(x => x.tur === 'birebir').sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0));
+    const G = MSJ.L.filter(x => x.tur === 'grup'), B = MSJ.L.filter(x => x.tur === 'birebir' && (x.son || +x.yeni)).sort((a, b) => ((b.son || {}).id || 0) - ((a.son || {}).id || 0));
     const sat = x => `<button class="msj-sat" data-msjac="${esc(x.id)}">${x.tur === 'grup' ? `<span class="msj-av g">${esc(x.sinif)}</span>` : msjAvatar(x.ogrenci, x.ad)}<span class="m"><b>${x.tur === 'grup' ? esc(x.sinif) + ' sınıfı' : esc(baslik(x.ad || x.ogrenci)) + ' · ' + esc(x.ogr_sinif || '')}</b><small>${x.son ? (x.son.kim === MSJ.ben ? 'Siz: ' : '') + esc(x.son.metin) : 'Henüz mesaj yok'}</small></span><span class="s">${x.son ? esc(msjSaat(x.son.zaman)) : ''}${x.yeni ? `<i>${x.yeni}</i>` : ''}${x.sikayet ? '<em>rehberliğe iletildi</em>' : ''}</span></button>`;
     $('#icerik').innerHTML = `<div class="msj-bas-ust"><div><h1>Mesajlar</h1></div><button class="msj-yeni" id="msjYeni" aria-label="Öğrenciye yaz"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Öğrenciye yaz</span></button></div>
       ${MSJ.sik ? `<div class="kart td-uyari" style="cursor:pointer" data-git-sik="1"><b>${MSJ.sik} grup mesajı şikâyet edildi</b> · Mesaj Şikâyetleri'nde görün</div>` : ''}
