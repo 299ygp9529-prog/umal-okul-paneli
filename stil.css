@@ -83,7 +83,7 @@ input:focus, textarea:focus { outline: 1px solid var(--neon); }
 #menu { flex: 1; }
 .menu-oge { display: block; width: 100%; text-align: left; background: none; border: 0; color: #c9d6ea; padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; }
 .menu-oge.secili { background: var(--kart); color: var(--neon); font-weight: 700; outline: 1px solid rgba(34,232,255,.6); box-shadow: 0 0 10px rgba(34,232,255,.25); }
-.kullanici { color: var(--cok-soluk); font-size: 12px; padding: 0 10px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; word-break: break-all; }
+.kullanici { color: var(--cok-soluk); font-size: 12px; padding: 0 10px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; overflow-wrap: anywhere; }
 main { flex: 1; min-width: 0; padding: 20px 24px 40px; }
 h1 { font-size: 20px; margin: 0; }
 h2 { font-size: 15px; margin: 18px 0 8px; color: var(--neonacik); font-weight: 600; }
@@ -2951,3 +2951,8 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .msj-ust.grup .msj-tik input[type="checkbox"] { width: 28px; height: 28px; background: var(--z); border-color: color-mix(in srgb, var(--c) 55%, transparent); box-shadow: none; }
 .msj-ust.grup .msj-tik input[type="checkbox"]::after { border-color: var(--c); width: 6px; height: 12px; }
 .msj-ust.grup .msj-tik input[type="checkbox"]:checked { border-color: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 40%, transparent); }
+
+/* K-89x: sözcükler asla ortadan bölünmez (Kurucu / Öğretmen) */
+.mod-sec, .mod-sec button { white-space: nowrap; word-break: normal; overflow-wrap: normal; hyphens: none; }
+.kullanici .mod-sec { max-width: 100%; }
+.kullanici .mod-sec button { padding: 6px 12px; }
