@@ -2731,3 +2731,8 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .tz-acU b { display: block; font-size: 16px; } .tz-acU small { font-size: 12.5px; }
 .tz-acB { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; margin: 0; flex: 0 0 auto; }
 .tz-acU .tz-kik { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,225,77,.15); color: #ffe14d; flex: none; }
+/* K-825: boş koltuk penceresi kişi türü */
+.gz-ksek { display: flex; gap: 6px; overflow-x: auto; margin: 2px 0 10px; scrollbar-width: none; }
+.gz-ksek::-webkit-scrollbar { display: none; }
+.gz-ksek button { flex: none; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cizgi, #24406a); background: transparent; color: inherit; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.gz-ksek button.secili { background: var(--neon); border-color: var(--neon); color: #06202a; }
