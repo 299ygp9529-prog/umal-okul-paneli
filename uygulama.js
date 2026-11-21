@@ -603,9 +603,21 @@
       atlasOnay('Telsiz kapatıldı', g.ad); TZ.imza = '*'; await tzDurum(); telsizBolumu(); };
     if (!window.UmalTelsiz) { $('#tzKap').innerHTML = '<div class="kart soluk">Telsiz yüklenemedi; sayfayı yenileyin.</div>'; return; }
     const r_ = async (f, a) => { const { data, error } = await sb.rpc(f, a); if (error) return { ok: false, hata: hataYaz(error) }; return data; };
+    // K-878: Kurucu "Mesajları sil" / "Öğrencileri kilitle" — gezi ayarında saklanır (tzTemizId, tzKilit); kilit = gezideki bütün öğrenciler sessizde
+    let GA = null; try { const { data: a_ } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', g.anahtar).maybeSingle(); GA = a_ && a_.deger ? JSON.parse(a_.deger) : null; } catch (e) {}
+    const gaYaz = async f => { const { data: a_, error: e1 } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', g.anahtar).maybeSingle(); if (e1 || !a_) return { ok: false, hata: e1 ? hataYaz(e1) : 'Gezi bulunamadı' };
+      const G_ = JSON.parse(a_.deger); f(G_); const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: g.anahtar, deger: JSON.stringify(G_) }, { onConflict: 'anahtar' }); return error ? { ok: false, hata: hataYaz(error) } : { ok: true, G: G_ }; };
+    const tzKilit = async (ac, sessizdeOlan) => { const r0 = await gaYaz(G_ => { if (ac) G_.tzKilit = { z: Date.now(), onceki: sessizdeOlan }; }); if (!r0.ok) return r0;
+      const G_ = r0.G, onceki = new Set((ac ? sessizdeOlan : ((G_.tzKilit && G_.tzKilit.onceki) || [])).map(String));
+      const nolar = [...new Set(Object.keys(G_.yer || {}).filter(a => a.startsWith('o:')).map(a => a.split(':')[2]))].filter(no => !onceki.has(String(no)));
+      let hata = ''; for (let i = 0; i < nolar.length; i += 10) { const R = await Promise.all(nolar.slice(i, i + 10).map(no => r_('umal_gezi_telsiz_islem', { p_anahtar: g.anahtar, p_veri: { sessiz: no, kapali: ac } }).catch(() => null))); R.forEach(x => { if (!x || !x.ok) hata = (x && x.hata) || 'bazı öğrencilerde olmadı'; }); }
+      if (!ac) { const r1 = await gaYaz(G2 => { delete G2.tzKilit; }); if (!r1.ok) return r1; }
+      return hata ? { ok: false, hata: 'Kilit tam olmadı: ' + hata } : { ok: true }; };
+    const tzTemizle = async son => gaYaz(G_ => { G_.tzTemizId = son; });
     if (TZ.vr) { TZ.vr.kapat(); TZ.vr = null; }
     if (window.UmalTelsizVarlik) { const g_ = g; kisiAdlariYukle().catch(() => {}).then(() => { if (TZ.vr || TZ.L[TZ.i] !== g_) return; TZ.vr = window.UmalTelsizVarlik(sb, g_.anahtar, { t: 'ogt', ad: KISI.get(String(D.eposta).toLowerCase()) || '', e: D.eposta }); }); }   // K-867
     TZ.ins = window.UmalTelsiz({ kap: $('#tzKap'), personel: true, gezi: g, cubuk: '#ogtAlt', uyar, onayla, kapat: TZ.kurucu ? tzKapat : null,
+      temizId: (GA && GA.tzTemizId) || 0, kilitli: !!(GA && GA.tzKilit), kilit: tzKilit, temizle: tzTemizle,   // K-878
       etkin: () => D.bolum === 'telsiz' && !document.body.classList.contains('tm-acik'),
       oku: (s, v) => r_('umal_gezi_telsiz_oku', { p_anahtar: g.anahtar, p_sonra: s, p_surum: v }),
       yaz: (m, du, h) => r_('umal_gezi_telsiz_yaz', Object.assign({ p_anahtar: g.anahtar, p_metin: m, p_duyuru: !!du }, h ? { p_hedef: h } : {})),   // K-848: h = yalnız bu otobüse
@@ -4920,6 +4932,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let G0 = null;   // K-862: telsizden görevli öğretmenin yaptığı başkan / görevli değişiklikleri — panelde aynı alan değişmediyse sunucudaki alınır
     const sunucuAl = S_ => {   // K-716bx: başkanın yerleşimi (yerZaman) ve öğrencilerin girdiği bilgiler (kayıt başına z) sunucudan alınır; panelde sonradan düzeltilen korunur
       let d_ = false; if (!S_) return d_;
+      if ('tzTemizId' in S_) G.tzTemizId = S_.tzTemizId; if (S_.tzKilit) G.tzKilit = S_.tzKilit; else delete G.tzKilit;   // K-878: telsizin sil/kilit ayarı yalnız telsizden değişir
       if ((+S_.yerZaman || 0) > (+G.yerZaman || 0)) { G.yer = S_.yer || {}; G.yerZaman = S_.yerZaman; G.baskanLog = S_.baskanLog || []; d_ = true; }
       if (!G0) G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
       if ((+S_.baskanZaman || 0) > (+G.baskanZaman || 0)) { if (JSON.stringify(G.baskan || {}) === G0.b) G.baskan = S_.baskan || G.baskan; else { const L_ = new Set((G.baskan.nolar || []).map(String)); (S_.baskan && S_.baskan.nolar || []).forEach(n => L_.add(String(n))); G.baskan.nolar = [...L_]; } G.baskanZaman = S_.baskanZaman; d_ = true; }
