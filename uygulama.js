@@ -5499,7 +5499,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
                 <p class="soluk kucuk" style="margin:8px 0 0">8 kısa soru, yaklaşık 1 dakika. İsimsiz: sonuçlarda öğrencinin adı görünmez.${G.sonAnket ? ' Sonuçlar Anketler bölümünde.' : ''}</p>
                 ${G.sonAnket ? '<div class="gk2-sat"><button class="ikincil" data-gkgit="anket">Sonuçları gör</button></div>' : ''}</div>`; })()}`;
         }
-        $('#icerik').innerHTML = `<div class="kart gk2-bas"><div class="ust" style="align-items:flex-start"><div><h2 style="margin:0">Gezi</h2><div class="soluk kucuk">${G.ucretsiz ? 'İlan → Kayıt → Belgeler → Otobüsler → Telsiz' : 'İlan → Kayıt → Ödeme → Belgeler → Otobüsler → Telsiz'}</div></div><span id="gzDurum" class="soluk kucuk" style="margin-left:auto">${esc(durum)}</span></div>
+        $('#icerik').innerHTML = `${gzAdimBar(adim)}<div class="kart gk2-bas"><div class="ust" style="align-items:flex-start"><div><h2 style="margin:0">Gezi</h2><div class="soluk kucuk">${G.ucretsiz ? 'İlan → Kayıt → Belgeler → Otobüsler → Telsiz' : 'İlan → Kayıt → Ödeme → Belgeler → Otobüsler → Telsiz'}</div></div><span id="gzDurum" class="soluk kucuk" style="margin-left:auto">${esc(durum)}</span></div>
             <div class="gk2-geziler">${GL.map(x => `<button class="${x.a === GZ_ANAH ? 'secili' : ''}" data-gksec="${esc(x.a)}">${esc(x.ad || 'Gezi')}</button>`).join('')}<button data-gkyeni="1">+ Yeni gezi</button></div>
             <div class="gk2-kart gk2-gezi"><div class="gk2-afisk" ${I.afis ? `style="background-image:url('${esc(I.afis)}');background-size:cover"` : ''}>${I.afis ? '' : KY_IK.otobus}</div><div><b>${esc(G.ad || 'Gezi')}</b><div class="soluk kucuk">${[G.tarih ? trT(G.tarih, true) : 'tarih yok', G.ucretsiz ? 'ücretsiz' : G.ucret ? (+G.ucret).toLocaleString(tr) + ' ₺' : '', ilDisi() ? 'il dışı' : 'il içi', G.kontenjan ? 'kontenjan ' + G.kontenjan : ''].filter(Boolean).join(' · ')}</div></div>
               ${!G.ucretsiz && I.sonOdeme ? `<div class="gk2-sag"><div class="gk2-geri">${kg > 0 ? kg + ' gün' : kg === 0 ? 'Bugün' : 'Doldu'}</div><div class="soluk kucuk">son ödeme ${trT(I.sonOdeme)}</div></div>` : ''}</div>
@@ -5600,6 +5600,9 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const bagla = () => {
         const R = $('#icerik');
         if (document.getElementById('gkTelsiz')) tzGeziKart(GZ_ANAH);   // K-808
+        R.querySelectorAll('[data-gzadim]').forEach(b => b.onclick = () => { const a = b.dataset.gzadim;   // K-832: üst adım şeridi bu sayfada da her adıma gider
+          if (a === 'otobus' || (a === 'gun' && TZ.L.length)) { try { sessionStorage.setItem('gk_adim:' + GZ_ANAH, adim); } catch (e) {} gzAdimGit(a); return; }
+          adim = a; acikAn = ekAn = null; ciz_(); window.scrollTo(0, 0); });
         R.querySelectorAll('[data-gkadim]').forEach(b => b.onclick = () => { const a = b.dataset.gkadim; if (a === 'otobus' || (a === 'gun' && TZ.L.length)) { try { sessionStorage.setItem('gk_adim:' + GZ_ANAH, adim); } catch (e) {} gzAdimGit(a); return; } adim = a; acikAn = ekAn = null; ciz_(); });   // K-827: Otobüsler ve canlı Telsiz kendi sayfasında
         R.querySelectorAll('[data-gksec]').forEach(b => b.onclick = () => { try { localStorage.setItem('gezi_sec:' + D.eposta, b.dataset.gksec); } catch (e) {} geziBolumu('kayit'); });
         R.querySelectorAll('[data-gkgit]').forEach(b => b.onclick = () => ac(b.dataset.gkgit));
