@@ -2906,3 +2906,6 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 .hz-tus { display: flex; gap: 8px; } .hz-tus button { flex: 1; }
 .hz-menu #hzDuz { align-self: center; }
 .bsk-ac { display: inline-flex; align-items: center; justify-content: center; }   /* K-864 */
+button.gz-sofor { background: none; border: 0; padding: 4px 6px; margin: -4px -6px; border-radius: 10px; cursor: pointer; font: inherit; }   /* K-865 */
+button.gz-sofor:active { background: rgba(34,232,255,.12); }
+.gz-kk-ust .foto.gz-sf { background: rgba(34,232,255,.12); color: #22e8ff; } .gz-kk-ust .foto.gz-sf svg { width: 40px; height: 40px; }
