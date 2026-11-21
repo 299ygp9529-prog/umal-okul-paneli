@@ -2956,3 +2956,12 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .mod-sec, .mod-sec button { white-space: nowrap; word-break: normal; overflow-wrap: normal; hyphens: none; }
 .kullanici .mod-sec { max-width: 100%; }
 .kullanici .mod-sec button { padding: 6px 12px; }
+
+/* K-89x: Mazeret (telafi) kartı — sıkışma, üst üste binme ve sözcük bölünmesi yok */
+.nw { white-space: nowrap; }
+.tk-tf .tk-sinav { grid-template-columns: 82px 1fr; align-items: start; row-gap: 8px; }
+.tk-tf .tk-dersler { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; }
+.tk-tf .tk-tf-sv { margin: 0; } .tk-tf .tk-tf-d b { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.tk-tf .tk-sag { grid-column: 1 / -1; flex-direction: row !important; align-items: center !important; justify-content: space-between; flex-wrap: wrap; gap: 8px !important; }
+.tk-tf .tk-tf-yer { text-align: left; line-height: 1.4; }
+.tk-tf .tf-gorev, .tk-tf .tk-liste { grid-column: 1 / -1; }
