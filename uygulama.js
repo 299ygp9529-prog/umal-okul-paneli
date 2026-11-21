@@ -4641,6 +4641,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       saat: S(`<circle cx="12" cy="12" r="9" ${F}/><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2"/>`),
       para: S(`<rect x="2.6" y="6" width="18.8" height="12" rx="2.4" ${F}/><rect x="2.6" y="6" width="18.8" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.5"/><path d="M6.2 9.6v4.8M17.8 9.6v4.8"/>`),
       kilit: S(`<rect x="4.8" y="10.4" width="14.4" height="10.2" rx="2.4" ${F}/><rect x="4.8" y="10.4" width="14.4" height="10.2" rx="2.4"/><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8M12 14.4v2.2"/>`),
+      mesaj: S(`<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" ${F}/><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12h5"/>`),
       kilitAcik: S(`<rect x="4.8" y="10.4" width="14.4" height="10.2" rx="2.4" ${F}/><rect x="4.8" y="10.4" width="14.4" height="10.2" rx="2.4"/><path d="M8 10.4V7.6a4 4 0 0 1 7.6-1.7M12 14.4v2.2"/>`),
       oto: S(`<path d="M13.2 2.8 5.4 13.2h5.4l-1 8 7.8-10.4h-5.4z" ${F}/><path d="M13.2 2.8 5.4 13.2h5.4l-1 8 7.8-10.4h-5.4z"/>`),
       sinif: S(`<path d="M3.5 20.5V9.8L12 4.6l8.5 5.2v10.7z" ${F}/><path d="M3.5 20.5V9.8L12 4.6l8.5 5.2v10.7M2 20.5h20"/><path d="M10 20.5v-4.6h4v4.6"/><circle cx="12" cy="10.6" r="1.8"/>`),
@@ -5007,7 +5008,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <div class="gz-liste">${(sekme === 'gor' ? hepsiP.filter(p => p.tur !== 'ogr') : havuz).map(p => `<div class="gz-kisi ${p.an === sel ? 'secili' : ''} ${G.yer[p.an] ? 'yerli' : ''}" data-kisi="${esc(p.an)}" style="--c:${renk(p)}"><b>${esc(baslik(p.ad))}</b><small>${p.sinif ? esc(p.sinif) + ' · ' + esc(p.no) : esc(GZ_TUR[p.tur] || '')}${G.yer[p.an] ? ' · ' + (otoBul(G.yer[p.an].o) || {}).no + '. otobüs, ' + G.yer[p.an].k : ''}</small>${cinsYaz(p)}${esOf(p.an) && M.get(esOf(p.an)) ? `<span class="gz-esr" title="Yan yana: ${esc(baslik(M.get(esOf(p.an)).ad))}">🤝</span>` : ''}${p.tur === 'ogr' ? `<span class="gz-x" data-cikar="${esc(p.an)}" title="Geziden çıkar">×</span>` : `${p.tur === 'reh' || p.tur === 'bel' ? `<span class="gz-rb" data-gbil="${esc(p.an)}" title="Bilgilerini gir">${gbEksik(p).length ? 'Bilgi gir' : 'Bilgiler ✓'}</span>` : ''}${p.tur === 'reh' ? `<span class="gz-rb" data-grb="${esc(p.an)}" title="Rehbere telsiz bağlantısı ver">Telsiz bağlantısı</span>` : ''}<span class="gz-x" data-gsil="${esc(p.an)}" title="Sil">×</span>`}</div>`).join('') || `<div class="soluk kucuk">${sekme === 'ogr' ? (G.anket ? 'Bekleyen öğrenci yok — hepsi yerleşti.' : 'Yukarıdan katılım formunu seçin ya da aşağıdan öğrenci ekleyin.') : 'Görevli eklenmedi.'}</div>`}</div>
           ${sekme === 'ogr' ? `<div class="gz-ekle"><input id="gzONo" placeholder="Öğrenci ekle: no ya da ad" autocomplete="off" enterkeyhint="done"><button class="ikincil" id="gzOEkle">Ekle</button></div>${G.cikar.length ? `<button class="bag kucuk" id="gzGeriAl">Çıkarılan ${G.cikar.length} öğrenciyi geri al</button>` : ''}`
             : `<div class="gz-ekle gz-gekle"><input id="gzGAd" placeholder="Ad Soyad"><select id="gzGTur">${Object.entries(GZ_TUR).map(([k, a]) => `<option value="${k}">${a}</option>`).join('')}</select><input id="gzGTel" placeholder="Telefon" value="05" inputmode="tel"><button class="ikincil" id="gzGEkle">Ekle</button></div>`}</div>
-          <div class="gz-oto" style="--g:${rk}"><div class="gz-oto-bas"><span class="gz-no">${o.no}</span><div class="gz-ob-bilgi"><b>${o.no}. Otobüs</b><small class="gz-ob-say"><span>${B.L.length} / ${o.kapasite} dolu</span><span class="gz-pk">${B.k} kız</span><span class="gz-pe">${B.e} erkek</span>${B.g ? `<span>${B.g} görevli</span>` : ''}<span class="gz-tzs" id="gzTzSay"></span></small>${o.plaka || o.sofor ? `<span class="gz-ob-ek">${o.plaka ? `<span class="gz-cip">🚌 ${esc(o.plaka)}</span>` : ''}${o.sofor ? `<span class="gz-cip">👤 ${esc(o.sofor)}${o.tel ? ` · ${esc(o.tel)}` : ''}</span>` : ''}</span>` : ''}</div><div class="gz-ob-sag"><label class="gz-kap" title="Bu otobüsün koltuk sayısı (şoför hariç)">Kapasite<input type="number" min="10" max="80" id="gzKap" value="${o.kapasite}"></label><button class="ikincil" data-oayar="${o.id}">Otobüs bilgileri</button></div></div>
+          <div class="gz-oto" style="--g:${rk}"><div class="gz-oto-bas"><span class="gz-no">${o.no}</span><div class="gz-ob-bilgi"><b>${o.no}. Otobüs</b><small class="gz-ob-say"><span>${B.L.length} / ${o.kapasite} dolu</span><span class="gz-pk">${B.k} kız</span><span class="gz-pe">${B.e} erkek</span>${B.g ? `<span>${B.g} görevli</span>` : ''}<span class="gz-tzs" id="gzTzSay"></span><span class="gz-sys" id="gzSySay"></span></small>${o.plaka || o.sofor ? `<span class="gz-ob-ek">${o.plaka ? `<span class="gz-cip">🚌 ${esc(o.plaka)}</span>` : ''}${o.sofor ? `<span class="gz-cip">👤 ${esc(o.sofor)}${o.tel ? ` · ${esc(o.tel)}` : ''}</span>` : ''}</span>` : ''}</div><div class="gz-ob-sag"><label class="gz-kap" title="Bu otobüsün koltuk sayısı (şoför hariç)">Kapasite<input type="number" min="10" max="80" id="gzKap" value="${o.kapasite}"></label><button class="ikincil" data-oayar="${o.id}">Otobüs bilgileri</button></div></div>
             <div class="gz-govde"><div class="gz-on"><button type="button" class="gz-sofor" data-sofor="${o.id}" title="Şoför${o.tel ? ' · ' + esc(o.tel) : ''}">${MENU_IK_DIREKSIYON}<small>${esc(o.sofor ? kisaAd(o.sofor) : 'Şoför')}</small></button><span class="gz-onkapi">Ön kapı</span></div>
             ${P.map(r => `<div class="gz-sira">${r.map(s => koltuk(o, s)).join('')}</div>`).join('')}<div class="gz-arka"></div></div>
             <div class="gz-lejant"><span><i style="--c:#ff8fc8"></i>Kız</span><span><i style="--c:#5cb8ff"></i>Erkek</span><span><i style="--c:#ffd166"></i>Öğretmen</span><span><i style="--c:#5ee08a"></i>Belediye</span><span><i class="cam"></i>Cam kenarı</span></div></div></div>
@@ -5131,8 +5132,20 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       $('#gzBilet').onclick = () => biletler(M);
       $('#gzListe').onclick = () => listeler(M);
       $('#gzExcel').onclick = () => excel(M);
-      tzvGuncelle();
+      tzvGuncelle(); sayBoya(); sayYukle();
     };
+    // K-868: yoklama (telsizdeki otobüs sayımı) — sayım açıkken gelen yeşil, gelmeyen kırmızı; otobüs başlığında geldi/toplam
+    const SAY = {};   // otobüsId → { z, d }
+    const sayAktif = oid => { const x = SAY[oid], s_ = x && x.d && x.d.sayim; if (!s_) return null; if (!s_.bitti) return x.d; return Date.now() - new Date(s_.bitti) < 90 * 60000 ? x.d : null; };
+    const sayDurum = (oid, no) => { const d_ = sayAktif(oid); if (!d_) return null; const k = (d_.kisiler || []).find(x => String(x.no) === String(no)); return k ? !!k.var : null; };
+    const sayBoya = () => { const kok = document.querySelector('.gz-oto'); if (!kok) return; const d_ = sayAktif(aktif), el = $('#gzSySay'), M_ = d_ ? kisiler() : null;
+      kok.querySelectorAll('.gz-k[data-kn]').forEach(b => { const an = koltukta(b.dataset.ko, +b.dataset.kn), p = an && M_ && M_.get(an), v = p && p.tur === 'ogr' ? sayDurum(b.dataset.ko, p.no) : null;
+        b.classList.toggle('sy-v', v === true); b.classList.toggle('sy-y', v === false); });
+      if (el) { if (!d_) el.innerHTML = ''; else { const K = d_.kisiler || [], g = K.filter(x => x.var).length; el.innerHTML = `${KY_IK.tamam}Yoklama <b>${g}/${K.length}</b>${d_.sayim.bitti ? ' · tam' : ''}`; el.classList.toggle('tam', !!d_.sayim.bitti); } } };
+    const sayYukle = async (zorla) => { const o_ = otoBul(aktif); if (!o_ || !TZ.L.some(x => x.anahtar === GZ_ANAH)) return; const x = SAY[o_.id]; if (!zorla && x && Date.now() - x.z < 5000) return;
+      SAY[o_.id] = { z: Date.now(), d: x && x.d }; let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_sayim_durum', { p_anahtar: GZ_ANAH, p_otobus: +o_.no })); } catch (e) { return; }
+      if (r && r.ok) { SAY[o_.id] = { z: Date.now(), d: r }; if (D.bolum === 'gezi') sayBoya(); } };
+    clearInterval(window.__gzSayZ); window.__gzSayZ = setInterval(() => { if (D.bolum !== 'gezi' || document.hidden) return; sayYukle(true); }, 8000);
     // K-867: telsizi o an açık olanlar — koltuktaki minik telsiz yeşil yanar; telsiz açık değilse ya da bağlantı kurulamadıysa simgeler gizli kalır
     const tzvGuncelle = () => { const kok = document.querySelector('.gz-oto'); if (!kok) return; const V = window.__gzTzvSon, hazir = !!(V && V.hazir) && TZ.L.some(x => x.anahtar === GZ_ANAH);
       kok.classList.toggle('tzv-hazir', hazir); const say = $('#gzTzSay'); if (!hazir) { if (say) say.innerHTML = ''; return; }
@@ -5205,16 +5218,30 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const bas_ = gzBasH(p.ad);
       pencereAc(`<div class="gz-kk" style="--c:${renk(p)}"><div class="gz-kk-ust">${ogr ? foto(String(p.no), p.ad) : `<div class="foto gz-gf">${esc(bas_)}</div>`}<div><b>${esc(baslik(p.ad))}</b>
           <small>${ogr ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</small><small>${o_.no}. otobüs · ${y.k}. koltuk${yerAd ? ', ' + esc(yerAd.toLocaleLowerCase(tr)) : ''}</small>
-          ${yan ? `<small>Yanında: ${esc(baslik(yan.ad))}${yan.sinif ? ' (' + esc(yan.sinif) + ')' : ''}</small>` : ''}${es ? `<small>Arkadaşı: ${esc(baslik(es.ad))}</small>` : ''}</div></div>
+          ${yan ? `<small>Yanında: ${esc(baslik(yan.ad))}${yan.sinif ? ' (' + esc(yan.sinif) + ')' : ''}</small>` : ''}${es ? `<small>Arkadaşı: ${esc(baslik(es.ad))}</small>` : ''}${ogr ? (d_ => d_ === true ? '<small class="gz-kk-syv">Yoklamada: geldi ✓</small>' : d_ === false ? '<small class="gz-kk-syy">Yoklamada: gelmedi</small>' : '')(sayDurum(y.o, p.no)) : ''}</div></div>
         <div class="gz-kk-dug"><button class="birincil" id="kkTasi">Yerini değiştir</button>${tel.length > 4 ? `<a class="ikincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">${ogr ? 'Veliyi ara' : 'Ara'}</a>` : `<button class="ikincil" disabled>${ogr ? 'Veli telefonu yok' : 'Telefon yok'}</button>`}
-          <button class="ikincil" id="kkOto">Başka otobüse al</button><button class="ikincil" id="kkCik">Koltuktan çıkar</button>${p.tur === 'reh' ? '<button class="ikincil" id="kkRb">Telsiz bağlantısı</button>' : ''}</div>${gbBilgiMi(p) ? gbAlanlar(p) : ''}</div>`);
+          ${ogr ? `<button class="birincil gz-kk-msj" id="kkMsj" style="grid-column:1/-1">${KY_IK.mesaj}Mesaj gönder</button>` : ''}<button class="ikincil" id="kkOto">Başka otobüse al</button><button class="ikincil" id="kkCik">Koltuktan çıkar</button>${p.tur === 'reh' ? '<button class="ikincil" id="kkRb">Telsiz bağlantısı</button>' : ''}</div>${gbBilgiMi(p) ? gbAlanlar(p) : ''}</div>`);
       if (gbBilgiMi(p)) gbBagla(an);
       fotolariYukle(ogr ? [String(p.no)] : []).catch(() => {});
       $('#kkTasi').onclick = () => { $('#pencere').classList.add('gizli'); sel = an; esMod = false; ciz(); };
       $('#kkOto').onclick = () => { $('#pencere').classList.add('gizli'); sel = an; esMod = false; ciz(); const t = document.querySelector('.gz-sekmeler'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
       $('#kkCik').onclick = () => { delete G.yer[an]; $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
       if ($('#kkRb')) $('#kkRb').onclick = () => rehberBag(an.slice(2));
+      if ($('#kkMsj')) $('#kkMsj').onclick = () => ozelMesaj(p);
     };
+    // K-868: öğrenciye özel mesaj — telefonuna bildirim gider; öğrenci sayfası açıksa ekranı kaplar, titreşir ve öter
+    const GZ_HAZIR_MSJ = [['Nerede kaldın?', 'Otobüs kalkıyor, hemen otobüse gel!'], ['Otobüse dön', 'Hemen otobüse dön, seni bekliyoruz.'], ['Toplanma yerine gel', 'Hemen toplanma yerine gel.'], ['Beni ara', 'Bu mesajı görünce öğretmenini hemen ara.']];
+    const ozelMesaj = p => { const ad = baslik(String(p.ad || '').split(/\s+/)[0] || '');
+      pencereAc(`<div class="gz-msj"><h2 style="margin-top:0">${esc(baslik(p.ad))} · mesaj</h2><p class="soluk kucuk" style="margin:-4px 0 12px">Telefonuna bildirim gider. Öğrenci sayfası açıksa ekranı kaplar, titreşir ve öter.</p>
+        <div class="gz-msj-hazir">${GZ_HAZIR_MSJ.map((m, i) => `<button type="button" class="ikincil" data-hmsj="${i}">${esc(m[0])}</button>`).join('')}</div>
+        <div class="gz-alan"><label>Başlık<input id="omBas" maxlength="60" value="${esc(GZ_HAZIR_MSJ[0][0])}"></label><label>Mesaj<textarea id="omMet" rows="3" maxlength="300">${esc(ad ? ad + ', ' + GZ_HAZIR_MSJ[0][1].charAt(0).toLocaleLowerCase(tr) + GZ_HAZIR_MSJ[0][1].slice(1) : GZ_HAZIR_MSJ[0][1])}</textarea></label></div>
+        <div class="dugmeler"><button class="birincil" id="omGon">${KY_IK.mesaj}Gönder</button></div><div class="soluk kucuk" id="omSonuc"></div></div>`);
+      $('#pencere').querySelectorAll('[data-hmsj]').forEach(b => b.onclick = () => { const m = GZ_HAZIR_MSJ[+b.dataset.hmsj]; $('#omBas').value = m[0]; $('#omMet').value = ad ? ad + ', ' + m[1].charAt(0).toLocaleLowerCase(tr) + m[1].slice(1) : m[1]; });
+      $('#omGon').onclick = async () => { const bas_ = $('#omBas').value.trim(), met = $('#omMet').value.trim(); if (bas_.length < 2 || met.length < 2) { uyar('Başlık ve mesaj yazın.'); return; }
+        const b = $('#omGon'); b.disabled = true; b.textContent = 'Gönderiliyor…';
+        let r = null; try { r = await sb.rpc('umal_obil_gonder', { p_kim: 'ogrenci', p_hedef: [String(p.no)], p_sablon: 'cagri', p_baslik: 'GEZİ · ' + bas_.charAt(0).toLocaleUpperCase(tr) + bas_.slice(1), p_metin: met.charAt(0).toLocaleUpperCase(tr) + met.slice(1), p_onemli: true }); } catch (e) { r = { error: e }; }
+        const d = r && r.data; if (!d || !d.ok) { b.disabled = false; b.innerHTML = KY_IK.mesaj + 'Yeniden dene'; uyar('Gönderilemedi: ' + ((r && r.error && hataYaz(r.error)) || (d && d.hata) || '')); return; }
+        $('#pencere').classList.add('gizli'); atlasOnay('Mesaj gitti', kisaAd(p.ad) + (d.telefon ? ' · telefonuna bildirim gitti' : ' · sayfayı açınca görecek')); }; };
     // K-826: rehbere geçici telsiz bağlantısı (karekod); yalnız telsiz açıkken çalışır, iptal edilebilir
     const rehberBag = async (gid, yeni) => {
       const g = G.gorevli.find(x => x.id === gid); if (!g) return;

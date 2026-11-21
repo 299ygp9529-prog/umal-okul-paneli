@@ -1076,11 +1076,28 @@
   // K-723: idareden öğrenciye bildirim (okunmamışlar ana sayfada kart)
   async function obYukle() { const k = $('#obilKart'); if (!k || !S.kod) return; let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_obil', { p_no: S.no, p_kod: S.kod })); } catch (e) {}
     if (!data || !data.ok) return; let g = 0; try { g = +localStorage.getItem('umalObil:' + S.no) || 0; } catch (e) {}
+    gzMsjGoster((data.liste || []).filter(x => x.id > g && x.onemli && /^GEZİ ·/.test(x.baslik || '')));   // K-868: gezide öğretmenin özel mesajı ekranı kaplar
     const L = (data.liste || []).filter(x => x.id > g).slice(0, 3);
     k.innerHTML = L.map(x => `<div class="kart obk ${x.onemli ? 'onemli' : ''}"><small>${x.onemli ? 'ÖNEMLİ · ' : ''}İDAREDEN</small><b></b><p></p><button class="ikincil" data-obok="${x.id}">Okudum</button></div>`).join('');
     k.querySelectorAll('.obk').forEach((el, i) => { el.querySelector('b').textContent = L[i].baslik; el.querySelector('p').textContent = L[i].metin; });
     k.querySelectorAll('[data-obok]').forEach(b => b.onclick = () => { sb.rpc('umal_obil_okudum_kod', { p_kim: 'ogrenci', p_no: S.no, p_kod: S.kod, p_idler: [+b.dataset.obok] }).then(() => {}, () => {}); const m = Math.max(g, ...L.map(x => x.id).filter(id => id <= +b.dataset.obok)); try { localStorage.setItem('umalObil:' + S.no, String(Math.max(+b.dataset.obok, m))); } catch (e) {} obYukle(); });
   }
+  // K-868: gezide öğretmenden özel mesaj (ör. "Nerede kaldın? Otobüs kalkıyor") — ekranı kaplar, güçlü titreşim ve ses; "Gördüm" okundu yapar
+  function gzMsjGoster(L) {
+    const x = L[L.length - 1]; let el = document.getElementById('gzMsjEkran');
+    if (!x) { if (el) el.remove(); return; } if (el && el.dataset.id === String(x.id)) return; if (el) el.remove();
+    el = document.createElement('div'); el.id = 'gzMsjEkran'; el.dataset.id = String(x.id); el.setAttribute('role', 'alertdialog');
+    el.innerHTML = `<div class="acil-ic"><div class="acil-ust"><span class="acil-isik"></span>ÖĞRETMENİNDEN · GEZİ</div><h1></h1><p></p><button class="birincil" id="gzMsjOk">Gördüm</button><small></small></div>`;
+    el.querySelector('h1').textContent = String(x.baslik || '').replace(/^GEZİ ·\s*/, ''); el.querySelector('p').textContent = x.metin || '';
+    try { el.querySelector('small').textContent = new Date(x.zaman || x.olusturma || Date.now()).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }); } catch (e) {}
+    document.body.appendChild(el);
+    try { navigator.vibrate && navigator.vibrate([500, 150, 500, 150, 500, 150, 800]); } catch (e) {}
+    const k = SES.kapali; SES.kapali = false; try { sesCal('acil'); setTimeout(() => { if (document.getElementById('gzMsjEkran')) sesCal('acil'); }, 1300); } catch (e) {} SES.kapali = k;
+    el.querySelector('#gzMsjOk').onclick = () => { const id = +x.id; sb.rpc('umal_obil_okudum_kod', { p_kim: 'ogrenci', p_no: S.no, p_kod: S.kod, p_idler: [id] }).then(() => {}, () => {});
+      try { const g = +localStorage.getItem('umalObil:' + S.no) || 0; localStorage.setItem('umalObil:' + S.no, String(Math.max(g, id))); } catch (e) {} el.remove(); obYukle(); };
+  }
+  setInterval(() => { if (S.kod && !document.hidden) obYukle(); }, 20000);   // K-868: idare/öğretmen mesajı sayfa açıkken 20 sn içinde düşer
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kod) obYukle(); });
   async function tuYukle() { let data = null; try { ({ data } = await sb.rpc('umal_ogrenci_gb', { p_no: S.no, p_kod: S.kod })); } catch (e) {} if (!data || !data.ok) return; TU.L = data.liste || []; tuAnaCiz(); setTimeout(kutlamaDenetle, 900); }
   // K-795: tebrik gelince öğrenci uygulamayı açtığında konfeti + alkış ekranı (her tebrikte bir kez; son 3 gün)
   const tkAn = () => 'gbKutla:' + S.no;

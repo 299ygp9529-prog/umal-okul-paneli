@@ -584,6 +584,11 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 #soRapor .sr-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #22385a; } #soRapor .sr-bar b { flex: 1; text-align: center; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #soRapor .sr-bar .birincil { width: auto; padding: 9px 14px; font-size: 14px; margin: 0; } #soRapor iframe { flex: 1; width: 100%; border: 0; background: #fff; }
 .gz-h-sf.ara { color: #cfe3f7; text-decoration: none; border: 1px solid #e8c66b66; border-radius: 999px; padding: 3px 9px 3px 6px; background: #e8c66b14; } .gz-h-sf.ara em { font-style: normal; font-weight: 800; color: #e8c66b; margin-left: 2px; }   /* K-866 */
+#gzMsjEkran { position: fixed; inset: 0; z-index: 10001; background: radial-gradient(circle at 50% 30%, #3a0a14, #0d1726 70%); display: grid; place-items: center; padding: 20px; }   /* K-868 */
+#gzMsjEkran .acil-ic { width: min(560px, 100%); text-align: center; border: 2px solid #ff5a6e; border-radius: 22px; padding: 26px 20px 18px; background: rgba(13,23,38,.88); box-shadow: 0 0 0 6px rgba(255,90,110,.14), 0 0 60px rgba(255,70,90,.4); }
+#gzMsjEkran .acil-ust { display: inline-flex; align-items: center; gap: 8px; color: #ff8a98; font-weight: 900; letter-spacing: .12em; font-size: 14px; } #gzMsjEkran .acil-isik { width: 12px; height: 12px; border-radius: 50%; background: #ff3b55; box-shadow: 0 0 12px #ff3b55; }
+#gzMsjEkran h1 { margin: 16px 0 6px; font-size: 30px; line-height: 1.2; overflow-wrap: anywhere; } #gzMsjEkran p { margin: 12px 0 22px; font-size: 22px; font-weight: 600; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+#gzMsjEkran button { width: 100%; padding: 16px; font-size: 19px; } #gzMsjEkran small { display: block; margin-top: 12px; color: var(--soluk); font-size: 13px; }
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -756,6 +761,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611211330"></script>
 <script src="../telsiz.js?v=202611211500"></script>
-<script src="ogrenci.js?v=202611211500"></script>
+<script src="ogrenci.js?v=202611211520"></script>
 </body>
 </html>

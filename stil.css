@@ -2917,3 +2917,11 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .gz-k .gz-tzr.acik { color: #3ef08a; border-color: rgba(62,240,138,.6); background: rgba(10,40,26,.85); box-shadow: 0 0 8px rgba(62,240,138,.45); } .gz-k .gz-tzr.acik .d { opacity: 1; }
 .gz-tzs:empty { display: none; } .gz-tzs { display: inline-flex; align-items: center; gap: 4px; color: #3ef08a; } .gz-tzs svg { width: 14px; height: 14px; }
 @media (max-width: 760px) { .gz-k .gz-tzr { width: 17px; height: 17px; top: 4px; right: 4px; border-radius: 6px; } .gz-k .gz-tzr svg { width: 12px; height: 12px; } }
+/* K-868: yoklama — sayım açıkken gelen yeşil, gelmeyen kırmızı (sabit, animasyonsuz) */
+.gz-k.sy-v { border-color: #3ef08a !important; box-shadow: 0 0 0 2px rgba(62,240,138,.55), 0 0 12px rgba(62,240,138,.35); background: rgba(62,240,138,.12) !important; }
+.gz-k.sy-y { border-color: #ff4d5e !important; box-shadow: 0 0 0 2px rgba(255,77,94,.65), 0 0 12px rgba(255,77,94,.4); background: rgba(255,77,94,.14) !important; }
+.gz-k.sy-y b { color: #ffb3bb; }
+.gz-sys:empty { display: none; } .gz-sys { display: inline-flex; align-items: center; gap: 4px; color: #ff8a98; } .gz-sys.tam { color: #3ef08a; } .gz-sys .ky-ik { width: auto; height: auto; background: none; box-shadow: none; margin: 0; color: inherit; } .gz-sys .ky-ik svg { width: 14px; height: 14px; }
+.gz-kk-syv { color: #3ef08a !important; font-weight: 700; } .gz-kk-syy { color: #ff6b7a !important; font-weight: 700; }
+.gz-kk-msj { gap: 8px; } .gz-msj-hazir { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; } .gz-msj-hazir button { margin: 0; min-height: 44px; }
+.gz-msj textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; background: var(--koyu); color: var(--yazi); border: 1px solid var(--cizgi); resize: vertical; }
