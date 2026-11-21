@@ -831,7 +831,7 @@
     const t = OTATIL && OTATIL.tatil && PGUN === gunIdx(simdi()) ? OTATIL.tatil : null, tohum = new Date().getDate();
     const L = t ? ['Tatil! Kitap da olur, uyku da olur, ikisi birden de olur.', 'Okul seni özledi ama dinlenmen daha önemli. İyi tatiller!', 'Tahtalar uyuyor, Atlas nöbette. Keyfine bak.']
       : ['Bugün ders yok. Biraz dinlen, biraz oku, çokça gül.', 'Ders yok ama hayaller açık. Güzel bir gün geçir.', 'Bugün tebeşir tozu yok. Kendine iyi bak.'];
-    return `<div class="kart gb-kart"><img class="gb-atlas" src="../atlas-maskot-foto.jpg" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(t ? t.ad : 'Bugün ders yok')}</b><p>${esc(L[tohum % L.length])}</p></div></div>`;
+    return `<div class="kart gb-kart"><img class="gb-atlas" src="../atlas-mutlu.jpg" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(t ? t.ad : 'Bugün ders yok')}</b><p>${esc(L[tohum % L.length])}</p></div></div>`;
   }
   function programCiz() {
     const s = simdi(), bg = gunIdx(s); if (PGUN == null) PGUN = bg > 4 ? 0 : bg;

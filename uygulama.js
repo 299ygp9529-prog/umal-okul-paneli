@@ -1480,7 +1480,7 @@
       : hs ? ['Hafta sonu', sec(['Kahveni yavaş iç; kâğıtlar pazartesi de orada olacak.', 'Bugün zil çalmıyor, sadece çaydanlık.', 'Yoklama yok, nöbet yok. Sen ve sıcak bir kahve.', 'Kırmızı kalem dinleniyor, sen de dinlen.', 'Tahtalar kapalı, Atlas bekçide. İyi hafta sonları!'])]
       : ['Bugün dersin yok', sec(['Programında bugün ders görünmüyor. Bir kahve iyi gider.', 'Boş gün! Hak edilmiş bir mola.', 'Bugün tebeşir tozu yok; biraz nefes al.', 'Dersin yok ama Atlas burada; bir şey lazım olursa yaz.'])];
     const alt = t && t.bas !== t.bit ? kisa(t.bas) + ' – ' + kisa(t.bit) : t ? kisa(t.bas) : '';
-    return `<div class="kart gb-kart"><img class="gb-atlas" src="atlas-maskot-foto.jpg" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(bas)}</b><p>${esc(metin)}</p>${alt ? `<small>${esc(alt)}</small>` : ''}${ek ? `<small>${ek}</small>` : ''}</div><span class="gb-ik">${GB_IK}</span></div>`;
+    return `<div class="kart gb-kart"><img class="gb-atlas" src="atlas-mutlu.jpg" alt="" width="54" height="54" loading="lazy"><div class="gb-m"><b>${esc(bas)}</b><p>${esc(metin)}</p>${alt ? `<small>${esc(alt)}</small>` : ''}${ek ? `<small>${ek}</small>` : ''}</div><span class="gb-ik">${GB_IK}</span></div>`;
   }
   function foto(no, ad) {
     const s = !FOTO_GIZLI.has(no) && D.fotolar[no];
@@ -7971,7 +7971,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     if (!z || Date.now() - z > 30 * 60000 || KUR_UYG()) return;
     const goster = () => {
       if (KUR_IOS()) return;
-      pencereAc(`<div class="kur-son"><img src="atlas-maskot-foto.jpg" alt="" class="kur-maskot"><h2>Atlas hazır</h2><p>Bir dokunuşla telefonunuzun ana ekranına ekleyin; uygulama gibi açılır, bildirimler gelir.</p>${kurulum ? '<button class="birincil" id="kurYukle">Atlas\'ı ana ekrana ekle</button>' : `<p class="soluk kucuk">Tarayıcının menüsünden (⋮) <b>Uygulamayı yükle</b> ya da <b>Ana ekrana ekle</b>'yi seçin.</p><a class="ikincil" href="kur.html">Adım adım anlatım</a>`}</div>`);
+      pencereAc(`<div class="kur-son"><img src="atlas-mutlu.jpg" alt="" class="kur-maskot"><h2>Atlas hazır</h2><p>Bir dokunuşla telefonunuzun ana ekranına ekleyin; uygulama gibi açılır, bildirimler gelir.</p>${kurulum ? '<button class="birincil" id="kurYukle">Atlas\'ı ana ekrana ekle</button>' : `<p class="soluk kucuk">Tarayıcının menüsünden (⋮) <b>Uygulamayı yükle</b> ya da <b>Ana ekrana ekle</b>'yi seçin.</p><a class="ikincil" href="kur.html">Adım adım anlatım</a>`}</div>`);
       const y = $('#kurYukle'); if (y) y.onclick = async () => { if (!kurulum) return; kurulum.prompt(); await kurulum.userChoice.catch(() => {}); kurulum = null; $('#pencere').classList.add('gizli'); atlasOnay('Atlas ana ekranda', 'Bundan sonra oradan açın'); };
     };
     if (kurulum) goster(); else setTimeout(goster, 2500);
