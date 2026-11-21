@@ -996,6 +996,7 @@
     setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);
     if (ALT_SEKME[rol]) ogtAltKur();   // K-741 · K-756: idare ve Kurucu da
     kurulumSonrasi();   // K-850: karekodla kurulduysa: ana ekrana ekleme
+    cihazBildir();   // K-856: ana ekran / bildirim durumu Kurucuya
     if (window.UmalBildirim && ['bas', 'yonetici', 'rehberlik', 'ogretmen'].includes(D.rol)) UmalBildirim.karsila({ sb, kim: 'personel', no: String(D.eposta || '').toLowerCase() });   // K-730: girişte bildirim izni   // K-720   // K-716ak: girişte Atlas karşılar (öğrenci panelindeki gibi)
     if (rol === 'rehberlik' || rol === 'bas') mektupZarfi();   // K-551: baş yönetici yalnız randevu hareketlerini görür (mektup içerikleri RLS ile yalnız rehberlikte)
     if (rol !== 'ogretmen') komutOnar();
@@ -7889,6 +7890,25 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     const PZ = new Map(); try { const P = await programYukle(); Object.values(P.siniflar || {}).forEach(sn => Object.values(sn || {}).forEach(c => (c && c.ogretmen || []).forEach(o => { const a = zAnah(o); if (a && !PZ.has(a)) PZ.set(a, { ad: o }); }))); } catch (e) {}
     $('#icerik').innerHTML = '<h1>Telefona Atlas Kur</h1>' + `<div class="kart kur-kart"><div class="og-dv-ust"><span class="og-dv-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3" fill="currentColor" fill-opacity=".16"/><path d="M10 18.5h4"/><path d="M9.5 9.5l2 2 3.5-4"/></svg></span><div><b>Telefona Atlas kur</b><span>Yanınızdaki öğretmeni seçin, karekodu okutsun; e-posta kodu beklemeden girer, kendi şifresini belirler.</span></div></div><input id="kurAra" placeholder="Öğretmen adı ya da e-posta" autocomplete="off" autocapitalize="off" spellcheck="false"><div id="kurSonuc" class="kur-sonuc"></div><button type="button" class="ikincil kur-yenib" id="kurYeniQR">Listede olmayan öğretmen için karekod</button></div>`;
     const ciz = () => telKurBolumu();
+    // K-856: Kurulum durumu — kim ana ekrana ekledi, kimde bildirim açık
+    const kd = document.createElement('div'); kd.className = 'kart kd-kart'; kd.innerHTML = '<b class="neon">Kurulum durumu</b><div class="soluk kucuk">Yükleniyor…</div>'; $('#icerik').appendChild(kd);
+    let OZ = []; try { const { data } = await sb.rpc('umal_kurulum_ozet'); OZ = (data && data.liste) || []; } catch (e) {}
+    const varA = new Set(OZ.map(x => zAnah(x.ad))), YOK = [...PZ.values()].filter(v => v.ad && !varA.has(zAnah(v.ad))).map(v => ({ ad: v.ad, panelYok: true }));
+    let eksik = false;
+    const zaman = t => { if (!t) return ''; const d = new Date(t), g = Math.floor((Date.now() - d) / 864e5); return g < 1 ? 'bugün ' + d.toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : g < 2 ? 'dün' : g + ' gün önce'; };
+    const durum = x => { if (x.panelYok) return { u: ['gri', 'Panelde yok'], b: ['gri', '—'], tam: false };
+      const u = x.uyg ? ['yesil', 'Ana ekranda'] : x.cihaz ? ['sari', 'Tarayıcıdan'] : x.giris ? ['sari', 'Girdi · eski sürüm'] : ['gri', 'Hiç girmedi'];
+      const b = x.izin === 'granted' || x.abone ? ['yesil', 'Bildirim açık'] : x.izin === 'denied' ? ['kirmizi', 'Bildirim kapalı'] : ['gri', 'Bildirim sorulmadı'];
+      return { u, b, tam: x.uyg && (x.izin === 'granted' || x.abone) }; };
+    const kdCiz = () => { const H = OZ.concat(YOK), T = OZ.length, ana = OZ.filter(x => x.uyg).length, bil = OZ.filter(x => x.izin === 'granted' || x.abone).length, hic = OZ.filter(x => !x.giris && !x.cihaz).length;
+      const G_ = eksik ? H.filter(x => !durum(x).tam) : H;
+      kd.innerHTML = `<div class="kd-ust"><b class="neon">Kurulum durumu</b><button class="ikincil kucuk-d" id="kdEksik">${eksik ? 'Hepsini göster' : 'Yalnız eksikleri göster'}</button></div>
+        <div class="kd-ozet"><span><b>${T}</b> panelde</span><span class="yesil"><b>${ana}</b> ana ekranda</span><span class="yesil"><b>${bil}</b> bildirim açık</span><span><b>${hic}</b> hiç girmedi</span>${YOK.length ? `<span class="gri"><b>${YOK.length}</b> panelde yok</span>` : ''}</div>
+        <div class="kd-liste">${G_.map(x => { const d = durum(x); return `<button type="button" class="kd-kisi ${d.tam ? 'tam' : ''}" ${x.panelYok ? `data-kdyok="${esc(x.ad)}"` : `data-kdep="${esc(x.eposta)}" data-kdad="${esc(x.ad || '')}"`}><b>${esc(baslik(x.ad || '') || x.eposta)}</b><span class="kd-roz"><i class="${d.u[0]}">${d.u[1]}</i>${x.panelYok ? '' : `<i class="${d.b[0]}">${d.b[1]}</i>`}</span><small>${x.panelYok ? 'Ders programında var · dokun: karekodla ekle' : [x.platform, x.son ? 'son ' + zaman(x.son) : x.giris ? 'son giriş ' + zaman(x.giris) : ''].filter(Boolean).join(' · ')}</small></button>`; }).join('') || '<div class="soluk">Eksik yok.</div>'}</div>`;
+      $('#kdEksik').onclick = () => { eksik = !eksik; kdCiz(); };
+      kd.querySelectorAll('[data-kdep]').forEach(b => b.onclick = () => kurQR(b.dataset.kdep, b.dataset.kdad));
+      kd.querySelectorAll('[data-kdyok]').forEach(b => b.onclick = () => kurQR(null, b.dataset.kdyok)); };
+    kdCiz();
     { const ka = $('#kurAra'); if (ka) {   // K-850 · K-852: listede olmayan öğretmen de buradan eklenir (ders programındaki adlar önerilir)
         const kurYeni = (ad0, ep0) => { const so = $('#kurSonuc');
           so.innerHTML = `<div class="kur-yeni"><b>Yeni öğretmen</b><label>Ad Soyad<input id="kurYAd" value="${esc(baslik(ad0 || ''))}" maxlength="80" autocomplete="off"></label><label>E-posta<input id="kurYEp" type="email" value="${esc(ep0 || '')}" placeholder="ornek@gmail.com" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"></label><button class="birincil" id="kurYEkle">Ekle ve karekod ver</button><small class="soluk">Öğretmen olarak eklenir; idare ya da rehberlik yetkisini sonra listeden verebilirsiniz.</small></div>`;
@@ -7915,6 +7935,15 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
   const KUR_PAYLAS = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
   const KUR_EKLE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
   const kurKodYaz = k => String(k || '').replace(/^(\d{3})(\d{3})$/, '$1 $2');
+  let cihazZ = 0;
+  function cihazBildir() {   // K-856: bu telefon ana ekrandan mı açıldı, bildirim izni ne durumda (Kurucu "Kurulum durumu"nda görür)
+    const yolla = async () => { if (Date.now() - cihazZ < 60000) return; cihazZ = Date.now();
+      let id = ''; try { id = localStorage.getItem('atlas-cihaz') || ''; if (!/^[0-9a-z]{16}$/.test(id)) { id = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem('atlas-cihaz', id); } } catch (e) { return; }
+      const ua = navigator.userAgent, pf = KUR_IOS() ? 'iPhone' : /Android/i.test(ua) ? 'Android' : 'Bilgisayar';
+      try { await sb.rpc('umal_cihaz_bildir', { p_cihaz: id, p_platform: pf, p_uyg: KUR_UYG(), p_izin: 'Notification' in window ? Notification.permission : 'yok' }); } catch (e) {} };
+    setTimeout(yolla, 4000); setTimeout(() => { cihazZ = 0; yolla(); }, 45000);
+    if (!cihazBildir.dinle) { cihazBildir.dinle = 1; document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - cihazZ > 10 * 60000) yolla(); }); }
+  }
   async function kurulumGir(arg) {
     const bi = $('#girisBilgi'); bi.textContent = 'Atlas kuruluyor…';
     let r = null; try { r = await sb.rpc('umal_kurulum_gir', Object.assign({ p_bilet: null, p_kod: null }, arg)); } catch (e) { r = { error: e }; }
