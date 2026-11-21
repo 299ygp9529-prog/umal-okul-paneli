@@ -617,10 +617,35 @@
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       plan: o => tzPlanYukle(g.anahtar, o),   // K-845: fotoğraflı oturma planı
+      duzenle: (o, islem) => tzGeziDuzenle(g.anahtar, o, islem),   // K-875: telsizden yerini değiştir, başka otobüse al, koltuktan çıkar, telefon gir
       varlikIzle: cb => window.UmalTelsizIzle ? window.UmalTelsizIzle(sb, g.anahtar, cb) : null,   // K-874: otobüs sayfasında telsizi açık olanlar
       mesaj: k => gzMesajAc({ tur: k.tur, no: k.no, ad: k.ad, tel: k.tel, eposta: k.eposta || '' }),   // K-869: telsizde koltuktaki kişiye özel mesaj
       yonet: (o, v) => r_('umal_gezi_telsiz_yonet', { p_anahtar: g.anahtar, p_otobus: o, p_veri: v }),   // K-862: görevli öğretmen başkan seçer, görevli ekler
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
+  }
+  // K-875: telsizden gezi düzenleme — panelin Gezi Otobüsleri'ndeki işlemlerin aynısı; gezi ayarına yazar (yerZaman ile panel de hemen alır)
+  async function tzGeziDuzenle(anahtar, otobusNo, x) {
+    const { data, error } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', anahtar).maybeSingle();
+    if (error || !data || !data.deger) return { ok: false, hata: error ? hataYaz(error) : 'Gezi bulunamadı' };
+    const G = JSON.parse(data.deger); ['yer', 'bilgi', 'kapali'].forEach(k => { if (!G[k] || typeof G[k] !== 'object') G[k] = {}; }); if (!Array.isArray(G.gorevli)) G.gorevli = [];
+    const oto = no => (G.otobusler || []).find(b => +b.no === +no), bus = oto(otobusNo); if (!bus) return { ok: false, hata: 'Otobüs bulunamadı' };
+    const ayr = G.ayrilan === 4 ? 4 : 2, anOf = (oid, k) => Object.keys(G.yer).find(a => G.yer[a].o === oid && +G.yer[a].k === +k), kapali = (oid, k) => (G.kapali[oid] || []).map(Number).includes(+k);
+    const an = anOf(bus.id, x.k); if (!an) return { ok: false, hata: 'Bu koltukta kimse yok; plan yenilendi.' };
+    const ogr = an.startsWith('o:'); let yeniK = null;
+    if (x.tur === 'tasi') { const k2 = +x.k2; if (!k2 || k2 > (+bus.kapasite || 0)) return { ok: false, hata: 'Koltuk bulunamadı' }; if (kapali(bus.id, k2)) return { ok: false, hata: 'Bu koltuk kapalı.' };
+      const b2 = anOf(bus.id, k2);
+      const once = G.yer[an]; G.yer[an] = { o: bus.id, k: k2 }; if (b2 && b2 !== an) G.yer[b2] = once; yeniK = k2; }
+    else if (x.tur === 'oto') { const ob = oto(x.o2); if (!ob) return { ok: false, hata: 'Otobüs bulunamadı' }; let k = null;
+      const bas = ogr ? ayr + 1 : 1; for (let n = bas; n <= (+ob.kapasite || 0); n++) if (!kapali(ob.id, n) && !anOf(ob.id, n)) { k = n; break; }
+      if (!k) return { ok: false, hata: ob.no + '. otobüste boş koltuk yok.' }; G.yer[an] = { o: ob.id, k }; yeniK = k; }
+    else if (x.tur === 'cikar') delete G.yer[an];
+    else if (x.tur === 'tel') { if (ogr) G.bilgi[an] = Object.assign({}, G.bilgi[an], { tel: x.tel || '', ogrTel: x.ogrTel || '', z: Date.now(), kim: 'idare' });
+      else { const g_ = G.gorevli.find(y => 'g:' + y.id === an); if (g_) { g_.tel = x.tel || ''; G.gorevliZaman = Date.now(); } } }
+    else return { ok: false, hata: 'Bilinmeyen işlem' };
+    if (x.tur !== 'tel') G.yerZaman = Date.now();
+    const { error: e2 } = await sb.from('umal_ayarlar').upsert({ anahtar, deger: JSON.stringify(G) }, { onConflict: 'anahtar' });
+    if (e2) return { ok: false, hata: /permission|policy|rls/i.test(e2.message || '') ? 'Bu işlem için yetkiniz yok (idare yapabilir).' : hataYaz(e2) };
+    tzPlanYukle.tel = {}; return { ok: true, k: yeniK };
   }
   // K-845: telsizde otobüse dokununca oturma planı (yalnız görmek için; değişiklik Gezi › Otobüsler'de)
   async function tzPlanYukle(anahtar, o) {
@@ -4898,6 +4923,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if (!G0) G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
       if ((+S_.baskanZaman || 0) > (+G.baskanZaman || 0)) { if (JSON.stringify(G.baskan || {}) === G0.b) G.baskan = S_.baskan || G.baskan; else { const L_ = new Set((G.baskan.nolar || []).map(String)); (S_.baskan && S_.baskan.nolar || []).forEach(n => L_.add(String(n))); G.baskan.nolar = [...L_]; } G.baskanZaman = S_.baskanZaman; d_ = true; }
       if ((+S_.gorevliZaman || 0) > (+G.gorevliZaman || 0)) { const var_ = new Set((G.gorevli || []).map(x => x.id)), dolu = new Set(Object.values(G.yer || {}).map(y => y.o + ':' + y.k));
+        if (JSON.stringify(G.gorevli || []) === G0.g) (S_.gorevli || []).forEach(x => { const i = G.gorevli.findIndex(y => y.id === x.id); if (i >= 0) G.gorevli[i] = x; });   // K-875: telsizden girilen telefon da gelsin (panelde değişmediyse)
         (S_.gorevli || []).forEach(x => { if (var_.has(x.id)) return; G.gorevli.push(x); const y = (S_.yer || {})['g:' + x.id]; if (y && !dolu.has(y.o + ':' + y.k)) { G.yer['g:' + x.id] = y; dolu.add(y.o + ':' + y.k); const kp = (G.kapali || {})[y.o]; if (Array.isArray(kp)) G.kapali[y.o] = kp.filter(n => +n !== +y.k); } });
         G.gorevliZaman = S_.gorevliZaman; d_ = true; }
       G0 = { g: JSON.stringify(G.gorevli || []), b: JSON.stringify(G.baskan || {}), k: JSON.stringify(G.kapali || {}) };
