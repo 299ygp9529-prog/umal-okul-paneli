@@ -2795,3 +2795,6 @@ body.ogt-sakin main *, body.ogt-sakin main *::before, body.ogt-sakin main *::aft
 @keyframes gzYeni { 50% { box-shadow: 0 0 0 3px var(--c, #22e8ff), 0 0 26px var(--c, #22e8ff); } }
 .gz-k b.gz-tam { white-space: normal; line-height: 1.1; font-size: 9.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; text-align: center; }   /* K-834: görevlinin tam adı */
 .gz-k .gz-gf { font-size: 9.5px; letter-spacing: -.2px; }
+/* K-837: bütün otobüslerde koltuk kutucukları aynı boy (uzun ad kutuyu büyütmez) */
+@media (max-width: 760px) { .gz-k { height: 76px; min-height: 76px; max-height: 76px; } .gz-sira > .gz-bosluk, .gz-sira > .gz-kapi { height: 76px; } }
+.gz-k b.gz-tam { max-height: 2.2em; overflow: hidden; }
