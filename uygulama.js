@@ -617,6 +617,7 @@
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
       plan: o => tzPlanYukle(g.anahtar, o),   // K-845: fotoğraflı oturma planı
+      mesaj: k => gzMesajAc({ tur: k.tur, no: k.no, ad: k.ad, tel: k.tel, eposta: k.eposta || '' }),   // K-869: telsizde koltuktaki kişiye özel mesaj
       yonet: (o, v) => r_('umal_gezi_telsiz_yonet', { p_anahtar: g.anahtar, p_otobus: o, p_veri: v }),   // K-862: görevli öğretmen başkan seçer, görevli ekler
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
   }
@@ -4708,6 +4709,30 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   // K-716bc: Excel/CSV katılımcı listesi her biçimde okunur. Başlık adları esnek: No / Okul No / Öğrenci No · Ad Soyad / Adı Soyadı / İsim + Soyisim · T.C. · doğum · telefon · cinsiyet · sınıf / şube;
   // belediye biçimi (ISIM, SOYISIM, TC/YABANCI_KIMLIK_NO, PASAPORT_NO = telefon) ve çok sayfalı dosyalar dahil. Numara sütunu yoksa ya da sıra numarasıysa öğrenci okul listesinden adıyla bulunur;
   // başlık satırı hiç yoksa her satır okul listesindeki ad soyadla tanınır, kalan bilgiler hücrenin içeriğinden alınır.
+  // K-869: gezide kişiye özel mesaj — öğrenciye ve Atlas'lı öğretmen/idareciye bildirim (öğrenci sayfası açıksa ekranı kaplar);
+  // şoför, rehber, belediye görevlisi gibi Atlas kullanmayanlara telefonun mesaj uygulamasıyla SMS. Öğrenciler kişiye mesaj atamaz (yalnız telsize yazar).
+  const GZ_MSJ_OGR = [['Nerede kaldın?', 'Otobüs kalkıyor, hemen otobüse gel!'], ['Otobüse dön', 'Hemen otobüse dön, seni bekliyoruz.'], ['Toplanma yerine gel', 'Hemen toplanma yerine gel.'], ['Beni ara', 'Bu mesajı görünce öğretmenini hemen ara.']];
+  const GZ_MSJ_GOR = [['Neredesiniz?', 'Otobüs kalkıyor, neredesiniz?'], ['Otobüse dönün', 'Lütfen otobüse dönün, sizi bekliyoruz.'], ['Mola bitti', 'Mola bitti, yola çıkıyoruz.'], ['Beni arayın', 'Müsait olunca beni arar mısınız?']];
+  async function gzMesajAc(k) {
+    const ogr = k.tur === 'ogr', ogt = k.tur === 'ogt' || k.tur === 'idr', tel = String(k.tel || '').replace(/\D/g, '');
+    let ep = k.eposta || ''; if (ogt && !ep) { await kisiAdlariYukle().catch(() => {}); const q = gzSade(k.ad); for (const [e, a] of KISI) if (gzSade(a) === q) { ep = e; break; } }
+    const yol = ogr || (ogt && ep) ? 'atlas' : tel.length >= 10 ? 'sms' : '';
+    const TUR = { ogr: 'Öğrenci', ogt: 'Öğretmen', idr: 'İdareci', reh: 'Rehber', bel: 'Belediye görevlisi', sof: 'Şoför' };
+    if (!yol) { uyar(`${baslik(k.ad || TUR[k.tur] || 'Kişi')} Atlas kullanmıyor ve telefonu kayıtlı değil. Önce telefonunu girin.`); return; }
+    const H = ogr ? GZ_MSJ_OGR : GZ_MSJ_GOR, ad = baslik(String(k.ad || '').split(/\s+/)[0] || ''), metinOf = m => ogr && ad ? ad + ', ' + m[1].charAt(0).toLocaleLowerCase(tr) + m[1].slice(1) : m[1];
+    pencereAc(`<div class="gz-msj"><h2 style="margin-top:0">${esc(baslik(k.ad || TUR[k.tur] || ''))} · mesaj</h2><p class="soluk kucuk" style="margin:-4px 0 12px">${esc(TUR[k.tur] || 'Görevli')} · ${yol === 'atlas' ? (ogr ? 'Telefonuna bildirim gider; öğrenci sayfası açıksa ekranı kaplar, titreşir ve öter.' : 'Atlas bildirimi olarak telefonuna gider.') : 'Atlas kullanmıyor: telefonunuzun mesaj uygulaması açılır (SMS), metin hazır gelir.'}</p>
+      <div class="gz-msj-hazir">${H.map((m, i) => `<button type="button" class="ikincil" data-hmsj="${i}">${esc(m[0])}</button>`).join('')}</div>
+      <div class="gz-alan">${yol === 'atlas' ? `<label>Başlık<input id="omBas" maxlength="60" value="${esc(H[0][0])}"></label>` : ''}<label>Mesaj<textarea id="omMet" rows="3" maxlength="300">${esc(metinOf(H[0]))}</textarea></label></div>
+      <div class="dugmeler"><button class="birincil" id="omGon">${KY_IK.mesaj}${yol === 'sms' ? 'SMS ile gönder' : 'Gönder'}</button></div></div>`);
+    $('#pencere').querySelectorAll('[data-hmsj]').forEach(b => b.onclick = () => { const m = H[+b.dataset.hmsj]; if ($('#omBas')) $('#omBas').value = m[0]; $('#omMet').value = metinOf(m); });
+    const buyuk = t => t.charAt(0).toLocaleUpperCase(tr) + t.slice(1);
+    $('#omGon').onclick = async () => { const met = buyuk($('#omMet').value.trim()); if (met.length < 2) { uyar('Mesajı yazın.'); return; }
+      if (yol === 'sms') { $('#pencere').classList.add('gizli'); location.href = 'sms:' + tel + '?&body=' + encodeURIComponent(met); return; }
+      const bas_ = buyuk($('#omBas').value.trim()); if (bas_.length < 2) { uyar('Başlık yazın.'); return; }
+      const b = $('#omGon'); b.disabled = true; b.textContent = 'Gönderiliyor…';
+      let r = null; try { r = await sb.rpc('umal_obil_gonder', { p_kim: ogr ? 'ogrenci' : 'ogretmen', p_hedef: [ogr ? String(k.no) : ep], p_sablon: 'cagri', p_baslik: 'GEZİ · ' + bas_, p_metin: met, p_onemli: true }); } catch (e) { r = { error: e }; }
+      const d = r && r.data; if (!d || !d.ok) { b.disabled = false; b.innerHTML = KY_IK.mesaj + 'Yeniden dene'; uyar('Gönderilemedi: ' + ((r && r.error && hataYaz(r.error)) || (d && d.hata) || '')); return; }
+      $('#pencere').classList.add('gizli'); atlasOnay('Mesaj gitti', (k.ad ? baslik(k.ad).split(' ')[0] : '') + (d.telefon ? ' · telefonuna bildirim gitti' : ogr ? ' · sayfayı açınca görecek' : ' · panelde görecek')); }; }
   const gzSade = s => String(s == null ? '' : s).normalize('NFC').replace(/[İIı]/g, 'i').toLowerCase().replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/â/g, 'a').replace(/î/g, 'i').replace(/û/g, 'u').replace(/[^a-z0-9]+/g, ' ').trim();
   const gzSutTur = h => !h ? '' : /kimlik|tckn|\bt ?c\b/.test(h) ? 'tc' : /pasaport/.test(h) ? 'pas' : /dogum|^d ?tarih/.test(h) && !/yer/.test(h) ? 'dg' : /telefon|gsm|iletisim|\bcep\b|\btel\b/.test(h) ? 'tl' : /cinsiyet/.test(h) ? 'cn'
     : /^((ogrenci|yolcu|katilimci)(nin|nun)? )?soy ?(ad|adi|isim|ismi)\b/.test(h) ? 'soy' : /^((ogrenci|yolcu|katilimci)(nin|nun)? )?(ad|adi|isim|ismi)\b|^(adsoyad|adisoyadi|isimsoyisim)$|^(ogrenci|yolcu|katilimci)$/.test(h) ? 'ad'
@@ -5220,28 +5245,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <small>${ogr ? esc(p.sinif) + ' · No ' + esc(p.no) : esc(GZ_TUR[p.tur] || 'Görevli')}</small><small>${o_.no}. otobüs · ${y.k}. koltuk${yerAd ? ', ' + esc(yerAd.toLocaleLowerCase(tr)) : ''}</small>
           ${yan ? `<small>Yanında: ${esc(baslik(yan.ad))}${yan.sinif ? ' (' + esc(yan.sinif) + ')' : ''}</small>` : ''}${es ? `<small>Arkadaşı: ${esc(baslik(es.ad))}</small>` : ''}${ogr ? (d_ => d_ === true ? '<small class="gz-kk-syv">Yoklamada: geldi ✓</small>' : d_ === false ? '<small class="gz-kk-syy">Yoklamada: gelmedi</small>' : '')(sayDurum(y.o, p.no)) : ''}</div></div>
         <div class="gz-kk-dug"><button class="birincil" id="kkTasi">Yerini değiştir</button>${tel.length > 4 ? `<a class="ikincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">${ogr ? 'Veliyi ara' : 'Ara'}</a>` : `<button class="ikincil" disabled>${ogr ? 'Veli telefonu yok' : 'Telefon yok'}</button>`}
-          ${ogr ? `<button class="birincil gz-kk-msj" id="kkMsj" style="grid-column:1/-1">${KY_IK.mesaj}Mesaj gönder</button>` : ''}<button class="ikincil" id="kkOto">Başka otobüse al</button><button class="ikincil" id="kkCik">Koltuktan çıkar</button>${p.tur === 'reh' ? '<button class="ikincil" id="kkRb">Telsiz bağlantısı</button>' : ''}</div>${gbBilgiMi(p) ? gbAlanlar(p) : ''}</div>`);
+          <button class="birincil gz-kk-msj" id="kkMsj" style="grid-column:1/-1">${KY_IK.mesaj}Mesaj gönder</button><button class="ikincil" id="kkOto">Başka otobüse al</button><button class="ikincil" id="kkCik">Koltuktan çıkar</button>${p.tur === 'reh' ? '<button class="ikincil" id="kkRb">Telsiz bağlantısı</button>' : ''}</div>${gbBilgiMi(p) ? gbAlanlar(p) : ''}</div>`);
       if (gbBilgiMi(p)) gbBagla(an);
       fotolariYukle(ogr ? [String(p.no)] : []).catch(() => {});
       $('#kkTasi').onclick = () => { $('#pencere').classList.add('gizli'); sel = an; esMod = false; ciz(); };
       $('#kkOto').onclick = () => { $('#pencere').classList.add('gizli'); sel = an; esMod = false; ciz(); const t = document.querySelector('.gz-sekmeler'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
       $('#kkCik').onclick = () => { delete G.yer[an]; $('#pencere').classList.add('gizli'); kaydet(); ciz(); };
       if ($('#kkRb')) $('#kkRb').onclick = () => rehberBag(an.slice(2));
-      if ($('#kkMsj')) $('#kkMsj').onclick = () => ozelMesaj(p);
+      if ($('#kkMsj')) $('#kkMsj').onclick = () => gzMesajAc(Object.assign({}, p, { eposta: ((G.gorevli || []).find(g => 'g:' + g.id === an) || {}).eposta || '' }));
     };
-    // K-868: öğrenciye özel mesaj — telefonuna bildirim gider; öğrenci sayfası açıksa ekranı kaplar, titreşir ve öter
-    const GZ_HAZIR_MSJ = [['Nerede kaldın?', 'Otobüs kalkıyor, hemen otobüse gel!'], ['Otobüse dön', 'Hemen otobüse dön, seni bekliyoruz.'], ['Toplanma yerine gel', 'Hemen toplanma yerine gel.'], ['Beni ara', 'Bu mesajı görünce öğretmenini hemen ara.']];
-    const ozelMesaj = p => { const ad = baslik(String(p.ad || '').split(/\s+/)[0] || '');
-      pencereAc(`<div class="gz-msj"><h2 style="margin-top:0">${esc(baslik(p.ad))} · mesaj</h2><p class="soluk kucuk" style="margin:-4px 0 12px">Telefonuna bildirim gider. Öğrenci sayfası açıksa ekranı kaplar, titreşir ve öter.</p>
-        <div class="gz-msj-hazir">${GZ_HAZIR_MSJ.map((m, i) => `<button type="button" class="ikincil" data-hmsj="${i}">${esc(m[0])}</button>`).join('')}</div>
-        <div class="gz-alan"><label>Başlık<input id="omBas" maxlength="60" value="${esc(GZ_HAZIR_MSJ[0][0])}"></label><label>Mesaj<textarea id="omMet" rows="3" maxlength="300">${esc(ad ? ad + ', ' + GZ_HAZIR_MSJ[0][1].charAt(0).toLocaleLowerCase(tr) + GZ_HAZIR_MSJ[0][1].slice(1) : GZ_HAZIR_MSJ[0][1])}</textarea></label></div>
-        <div class="dugmeler"><button class="birincil" id="omGon">${KY_IK.mesaj}Gönder</button></div><div class="soluk kucuk" id="omSonuc"></div></div>`);
-      $('#pencere').querySelectorAll('[data-hmsj]').forEach(b => b.onclick = () => { const m = GZ_HAZIR_MSJ[+b.dataset.hmsj]; $('#omBas').value = m[0]; $('#omMet').value = ad ? ad + ', ' + m[1].charAt(0).toLocaleLowerCase(tr) + m[1].slice(1) : m[1]; });
-      $('#omGon').onclick = async () => { const bas_ = $('#omBas').value.trim(), met = $('#omMet').value.trim(); if (bas_.length < 2 || met.length < 2) { uyar('Başlık ve mesaj yazın.'); return; }
-        const b = $('#omGon'); b.disabled = true; b.textContent = 'Gönderiliyor…';
-        let r = null; try { r = await sb.rpc('umal_obil_gonder', { p_kim: 'ogrenci', p_hedef: [String(p.no)], p_sablon: 'cagri', p_baslik: 'GEZİ · ' + bas_.charAt(0).toLocaleUpperCase(tr) + bas_.slice(1), p_metin: met.charAt(0).toLocaleUpperCase(tr) + met.slice(1), p_onemli: true }); } catch (e) { r = { error: e }; }
-        const d = r && r.data; if (!d || !d.ok) { b.disabled = false; b.innerHTML = KY_IK.mesaj + 'Yeniden dene'; uyar('Gönderilemedi: ' + ((r && r.error && hataYaz(r.error)) || (d && d.hata) || '')); return; }
-        $('#pencere').classList.add('gizli'); atlasOnay('Mesaj gitti', kisaAd(p.ad) + (d.telefon ? ' · telefonuna bildirim gitti' : ' · sayfayı açınca görecek')); }; };
     // K-826: rehbere geçici telsiz bağlantısı (karekod); yalnız telsiz açıkken çalışır, iptal edilebilir
     const rehberBag = async (gid, yeni) => {
       const g = G.gorevli.find(x => x.id === gid); if (!g) return;
@@ -5488,8 +5500,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     // K-865: şoföre dokununca kartı: adı, otobüs, plaka; telefonu kayıtlıysa "Ara", değilse bilgilerini gir (diğer kişilerin kartıyla aynı)
     const soforKart = o => { if (!o) return; const tel = gzTel(o.tel || '');
       pencereAc(`<div class="gz-kk" style="--c:#22e8ff"><div class="gz-kk-ust"><div class="foto gz-sf">${MENU_IK_DIREKSIYON}</div><div><b>${esc(o.sofor ? baslik(o.sofor) : 'Şoför')}</b><small>Şoför · ${o.no}. otobüs</small>${o.plaka ? `<small>Plaka: ${esc(o.plaka)}</small>` : ''}${tel.length > 4 ? `<small>${esc(tel)}</small>` : ''}</div></div>
-        <div class="gz-kk-dug">${tel.length > 4 ? `<a class="birincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">Ara</a>` : '<button class="ikincil" disabled>Telefon yok</button>'}<button class="ikincil" id="sfDuz">${o.sofor || tel.length > 4 ? 'Bilgilerini düzenle' : 'Bilgilerini gir'}</button></div></div>`);
-      $('#sfDuz').onclick = () => otoAyar(o); };
+        <div class="gz-kk-dug">${tel.length > 4 ? `<a class="birincil" href="tel:${esc(tel.replace(/\s+/g, ''))}">Ara</a>` : '<button class="ikincil" disabled>Telefon yok</button>'}<button class="birincil gz-kk-msj" id="sfMsj" style="grid-column:1/-1">${KY_IK.mesaj}Mesaj gönder</button><button class="ikincil" id="sfDuz">${o.sofor || tel.length > 4 ? 'Bilgilerini düzenle' : 'Bilgilerini gir'}</button></div></div>`);
+      $('#sfDuz').onclick = () => otoAyar(o); $('#sfMsj').onclick = () => gzMesajAc({ tur: 'sof', ad: o.sofor || 'Şoför', tel: o.tel || '' }); };
     const otoAyar = o => {
       pencereAc(`<h2 style="margin-top:0">${o.no}. Otobüs</h2><div class="gz-alan"><label>Otobüs no<input id="oaNo" type="number" min="1" value="${esc(o.no)}"></label><label>Kapasite (şoför hariç koltuk)<input id="oaKap" type="number" min="10" max="80" value="${esc(o.kapasite)}"></label><label>Plaka<input id="oaPl" value="${esc(o.plaka)}" placeholder="34 ABC 123"></label><label>Şoför<input id="oaSf" value="${esc(o.sofor)}" placeholder="Ad Soyad"></label><label>Şoför telefonu<input id="oaTel" value="${esc(o.tel || '05')}" inputmode="tel"></label></div>
         <p class="soluk kucuk">Kapasite değişince koltuk düzeni yeniden çizilir; yeni kapasiteyi aşan koltuklardaki kişiler bekleyenlere döner. Öndeki ${GZ_AYRILAN} koltuk görevlilere ayrılır (${GZ_AYRILAN_AD.slice(0, GZ_AYRILAN).map((a, i) => (i + 1) + ' ' + a.toLocaleLowerCase(tr)).join(', ')}); gezi bilgilerindeki "Önde ayrılan koltuk"tan değiştirilir.</p><div class="dugmeler"><button class="birincil" id="oaKay">Kaydet</button>${G.otobusler.length > 1 ? '<button class="bag kirmizi" id="oaSil">Otobüsü sil</button>' : ''}</div>`);
