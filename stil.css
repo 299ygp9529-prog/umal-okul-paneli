@@ -818,14 +818,7 @@ span.tk-gel.neon { color: var(--neon); }
   .sm-sikisik .oz-satir summary, .sm-sikisik .oz-top { padding-top: 6px !important; padding-bottom: 6px !important; }
   .sm-sikisik .salonlar { margin-top: 6px; }
 }
-/* K-408: Sınav takvimi kaydırmasız (masaüstü) */
-@media (min-width: 761px) {
-  .tk-s1 .tk-ozet { margin-bottom: 8px; gap: 8px; } .tk-s1 .tk-ozet > div { padding: 6px 12px; }
-  .tk-s1 .tk-gun { padding: 5px 0; } .tk-s1 .tk-sinav { padding: 5px 8px; } .tk-s1 .tk-sinavlar { gap: 5px; } .tk-s1 .kart { padding-top: 10px; padding-bottom: 10px; }
-  .tk-s2 .tk-cip { font-size: 11.5px; padding: 1px 8px 1px 3px; } .tk-s2 .tk-dersler { gap: 3px; } .tk-s2 .tk-tarih b { font-size: 14.5px; } .tk-s2 .tk-saat b { font-size: 13px; }
-  .tk-s2 .tk-iki { gap: 10px; } .tk-s2 h1 { margin-bottom: 4px; }
-  .tk-s3 .tk-cip { font-size: 10.5px; } .tk-s3 .tk-cip b { font-size: 10px; } .tk-s3 .tk-gun { padding: 3px 0; gap: 6px; } .tk-s3 .tk-ozet b { font-size: 17px; }
-}
+/* K-408 sıklaştırma kaldırıldı (K-89x): takvim ferah durur, sığmazsa kayar */
 @media (min-width: 761px) { .tk-iki + .kart { margin-top: 8px; } }
 /* K-409: Sınav merkezi salonları seviye seviye (Rehberlik/Proje düzeniyle aynı) */
 .salonlar.sm-gruplu { display: flex; flex-direction: column; gap: 8px; }
@@ -2989,3 +2982,15 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .dp-gv-o { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
 .dp-gv-o .cip { display: flex; justify-content: space-between; align-items: center; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 1100px) { .gv-nb { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); column-gap: 28px; } .gv-nbs:last-child { border-bottom: 1px solid var(--cizgi); } }
+
+/* K-89x: Sınav takvimi ferah düzen — iç içe girmesin */
+.tk-ozet { gap: 14px; margin-bottom: 18px; } .tk-ozet > div { padding: 14px 18px; gap: 4px; }
+.tk-iki { gap: 20px; } .tk-iki > .kart { padding: 18px 20px; }
+.tk-gun { padding: 16px 0; gap: 16px; } .tk-sinavlar { gap: 12px; }
+.tk-sinav { padding: 14px 16px; gap: 16px; border-radius: 14px; }
+.tk-dersler { gap: 8px 8px; } .tk-cip { padding: 4px 11px 4px 4px; font-size: 13px; gap: 7px; } .tk-cip b { padding: 1px 6px; }
+.tk-sag { gap: 8px; } .tk-gel { padding: 6px 12px; }
+.tk-gun > div:last-child { display: flex; flex-direction: column; gap: 14px; }
+.tk-tf .tk-sinav { row-gap: 14px; padding: 16px 18px; } .tk-tf .tk-dersler { gap: 12px 18px; } .tk-tf .tk-tf-d small { margin-top: 2px; }
+.tk-tf .tf-gorev { flex-wrap: nowrap; gap: 10px; padding-top: 12px; margin-top: 4px; } .tk-tf .tf-gorev .tf-gk { flex: 1; min-width: 0; } .tk-tf .tf-gorev > button { flex: none; white-space: nowrap; margin-top: 0; }
+@media (max-width: 760px) { .tk-tf .tf-gorev { flex-wrap: wrap; } }
