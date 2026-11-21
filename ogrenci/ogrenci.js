@@ -454,10 +454,11 @@
   // K-716be: karizmatik otobüs krokisi — ön cam, direksiyon, kapı, yan camlar, tekerler, koridor; sütun başlıkları cam/koridor
   const GZ_DIREKSIYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M3.8 10.5h6M14.2 10.5h6M12 14.2v6.2"/></svg>';
   const GZ_KAPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M12 3v18M10 12h.01M14 12h.01"/></svg>';
-  function gzOtobus(P, hucre, ek) {
+  function gzOtobus(P, hucre, ek, ob) {   // K-866: ob = otobüs (şoför adı ve telefonu varsa krokide gösterilir, dokununca aranır)
+    const sfAd = ob && ob.sofor ? String(ob.sofor).trim().split(/\s+/)[0] : 'Şoför', sfTel = ob && ob.tel ? String(ob.tel).replace(/[^\d+]/g, '') : '';
     const sira = r => `<div class="gz-h-sira">${r.map((s, j) => !s ? (j === 2 ? '<i class="kor"></i>' : '<i></i>') : s.kapi ? `<i class="kapi">${j === 3 ? '<span>KAPI</span>' : ''}</i>` : hucre(s, j)).join('')}</div>`;
     return `<div class="gz-harita ${ek || ''}"><b class="tk t1"></b><b class="tk t2"></b><b class="tk t3"></b><b class="tk t4"></b>
-      <div class="gz-h-on"><span class="gz-h-sf">${GZ_DIREKSIYON}Şoför</span><span class="gz-h-ok">ÖN</span><span class="gz-h-kp">${GZ_KAPI}Ön kapı</span></div>
+      <div class="gz-h-on">${sfTel ? `<a class="gz-h-sf ara" href="tel:${esc(sfTel)}" title="Şoförü ara">${GZ_DIREKSIYON}${esc(sfAd)}<em>Ara</em></a>` : `<span class="gz-h-sf">${GZ_DIREKSIYON}${esc(sfAd)}</span>`}<span class="gz-h-ok">ÖN</span><span class="gz-h-kp">${GZ_KAPI}Ön kapı</span></div>
       <div class="gz-h-bas"><span>Cam</span><span>Koridor</span><span></span><span>Koridor</span><span>Cam</span></div>
       ${P.map(sira).join('')}<div class="gz-h-arka">ARKA</div></div>
       <div class="gz-lej"><span><i class="l-cam"></i>Cam kenarı</span><span><i class="l-kor"></i>Koridor</span><span><i class="l-kapi"></i>Orta kapı</span></div>`;
@@ -717,7 +718,7 @@
         <div class="gzt-bilgi">${tarih ? `<div><small>TARİH</small><b>${esc(tarih)}</b></div>` : ''}${d.saat || d.kalkis ? `<div><small>KALKIŞ</small><b>${esc([d.saat, d.kalkis].filter(Boolean).join(' · '))}</b></div>` : ''}${gzr ? `<div><small>GÜZERGÂH</small><b>${esc(gzr)}</b></div>` : ''}${d.otobus.plaka ? `<div><small>PLAKA</small><b>${esc(d.otobus.plaka)}</b></div>` : ''}${d.otobus.sofor || d.otobus.tel ? `<div><small>ŞOFÖR</small><b>${esc(d.otobus.sofor || '')}${d.otobus.tel ? `${d.otobus.sofor ? ' · ' : ''}<a href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}">${esc(d.otobus.tel)}</a>` : ''}</b></div>` : ''}</div></div>
       <div class="gzt-koc">${canak ? '<img class="gzt-abide" src="../gezi-abide-bilet.png" alt="">' : ''}<div><small>OTOBÜS</small><b>${d.otobus.no}</b></div>${d.numarasiz ? `<div class="gzt-kol"><small>YERİN</small><i class="gzt-isaret"></i><em>Krokide kırmızı</em></div>` : `<div class="gzt-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div>`}<div class="gzt-yer"><span>${d.numarasiz ? '' : esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(d.otobus.plaka || '')}</span></div></div></div>
       ${d.gun && d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
-      ${gzOtobus(P, (x, j) => `<i class="k ${x.n === d.koltuk ? 'ben' : ''} y-${x.yer} ${j < 2 ? 'sol' : 'sag'}">${x.n === d.koltuk ? 'SEN' : d.numarasiz ? '' : x.n}</i>`, d.numarasiz ? 'kirmizi' : '')}
+      ${gzOtobus(P, (x, j) => `<i class="k ${x.n === d.koltuk ? 'ben' : ''} y-${x.yer} ${j < 2 ? 'sol' : 'sag'}">${x.n === d.koltuk ? 'SEN' : d.numarasiz ? '' : x.n}</i>`, d.numarasiz ? 'kirmizi' : '', d.otobus)}
       <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.numarasiz ? `${d.otobus.no}. otobüste krokide kırmızı SEN yazan koltuğa otur.` : `${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur.`} Değişiklik olursa burada hemen görünür.</p>${gzProgram(d)}`;
   }
   function gzProgram(d) {   // ilandaki gezi programı biletle birlikte de görünür

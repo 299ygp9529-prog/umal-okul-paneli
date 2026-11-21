@@ -297,7 +297,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gz-harita .tk { position: absolute; width: 7px; height: 38px; border-radius: 4px; background: linear-gradient(90deg, #05080e, #2a3446, #05080e); box-shadow: 0 0 0 1px #e8c66b44; }
 .gz-harita .t1, .gz-harita .t3 { left: -7px; } .gz-harita .t2, .gz-harita .t4 { right: -7px; } .gz-harita .t1, .gz-harita .t2 { top: 70px; } .gz-harita .t3, .gz-harita .t4 { bottom: 54px; }
 .gz-h-on { position: relative; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: #cfe3f7; padding: 16px 4px 9px; border-bottom: 1px dashed #e8c66b55; margin-bottom: 0; }
-.gz-h-on span { display: flex; align-items: center; gap: 5px; } .gz-h-on svg { width: 17px; height: 17px; color: #e8c66b; } .gz-h-ok { position: absolute; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: .3em; color: #e8c66b; opacity: .8; }
+.gz-h-on span, .gz-h-on a { display: flex; align-items: center; gap: 5px; } .gz-h-on svg { width: 17px; height: 17px; color: #e8c66b; } .gz-h-ok { position: absolute; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: .3em; color: #e8c66b; opacity: .8; }
 .gz-h-bas { display: grid; grid-template-columns: 1fr 1fr .5fr 1fr 1fr; gap: 5px; text-align: center; font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8fb7d9; }
 .gz-h-bas span:nth-child(1), .gz-h-bas span:nth-child(5) { color: #7fdcff; }
 .gz-h-sira { display: grid; grid-template-columns: 1fr 1fr .5fr 1fr 1fr; gap: 5px; }
@@ -583,6 +583,7 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 #soRapor { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; background: #0b1424; padding-top: env(safe-area-inset-top); }
 #soRapor .sr-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #22385a; } #soRapor .sr-bar b { flex: 1; text-align: center; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #soRapor .sr-bar .birincil { width: auto; padding: 9px 14px; font-size: 14px; margin: 0; } #soRapor iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+.gz-h-sf.ara { color: #cfe3f7; text-decoration: none; border: 1px solid #e8c66b66; border-radius: 999px; padding: 3px 9px 3px 6px; background: #e8c66b14; } .gz-h-sf.ara em { font-style: normal; font-weight: 800; color: #e8c66b; margin-left: 2px; }   /* K-866 */
 </style>
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
@@ -755,6 +756,6 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611211330"></script>
 <script src="../telsiz.js?v=202611211330"></script>
-<script src="ogrenci.js?v=202611211330"></script>
+<script src="ogrenci.js?v=202611211405"></script>
 </body>
 </html>
