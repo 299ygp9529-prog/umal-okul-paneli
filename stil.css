@@ -2928,3 +2928,4 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 /* K-871: kişi kartı düzeni — düğmeler hep iki sütun, aynı boy; tek kalan son düğme tam genişlik; görevli baş harfi koltuktakiyle aynı (turuncu) */
 .gz-kk-dug > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .gz-kk-ust .foto.gz-gf { background: linear-gradient(135deg, #ffb547, #ff7a3d); color: #2a1300; }
+.gz-kk .gb-dug { margin-top: 14px; } .gz-kk .gb-dug .birincil { flex: 1; width: 100%; min-width: 0; min-height: 46px; font-size: inherit; margin: 0; }   /* K-871: kartın altındaki Bilgileri kaydet de üstteki düğmelerle aynı boy, tam genişlik */
