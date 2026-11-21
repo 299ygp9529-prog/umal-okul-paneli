@@ -4295,8 +4295,10 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const kutu = $('#girisIc'); if (!kutu) return;
     kutu.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     await ogrencileriYukle();
-    let { data: dr, error } = await sb.rpc('umal_ogrenci_kod_durum2');   // K-734: giriş geçmişiyle
-    if (error) ({ data: dr, error } = await sb.rpc('umal_ogrenci_kod_durum'));
+    let dr = [], error = null;   // K-734: giriş geçmişiyle · K-860: 1000 satır sınırı — sayfa sayfa (yoksa girmiş öğrenci "girmedi" görünür)
+    for (const f of ['umal_ogrenci_kod_durum2', 'umal_ogrenci_kod_durum']) { dr = []; error = null;
+      for (let i = 0; i < 20; i++) { const r = await sb.rpc(f).range(i * 1000, i * 1000 + 999); if (r.error) { error = r.error; break; } dr = dr.concat(r.data || []); if ((r.data || []).length < 1000) break; }
+      if (!error) break; }
     const saltKod = D.rol === 'ogretmen'; kutu.classList.toggle('salt-kod', saltKod);   // K-615: öğretmen kimin girdiğini görür, kod üretemez
     if (error) { kutu.innerHTML = saltKod ? '<div class="soluk">Bu ekran için Supabase\'de <b>20261115000000_umal_ogretmen_gorunum.sql</b> çalıştırılmalı.</div>' : `<div class="kirmizi">Kod bilgisi alınamadı: ${esc(hataYaz(error))}. (Sunucu kurulumu yapıldı mı?)</div>`; return; }
     const K = {}; (dr || []).forEach(r => { K[String(r.no)] = r; });
