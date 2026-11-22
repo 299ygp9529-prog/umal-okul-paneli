@@ -3829,12 +3829,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const anaCiz = () => {
       NT.T = null;
       $('#icerik').innerHTML = `<div class="rv-bas"><div><h1 style="margin:0">Not Yükle</h1><div class="soluk kucuk">Sınav notlarını PDF'ten ya da elle yükleyin. Yayınlayınca her öğrenci, öğrenci panelindeki Notlarım'da yalnız kendi notunu görür.</div></div></div>
-        <div class="kart nt-yukle"><div class="nt-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/></svg></div>
+        <div class="nt-yuk2"><div class="kart nt-yukle"><div class="nt-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.500V4.500M7.500 9L12 4.500 16.500 9"/><path d="M4.500 15.500v2.500a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.500"/></svg></div>
           <b>Not listesinin PDF'ini seçin</b><div class="soluk kucuk">e-Okul'dan indirdiğiniz not listesi. Sınıfı Atlas kendisi bulur; yayınlamadan önce notları siz kontrol edersiniz. PDF bu cihazda okunur, başka bir yere gönderilmez.</div>
           <div class="dugmeler" style="justify-content:center;margin:12px 0 0"><button class="birincil" id="ntSec">PDF seç</button><button class="ikincil" id="ntElle">Elle gir</button></div>
           <input type="file" id="ntDosya" accept="application/pdf,.pdf" style="display:none"><div class="kucuk" id="ntBilgi" style="margin-top:8px"></div></div>
+        <div class="kart nt-yukle nt-foto"><div class="nt-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5a2 2 0 0 1 2-2h1.800l1.400-2h5.600l1.400 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.600"/></svg></div>
+          <b>Soru puan kâğıdının fotoğrafı</b><div class="soluk kucuk">Karekodlu Atlas kâğıdına puanları elle yazın, fotoğrafını çekin. Atlas kâğıdı tanır, puanları okur, öğretmenin yazdığı toplamla karşılaştırır; tutmayan satırı size gösterir.</div>
+          <div class="dugmeler" style="justify-content:center;margin:12px 0 0"><button class="birincil" id="ntFoto">Fotoğraf çek</button><button class="ikincil" id="ntKagit">Kâğıt yazdır</button></div>
+          <input type="file" id="ntFotoDosya" accept="image/*" capture="environment" style="display:none"></div></div>
         <div class="kart"><h2 style="margin-top:0">${D.rol === 'ogretmen' ? 'Yüklediklerim' : 'Yüklenen notlar'}</h2><div class="satirlar">${liste()}</div></div>`;
       $('#ntSec').onclick = () => $('#ntDosya').click();
+      $('#ntFoto').onclick = () => $('#ntFotoDosya').click();
+      $('#ntFotoDosya').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (f) (await yz()).fotoOku(yzCtx(), f); };
+      $('#ntKagit').onclick = async () => (await yz()).yazdirPencere(yzCtx());
       $('#ntElle').onclick = () => { NT.T = { sinif: null, ders: '', sinav: '1. Dönem 1. Yazılı', notlar: {}, sutunlar: [], sec: 0 }; duzCiz(); };
       $('#ntDosya').onchange = async ev => { const f = ev.target.files[0]; if (!f) return; const bil = $('#ntBilgi'); bil.className = 'kucuk soluk'; bil.textContent = 'PDF okunuyor…';
         try { const c = ntCoz(await ntPdfSatirlari(f));
@@ -3844,6 +3851,32 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         } catch (e) { bil.className = 'kucuk kirmizi'; bil.textContent = 'PDF okunamadı: ' + (e.message || e); }
         ev.target.value = ''; };
     };
+    // K-900: karekodlu soru puan kâğıdı (yazili.js) — basma ve fotoğraftan okuma
+    const yz = async () => { if (!window.UmalYazili) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili.js?v=20261122052629'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); }); return window.UmalYazili; };
+    const yzDersler = async kapsam => {
+      await Promise.all([programYukle(), kisiAdlariYukle().catch(() => {})]);
+      const nk = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
+      let ben = KISI.get(String(D.eposta).toLowerCase()) || benimAd || ''; ben = (await ogtEsle()) || ben;
+      const EP = new Map(); KISI.forEach((a, ep) => EP.set(nk(a), ep));
+      const haric = d => /rehberlik|beden|^bed\b|spor|ders\s*d[ıi]ş[ıi]|kul[üu]p|sosyal etkinlik|nöbet/i.test(d);
+      const M = new Map();
+      Object.entries((D.program || {}).siniflar || {}).forEach(([sf, S]) => Object.values(S || {}).forEach(h => { if (!h || !h.ders || haric(h.ders)) return;
+        (h.ogretmen || []).forEach(o => { const og = String(o).replace(/\s+\d+$/, '').trim(); if (!og) return; if (kapsam === 'ben' && nk(og) !== nk(ben)) return;
+          const k = nk(og) + '|' + sf + '|' + ntNorm(h.ders); if (!M.has(k)) M.set(k, { ogretmen: baslik(og), eposta: kapsam === 'ben' ? D.eposta : (EP.get(nk(og)) || ''), sinif: sf, ders: baslik(h.ders) }); }); }));
+      return [...M.values()].filter(x => D.ogrenciler.some(o => o.sinif === x.sinif)).sort((a, b) => a.ogretmen.localeCompare(b.ogretmen, tr) || sinifSira(a.sinif, b.sinif) || a.ders.localeCompare(b.ders, tr));
+    };
+    const yzKaydet = async K => {
+      const { data: tz } = await israrla(() => sb.from('umal_not').select('*').eq('sinif', K.sinif));
+      const ayni = (tz || []).find(n => ntNorm(n.ders) === ntNorm(K.ders) && ntNorm(n.sinav) === ntNorm(K.sinav));
+      if (ayni && !await onayla(`${K.sinif} · ${K.ders} · ${K.sinav} için daha önce not kaydı var. Fotoğraftan okunan ${Object.keys(K.notlar).length} öğrencinin notu o kayda yazılsın mı? (Kâğıtta olmayan öğrencilerin notu olduğu gibi kalır.)`)) return { ok: false, hata: 'Kaydedilmedi.' };
+      const alan = { sinif: K.sinif, ders: K.ders, sinav: K.sinav, notlar: Object.assign({}, ayni ? ayni.notlar : {}, K.notlar), soru: Object.assign({}, ayni ? ayni.soru : {}, K.soru), soru_puan: K.soru_puan, kaynak: 'foto', yayin: K.yayin || !!(ayni && ayni.yayin), guncel: new Date().toISOString() };
+      const { data, error } = await israrla(() => ayni ? sb.from('umal_not').update(alan).eq('id', ayni.id).select().maybeSingle() : sb.from('umal_not').insert(Object.assign({ yukleyen: D.eposta, yukleyen_ad: benimAd || null }, alan)).select().maybeSingle());
+      if (error || !data) return { ok: false, hata: 'Kaydedilemedi: ' + (error ? hataYaz(error) : 'yetki yok') };
+      NT.L = [data, ...NT.L.filter(n => n.id !== data.id)]; return { ok: true };
+    };
+    const yzCtx = () => ({ sb, D, esc, baslik, uyar, onayla, pencereAc, pencereKapat: () => $('#pencere').classList.add('gizli'), betikYukle,
+      idare: D.rol === 'bas' || D.rol === 'yonetici', dersler: yzDersler, ogrenciler: s => sinifOgr(s).map(o => ({ no: String(o.no), ad: o.ad })),
+      kaydet: yzKaydet, geri: () => anaCiz(), fotoSec: () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture', 'environment'); i.onchange = async () => { if (i.files[0]) (await yz()).fotoOku(yzCtx(), i.files[0]); }; i.click(); } });
     const sutunUygula = () => { const T = NT.T, s = T.sutunlar[T.sec]; T.notlar = {}; if (s && T.sinif) sinifOgr(T.sinif).forEach(o => { const v = s.deger[String(o.no)]; if (v != null) T.notlar[String(o.no)] = v; }); };
     const duzCiz = () => {
       const T = NT.T, O = T.sinif ? sinifOgr(T.sinif) : [];
