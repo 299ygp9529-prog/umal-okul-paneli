@@ -609,3 +609,5 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
   main .alt-cubuk { display: flex; justify-content: flex-end; background: none; pointer-events: none; } main .alt-cubuk > * { pointer-events: auto; }
   main .alt-cubuk .birincil { box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 }
+  #ogrAlt button[hidden] { display: none !important; }
+  body.ozel.ogr-alt #ogrAlt { grid-template-columns: repeat(3, 1fr); }
