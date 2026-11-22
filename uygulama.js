@@ -711,7 +711,7 @@
     const kap = new Set((r.kapali || []).map(Number)), ayr = +r.ayrilan || 2;
     const P = gzPlan(r.kapasite);
     const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
-      if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc(String(x.ad || x.turAd || '').trim().split(/\s+/)[0] || x.turAd)}</em></button>`;
+      if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc((String(x.ad || '').trim().split(/\s+/)[0] || x.turAd).toLocaleUpperCase('tr'))}</em></button>`;
       return `<button type="button" class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}" data-tzbos="${s.n}" data-kap="${kap.has(s.n) ? 1 : ''}"><i>${s.n}</i>${kap.has(s.n) ? '' : s.n <= ayr ? '<em>Görevli</em>' : ''}</button>`; };   // K-89x: boş/kapalı koltuğa da dokunulur
     const ogr = (r.kisiler || []).filter(x => x.tur === 'ogr').length, gor = (r.kisiler || []).length - ogr;
     const html = `<div class="tz-plan"><div class="tz-pon"><span>Ön · şoför${r.plaka ? ' · ' + esc(r.plaka) : ''}</span><span>${ogr} öğrenci · ${gor} görevli</span></div>${P.map(row => `<div class="tz-psira">${row.map(kh).join('')}</div>`).join('')}</div>`;
