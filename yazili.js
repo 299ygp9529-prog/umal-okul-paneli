@@ -202,6 +202,30 @@
   // ---------- K-902: karekodsuz antetli "Sınav Not Çizelgesi" (6 Kasım'da bütün sınıflar için basılan, soru soru) ----------
   // Ölçüler pt (A4 = 595 × 842): tablo dış çerçevesi x 25.5–569.2, y 110–780.4 (üst = koyu başlık bandının üstü); başlık 110–127.8, soru puanı satırı 127.8–145.3, öğrenciler 145.3–780.4 eşit bölünür.
   const E = { x0: 25.5, x1: 569.2, y0: 110, y1: 780.4, pY: 127.8, rY: 145.3, cNo: 45, cSoru: 210, sW: 31.65, sN: 10, cTop: 526.5 };
+
+  // Kâğıdın kendisi: en büyük parlak (beyaz) bölge; köşeleri x±y uç noktaları (masadaki kâğıt için yeterli)
+  function sayfaBul(G) {
+    const { g, w, h } = G, H_ = new Array(256).fill(0); for (let i = 0; i < g.length; i++) H_[g[i]]++;
+    let top = 0, ts = 0; for (let i = 0; i < 256; i++) { top += H_[i]; ts += i * H_[i]; }
+    let wB = 0, sB = 0, en = 0, esik = 128; for (let i = 0; i < 256; i++) { wB += H_[i]; if (!wB) continue; const wF = top - wB; if (!wF) break; sB += i * H_[i]; const mB = sB / wB, mF = (ts - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > en) { en = v; esik = i; } }
+    const b = new Uint8Array(w * h); for (let i = 0; i < g.length; i++) b[i] = g[i] > esik ? 1 : 0;
+    const lbl = new Int32Array(w * h), yig = new Int32Array(w * h); let enId = 0, enN = 0, id = 0;
+    for (let p = 0; p < w * h; p++) { if (!b[p] || lbl[p]) continue; id++; let n = 0, t = 0; yig[t++] = p; lbl[p] = id;
+      while (t) { const q = yig[--t], qx = q % w; n++;
+        if (qx > 0 && b[q - 1] && !lbl[q - 1]) { lbl[q - 1] = id; yig[t++] = q - 1; } if (qx < w - 1 && b[q + 1] && !lbl[q + 1]) { lbl[q + 1] = id; yig[t++] = q + 1; }
+        if (q >= w && b[q - w] && !lbl[q - w]) { lbl[q - w] = id; yig[t++] = q - w; } if (q < w * (h - 1) && b[q + w] && !lbl[q + w]) { lbl[q + w] = id; yig[t++] = q + w; } }
+      if (n > enN) { enN = n; enId = id; } }
+    if (enN < w * h * 0.15) return null;
+    let a = [1e9, 0, 0], bb = [-1e9, 0, 0], c = [-1e9, 0, 0], d = [1e9, 0, 0];   // SÜ: min(x+y), SAÜ: max(x−y), SAA: max(x+y), SA: min(x−y)
+    for (let p = 0; p < w * h; p++) { if (lbl[p] !== enId) continue; const x = p % w, y = (p / w) | 0;
+      if (x + y < a[0]) a = [x + y, x, y]; if (x - y > bb[0]) bb = [x - y, x, y]; if (x + y > c[0]) c = [x + y, x, y]; if (x - y < d[0]) d = [x - y, x, y]; }
+    return [a, bb, c, d].map(q => [(q[1] + .5) / G.k, (q[2] + .5) / G.k]);
+  }
+  const A4 = [[0, 0], [595.3, 0], [595.3, 841.9], [0, 841.9]];
+  function bandSkor(tam, H) {   // koyu başlık bandı doğru yerde mi: band koyu, hemen altı ve üstü açık
+    const ort = (y0, hh) => { const id = cikar(tam, H, 60, y0, 470, hh, 0.6), d = id.data; let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2]; return s / (d.length / 4) / 3; };
+    return (ort(132, 8) + ort(96, 6)) / 2 - ort(112, 12);
+  }
   async function koseIste(sb, cv) {   // tablonun 4 köşesi: küçültülmüş ve bulanıklaştırılmış görüntüyle (adlar okunamaz)
     const k = 480 / Math.max(cv.width, cv.height), c = document.createElement('canvas'); c.width = Math.round(cv.width * k); c.height = Math.round(cv.height * k);
     const x = c.getContext('2d'); x.filter = 'blur(1.6px)'; x.drawImage(cv, 0, 0, c.width, c.height);
@@ -226,17 +250,19 @@
   async function hazirlaEski(sb, cv, ilerle) {
     ilerle && ilerle('Not çizelgesi fotoğrafta aranıyor…');
     const tam = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
-    const K = await koseIste(sb, cv);
     const P = [[E.x0, E.y0], [E.x1, E.y0], [E.x1, E.y1], [E.x0, E.y1]];
-    let H = homografi(P, K);
-    // başlık bandıyla ince ayar: bandın gerçek sol/sağ uçlarını ve üst kenarını ölç, üst köşeleri ona göre kaydır
-    const b = koseDuzelt(tam, H);
-    if (b && Math.abs(b.sol[0] - E.x0) < 12 && Math.abs(b.sag[0] - E.x1) < 12) {
-      const map = (p) => { const z = H[6] * p[0] + H[7] * p[1] + 1; return [(H[0] * p[0] + H[1] * p[1] + H[2]) / z, (H[3] * p[0] + H[4] * p[1] + H[5]) / z]; };
-      const dy = E.y0 - b.sol[1];
-      const K2 = [map(b.sol), map(b.sag), K[2], K[3]];
-      if (Math.abs(dy) < 14) H = homografi(P, K2);
+    const harita = H => p => { const z = H[6] * p[0] + H[7] * p[1] + 1; return [(H[0] * p[0] + H[1] * p[1] + H[2]) / z, (H[3] * p[0] + H[4] * p[1] + H[5]) / z]; };
+    // 1) kâğıdın kenarları (yerel, yapay zekâ yok) → 4 dönüşten koyu başlık bandının yerinde olduğu yön
+    let H = null, skor = -1;
+    const S = sayfaBul(griAl(cv, 700));
+    if (S) for (let r = 0; r < 4; r++) { const Hr = homografi(A4, [0, 1, 2, 3].map(i => S[(i + r) % 4])), sk = bandSkor(tam, Hr); if (sk > skor) { skor = sk; H = Hr; } }
+    if (!H || skor < 40) {   // 2) kâğıt arka plandan ayrılamadıysa: küçük ve bulanık görüntüyle tablonun köşeleri
+      const K = await koseIste(sb, cv); H = homografi(P, K);
+      if (bandSkor(tam, H) < 25) throw Object.assign(new Error('Not çizelgesi fotoğrafta bulunamadı. Kâğıdı koyu bir zemine koyup bütün sayfa görünecek şekilde yeniden çekin.'), { atlas: true });
     }
+    // 3) başlık bandıyla ince ayar (üst köşeler)
+    const b = koseDuzelt(tam, H), m = harita(H);
+    if (b && Math.abs(b.sol[0] - E.x0) < 12 && Math.abs(b.sag[0] - E.x1) < 12 && Math.abs(E.y0 - b.sol[1]) < 14) H = homografi(P, [m(b.sol), m(b.sag), m([E.x1, E.y1]), m([E.x0, E.y1])]);
     return { cv, tam, H };
   }
   function tabloResmiE(h) {
@@ -300,23 +326,27 @@
         <div class="nt-alan"><span class="nk-sbas">Sınıflar <small class="soluk">(${S.sec.size}/${S.L.length} seçili · ${sayfa} sayfa)</small>${S.L.length > 1 ? `<button class="bag" data-yztum="${S.sec.size === S.L.length ? 0 : 1}">${S.sec.size === S.L.length ? 'Hiçbirini seçme' : 'Tümünü seç'}</button>` : ''}</span>
           ${S.L.length ? `<div class="nk-liste">${Object.entries(grup).map(([og, I]) => `${S.kapsam === 'hepsi' ? `<button class="nk-og" data-yzog="${I.join(',')}">${c.esc(og)}<small>${I.filter(i => S.sec.has(i)).length}/${I.length}</small></button>` : ''}<div class="nk-izg">${I.map(i => `<label class="nk-sec"><input type="checkbox" data-yzi="${i}" ${S.sec.has(i) ? 'checked' : ''}><b>${c.esc(S.L[i].sinif)}</b><span>${c.esc(S.L[i].ders)}</span></label>`).join('')}</div>`).join('')}</div>`
             : `<div class="soluk kucuk">Ders programında ${S.kapsam === 'ben' ? 'size ait ders' : 'ders'} bulunamadı.</div>`}</div>
-        <div class="dugmeler"><span class="kucuk soluk" id="yzBilgi" style="margin-right:auto"></span><button class="birincil" id="yzBas" ${S.sec.size ? '' : 'disabled'}>PDF hazırla</button></div>`);
+        <div class="dugmeler"><span class="kucuk soluk" id="yzBilgi" style="margin-right:auto"></span><button class="ikincil" id="yzBas" ${S.sec.size ? '' : 'disabled'}>PDF indir</button>${c.okuldaYazdir ? `<button class="birincil" id="yzOkul" ${S.sec.size ? '' : 'disabled'}>Okulda yazdır</button>` : ''}</div>`);
       document.querySelectorAll('[data-yzs]').forEach(b => b.onclick = () => { S.sinav = b.dataset.yzs; ciz(); });
       document.querySelectorAll('[data-yzk]').forEach(b => b.onclick = async () => { S.kapsam = b.dataset.yzk; await yukle(); ciz(); });
       document.querySelectorAll('[data-yztum]').forEach(b => b.onclick = () => { S.sec = b.dataset.yztum === '1' ? new Set(S.L.map((x, i) => i)) : new Set(); ciz(); });
       document.querySelectorAll('[data-yzog]').forEach(b => b.onclick = () => { const I = b.dataset.yzog.split(',').map(Number), hep = I.every(i => S.sec.has(i)); I.forEach(i => hep ? S.sec.delete(i) : S.sec.add(i)); ciz(); });
       document.querySelectorAll('[data-yzi]').forEach(i => i.onchange = () => { const k = +i.dataset.yzi; i.checked ? S.sec.add(k) : S.sec.delete(k); ciz(); });
+      const hazirla = async bil => { await c.betikYukle('html2pdf.bundle.min.js?v=0101');
+        const isler = [...S.sec].sort((a, b) => a - b).map(i => ({ ...S.L[i], sinav: S.sinav, ogrenciler: c.ogrenciler(S.L[i].sinif) })).filter(x => x.ogrenciler.length);
+        const r = await kagitPdf(c.sb, isler, m => { if (bil) bil.textContent = m; });
+        return { pdf: r.pdf, sayfa: r.sayfa, ad: 'Soru-puan-kagitlari-' + S.sinav.replace(/[^0-9A-Za-zÇĞİÖŞÜçğıöşü]+/g, '-') + '.pdf' }; };
       const bas = document.getElementById('yzBas'); if (bas) bas.onclick = async () => {
         const bil = document.getElementById('yzBilgi'); bas.disabled = true;
-        try { await c.betikYukle('html2pdf.bundle.min.js?v=0101');
-          const isler = [...S.sec].sort((a, b) => a - b).map(i => ({ ...S.L[i], sinav: S.sinav, ogrenciler: c.ogrenciler(S.L[i].sinif) })).filter(x => x.ogrenciler.length);
-          const { pdf, sayfa: n } = await kagitPdf(c.sb, isler, m => { bil.textContent = m; });
-          const ad = 'Soru-puan-kagitlari-' + S.sinav.replace(/[^0-9A-Za-zÇĞİÖŞÜçğıöşü]+/g, '-') + '.pdf';
+        try { const { pdf, sayfa: n, ad } = await hazirla(bil);
           const url = pdf.output('bloburl'); bil.textContent = n + ' sayfa hazır.';
           const a = document.createElement('a'); a.href = url; a.download = ad; document.body.appendChild(a); a.click(); a.remove();
           setTimeout(() => { try { window.open(url, '_blank'); } catch (e) {} }, 300);
         } catch (e) { bil.textContent = ''; c.uyar('Kâğıt hazırlanamadı: ' + (e.message || e)); }
         bas.disabled = false; };
+      const okul = document.getElementById('yzOkul'); if (okul) okul.onclick = () => {
+        const n = [...S.sec].length;
+        c.okuldaYazdir({ ad: 'Soru puan kâğıtları · ' + S.sinav + ' · ' + n + ' sınıf', uret: async () => { const { pdf } = await hazirla(null); return pdf.output('blob'); } }); };
     };
     c.pencereAc('<div class="soluk">Ders programı okunuyor…</div>');
     try { await yukle(); } catch (e) { c.uyar('Ders listesi alınamadı: ' + (e.message || e)); return; }
@@ -418,5 +448,5 @@
     if (t1) t1.onclick = () => kaydet(false); if (t2) t2.onclick = () => kaydet(true);
   }
 
-  window.UmalYazili = { L, kagitPdf, oku, satirDenetle, sayi, yazdirPencere, fotoOku, FT, _t: { resimAl, griAl, isaretBul, homografi, cikar, tabloResmi, satirResmi, tuval } };
+  window.UmalYazili = { _e: { tabloResmiE, satirResmiE }, E, hazirlaEski, sayfaBul, bandSkor, L, kagitPdf, oku, satirDenetle, sayi, yazdirPencere, fotoOku, FT, _t: { resimAl, griAl, isaretBul, homografi, cikar, tabloResmi, satirResmi, tuval } };
 })();

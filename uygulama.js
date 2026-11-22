@@ -3852,7 +3852,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         ev.target.value = ''; };
     };
     // K-900: karekodlu soru puan kâğıdı (yazili.js) — basma ve fotoğraftan okuma
-    const yz = async () => { if (!window.UmalYazili) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili.js?v=20261122063742'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); }); return window.UmalYazili; };
+    const yz = async () => { if (!window.UmalYazili) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili.js?v=20261122064709'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); }); return window.UmalYazili; };
     const yzDersler = async kapsam => {
       await Promise.all([programYukle(), kisiAdlariYukle().catch(() => {})]);
       const nk = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
@@ -3876,7 +3876,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     };
     const yzCtx = () => ({ sb, D, esc, baslik, uyar, onayla, pencereAc, pencereKapat: () => $('#pencere').classList.add('gizli'), betikYukle,
       idare: D.rol === 'bas' || D.rol === 'yonetici', dersler: yzDersler, ogrenciler: s => sinifOgr(s).map(o => ({ no: String(o.no), ad: o.ad })),
-      kaydet: yzKaydet, geri: () => anaCiz(), fotoSec: () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture', 'environment'); i.onchange = async () => { if (i.files[0]) (await yz()).fotoOku(yzCtx(), i.files[0]); }; i.click(); } });
+      kaydet: yzKaydet, okuldaYazdir, geri: () => anaCiz(), fotoSec: () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture', 'environment'); i.onchange = async () => { if (i.files[0]) (await yz()).fotoOku(yzCtx(), i.files[0]); }; i.click(); } });
     const sutunUygula = () => { const T = NT.T, s = T.sutunlar[T.sec]; T.notlar = {}; if (s && T.sinif) sinifOgr(T.sinif).forEach(o => { const v = s.deger[String(o.no)]; if (v != null) T.notlar[String(o.no)] = v; }); };
     const duzCiz = () => {
       const T = NT.T, O = T.sinif ? sinifOgr(T.sinif) : [];
