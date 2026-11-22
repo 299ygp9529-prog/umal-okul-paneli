@@ -1349,12 +1349,14 @@
   const rpYeni = () => { if (!RH.plan || !RH.plan.yayin) return false; let g = ''; try { g = localStorage.getItem(rpGorKey()) || ''; } catch (e) {} return g !== RH.plan.yayin; };
   function rhMesajCiz(yeniler) {
     const k = $('#rhMesajlar'); if (!k) return;
-    k.innerHTML = RH.mesajlar.length ? rhSohbetHtml(ozel() ? 'Öğretmeninle mesajlar' : 'Rehberlik servisiyle mesajlar', 10, yeniler) : '';
+    const ozAcik = ozel() && RH.plan && RH.plan.yayin;   // K-922: özel öğrenci öğretmenine ilk mesajı da yazabilir (plan yayındaysa)
+    k.innerHTML = RH.mesajlar.length || ozAcik ? rhSohbetHtml(ozel() ? 'Öğretmeninle mesajlar' : 'Rehberlik servisiyle mesajlar', 10, yeniler)
+      : ozel() ? '<div class="rh-mesaj rh-sohbet"><h2>Öğretmeninle mesajlar</h2><p class="soluk">Öğretmenin plan ya da mesaj gönderince buradan yazışabilirsin.</p></div>' : '';
   }
   // K-753: öğretmen / rehberlik mesajları sohbet gibi (eskiden yeniye); öğrenci yanıt yazar. Öğrencinin mesajı silinmez.
   function rhSohbetHtml(baslik_, n, yeniler) {
     const L = RH.mesajlar.slice(0, n).reverse(), z = t => esc(new Date(t).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }));
-    return `<div class="rh-mesaj rh-sohbet"><h2>${baslik_}</h2>${L.map(m => `<div class="${m.ben ? 'ben' : ''}"><p>${esc(m.metin)}</p><small>${m.ben ? 'Sen · ' : ''}${z(m.zaman)}${m.ben ? (m.okundu ? ' · okundu' : '') : (yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : '')}</small></div>`).join('')}
+    return `<div class="rh-mesaj rh-sohbet"><h2>${baslik_}</h2>${L.length ? '' : '<p class="soluk kucuk">Henüz mesaj yok. Öğretmenine buradan yazabilirsin.</p>'}${L.map(m => `<div class="${m.ben ? 'ben' : ''}"><p>${esc(m.metin)}</p><small>${m.ben ? 'Sen · ' : ''}${z(m.zaman)}${m.ben ? (m.okundu ? ' · okundu' : '') : (yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : '')}</small></div>`).join('')}
       <div class="rh-yaz"><textarea data-rhyaz rows="1" maxlength="1000" placeholder="${ozel() ? 'Öğretmenine yaz…' : 'Rehberlik servisine yaz…'}"></textarea><button class="birincil" data-rhgonder aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button></div><div class="rh-yaz-b" data-rhb></div></div>`;
   }
   document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-rhgonder]'); if (!b) return; const kutu = b.closest('.rh-sohbet'), y = kutu && kutu.querySelector('[data-rhyaz]'), bl = kutu && kutu.querySelector('[data-rhb]'); if (!y) return;
@@ -1897,11 +1899,11 @@
       ['s-ayar', 'Ayarlar', ik(`<path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" ${F}/><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4.9a7.5 7.5 0 0 0-2.6-1.5L14 2.4h-4l-.4 2.5A7.5 7.5 0 0 0 7 6.4l-2.4-.9-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-.9a7.5 7.5 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 2.6-1.5l2.4.9 2-3.4z"/>`)]];
     const n = document.createElement('nav'); n.id = 'ogrAlt'; n.setAttribute('aria-label', 'Öğrenci menüsü');
     n.innerHTML = T.map(([id, ad, sv]) => `<button data-oa="${id}">${sv}<span>${ad}</span>${id === 's-msj' ? '<i class="oa-sayi gizli"></i>' : id === 's-ayar' ? '<i class="oa-sayi oa-ay gizli"></i>' : ''}</button>`).join(''); document.body.appendChild(n);
-    const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { msAc(); return; } if (id === 's-ayar') { ayAc(); return; }
+    const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { if (ozel()) { rehAc(); return; } msAc(); return; }   // K-922: özel öğrencinin sınıf grubu yok; Mesajlar öğretmeniyle yazışma if (id === 's-ayar') { ayAc(); return; }
       const b = document.createElement('button'); b.dataset.git = id; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } };
-    n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; if (b.dataset.oa === aktifEkran() && b.dataset.oa !== 's-msj') { window.scrollTo(0, 0); return; } git(b.dataset.oa); setTimeout(guncelle, 50); };
+    n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; if ((b.dataset.oa === aktifEkran() || (ozel() && b.dataset.oa === 's-msj' && aktifEkran() === 's-reh')) && b.dataset.oa !== 's-msj') { window.scrollTo(0, 0); return; } git(b.dataset.oa); setTimeout(guncelle, 50); };
     const guncelle = () => { const a = aktifEkran(), acik = !!S.kod && a && a !== 'giris'; document.body.classList.toggle('ogr-alt', acik);
-      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a)); const k = msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k);
+      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a || (a === 's-reh' && ozel() && b.dataset.oa === 's-msj'))); const k = ozel() ? RH.mesajlar.filter(m => !m.okundu && !m.ben).length : msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k);
       const a_ = n.querySelector('.oa-ay'), y_ = bdYeni(); if (a_) { a_.textContent = String(y_); a_.classList.toggle('gizli', !y_); } };
     setInterval(guncelle, 1000); guncelle();
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
