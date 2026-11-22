@@ -62,19 +62,20 @@
     const maxA = (K.soru_puan || []).map(v => v == null ? null : +v), maxE = B.sorular.map(s => s.max);
     const maxUyum = !K.soru_puan || (maxA.length === Q && maxA.every((v, i) => v == null || v === maxE[i]));
     const soruVar = Object.keys(K.soru || {}).length > 0;
-    let yaz = {}, nYaz = 0, nDeg = 0, nAyni = 0, nSorun = 0, nYok = 0;
+    let yaz = {}, nYaz = 0, nDeg = 0, nAyni = 0, nSorun = 0, nYok = 0, nFark = 0;
     const satirlar = B.ogrenciler.map(o => { const h = hedef(K, o.no, Q), et = eToplam(o); let c = '', not = '';
       if (!h) { nYok++; c = 'yok'; }
+      else if (h.sorun === 'soru puanı yok') { if (String(h.toplam).replace(',', '.') === String(et)) nAyni++; else { nFark++; c = 'degisir'; not = 'toplam farklı'; } }
       else if (h.sorun) { nSorun++; c = 'degisir'; not = h.sorun; }
       else if (esit(h, o)) { nAyni++; }
       else { nYaz++; if (o.katilim) nDeg++; c = o.katilim ? 'degisir' : ''; yaz[o.no] = { katilim: h.katilim, puan: h.puan }; }
       return `<div class="ek-s ${c}" ${not ? `title="${esc(not)}"` : ''}><span class="no">${esc(o.no)}</span><span class="ad">${esc(bas(o.ad))}</span><span class="v">${esc(h ? h.toplam : '')}</span><span class="e">${et ? 'e-Okul ' + esc(et) : ''}</span></div>`; }).join('');
-    const engel = !soruVar ? `Bu Atlas kaydında soru puanları yok (${K.kaynak === 'foto' ? '' : 'PDF ya da elle girilmiş toplam not'}). e-Okul'un OYSS ekranı soru soru puan istediği için yalnız karşılaştırma yapılır; yazmak için notu soru puan kâğıdının fotoğrafıyla yükleyin.`
+    const engel = !soruVar ? `Bu Atlas kaydı yalnız toplam notu tutuyor (PDF ya da elle girilmiş). e-Okul'un OYSS ekranı soru soru puan istediği için bu kayıtla yalnız karşılaştırma yapılır; e-Okul'a yazmak için notları soru puan kâğıdının fotoğrafıyla yükleyin.`
       : !maxUyum ? `Soruların en yüksek puanları tutmuyor — Atlas: ${maxA.map(goster).join(', ')} · e-Okul: ${maxE.join(', ')}. Yanlış sınav ya da yanlış ders seçilmiş olabilir; yazma kapalı.` : '';
     E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${B.ogrenciler.length} öğrenci · ${Q} soru</div>
       <div class="kart"><div class="nt-alan"><span>Atlas'taki not</span>${S.kayitlar.map((k, i) => `<button class="ek-kayit ${K === k ? 'secili' : ''}" data-k="${i}"><div><b>${esc(k.sinif)} · ${esc(k.ders)}</b><small>${esc(k.sinav)} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} · ${Object.keys(k.soru || {}).length ? 'soru puanlı' : 'yalnız toplam'}</small></div><span class="ek-o">${k.ortak} öğrenci</span></button>`).join('')}</div></div>
       <div class="kart"><div class="soluk kucuk">Kalın rakam Atlas'taki toplam; yanında e-Okul'da şu an yazan toplam (varsa).</div><div class="ek-tablo">${satirlar}</div>
-        <p class="kucuk" style="margin:12px 0 0">${nAyni ? `<span class="yeşil">${nAyni} öğrenci e-Okul ile aynı.</span> ` : ''}${engel ? '' : (nYaz ? `${nYaz} öğrencinin notu e-Okul'a yazılacak.` : '')}${!engel && nDeg ? ` <span class="turuncu">Turuncu ${nDeg} öğrencinin e-Okul'da farklı notu var; Atlas'takiyle değişecek.</span>` : ''}${engel && nYaz ? ` <span class="turuncu">${nYaz} öğrencide fark var (turuncu).</span>` : ''}${nSorun ? ` <span class="turuncu">${nSorun} öğrenci yazılamaz (üzerine gelince nedeni görünür).</span>` : ''}${nYok ? ` <span class="soluk">${nYok} öğrencinin Atlas'ta notu yok; e-Okul'da olduğu gibi kalır.</span>` : ''}</p>
+        <p class="kucuk" style="margin:12px 0 0">${nAyni ? `<span class="yeşil">${nAyni} öğrencinin ${soruVar ? 'notu' : 'toplamı'} e-Okul ile aynı.</span> ` : ''}${nFark ? `<span class="turuncu">${nFark} öğrencinin toplamı e-Okul'dakinden farklı (turuncu).</span> ` : ''}${engel ? '' : (nYaz ? `${nYaz} öğrencinin notu e-Okul'a yazılacak.` : '')}${!engel && nDeg ? ` <span class="turuncu">Turuncu ${nDeg} öğrencinin e-Okul'da farklı notu var; Atlas'takiyle değişecek.</span>` : ''}${engel && nYaz ? ` <span class="turuncu">${nYaz} öğrencide fark var (turuncu).</span>` : ''}${nSorun ? ` <span class="turuncu">${nSorun} öğrenci yazılamaz (üzerine gelince nedeni görünür).</span>` : ''}${nYok ? ` <span class="soluk">${nYok} öğrencinin Atlas'ta notu yok; e-Okul'da olduğu gibi kalır.</span>` : ''}</p>
         ${engel ? `<div class="kart ek-son" style="margin:12px 0 0">${UNL}<div class="kucuk">${engel}</div></div>` : `<div class="dugmeler" style="margin-top:12px"><button class="birincil" id="ekYaz" ${nYaz ? '' : 'disabled'}>${nYaz ? `${nYaz} öğrenciyi e-Okul'a yaz` : 'e-Okul zaten Atlas ile aynı'}</button></div>`}</div>`;
     E.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.sec = S.kayitlar[+b.dataset.k]; ciz(); });
     const y = $('#ekYaz'); if (y) y.onclick = () => {

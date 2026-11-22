@@ -32,7 +32,7 @@
     return { no: String(o.OGR_NO), ad: String(o.ADI_SOYADI || ''), katilim: KAT[String(o.KATILIM)] != null ? KAT[String(o.KATILIM)] : String(o.KATILIM), puan: P };
   }
   function baglam(v) {
-    var sec = Array.prototype.slice.call(document.querySelectorAll('select')).filter(function (s) { return !/OKLMenu/.test(s.id); }).map(function (s) { var o = s.options[s.selectedIndex]; return o && o.value && o.value !== '-1' ? o.text.replace(/\s+/g, ' ').trim() : ''; }).filter(Boolean);
+    var sec = Array.prototype.slice.call(document.querySelectorAll('select')).filter(function (s) { return !/OKLMenu/.test(s.id) && !s.closest('table'); }).slice(0, 3).map(function (s) { var o = s.options[s.selectedIndex]; return o && o.value && o.value !== '-1' ? o.text.replace(/\s+/g, ' ').trim() : ''; }).filter(Boolean);
     return { ogrenciler: v.ogrenciListesi.map(satir), sorular: v.kolonlar.map(function (k, i) { return { no: i + 1, max: +k.PUAN, ad: String(k.AD || '') }; }), baslik: sec.join(' · ').replace(/^AL\s*-\s*/, '').slice(0, 200) };
   }
   function yaz(o, d) {
