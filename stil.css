@@ -3003,7 +3003,7 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .nt-yuk2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 14px; } .nt-yuk2 > .kart { margin: 0; display: flex; flex-direction: column; align-items: center; }
 .nt-yuk2 .nt-yukle .dugmeler { margin-top: auto !important; padding-top: 12px; }
 .nt-foto { border-color: rgba(62,240,138,.5); } .nt-foto .nt-ik { background: rgba(62,240,138,.12); border-color: rgba(62,240,138,.45); color: #8dffc0; }
-.nk-liste { display: flex; flex-direction: column; gap: 8px; max-height: min(52vh, 460px); overflow: auto; padding-right: 2px; }
+.nk-liste { display: flex; flex-direction: column; gap: 8px; max-height: min(40vh, 440px); overflow: auto; padding-right: 2px; }
 .nk-og { display: inline-flex; align-items: baseline; gap: 8px; align-self: flex-start; background: none; border: 0; padding: 2px 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 800; color: var(--neon); letter-spacing: .02em; margin-top: 6px; } .nk-og small { color: var(--soluk); font-weight: 600; }
 .nk-sbas { display: flex !important; align-items: baseline; gap: 10px; flex-wrap: wrap; } .nk-sbas .bag { margin-left: auto; font-size: 12.5px; }
 .nk-izg { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
