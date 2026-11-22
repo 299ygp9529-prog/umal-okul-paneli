@@ -77,8 +77,43 @@
     bitir({ yazilan: yazilan - farkli.length, farkli: farkli });
   }
 
+  // ---- Klasik e-Okul not girişi (Ders Notu Girişi OOK07003 / Seçmeli OOK07004): dgListem tablosu, her sütunda metin kutuları ----
+  function klasikTablo() { return document.getElementById('dgListem'); }
+  function klasikBaglam() {
+    var g = klasikTablo(); if (!g) return null;
+    var R = Array.prototype.slice.call(g.rows), bas = Array.prototype.slice.call(R[0].cells).map(function (c) { return c.innerText.replace(/\s+/g, ' ').trim(); });
+    var ogr = [], acik = {};
+    R.slice(1).forEach(function (r) { var C = r.cells; if (!C || C.length < 3) return; var no = (C[0].innerText || '').trim(); if (!/^\d+$/.test(no)) return;
+      var d = {}; for (var j = 2; j < C.length; j++) { var i = C[j].querySelector('input[type=text]'); if (i) { d[j] = i.value.trim(); if (!i.disabled && !i.readOnly) acik[j] = true; } }
+      ogr.push({ no: no, ad: (C[1].innerText || '').trim(), deger: d }); });
+    var kol = Object.keys(acik).map(Number).concat(ogr.length ? Object.keys(ogr[0].deger).map(Number) : []).filter(function (v, k, A) { return A.indexOf(v) === k; }).sort(function (a, b) { return a - b; })
+      .map(function (j) { return { i: j, ad: bas[j] || (j + '. sütun'), acik: !!acik[j] }; });
+    var sec = Array.prototype.slice.call(document.querySelectorAll('select')).filter(function (s) { return !/OKLMenu/.test(s.id); }).slice(0, 3).map(function (s) { var o = s.options[s.selectedIndex]; return o && o.value && o.value !== '-1' ? o.text.replace(/\s+/g, ' ').trim() : ''; }).filter(Boolean);
+    return { tip: 'klasik', ogrenciler: ogr, kolonlar: kol, baslik: sec.join(' · ').replace(/^AL\s*-\s*/, '').slice(0, 200) };
+  }
+  function klasikDoldur(kolon, notlar) {
+    var g = klasikTablo(), n = 0, kapali = 0;
+    Array.prototype.slice.call(g.rows).slice(1).forEach(function (r) { var C = r.cells; if (!C || !C[kolon]) return; var no = (C[0].innerText || '').trim(); if (!(no in notlar)) return;
+      var i = C[kolon].querySelector('input[type=text]'); if (!i) return; if (i.disabled || i.readOnly) { kapali++; return; }
+      i.focus(); i.value = String(notlar[no]); ['input', 'change', 'keyup', 'blur'].forEach(function (t) { i.dispatchEvent(new Event(t, { bubbles: true })); }); i.style.background = '#d9fbe8'; n++; });
+    var kod = document.querySelector('input[id*=GuvenlikKod]');
+    if (kod) { kod.scrollIntoView({ block: 'center' }); kod.style.outline = '4px solid #22c55e'; setTimeout(function () { try { kod.focus(); } catch (e) {} }, 300); }
+    return { dolan: n, kapali: kapali, kodVar: !!kod };
+  }
+  if (!vmBul() && klasikTablo()) {
+    var penK = window.open(KOPRU, 'atlasEokul', 'width=960,height=860');
+    if (!penK) { alert('Atlas penceresi açılamadı. Tarayıcının açılır pencere engelini e-Okul için kaldırın.'); return; }
+    A.pen = penK;
+    if (!A.dinleyiciK) { A.dinleyiciK = function (ev) {
+      if (ev.origin !== ATLAS || !ev.data || !ev.data.atlas || ev.source !== A.pen) return;
+      if (ev.data.tip === 'hazir') { var b = klasikBaglam(); if (b) A.pen.postMessage(Object.assign({ atlas: 1, tip: 'baglam' }, b), ATLAS); }
+      else if (ev.data.tip === 'doldur') { var r = klasikDoldur(+ev.data.kolon, ev.data.notlar || {}); A.pen.postMessage({ atlas: 1, tip: 'doldurdu', sonuc: r }, ATLAS); }
+    }; window.addEventListener('message', A.dinleyiciK); }
+    return;
+  }
+
   var v0 = vmBul();
-  if (!v0 || !v0.ogrenciListesi.length || !v0.kolonlar.length) { alert('Atlas: Önce e-Okul › OYSS Not Girişi\'nde sınıfı, dersi ve sınavı seçip "Öğrenci Listesi Yükle"ye basın; liste açılınca düğmeye yeniden basın.'); return; }
+  if (!v0 || !v0.ogrenciListesi.length || !v0.kolonlar.length) { alert('Atlas: Önce e-Okul not giriş ekranında (OYSS Not Girişi ya da Ders Notu Girişi) sınıfı ve dersi seçip listeyi açın; liste açılınca düğmeye yeniden basın.'); return; }
   var pen = window.open(KOPRU, 'atlasEokul', 'width=960,height=860');
   if (!pen) { alert('Atlas penceresi açılamadı. Tarayıcının açılır pencere engelini e-Okul için kaldırın.'); return; }
   A.pen = pen;
