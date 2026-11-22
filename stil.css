@@ -3046,3 +3046,6 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 .ob-gvs.secili { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon) inset; background: rgba(34,232,255,.08); }
 .ob-bos { font-style: normal; color: #7dffb5; font-weight: 700; } .ob-dolu { font-style: normal; color: var(--soluk); }
 @media (min-width: 721px) { .ob-yon .birincil { width: auto; align-self: flex-start; padding-left: 22px; padding-right: 22px; } }
+/* K-929: programda bulunamayan hesaplar */
+.og-esz-s { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .og-esz-s .ana { flex: 1 1 180px; min-width: 0; } .og-esz-s .ana small { display: block; overflow-wrap: anywhere; }
+.og-esz-s select { flex: 1 1 180px; min-width: 0; } .og-esz-s button { flex: none; }
