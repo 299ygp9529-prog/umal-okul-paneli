@@ -1,8 +1,30 @@
 // Uygulama olarak yüklenebilmesi için en küçük service worker (önbellek yok; veriler her zaman canlı).
 // K-722: anlık bildirim (acil duyuru, veliye "derse girmedi") burada gösterilir.
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-self.addEventListener('fetch', () => {});
+self.addEventListener('activate', e => e.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(L => Promise.all(L.filter(k => k.startsWith('atlas-sabit-') && k !== ONB).map(k => caches.delete(k)))).catch(() => {})])));
+// K-905: yavaş telefonlar için önbellek. Yalnız aynı sitedeki SABİT dosyalar: sürüm damgalı (?v=…) betik/stil ve yazı tipi/resim.
+// Damgalı dosya değişince damga değişir → yeni adres; eskisi silinir. Sayfanın kendisi ve bütün veriler (Supabase) her zaman canlı.
+const ONB = 'atlas-sabit-1';
+self.addEventListener('fetch', e => {
+  const q = e.request; if (q.method !== 'GET') return;
+  let u; try { u = new URL(q.url); } catch (x) { return; }
+  if (u.origin !== self.location.origin || q.mode === 'navigate' || q.cache === 'no-store') return;
+  const damgali = u.searchParams.has('v') && /\.(js|css)$/.test(u.pathname) && /^[\w.-]{3,20}$/.test(u.searchParams.get('v'));
+  const resim = !u.search && /\.(woff2?|webp|png|svg|jpg)$/.test(u.pathname) && !/^\/(foto|yukle)/.test(u.pathname);
+  if (!damgali && !resim) return;
+  e.respondWith((async () => {
+    const c = await caches.open(ONB), v = await c.match(q);
+    const al = fetch(q).then(async r => {
+      if (r && r.ok && r.type === 'basic') {
+        if (damgali) { const L = await c.keys(); await Promise.all(L.filter(k => { const x = new URL(k.url); return x.pathname === u.pathname && x.href !== u.href; }).map(k => c.delete(k))); }
+        await c.put(q, r.clone());
+      }
+      return r;
+    });
+    if (v) { if (resim) e.waitUntil(al.catch(() => {})); return v; }   // damgalı: hiç değişmez; resim: önbellekten ver, arkada tazele
+    return al;
+  })());
+});
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { metin: e.data ? e.data.text() : '' }; }
   const acil = !!d.acil;
