@@ -270,6 +270,7 @@
     const c = tuval(cikar(h.tam, h.H, x0, y0, w, hh, px)), x = c.getContext('2d');
     x.fillStyle = '#9aa3ad'; x.fillRect((E.cNo - x0 - 1.5) * px, (E.pY - y0) * px, (E.cSoru - E.cNo + 1.5) * px, (E.y1 - E.pY + 1) * px);
     x.fillStyle = '#ffffff'; x.font = `bold ${Math.round(9 * px)}px sans-serif`; x.textAlign = 'center'; x.fillText('(gizli)', ((E.cNo + E.cSoru) / 2 - x0) * px, (E.pY - y0 + 14) * px);
+    x.fillStyle = '#fbf6ea'; x.fillRect((E.cTop - x0 + 1) * px, (E.pY - y0 + 1.2) * px, (E.x1 - E.cTop - 2) * px, (E.rY - E.pY - 2.4) * px);   // basılı "100" soru puanı sanılmasın
     return c.toDataURL('image/jpeg', 0.86).split(',')[1];
   }
   function satirResmiE(h, i, n) {
