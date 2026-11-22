@@ -3837,7 +3837,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
           <b>Soru puan kâğıdının fotoğrafı</b><div class="soluk kucuk">Karekodlu Atlas kâğıdına puanları elle yazın, fotoğrafını çekin. Atlas kâğıdı tanır, puanları okur, öğretmenin yazdığı toplamla karşılaştırır; tutmayan satırı size gösterir.</div>
           <div class="dugmeler" style="justify-content:center;margin:12px 0 0"><button class="birincil" id="ntFoto">Fotoğraf çek</button><button class="ikincil" id="ntKagit">Kâğıt yazdır</button></div>
           <input type="file" id="ntFotoDosya" accept="image/*" capture="environment" style="display:none"></div></div>
-        <div class="kart"><div class="nt-lbas"><h2 style="margin:0">${D.rol === 'ogretmen' ? 'Yüklediklerim' : 'Yüklenen notlar'}</h2><a class="ikincil" href="eokul-kur.html" target="_blank" rel="noopener">e-Okul'a aktar</a></div><div class="satirlar">${liste()}</div></div>`;
+        <div class="kart"><div class="nt-lbas"><h2 style="margin:0">${D.rol === 'ogretmen' ? 'Yüklediklerim' : 'Yüklenen notlar'}</h2><a class="ikincil" href="eokul-kur.html">e-Okul'a aktar</a></div><div class="satirlar">${liste()}</div></div>`;
       $('#ntSec').onclick = () => $('#ntDosya').click();
       $('#ntFoto').onclick = () => $('#ntFotoDosya').click();
       $('#ntFotoDosya').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (f) (await yz()).fotoOku(yzCtx(), f); };

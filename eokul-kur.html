@@ -14,25 +14,31 @@
   .ku-adim > b { font-size: 16px; } .ku-adim span b { color: var(--yazi); } .ku-adim span { color: var(--soluk); font-size: 13.5px; line-height: 1.45; } .ku-adim kbd { font: inherit; font-weight: 800; color: var(--yazi); padding: 1px 7px; border: 1px solid var(--cizgi); border-radius: 6px; background: var(--koyu); }
   .ku-dugme { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 12px 18px; border-radius: 14px; background: linear-gradient(135deg, #22e8ff, #3ef08a); color: #04121c; font-weight: 800; text-decoration: none; cursor: grab; box-shadow: 0 6px 22px rgba(34,232,255,.25); }
   .ku-dugme svg { width: 20px; height: 20px; }
+  .geri-hap { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; } .geri-hap svg { width: 18px; height: 18px; }
+  .ku-yedek { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; } .ku-yedek > span { color: var(--soluk); font-size: 13.5px; line-height: 1.9; } .ku-yedek b { color: var(--yazi); } .ku-yedek kbd { font: inherit; font-weight: 800; color: var(--yazi); padding: 1px 7px; border: 1px solid var(--cizgi); border-radius: 6px; background: var(--koyu); }
   .ku-not { margin-top: 16px; color: var(--soluk); font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
 <div class="ku">
-  <h1>e-Okul'a aktar düğmesi</h1>
+  <a class="ikincil geri-hap" id="kuGeri" href="/#notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Not Yükle</a>
+  <h1 style="margin-top:18px">e-Okul'a aktar düğmesi</h1>
   <div class="ku-alt">Soru puan kâğıdının fotoğrafıyla Atlas'a giren soru puanlarını e-Okul OYSS not girişine tek tıkla yazar. Yalnız toplamı olan notlarla (PDF ya da elle) e-Okul'u karşılaştırır. Bir kez kurulur; sonra her sınıfta aynı düğmeye basarsınız. Notlar yazılmadan önce size gösterilir, kayıttan sonra e-Okul'daki notlar Atlas ile tek tek karşılaştırılır.</div>
   <div class="ku-izg">
     <div class="kart ku-adim"><i>1</i><b>Yer imleri çubuğunu açın</b><span>Bilgisayarda Chrome ya da Edge'de <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> tuşlarına basın (Mac'te <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>). Adres çubuğunun altında ince bir çubuk belirir.</span></div>
-    <div class="kart ku-adim"><i>2</i><b>Bu düğmeyi çubuğa sürükleyin</b><span>Fareyle tutup yer imleri çubuğuna bırakın. Tıklamayın; sürükleyin.</span>
+    <div class="kart ku-adim"><i>2</i><b>Bu düğmeyi çubuğa sürükleyin</b><span>Farenin sol tuşuyla düğmeye basılı tutun, yukarıdaki yer imleri çubuğunun üstüne getirip bırakın. Çubukta yeşil yıldızlı "Atlas'tan aktar" belirir.</span>
       <a class="ku-dugme" id="kuDugme" href="#" title="Yer imleri çubuğuna sürükleyin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h11M12 6.5 17.5 12 12 17.5"/><path d="M20 4.5v15"/></svg>Atlas'tan aktar</a></div>
     <div class="kart ku-adim"><i>3</i><b>e-Okul'da basın</b><span>e-Okul › Not İşlemleri › <b>OYSS Not Girişi</b>'nde sınıfı, dersi ve sınavı seçip <b>Öğrenci Listesi Yükle</b>'ye basın, sonra çubuktaki <b>Atlas'tan aktar</b>'a basın. Atlas penceresinde notları kontrol edip <b>e-Okul'a yaz</b> deyin.</span></div>
   </div>
+  <div class="kart ku-yedek"><b>Sürükleyemiyor musunuz?</b><span>1. <button class="ikincil" id="kuKopya">Düğmenin kodunu kopyala</button> &nbsp;2. <kbd>⌘</kbd> + <kbd>D</kbd> (Windows'ta <kbd>Ctrl</kbd> + <kbd>D</kbd>) ile bu sayfayı yer imlerine ekleyin; açılan kutuda <b>Daha fazla</b> / <b>Düzenle</b>'ye basın. &nbsp;3. Adını <b>Atlas'tan aktar</b> yapın, <b>URL</b> kutusundakini silip kopyaladığınız kodu yapıştırın, <b>Kaydet</b>.</span><span class="kucuk" id="kuKopyaBilgi"></span></div>
   <div class="ku-not">Düğme yalnız sizin bilgisayarınızda, açık olan e-Okul sayfanızda çalışır; e-Okul şifreniz Atlas'a hiç gelmez. Atlas penceresi açılmazsa tarayıcının açılır pencere engelini e-Okul için kaldırın. Aynı tarayıcıda Atlas'a giriş yapmış olmanız gerekir.</div>
 </div>
 <script>
+try { if (document.referrer && new URL(document.referrer).origin === location.origin) document.getElementById('kuGeri').onclick = ev => { ev.preventDefault(); history.back(); }; } catch (e) {}
 fetch('eokul-aktar.js?v=' + Date.now()).then(r => r.text()).then(t => {
   const kod = t.split('\n').filter(s => !/^\s*\/\//.test(s)).map(s => s.trim()).join(' ');
   const a = document.getElementById('kuDugme'); a.href = 'javascript:' + encodeURIComponent(kod);
+  document.getElementById('kuKopya').onclick = async () => { const bil = document.getElementById('kuKopyaBilgi'); try { await navigator.clipboard.writeText(a.href); bil.className = 'kucuk yeşil'; bil.textContent = 'Kopyalandı. Şimdi 2. ve 3. adımı yapın.'; } catch (e) { bil.className = 'kucuk kirmizi'; bil.textContent = 'Kopyalanamadı; düğmeyi sürüklemeyi deneyin.'; } };
   a.onclick = ev => { ev.preventDefault(); a.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); };
 });
 </script>
