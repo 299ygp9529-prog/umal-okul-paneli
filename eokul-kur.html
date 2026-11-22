@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Okul'a aktar düğmesi · Atlas</title>
+<link rel="stylesheet" href="stil.css?v=20261122054024">
+<style>
+  body { background: var(--zemin); margin: 0; }
+  .ku { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  .ku h1 { margin: 0 0 4px; font-size: 24px; } .ku-alt { color: var(--soluk); margin-bottom: 18px; line-height: 1.45; }
+  .ku-izg { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .ku-adim { display: flex; flex-direction: column; gap: 8px; } .ku-adim i { font-style: normal; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #04121c; background: var(--neon); }
+  .ku-adim b { font-size: 16px; } .ku-adim span { color: var(--soluk); font-size: 13.5px; line-height: 1.45; } .ku-adim kbd { font: inherit; font-weight: 800; color: var(--yazi); padding: 1px 7px; border: 1px solid var(--cizgi); border-radius: 6px; background: var(--koyu); }
+  .ku-dugme { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 12px 18px; border-radius: 14px; background: linear-gradient(135deg, #22e8ff, #3ef08a); color: #04121c; font-weight: 800; text-decoration: none; cursor: grab; box-shadow: 0 6px 22px rgba(34,232,255,.25); }
+  .ku-dugme svg { width: 20px; height: 20px; }
+  .ku-not { margin-top: 16px; color: var(--soluk); font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="ku">
+  <h1>e-Okul'a aktar düğmesi</h1>
+  <div class="ku-alt">Atlas'a yüklediğiniz notları (kâğıt fotoğrafından, PDF'ten ya da elle) e-Okul not girişine tek tıkla yazar. Bir kez kurulur; sonra her sınıfta aynı düğmeye basarsınız. Notlar yazılmadan önce size gösterilir, kayıttan sonra e-Okul'daki notlar Atlas ile tek tek karşılaştırılır.</div>
+  <div class="ku-izg">
+    <div class="kart ku-adim"><i>1</i><b>Yer imleri çubuğunu açın</b><span>Bilgisayarda Chrome ya da Edge'de <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> tuşlarına basın (Mac'te <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>). Adres çubuğunun altında ince bir çubuk belirir.</span></div>
+    <div class="kart ku-adim"><i>2</i><b>Bu düğmeyi çubuğa sürükleyin</b><span>Fareyle tutup yer imleri çubuğuna bırakın. Tıklamayın; sürükleyin.</span>
+      <a class="ku-dugme" id="kuDugme" href="#" title="Yer imleri çubuğuna sürükleyin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h11M12 6.5 17.5 12 12 17.5"/><path d="M20 4.5v15"/></svg>Atlas'tan aktar</a></div>
+    <div class="kart ku-adim"><i>3</i><b>e-Okul'da basın</b><span>e-Okul › Not Girişi'nde sınıfı ve dersi seçip listeyi açın, sonra çubuktaki <b>Atlas'tan aktar</b>'a basın. Açılan Atlas penceresinde notu ve sütunu kontrol edip <b>e-Okul'a yaz</b> deyin.</span></div>
+  </div>
+  <div class="ku-not">Düğme yalnız sizin bilgisayarınızda, açık olan e-Okul sayfanızda çalışır; e-Okul şifreniz Atlas'a hiç gelmez. Atlas penceresi açılmazsa tarayıcının açılır pencere engelini e-Okul için kaldırın. Aynı tarayıcıda Atlas'a giriş yapmış olmanız gerekir.</div>
+</div>
+<script>
+fetch('eokul-aktar.js?v=' + Date.now()).then(r => r.text()).then(t => {
+  const kod = t.split('\n').filter(s => !/^\s*\/\//.test(s)).map(s => s.trim()).join(' ');
+  const a = document.getElementById('kuDugme'); a.href = 'javascript:' + encodeURIComponent(kod);
+  a.onclick = ev => { ev.preventDefault(); a.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); };
+});
+</script>
+</body>
+</html>

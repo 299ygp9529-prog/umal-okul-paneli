@@ -3036,3 +3036,5 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
   .nk-detay img { width: auto; height: 60px; max-width: none; }
   .nk-detay { position: sticky; left: 0; min-width: 0; width: calc(100vw - 74px); box-sizing: border-box; }
 }
+
+.nt-lbas { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; } .nt-lbas a.ikincil { text-decoration: none; font-size: 13.5px; }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Okul'a aktar · Atlas</title>
+<link rel="stylesheet" href="stil.css?v=20261122054024">
+<script src="supabase.min.js?v=2.45.4"></script>
+<style>
+  body { background: var(--zemin); margin: 0; }
+  .ek { max-width: 880px; margin: 0 auto; padding: 18px 16px 40px; }
+  .ek h1 { font-size: 21px; margin: 0 0 2px; } .ek-alt { color: var(--soluk); font-size: 13px; margin-bottom: 14px; }
+  .ek-kayit { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--cizgi); background: var(--koyu); color: var(--yazi); cursor: pointer; font: inherit; margin-bottom: 6px; }
+  .ek-kayit.secili { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon) inset; }
+  .ek-kayit b { display: block; } .ek-kayit small { color: var(--soluk); } .ek-kayit .ek-o { margin-left: auto; color: var(--neon); font-weight: 800; white-space: nowrap; }
+  .ek-tablo { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 5px; margin-top: 8px; }
+  .ek-s { display: grid; grid-template-columns: 50px minmax(0, 1fr) 40px 64px; gap: 6px; align-items: center; padding: 6px 9px; border-radius: 10px; background: var(--koyu); border: 1px solid var(--cizgi); font-size: 13.5px; }
+  .ek-s .no { color: var(--neon); font-weight: 800; } .ek-s .ad { overflow-wrap: break-word; line-height: 1.2; } .ek-s .v { text-align: center; font-weight: 800; } .ek-s .e { text-align: right; color: var(--soluk); font-size: 12px; white-space: nowrap; }
+  .ek-s.degisir { border-color: rgba(245,158,11,.7); } .ek-s.yok { opacity: .55; }
+  .ek-bas { display: grid; grid-template-columns: 54px minmax(0, 1fr) 52px 52px; gap: 6px; font-size: 11.5px; font-weight: 800; color: var(--soluk); padding: 0 9px; }
+  .ek-cubuk { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; margin: 12px 0 6px; } .ek-cubuk i { display: block; height: 100%; width: 0; background: var(--neon); transition: width .3s; }
+  .ek-son { display: flex; align-items: flex-start; gap: 12px; } .ek-son svg { flex: none; width: 34px; height: 34px; }
+</style>
+</head>
+<body>
+<div class="ek" id="ek"><div class="kart soluk">Atlas açılıyor…</div></div>
+<script>
+(function () {
+  'use strict';
+  const EOKUL = 'https://e-okul.meb.gov.tr';
+  const sb = window.supabase.createClient('https://ceqdghykweubeaokwadt.supabase.co', 'sb_publishable_YCctPAToPYgrvfeieRumPw_4SNsfaEZ', { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'sb-ceqdghykweubeaokwadt-auth-token',
+    storage: { getItem: k => { try { return sessionStorage.getItem(k) || localStorage.getItem(k); } catch (e) { return null; } }, setItem: (k, v) => { try { (sessionStorage.getItem(k) ? sessionStorage : localStorage).setItem(k, v); } catch (e) {} }, removeItem: () => {} } } });
+  const $ = s => document.querySelector(s), E = $('#ek');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tr = 'tr-TR', nrm = s => String(s || '').toLocaleLowerCase(tr).replace(/[^a-z0-9çğıöşü]/g, '');
+  const bas = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s(/-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
+  const TIK = '<svg viewBox="0 0 24 24" fill="none" stroke="#3ef08a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.3 3 3 6-6.3"/></svg>';
+  const UNL = '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>';
+  const S = { baglam: null, kayitlar: [], sec: null, kolon: null };
+  const gonder = o => { try { window.opener.postMessage(Object.assign({ atlas: 1 }, o), EOKUL); } catch (e) {} };
+  const hata = m => { E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="kart ek-son">${UNL}<div>${m}</div></div>`; };
+
+  // e-Okul'daki değer ile Atlas'taki değer aynı mı (G/K/sayı)
+  const ayni = (a, e) => { if (a == null || a === '') return e == null || e === ''; const A = String(a).toUpperCase().replace(',', '.'), B = String(e == null ? '' : e).toUpperCase().replace(',', '.'); return A === B || (!isNaN(+A) && !isNaN(+B) && B !== '' && Math.abs(+A - +B) < .001); };
+  const goster = v => v == null || v === '' ? '' : String(v).replace('.', ',');
+  const atlasDeger = v => { const t = String(v == null ? '' : v).trim().toUpperCase().replace(',', '.'); if (t === 'G' || t === 'GM' || t === 'M' || t === 'MZ') return 'G'; if (t === 'K') return 'K'; if (/^\d{1,3}(\.\d+)?$/.test(t) && +t <= 100) return String(Math.round(+t)); return null; };   // e-Okul tam sayı ister
+
+  function kolonTahmin(sinav) {   // "1. Dönem 2. Yazılı" → e-Okul'daki 2. sınav sütunu
+    const K = S.baglam.kolonlar, n = (String(sinav).match(/(\d)\.\s*(yazılı|sınav)/i) || [])[1];
+    if (!n) return null;
+    const k = K.find(k => new RegExp('(^|\\D)' + n + '\\.?\\s*(yazılı|sınav|ortak)', 'i').test(k.ad)) || K.find(k => /yaz|sın/i.test(k.ad) && (k.ad.match(/\d/) || [])[0] === n);
+    return k ? k.i : null;
+  }
+  function ciz() {
+    const B = S.baglam, K = S.sec;
+    if (!S.kayitlar.length) return hata(`Bu sınıfın öğrencileri için Atlas'ta yüklenmiş not bulunamadı.<br><span class="soluk kucuk">Önce Atlas › Not Yükle'den notları yükleyin (PDF, elle ya da soru puan kâğıdının fotoğrafı).</span>`);
+    let tablo = '', degisen = 0, yazilacak = 0, eksik = 0, yuvarlanan = 0;
+    if (K && S.kolon != null) {
+      tablo = B.ogrenciler.map(o => { const ham = (K.notlar || {})[o.no], a = atlasDeger(ham), e = (o.notlar || [])[S.kolon], yv = a != null && /^\d+[.,]\d*[1-9]/.test(String(ham).trim());
+        const yok = a == null; if (yok) eksik++; else if (!ayni(a, e)) { yazilacak++; if (e != null && e !== '') degisen++; } if (yv) yuvarlanan++;
+        return `<div class="ek-s ${yok ? 'yok' : (!ayni(a, e) && e != null && e !== '' ? 'degisir' : '')}"><span class="no">${esc(o.no)}</span><span class="ad">${esc(bas(o.ad))}</span><span class="v" ${yv ? `title="Atlas'ta ${esc(ham)}"` : ''}>${esc(goster(a))}${yv ? '<sup>*</sup>' : ''}</span><span class="e">${e != null && e !== '' ? 'e-Okul ' + esc(goster(e)) : ''}</span></div>`; }).join('');
+    }
+    E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${B.ogrenciler.length} öğrenci</div>
+      <div class="kart"><div class="nt-alan"><span>Atlas'taki not</span>${S.kayitlar.map((k, i) => `<button class="ek-kayit ${K === k ? 'secili' : ''}" data-k="${i}"><div><b>${esc(k.sinif)} · ${esc(k.ders)}</b><small>${esc(k.sinav)} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}${k.kaynak === 'foto' ? ' · kâğıt fotoğrafından' : ''}</small></div><span class="ek-o">${k.ortak} öğrenci</span></button>`).join('')}</div>
+      ${K ? `<div class="nt-alan" style="margin-top:12px"><span>e-Okul'da hangi sütuna?</span><div class="cipler">${B.kolonlar.map(k => `<button class="cip ${S.kolon === k.i ? 'secili' : ''}" data-c="${k.i}">${esc(k.ad)}</button>`).join('')}</div></div>` : ''}</div>
+      ${K && S.kolon != null ? `<div class="kart"><div class="soluk kucuk">Kalın rakam Atlas'taki not; yanında e-Okul'da şu an yazan not (varsa).</div><div class="ek-tablo">${tablo}</div>
+        <p class="kucuk ${degisen ? 'turuncu' : 'soluk'}" style="margin:12px 0 0">${yazilacak ? `${yazilacak} öğrencinin notu e-Okul'a yazılacak.` : 'e-Okul\'daki notlar Atlas ile zaten aynı.'}${degisen ? ` Turuncu ${degisen} öğrencinin e-Okul'da farklı bir notu var; Atlas'takiyle değişecek.` : ''}${eksik ? ` Soluk ${eksik} öğrencinin Atlas'ta notu yok; e-Okul'da olduğu gibi kalır.` : ''}${yuvarlanan ? ` e-Okul tam sayı kabul ettiği için * işaretli ${yuvarlanan} buçuklu not yukarı yuvarlandı.` : ''}</p>
+        <div class="dugmeler" style="margin-top:12px"><button class="birincil" id="ekYaz" ${yazilacak ? '' : 'disabled'}>e-Okul'a yaz</button></div></div>` : ''}`;
+    E.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.sec = S.kayitlar[+b.dataset.k]; S.kolon = kolonTahmin(S.sec.sinav); ciz(); });
+    E.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { S.kolon = +b.dataset.c; ciz(); });
+    const y = $('#ekYaz'); if (y) y.onclick = () => {
+      const notlar = {}; B.ogrenciler.forEach(o => { const a = atlasDeger((K.notlar || {})[o.no]); if (a != null && !ayni(a, (o.notlar || [])[S.kolon])) notlar[o.no] = a; });
+      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${esc(B.kolonlar.find(k => k.i === S.kolon).ad)}</div><div class="kart"><b id="ekDurum">e-Okul'a yazılıyor…</b><div class="ek-cubuk"><i id="ekCubuk"></i></div><div class="soluk kucuk">Bu pencereyi ve e-Okul sayfasını kapatmayın. e-Okul notları 5'erli gruplar hâlinde kaydeder.</div></div>`;
+      gonder({ tip: 'yaz', kolon: S.kolon, notlar });
+    };
+  }
+  async function baglamGeldi(B) {
+    S.baglam = B; E.innerHTML = '<div class="kart soluk">Atlas\'taki notlar aranıyor…</div>';
+    const { data: u } = await sb.auth.getSession();
+    if (!u || !u.session) return hata(`Bu tarayıcıda Atlas oturumu açık değil.<br><span class="soluk kucuk">Aynı tarayıcıda <a href="https://umalatlas.com.tr" target="_blank" style="color:var(--neon)">umalatlas.com.tr</a> adresinden giriş yapın, sonra e-Okul'da düğmeye yeniden basın.</span>`);
+    const nolar = new Set(B.ogrenciler.map(o => String(o.no)));
+    const { data, error } = await sb.from('umal_not').select('id,sinif,ders,sinav,notlar,guncel,kaynak').order('guncel', { ascending: false }).limit(400);
+    if (error) return hata('Atlas\'taki notlar okunamadı: ' + esc(error.message));
+    S.kayitlar = (data || []).map(k => Object.assign(k, { ortak: Object.keys(k.notlar || {}).filter(n => nolar.has(n) && atlasDeger(k.notlar[n]) != null).length }))
+      .filter(k => k.ortak >= Math.max(1, Math.min(5, nolar.size * .3)));
+    const bd = nrm(B.baslik);   // e-Okul başlığında geçen dersi öne al
+    S.kayitlar.sort((a, b) => (bd.includes(nrm(b.ders)) - bd.includes(nrm(a.ders))) || b.ortak - a.ortak || new Date(b.guncel) - new Date(a.guncel));
+    if (S.kayitlar.length) { S.sec = S.kayitlar[0]; S.kolon = kolonTahmin(S.sec.sinav); }
+    ciz();
+  }
+  window.addEventListener('message', ev => {
+    if (ev.origin !== EOKUL || !ev.data || !ev.data.atlas) return; const d = ev.data;
+    if (d.tip === 'baglam') baglamGeldi(d);
+    else if (d.tip === 'ilerleme') { const a = $('#ekDurum'), c = $('#ekCubuk'); if (a) a.textContent = d.m; if (c) c.style.width = Math.round(d.oran * 100) + '%'; }
+    else if (d.tip === 'bitti') {
+      const r = d.sonuc || {}; const iyi = !r.hata && !(r.farkli || []).length;
+      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="kart ek-son">${iyi ? TIK : UNL}<div><b>${iyi ? `${r.yazilan} öğrencinin notu e-Okul'a kaydedildi.` : (r.hata ? 'Kaydetme yarıda kaldı.' : 'Bazı notlar e-Okul\'da farklı görünüyor.')}</b>
+        <div class="soluk kucuk" style="margin-top:4px">${iyi ? 'Kayıttan sonra e-Okul\'daki notlar tek tek Atlas ile karşılaştırıldı; hepsi aynı.' : esc(r.hata || '')}</div>
+        ${(r.farkli || []).length ? `<div class="kucuk" style="margin-top:8px">${r.farkli.map(f => `${esc(f.no)} ${esc(bas(f.ad))}: Atlas ${esc(goster(f.atlas))}, e-Okul ${esc(goster(f.eokul) || 'boş')}`).join('<br>')}</div><div class="soluk kucuk" style="margin-top:6px">e-Okul'da düğmeye yeniden basarsanız yalnız bunlar yazılır.</div>` : ''}</div></div>
+        <div class="dugmeler"><button class="ikincil" onclick="window.close()">Pencereyi kapat</button></div>`;
+    }
+  });
+  if (!window.opener) { hata('Bu sayfa e-Okul not girişi ekranındaki <b>Atlas\'tan aktar</b> düğmesiyle açılır.<br><span class="soluk kucuk"><a href="eokul-kur.html" style="color:var(--neon)">Düğmeyi nasıl kurarım?</a></span>'); return; }
+  gonder({ tip: 'hazir' });
+})();
+</script>
+</body>
+</html>
