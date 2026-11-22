@@ -1180,18 +1180,42 @@
     kurKodFormu(KUR_IOS() && KUR_UYG());   // K-850: iPhone ana ekran uygulamasında kurulum kodu açık gelir
     if (/[?&]kayit\b/.test(location.search) && !$('#kayitBilgi')) {   // K-733: umalatlas.com.tr/kayit
       const k = document.createElement('div'); k.id = 'kayitBilgi'; k.className = 'kayit-bilgi';
-      k.innerHTML = `<b>Öğretmen kaydı</b><span>Adınızı, soyadınızı ve e-posta adresinizi yazıp gönderin. İdare onaylayınca bu e-postayla panele girersiniz.</span>
+      const pin = (id, ph) => `<input id="${id}" type="text" class="pin-gizli" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="${ph}">`;
+      k.innerHTML = `<b>Öğretmen kaydı</b><span>Bilgilerinizi ve kendi şifrenizi yazın; e-postanıza gelen kodla adresinizi onaylayın. İdare onaylayınca bu e-posta ve şifreyle panele girersiniz.</span>
         <form id="kyForm" onsubmit="return false" autocomplete="on"><label for="kyAd">Adınız soyadınız</label><input id="kyAd" autocomplete="name" placeholder="Ör. Ayşe Yılmaz" autocapitalize="words">
         <label for="kyEp">E-posta adresiniz</label><input id="kyEp" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="ornek@gmail.com">
-        <button class="birincil" id="kyGonder" type="submit">Gönder</button><div id="kyBilgi" class="ky-bilgi"></div></form>`;
+        <label for="kyS1">Şifreniz (6 haneli)</label>${pin('kyS1', 'Kendi şifreniz')}<label for="kyS2">Şifreyi tekrar yazın</label>${pin('kyS2', 'Yeniden yazın')}
+        <button class="birincil" id="kyGonder" type="submit">E-postama onay kodu gönder</button><div id="kyBilgi" class="ky-bilgi"></div></form>
+        <form id="kyKodForm" class="gizli" onsubmit="return false"><label for="kyKod">E-postanıza gelen kod</label><input id="kyKod" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Kod">
+        <button class="birincil" id="kyOnayla" type="submit">Onayla ve kaydı tamamla</button><button class="ikincil" id="kyGeri" type="button">Geri</button><div id="kyBilgi2" class="ky-bilgi"></div></form>`;
       $('#adim1').before(k); document.body.classList.add('kayit-modu');
-      $('#kyForm').onsubmit = async () => { const ad = $('#kyAd').value.trim(), ep = $('#kyEp').value.trim(), bl = $('#kyBilgi');
-        if (ad.split(/\s+/).length < 2) { bl.textContent = 'Adınızı ve soyadınızı yazın.'; return false; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ep)) { bl.textContent = 'E-posta adresini kontrol edin.'; return false; }
+      const KY = {};   // K-928: öğretmen kendi şifresini kayıtta belirler, e-postasını kodla onaylar; panele giriş idare onayından sonra
+      $('#kyForm').onsubmit = ev => { ev.preventDefault(); kyGonder(); return false; }; const kyGonder = async () => { const ad = $('#kyAd').value.trim().replace(/\s+/g, ' '), ep = $('#kyEp').value.trim().toLowerCase(), p1 = $('#kyS1').value, p2 = $('#kyS2').value, bl = $('#kyBilgi');
+        if (ad.split(' ').length < 2) { bl.textContent = 'Adınızı ve soyadınızı yazın.'; return false; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ep)) { bl.textContent = 'E-posta adresini kontrol edin.'; return false; }
+        if (!/^\d{6}$/.test(p1)) { bl.textContent = 'Şifre 6 haneli bir sayı olsun.'; return false; }
+        if (/^(\d)\1+$/.test(p1) || '0123456789012345'.includes(p1) || '9876543210987654'.includes(p1)) { bl.textContent = 'Bu şifre çok kolay tahmin edilir; başka rakamlar seçin.'; return false; }
+        if (p1 !== p2) { bl.textContent = 'İki şifre aynı değil.'; return false; }
         $('#kyGonder').disabled = true; bl.textContent = 'Gönderiliyor…';
         try { const { data, error } = await sb.rpc('umal_ogretmen_kayit', { p_ad: ad, p_eposta: ep }); if (error || !data || !data.ok) throw new Error(error ? hataYaz(error) : (data && data.hata) || 'Gönderilemedi');
-          k.innerHTML = `<b>Teşekkürler, ${esc(ad)}</b><span>${data.zaten ? 'Bu e-posta panelde zaten kayıtlı. Aşağıdan e-posta adresinizle giriş yapabilirsiniz.' : 'Kaydınız idareye ulaştı. Onaylanınca bu e-postayla (' + esc(ep) + ') panele girersiniz; ilk girişte e-postanıza kod gelir.'}</span>`;
-          if (data.zaten) { document.body.classList.remove('kayit-modu'); try { $('#eposta').value = ep; } catch (e) {} }
-        } catch (e) { bl.textContent = e.message || 'Gönderilemedi'; $('#kyGonder').disabled = false; } return false; };
+          if (data.zaten) { k.innerHTML = `<b>Bu e-posta panelde zaten kayıtlı</b><span>Aşağıdan e-posta adresinizle giriş yapın. Şifreniz yoksa «e-postama kod gönder» ile kod isteyip şifrenizi belirleyin.</span>`; document.body.classList.remove('kayit-modu'); try { $('#eposta').value = ep; } catch (e) {} return false; }
+          const r = await sb.auth.signInWithOtp({ email: ep, options: { shouldCreateUser: true } }); if (r.error) throw new Error('Onay kodu gönderilemedi: ' + hataYaz(r.error));
+          Object.assign(KY, { ad, ep, p1 }); $('#kyForm').classList.add('gizli'); $('#kyKodForm').classList.remove('gizli');
+          $('#kyBilgi2').textContent = `${ep} adresine kod gönderildi (istenmeyen klasörüne de bakın).`; setTimeout(() => $('#kyKod').focus(), 50);
+        } catch (e) { bl.textContent = e.message || 'Gönderilemedi'; } $('#kyGonder').disabled = false; return false; };
+      $('#kyGeri').onclick = () => { $('#kyKodForm').classList.add('gizli'); $('#kyForm').classList.remove('gizli'); };
+      $('#kyKodForm').onsubmit = ev => { ev.preventDefault(); kyOnay(); return false; }; const kyOnay = async () => { const kod = $('#kyKod').value.replace(/\D/g, ''), bl = $('#kyBilgi2');
+        if (kod.length < 6 || kod.length > 10) { bl.textContent = 'E-postadaki kodun tamamını yazın.'; return false; }
+        $('#kyOnayla').disabled = true; bl.textContent = 'Onaylanıyor…';
+        try { let { error } = await sb.auth.verifyOtp({ email: KY.ep, token: kod, type: 'email' });
+          if (error) { const r2 = await sb.auth.verifyOtp({ email: KY.ep, token: kod, type: 'signup' }).catch(er => ({ error: er })); if (!r2.error) error = null; }
+          if (error) throw new Error('Kod doğru değil ya da süresi doldu.');
+          const u = await sb.auth.updateUser({ password: KY.p1, data: { sifre_var: true, ad: KY.ad } });
+          if (u.error && !/different from the old|same password|should be different/i.test(u.error.message || '')) throw new Error(/weak|pwned|leaked/i.test(u.error.message || '') ? 'Bu şifre çok kolay ya da sızmış listelerde var; Geri deyip başka rakamlar seçin.' : 'Şifre kaydedilemedi: ' + hataYaz(u.error));
+          try { localStorage.setItem('atlas-son-eposta', KY.ep); localStorage.removeItem('atlas-sifre-gerek'); } catch (e) {}
+          await sb.auth.signOut().catch(() => {});
+          k.innerHTML = `<b>Teşekkürler, ${esc(KY.ad)}</b><span>E-postanız onaylandı ve şifreniz kaydedildi. İdare kaydınızı onaylayınca aşağıdan <b>${esc(KY.ep)}</b> ve şifrenizle panele girersiniz; kod beklemezsiniz.</span>`;
+          document.body.classList.remove('kayit-modu'); try { $('#eposta').value = KY.ep; } catch (e) {}
+        } catch (e) { bl.textContent = e.message || 'Onaylanamadı'; $('#kyOnayla').disabled = false; } return false; };
     }
   }
   // K-716cd: panel hızı — zayıf cihazda (az bellek/çekirdek, veri tasarrufu, hareket azaltma) çerçeveler sabit; ekran dışındaki kutuların animasyonu durur
