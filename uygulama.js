@@ -4127,7 +4127,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
             S.push(`--- Sayfa ${i} ---\n` + satir.join('\n')); }
           metin = S.join('\n\n').slice(0, 19500); } catch (e_) { metin = ''; }
         let govde;
-        if (metin.replace(/---.*---|\[\d+\]|\s/g, '').length >= 60) govde = { metin };
+        const b64 = () => new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); });
+        if (metin.replace(/---.*---|\[\d+\]|\s/g, '').length >= 60) { govde = { metin }; if (f.size <= 2 * 1024 * 1024) govde.pdf = await b64(); }   // K-921: bazı PDF'lerde rakamlar metne çıkmıyor; küçük PDF'in kendisi de gider
         else { if (f.size > 3 * 1024 * 1024) throw Object.assign(new Error('Bu PDF taranmış görünüyor ve büyük (3 MB üstü). Programı yapay zekâdan metin olarak (ya da daha küçük PDF) alıp deneyin.'), { atlas: true });
           govde = { pdf: await new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); }) }; }
         const { data, error } = await sb.functions.invoke('atlas-plan', { body: govde });
