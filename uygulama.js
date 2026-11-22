@@ -4146,12 +4146,15 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       if ($('#rpAkEkle')) $('#rpAkEkle').onclick = () => bitir(false);
       $('#rpAkDeg').onclick = async () => { if (V.gorevler.length && !await onayla(`Plandaki ${V.gorevler.length} görev silinip yerine programdaki ${L.length} görev konulsun mu?`)) return; bitir(true); };
     };
+    let yukGuncel = P && P.guncel;   // K-925: bu ekran açıldıktan sonra plan başka yerde değiştiyse sessizce üstüne yazılmaz
     const kaydet = async y => {
+      try { const { data: t } = await sb.rpc('umal_rehberlik_ogrenci', { p_no: no }); const sg = t && t.ok && t.plan && t.plan.guncel;
+        if (sg && yukGuncel && sg !== yukGuncel && !await onayla('Bu plan siz bu ekranı açtıktan sonra başka bir yerde güncellendi. Sizdeki hâli onun üstüne yazılsın mı? (Vazgeçip sayfayı yenilerseniz güncel hâli görürsünüz.)')) return; } catch (e) {}
       $('#rpBilgi').textContent = 'Kaydediliyor…';
       const { data: r, error: e } = await israrla(() => sb.rpc('umal_rehberlik_plan_kaydet', { p_no: no, p_veri: V, p_yayin: y }));
       if (e || !r || !r.ok) { $('#rpBilgi').textContent = e ? 'Kaydedilemedi: ' + (/function/.test(e.message || '') ? '20261114150000 SQL çalıştırılmalı' : hataYaz(e)) : r.hata; return; }
       if (y && tasi.size) { const ids = [...tasi]; const { error: te } = await sb.rpc('umal_ozel_kendi_tasi', { p_no: no, p_hafta: hk, p_idler: ids }); if (!te) { if (O.kendi && O.kendi[hk]) O.kendi[hk] = O.kendi[hk].filter(x => !tasi.has(String(x.id))); tasi.clear(); birlesti = false; } }
-      yayin = y ? new Date().toISOString() : null; degisti = false; O.plan = { veri: JSON.parse(JSON.stringify(V)), yayin, ok, ogr: (O.plan && O.plan.ogr) || {}, guncel: new Date().toISOString() }; ciz();
+      yayin = y ? new Date().toISOString() : null; degisti = false; yukGuncel = null; sb.rpc('umal_rehberlik_ogrenci', { p_no: no }).then(({ data: t }) => { if (t && t.ok && t.plan) yukGuncel = t.plan.guncel; }, () => {}); O.plan = { veri: JSON.parse(JSON.stringify(V)), yayin, ok, ogr: (O.plan && O.plan.ogr) || {}, guncel: new Date().toISOString() }; ciz();
       $('#rpBilgi').textContent = y ? '✓ Yayında — öğrencinin ekranına düştü' : '✓ Kaydedildi (öğrenci görmez)';
     };
     const pdf = (sb_) => { const oz = O.sinif === 'ÖZEL';   // K-587: şık haftalık plan (A4 yatay) · K-590: siyah-beyaz seçeneği, body etiketi (yatay genişlik)
