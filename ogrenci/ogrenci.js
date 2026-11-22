@@ -417,7 +417,7 @@
   window.__tzoAc = () => tzoAc();
   // K-905: Gezi Telsizi (96 KB) yalnız gezi günü, gerektiğinde yüklenir — diğer günlerde açılışı yavaşlatmaz
   let tzBetik = null;
-  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=20261121223357'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
+  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=202611221035'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
   async function tzoAc() {
     if (!TZO.g) return; if (!window.UmalTelsiz) { try { await telsizYukle(); } catch (e) { uyar('Telsiz yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.'); return; } }
     if (!window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);

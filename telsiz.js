@@ -34,7 +34,7 @@
     '.tz-c.sec{border-width:2px!important;background:rgba(242,193,78,.24)!important;box-shadow:0 0 0 2px rgba(242,193,78,.25)}.tz-c.ben.sec{background:rgba(34,232,255,.22)!important;box-shadow:0 0 14px rgba(34,232,255,.6)}',
     '@media (max-width:760px){body.klavye-acik .tz-ekran .tz-gz,body.klavye-acik .tz-ekran .tz-serit{display:none!important}body.klavye-acik .tz-obbant{margin:0;border-radius:0;border-width:0 0 1px}}.tz-obs1{flex-wrap:nowrap!important}.tz-obs1 b{white-space:nowrap}',
     '.tz-obbant{margin:6px 0 2px;padding:6px;border-radius:14px;background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.45);flex:none}.tz-obs1{display:flex;align-items:center;gap:6px}.tz-obs1 b{display:flex;align-items:center;gap:5px;color:#f2c14e;font-size:13.5px}.tz-obb-bos{flex:1}',
-    '.tz-seg{display:flex;padding:3px;border-radius:12px;background:#0b1424;border:1px solid #2a4468}.tz-obbant .tz-seg button{height:36px;border:0;background:none;padding:0 12px;border-radius:9px;font-size:14px;font-weight:800;color:#9db0cf;display:flex;align-items:center;gap:5px}.tz-obbant .tz-seg button.secili{background:#f2c14e;color:#2a1d00}.tz-obbant button.ik{width:44px;height:42px;border-radius:12px;padding:0;display:grid;place-items:center}',
+    '.tz-seg{display:flex;padding:3px;border-radius:12px;background:#0b1424;border:1px solid #2a4468}.tz-obbant .tz-seg button{height:36px;border:0;background:none;padding:0 12px;border-radius:9px;font-size:14px;font-weight:800;color:#9db0cf;display:flex;align-items:center;gap:5px}.tz-obbant .tz-seg button.secili{background:#f2c14e;color:#2a1d00}.tz-obbant button.ik{width:44px;height:42px;border-radius:12px;padding:0;display:grid;place-items:center;flex:none}.tz-obbant button.ik.etk{width:auto;display:flex;align-items:center;gap:6px;padding:0 12px;font-size:14px;font-weight:800;white-space:nowrap}.tz-obbant .tz-seg button{white-space:nowrap}@media (max-width:400px){.tz-c{flex-basis:50px;padding:3px 2px}.tz-c b{font-size:8.5px;letter-spacing:0;white-space:nowrap}.tz-obbant .tz-seg button{padding:0 9px}.tz-obbant .tz-seg button svg{display:none}.tz-obbant button.ik.etk{padding:0 10px}}',
     '.tz-obbant button{height:30px;padding:0 10px;border-radius:9px;border:1px solid #2a4468;background:#0b1424;color:#cfe0ff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}.tz-obbant button.x{color:#ffb3b3;border-color:#5a2f3a}.tz-obs2 span{font-size:12px;color:#9db0cf}.tz-obbant button.secili{background:#f2c14e;border-color:#f2c14e;color:#2a1d00}',
     '.tz-c.kilit{opacity:.42;cursor:default;border-style:dashed}.tz-c.yok{border-style:solid;border-color:#2a4468;background:rgba(127,246,255,.04)}.tz-c.yok span{color:#9db0cf}',
     '.tz-psek{display:flex;gap:6px;margin:4px 0 12px}.tz-psek button{flex:1;height:40px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-psek button.secili{background:#22e8ff;border-color:#22e8ff;color:#06202a}',
@@ -79,6 +79,12 @@
     '.tz-top em{display:flex;align-items:center;gap:4px;font-style:normal;font-size:12px;font-weight:800;color:#22e8ff;flex:none}',
     '.tz-top.yakin{background:linear-gradient(135deg,rgba(255,77,94,.28),rgba(255,122,61,.12));border-color:#ff6b78;box-shadow:0 0 22px rgba(255,77,94,.3)}.tz-top.yakin .tz-tsaat{color:#ff9aa3;text-shadow:0 0 14px rgba(255,77,94,.6)}.tz-top.yakin .tz-tm small i{background:#ff4d5e;animation:tzNabiz 1s ease-in-out infinite}',
     '.tz-top.gecti{opacity:.7}',
+    // K-906: mola şeridi — bitiş saati büyük, kalan süre; son 5 dakikada kırmızı. Yalnız CSS opaklık animasyonu (telefonu yormaz)
+    '.tz-molab{display:flex;align-items:center;gap:12px;margin:8px 12px 0;padding:9px 12px;border-radius:16px;color:#fff;flex:none;background:linear-gradient(135deg,rgba(62,240,138,.2),rgba(34,232,255,.08));border:1px solid rgba(62,240,138,.7);box-shadow:0 0 18px rgba(62,240,138,.14)}',
+    '.tz-molab .tz-mik{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;color:#3ef08a;background:rgba(62,240,138,.12);border:1px solid rgba(62,240,138,.35)}',
+    '.tz-molab .tz-tsaat{color:#7dffb3;text-shadow:0 0 12px rgba(62,240,138,.45)}.tz-molab .tz-tm b{color:#7dffb3}.tz-molab .tz-tm small{color:#c9ffe0}.tz-molab .tz-tm small i{background:#3ef08a}',
+    '.tz-molab.yakin{background:linear-gradient(135deg,rgba(255,77,94,.26),rgba(255,122,61,.1));border-color:#ff6b78;box-shadow:0 0 22px rgba(255,77,94,.28)}.tz-molab.yakin .tz-mik{color:#ff9aa3;background:rgba(255,77,94,.14);border-color:rgba(255,107,120,.45)}.tz-molab.yakin .tz-tsaat{color:#ff9aa3;text-shadow:0 0 14px rgba(255,77,94,.6)}.tz-molab.yakin .tz-tm b{color:#ff9aa3}.tz-molab.yakin .tz-tm small i{background:#ff4d5e;animation:tzNabiz 1s ease-in-out infinite}',
+    '.tz-molab.bitti{background:linear-gradient(135deg,rgba(255,181,71,.24),rgba(255,122,61,.1));border-color:rgba(255,181,71,.8)}.tz-molab.bitti .tz-mik{color:#ffc46b;background:rgba(255,181,71,.14);border-color:rgba(255,181,71,.4)}.tz-molab.bitti .tz-tsaat,.tz-molab.bitti .tz-tm b{color:#ffc46b;text-shadow:none}.tz-molab.bitti .tz-tm small i{background:#ffb547}',
     '.tz-kdur{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#7ff6ff;background:rgba(34,232,255,.07);border:1px solid rgba(34,232,255,.3);border-radius:12px;padding:9px 11px;margin-bottom:12px}.tz-kdur.hata{color:#ffb0b0;border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.07)}',
     '.tz-lb{display:block;font-size:13px;font-weight:700;color:#cfe0ff;margin:4px 2px 6px}.tz-lb small{font-weight:500;color:#8aa0c2}',
     '.tz-saat-sat{display:flex;gap:6px;margin-bottom:12px}.tz-saat-sat input{flex:1;min-width:0;height:46px;border-radius:12px;border:1px solid #24406a;background:#0b1424;color:#fff;font:inherit;font-size:20px;font-weight:800;padding:0 10px;color-scheme:dark}',
@@ -112,7 +118,7 @@
     '.tz-gz .tz-gm{display:flex;align-items:baseline;gap:7px;min-width:0}.tz-gz b{font-size:14px;flex:none}.tz-gz small{margin:0;font-size:11.5px;flex:1;min-width:0}',
     '.tz-canli{padding:3px 7px;font-size:10px;gap:5px}.tz-canli i{width:6px;height:6px}.tz-kapa{height:30px;font-size:12px}.tz-kapa svg{width:15px;height:15px}',
     '.tz-sus-dug{margin:5px 6px 0;padding:5px 10px;font-size:12px;border-radius:10px}',
-    '.tz-top{margin:5px 6px 0;padding:5px 10px;gap:9px;border-radius:12px}.tz-tsaat{font-size:22px}',
+    '.tz-top{margin:5px 6px 0;padding:5px 10px;gap:9px;border-radius:12px}.tz-tsaat{font-size:22px}.tz-molab{margin:5px 6px 0;padding:5px 10px;gap:9px;border-radius:12px}.tz-molab .tz-mik{width:32px;height:32px;border-radius:10px}',
     '.tz-tm{flex-direction:row;align-items:baseline;gap:7px;flex-wrap:wrap;row-gap:0}.tz-tm b{font-size:10px}.tz-tm>span{font-size:13px;-webkit-line-clamp:3;flex-basis:100%}.tz-tm small{font-size:12px}',
     '.tz-top em{font-size:0;gap:0;width:30px;height:30px;justify-content:center;border-radius:50%;border:1px solid rgba(34,232,255,.5);background:rgba(34,232,255,.08)}',
     '.tz-akis{padding:8px;gap:6px}',
@@ -128,7 +134,7 @@
     '.tz-baska{align-self:stretch;padding:5px 10px;border-radius:10px;border:1px dashed #2a4468;color:#8aa0c2;font-size:12.5px}.tz-baska b{color:#cfe0ff}',
     '.tz-ob{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.tz-ob button{height:38px;border-radius:11px;border:1px solid #24406a;background:transparent;color:#b9c9e2;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.tz-ob button.h{grid-column:span 2}.tz-ob button.s{background:#ffb547;border-color:#ffb547;color:#2a1300}',
     '.tz-top.tz-serit{display:flex;gap:5px;padding:0;background:none;border:0;box-shadow:none;overflow-x:auto;scrollbar-width:none}.tz-top.tz-serit::-webkit-scrollbar{display:none}',
-    '.tz-c{flex:1 0 50px;display:flex;flex-direction:column;align-items:center;padding:3px 4px;border-radius:10px;border:1px solid rgba(255,181,71,.6);background:rgba(255,181,71,.1);text-decoration:none;color:#fff}.tz-c b{font-size:9.5px;color:#ffc46b;letter-spacing:.04em}.tz-c span{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}',
+    '.tz-c{flex:1 0 58px;display:flex;flex-direction:column;align-items:center;padding:3px 4px;border-radius:10px;border:1px solid rgba(255,181,71,.6);background:rgba(255,181,71,.1);text-decoration:none;color:#fff}.tz-c b{font-size:9.5px;color:#ffc46b;letter-spacing:.04em;white-space:nowrap}.tz-c span{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}',
     '.tz-c.yakin{border-color:#ff6b78;background:rgba(255,77,94,.16)}.tz-c.yakin span{color:#ff9aa3}.tz-c.gecti{opacity:.6}.tz-c.yok{border-style:dashed;border-color:#2a4468;background:none}.tz-c.yok span{color:#5f7393}.tz-c.yok b{color:#5f7393}',
     '.tz-c{font:inherit;cursor:pointer}.tz-c.say{border-color:#ffb547;background:rgba(255,181,71,.2)}.tz-c.say span{color:#ffe2b0}.tz-c.tam{border-color:rgba(62,240,138,.7);background:rgba(62,240,138,.12)}.tz-c.tam b{color:#3ef08a}.tz-c.tam span{color:#bff7d6}',
     '.tz-obb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.tz-obb b{font-size:18px}.tz-obt{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#ffc46b;text-decoration:none;border:1px solid rgba(255,181,71,.5);border-radius:999px;padding:4px 10px}',
@@ -182,6 +188,7 @@
     var ak = ekran.querySelector('.tz-akis'), alt = ekran.querySelector('.tz-alt'), topEl = ekran.querySelector('.tz-top'), sayEl = ekran.querySelector('.tz-say');
     // K-848: otobüs telsizi — Kurucu/gezi sorumlusu bir otobüse dokununca akış o otobüsün gördüğü hâle döner
     var obEl = null; if (P) { obEl = d.createElement('div'); obEl.className = 'tz-obbant'; obEl.style.display = 'none'; topEl.parentNode.insertBefore(obEl, topEl.nextSibling); }
+    var molaEl = d.createElement('div'); molaEl.className = 'tz-molab'; molaEl.setAttribute('role', 'status'); molaEl.style.display = 'none'; topEl.parentNode.insertBefore(molaEl, (obEl || topEl).nextSibling);   // K-906
     function obGor(m) { var o = S.obSec; if (!o) return true;
       if (m.hedef) return +m.hedef === o;
       if (m.sayim) return +(m.sayim.otobus || m.otobus) === o;
@@ -195,8 +202,8 @@
       if (!o) { obEl.style.display = 'none'; obEl.innerHTML = ''; return; }
       obEl.style.display = '';
       var IKP = '<path d="M7 4h7a2 2 0 0 1 2 2v7H9a2 2 0 0 1-2-2z"/><path d="M5 11v4a2 2 0 0 0 2 2h11"/><path d="M8 17v3M16 17v3"/>', IKS = '<path d="M9 4h6v3H9z"/><path d="M8 5H6v15h12V5h-2"/><path d="M9 13l2 2 4-4"/>';
-      obEl.innerHTML = '<div class="tz-obs1"><span class="tz-seg"><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">' + SVG(IK.otobus, 16, 2.2) + 'Oto ' + o + '</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></span><i class="tz-obb-bos"></i>' +
-        (cfg.plan ? '<button type="button" class="ik" data-obp="plan" title="Oturma planı ve yoklama" aria-label="Oturma planı ve yoklama">' + SVG(IKP, 22, 2) + '</button>' : '<button type="button" class="ik" data-obp="say" title="Yoklama" aria-label="Yoklama">' + SVG(IKS, 22, 2) + '</button>') + '<button type="button" class="ik x" data-obx title="Bütün gezi" aria-label="Bütün gezi">' + SVG('<path d="M6 6l12 12M18 6L6 18"/>', 19, 2.4) + '</button></div>';
+      obEl.innerHTML = '<div class="tz-obs1"><span class="tz-seg"><button type="button" data-obh="0" class="' + (!S.obHerkes ? 'secili' : '') + '">' + SVG(IK.otobus, 16, 2.2) + 'Otobüs ' + o + '</button><button type="button" data-obh="1" class="' + (S.obHerkes ? 'secili' : '') + '">Herkese</button></span><i class="tz-obb-bos"></i>' +
+        (cfg.plan ? '<button type="button" class="ik etk" data-obp="plan" title="Oturma planı ve yoklama">' + SVG(IKP, 18, 2.1) + 'Yoklama</button>' : '<button type="button" class="ik etk" data-obp="say" title="Yoklama">' + SVG(IKS, 18, 2.1) + 'Yoklama</button>') + '<button type="button" class="ik x" data-obx title="Bütün gezi" aria-label="Bütün gezi">' + SVG('<path d="M6 6l12 12M18 6L6 18"/>', 19, 2.4) + '</button></div>';
 
       obEl.querySelectorAll('[data-obp]').forEach(function (b) { b.onclick = function () { otobusSayfa(o, b.dataset.obp); }; });
       obEl.querySelector('[data-obx]').onclick = function () { obSec(0); };
@@ -227,10 +234,10 @@
       var L = (cfg.gezi && cfg.gezi.otobusler && cfg.gezi.otobusler.length ? cfg.gezi.otobusler : [1, 2, 3, 4, 5, 6]), T = toplanmalar(), SY = S.sayimlar || [];
       var ben = benimOto ? +benimOto() || 0 : 0;
       var izin = function (o) { var y = S.yetki; return R || !y || y.tum || +y.otobus === o; };   // K-845: Kurucu ve gezi sorumlusu bütün otobüsler, diğerleri kendi otobüsü
-      var html = L.map(function (o) { if (!izin(o)) { var mk = null; for (var j = T.length - 1; j >= 0; j--) { var Lj = obListe(T[j].konum); if (!Lj || Lj.indexOf(o) >= 0) { mk = T[j]; break; } } return '<span class="tz-c kilit" title="Bu otobüs başka görevlide"><b>OTO ' + o + '</b><span>' + (mk && dkHesap(mk.konum) >= -30 ? esc(mk.konum.saat) : '—') + '</span></span>'; }
+      var html = L.map(function (o) { if (!izin(o)) { var mk = null; for (var j = T.length - 1; j >= 0; j--) { var Lj = obListe(T[j].konum); if (!Lj || Lj.indexOf(o) >= 0) { mk = T[j]; break; } } return '<span class="tz-c kilit" title="Bu otobüs başka görevlide"><b>OTOBÜS ' + o + '</b><span>' + (mk && dkHesap(mk.konum) >= -30 ? esc(mk.konum.saat) : '—') + '</span></span>'; }
         var sy = SY.filter(function (x) { return x.otobus === o; })[0], tazeTam = sy && sy.bitti && (Date.now() - new Date(sy.bitti)) < 90 * 60000;
         var top = sy && sy.toplam != null ? sy.toplam : (S.obsay && S.obsay[o] != null ? S.obsay[o] : null), gel = sy && !sy.bitti ? sy.gelen : tazeTam ? sy.toplam : 0;   // K-849: hepsi gelen/toplam
-        return '<button type="button" class="tz-c' + (o === ben ? ' ben' : '') + (tazeTam ? ' tam' : '') + '" data-tzob="' + o + '"><b>OTO ' + o + '</b><span>' + (tazeTam ? '✓ ' : '') + gel + '/' + (top == null ? '–' : top) + '</span></button>'; }).join('');
+        return '<button type="button" class="tz-c' + (o === ben ? ' ben' : '') + (tazeTam ? ' tam' : '') + '" data-tzob="' + o + '"><b>OTOBÜS ' + o + '</b><span>' + (tazeTam ? '✓ ' : '') + gel + '/' + (top == null ? '–' : top) + '</span></button>'; }).join('');
       if (topEl.__h !== html) { topEl.__h = html; topEl.innerHTML = html; if (S.obSec) obBantCiz(); } topEl.style.display = '';
     }
     function otobusSayfa(o, sek0) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
@@ -350,8 +357,30 @@
       if (sayEl.__h !== html) { sayEl.__h = html; sayEl.innerHTML = html; var b = sayEl.querySelector('[data-sayvar]'); if (b) b.onclick = async function () { b.disabled = true; var r = null; try { r = await cfg.sayimVar(s.id); } catch (e) {} if (!r || !r.ok) { b.disabled = false; uyar((r && r.hata) || 'Gönderilemedi, yeniden dokun.'); return; } S.sayildi = s.id; sayCiz(); }; }
       sayEl.style.display = '';
     }
+    // K-906: Mola — öğretmen "Mola 20 dk" gönderince herkesin ekranının üstünde "Mola bitiyor 10:47" şeridi. Bitiş = mesaj saati + süre.
+    // Sonra gelen "Toplanıyoruz" / "Hareket ediyoruz" ya da yeni mola şeridi günceller; mola bitince 10 dakika "Mola bitti" yazar, sonra kalkar.
+    var MOLA_RE = /^Mola (?:(\d+) dk|(1) saat)/;
+    function molaBul() {
+      for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.gizli || m.rol === 'ogrenci' || m.duyuru || m.sayim || !m.metin) continue;
+        var t = new Date(m.zaman); if (!(t.getTime() > Date.now() - 3 * 3600000)) return null;
+        if (/^(Toplanıyoruz|Hareket ediyoruz)/.test(m.metin)) return null;
+        var x = MOLA_RE.exec(m.metin); if (!x) continue;
+        if (S.obSec && m.hedef && m.hedef !== S.obSec) continue;
+        var dk = x[1] ? +x[1] : 60, b = new Date(t); b.setSeconds(0, 0); return { m: m, dk: dk, bitis: new Date(b.getTime() + dk * 60000) }; }
+      return null;
+    }
+    function molaCiz() {
+      var o = molaBul(), kal = o ? Math.ceil((o.bitis - Date.now()) / 60000) : 0;
+      if (!o || kal < -10) { if (molaEl.style.display !== 'none') { molaEl.style.display = 'none'; molaEl.__h = ''; } return; }
+      var bit = kal <= 0, ks = bit ? 'Toplanma zamanı' : kal > 59 ? '1 sa ' + (kal - 60 ? (kal - 60) + ' dk ' : '') + 'kaldı' : kal + ' dk kaldı';
+      var html = '<span class="tz-mik">' + SVG('<path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5c-.6.8-.6 1.7 0 2.5M11.5 3.5c-.6.8-.6 1.7 0 2.5"/>', 20, 2) + '</span>' +
+        '<span class="tz-tsaat">' + esc(saat(o.bitis)) + '</span><span class="tz-tm"><b>' + (bit ? 'MOLA BİTTİ' : o.dk === 60 ? '1 SAAT MOLA' : o.dk + ' DAKİKA MOLA') + '</b><span>' + (bit ? 'Mola bitti, herkes toplanma yerine' : 'Bu saatte mola bitiyor') + '</span><small><i></i>' + esc(ks) + '</small></span>';
+      if (molaEl.__h !== html) { molaEl.__h = html; molaEl.innerHTML = html; }
+      molaEl.classList.toggle('yakin', !bit && kal <= 5); molaEl.classList.toggle('bitti', bit); molaEl.style.display = '';
+    }
     function topBul() { var b = bugun(); for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.konum && m.konum.saat && !m.gizli && (!m.konum.tarih || m.konum.tarih === b) && bana(m.konum)) return m; } return (cfg.gezi && cfg.gezi.toplanma && cfg.gezi.toplanma.tarih === b && bana(cfg.gezi.toplanma)) ? { konum: cfg.gezi.toplanma } : null; }
     function topCiz() {   // toplanma şeridi: saat büyük, kalan süre; son 10 dakikada kırmızı ve yanıp sönen nokta (yalnız CSS opaklık; telefonu yormaz)
+      molaCiz();
       if (P || R) return seritCiz();
       var m = topBul(); if (!m) { topEl.style.display = 'none'; return; }
       var k = m.konum, p = k.saat.split(':'), h = new Date(); h.setHours(+p[0], +p[1], 0, 0); var dk = Math.round((h - Date.now()) / 60000);
@@ -505,7 +534,7 @@
     }
     function molaSor() {   // K-820: mola süresi seçilir
       perde('<div class="tz-bas">MOLA SÜRESİ</div><div class="tz-mola">' + [10, 15, 20, 30, 45, 60].map(function (n) { return '<button type="button" data-mdk="' + n + '">' + (n === 60 ? '1 saat' : n + ' dk') + '</button>'; }).join('') + '</div>', function (p, kapat) {
-        p.querySelectorAll('[data-mdk]').forEach(function (b) { b.onclick = function () { var n = +b.dataset.mdk; kapat(); gonder('Mola ' + (n === 60 ? '1 saat' : n + ' dk')); }; }); });
+        p.querySelectorAll('[data-mdk]').forEach(function (b) { b.onclick = function () { var n = +b.dataset.mdk, h = new Date(Date.now() + n * 60000); kapat(); gonder('Mola ' + (n === 60 ? '1 saat' : n + ' dk') + ' · bitiş ' + saat(h)); }; }); });
     }
     function perde(html, bagla) {
       var p = d.createElement('div'); p.className = 'tz-perde'; p.innerHTML = '<div class="tz-sayfa" role="dialog" aria-modal="true"><div class="tz-tut"></div><button type="button" class="tz-kapat x-kapat" aria-label="Kapat" title="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' + html + '</div>'; ekran.appendChild(p);
