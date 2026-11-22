@@ -901,6 +901,12 @@
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: tarih }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !L.some(y => y.sinif === x.sinif && y.n === +x.saat)) L.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', bas: z.bas, bit: z.bit, gorev: true, asil: x.asil || '' }); }); } catch (e) {}
     return { ben, L: L.sort((a, b) => a.n - b.n), zil };
   }
+  async function ogtNobetGun(tarih, ben) {   // K-930: öğretmenin o günkü nöbeti [{yer, my, es[]}] (nöbet çizelgesi umal_nobet_oku ile; öğretmen umal_ayarlar'ı okuyamaz)
+    if (!ben) return []; if (ogtNobetGun.N === undefined) { try { const { data } = await sb.rpc('umal_nobet_oku'); ogtNobetGun.N = data ? JSON.parse(data) : {}; } catch (e) { ogtNobetGun.N = {}; } }
+    const d = new Date(tarih + 'T12:00:00'); let L = []; try { L = nobetBugun(ogtNobetGun.N || {}, d); } catch (e) { return []; }
+    const nk = x => String(x || '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, ''), adlar = L.map(x => x.ad), benim = programAdBul(ben, adlar) || '';
+    if (!benim) return []; const my = (L.find(x => x.yer === 'Nöbetçi Müdür Yardımcısı') || {}).ad || '';
+    return L.filter(x => nk(x.ad) === nk(benim)).map(x => ({ yer: x.yer === 'Nöbetçi Müdür Yardımcısı' ? 'Nöbetçi müdür yardımcısı' : x.yer, my: x.yer === 'Nöbetçi Müdür Yardımcısı' ? '' : my, es: L.filter(y => y.yer === x.yer && nk(y.ad) !== nk(benim)).map(y => y.ad) })); }
   async function ogtProgram() {
     if (!OP.tarih) OP.tarih = bugunISO();
     const I = $('#icerik'), bug = bugunISO(), d0 = new Date(OP.tarih + 'T12:00:00'), pzt = new Date(d0); pzt.setDate(d0.getDate() - ((d0.getDay() + 6) % 7));
@@ -912,14 +918,16 @@
     I.querySelectorAll('[data-opk]').forEach(b => b.onclick = () => kay(+b.dataset.opk));
     const { ben, L, zil } = await ogtDersleriGun(OP.tarih); const E = $('#opListe'); if (!E) return;
     if (!ben) { E.innerHTML = '<div class="kart soluk">Adınız ders programında bulunamadı. İdare, Öğretmenler sayfasındaki «Ders programında bulunamayan hesaplar» kartından sizi programdaki adınızla eşleyebilir.</div>'; return; }
-    if (!L.length) { if (!TATIL) await tatilYukle(); E.innerHTML = gunBosKart(OP.tarih); return; }
+    const nb = await ogtNobetGun(OP.tarih, ben), nbK = nb.length ? `<div class="op-nobet"><span class="op-nb-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 9.9C8 19.3 5 15.5 5 11V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span><b>Nöbetçisiniz${nb[0].yer ? ' · ' + esc(nb[0].yer) : ''}</b><small>${nb[0].my ? 'Nöbetçi müdür yardımcısı: ' + esc(baslik(nb[0].my)) : 'Bugünün nöbet yeri'}${nb[0].es.length ? ' · Nöbet arkadaşınız: ' + esc(nb[0].es.map(baslik).join(', ')) : ''}</small></span></div>` : '';   // K-930: nöbet günü
+    for (const g of G) ogtNobetGun(g, ben).then(r => { const b = I.querySelector(`[data-opg="${g}"]`); if (b && r.length) { b.classList.add('nobetli'); b.title = 'Nöbet günü'; } });
+    if (!L.length) { if (!TATIL) await tatilYukle(); E.innerHTML = nbK + gunBosKart(OP.tarih); return; }
     const an = new Date(), t = an.getHours() * 60 + an.getMinutes(), dk = x => { const [h, m] = String(x).split(':').map(Number); return h * 60 + m; }, bugun = OP.tarih === bug;
     const satir = x => { const su = bugun && dk(x.bas) - 5 <= t && t < dk(x.bit) + 10, gecti = OP.tarih < bug || (bugun && dk(x.bit) + 10 <= t);
       if (x.bos) return `<div class="op-ders op-bosd ${gecti ? 'gecti' : ''}"><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>Boş</b></span></div>`;
       const asil = x.gorev && x.asil ? baslik(String(x.asil).replace(/\s+\d+$/, '')) : '', ek = asil ? (() => { const k = asil.toLocaleLowerCase(tr), v = (k.match(/[aeıioöuü](?=[^aeıioöuü]*$)/) || ['e'])[0], u = { a: 'ı', ı: 'ı', e: 'i', i: 'i', o: 'u', u: 'u', ö: 'ü', ü: 'ü' }[v]; return "'" + (/[aeıioöuü]$/.test(k) ? 'n' : '') + u + 'n'; })() : '';   // Kaya'nın, Yılmaz'ın, Öztürk'ün
       return `<button class="op-ders ${su ? 'su' : ''} ${gecti ? 'gecti' : ''} ${x.gorev ? 'gorevli' : ''}" ${su ? `data-opy="${esc(x.sinif)}|${x.n}"` : 'disabled'}><span class="op-saat"><small>${x.n}. Ders</small><b>${esc(String(x.bas))}</b><i></i><b>${esc(String(x.bit))}</b></span><span class="op-ic"><b>${esc((x.ders || '').toLocaleUpperCase(tr))}</b><span>${esc(x.sinif.replace('-', '/'))}</span>${x.gorev ? `<em class="op-gv">NÖBET · GÖREVLENDİRME</em>${asil ? `<span class="op-gv-k">${esc(asil + ek)} dersi</span>` : ''}` : ''}${su ? '<em>Şu an · yoklamayı al</em>' : ''}</span></button>`; };
     // K-772: günün bütün ders saatleri; dersi olmayan saat "Boş"
-    E.innerHTML = (zil || []).map(z => { const n = parseInt(z.ders, 10), B = L.filter(x => x.n === n); return B.length ? B.map(satir).join('') : satir({ bos: true, n, bas: z.bas, bit: z.bit }); }).join('') + L.filter(x => !(zil || []).some(z => parseInt(z.ders, 10) === x.n)).map(satir).join('');
+    E.innerHTML = nbK + (zil || []).map(z => { const n = parseInt(z.ders, 10), B = L.filter(x => x.n === n); return B.length ? B.map(satir).join('') : satir({ bos: true, n, bas: z.bas, bit: z.bit }); }).join('') + L.filter(x => !(zil || []).some(z => parseInt(z.ders, 10) === x.n)).map(satir).join('');
     E.querySelectorAll('[data-opy]').forEach(b => b.onclick = () => ac('dersyoklama'));
   }
   function ogtAltKur() {   // yalnız öğretmen, yalnız telefon (CSS ile)
