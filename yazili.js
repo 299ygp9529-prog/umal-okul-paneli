@@ -191,7 +191,7 @@
     const { data: k, error: e1 } = await sb.rpc('umal_nk_al', { p_kod: h.kod });
     if (e1 || !k || !k.ok) throw Object.assign(new Error((k && k.hata) || (e1 && e1.message) || 'Kâğıt bulunamadı'), { atlas: true });
     const n = k.satirlar.length;
-    ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`);
+    ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`, true);
     const { data: r, error: e2 } = await sb.functions.invoke('atlas-not-oku', { body: { resim: tabloResmi(h, n), satir: n, soru: L.sN } });
     if (e2) { let j = null; try { j = e2.context && typeof e2.context.json === 'function' ? await e2.context.json() : null; } catch (x) {} throw Object.assign(new Error((j && j.hata) || 'Okuma sunucusuna ulaşılamadı. Biraz sonra yeniden deneyin.'), { atlas: true }); }
     if (!r || !r.ok) throw Object.assign(new Error((r && r.hata) || 'Puanlar okunamadı'), { atlas: true });
@@ -234,12 +234,14 @@
         <p class="soluk kucuk" style="margin-top:-4px">Her sınıf için öğrenci listesi basılı, karekodlu kâğıt. Öğretmen puanları elle yazar, sonra Not Yükle'de fotoğrafını çeker; puanlar Atlas'a kendiliğinden girer.</p>
         <div class="nt-alan"><span>Sınav</span><div class="cipler">${SINAVLAR.map(x => `<button class="cip ${S.sinav === x ? 'secili' : ''}" data-yzs="${x}">${x}</button>`).join('')}</div></div>
         ${c.idare ? `<div class="nt-alan"><span>Kimin dersleri</span><div class="cipler"><button class="cip ${S.kapsam === 'ben' ? 'secili' : ''}" data-yzk="ben">Yalnız benim derslerim</button><button class="cip ${S.kapsam === 'hepsi' ? 'secili' : ''}" data-yzk="hepsi">Bütün öğretmenler</button></div></div>` : ''}
-        <div class="nt-alan"><span>Sınıflar <small class="soluk">(${S.sec.size}/${S.L.length} seçili · ${sayfa} sayfa)</small></span>
-          ${S.L.length ? `<div class="nk-liste">${Object.entries(grup).map(([og, I]) => `${S.kapsam === 'hepsi' ? `<div class="nk-og">${c.esc(og)}</div>` : ''}<div class="nk-izg">${I.map(i => `<label class="nk-sec"><input type="checkbox" data-yzi="${i}" ${S.sec.has(i) ? 'checked' : ''}><b>${c.esc(S.L[i].sinif)}</b><span>${c.esc(S.L[i].ders)}</span></label>`).join('')}</div>`).join('')}</div>`
+        <div class="nt-alan"><span class="nk-sbas">Sınıflar <small class="soluk">(${S.sec.size}/${S.L.length} seçili · ${sayfa} sayfa)</small>${S.L.length > 1 ? `<button class="bag" data-yztum="${S.sec.size === S.L.length ? 0 : 1}">${S.sec.size === S.L.length ? 'Hiçbirini seçme' : 'Tümünü seç'}</button>` : ''}</span>
+          ${S.L.length ? `<div class="nk-liste">${Object.entries(grup).map(([og, I]) => `${S.kapsam === 'hepsi' ? `<button class="nk-og" data-yzog="${I.join(',')}">${c.esc(og)}<small>${I.filter(i => S.sec.has(i)).length}/${I.length}</small></button>` : ''}<div class="nk-izg">${I.map(i => `<label class="nk-sec"><input type="checkbox" data-yzi="${i}" ${S.sec.has(i) ? 'checked' : ''}><b>${c.esc(S.L[i].sinif)}</b><span>${c.esc(S.L[i].ders)}</span></label>`).join('')}</div>`).join('')}</div>`
             : `<div class="soluk kucuk">Ders programında ${S.kapsam === 'ben' ? 'size ait ders' : 'ders'} bulunamadı.</div>`}</div>
         <div class="dugmeler"><span class="kucuk soluk" id="yzBilgi" style="margin-right:auto"></span><button class="birincil" id="yzBas" ${S.sec.size ? '' : 'disabled'}>PDF hazırla</button></div>`);
       document.querySelectorAll('[data-yzs]').forEach(b => b.onclick = () => { S.sinav = b.dataset.yzs; ciz(); });
       document.querySelectorAll('[data-yzk]').forEach(b => b.onclick = async () => { S.kapsam = b.dataset.yzk; await yukle(); ciz(); });
+      document.querySelectorAll('[data-yztum]').forEach(b => b.onclick = () => { S.sec = b.dataset.yztum === '1' ? new Set(S.L.map((x, i) => i)) : new Set(); ciz(); });
+      document.querySelectorAll('[data-yzog]').forEach(b => b.onclick = () => { const I = b.dataset.yzog.split(',').map(Number), hep = I.every(i => S.sec.has(i)); I.forEach(i => hep ? S.sec.delete(i) : S.sec.add(i)); ciz(); });
       document.querySelectorAll('[data-yzi]').forEach(i => i.onchange = () => { const k = +i.dataset.yzi; i.checked ? S.sec.add(k) : S.sec.delete(k); ciz(); });
       const bas = document.getElementById('yzBas'); if (bas) bas.onclick = async () => {
         const bil = document.getElementById('yzBilgi'); bas.disabled = true;
@@ -261,10 +263,12 @@
   // Fotoğraftan okuma + kontrol ekranı. c: { sb, D, esc, baslik, uyar, onayla, pencereAc, pencereKapat, geri, kaydet(kayit) -> Promise<{ok,hata}> }
   const FT = { k: null };
   async function fotoOku(c, dosya) {
-    c.pencereAc('<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="soluk kucuk">Öğrenci adları ve numaraları yapay zekâya gönderilmez; yalnız puan kutuları okunur.</div></div>');
+    c.pencereAc('<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="kucuk" id="yzSure"></div><div class="soluk kucuk">Öğrenci adları ve numaraları yapay zekâya gönderilmez; yalnız puan kutuları okunur.</div></div>');
     let r;
-    try { r = await oku(c.sb, dosya, m => { const e = document.getElementById('yzAsama'); if (e) e.textContent = m; }); }
-    catch (e) { c.pencereKapat(); c.uyar(e && e.atlas ? e.message : 'Fotoğraf okunamadı: ' + (e && e.message || e)); return; }
+    let sayac = null; const t0 = Date.now();
+    try { r = await oku(c.sb, dosya, (m, uzun) => { const e = document.getElementById('yzAsama'); if (e) e.textContent = m;
+      if (uzun && !sayac) sayac = setInterval(() => { const z = document.getElementById('yzSure'); if (z) z.textContent = `Kâğıttaki her kutu tek tek okunuyor; bu, yarım dakika kadar sürer · ${Math.round((Date.now() - t0) / 1000)} sn`; }, 1000); }); clearInterval(sayac); }
+    catch (e) { clearInterval(sayac); c.pencereKapat(); c.uyar(e && e.atlas ? e.message : 'Fotoğraf okunamadı: ' + (e && e.message || e)); return; }
     c.pencereKapat();
     const k = r.kagit, o = r.okunan;
     const ayni = FT.k && FT.k.sinif === k.sinif && FT.k.ders === k.ders && FT.k.sinav === k.sinav;
