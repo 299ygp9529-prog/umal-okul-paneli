@@ -251,7 +251,7 @@
     return tuval(cikar(h.tam, h.H, E.cSoru - 2, y - 1.5, (E.x1 + 1) - (E.cSoru - 2), hh + 3, px)).toDataURL('image/jpeg', 0.85);
   }
   async function okuEski(sb, cv, sec, ilerle) {   // sec: {sinif, ders, sinav}
-    const { data: k, error: e1 } = await sb.rpc('umal_nk_al', { p_kod: 'ESKI-' + sec.sinif });
+    const { data: k, error: e1 } = await sb.rpc('umal_nk_al', { p_kod: 'ESKI' + sec.sinif.replace(/-/g, '') });
     if (e1 || !k || !k.ok) throw Object.assign(new Error(sec.sinif + ' için antetli not çizelgesinin listesi Atlas\'ta yok.'), { atlas: true });
     const h = await hazirlaEski(sb, cv, ilerle), n = k.satirlar.length;
     ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`, true);
