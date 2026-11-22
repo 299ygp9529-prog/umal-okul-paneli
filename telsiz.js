@@ -181,7 +181,7 @@
     var P = !!cfg.personel, R = cfg.rol === 'rehber', uyar = cfg.uyar || function (m) { w.alert(m); }, onayla = cfg.onayla || function (m) { return Promise.resolve(w.confirm(m)); };
     var kap = cfg.kap; kap.innerHTML = '';
     var ekran = d.createElement('div'); ekran.className = 'tz-ekran'; kap.appendChild(ekran);
-    var HIZ = P || R ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola'] : ['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım'];
+    var HIZ = P || R ? ['Toplanıyoruz', 'Hareket ediyoruz', 'Mola'] : (cfg.mola ? ['Mola'] : []).concat(['Toplandık', 'Otobüsteyim', 'Kayboldum', 'Yardım lazım']);   // K-908: gezi başkanı da mola başlatır
     ekran.innerHTML = '<div class="tz-gz"><div class="tz-ik">' + SVG(IK.otobus, 22, 2) + '</div><div class="tz-gm"><b class="tz-gad"></b><small class="tz-galt"></small></div>' +
       '<span class="tz-canli"><i></i>CANLI</span>' + (!P && cfg.sayim ? '<button type="button" class="tz-yokb" data-tzyok>' + SVG('<path d="M9 5h6M9 3h6v4H9z"/><path d="M8 5H6v16h12V5h-2"/><path d="M9 13l2 2 4-4"/>', 16, 2.1) + 'Yoklama</button>' : '') + '</div>' + (cfg.kapat ? '<div class="tz-kur"><button type="button" class="tz-kurb" data-tzsil>Mesajları sil</button><button type="button" class="tz-kurb" data-tzkilit></button><button type="button" class="tz-kurb kapa tz-kapa">Telsizi kapat</button></div>' : '') + (P ? '<div class="tz-top tz-serit" style="display:none"></div>' : '<div class="tz-say" style="display:none"></div><a class="tz-top" style="display:none" target="_blank" rel="noopener"></a>') + (P ? '<button class="tz-sus-dug" type="button" style="display:none">' + SVG(IK.sessiz, 16) + '<span></span><em>Listeyi aç</em></button>' : '') +
       '<div class="tz-akis" role="log" aria-live="polite"></div><div class="tz-alt"></div>';
@@ -208,7 +208,7 @@
       obEl.querySelectorAll('[data-obp]').forEach(function (b) { b.onclick = function () { otobusSayfa(o, b.dataset.obp); }; });
       obEl.querySelector('[data-obx]').onclick = function () { obSec(0); };
       obEl.querySelectorAll('[data-obh]').forEach(function (b) { b.onclick = function () { S.obHerkes = b.dataset.obh === '1'; obBantCiz(); }; }); }
-    function obSec(o) { S.obSec = o; S.obHerkes = false; ak.__kur = false; akisCiz(); obBantCiz(); }
+    function obSec(o) { S.obSec = o; S.obHerkes = false; ak.__kur = false; akisCiz(); obBantCiz(); molaCiz(); }
     // klavye/boy modülü sayfa başına bir kez kurulur (her açılışta yeni dinleyici eklenmesin); hep o anki telsiz ekranını gösterir
     AKTIF = { ekran: ekran, ak: ak, S: S, cfg: cfg };
     if (SKK === undefined) { SKK = null; try { if (w.UmalSohbetKlavye) SKK = w.UmalSohbetKlavye({ ekran: function () { return AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) ? AKTIF.ekran : null; }, akis: function () { return AKTIF && !AKTIF.S.olu ? AKTIF.ak : null; }, gonder: '.tz-gon', cubuk: cfg.cubuk, etkin: function () { return !!AKTIF && !AKTIF.S.olu && d.body.contains(AKTIF.ekran) && (!AKTIF.cfg.etkin || AKTIF.cfg.etkin()); } }); } catch (e) { SKK = null; } }
@@ -361,12 +361,12 @@
     // Sonra gelen "Toplanıyoruz" / "Hareket ediyoruz" ya da yeni mola şeridi günceller; mola bitince 10 dakika "Mola bitti" yazar, sonra kalkar.
     var MOLA_RE = /^Mola (?:(\d+) dk|(1) saat)/;
     function molaBul() {
-      for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i]; if (m.gizli || m.rol === 'ogrenci' || m.duyuru || m.sayim || !m.metin) continue;
+      for (var i = S.M.length - 1; i >= 0; i--) { var m = S.M[i], bm = m.sayim && m.sayim.tur === 'mola'; if (m.gizli || m.duyuru || !m.metin || (m.sayim && !bm) || (m.rol === 'ogrenci' && !bm)) continue;   // öğrenciden yalnız başkan molası (sunucu işaretli)
         var t = new Date(m.zaman); if (!(t.getTime() > Date.now() - 3 * 3600000)) return null;
         if (/^(Toplanıyoruz|Hareket ediyoruz)/.test(m.metin)) return null;
         var x = MOLA_RE.exec(m.metin); if (!x) continue;
-        if (S.obSec && m.hedef && m.hedef !== S.obSec) continue;
-        var dk = x[1] ? +x[1] : 60, b = new Date(t); b.setSeconds(0, 0); return { m: m, dk: dk, bitis: new Date(b.getTime() + dk * 60000) }; }
+        if ((P || R) && m.hedef && S.obSec && m.hedef !== S.obSec) continue;   // bir otobüse özel mola: görevli başka otobüsü açtıysa görmez; bütün gezide etiketle görür (öğrenciye sunucu süzer)
+        var dk = x[1] ? +x[1] : 60, b = new Date(t); b.setSeconds(0, 0); return { m: m, dk: dk, ob: m.hedef || null, bitis: new Date(b.getTime() + dk * 60000) }; }
       return null;
     }
     function molaCiz() {
@@ -374,7 +374,7 @@
       if (!o || kal < -10) { if (molaEl.style.display !== 'none') { molaEl.style.display = 'none'; molaEl.__h = ''; } return; }
       var bit = kal <= 0, ks = bit ? 'Toplanma zamanı' : kal > 59 ? '1 sa ' + (kal - 60 ? (kal - 60) + ' dk ' : '') + 'kaldı' : kal + ' dk kaldı';
       var html = '<span class="tz-mik">' + SVG('<path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5c-.6.8-.6 1.7 0 2.5M11.5 3.5c-.6.8-.6 1.7 0 2.5"/>', 20, 2) + '</span>' +
-        '<span class="tz-tsaat">' + esc(saat(o.bitis)) + '</span><span class="tz-tm"><b>' + (bit ? 'MOLA BİTTİ' : o.dk === 60 ? '1 SAAT MOLA' : o.dk + ' DAKİKA MOLA') + '</b><span>' + (bit ? 'Mola bitti, herkes toplanma yerine' : 'Bu saatte mola bitiyor') + '</span><small><i></i>' + esc(ks) + '</small></span>';
+        '<span class="tz-tsaat">' + esc(saat(o.bitis)) + '</span><span class="tz-tm"><b>' + (o.ob ? 'OTOBÜS ' + o.ob + ' · ' : '') + (bit ? 'MOLA BİTTİ' : o.dk === 60 ? '1 SAAT MOLA' : o.dk + ' DAKİKA MOLA') + '</b><span>' + (bit ? 'Mola bitti, herkes toplanma yerine' : 'Bu saatte mola bitiyor') + '</span><small><i></i>' + esc(ks) + '</small></span>';
       if (molaEl.__h !== html) { molaEl.__h = html; molaEl.innerHTML = html; }
       molaEl.classList.toggle('yakin', !bit && kal <= 5); molaEl.classList.toggle('bitti', bit); molaEl.style.display = '';
     }
@@ -534,7 +534,9 @@
     }
     function molaSor() {   // K-820: mola süresi seçilir
       perde('<div class="tz-bas">MOLA SÜRESİ</div><div class="tz-mola">' + [10, 15, 20, 30, 45, 60].map(function (n) { return '<button type="button" data-mdk="' + n + '">' + (n === 60 ? '1 saat' : n + ' dk') + '</button>'; }).join('') + '</div>', function (p, kapat) {
-        p.querySelectorAll('[data-mdk]').forEach(function (b) { b.onclick = function () { var n = +b.dataset.mdk, h = new Date(Date.now() + n * 60000); kapat(); gonder('Mola ' + (n === 60 ? '1 saat' : n + ' dk') + ' · bitiş ' + saat(h)); }; }); });
+        p.querySelectorAll('[data-mdk]').forEach(function (b) { b.onclick = function () { var n = +b.dataset.mdk, h = new Date(Date.now() + n * 60000); kapat();
+          if (!P && !R && cfg.mola) { b.disabled = true; cfg.mola(n).then(function (r) { if (!r || !r.ok) { uyar((r && r.hata !== 'hiz' && r.hata) || 'Gönderilemedi, yeniden dene.'); return; } yukle(); }, function () { uyar('Gönderilemedi, yeniden dene.'); }); return; }   // K-908: başkan molası sunucuda işaretlenir
+          gonder('Mola ' + (n === 60 ? '1 saat' : n + ' dk') + ' · bitiş ' + saat(h)); }; }); });
     }
     function perde(html, bagla) {
       var p = d.createElement('div'); p.className = 'tz-perde'; p.innerHTML = '<div class="tz-sayfa" role="dialog" aria-modal="true"><div class="tz-tut"></div><button type="button" class="tz-kapat x-kapat" aria-label="Kapat" title="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' + html + '</div>'; ekran.appendChild(p);
