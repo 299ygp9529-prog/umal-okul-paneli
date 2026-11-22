@@ -159,7 +159,7 @@
   async function hazirla(dosya, ilerle) {
     ilerle && ilerle('Fotoğraf hazırlanıyor…');
     const cv = await resimAl(dosya), G = griAl(cv, 1100), K = isaretBul(G);
-    if (!K) throw Object.assign(new Error('Kâğıdın köşelerindeki 4 siyah kare bulunamadı. Kâğıdın tamamı görünecek şekilde, düz ve aydınlık bir yerde yeniden çekin.'), { atlas: true });
+    if (!K) throw Object.assign(new Error('Kâğıdın köşelerindeki 4 siyah kare bulunamadı. Kâğıdın tamamı görünecek şekilde, düz ve aydınlık bir yerde yeniden çekin.'), { atlas: true, kodYok: true, cv });
     const tam = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
     await jsqrYukle();
     // resmin hangi köşesi kâğıdın hangi köşesi: 4 döndürmeyi dene, karekodun okunduğu doğrudur
@@ -171,7 +171,7 @@
       const r = window.jsQR(q.data, q.width, q.height, { inversionAttempts: 'dontInvert' });
       if (r && r.data && r.data.startsWith(KAG)) { H = Hd; kod = r.data.slice(KAG.length).trim(); break; }
     }
-    if (!H) throw Object.assign(new Error('Kâğıdın karekodu okunamadı. Karekod net görünecek şekilde, gölge düşürmeden yeniden çekin.'), { atlas: true });
+    if (!H) throw Object.assign(new Error('Kâğıdın karekodu okunamadı. Karekod net görünecek şekilde, gölge düşürmeden yeniden çekin.'), { atlas: true, kodYok: true, cv });
     return { cv, H, kod, tam };
   }
   function tabloResmi(h, satirSay) {   // adlar ve numaralar boyanmış puan tablosu (yapay zekâya giden tek görüntü)
@@ -196,6 +196,69 @@
     if (e2) { let j = null; try { j = e2.context && typeof e2.context.json === 'function' ? await e2.context.json() : null; } catch (x) {} throw Object.assign(new Error((j && j.hata) || 'Okuma sunucusuna ulaşılamadı. Biraz sonra yeniden deneyin.'), { atlas: true }); }
     if (!r || !r.ok) throw Object.assign(new Error((r && r.hata) || 'Puanlar okunamadı'), { atlas: true });
     return { kagit: k, okunan: r, resim: i => satirResmi(h, i) };
+  }
+
+
+  // ---------- K-902: karekodsuz antetli "Sınav Not Çizelgesi" (6 Kasım'da bütün sınıflar için basılan, soru soru) ----------
+  // Ölçüler pt (A4 = 595 × 842): tablo dış çerçevesi x 25.5–569.2, y 110–780.4 (üst = koyu başlık bandının üstü); başlık 110–127.8, soru puanı satırı 127.8–145.3, öğrenciler 145.3–780.4 eşit bölünür.
+  const E = { x0: 25.5, x1: 569.2, y0: 110, y1: 780.4, pY: 127.8, rY: 145.3, cNo: 45, cSoru: 210, sW: 31.65, sN: 10, cTop: 526.5 };
+  async function koseIste(sb, cv) {   // tablonun 4 köşesi: küçültülmüş ve bulanıklaştırılmış görüntüyle (adlar okunamaz)
+    const k = 480 / Math.max(cv.width, cv.height), c = document.createElement('canvas'); c.width = Math.round(cv.width * k); c.height = Math.round(cv.height * k);
+    const x = c.getContext('2d'); x.filter = 'blur(1.6px)'; x.drawImage(cv, 0, 0, c.width, c.height);
+    const { data: r, error } = await sb.functions.invoke('atlas-kose', { body: { resim: c.toDataURL('image/jpeg', 0.7).split(',')[1] } });
+    if (error || !r || !r.ok) throw Object.assign(new Error('Kâğıt fotoğrafta bulunamadı. Bütün sayfa görünecek şekilde, düz ve aydınlık bir yerde yeniden çekin.'), { atlas: true });
+    if (!r.bulundu) throw Object.assign(new Error('Fotoğrafta not çizelgesi bulunamadı. Bütün sayfa görünecek şekilde yeniden çekin.'), { atlas: true });
+    return r.kose.map(([u, v]) => [u * cv.width, v * cv.height]);
+  }
+  // Gri tonda, verilen yaklaşık köşeyi koyu başlık bandının köşesine oturtur (yalnız üst köşeler; band tablonun en belirgin parçası)
+  function koseDuzelt(tam, H) {
+    const id = cikar(tam, H, E.x0 - 12, E.y0 - 10, (E.x1 - E.x0) + 24, 44, 3), w = id.width, h = id.height, d = id.data, kara = (i, j) => { const o = (j * w + i) * 4; return (d[o] + d[o + 1] + d[o + 2]) / 3 < 95; };
+    let sol = -1, sag = -1, ust = -1, alt = -1;
+    const satirKara = j => { let n = 0; for (let i = 0; i < w; i++) if (kara(i, j)) n++; return n; };
+    for (let j = 0; j < h; j++) if (satirKara(j) > w * 0.5) { if (ust < 0) ust = j; alt = j; }
+    if (ust < 0) return null;
+    const jm = Math.round((ust + alt) / 2);
+    for (let i = 0; i < w; i++) if (kara(i, jm)) { sol = i; break; }
+    for (let i = w - 1; i >= 0; i--) if (kara(i, jm)) { sag = i; break; }
+    const pt = (i, j) => [E.x0 - 12 + i / 3, E.y0 - 10 + j / 3];
+    return { sol: pt(sol, ust), sag: pt(sag, ust), bandAlt: pt(0, alt)[1] };
+  }
+  async function hazirlaEski(sb, cv, ilerle) {
+    ilerle && ilerle('Not çizelgesi fotoğrafta aranıyor…');
+    const tam = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+    const K = await koseIste(sb, cv);
+    const P = [[E.x0, E.y0], [E.x1, E.y0], [E.x1, E.y1], [E.x0, E.y1]];
+    let H = homografi(P, K);
+    // başlık bandıyla ince ayar: bandın gerçek sol/sağ uçlarını ve üst kenarını ölç, üst köşeleri ona göre kaydır
+    const b = koseDuzelt(tam, H);
+    if (b && Math.abs(b.sol[0] - E.x0) < 12 && Math.abs(b.sag[0] - E.x1) < 12) {
+      const map = (p) => { const z = H[6] * p[0] + H[7] * p[1] + 1; return [(H[0] * p[0] + H[1] * p[1] + H[2]) / z, (H[3] * p[0] + H[4] * p[1] + H[5]) / z]; };
+      const dy = E.y0 - b.sol[1];
+      const K2 = [map(b.sol), map(b.sag), K[2], K[3]];
+      if (Math.abs(dy) < 14) H = homografi(P, K2);
+    }
+    return { cv, tam, H };
+  }
+  function tabloResmiE(h) {
+    const px = 2.6, x0 = E.x0 - 1, y0 = E.y0 - 1, w = (E.x1 + 1) - x0, hh = (E.y1 + 1) - y0;
+    const c = tuval(cikar(h.tam, h.H, x0, y0, w, hh, px)), x = c.getContext('2d');
+    x.fillStyle = '#9aa3ad'; x.fillRect((E.cNo - x0 - 1.5) * px, (E.pY - y0) * px, (E.cSoru - E.cNo + 1.5) * px, (E.y1 - E.pY + 1) * px);
+    x.fillStyle = '#ffffff'; x.font = `bold ${Math.round(9 * px)}px sans-serif`; x.textAlign = 'center'; x.fillText('(gizli)', ((E.cNo + E.cSoru) / 2 - x0) * px, (E.pY - y0 + 14) * px);
+    return c.toDataURL('image/jpeg', 0.86).split(',')[1];
+  }
+  function satirResmiE(h, i, n) {
+    const px = 2.4, rh = (E.y1 - E.rY) / n, y = i < 0 ? E.pY : E.rY + i * rh, hh = i < 0 ? E.rY - E.pY : rh;
+    return tuval(cikar(h.tam, h.H, E.cSoru - 2, y - 1.5, (E.x1 + 1) - (E.cSoru - 2), hh + 3, px)).toDataURL('image/jpeg', 0.85);
+  }
+  async function okuEski(sb, cv, sec, ilerle) {   // sec: {sinif, ders, sinav}
+    const { data: k, error: e1 } = await sb.rpc('umal_nk_al', { p_kod: 'ESKI-' + sec.sinif });
+    if (e1 || !k || !k.ok) throw Object.assign(new Error(sec.sinif + ' için antetli not çizelgesinin listesi Atlas\'ta yok.'), { atlas: true });
+    const h = await hazirlaEski(sb, cv, ilerle), n = k.satirlar.length;
+    ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`, true);
+    const { data: r, error: e2 } = await sb.functions.invoke('atlas-not-oku', { body: { resim: tabloResmiE(h), satir: n, soru: E.sN } });
+    if (e2) { let j = null; try { j = e2.context && typeof e2.context.json === 'function' ? await e2.context.json() : null; } catch (x) {} throw Object.assign(new Error((j && j.hata) || 'Okuma sunucusuna ulaşılamadı. Biraz sonra yeniden deneyin.'), { atlas: true }); }
+    if (!r || !r.ok) throw Object.assign(new Error((r && r.hata) || 'Puanlar okunamadı'), { atlas: true });
+    return { kagit: Object.assign({}, k, { ders: sec.ders, sinav: sec.sinav, sayfa: 1, sayfa_say: 1 }), okunan: r, resim: i => satirResmiE(h, i, n) };
   }
 
   // ---------- doğrulama ----------
@@ -262,13 +325,46 @@
 
   // Fotoğraftan okuma + kontrol ekranı. c: { sb, D, esc, baslik, uyar, onayla, pencereAc, pencereKapat, geri, kaydet(kayit) -> Promise<{ok,hata}> }
   const FT = { k: null };
+  const BEKLE = '<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="kucuk" id="yzSure"></div><div class="soluk kucuk">Öğrenci adları yapay zekâya gönderilmez; yalnız puan kutuları okunur.</div></div>';
+  // karekodsuz kâğıt: antetli Sınav Not Çizelgesi için sınıf/ders/sınav seçimi
+  async function eskiSec(c) {
+    const L_ = await c.dersler(c.idare ? 'hepsi' : 'ben').catch(() => []);
+    const siniflar = [...new Set(L_.map(x => x.sinif))].sort((a, b) => (parseInt(a) - parseInt(b)) || a.localeCompare(b, 'tr'));
+    const S = { sinif: siniflar.length === 1 ? siniflar[0] : null, ders: null, sinav: varsayilanSinav() };
+    return new Promise(ok => {
+      const ciz = () => {
+        const dersler = [...new Set(L_.filter(x => x.sinif === S.sinif).map(x => x.ders))];
+        if (dersler.length === 1) S.ders = dersler[0]; else if (!dersler.includes(S.ders)) S.ders = null;
+        c.pencereAc(`<h2 style="margin-top:0">Antetli not çizelgesi</h2>
+          <p class="soluk kucuk" style="margin-top:-4px">Bu kâğıtta karekod yok; okulun soru soru Sınav Not Çizelgesi olarak okunacak. Kâğıdın hangi sınıfa ait olduğunu seçin.</p>
+          <div class="nt-alan"><span>Sınıf</span><div class="cipler">${siniflar.map(s => `<button class="cip ${S.sinif === s ? 'secili' : ''}" data-es="${c.esc(s)}">${c.esc(s)}</button>`).join('') || '<span class="soluk kucuk">Ders programında sınıfınız bulunamadı.</span>'}</div></div>
+          ${S.sinif ? `<div class="nt-alan"><span>Ders</span><div class="cipler">${dersler.map(d => `<button class="cip ${S.ders === d ? 'secili' : ''}" data-ed="${c.esc(d)}">${c.esc(d)}</button>`).join('')}</div></div>` : ''}
+          <div class="nt-alan"><span>Sınav</span><div class="cipler">${SINAVLAR.map(x => `<button class="cip ${S.sinav === x ? 'secili' : ''}" data-en="${x}">${x}</button>`).join('')}</div></div>
+          <div class="dugmeler"><button class="ikincil" id="esVaz">Vazgeç</button><button class="birincil" id="esOku" ${S.sinif && S.ders ? '' : 'disabled'}>Puanları oku</button></div>`);
+        document.querySelectorAll('[data-es]').forEach(b => b.onclick = () => { S.sinif = b.dataset.es; ciz(); });
+        document.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => { S.ders = b.dataset.ed; ciz(); });
+        document.querySelectorAll('[data-en]').forEach(b => b.onclick = () => { S.sinav = b.dataset.en; ciz(); });
+        document.getElementById('esVaz').onclick = () => { c.pencereKapat(); ok(null); };
+        document.getElementById('esOku').onclick = () => ok(Object.assign({}, S));
+      };
+      ciz();
+    });
+  }
   async function fotoOku(c, dosya) {
-    c.pencereAc('<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="kucuk" id="yzSure"></div><div class="soluk kucuk">Öğrenci adları ve numaraları yapay zekâya gönderilmez; yalnız puan kutuları okunur.</div></div>');
-    let r;
-    let sayac = null; const t0 = Date.now();
-    try { r = await oku(c.sb, dosya, (m, uzun) => { const e = document.getElementById('yzAsama'); if (e) e.textContent = m;
-      if (uzun && !sayac) sayac = setInterval(() => { const z = document.getElementById('yzSure'); if (z) z.textContent = `Kâğıttaki her kutu tek tek okunuyor; bu, yarım dakika kadar sürer · ${Math.round((Date.now() - t0) / 1000)} sn`; }, 1000); }); clearInterval(sayac); }
-    catch (e) { clearInterval(sayac); c.pencereKapat(); c.uyar(e && e.atlas ? e.message : 'Fotoğraf okunamadı: ' + (e && e.message || e)); return; }
+    c.pencereAc(BEKLE);
+    let r, sayac = null; const t0 = Date.now();
+    const ilerle = (m, uzun) => { const e = document.getElementById('yzAsama'); if (e) e.textContent = m;
+      if (uzun && !sayac) sayac = setInterval(() => { const z = document.getElementById('yzSure'); if (z) z.textContent = `Kâğıttaki her kutu tek tek okunuyor; bu, yarım dakika kadar sürer · ${Math.round((Date.now() - t0) / 1000)} sn`; }, 1000); };
+    const hata = e => { clearInterval(sayac); c.pencereKapat(); c.uyar(e && e.atlas ? e.message : 'Fotoğraf okunamadı: ' + (e && e.message || e)); };
+    try { r = await oku(c.sb, dosya, ilerle); }
+    catch (e) {
+      if (!(e && e.kodYok && e.cv)) return hata(e);
+      clearInterval(sayac); sayac = null;
+      const sec = await eskiSec(c); if (!sec) return;
+      c.pencereAc(BEKLE);
+      try { r = await okuEski(c.sb, e.cv, sec, ilerle); } catch (e2) { return hata(e2); }
+    }
+    clearInterval(sayac);
     c.pencereKapat();
     const k = r.kagit, o = r.okunan;
     const ayni = FT.k && FT.k.sinif === k.sinif && FT.k.ders === k.ders && FT.k.sinav === k.sinav;

@@ -3852,7 +3852,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         ev.target.value = ''; };
     };
     // K-900: karekodlu soru puan kâğıdı (yazili.js) — basma ve fotoğraftan okuma
-    const yz = async () => { if (!window.UmalYazili) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili.js?v=20261122053122'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); }); return window.UmalYazili; };
+    const yz = async () => { if (!window.UmalYazili) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili.js?v=20261122063501'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); }); return window.UmalYazili; };
     const yzDersler = async kapsam => {
       await Promise.all([programYukle(), kisiAdlariYukle().catch(() => {})]);
       const nk = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
