@@ -3038,3 +3038,11 @@ button.gz-sofor:active { background: rgba(34,232,255,.12); }
 }
 
 .nt-lbas { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; } .nt-lbas a.ikincil { text-decoration: none; font-size: 13.5px; }
+
+/* K-903: boş ders görevi seçici */
+.ob-gv { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.ob-gvs { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: baseline; text-align: left; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--cizgi); background: var(--koyu); color: var(--yazi); cursor: pointer; font: inherit; min-width: 0; }
+.ob-gvs b { grid-row: span 2; font-size: 17px; color: var(--neon); } .ob-gvs span { min-width: 0; overflow-wrap: break-word; line-height: 1.2; } .ob-gvs small { color: var(--soluk); font-size: 12px; min-width: 0; overflow-wrap: break-word; }
+.ob-gvs.secili { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon) inset; background: rgba(34,232,255,.08); }
+.ob-bos { font-style: normal; color: #7dffb5; font-weight: 700; } .ob-dolu { font-style: normal; color: var(--soluk); }
+@media (min-width: 721px) { .ob-yon .birincil { width: auto; align-self: flex-start; padding-left: 22px; padding-right: 22px; } }

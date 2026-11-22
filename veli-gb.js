@@ -187,17 +187,33 @@
       ['bilgi', 'Bilgilendirme', 'Okuldan bilgilendirme', '', false]],
     ogrenci: [['cagri', 'İdareye çağrı', 'İdareye uğra', '{ad}, ilk teneffüste müdür yardımcısının odasına uğramanı rica ediyoruz.', true],
       ['bilgi', 'Bilgilendirme', 'Okuldan bilgilendirme', '', false]],
-    ogretmen: [['gorev', 'Boş ders görevi', 'Boş ders görevi', 'Bugün ... ders ... sınıfının dersine girmenizi rica ederiz.', true],
+    ogretmen: [['gorev', 'Boş ders görevi', 'Boş ders görevi', '', true],
       ['cagri', 'Müdür çağırıyor', 'Okul müdürü sizi bekliyor', 'Müsait olduğunuz ilk anda müdür odasına uğramanızı rica ederiz.', true],
       ['toplanti', 'Toplantı', 'Toplantı', 'Bugün saat ...\'te öğretmenler odasında kısa bir toplantı yapılacaktır.', false],
       ['bilgi', 'Bilgilendirme', 'İdareden bilgilendirme', '', false]]
   };
   const KIM_AD = { veli: 'Veliye', ogrenci: 'Öğrenciye', ogretmen: 'Öğretmene' };
+  // K-903: boş ders görevi — saat ve sınıf ders programından seçilir, metin kendiliğinden yazılır; o saatte dersi olmayan öğretmenler öne gelir
+  const GV = { saat: null, sinif: null, P: null };
+  const nkAd = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
+  const gvGun = () => { const g = (new Date().getDay() + 6) % 7; return g > 4 ? { g: 0, ad: 'Pazartesi' } : { g, ad: 'Bugün' }; };
+  function gvDersler() {   // seçili saatte dersi olan sınıflar: [{sinif, ders, ogretmen}]
+    const P = GV.P || {}, { g } = gvGun(); if (!GV.saat) return [];
+    return Object.entries(P.siniflar || {}).map(([sf, S]) => { const h = (S || {})[`${g}-${GV.saat}`]; return h && h.ders ? { sinif: sf, ders: h.ders, ogretmen: (h.ogretmen || []).map(o => String(o).replace(/\s+\d+$/, '')).join(', ') } : null; }).filter(Boolean).sort((a, b) => sira(a.sinif, b.sinif));
+  }
+  function gvMesgul() { const P = GV.P || {}, { g } = gvGun(), M = new Set(); if (!GV.saat) return M; Object.values(P.siniflar || {}).forEach(S => { const h = (S || {})[`${g}-${GV.saat}`]; (h && h.ogretmen || []).forEach(o => M.add(nkAd(o))); }); return M; }
+  function gvMetin() { const d = gvDersler().find(x => x.sinif === GV.sinif), { ad } = gvGun(); return GV.saat && d ? `${ad} ${GV.saat}. ders ${d.sinif} sınıfının ${bas(d.ders)} dersine girmenizi rica ederiz.` : ''; }
+  function gvHtml() {
+    const zil = ((GV.P || {}).zil || {})[gvGun().g === 4 ? 'cuma' : 'normal'] || [], saatler = zil.map(z => parseInt(z.ders, 10)).filter(n => n > 0);
+    const S = saatler.length ? saatler : [1, 2, 3, 4, 5, 6, 7, 8], D = gvDersler();
+    return `<div class="gb-bas" style="margin-top:14px">Kaçıncı ders? <span class="soluk kucuk">(${gvGun().ad.toLocaleLowerCase(tr)})</span></div><div class="dya-sec">${S.map(n => { const z = zil.find(z => parseInt(z.ders, 10) === n); return `<button class="cip ${GV.saat === n ? 'secili' : ''}" data-gvs="${n}">${n}. ders${z && z.bas ? ` <small>${esc(String(z.bas).replace(':', '.'))}</small>` : ''}</button>`; }).join('')}</div>
+      ${GV.saat ? `<div class="gb-bas" style="margin-top:12px">Hangi sınıfın dersi?</div><div class="ob-gv">${D.map(d => `<button class="ob-gvs ${GV.sinif === d.sinif ? 'secili' : ''}" data-gvc="${esc(d.sinif)}"><b>${esc(d.sinif)}</b><span>${esc(bas(d.ders))}</span><small>${esc(bas(d.ogretmen))}</small></button>`).join('') || '<div class="soluk kucuk">Bu saatte programda ders yok.</div>'}</div>` : ''}`;
+  }
   let OB = { sek: null, kim: 'veli', sablon: 'davet', baslik: '', metin: '', onemli: true, sinif: null, sec: new Set(), ara: '', ogr: null, sonuc: '' };
   const ZIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>';
   const idare = () => ['bas', 'yonetici'].includes(X.rol);
   const zaman = t => new Date(t).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  function sablonUygula() { const S = SABLON[OB.kim].find(s => s[0] === OB.sablon) || SABLON[OB.kim][0]; OB.sablon = S[0]; OB.baslik = S[2]; OB.metin = S[3]; OB.onemli = S[4]; }
+  function sablonUygula() { const S = SABLON[OB.kim].find(s => s[0] === OB.sablon) || SABLON[OB.kim][0]; OB.sablon = S[0]; OB.baslik = S[2]; OB.metin = S[3]; OB.onemli = S[4]; if (OB.kim === 'ogretmen' && OB.sablon === 'gorev' && GV.sinif) OB.metin = gvMetin(); }
   async function obil(ctx) {
     X = ctx; if (!OB.sek) OB.sek = idare() ? 'gonder' : 'gelen';
     if (idare() && !OB.baslik && !OB.metin) sablonUygula();
@@ -223,9 +239,10 @@
   function aliciHtml() {
     if (OB.kim === 'ogretmen') {
       if (!OB.ogr) return '<div class="soluk">Öğretmenler yükleniyor…</div>';
-      const L = OB.ogr.filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr)));
+      const gv = OB.sablon === 'gorev' && GV.saat, M = gv ? gvMesgul() : null;
+      const L = OB.ogr.filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr))).map(o => Object.assign(o, { bos: gv ? !M.has(nkAd(o.ad)) : null })).sort((a, b) => gv ? (b.bos - a.bos) || a.ad.localeCompare(b.ad, tr) : 0);
       return `<div class="ob-ara"><input id="obAra" placeholder="Öğretmen ara" value="${esc(OB.ara)}"><button class="cip" id="obHepsi">${L.length && L.every(o => OB.sec.has(o.e)) ? 'Seçimi kaldır' : 'Tümünü seç'}</button></div>
-        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${OB.sec.has(o.e) ? 'secili' : ''}" data-obo="${esc(o.e)}"><span class="msj-av">${esc(o.ad.split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small class="${o.tel ? 'ob-telacik' : ''}">${o.tel ? 'telefon bildirimi açık' : 'yalnız panelde görür'}</small></span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
+        <div class="gb-ogr">${L.map(o => `<button class="gb-o ${OB.sec.has(o.e) ? 'secili' : ''}" data-obo="${esc(o.e)}"><span class="msj-av">${esc(o.ad.split(' ').map(w => w[0]).join('').slice(0, 2))}</span><span><b>${esc(bas(o.ad))}</b><small class="${o.tel ? 'ob-telacik' : ''}">${o.bos === true ? '<i class="ob-bos">o saatte boş</i> · ' : o.bos === false ? '<i class="ob-dolu">o saatte dersi var</i> · ' : ''}${o.tel ? 'telefon bildirimi açık' : 'yalnız panelde görür'}</small></span></button>`).join('') || '<div class="soluk">Bulunamadı.</div>'}</div>`;
     }
     const S = [...new Set(gbOgr().map(o => o.sinif))].filter(s => /^\d+-/.test(s)).sort(sira); if (!OB.sinif || !S.includes(OB.sinif)) OB.sinif = S[0];
     const ros = gbOgr().filter(o => o.sinif === OB.sinif).sort((a, b) => (+a.no) - (+b.no));
@@ -234,13 +251,15 @@
   }
   async function gonderObCiz() {
     const E = $('#obIc');
+    if (OB.kim === 'ogretmen' && OB.sablon === 'gorev' && !GV.P && X.program) { GV.P = {}; X.program().then(p => { GV.P = p || {}; if (OB.sek === 'gonder') gonderObCiz(); }, () => {}); }
     if (OB.kim === 'ogretmen' && !OB.ogr) { (async () => { try { const [{ data }, tl] = await Promise.all([X.sb.from('umal_ogretmenler').select('eposta,ad'), X.sb.rpc('umal_obil_telefonlar').then(r => new Set(r.data || []), () => new Set())]); OB.ogr = (data || []).filter(o => o.eposta && o.ad).map(o => ({ e: String(o.eposta).toLowerCase(), ad: o.ad, tel: tl.has(String(o.eposta).toLowerCase()) })).sort((a, b) => a.ad.localeCompare(b.ad, tr)); } catch (e) { OB.ogr = []; } if (OB.sek === 'gonder') gonderObCiz(); })(); }
     E.innerHTML = `<div class="kart">
       <div class="gb-bas">Kime</div><div class="gb-tur ob-kim">${Object.entries(KIM_AD).map(([k, a]) => `<button class="gb-t ${OB.kim === k ? 'secili yesil' : ''}" data-obk="${k}">${a}</button>`).join('')}</div>
       <div class="gb-bas" style="margin-top:14px">Konu</div><div class="dya-sec">${SABLON[OB.kim].map(s => `<button class="cip ${OB.sablon === s[0] ? 'secili' : ''}" data-obt="${s[0]}">${s[1]}</button>`).join('')}</div>
       ${OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? `<div class="ob-yon"><b>Gelmeyen öğretmenin derslerine görevli mi atayacaksınız?</b><span>Boş Ders Görevlendirme ekranında gelmeyeni işaretleyin; Atlas o saatte boş olan nöbetçileri önerir, tek dokunuşla atarsınız ve "Kaydet ve bildir" ile görevliye bildirim kendiliğinden gider.</span><button class="birincil" id="obGorev">Boş Ders Görevlendirme'yi aç</button></div>` : ''}
+      ${OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? gvHtml() : ''}
       <label class="ob-l">Başlık</label><input id="obBaslik" maxlength="90" value="${esc(OB.baslik)}">
-      <label class="ob-l">Metin</label><textarea id="obMetin" maxlength="600" rows="4">${esc(OB.metin)}</textarea>
+      <label class="ob-l">Metin</label><textarea id="obMetin" maxlength="600" rows="4" placeholder="${OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? 'Yukarıdan dersi ve sınıfı seçin; metin kendiliğinden yazılır.' : ''}">${esc(OB.metin)}</textarea>
       ${OB.kim !== 'ogretmen' ? '<div class="soluk kucuk">{ad} yazdığınız yere öğrencinin adı gelir; her alıcıya kendi adıyla gider.</div>' : ''}
       <button class="ob-onem ${OB.onemli ? 'secili' : ''}" id="obOnemli"><i></i><span>Önemli: telefon ekranında kapatılana kadar kalsın</span></button>
       <div class="gb-bas" style="margin-top:14px">Alıcılar <span class="gb-ogr-say">${OB.sec.size ? OB.sec.size + ' seçili' : ''}</span></div>${aliciHtml()}
@@ -250,6 +269,8 @@
     E.querySelectorAll('[data-obk]').forEach(b => b.onclick = () => { if (OB.kim === b.dataset.obk) return; OB.kim = b.dataset.obk; OB.sablon = SABLON[OB.kim][0][0]; OB.sec = new Set(); OB.sonuc = ''; sablonUygula(); gonderObCiz(); });
     E.querySelectorAll('[data-obt]').forEach(b => b.onclick = () => { OB.sablon = b.dataset.obt; sablonUygula(); OB.sonuc = ''; gonderObCiz(); });
     if ($('#obGorev')) $('#obGorev').onclick = () => X.bolumAc && X.bolumAc('gorev');
+    E.querySelectorAll('[data-gvs]').forEach(b => b.onclick = () => { oku(); GV.saat = +b.dataset.gvs; GV.sinif = null; OB.metin = ''; gonderObCiz(); });
+    E.querySelectorAll('[data-gvc]').forEach(b => b.onclick = () => { oku(); GV.sinif = b.dataset.gvc; OB.metin = gvMetin(); gonderObCiz(); });
     $('#obBaslik').oninput = oku; $('#obMetin').oninput = oku;
     $('#obOnemli').onclick = () => { oku(); OB.onemli = !OB.onemli; gonderObCiz(); };
     const sinif = $('#obSinif'); if (sinif) sinif.onchange = () => { oku(); OB.sinif = sinif.value; gonderObCiz(); };
@@ -258,7 +279,7 @@
     if ($('#obHepsi')) $('#obHepsi').onclick = () => { oku(); const L = OB.kim === 'ogretmen' ? (OB.ogr || []).filter(o => !OB.ara || o.ad.toLocaleLowerCase(tr).includes(OB.ara.toLocaleLowerCase(tr))).map(o => o.e) : gbOgr().filter(o => o.sinif === OB.sinif).map(o => o.no);
       const hepsi = L.length && L.every(k => OB.sec.has(k)); L.forEach(k => hepsi ? OB.sec.delete(k) : OB.sec.add(k)); OB.sonuc = ''; gonderObCiz(); };
     $('#obGonder').onclick = async () => { oku(); const B = OB.baslik.trim(), M = OB.metin.trim();
-      if (B.length < 2 || M.length < 2) return X.uyar('Başlık ve metin yazın.'); if (/\.\.\./.test(B + M) && !await X.onayla('Metinde "..." ile boş bırakılmış yer var. Yine de gönderilsin mi?')) return;
+      if (B.length < 2 || M.length < 2) return X.uyar(OB.kim === 'ogretmen' && OB.sablon === 'gorev' ? 'Önce dersi ve sınıfı seçin.' : 'Başlık ve metin yazın.'); if (/\.\.\./.test(B + M) && !await X.onayla('Metinde "..." ile boş bırakılmış yer var. Yine de gönderilsin mi?')) return;
       const hedef = [...OB.sec], kisisel = OB.kim !== 'ogretmen' && /\{ad\}/.test(B + M), adi = no => { const o = gbOgr().find(x => x.no === no); return o ? bas(o.ad).split(' ')[0] : 'öğrencimiz'; };
       if (!await X.onayla(`${hedef.length} ${OB.kim === 'veli' ? 'veliye' : OB.kim === 'ogrenci' ? 'öğrenciye' : 'öğretmene'} gönderilsin mi?${OB.onemli ? ' (önemli)' : ''}`)) return;
       const d = $('#obGonder'); d.disabled = true; d.textContent = 'Gönderiliyor…'; let al = 0, tel = 0, hata = '';
