@@ -89,7 +89,7 @@
     var kol = Object.keys(acik).map(Number).concat(ogr.length ? Object.keys(ogr[0].deger).map(Number) : []).filter(function (v, k, A) { return A.indexOf(v) === k; }).sort(function (a, b) { return a - b; })
       .map(function (j) { return { i: j, ad: bas[j] || (j + '. sütun'), acik: !!acik[j] }; });
     var sec = Array.prototype.slice.call(document.querySelectorAll('select')).filter(function (s) { return !/OKLMenu/.test(s.id); }).slice(0, 3).map(function (s) { var o = s.options[s.selectedIndex]; return o && o.value && o.value !== '-1' ? o.text.replace(/\s+/g, ' ').trim() : ''; }).filter(Boolean);
-    return { tip: 'klasik', ogrenciler: ogr, kolonlar: kol, baslik: sec.join(' · ').replace(/^AL\s*-\s*/, '').slice(0, 200) };
+    return { ekran: 'klasik', ogrenciler: ogr, kolonlar: kol, baslik: sec.join(' · ').replace(/^AL\s*-\s*/, '').slice(0, 200) };
   }
   function klasikDoldur(kolon, notlar) {
     var g = klasikTablo(), n = 0, kapali = 0;

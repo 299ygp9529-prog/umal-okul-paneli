@@ -83,7 +83,7 @@
     const y = $('#ekDoldur'); if (y) y.onclick = () => { y.disabled = true; gonder({ tip: 'doldur', kolon: S.kolon, notlar: S.klasikYaz }); };
   }
   function ciz() {
-    if (S.baglam && S.baglam.tip === 'klasik') return cizKlasik();
+    if (S.baglam && S.baglam.ekran === 'klasik') return cizKlasik();
     const B = S.baglam, K = S.sec, Q = B.sorular.length;
     if (!S.kayitlar.length) return hata(`Bu sınıfın öğrencileri için Atlas'ta yüklenmiş not bulunamadı.<br><span class="soluk kucuk">Önce Atlas › Not Yükle'den soru puan kâğıdının fotoğrafını çekip kaydedin.</span>`);
     const maxA = (K.soru_puan || []).map(v => v == null ? null : +v), maxE = B.sorular.map(s => s.max);
