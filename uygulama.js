@@ -707,11 +707,11 @@
       Object.values(kisi).forEach(x => { const b = x.tur === 'ogr' && t_.m[String(x.no)]; if (b) { if (b.ot) x.ogrTel = b.ot; if (b.vt) x.tel = b.vt; } }); } catch (e) {}
     const bas = ad => String(ad || '?').trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 3).toLocaleUpperCase('tr');
     const fs = f => !f ? '' : /^(data:|https?:)/.test(f) ? f : 'data:image/jpeg;base64,' + f;
-    const foto = (x, n) => `<span class="tz-pf" style="--c:${RN[x.tur] || '#5cb8ff'}">${x.foto ? `<img src="${esc(fs(x.foto))}" alt="" decoding="async">` : esc(bas(x.ad))}</span>`;
+    const foto = (x, n) => `<span class="tz-pf" style="--c:${RN[x.tur] || '#5cb8ff'}">${x.foto ? `<img src="${esc(fs(x.foto))}" alt="" decoding="async">` : x.tur === 'ogr' ? esc(bas(x.ad)) : '<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="var(--c,#ffb347)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.7 3.6-5.6 7-5.6s6.2 1.9 7 5.6"/></svg>'}</span>`;
     const kap = new Set((r.kapali || []).map(Number)), ayr = +r.ayrilan || 2;
     const P = gzPlan(r.kapasite);
     const kh = s => { if (!s) return '<span></span>'; if (s.kapi) return '<span class="tz-pk kap" style="visibility:hidden"></span>'; const x = kisi[s.n];
-      if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc(x.tur === 'ogr' ? String(x.ad || '').split(/\s+/)[0] : bas(x.ad))}</em></button>`;
+      if (x) return `<button type="button" class="tz-pk${x.baskan ? ' bsk' : ''}" data-tzk="${s.n}"><i>${s.n}</i>${x.baskan ? '<b class="tz-pbsk" title="Otobüs başkanı">B</b>' : ''}${foto(x)}<em>${esc(String(x.ad || x.turAd || '').trim().split(/\s+/)[0] || x.turAd)}</em></button>`;
       return `<button type="button" class="tz-pk ${kap.has(s.n) ? 'kap' : 'bos'}" data-tzbos="${s.n}" data-kap="${kap.has(s.n) ? 1 : ''}"><i>${s.n}</i>${kap.has(s.n) ? '' : s.n <= ayr ? '<em>Görevli</em>' : ''}</button>`; };   // K-89x: boş/kapalı koltuğa da dokunulur
     const ogr = (r.kisiler || []).filter(x => x.tur === 'ogr').length, gor = (r.kisiler || []).length - ogr;
     const html = `<div class="tz-plan"><div class="tz-pon"><span>Ön · şoför${r.plaka ? ' · ' + esc(r.plaka) : ''}</span><span>${ogr} öğrenci · ${gor} görevli</span></div>${P.map(row => `<div class="tz-psira">${row.map(kh).join('')}</div>`).join('')}</div>`;
