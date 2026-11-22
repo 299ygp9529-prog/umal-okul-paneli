@@ -58,7 +58,10 @@
   const KURUCU_EP = new Set();   // K-716bh: baş yöneticinin e-postası; adı yerine altın KURUCU yazılır
   const KURUCU_HTML = '<span class="kurucu-yazi">KURUCU</span>';
   function kisiHtml(ep, ad) { const e = String(ep || '').toLowerCase(); if (KURUCU_EP.has(e) || (D.rol === 'bas' && e === String(D.eposta || '').toLowerCase())) return KURUCU_HTML; const a = ad || KISI.get(e); return esc(a ? baslik(a) : (e.split('@')[0] || '')); }
-  async function kisiAdlariYukle() { if (KISI.size) return; try { const { data } = await sb.from('umal_ogretmenler').select('eposta,ad'); (data || []).forEach(x => { if (x.ad) KISI.set(String(x.eposta).toLowerCase(), x.ad); }); } catch (e) {} }
+  async function kisiAdlariYukle() { const ben_ = String(D.eposta || '').toLowerCase();
+    if (!kisiAdlariYukle.ok) { kisiAdlariYukle.ok = true; try { const { data } = await sb.from('umal_ogretmenler').select('eposta,ad'); (data || []).forEach(x => { if (x.ad) KISI.set(String(x.eposta).toLowerCase(), x.ad); }); } catch (e) {} }
+    // K-929: öğretmen umal_ogretmenler'i okuyamaz; kendi adı sunucudan gelsin (yoksa ders programı «bulunamadı» diyordu)
+    if (ben_ && !kisiAdlariYukle.ad) { kisiAdlariYukle.ad = true; try { const r = await sb.rpc('umal_adim'); const a_ = !r.error && r.data; if (typeof a_ === 'string' && a_.trim().length > 1 && !/@/.test(a_) && !['bas', 'yonetici', 'ogretmen', 'rehberlik'].includes(a_)) { KISI.set(ben_, a_.trim()); try { localStorage.setItem('umalAd:' + ben_, a_.trim()); } catch (e) {} } } catch (e) {} } }
   const kisiAd = (eposta, ad) => { const k = KISI.get(String(eposta || '').toLowerCase()); if (k) return baslik(k); if (ad && !String(ad).includes('@')) return ad; return 'Rehberlik öğretmeni'; };
   // ------------------------------------------------------------------ Supabase yardımcıları
   async function hepsi(tablo, secim, ek) {
@@ -892,6 +895,10 @@
     let ben = KISI.get(String(D.eposta).toLowerCase()) || ''; if (!ben) try { ben = localStorage.getItem('umalAd:' + String(D.eposta).toLowerCase()) || ''; } catch (e) {}
     ben = (await ogtEsle()) || ben;
     const zil = gun > 4 ? [] : ((p.zil || {})[gun === 4 ? 'cuma' : 'normal'] || []).filter(z => parseInt(z.ders, 10) > 0), L = [];
+    if (ben) {   // K-929: ad programdakiyle birebir tutmazsa (ör. yalnız ad ya da «Hoca» eki) kelimeleri tutan tek öğretmen seçilir
+      const ad_ = new Set(); Object.values(p.siniflar || {}).forEach(S => Object.values(S || {}).forEach(h => ((h && h.ogretmen) || []).forEach(o => ad_.add(String(o).replace(/\s+\d+$/, '')))));
+      if (![...ad_].some(o => nk(o) === nk(ben))) { const kel = x => String(x).toLocaleLowerCase(tr).split(/\s+/).map(nk).filter(w => w.length > 1 && !['hoca', 'hocam', 'öğretmen', 'öğt'].includes(w));
+        const bk = kel(ben), ad2 = [...ad_].filter(o => { const ok_ = kel(o); return bk.length && bk.every(w => ok_.includes(w)); }); if (ad2.length === 1) ben = ad2[0]; } }
     Object.entries(p.siniflar || {}).forEach(([sf, S]) => zil.forEach(z => { const n = parseInt(z.ders, 10), h = (S || {})[`${gun}-${n}`]; if (h && ben && (h.ogretmen || []).some(o => nk(String(o).replace(/\s+\d+$/, '')) === nk(ben))) L.push({ sinif: sf, n, ders: h.ders || '', bas: z.bas, bit: z.bit }); }));
     try { const { data: gv } = await sb.rpc('umal_gorev_benim', { p_tarih: tarih }); (gv || []).forEach(x => { const z = zil.find(y => parseInt(y.ders, 10) === +x.saat); if (z && !L.some(y => y.sinif === x.sinif && y.n === +x.saat)) L.push({ sinif: x.sinif, n: +x.saat, ders: x.ders || '', bas: z.bas, bit: z.bit, gorev: true, asil: x.asil || '' }); }); } catch (e) {}
     return { ben, L: L.sort((a, b) => a.n - b.n), zil };
