@@ -40,38 +40,46 @@
   const gonder = o => { try { window.opener.postMessage(Object.assign({ atlas: 1 }, o), EOKUL); } catch (e) {} };
   const hata = m => { E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="kart ek-son">${UNL}<div>${m}</div></div>`; };
 
-  // e-Okul'daki değer ile Atlas'taki değer aynı mı (G/K/sayı)
-  const ayni = (a, e) => { if (a == null || a === '') return e == null || e === ''; const A = String(a).toUpperCase().replace(',', '.'), B = String(e == null ? '' : e).toUpperCase().replace(',', '.'); return A === B || (!isNaN(+A) && !isNaN(+B) && B !== '' && Math.abs(+A - +B) < .001); };
   const goster = v => v == null || v === '' ? '' : String(v).replace('.', ',');
-  const atlasDeger = v => { const t = String(v == null ? '' : v).trim().toUpperCase().replace(',', '.'); if (t === 'G' || t === 'GM' || t === 'M' || t === 'MZ') return 'G'; if (t === 'K') return 'K'; if (/^\d{1,3}(\.\d+)?$/.test(t) && +t <= 100) return String(Math.round(+t)); return null; };   // e-Okul tam sayı ister
-
-  function kolonTahmin(sinav) {   // "1. Dönem 2. Yazılı" → e-Okul'daki 2. sınav sütunu
-    const K = S.baglam.kolonlar, n = (String(sinav).match(/(\d)\.\s*(yazılı|sınav)/i) || [])[1];
-    if (!n) return null;
-    const k = K.find(k => new RegExp('(^|\\D)' + n + '\\.?\\s*(yazılı|sınav|ortak)', 'i').test(k.ad)) || K.find(k => /yaz|sın/i.test(k.ad) && (k.ad.match(/\d/) || [])[0] === n);
-    return k ? k.i : null;
+  const katAtlas = v => { const t = String(v == null ? '' : v).trim().toUpperCase(); return t === 'G' || t === 'GM' || t === 'M' || t === 'MZ' ? 'G' : t === 'K' ? 'K' : null; };
+  const sayi = v => { if (v == null || v === '') return null; const x = +String(v).replace(',', '.'); return isFinite(x) ? x : NaN; };
+  // Atlas kaydından bir öğrencinin e-Okul'a gidecek hâli: {katilim:'G'|'K'|'girdi', puan:[...], toplam} ya da {sorun}
+  function hedef(K, no, Q) {
+    const n = (K.notlar || {})[no]; if (n == null || String(n).trim() === '') return null;
+    const kt = katAtlas(n); if (kt) return { katilim: kt, puan: [], toplam: kt };
+    const s = (K.soru || {})[no];
+    if (!Array.isArray(s)) return { sorun: 'soru puanı yok', toplam: goster(n) };
+    if (s.length !== Q) return { sorun: `Atlas'ta ${s.length} soru, e-Okul'da ${Q}`, toplam: goster(n) };
+    const P = s.map(v => v == null ? 0 : sayi(v));
+    if (P.some(v => isNaN(v) || !Number.isInteger(v))) return { sorun: 'buçuklu soru puanı', toplam: goster(n) };
+    return { katilim: 'girdi', puan: P, toplam: String(P.reduce((a, b) => a + b, 0)) };
   }
+  const eToplam = e => e.katilim === 'G' || e.katilim === 'K' ? e.katilim : e.katilim === 'girdi' ? (e.puan.some(p => p === '') ? '…' : String(e.puan.reduce((a, b) => a + +b, 0))) : '';
+  const esit = (h, e) => h.katilim === 'G' || h.katilim === 'K' ? e.katilim === h.katilim : e.katilim === 'girdi' && e.puan.length === h.puan.length && e.puan.every((p, j) => p !== '' && +p === h.puan[j]);
   function ciz() {
-    const B = S.baglam, K = S.sec;
-    if (!S.kayitlar.length) return hata(`Bu sınıfın öğrencileri için Atlas'ta yüklenmiş not bulunamadı.<br><span class="soluk kucuk">Önce Atlas › Not Yükle'den notları yükleyin (PDF, elle ya da soru puan kâğıdının fotoğrafı).</span>`);
-    let tablo = '', degisen = 0, yazilacak = 0, eksik = 0, yuvarlanan = 0;
-    if (K && S.kolon != null) {
-      tablo = B.ogrenciler.map(o => { const ham = (K.notlar || {})[o.no], a = atlasDeger(ham), e = (o.notlar || [])[S.kolon], yv = a != null && /^\d+[.,]\d*[1-9]/.test(String(ham).trim());
-        const yok = a == null; if (yok) eksik++; else if (!ayni(a, e)) { yazilacak++; if (e != null && e !== '') degisen++; } if (yv) yuvarlanan++;
-        return `<div class="ek-s ${yok ? 'yok' : (!ayni(a, e) && e != null && e !== '' ? 'degisir' : '')}"><span class="no">${esc(o.no)}</span><span class="ad">${esc(bas(o.ad))}</span><span class="v" ${yv ? `title="Atlas'ta ${esc(ham)}"` : ''}>${esc(goster(a))}${yv ? '<sup>*</sup>' : ''}</span><span class="e">${e != null && e !== '' ? 'e-Okul ' + esc(goster(e)) : ''}</span></div>`; }).join('');
-    }
-    E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${B.ogrenciler.length} öğrenci</div>
-      <div class="kart"><div class="nt-alan"><span>Atlas'taki not</span>${S.kayitlar.map((k, i) => `<button class="ek-kayit ${K === k ? 'secili' : ''}" data-k="${i}"><div><b>${esc(k.sinif)} · ${esc(k.ders)}</b><small>${esc(k.sinav)} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}${k.kaynak === 'foto' ? ' · kâğıt fotoğrafından' : ''}</small></div><span class="ek-o">${k.ortak} öğrenci</span></button>`).join('')}</div>
-      ${K ? `<div class="nt-alan" style="margin-top:12px"><span>e-Okul'da hangi sütuna?</span><div class="cipler">${B.kolonlar.map(k => `<button class="cip ${S.kolon === k.i ? 'secili' : ''}" data-c="${k.i}">${esc(k.ad)}</button>`).join('')}</div></div>` : ''}</div>
-      ${K && S.kolon != null ? `<div class="kart"><div class="soluk kucuk">Kalın rakam Atlas'taki not; yanında e-Okul'da şu an yazan not (varsa).</div><div class="ek-tablo">${tablo}</div>
-        <p class="kucuk ${degisen ? 'turuncu' : 'soluk'}" style="margin:12px 0 0">${yazilacak ? `${yazilacak} öğrencinin notu e-Okul'a yazılacak.` : 'e-Okul\'daki notlar Atlas ile zaten aynı.'}${degisen ? ` Turuncu ${degisen} öğrencinin e-Okul'da farklı bir notu var; Atlas'takiyle değişecek.` : ''}${eksik ? ` Soluk ${eksik} öğrencinin Atlas'ta notu yok; e-Okul'da olduğu gibi kalır.` : ''}${yuvarlanan ? ` e-Okul tam sayı kabul ettiği için * işaretli ${yuvarlanan} buçuklu not yukarı yuvarlandı.` : ''}</p>
-        <div class="dugmeler" style="margin-top:12px"><button class="birincil" id="ekYaz" ${yazilacak ? '' : 'disabled'}>e-Okul'a yaz</button></div></div>` : ''}`;
-    E.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.sec = S.kayitlar[+b.dataset.k]; S.kolon = kolonTahmin(S.sec.sinav); ciz(); });
-    E.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { S.kolon = +b.dataset.c; ciz(); });
+    const B = S.baglam, K = S.sec, Q = B.sorular.length;
+    if (!S.kayitlar.length) return hata(`Bu sınıfın öğrencileri için Atlas'ta yüklenmiş not bulunamadı.<br><span class="soluk kucuk">Önce Atlas › Not Yükle'den soru puan kâğıdının fotoğrafını çekip kaydedin.</span>`);
+    const maxA = (K.soru_puan || []).map(v => v == null ? null : +v), maxE = B.sorular.map(s => s.max);
+    const maxUyum = !K.soru_puan || (maxA.length === Q && maxA.every((v, i) => v == null || v === maxE[i]));
+    const soruVar = Object.keys(K.soru || {}).length > 0;
+    let yaz = {}, nYaz = 0, nDeg = 0, nAyni = 0, nSorun = 0, nYok = 0;
+    const satirlar = B.ogrenciler.map(o => { const h = hedef(K, o.no, Q), et = eToplam(o); let c = '', not = '';
+      if (!h) { nYok++; c = 'yok'; }
+      else if (h.sorun) { nSorun++; c = 'degisir'; not = h.sorun; }
+      else if (esit(h, o)) { nAyni++; }
+      else { nYaz++; if (o.katilim) nDeg++; c = o.katilim ? 'degisir' : ''; yaz[o.no] = { katilim: h.katilim, puan: h.puan }; }
+      return `<div class="ek-s ${c}" ${not ? `title="${esc(not)}"` : ''}><span class="no">${esc(o.no)}</span><span class="ad">${esc(bas(o.ad))}</span><span class="v">${esc(h ? h.toplam : '')}</span><span class="e">${et ? 'e-Okul ' + esc(et) : ''}</span></div>`; }).join('');
+    const engel = !soruVar ? `Bu Atlas kaydında soru puanları yok (${K.kaynak === 'foto' ? '' : 'PDF ya da elle girilmiş toplam not'}). e-Okul'un OYSS ekranı soru soru puan istediği için yalnız karşılaştırma yapılır; yazmak için notu soru puan kâğıdının fotoğrafıyla yükleyin.`
+      : !maxUyum ? `Soruların en yüksek puanları tutmuyor — Atlas: ${maxA.map(goster).join(', ')} · e-Okul: ${maxE.join(', ')}. Yanlış sınav ya da yanlış ders seçilmiş olabilir; yazma kapalı.` : '';
+    E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${B.ogrenciler.length} öğrenci · ${Q} soru</div>
+      <div class="kart"><div class="nt-alan"><span>Atlas'taki not</span>${S.kayitlar.map((k, i) => `<button class="ek-kayit ${K === k ? 'secili' : ''}" data-k="${i}"><div><b>${esc(k.sinif)} · ${esc(k.ders)}</b><small>${esc(k.sinav)} · ${esc(new Date(k.guncel).toLocaleDateString(tr, { day: 'numeric', month: 'long' }))} · ${Object.keys(k.soru || {}).length ? 'soru puanlı' : 'yalnız toplam'}</small></div><span class="ek-o">${k.ortak} öğrenci</span></button>`).join('')}</div></div>
+      <div class="kart"><div class="soluk kucuk">Kalın rakam Atlas'taki toplam; yanında e-Okul'da şu an yazan toplam (varsa).</div><div class="ek-tablo">${satirlar}</div>
+        <p class="kucuk" style="margin:12px 0 0">${nAyni ? `<span class="yeşil">${nAyni} öğrenci e-Okul ile aynı.</span> ` : ''}${engel ? '' : (nYaz ? `${nYaz} öğrencinin notu e-Okul'a yazılacak.` : '')}${!engel && nDeg ? ` <span class="turuncu">Turuncu ${nDeg} öğrencinin e-Okul'da farklı notu var; Atlas'takiyle değişecek.</span>` : ''}${engel && nYaz ? ` <span class="turuncu">${nYaz} öğrencide fark var (turuncu).</span>` : ''}${nSorun ? ` <span class="turuncu">${nSorun} öğrenci yazılamaz (üzerine gelince nedeni görünür).</span>` : ''}${nYok ? ` <span class="soluk">${nYok} öğrencinin Atlas'ta notu yok; e-Okul'da olduğu gibi kalır.</span>` : ''}</p>
+        ${engel ? `<div class="kart ek-son" style="margin:12px 0 0">${UNL}<div class="kucuk">${engel}</div></div>` : `<div class="dugmeler" style="margin-top:12px"><button class="birincil" id="ekYaz" ${nYaz ? '' : 'disabled'}>${nYaz ? `${nYaz} öğrenciyi e-Okul'a yaz` : 'e-Okul zaten Atlas ile aynı'}</button></div>`}</div>`;
+    E.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.sec = S.kayitlar[+b.dataset.k]; ciz(); });
     const y = $('#ekYaz'); if (y) y.onclick = () => {
-      const notlar = {}; B.ogrenciler.forEach(o => { const a = atlasDeger((K.notlar || {})[o.no]); if (a != null && !ayni(a, (o.notlar || [])[S.kolon])) notlar[o.no] = a; });
-      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')} · ${esc(B.kolonlar.find(k => k.i === S.kolon).ad)}</div><div class="kart"><b id="ekDurum">e-Okul'a yazılıyor…</b><div class="ek-cubuk"><i id="ekCubuk"></i></div><div class="soluk kucuk">Bu pencereyi ve e-Okul sayfasını kapatmayın. e-Okul notları 5'erli gruplar hâlinde kaydeder.</div></div>`;
-      gonder({ tip: 'yaz', kolon: S.kolon, notlar });
+      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="ek-alt">${esc(B.baslik || '')}</div><div class="kart"><b id="ekDurum">e-Okul'a kaydediliyor…</b><div class="ek-cubuk"><i id="ekCubuk"></i></div><div class="soluk kucuk">Bu pencereyi ve e-Okul sayfasını kapatmayın. e-Okul notları 5'erli gruplar hâlinde kaydeder; her grupta EBA'ya da gönderir.</div></div>`;
+      S.yazilan = yaz; gonder({ tip: 'yaz', veri: yaz });
     };
   }
   async function baglamGeldi(B) {
@@ -79,13 +87,14 @@
     const { data: u } = await sb.auth.getSession();
     if (!u || !u.session) return hata(`Bu tarayıcıda Atlas oturumu açık değil.<br><span class="soluk kucuk">Aynı tarayıcıda <a href="https://umalatlas.com.tr" target="_blank" style="color:var(--neon)">umalatlas.com.tr</a> adresinden giriş yapın, sonra e-Okul'da düğmeye yeniden basın.</span>`);
     const nolar = new Set(B.ogrenciler.map(o => String(o.no)));
-    const { data, error } = await sb.from('umal_not').select('id,sinif,ders,sinav,notlar,guncel,kaynak').order('guncel', { ascending: false }).limit(400);
+    const { data, error } = await sb.from('umal_not').select('id,sinif,ders,sinav,notlar,soru,soru_puan,guncel,kaynak').order('guncel', { ascending: false }).limit(400);
     if (error) return hata('Atlas\'taki notlar okunamadı: ' + esc(error.message));
-    S.kayitlar = (data || []).map(k => Object.assign(k, { ortak: Object.keys(k.notlar || {}).filter(n => nolar.has(n) && atlasDeger(k.notlar[n]) != null).length }))
+    S.kayitlar = (data || []).map(k => Object.assign(k, { ortak: Object.keys(k.notlar || {}).filter(n => nolar.has(n) && String(k.notlar[n]).trim()).length }))
       .filter(k => k.ortak >= Math.max(1, Math.min(5, nolar.size * .3)));
-    const bd = nrm(B.baslik);   // e-Okul başlığında geçen dersi öne al
-    S.kayitlar.sort((a, b) => (bd.includes(nrm(b.ders)) - bd.includes(nrm(a.ders))) || b.ortak - a.ortak || new Date(b.guncel) - new Date(a.guncel));
-    if (S.kayitlar.length) { S.sec = S.kayitlar[0]; S.kolon = kolonTahmin(S.sec.sinav); }
+    const bd = nrm(B.baslik), sn = (String(B.baslik).match(/(\d)\.\s*Dönem\s*(\d)\./i) || []);
+    const puan = k => (bd.includes(nrm(k.ders)) ? 4 : 0) + (sn[1] && new RegExp(sn[1] + '\\.\\s*Dönem\\s*' + sn[2] + '\\.', 'i').test(k.sinav) ? 2 : 0) + (Object.keys(k.soru || {}).length ? 1 : 0);
+    S.kayitlar.sort((a, b) => puan(b) - puan(a) || b.ortak - a.ortak || new Date(b.guncel) - new Date(a.guncel));
+    if (S.kayitlar.length) S.sec = S.kayitlar[0];
     ciz();
   }
   window.addEventListener('message', ev => {
@@ -93,10 +102,11 @@
     if (d.tip === 'baglam') baglamGeldi(d);
     else if (d.tip === 'ilerleme') { const a = $('#ekDurum'), c = $('#ekCubuk'); if (a) a.textContent = d.m; if (c) c.style.width = Math.round(d.oran * 100) + '%'; }
     else if (d.tip === 'bitti') {
-      const r = d.sonuc || {}; const iyi = !r.hata && !(r.farkli || []).length;
-      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="kart ek-son">${iyi ? TIK : UNL}<div><b>${iyi ? `${r.yazilan} öğrencinin notu e-Okul'a kaydedildi.` : (r.hata ? 'Kaydetme yarıda kaldı.' : 'Bazı notlar e-Okul\'da farklı görünüyor.')}</b>
-        <div class="soluk kucuk" style="margin-top:4px">${iyi ? 'Kayıttan sonra e-Okul\'daki notlar tek tek Atlas ile karşılaştırıldı; hepsi aynı.' : esc(r.hata || '')}</div>
-        ${(r.farkli || []).length ? `<div class="kucuk" style="margin-top:8px">${r.farkli.map(f => `${esc(f.no)} ${esc(bas(f.ad))}: Atlas ${esc(goster(f.atlas))}, e-Okul ${esc(goster(f.eokul) || 'boş')}`).join('<br>')}</div><div class="soluk kucuk" style="margin-top:6px">e-Okul'da düğmeye yeniden basarsanız yalnız bunlar yazılır.</div>` : ''}</div></div>
+      const r = d.sonuc || {}, F = r.farkli || [], iyi = !r.hata && !F.length, ad = no => (S.baglam.ogrenciler.find(o => o.no === no) || {}).ad || '';
+      E.innerHTML = `<h1>e-Okul'a aktar</h1><div class="kart ek-son">${iyi ? TIK : UNL}<div><b>${iyi ? `${r.yazilan} öğrencinin notu e-Okul'a kaydedildi.` : (r.hata ? 'Kaydetme tamamlanamadı.' : 'Bazı notlar e-Okul\'da farklı görünüyor.')}</b>
+        <div class="soluk kucuk" style="margin-top:4px">${iyi ? 'Kayıttan sonra e-Okul\'daki notlar yeniden okunup Atlas ile tek tek karşılaştırıldı; hepsi aynı.' : esc(r.hata || '')}${r.hata && r.yazilan ? ` Bu ana kadar ${r.yazilan} öğrenci kaydedildi.` : ''}</div>
+        ${F.length ? `<div class="kucuk" style="margin-top:8px">${F.map(f => `${esc(f.no)} ${esc(bas(ad(f.no)))}`).join('<br>')}</div>` : ''}
+        ${!iyi ? '<div class="soluk kucuk" style="margin-top:6px">e-Okul\'da düğmeye yeniden basarsanız yalnız eksik kalanlar yazılır.</div>' : ''}</div></div>
         <div class="dugmeler"><button class="ikincil" onclick="window.close()">Pencereyi kapat</button></div>`;
     }
   });
