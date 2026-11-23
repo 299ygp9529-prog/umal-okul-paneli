@@ -1140,6 +1140,7 @@
     else $('#rolEtiket').textContent = { yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
+    sb.rpc('umal_sinif_ogretmeni_siniflarim').then(({ data }) => { if (Array.isArray(data) && data.length) { D.sinifOgrt = data; menuYaz(); if (location.hash === '#sinifform') ac('sinifform'); } }, () => {});   // K-951
     panelSelam().catch(e => console.warn('karşılama', e));
     setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);
     if (ALT_SEKME[rol]) ogtAltKur();   // K-741 · K-756: idare ve Kurucu da
@@ -1368,6 +1369,7 @@
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
+    { id: 'sinifform', ad: 'Sınıfımın Formları', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: sinifFormlari, kosul: () => (D.sinifOgrt || []).length > 0 },   // K-951: Rehberlik dersine girdiği sınıfın MEB formları (yalnız okur)
     { id: 'yonlendir', ad: 'Rehberliğe Yönlendir', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yonlendirBolumu },   // K-571   // K-554: menüde ayrı değil, Rehberlik içinde sekme   // K-549 · K-551: baş yönetici de   // K-543: öğrencilerden rehberliğe mektup (yalnız rehberlik rolü)
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik', 'ogretmen'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
@@ -1396,6 +1398,7 @@
     disiplin: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18M10.5 12.5v2h3v-2"/>',   // K-629: İdari İşlemler (çanta)
     mektup: '<rect x="3.500" y="5.500" width="17" height="13" rx="2.500"/><path d="M4 7l8 6.200L20 7"/>',
     ozelders: '<path d="M2.500 9.500L12 5l9.500 4.500L12 14 2.500 9.500Z"/><path d="M6.500 11.500v4.200c1.500 1.400 3.300 2.100 5.500 2.100s4-.7 5.500-2.100v-4.200M21.500 9.500v5"/>',
+    sinifform: '<path d="M8 4h8l3 3v13H5V4h3"/><path d="M9 3h6v3H9z"/><path d="M8.500 11h7M8.500 14.500h7M8.500 18h4"/>',
     yonlendir: '<circle cx="9" cy="8" r="3.300"/><path d="M3 19.500c.5-3.300 2.800-5.200 6-5.200 1.200 0 2.300.3 3.200.8M14.500 17h6.500M18 14l3 3-3 3"/>',
     giriskod: '<circle cx="8" cy="14.500" r="3.800"/><path d="M10.800 11.800L19.500 3.500M15.500 7.500l2.800 2.800M18 5l2.300 2.300"/>',
     soru: '<path d="M13.500 3.500H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.500-5.500Z"/><path d="M13.500 3.500V9H19M12 12.500v5M9.500 15h5"/>',
@@ -1433,7 +1436,7 @@
   const ALT_SEKME = { ogretmen: ['dersyoklama', 'oprogram', 'dosyalar', 'mesajlar', 'menu'], yonetici: ['dersyoklama', 'gorev', 'harita', 'obil', 'menu'], bas: ['harita', 'dersyoklama', 'dosyalar', 'mesajlar', 'menu'] };
   const altta = id => telefon() && (ALT_SEKME[D.rol] || []).includes(id);
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'telkur', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'testler', 'yonlendir', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'testler', 'yonlendir', 'sinifform', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -4538,6 +4541,26 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       const b = ev.target.closest('[data-ac]'); if (b) { acik = acik === b.dataset.ac ? null : b.dataset.ac; liste(); } });
     liste();    yenile(async () => { if (!canliGuvenli()) return; const eski = JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length; await anketVerisi();   // K-553: öğrenci doldurdukça işaretler kendiliğinden gelir
       if (eski !== JSON.stringify(D.cevaplar) + JSON.stringify(D.durumlar) + D.anketler.length) { formlar.splice(0, formlar.length, ...D.anketler.filter(rehForm)); liste(); } }, 30);
+  }
+  // ------------------------------------------------------------------ K-951: Sınıf öğretmeni — kendi sınıfının Öğrenci Bilgi, Aile Bilgi ve Yaşam Pencerem formları (yalnız okur)
+  async function sinifFormlari() {
+    $('#icerik').innerHTML = `<h1>Sınıfımın Formları</h1><div class="soluk kucuk">Rehberlik dersine girdiğiniz sınıfın formları. Yalnız görüntülersiniz; formları rehberlik servisi yayınlar.</div><div id="sfIc" style="margin-top:12px"><div class="soluk">Yükleniyor…</div></div>`;
+    let r = null, error = null; try { ({ data: r, error } = await sb.rpc('umal_sinif_ogretmeni_formlar')); } catch (e) { error = e; }
+    if (!$('#sfIc')) return;
+    if (error || !r || !r.ok) { $('#sfIc').innerHTML = `<div class="kart soluk">${error && /function|schema/i.test(error.message || '') ? "Supabase'de <b>20261123200000_umal_sinif_ogretmeni_formlar.sql</b> çalıştırılmalı." : 'Formlar alınamadı: ' + esc(error ? hataYaz(error) : (r && r.hata) || '')}</div>`; return; }
+    await ogrencileriYukle().catch(() => []);
+    D.anketler = D.anketler || []; D.cevaplar = D.cevaplar || {};
+    (r.anketler || []).forEach(a => { if (!D.anketler.some(x => x.id === a.id)) D.anketler.push(a); });
+    (r.cevaplar || []).forEach(c => { (D.cevaplar[c.anket] = D.cevaplar[c.anket] || {})[c.sinif] = (c.veri || {}).cevaplar || {}; });
+    const SIRA = ['ogrenci-bilgi', 'aile-bilgi', 'yasam-pencerem'], ADI = { 'ogrenci-bilgi': 'Öğrenci Bilgi Formu', 'aile-bilgi': 'Aile (Veli) Bilgi Formu', 'yasam-pencerem': 'Yaşam Pencerem' };
+    const F = (r.anketler || []).slice().sort((a, b) => SIRA.indexOf(a.tanim.sablon) - SIRA.indexOf(b.tanim.sablon) || String(b.tanim.baslangic || '').localeCompare(String(a.tanim.baslangic || '')));
+    const S = (r.siniflar || []).slice().sort(sinifSira);
+    $('#sfIc').innerHTML = S.map(s => `<div class="kart sf-kart"><div class="sf-bas"><span class="neon-tabela" style="--sv:${seviyeRenk(s)}">${esc(s)}</span><span class="soluk kucuk">${D.ogrenciler.filter(o => o.sinif === s).length} öğrenci</span></div>
+      ${SIRA.map(sb_ => { const L = F.filter(a => a.tanim.sablon === sb_ && (a.tanim.siniflar || {})[s]);
+        if (!L.length) return `<div class="sf-form bos"><b>${ADI[sb_]}</b><small>Bu sınıfa henüz yayınlanmadı</small></div>`;
+        return L.map(a => { const k = katilanlar(a, s), d = k.filter(x => cevap(a, s, String(x.no))).length;
+          return `<button class="sf-form" data-sff="${esc(a.id)}" data-sfs="${esc(s)}"><b>${esc(a.tanim.ad || ADI[sb_])}</b><small><span class="${d === k.length && k.length ? 'neon' : ''}">${d}/${k.length} doldurdu</span>${k.length - d ? ` · ${k.length - d} bekleyen` : ''}</small><span class="sf-ok" aria-hidden="true">›</span></button>`; }).join(''); }).join('')}</div>`).join('');
+    $('#sfIc').onclick = ev => { const b = ev.target.closest('[data-sff]'); if (!b) return; const a = D.anketler.find(x => x.id === b.dataset.sff); if (a) sinifKatilimPlani(a, b.dataset.sfs); };
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
