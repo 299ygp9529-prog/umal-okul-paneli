@@ -8358,11 +8358,12 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
   function kurEpostaSor(arg, d) {
     ['#adim1', '#adim2', '#adim3', '#kurKodKutu'].forEach(x => { const e = $(x); if (e) e.classList.add('gizli'); }); const ki = $('#kurIos'); if (ki) ki.remove();
     let k = $('#kurEp'); if (!k) { k = document.createElement('form'); k.id = 'kurEp'; k.className = 'kur-ios'; k.setAttribute('onsubmit', 'return false'); $('#girisBilgi').before(k); }
-    k.innerHTML = `<b class="kur-bas">Atlas'a hoş geldiniz</b><p>Kurucu sizi davet etti. Adınızı ve e-postanızı yazın; hemen girersiniz.</p>
+    k.innerHTML = `${d.hata ? `<div class="kur-hata" role="alert" style="background:rgba(255,91,110,.14);border:1px solid rgba(255,91,110,.6);color:#ffb0b8;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-weight:700">${esc(d.hata)}</div>` : ''}<b class="kur-bas">Atlas'a hoş geldiniz</b><p>Kurucu sizi davet etti. Adınızı ve e-postanızı yazın; hemen girersiniz.</p>
       <label for="kurEpAd">Adınız Soyadınız</label><input id="kurEpAd" maxlength="80" autocomplete="name" value="${esc(baslik(d.ad || ''))}">
       <label for="kurEpEp">E-posta adresiniz</label><input id="kurEpEp" type="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ornek@gmail.com">
       <button type="submit" class="birincil" id="kurEpGir">Devam</button>`;
     if (d.hata) $('#girisBilgi').textContent = d.hata;
+    if (arg && arg.p_eposta) $('#kurEpEp').value = arg.p_eposta;   // K-939: hata sonrası yazdığı e-posta kutuda kalsın
     setTimeout(() => ($('#kurEpAd').value ? $('#kurEpEp') : $('#kurEpAd')).focus(), 60);
     $('#kurEpGir').onclick = async () => { const ad = baslik($('#kurEpAd').value.trim()), ep = $('#kurEpEp').value.trim().toLowerCase();
       if (!ad) { $('#girisBilgi').textContent = 'Adınızı ve soyadınızı yazın.'; return; }
