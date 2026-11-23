@@ -4044,6 +4044,52 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   const rpS1 = v => (Math.round(v * 10) / 10).toLocaleString(tr);
   const rpZaman = z => new Date(z).toLocaleString(tr, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const RO = { per: 30 };
+  // K-950: günleri sütun olan program tablosu (üstte SALI ÇARŞAMBA … ve tarihler) yapay zekâsız, gerçek tarihine göre okunur
+  const rpIzgaraOku = (sayfalar, yil = new Date().getFullYear()) => {
+    const nrm = s => String(s).toLocaleLowerCase(tr).replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+    const GN = ['pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi', 'pazar'], AY = ['ocak', 'subat', 'mart', 'nisan', 'mayis', 'haziran', 'temmuz', 'agustos', 'eylul', 'ekim', 'kasim', 'aralik'];
+    const orta = c => c.x + (c.w || 0) / 2, gorevler = [], gunler = {}, sira = [], notlar = [];
+    for (const R of sayfalar) {
+      const hi = R.findIndex(r => r.filter(c => GN.includes(nrm(c.t))).length >= 4); if (hi < 0) continue;
+      const B = R[hi].filter(c => GN.includes(nrm(c.t))).map(c => ({ g: GN.indexOf(nrm(c.t)), m: orta(c), H: [] })).sort((a, b) => a.m - b.m);
+      const kol = c => { const m = orta(c); let i = 0; while (i < B.length - 1 && m > (B[i].m + B[i + 1].m) / 2) i++; return B[i]; };
+      const kay = {}, kayAd = {}; let bitti = false;
+      R.slice(0, hi).forEach(r => { const ac = r.filter(c => /^[^()]{2,30}\([^)]{2,30}\)$/.test(c.t)).length >= 2; r.forEach(c => { const m = c.t.match(/^(.+?)\s*\(([^)]+)\)$/); if (ac) { if (m) { kay[nrm(m[1])] = m[2].trim(); kayAd[nrm(m[1])] = m[1].trim(); } } else if (c.t.length > 6 && !/^haftal[ıi]k program$/i.test(c.t) && !/^\d{1,2}\s*[–-]\s*\d{1,2}\s+\p{L}+/u.test(c.t) && c.t !== '·') notlar.push(c.t); }); });
+      R.slice(hi + 1).forEach(r => { if (bitti) return; if (r.some(c => /toplam/i.test(c.t))) { bitti = true; return; } if (r.length === 1 && orta(r[0]) < B[0].m - 30 && r[0].t.length > 25) return; r.forEach(c => kol(c).H.push(c.t)); });
+      B.forEach(b => {
+        let tarih = null; const Gs = [];
+        let cur = null; const kapat = () => { if (cur) Gs.push(cur); cur = null; };
+        b.H.forEach(t => { const n = nrm(t);
+          const tm = n.match(/^(\d{1,2})\s+([a-z]+)/); if (tm && AY.includes(tm[2]) && !cur && !Gs.length) { tarih = new Date(yil, AY.indexOf(tm[2]), +tm[1], 12); return; }
+          if (/^not\b|yanlis$/.test(n)) return;
+          if (/dinlenme|bos gun|tatil/.test(n)) { gunler[b.g] = Object.assign(gunler[b.g] || {}, { dinlenme: true }); return; }
+          let m;
+          if (cur && (m = n.match(/^(\d+)\s*(sayfa|sf|s\.?)$/))) { cur.sayfa = +m[1]; return; }
+          if (cur && (m = n.match(/^(\d+)\s*test$/))) { cur.test = +m[1]; return; }
+          if (cur && (m = n.match(/^(\d+)\s*soru$/))) { cur.soru = +m[1]; return; }
+          if (cur && (m = n.match(/^(\d+)\s*(dakika|dk)$/))) { cur.dk = +m[1]; return; }
+          if (cur && (m = n.match(/^(\d+)\s*(saat|sa)$/))) { cur.dk = +m[1] * 60; return; }
+          if (cur && (m = n.match(/^(\d+)\s*[–-]\s*(\d+)$/))) { cur.a = +m[1]; cur.b = +m[2]; return; }
+          if (cur && /^\d+$/.test(n)) { cur.a = cur.b = +n; return; }
+          if (/\p{L}{2}/u.test(t)) { kapat(); cur = { ad: t }; return; }
+          if (cur) cur.ek = (cur.ek ? cur.ek + ' ' : '') + t; });
+        kapat();
+        const g = tarih ? (tarih.getDay() + 6) % 7 : b.g;
+        gunler[g] = Object.assign(gunler[g] || {}, tarih ? { tarih } : {}); if (!sira.includes(g)) sira.push(g);
+        Gs.forEach(x => { const n = nrm(x.ad);
+          let ders = RP_DERS.find(d => nrm(d) === n) || RP_DERS.find(d => n.startsWith(nrm(d)));
+          if (!ders) ders = /\bmat|fonk|turev|integral|limit|polinom|logaritma|trigonometri/.test(n) ? 'Matematik' : /turkce|dil bilgisi/.test(n) ? 'Türkçe' : x.ad.charAt(0).toLocaleUpperCase(tr) + x.ad.slice(1).toLocaleLowerCase(tr);
+          const k0 = Object.keys(kay).find(k => n === k || n.startsWith(k) || k.startsWith(n));
+          const bas = nrm(ders) === n || (k0 && nrm(ders) === k0) ? '' : k0 ? kayAd[k0] : x.ad.split(' ').map(w => w.charAt(0).toLocaleUpperCase(tr) + w.slice(1).toLocaleLowerCase(tr)).join(' ');
+          const aralik = x.a != null ? (x.a === x.b ? `s. ${x.a}` : `s. ${x.a}–${x.b}`) : '';
+          const sayfa = x.sayfa || (x.a != null ? x.b - x.a + 1 : 0);
+          let dk = x.dk || 0; if (!dk && sayfa && ['Matematik', 'Geometri', 'Problemler'].includes(ders)) dk = sayfa * 17.5;   // K-924
+          const konu = [bas, aralik, x.test ? x.test + ' test' : '', x.ek || ''].filter(Boolean).join(' · ');
+          gorevler.push({ g, ders: ders.slice(0, 30), konu: konu.slice(0, 80), soru: Math.min(500, x.soru || 0), kaynak: (k0 ? kay[k0] : '').slice(0, 40), dk: Math.max(5, Math.min(240, Math.round((dk || 45) / 5) * 5)) }); });
+      });
+    }
+    return { gorevler: gorevler.slice(0, 150), gunler, sira, not: notlar.join(' · ').slice(0, 400) };
+  };
   const rpAlt = x => [x.konu, x.soru ? x.soru + ' soru' : '', x.kaynak, rpSure(+x.dk || 0)].filter(Boolean).map(esc).join(' · ');   // K-584
   const rpSqlYok = e => /umal_rehberlik_(ogrenci|plan|mesaj)|function/.test((e && e.message) || '') ? "Supabase'de <b>20261114150000_umal_rehberlik_plan_mesaj.sql</b> çalıştırılmalı." : esc(hataYaz(e));
   // K-588: öğrencinin haftalık uyarlaması (taşı/kısalt/çıkar, durum, yoğun hafta, değerlendirme) ve uyum
@@ -4172,32 +4218,36 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     const planAktar = async f => {   // K-716bq: yapay zekâyla hazırlanan program PDF'i → görevler (sunucu: atlas-plan)
       if (f.size > 8 * 1024 * 1024) { uyar('PDF 8 MB\'tan büyük. Programın yalnız ilgili sayfalarını kaydedip deneyin.'); return; }
       pencereAc('<h2 style="margin-top:0">Program okunuyor…</h2><p class="soluk">Atlas PDF\'i inceleyip görevleri günlere yerleştiriyor. Birkaç saniye sürebilir.</p>');
-      let r = null;
+      let r = null, SP = [];
       try {
         let metin = '';   // K-716bv: PDF'in metni burada okunur, sunucuya yalnız metin gider (sunucu sınırına takılmaz); metin yoksa (taranmış) PDF'in kendisi gider
         try { const pj = await import(new URL('soru/pdf.min.mjs', location.href).href); pj.GlobalWorkerOptions.workerSrc = new URL('soru/pdf.worker.min.mjs', location.href).href;
-          const doc = await pj.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise, S = [];
+          const doc = await pj.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise, S = []; SP = [];
           for (let i = 1; i <= Math.min(doc.numPages, 12); i++) { const pg = await doc.getPage(i), tc = await pg.getTextContent(), R = new Map();
             tc.items.forEach(it => { if (!it.str || !it.str.trim()) return; const y = Math.round(it.transform[5] / 3) * 3; if (!R.has(y)) R.set(y, []); R.get(y).push({ x: it.transform[4], w: it.width || 0, t: it.str }); });
+            const SR = []; SP.push(SR);
             const satir = [...R.entries()].sort((a, b) => b[0] - a[0]).map(([, L]) => { L.sort((a, b) => a.x - b.x); const P = []; let son = null;   // hücreler: [x] metin — tablo sütunları başlıktaki x'e göre eşleşir
-              L.forEach(k => { if (son == null || k.x - son > 4) P.push({ x: k.x, t: k.t }); else P[P.length - 1].t += (k.x - son > 1 ? ' ' : '') + k.t; son = k.x + k.w; });
+              L.forEach(k => { if (son == null || k.x - son > 4) P.push({ x: k.x, t: k.t }); else P[P.length - 1].t += (k.x - son > 1 ? ' ' : '') + k.t; son = k.x + k.w; P[P.length - 1].w = son - P[P.length - 1].x; });
+              SR.push(P.map(c => ({ x: c.x, w: c.w || 0, t: c.t.replace(/\s+/g, ' ').trim() })).filter(c => c.t));   // K-950
               return P.map(c => `[${Math.round(c.x)}] ${c.t.replace(/\s+/g, ' ').trim()}`).join('  '); }).filter(Boolean);
             S.push(`--- Sayfa ${i} ---\n` + satir.join('\n')); }
           metin = S.join('\n\n').slice(0, 19500); } catch (e_) { metin = ''; }
         let govde;
+        if (SP.length) { const yl = (metin.match(/\b(20\d\d)\b/) || [])[1]; const iz = rpIzgaraOku(SP, yl ? +yl : new Date().getFullYear()); if (iz.gorevler.length >= 3) r = Object.assign({ ok: true, model: 'izgara' }, iz); }   // K-950: günler sütunsa tarihine göre, sunucusuz
+        if (!r) {
         const b64 = () => new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); });
         if (metin.replace(/---.*---|\[\d+\]|\s/g, '').length >= 60) { govde = { metin }; if (f.size <= 2 * 1024 * 1024) govde.pdf = await b64(); }   // K-921: bazı PDF'lerde rakamlar metne çıkmıyor; küçük PDF'in kendisi de gider
         else { if (f.size > 3 * 1024 * 1024) throw Object.assign(new Error('Bu PDF taranmış görünüyor ve büyük (3 MB üstü). Programı yapay zekâdan metin olarak (ya da daha küçük PDF) alıp deneyin.'), { atlas: true });
           govde = { pdf: await new Promise((ok, red) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = red; fr.readAsDataURL(f); }) }; }
         const { data, error } = await sb.functions.invoke('atlas-plan', { body: govde });
-        if (error) { let j = null; try { j = error.context && typeof error.context.json === 'function' ? await error.context.json() : null; } catch (e_) {} if (j && j.hata) { const x = new Error(j.hata + (j.ayrinti ? ' — ' + String(j.ayrinti).slice(0, 160) : '')); x.atlas = true; throw x; } const st = error.context && error.context.status; if (st) throw Object.assign(new Error(st === 546 ? 'sunucu sınırı aşıldı (546); PDF çok büyük olabilir' : 'sunucu hatası ' + st), { atlas: true }); throw error; } r = data;
+        if (error) { let j = null; try { j = error.context && typeof error.context.json === 'function' ? await error.context.json() : null; } catch (e_) {} if (j && j.hata) { const x = new Error(j.hata + (j.ayrinti ? ' — ' + String(j.ayrinti).slice(0, 160) : '')); x.atlas = true; throw x; } const st = error.context && error.context.status; if (st) throw Object.assign(new Error(st === 546 ? 'sunucu sınırı aşıldı (546); PDF çok büyük olabilir' : 'sunucu hatası ' + st), { atlas: true }); throw error; } r = data; }
       } catch (e) { $('#pencere').classList.add('gizli'); uyar('Program okunamadı: ' + (e && e.atlas ? e.message : /Failed to send|not found|404/i.test(String(e && e.message)) ? 'atlas-plan sunucu işlevi henüz kurulmamış.' : hataYaz(e))); return; }
       if (!r || !r.ok || !(r.gorevler || []).length) { $('#pencere').classList.add('gizli'); uyar((r && r.hata) || 'Programda görev bulunamadı.'); return; }
       const esle = d => RP_DERS.find(x => x.toLocaleLowerCase(tr) === String(d).toLocaleLowerCase(tr)) || d;
       const L = r.gorevler.map(x => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), g: +x.g, ders: esle(x.ders), konu: x.konu || '', soru: +x.soru || 0, kaynak: x.kaynak || '', dk: +x.dk || 45 }));
       const top = L.reduce((t, x) => t + x.dk, 0);
       pencereAc(`<h2 style="margin-top:0">Programdan ${L.length} görev bulundu</h2><p class="soluk kucuk">Toplam ${rpSure(top)}. Kontrol edin; eklendikten sonra her görevi tek tek düzeltebilir ya da silebilirsiniz.</p>
-        <div class="rp-onizle">${RP_GUN.map((gn, gi) => { const G = L.filter(x => x.g === gi); return G.length ? `<div><b>${gn} <small>${rpSure(G.reduce((t, x) => t + x.dk, 0))}</small></b>${G.map(x => `<span><em>${esc(x.ders)}</em>${rpAlt(x)}</span>`).join('')}</div>` : ''; }).join('')}</div>
+        ${r.sira ? '<p class="kucuk" style="margin:0 0 8px">Görevler programdaki tarihlere göre günlerine yerleşti.</p>' : ''}<div class="rp-onizle">${(r.sira || [0, 1, 2, 3, 4, 5, 6]).map(gi => { const gn = RP_GUN[gi], G = L.filter(x => x.g === gi), gb = (r.gunler || {})[gi] || {}, tl = gb.tarih ? ' · ' + gb.tarih.getDate() + ' ' + AYLAR[gb.tarih.getMonth()] : ''; return G.length ? `<div><b>${gn}${tl} <small>${rpSure(G.reduce((t, x) => t + x.dk, 0))}</small></b>${G.map(x => `<span><em>${esc(x.ders)}</em>${rpAlt(x)}</span>`).join('')}</div>` : gb.dinlenme ? `<div><b>${gn}${tl}</b><span>Dinlenme · görev yok</span></div>` : ''; }).join('')}</div>
         ${r.not ? `<p class="kucuk"><b>Programdaki not:</b> ${esc(r.not)}</p>` : ''}
         <div class="dugmeler">${V.gorevler.length ? '<button class="ikincil" id="rpAkEkle">Mevcut görevlere ekle</button><button class="birincil" id="rpAkDeg">Planı bununla değiştir</button>' : '<button class="birincil" id="rpAkDeg">Plana yerleştir</button>'}</div>`);
       const bitir = degis => { if (degis) V.gorevler = L; else V.gorevler.push(...L); if (r.not && !V.not) V.not = r.not; degisti = true; $('#pencere').classList.add('gizli'); { const y_ = window.scrollY; ciz(); window.scrollTo(0, y_); } $('#rpBilgi').textContent = `${L.length} görev aktarıldı — kontrol edip ${yayin ? 'Kaydet' : 'Yayına al'}`; };
