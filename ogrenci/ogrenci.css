@@ -628,3 +628,4 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gzy-k.bos { opacity: .45; } .gzy-b { min-height: 1px; }
 /* K-947: geniş ekranda (iPad yatay, bilgisayar) çalışma planı ortada, okunaklı genişlikte; dokunulan yerler (tik, Ekle, ok) birbirine yakın */
 @media (min-width: 1000px) { #s-plan { max-width: 620px; margin-left: auto; margin-right: auto; } }
+@media (min-width: 1000px) { main .rh-yaz .birincil { width: 44px !important; min-width: 0 !important; max-width: 44px !important; padding: 0 !important; } }   /* K-948: geniş ekranda öğretmene mesaj gönder düğmesi elips olmasın, yuvarlak kalsın */
