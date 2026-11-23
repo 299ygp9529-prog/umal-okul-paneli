@@ -2514,19 +2514,19 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
 .liste tr.sube span { color:#5b6b82; font-weight:600; font-size:8.5pt }
 .liste td.s { color:#5b6b82; width:7mm } .liste td.ad { font-weight:700; white-space: nowrap; } .liste .mono { font-variant-numeric: tabular-nums; }
 .imza { display:flex; justify-content:flex-end; gap:30mm; margin: 12mm 24mm 0; font-size:9pt; color:#334155; page-break-inside: avoid; } .imza div { text-align:center; border-top:.3mm solid #94a3b8; padding-top:1.5mm; width:50mm }`;
-  function raporYazdir(govde, baslikAdi, yatay) {
+  function raporYazdir(govde, baslikAdi, yatay, sec) {
     const logo = new URL('okul-logo.png', location.href).href;
     const tarih = new Date().toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric' });
     const belge = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslikAdi)}</title><style>${RAPOR_CSS}${yatay ? '@page { size: A4 landscape; margin: 0; }' : ''}</style></head><body class="${yatay ? 'yatay' : ''}">
       <table class="duzen"><thead><tr><td><div class="ust-bosluk"></div></td></tr></thead><tbody><tr><td>${govde.replace(/__LOGO__/g, logo)}</td></tr></tbody><tfoot><tr><td><div class="alt-bosluk"></div></td></tr></tfoot></table>
       <div class="ayak"><span><img src="${logo}" alt="">Ümraniye Merkez Anadolu Lisesi · Okul Yönetim Paneli</span><span>Hazırlanma: ${esc(tarih)}</span></div></body></html>`;
-    belgeOnizle(belge, baslikAdi, yatay);
+    belgeOnizle(belge, baslikAdi, yatay, sec);
   }
   // K-410: bütün çıktılar aynı yoldan: önizleme penceresi + 🖨 Yazdır / PDF (masaüstü çerçeveyi yazdırır, telefon PDF + Paylaş)
   function belgeOnizle(belge, baslikAdi, yatay, sec) {
     if (yatay && !/<body[^>]*class=/.test(belge)) belge = belge.replace('<body', '<body class="yatay"');
     // Önce önizleme; "Yazdır" ile aynı belge yazdırılır
-    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="ikincil" id="rpGonder">📤 Gönder</button><button class="ikincil" id="rpYazdir">🖨 Yazdır / PDF</button><button class="birincil rp-okul" id="rpOkul">${KY_IK.yazdir}Okulda yazdır</button></div></div>
+    pencereAc(`<div class="ust" style="align-items:center"><h1>${esc(baslikAdi)}</h1><div class="dugmeler" style="margin:0 44px 0 0"><button class="ikincil" id="rpGonder">📤 Gönder</button><button class="ikincil" id="rpYazdir">🖨 Yazdır / PDF</button>${sec && sec.resim ? '<button class="ikincil" id="rpResim">Resim (PNG)</button>' : ''}<button class="birincil rp-okul" id="rpOkul">${KY_IK.yazdir}Okulda yazdır</button></div></div>
       <div class="rp-cerceve ${yatay ? 'yatay' : ''}"><iframe id="raporCerceve" title="Önizleme"></iframe></div><div class="cok-soluk kucuk" style="margin-top:8px">Yazdır penceresinde "PDF olarak kaydet" seçilirse PDF olur.</div>`);
     $('#pencere .pencere-ic').classList.add('genis');
     const fr = document.getElementById('raporCerceve');
@@ -2538,6 +2538,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {}
     };
     $('#rpGonder').onclick = () => pdfPaylas(belge, baslikAdi, yatay, $('#rpGonder'), sec && sec.kenar);
+    if ($('#rpResim')) $('#rpResim').onclick = () => resimPaylas(belge, baslikAdi, yatay, $('#rpResim'));   // K-944
     $('#rpOkul').onclick = () => okuldaYazdir({ ad: baslikAdi, uret: () => pdfUret(belge, yatay, sec && sec.kenar) });   // K-716bn   // K-507: her yazdırmanın yanında Gönder   // K-505: PDF dosyası → paylaş menüsü (Mail, AirDrop, WhatsApp…) ya da indir
   }
   // K-391: telefonda rapor → gerçek PDF dosyası → telefonun paylaş menüsü (Dosyalar'a kaydet, WhatsApp, AirDrop, Yazdır)
@@ -2670,7 +2671,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     let bek = null; try { bek = JSON.parse(sessionStorage.getItem('atlasYazdir') || 'null'); sessionStorage.removeItem('atlasYazdir'); } catch (e) {}
     if (bek && /^yazdir\/kisayol\//.test(bek.yol || '')) okuldaYazdir({ ad: bek.ad, yol: bek.yol });
   }
-  async function pdfUret(belge, yatay, kenar) {   // K-716bn: önizlemedeki belgeden gerçek A4 PDF (paylaşma ve okulda yazdırma ortak)
+  async function pdfUret(belge, yatay, kenar, resim) {   // K-944: resim = true → aynı görüntü PNG olarak   // K-716bn: önizlemedeki belgeden gerçek A4 PDF (paylaşma ve okulda yazdırma ortak)
     const G = yatay ? 1123 : 794;   // A4 genişliği (px)
     const kat = document.createElement('div');   // dış kap: ekranda görünmez; PDF'e içteki #pdfKatman çekilir
     kat.style.cssText = `position:absolute;left:0;top:0;width:${G}px;height:0;overflow:hidden;pointer-events:none`;
@@ -2682,11 +2683,23 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
       document.body.appendChild(kat); const ic = kat.firstChild;
       await Promise.all([...kat.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
       const H = ic.scrollHeight, olcek = Math.max(1, Math.min(2, Math.sqrt(15e6 / (G * H))));   // iPhone tuval sınırı (~16 milyon piksel)
+      if (resim) { const c = await window.html2pdf().set({ margin: 0, pagebreak: { mode: [] }, jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, html2canvas: { scale: Math.min(2, olcek * 1.5), useCORS: true, backgroundColor: '#ffffff', width: G, windowWidth: G, scrollX: 0, scrollY: 0, x: 0, y: 0 } }).from(ic).toCanvas().get('canvas');
+        return await new Promise((ok, red) => c.toBlob(b => b ? ok(b) : red(new Error('Resim oluşturulamadı')), 'image/png')); }
       const blob = await window.html2pdf().set({ margin: kenar || [8, 0, 10, 0], image: { type: 'jpeg', quality: 0.92 },
         html2canvas: { scale: olcek, useCORS: true, backgroundColor: '#ffffff', width: G, windowWidth: G, scrollX: 0, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: yatay ? 'landscape' : 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.imza', '.kart'] } }).from(ic).outputPdf('blob');
       return blob;
     } finally { kat.remove(); }
+  }
+  async function resimPaylas(belge, baslikAdi, yatay, dugme) {   // K-944: önizlemedeki belge → PNG resim → paylaş (WhatsApp vb.) ya da indir
+    const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.png';
+    if (dugme._dosya) { const f = dugme._dosya;
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) {} return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = ad; document.body.appendChild(a); a.click(); a.remove(); return; }
+    const eski = dugme.textContent; dugme.disabled = true; dugme.textContent = 'Resim hazırlanıyor…';
+    try { const blob = await pdfUret(belge, yatay, null, true); dugme._dosya = new File([blob], ad, { type: 'image/png' }); dugme.textContent = 'Resmi paylaş / kaydet'; }
+    catch (e) { dugme.textContent = eski; uyar('Resim hazırlanamadı: ' + (e && e.message || e)); }
+    finally { dugme.disabled = false; }
   }
   async function pdfPaylas(belge, baslikAdi, yatay, dugme, kenar) {
     const ad = (baslikAdi || 'rapor').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf';
@@ -7586,14 +7599,14 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
       const fark = L.filter(([, d]) => d !== ad).sort((a, b) => sinifSira(a[0], b[0])), giren = L.map(z => z[0]).sort(sinifSira);
       const sinifta = (x.yer || {})[v] === 'sinif', sen = (x.senaryo || {})[v];
       return `<td><div class="tk-d">${esc(ad)}</div><div class="tk-e">${sinifta ? '<span class="tk-y s">Sınıfta</span>' : '<span class="tk-y k">Kelebek</span>'}${sen ? `<span class="tk-y">${esc(sen)}</span>` : ''}${L.length && tum && giren.length < tum ? `<span class="tk-sb">Şube: ${giren.map(z => esc(z.split("-")[1])).join(", ")}</span>` : ''}</div>${Object.entries(fark.reduce((m, [s, d]) => ((m[d] = m[d] || []).push(s.split('-')[1]), m), {})).map(([d, Ls]) => `<div class="tk-f">${esc(v)}-${esc(Ls.join(', '))}: ${esc(d)}</div>`).join('')}</td>`; };
-    const css = `<style>.tk-t{width:calc(100% - 28mm);margin:5mm 14mm 0;border-collapse:separate;border-spacing:0;font-size:9pt}
-.tk-t th{background:#13305a;color:#fff;padding:2mm 2.5mm;text-align:left;font-size:8.6pt}.tk-t th.sv{border-top:1.4mm solid var(--c)}.tk-t th.sv b{display:inline-block;min-width:6mm;padding:0 1.5mm;border-radius:1.2mm;background:var(--c);color:#0d1726;text-align:center;margin-right:2mm}
-.tk-t td{padding:2mm 2.5mm;border-bottom:.25mm solid #e3e9f1;vertical-align:top}.tk-t tr{page-break-inside:avoid}
-.tk-t td.g{background:#e6f7fb;color:#0e5a7a;font-weight:800;width:30mm;border-right:.6mm solid #22b8d6}.tk-t td.g span{display:block;font-weight:600;color:#5b6b82;font-size:8pt}
-.tk-t td.n{width:22mm;font-weight:700;color:#13305a}.tk-t td.n small{display:block;font-weight:500;color:#5b6b82;font-size:8pt}
-.tk-d{font-weight:700;color:#14213d}.tk-e{margin-top:1mm;display:flex;gap:1.2mm;flex-wrap:wrap;align-items:center}.tk-y{font-size:7.4pt;border-radius:1mm;padding:.2mm 1.4mm;background:#eef3f8;color:#334155;font-weight:700}
-.tk-y.k{background:#dff8fd;color:#0e7490}.tk-y.s{background:#fff1e0;color:#c2410c}.tk-sb{font-size:7.4pt;color:#5b6b82}.tk-f{font-size:7.8pt;color:#7c3aed;margin-top:.6mm}.tk-bos{color:#cbd5e1;text-align:center}
-.tk-not{margin:4mm 14mm 0;font-size:8.2pt;color:#5b6b82}.tk-bilgi{margin:5mm 14mm 0;padding:4mm 5mm;border:.6mm solid #0e9fb8;border-left:2.4mm solid #0e7490;border-radius:2.4mm;background:#e3f6fa;font-size:12.5pt;font-weight:600;color:#0b1f3a;line-height:1.5;break-inside:avoid}.tk-bilgi b{display:block;color:#0e5a7a;font-size:10.5pt;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.6mm}</style>`;
+    const css = `<style>.tk-t{width:calc(100% - 28mm);margin:5mm 14mm 0;border-collapse:separate;border-spacing:0;font-size:11pt;border:.4mm solid #c9d6e6;border-radius:2mm;overflow:hidden}
+.tk-t th{background:#13305a;color:#fff;padding:2.2mm 3mm;text-align:left;font-size:11pt}.tk-t th.sv{border-top:1.4mm solid var(--c)}.tk-t th.sv b{display:inline-block;min-width:7mm;font-size:11pt;padding:0 1.5mm;border-radius:1.2mm;background:var(--c);color:#0d1726;text-align:center;margin-right:2mm}
+.tk-t td{padding:1.7mm 3mm;border-bottom:.35mm solid #c9d6e6;vertical-align:top}.tk-t td+td{border-left:.25mm solid #e3e9f1}.tk-t tr{page-break-inside:avoid}
+.tk-t td.g{background:#e6f7fb;color:#0b4a66;font-weight:900;font-size:13pt;width:32mm;border-right:.8mm solid #22b8d6}.tk-t td.g span{display:block;font-weight:700;color:#41566f;font-size:10pt;margin-top:.6mm}
+.tk-t td.n{width:24mm;font-weight:800;color:#13305a;font-size:11.5pt}.tk-t td.n small{display:block;font-weight:600;color:#41566f;font-size:9.5pt}
+.tk-d{font-weight:800;color:#0b1730;font-size:12.5pt;line-height:1.25}.tk-e{margin-top:.5mm;display:flex;gap:1.2mm;flex-wrap:wrap;align-items:center}.tk-y{font-size:8.6pt;border-radius:1mm;padding:.2mm 1.4mm;background:#eef3f8;color:#334155;font-weight:700}
+.tk-y.k{background:#dff8fd;color:#0e7490}.tk-y.s{background:#fff1e0;color:#c2410c}.tk-sb{font-size:8.6pt;color:#41566f}.tk-f{font-size:9.2pt;color:#6d28d9;font-weight:600;margin-top:.8mm}.tk-bos{color:#cbd5e1;text-align:center}
+.tk-not{margin:4mm 14mm 0;font-size:9.5pt;color:#41566f}.tk-bilgi{margin:5mm 14mm 0;padding:4mm 5mm;border:.6mm solid #0e9fb8;border-left:2.4mm solid #0e7490;border-radius:2.4mm;background:#e3f6fa;font-size:12.5pt;font-weight:600;color:#0b1f3a;line-height:1.5;break-inside:avoid}.tk-bilgi b{display:block;color:#0e5a7a;font-size:10.5pt;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.6mm}</style>`;
     const govde = raporBant(esc(tk.ad || 'Ortak Yazılı Sınav Takvimi'), `Sınav Takvimi · ${gunler.length} gün · ${S.length} oturum`) + css
       + `<table class="tk-t"><thead><tr><th>Tarih</th><th>Oturum</th>${SV.map(v => `<th class="sv" style="--c:${SEVIYE_RENK[v]}"><b>${v}</b>${v}. Sınıflar</th>`).join('')}</tr></thead><tbody>${gunler.map(t => { const G = S.filter(x => x.tarih === t), d = new Date(t + 'T12:00:00');
         return G.map((x, i) => `<tr>${i ? '' : `<td class="g" rowspan="${G.length}">${esc(d.toLocaleDateString(tr, { day: 'numeric', month: 'long' }))}<span>${esc(d.toLocaleDateString(tr, { weekday: 'long' }))}</span></td>`}<td class="n">${esc(dersYaz(x))}<small>${esc(saat(x))}</small></td>${SV.map(v => hucre(x, v)).join('')}</tr>`).join(''); }).join('') || `<tr><td colspan="${SV.length + 2}">Takvimde sınav yok.</td></tr>`}</tbody></table>
@@ -7601,7 +7614,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
       + (tk.bilgi ? `<div class="tk-bilgi"><b>Bilgi notu</b>${esc(tk.bilgi).replace(/\n/g, '<br>')}</div>` : '');
     // K-666: takvim çıktısı tek sayfaya sığar (gerekirse orantılı küçültülür)
     const sig = `<script>(function(){function sig(){var e=document.querySelector('.tk-sig');if(!e)return;e.style.zoom='';var mm=96/25.4,H=210*mm-30*mm,ust=e.getBoundingClientRect().top+(window.scrollY||0),h=e.scrollHeight,k=(H-ust)/h;if(k<1)e.style.zoom=Math.max(.45,k).toFixed(3);}if(document.readyState==='complete')sig();else window.addEventListener('load',sig);window.addEventListener('beforeprint',sig);setTimeout(sig,300);})();<\/script>`;
-    raporYazdir(`<div class="tk-sig">${govde}</div>${sig}`, (tk.ad || 'Sınav takvimi'), true);
+    raporYazdir(`<div class="tk-sig">${govde}</div>${sig}`, (tk.ad || 'Sınav takvimi'), true, { resim: true });   // K-944: PDF yanında resim
   }
   // K-635: Senaryo tablosu (OYSS): ders × seviye senaryoları sınav takviminden; düzenlenir, takvime yazılır, resmî görünümlü PDF
   function senaryoTablosu(tk, yonetir, yeniden) {
