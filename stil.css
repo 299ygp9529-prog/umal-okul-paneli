@@ -3081,3 +3081,11 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 @media (max-width: 380px) { .op-nobet { gap: 10px; padding: 10px 12px; } .op-nobet .nb-yer { font-size: 17px; } }
 .op-gun.nobetli { position: relative; } .op-gun.nobetli::after { content: ""; position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe3a6, #ff9a3d); box-shadow: 0 0 0 2px rgba(20,20,30,.6), 0 0 10px rgba(255,170,70,.9); }
 .gz-kisa { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 4px; } .gz-kisa button { min-height: 48px; font-weight: 800; gap: 8px; }   /* K-946 */
+/* K-951: Sınıfımın Formları (sınıf öğretmeni, yalnız okur) */
+.sf-kart { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.sf-bas { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.sf-form { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; width: 100%; min-height: 58px; padding: 11px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.035); color: inherit; font: inherit; cursor: pointer; }
+.sf-form:hover { border-color: rgba(34,232,255,.35); }
+.sf-form b { grid-column: 1; font-size: 15px; } .sf-form small { grid-column: 1; color: var(--soluk); font-size: 13px; }
+.sf-ok { grid-column: 2; grid-row: 1 / 3; font-size: 24px; line-height: 1; color: var(--neon); }
+.sf-form.bos { cursor: default; opacity: .55; }
