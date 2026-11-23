@@ -56,23 +56,26 @@
     var W = 794, H = 1123, K = 3, css = b.css.replace(/@page[^}]*}/, '').replace(/html, body \{[^}]*}/, '').replace(/body \{/, '.ak-kok {').replace(/\* \{/, '.ak-kok * {') +
       '.ak-sayfa{width:' + W + 'px;height:' + H + 'px;padding:40px 38px 0;grid-template-columns:359px 359px;grid-auto-rows:208px}';
     var resim = async function (sayfaHtml) {
-      var d = document.createElement('div'); d.className = 'ak-kok'; d.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml'); d.innerHTML = '<style>' + css + '</style>' + sayfaHtml;
+      var d = document.createElement('div'); d.className = 'ak-kok'; d.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml'); d.setAttribute('style', 'width:' + W + 'px;height:' + H + 'px;transform:scale(' + K + ');transform-origin:0 0'); d.innerHTML = '<style>' + css + '</style>' + sayfaHtml;
       var x = new XMLSerializer().serializeToString(d);
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W * K + '" height="' + H * K + '" viewBox="0 0 ' + W + ' ' + H + '"><foreignObject x="0" y="0" width="' + W + '" height="' + H + '">' + x + '</foreignObject></svg>';
+      // K-935: iPhone Safari foreignObject'i viewBox ile büyütmüyordu (kartlar sayfanın köşesinde 1/3 boyda kalıyordu) — büyütme artık içerideki CSS ile
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W * K + '" height="' + H * K + '"><foreignObject x="0" y="0" width="' + W * K + '" height="' + H * K + '">' + x + '</foreignObject></svg>';
       var im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       await new Promise(function (ok, red) { im.onload = ok; im.onerror = function () { red(new Error('Sayfa çizilemedi')); }; });
       if (im.decode) { try { await im.decode(); } catch (e) {} }
       var c = document.createElement('canvas'); c.width = W * K; c.height = H * K; var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
       return c;
     };
-    var ayar = { margin: 0, image: { type: 'jpeg', quality: 0.93 }, jsPDF: { unit: 'px', format: [W, H], orientation: 'portrait', compress: true, hotfixes: ['px_scaling'] } };
-    var w = window.html2pdf().set(ayar).from(await resim(b.sayfalar[0]), 'canvas').toPdf();
-    for (var i = 1; i < b.sayfalar.length; i++) {
+    // K-935: her sayfa resmi A4'e tam oturur; html2pdf'in sayfa bölmesi (iPhone'da araya boş sayfa) kullanılmaz
+    var kc = document.createElement('canvas'); kc.width = kc.height = 2; var kg = kc.getContext('2d'); kg.fillStyle = '#fff'; kg.fillRect(0, 0, 2, 2);
+    var doc = await window.html2pdf().set({ margin: 0, image: { type: 'jpeg', quality: 0.9 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } }).from(kc, 'canvas').toPdf().get('pdf');   // boş A4; sayfa resimleri doğrudan eklenir
+    for (var i = 0; i < b.sayfalar.length; i++) {
       var c = await resim(b.sayfalar[i]);
-      w = w.get('pdf').then(function (p) { p.addPage([W, H], 'portrait'); }).from(c, 'canvas').toPdf();
+      if (i) doc.addPage('a4', 'portrait');
+      doc.addImage(c.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 210, 297);
       if (opt.ilerle) opt.ilerle(i + 1, b.sayfalar.length);
     }
-    return await w.output('blob');
+    return doc.output('blob');
   }
   window.UmalAtlasKart = { belge: belge, pdf: pdf };
 })();

@@ -4508,7 +4508,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
               const { data, error } = await sb.rpc('umal_ogrenci_kod_uret', { p_nolar: nolar }); if (error) { uyar('Üretilemedi: ' + hataYaz(error)); ciz(); return; }
               L_ = (data || []).slice(); D.sonFisler = D.sonFisler || {}; D.sonFisler['@' + dz] = L_; (data || []).forEach(r => { K[String(r.no)] = { no: r.no, uretildi: new Date().toISOString(), son_giris: null }; }); }
             const dg = ak || as_; dg.disabled = true; dg.textContent = 'PDF hazırlanıyor…';
-            try { if (!window.UmalAtlasKart) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'atlas-kart.js?v=202611211250'; sc.onload = ok; sc.onerror = () => red(new Error('kart modülü yüklenemedi')); document.head.appendChild(sc); });
+            try { if (!window.UmalAtlasKart) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'atlas-kart.js?v=202611231035'; sc.onload = ok; sc.onerror = () => red(new Error('kart modülü yüklenemedi')); document.head.appendChild(sc); });
               const bl = await window.UmalAtlasKart.pdf(L_, { ilerle: (i, n) => { dg.textContent = `PDF hazırlanıyor ${i}/${n}`; } });
               const a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = `Atlas kartları ${dz}. sınıflar (${L_.length}).pdf`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
               atlasOnay('Atlas kartları indi', `${dz}. sınıflar · ${L_.length} öğrenci`);
