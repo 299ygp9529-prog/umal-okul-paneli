@@ -1259,7 +1259,7 @@
         <div class="rp-his">${[[1, 'Zor geçti'], [2, 'İdare eder'], [3, 'İyi geçti']].map(([v, t]) => `<button class="${D_.his === v ? 'secili' : ''}" data-phis="${v}">${t}</button>`).join('')}</div>
         <label>En çok neyde zorlandın? (isteğe bağlı)</label><div class="pl-cip">${zorL.concat(['Zaman', 'Odaklanma']).map(z => `<button class="${(D_.zor || []).includes(z) ? 'secili' : ''}" data-pzor="${esc(z)}">${esc(z)}</button>`).join('')}</div>
         <textarea id="plDegNot" maxlength="300" rows="2" placeholder="${ozel() ? 'Öğretmenine' : 'Rehber öğretmenine'} iletmek istediğin bir şey var mı? (isteğe bağlı)">${esc(D_.not || '')}</textarea>
-        <div class="dg"><button class="birincil" data-pdeg="${dh}" ${D_.his ? '' : 'disabled'}>Gönder</button></div></div>` : ''}`;
+        <div class="dg"><button class="birincil gonder-dug" data-pdeg="${dh}" ${D_.his ? '' : 'disabled'}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>Gönder</button></div></div>` : ''}`;
   }
   function gorevHtml(x, hk, gi) {
     const key = (x.rh ? 'r:' : 'o:') + x.id, d = durumOf(x), ac = PL.acik === key;
@@ -1389,7 +1389,7 @@
   function rhSohbetHtml(baslik_, n, yeniler) {
     const L = RH.mesajlar.slice(0, n).reverse(), z = t => esc(new Date(t).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }));
     return `<div class="rh-mesaj rh-sohbet"><h2>${baslik_}</h2>${L.length ? '' : '<p class="soluk kucuk">Henüz mesaj yok. Öğretmenine buradan yazabilirsin.</p>'}${L.map(m => `<div class="${m.ben ? 'ben' : ''}"><p>${esc(m.metin)}</p><small>${m.ben ? 'Sen · ' : ''}${z(m.zaman)}${m.ben ? (m.okundu ? ' · okundu' : '') : (yeniler && yeniler.has(m.id) ? '<span class="yeni_">YENİ</span>' : '')}</small></div>`).join('')}
-      <div class="rh-yaz"><textarea data-rhyaz rows="1" maxlength="1000" placeholder="${ozel() ? 'Öğretmenine yaz…' : 'Rehberlik servisine yaz…'}"></textarea><button class="birincil" data-rhgonder aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>Gönder</button></div><div class="rh-yaz-b" data-rhb></div></div>`;
+      <div class="rh-yaz"><textarea data-rhyaz rows="1" maxlength="1000" placeholder="${ozel() ? 'Öğretmenine yaz…' : 'Rehberlik servisine yaz…'}"></textarea><button class="birincil gonder-dug" data-rhgonder aria-label="Gönder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>Gönder</button></div><div class="rh-yaz-b" data-rhb></div></div>`;
   }
   document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-rhgonder]'); if (!b) return; const kutu = b.closest('.rh-sohbet'), y = kutu && kutu.querySelector('[data-rhyaz]'), bl = kutu && kutu.querySelector('[data-rhb]'); if (!y) return;
     const t = y.value.trim(); if (!t) { y.focus(); return; } b.disabled = true; if (bl) bl.textContent = 'Gönderiliyor…'; let d = null;
