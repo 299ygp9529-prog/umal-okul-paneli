@@ -517,7 +517,8 @@
       if (duy) { S.duyuru = false; var du = alt.querySelector('[data-tzduy]'); if (du) du.classList.remove('secili'); var yz = alt.querySelector('.tz-yaz'); if (yz) yz.classList.remove('duyuru'); if (y) y.placeholder = phYaz(); }
       await yukleBekle(); bekSil(gec);
     }
-    async function yukle() {
+    async function yukle(oto) {
+      if (!oto) S.hareket = Date.now();   // K-954: kullanıcı bir şey yaptı → hızlı yenileme
       if (S.calisiyor || S.olu) return; S.calisiyor = true;
       var r = null; try { r = await cfg.oku(S.son, S.surum); } catch (e) { r = null; }
       S.calisiyor = false; if (S.olu || !r) return;
@@ -534,7 +535,7 @@
       else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } if (r.obsay) S.obsay = r.obsay; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz || !!r.kilit !== !!S.kilit) { S.sessiz = !!r.sessiz; S.kilit = !!r.kilit; alt.dataset.d = ''; altCiz(); } }
       if (P && typeof r.kilit === 'boolean' && r.kilit !== !!cfg.kilitli) { cfg.kilitli = r.kilit; if (typeof kilitYaz === 'function') kilitYaz(); }   // K-879
-      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); }
+      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); if (L.length) S.hareket = Date.now(); }
       topCiz();
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
     }
@@ -625,7 +626,7 @@
     var yb = ekran.querySelector('[data-tzyok]'); if (yb) yb.onclick = function () { otobusSayfa(benimOto() || +cfg.sayim.otobus || 0); };   // K-822: gezi başkanı
     if (P && cfg.sayim) topEl.onclick = function (e) { var b = e.target.closest('[data-tzob]'); if (b) { var o = +b.dataset.tzob; obSec(S.obSec === o ? 0 : o); } };   // K-848: dokun → o otobüsün telsizi; tekrar dokun → bütün gezi
     if (P) { ak.onclick = function (e) { if (e.target.closest('.tz-harita')) return; var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
-    function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(); dongu(); }, d.hidden ? 15000 : 4000); }
+    function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(true); dongu(); }, d.hidden ? 15000 : (Date.now() - (S.hareket || 0) < 30000 ? 4000 : 10000)); }   // K-954: son 30 sn'de mesaj/hareket yoksa 10 sn'de bir sorar
     function dur() { clearTimeout(S.zam); }
     var gor = function () { if (!d.hidden && !S.olu && S.acik) { yukle(); dongu(); } }; d.addEventListener('visibilitychange', gor);
     gezCiz(); altCiz(); akisCiz(); topCiz(); if (SK && SK.olc) SK.olc();
