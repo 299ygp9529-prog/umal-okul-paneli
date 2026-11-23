@@ -3080,3 +3080,4 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 @media (prefers-reduced-motion: reduce) { .op-nobet .nb-cerceve, .op-nobet::after, .op-nobet .nb-rozet::before { animation: none; } }
 @media (max-width: 380px) { .op-nobet { gap: 10px; padding: 10px 12px; } .op-nobet .nb-yer { font-size: 17px; } }
 .op-gun.nobetli { position: relative; } .op-gun.nobetli::after { content: ""; position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe3a6, #ff9a3d); box-shadow: 0 0 0 2px rgba(20,20,30,.6), 0 0 10px rgba(255,170,70,.9); }
+.gz-kisa { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 4px; } .gz-kisa button { min-height: 48px; font-weight: 800; gap: 8px; }   /* K-946 */
