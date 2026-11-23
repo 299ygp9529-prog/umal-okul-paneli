@@ -627,4 +627,4 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 .gzy-k.gor { border-color: rgba(255,209,102,.5); background: rgba(255,209,102,.08); } .gzy-k.gor small { color: #e8c66b; }
 .gzy-k.bos { opacity: .45; } .gzy-b { min-height: 1px; }
 /* K-947: geniş ekranda (iPad yatay, bilgisayar) çalışma planı ortada, okunaklı genişlikte; dokunulan yerler (tik, Ekle, ok) birbirine yakın */
-@media (min-width: 1000px) { #s-plan { max-width: 760px; margin-left: auto; margin-right: auto; } }
+@media (min-width: 1000px) { #s-plan { max-width: 620px; margin-left: auto; margin-right: auto; } }
