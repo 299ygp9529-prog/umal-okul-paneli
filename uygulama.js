@@ -77,12 +77,13 @@
     return out;
   }
   // K-596: tarayıcının beyaz onay / soru / uyarı pencereleri yerine temaya uygun pencere (lacivert + camgöbeği)
-  function sorKutu({ m, girdi, v, tek }) {
+  function sorKutu({ m, girdi, v, tek, eposta }) {
     return new Promise(son => {
       const k = document.createElement('div'); k.className = 'sor-kutu'; const tehlike = !girdi && !tek && /silin|kaldırıl|iptal|kapan|geçersiz|kilitlen|dönülecek/i.test(m);
       k.innerHTML = `<div class="sor-ic${tehlike ? ' sor-tehlike' : ''}" role="dialog" aria-modal="true"><div class="sor-ik">${tek ? '!' : girdi ? '✎' : '?'}</div><p></p>${girdi ? '<textarea rows="3" maxlength="1000"></textarea><small>Enter: tamam · Shift+Enter: yeni satır</small>' : ''}<div class="sor-dug">${tek ? '' : '<button class="ikincil" data-s="0">Vazgeç</button>'}<button class="birincil" data-s="1">${tek ? 'Tamam' : tehlike ? 'Evet' : 'Tamam'}</button></div></div>`;
       k.querySelector('p').textContent = String(m == null ? '' : m);
       const ta = k.querySelector('textarea'); if (ta) ta.value = v || '';
+      if (ta && eposta) { ta.setAttribute('autocapitalize', 'none'); ta.setAttribute('autocorrect', 'off'); ta.setAttribute('spellcheck', 'false'); ta.setAttribute('inputmode', 'email'); ta.rows = 1; }   // K-937: e-posta kutusunda telefon ilk harfi büyütmesin
       const bit = r => { k.classList.add('kapan'); document.removeEventListener('keydown', tus, true); setTimeout(() => k.remove(), 140); son(r); };
       const evet = () => bit(girdi ? ta.value : true), hayir = () => bit(girdi ? null : false);
       const tus = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); hayir(); } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); evet(); } };
@@ -4751,7 +4752,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         g.onblur = kaydet; g.onkeydown = ev => { if (ev.key === 'Enter') g.blur(); };
       });
       $('#icerik').querySelectorAll('[data-epd]').forEach(b => b.onclick = async () => {   // K-854: yanlış yazılmış e-postayı düzelt (hesap, şifre ve geçmiş korunur)
-        const eski = b.dataset.epd, yeni = await girdiAl(`${eski} adresi düzeltilsin. Doğru e-posta:`, eski); if (yeni == null) return;
+        const eski = b.dataset.epd, yeni = await sorKutu({ m: `${eski} adresi düzeltilsin. Doğru e-posta:`, girdi: true, v: eski, eposta: true }); if (yeni == null) return;
         const n = String(yeni).trim().toLowerCase(); if (!n || n === eski) return;
         const { data, error } = await sb.rpc('umal_eposta_duzelt', { p_eski: eski, p_yeni: n });
         if (error || !data || !data.ok) { uyar('Düzeltilemedi: ' + ((data && data.hata) || hataYaz(error))); return; }
