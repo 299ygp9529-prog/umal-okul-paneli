@@ -417,7 +417,7 @@
   window.__tzoAc = () => tzoAc();
   // K-905: Gezi Telsizi (96 KB) yalnız gezi günü, gerektiğinde yüklenir — diğer günlerde açılışı yavaşlatmaz
   let tzBetik = null;
-  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=202611230925'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
+  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=202611231350'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
   async function tzoAc() {
     if (!TZO.g) return; if (!window.UmalTelsiz) { try { await telsizYukle(); } catch (e) { uyar('Telsiz yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.'); return; } }
     if (!window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);
@@ -437,6 +437,7 @@
       sayimVar: id => r_('umal_ogrenci_sayim_var', { p_bilet: TZO.b, p_sayim: id }),
       sayim: baskan,
       mola: baskan ? dk => r_('umal_ogrenci_telsiz_mola', { p_bilet: TZO.b, p_dk: dk }) : null,
+      bsk: baskan ? { oku: sn => r_('umal_ogrenci_bsk_oku', { p_bilet: TZO.b, p_sonra: sn }), yaz: m => r_('umal_ogrenci_bsk_yaz', { p_bilet: TZO.b, p_metin: m }) } : null,   // K-941: Başkanlar grubu
       yerler: baskan ? async () => { await gzYukle(); const i = (GZ.B || []).findIndex(x => x.anahtar === (TZO.g || {}).anahtar); bskAc(i < 0 ? 0 : i); } : null,   // K-932: gezi başkanı telsizden koltukları düzenler   // K-908: gezi başkanı mola başlatır
       konum: (la, lo, ac) => r_('umal_ogrenci_telsiz_konum', { p_bilet: TZO.b, p_lat: la, p_lng: lo, p_acc: ac }),
       kapandi: () => { TZO.g = null; TZO.b = ''; if (TZO.vr) { TZO.vr.kapat(); TZO.vr = null; } anaCiz(true); } });

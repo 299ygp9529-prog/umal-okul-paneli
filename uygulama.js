@@ -662,6 +662,7 @@
       varlikIzle: cb => window.UmalTelsizIzle ? window.UmalTelsizIzle(sb, g.anahtar, cb) : null,   // K-874: otobüs sayfasında telsizi açık olanlar
       mesaj: k => gzMesajAc({ tur: k.tur, no: k.no, ad: k.ad, tel: k.tel, eposta: k.eposta || '' }),   // K-869: telsizde koltuktaki kişiye özel mesaj
       yonet: (o, v) => r_('umal_gezi_telsiz_yonet', { p_anahtar: g.anahtar, p_otobus: o, p_veri: v }),   // K-862: görevli öğretmen başkan seçer, görevli ekler
+      bsk: { oku: sn => r_('umal_gezi_bsk_oku', { p_anahtar: g.anahtar, p_sonra: sn }), yaz: m => r_('umal_gezi_bsk_yaz', { p_anahtar: g.anahtar, p_metin: m }) },   // K-941: Başkanlar grubu
       kapandi: () => { TZ.imza = '*'; tzDurum(); } });
   }
   // K-875: telsizden gezi düzenleme — panelin Gezi Otobüsleri'ndeki işlemlerin aynısı; gezi ayarına yazar (yerZaman ile panel de hemen alır)
