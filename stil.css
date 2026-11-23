@@ -3089,3 +3089,4 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 .sf-form b { grid-column: 1; font-size: 15px; } .sf-form small { grid-column: 1; color: var(--soluk); font-size: 13px; }
 .sf-ok { grid-column: 2; grid-row: 1 / 3; font-size: 24px; line-height: 1; color: var(--neon); }
 .sf-form.bos { cursor: default; opacity: .55; }
+.gz-kisa #gzKYok { grid-column: 1 / -1; }   /* K-952 */
