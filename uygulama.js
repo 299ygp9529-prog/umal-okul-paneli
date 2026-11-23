@@ -3244,7 +3244,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         if (error) { bilgi = 'Silinemedi: ' + hataYaz(error); durumCiz(); return; }
         return ac('anket');
       }
-      if (b.dataset.tur) { if (b.dataset.tur === 'ozel' && !rehberlikYazar()) return; const o = b.dataset.tur === 'ozel'; if (o !== T.rehberlik) T.kanal = o ? 'web' : 'ikisi'; T.rehberlik = o; ciz(); return; }
+      if (b.dataset.tur && b.dataset.q == null) { if (b.dataset.tur === 'ozel' && !rehberlikYazar()) return;   // K-953: soru türü düğmeleri (data-q) buraya düşmesin const o = b.dataset.tur === 'ozel'; if (o !== T.rehberlik) T.kanal = o ? 'web' : 'ikisi'; T.rehberlik = o; ciz(); return; }
       if (b.dataset.kn) { T.kanal = b.dataset.kn; ciz(); return; }
       if (b.dataset.k) { T.kimler = b.dataset.k; if (b.dataset.k === 'ogretmen') T.rehberlik = false; ciz(); return; }
       if (b.dataset.kl != null) {
