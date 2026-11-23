@@ -417,7 +417,7 @@
   window.__tzoAc = () => tzoAc();
   // K-905: Gezi Telsizi (96 KB) yalnız gezi günü, gerektiğinde yüklenir — diğer günlerde açılışı yavaşlatmaz
   let tzBetik = null;
-  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=202611230920'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
+  const telsizYukle = () => window.UmalTelsiz ? Promise.resolve() : (tzBetik = tzBetik || new Promise((ok, red) => { const e = document.createElement('script'); e.src = '../telsiz.js?v=202611230925'; e.onload = ok; e.onerror = () => { tzBetik = null; red(new Error('telsiz')); }; document.head.appendChild(e); }));
   async function tzoAc() {
     if (!TZO.g) return; if (!window.UmalTelsiz) { try { await telsizYukle(); } catch (e) { uyar('Telsiz yüklenemedi. İnternet bağlantını kontrol edip yeniden dene.'); return; } }
     if (!window.UmalTelsiz) return; goster('s-telsiz'); window.scrollTo(0, 0);
@@ -436,7 +436,8 @@
       foto: fk => r_('umal_ogrenci_telsiz_fotolar', { p_bilet: TZO.b, p_fk: fk }),
       sayimVar: id => r_('umal_ogrenci_sayim_var', { p_bilet: TZO.b, p_sayim: id }),
       sayim: baskan,
-      mola: baskan ? dk => r_('umal_ogrenci_telsiz_mola', { p_bilet: TZO.b, p_dk: dk }) : null,   // K-908: gezi başkanı mola başlatır
+      mola: baskan ? dk => r_('umal_ogrenci_telsiz_mola', { p_bilet: TZO.b, p_dk: dk }) : null,
+      yerler: baskan ? async () => { await gzYukle(); const i = (GZ.B || []).findIndex(x => x.anahtar === (TZO.g || {}).anahtar); bskAc(i < 0 ? 0 : i); } : null,   // K-932: gezi başkanı telsizden koltukları düzenler   // K-908: gezi başkanı mola başlatır
       konum: (la, lo, ac) => r_('umal_ogrenci_telsiz_konum', { p_bilet: TZO.b, p_lat: la, p_lng: lo, p_acc: ac }),
       kapandi: () => { TZO.g = null; TZO.b = ''; if (TZO.vr) { TZO.vr.kapat(); TZO.vr = null; } anaCiz(true); } });
   }
@@ -637,7 +638,7 @@
     if ($('#ilKatil')) $('#ilKatil').onclick = () => gonder(true);
     if ($('#ilVaz')) $('#ilVaz').onclick = async () => { if (!await onayla('Gezi başvurunu geri çekmek istiyor musun?')) return; gonder(false); };
   }
-  function gzKutu() { return (GZ.L || []).map((d, i) => gzKutu1(d, i)).join('') + ilKutu() + (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
+  function gzKutu() { return (GZ.B || []).map((d, i) => `<button data-git="bsk" data-bsk="${i}" class="genis no-ana gz-ana bsk-ana"><i class="ik" style="--c:#ffd166">${BSK_IK}</i><span><b>Gezi Başkanı · ${esc(d.ad || 'Gezi')}</b><small>Otobüslerdeki yerleri düzenle</small></span></button>`).join('') + (GZ.L || []).map((d, i) => gzKutu1(d, i)).join('') + ilKutu() + (GZ.E || []).map((d, i) => `<button data-git="gbil" data-gb="${i}" class="genis no-ana gb-uyari"><i class="gb-u-ik">${UYARI_IK}</i><span><b>Gezi için eksik bilgilerini tamamla</b><small>${esc(d.ad || 'Gezi')} · eksik: ${esc(d.eksik.map(k => GB_KISA[k] || k).join(', '))}</small></span><em>Tamamla</em></button>`).join(''); }   // K-716bj: kırmızı uyarı
   // K-716bx: gezi katılımcısı eksik bilgilerini (T.C., doğum tarihi, telefon) kendisi girer; idare panelinde hemen görünür
   let GB = { i: 0, mesaj: '', tur: '' };
   function gbAc(i) { GB = { i: i || 0, mesaj: '', tur: '' }; gbCiz(); goster('s-gbil'); window.scrollTo(0, 0); }
