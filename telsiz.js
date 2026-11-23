@@ -249,7 +249,7 @@
     function otobusSayfa(o, sek0) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
       var bosK = null, D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null, PL0 = PLC[o] || null;
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-      var kok = null, kapat_ = null, PL = PL0, secK = null, gorSec = null, sek = cfg.plan ? 'plan' : 'say', Dimza = '';   // K-873: plan ve sayım tek sayfada
+      var kok = null, kapat_ = null, PL = PL0, secK = null, gorSec = null, sek = cfg.plan ? 'plan' : 'say', Dimza = '', BK = {};   // K-955: BK = sunucuya giden ama henüz dönmeyen Geldi/geri al işaretleri   // K-873: plan ve sayım tek sayfada
       // K-875: telsizdeki koltuk kartı — paneldeki kartla aynı işlemler (Yerini değiştir, ara / telefon gir, Mesaj, Başka otobüse al, Koltuktan çıkar)
       var tasiK = null;
       var kartHtml = function (k) { var ogr = k.tur === 'ogr', dz = !!(cfg.duzenle && P), B = [];
@@ -336,8 +336,8 @@
       var sayBagla = function () { var V = sayV();
         var sb = kok.querySelector('[data-sbas]'); if (sb) sb.onclick = async function () { if (D && D.sayim && !D.sayim.bitti && !await onayla('Otobüs ' + o + ' sayımı baştan başlasın mı? Şimdiye kadar sayılanlar sıfırlanır.')) return;
           sb.disabled = true; var r = await cfg.sayim.baslat(o); if (!r || !r.ok) { sb.disabled = false; uyar((r && r.hata) || 'Başlatılamadı'); return; } await yenile(); yukle(); };
-        kok.querySelectorAll('[data-svar]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); b.disabled = true; var k = V.K.filter(function (x) { return x.no === b.dataset.svar; })[0]; if (k) { k.var = true; k.kim = 'ogretmen'; } yeniden(); var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.svar, true); if (!r || !r.ok) uyar((r && r.hata) || 'Kaydedilemedi'); await yenile(); yukle(); }; });
-        kok.querySelectorAll('[data-syok]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); b.disabled = true; var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.syok, false); if (!r || !r.ok) uyar((r && r.hata) || 'Kaydedilemedi'); await yenile(); yukle(); }; });
+        kok.querySelectorAll('[data-svar]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); b.disabled = true; var k = V.K.filter(function (x) { return x.no === b.dataset.svar; })[0]; if (k) { k.var = true; k.kim = 'ogretmen'; } BK[b.dataset.svar] = { v: true, t: Date.now(), s: D.sayim.id }; yeniden(); var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.svar, true); if (!r || !r.ok) { delete BK[b.dataset.svar]; uyar((r && r.hata) || 'Kaydedilemedi'); } await yenile(); yukle(); }; });
+        kok.querySelectorAll('[data-syok]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); b.disabled = true; BK[b.dataset.syok] = { v: false, t: Date.now(), s: D.sayim.id }; var r = await cfg.sayim.isaret(D.sayim.id, b.dataset.syok, false); if (!r || !r.ok) { delete BK[b.dataset.syok]; uyar((r && r.hata) || 'Kaydedilemedi'); } await yenile(); yukle(); }; });
         kok.querySelectorAll('[data-sara]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); b.disabled = true; var r = await cfg.sayim.ara(D.sayim.id, b.dataset.sara); b.textContent = r && r.ok ? (r.tekrar ? 'Az önce gitti' : 'Gönderildi') : 'Gitmedi'; }; });
         kok.querySelectorAll('[data-smsj]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var no = b.dataset.smsj, x = kisiNo(no) || V.K.filter(function (y) { return y.no === no; })[0] || { no: no }; cfg.mesaj({ tur: 'ogr', no: no, ad: x.ad || '', tel: x.tel || '' }); }; });
         kok.querySelectorAll('[data-skol]').forEach(function (r) { r.onclick = function () { secK = +r.dataset.skol; planCiz(); var sy = kok.closest('.tz-sayfa'); if (sy) sy.scrollTo({ top: 0, behavior: 'smooth' }); }; });
@@ -347,7 +347,8 @@
           (!D ? '<div class="tz-kdur">Yükleniyor…</div>' : sayUst() + sayAlt());
         sayBagla();
       };
-      var yenile = async function () { if (!cfg.sayim) return; var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { var im = JSON.stringify(r); D = r; if (im !== Dimza) { Dimza = im; if (kok && !kapali) yeniden(); } } };
+      var yenile = async function () { if (!cfg.sayim) return; var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { (r.kisiler || []).forEach(function (k) { var b = BK[k.no]; if (!b) return; if (!r.sayim || r.sayim.id !== b.s || !!k.var === b.v || Date.now() - b.t > 30000) delete BK[k.no]; else { k.var = b.v; if (b.v && !k.kim) k.kim = 'ogretmen'; } });   // K-955: sunucu gecikirse eski cevap Geldi'yi geri almasın
+        var im = JSON.stringify(r); D = r; if (im !== Dimza) { Dimza = im; if (kok && !kapali) yeniden(); } } };
       kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); if (cfg.plan) { var sy_ = p.querySelector('.tz-sayfa'); if (sy_) sy_.classList.add('tam'); } var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); } }); });
       ciz();   // önbellekte plan varsa anında; yenisi arka planda (pencerenin açılışı takılmasın)
       setTimeout(function () { if (kapali) return; if (cfg.plan) planYukle(); yenile(); }, 260);
