@@ -611,3 +611,18 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 }
   #ogrAlt button[hidden] { display: none !important; }
   body.ozel.ogr-alt #ogrAlt { grid-template-columns: repeat(3, 1fr); }
+/* K-938: otobüsteki yolcular */
+.gzy-ac { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer; }
+.gzy-ac span { display: flex; flex-direction: column; } .gzy-ac small { color: #9fb2cf; font-size: 12.5px; }
+.gzy { padding: 12px 10px; } .gzy-ust { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .gzy-ust > span { flex: 1 1 auto; min-width: 0; } .gzy-ust b { display: block; } .gzy-ust small { display: block; color: #9fb2cf; font-size: 12px; } .gzy-ust .ikincil { flex: none; }
+.gzy-bas, .gzy-s { display: grid; grid-template-columns: 16px 1fr 1fr 6px 1fr 1fr; gap: 4px; align-items: stretch; }
+.gzy-s.bes { grid-template-columns: 16px 1fr 1fr 1fr 1fr 1fr; }
+.gzy-bas { font-size: 10.5px; color: #7f93b3; font-weight: 700; letter-spacing: .04em; margin-bottom: 4px; } .gzy-bas span:nth-child(2) { grid-column: 2 / 4; text-align: center; } .gzy-bas span:nth-child(4) { grid-column: 5 / 7; text-align: center; }
+.gzy-s { margin-bottom: 4px; } .gzy-n { font-size: 10.5px; color: #7f93b3; font-weight: 800; display: grid; place-items: center; }
+.gzy-k { min-width: 0; border: 1px solid #24406a; background: #0d1a2e; border-radius: 8px; padding: 4px 5px; position: relative; }
+.gzy-k i { position: absolute; top: 2px; right: 4px; font-style: normal; font-size: 9px; color: #6f86a8; font-weight: 700; }
+.gzy-k b { display: block; font-size: 11.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px; }
+.gzy-k small { display: block; font-size: 10px; color: #8aa0c2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gzy-k.ben { border-color: #ff5b6e; background: rgba(255,91,110,.16); } .gzy-k.ben b { color: #ff8a95; }
+.gzy-k.gor { border-color: rgba(255,209,102,.5); background: rgba(255,209,102,.08); } .gzy-k.gor small { color: #e8c66b; }
+.gzy-k.bos { opacity: .45; } .gzy-b { min-height: 1px; }

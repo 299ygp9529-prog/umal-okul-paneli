@@ -736,7 +736,37 @@
       <div class="gzt-koc">${canak ? '<img class="gzt-abide" src="../gezi-abide-bilet.png" alt="">' : ''}<div><small>OTOBÜS</small><b>${d.otobus.no}</b></div>${d.numarasiz ? `<div class="gzt-kol"><small>YERİN</small><i class="gzt-isaret"></i><em>Krokide kırmızı</em></div>` : `<div class="gzt-kol"><small>KOLTUK</small><b>${d.koltuk}</b></div>`}<div class="gzt-yer"><span>${d.numarasiz ? '' : esc(gzYerAd(yer).toLocaleUpperCase(tr))}</span><span>${esc(d.otobus.plaka || '')}</span></div></div></div>
       ${d.gun && d.otobus.tel ? `<a class="gz-ara" href="tel:${esc(String(d.otobus.tel).replace(/[^\d+]/g, ''))}"><i>${svg('telefon')}</i><span><small>Kaybolursan ya da otobüsü bulamazsan</small><b>Şoförü ara${d.otobus.sofor ? ' · ' + esc(d.otobus.sofor) : ''}</b><em>${esc(d.otobus.tel)}</em></span></a>` : ''}
       ${gzOtobus(P, (x, j) => `<i class="k ${x.n === d.koltuk ? 'ben' : ''} y-${x.yer} ${j < 2 ? 'sol' : 'sag'}">${x.n === d.koltuk ? 'SEN' : d.numarasiz ? '' : x.n}</i>`, d.numarasiz ? 'kirmizi' : '', d.otobus)}
-      <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.numarasiz ? `${d.otobus.no}. otobüste krokide kırmızı SEN yazan koltuğa otur.` : `${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur.`} Değişiklik olursa burada hemen görünür.</p>${gzProgram(d)}`;
+      <p class="soluk kucuk" style="text-align:center">Otobüse binerken ${d.numarasiz ? `${d.otobus.no}. otobüste krokide kırmızı SEN yazan koltuğa otur.` : `${d.otobus.no}. otobüse, ${d.koltuk} numaralı koltuğa (${esc(gzYerAd(yer).toLocaleLowerCase(tr))}) otur.`} Değişiklik olursa burada hemen görünür.</p>${gzYolcuKutu(d)}${gzProgram(d)}`;
+    gzYolcuBagla(d);
+  }
+  // K-938: otobüsteki yolcular — öğrenci kendi otobüsünde kimin nerede oturduğunu görür (yalnız ad, sınıf; görevlide görev)
+  const GZY = { a: '', acik: false, L: null, hata: '' };
+  const GZY_TUR = { ogt: 'Öğretmen', idr: 'İdareci', bel: 'Belediye', reh: 'Rehber', diger: 'Görevli' };
+  function gzYolcuKutu(d) {
+    if (GZY.a !== d.anahtar + ':' + d.otobus.no) { GZY.a = d.anahtar + ':' + d.otobus.no; GZY.acik = false; GZY.L = null; GZY.hata = ''; }
+    if (!GZY.acik) return `<button type="button" class="kart gzy-ac" id="gzyAc"><i class="ik" style="--c:#e8c66b">${svg('otobus')}</i><span><b>Otobüste kimler var?</b><small>${d.otobus.no}. otobüste kimin nerede oturduğunu gör</small></span></button>`;
+    if (GZY.hata) return `<div class="kart gzy"><b>Otobüsteki yolcular</b><p class="soluk kucuk">${esc(GZY.hata)}</p><button class="ikincil kucuk" id="gzyYen">Yeniden dene</button></div>`;
+    if (!GZY.L) return '<div class="kart gzy"><b>Otobüsteki yolcular</b><p class="soluk kucuk">Yükleniyor…</p></div>';
+    const Y = {}; GZY.L.forEach(y => { Y[y.k] = y; });
+    const parca = ad => baslik(ad || '').split(' ').filter(Boolean), ilk = ad => parca(ad)[0] || '', son = ad => { const p = parca(ad); return p.length > 1 ? p[p.length - 1][0] + '.' : ''; };
+    const hucre = s => { if (!s || s.kapi) return '<div class="gzy-b"></div>'; const y = Y[s.n];
+      return `<div class="gzy-k ${y ? (y.ben ? 'ben' : y.gorev ? 'gor' : '') : 'bos'}">${d.numarasiz ? '' : `<i>${s.n}</i>`}${y ? `<b>${y.ben ? 'SEN' : esc(ilk(y.ad))}</b><small>${esc([y.ben || y.gorev ? '' : son(y.ad), y.gorev ? (GZY_TUR[y.gorev] || 'Görevli') : (y.sinif || '')].filter(Boolean).join(' · '))}</small>` : '<b class="soluk">boş</b>'}</div>`; };
+    const satir = (r, i) => { const orta = r[2] && !r[2].kapi; return `<div class="gzy-s ${orta ? 'bes' : ''}"><span class="gzy-n">${i + 1}</span>${hucre(r[0])}${hucre(r[1])}${orta ? hucre(r[2]) : '<span class="gzy-kor"></span>'}${hucre(r[3])}${hucre(r[4])}</div>`; };
+    const ogr = GZY.L.filter(y => !y.gorev).length;
+    return `<div class="kart gzy"><div class="gzy-ust"><span><b>Otobüs ${d.otobus.no} yolcuları</b><small>${ogr} öğrenci${GZY.L.length > ogr ? ' · ' + (GZY.L.length - ogr) + ' görevli' : ''}</small></span><button class="ikincil kucuk" id="gzyKap">Gizle</button></div>
+      <div class="gzy-bas"><span></span><span>Sol</span><span></span><span>Sağ</span></div>${gzPlan(d.otobus.kapasite).map(satir).join('')}<p class="soluk kucuk" style="margin:8px 0 0">1. sıra en öndeki sıradır. Yerler değişirse Gizle'ye basıp yeniden açın.</p></div>`;
+  }
+  async function gzYolcuYukle(d) {
+    GZY.hata = ''; GZY.L = null; gzCiz();
+    let r = null; try { r = await sb.rpc('umal_ogrenci_gezi_yolcular', { p_no: S.no, p_kod: S.kod, p_anahtar: d.anahtar }); } catch (e) { r = { error: e }; }
+    const x = r && r.data; if (!x || !x.ok) GZY.hata = (x && x.hata) || (r && r.error && /could not find|does not exist|404/i.test(r.error.message || '') ? 'Bu özellik henüz açılmadı.' : 'Liste alınamadı; internetini kontrol edip yeniden dene.');
+    else GZY.L = x.yolcular || [];
+    if (GZ.d === d || (GZ.d && GZ.d.anahtar === d.anahtar)) gzCiz();
+  }
+  function gzYolcuBagla(d) {
+    const a = $('#gzyAc'); if (a) a.onclick = () => { GZY.acik = true; gzYolcuYukle(d); };
+    const k = $('#gzyKap'); if (k) k.onclick = () => { GZY.acik = false; gzCiz(); };
+    const y = $('#gzyYen'); if (y) y.onclick = () => gzYolcuYukle(d);
   }
   function gzProgram(d) {   // ilandaki gezi programı biletle birlikte de görünür
     const I0 = (GZ.I || []).find(x => x.anahtar === d.anahtar) || {}, I = { program: (d.program && d.program.length ? d.program : I0.program) || [], aciklama: d.aciklama || I0.aciklama || '' }, L = I.program.filter(x => x && x.t);
