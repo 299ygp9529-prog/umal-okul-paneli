@@ -478,7 +478,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (d.tf === 'afis') {   // K-959b: görevliler her açılışta yeniden okunur (Sınav takviminde yeni atananlar da gelsin)
       try { const { data: tg } = await C.sb.from('umal_ayarlar').select('deger').eq('anahtar', 'telafi_gorev').maybeSingle(); TF.gorev = ((tg && tg.deger ? JSON.parse(tg.deger) : null) || {}).oturum || {}; } catch (e) {}
       const P_ = TF.P, n_ = P_.gunler.reduce((t, g) => t + g.slot.filter(s => { const o = (TF.gorev || {})[g.tarih + '|' + parseInt(s.ders, 10)] || {}; return (o.gozcu || []).length || (o.sorumlu || []).length; }).length, 0);
-      if (!n_) bilgi('Bu programda görevli öğretmen atanmamış; afişte görevli sütunu çıkmaz. Sınav takvimi › Mazeret sınavları › "Görevlileri otomatik ata" ile atayıp kaydedin.');
+      if (!n_) uyar('Bu programda görevli öğretmen atanmamış; afişte görevli sütunu çıkmaz. Sınav takvimi › Mazeret sınavları › "Görevlileri otomatik ata" ile atayıp kaydedin.');
       tfAfis(); return true; }
     if (d.tf === 'aktar') { await tfAktar(); return true; }
     if (d.tf === 'beden') { const [n, o] = tfBedenHepsi(); TF.degisti = true; tfCiz(); if (n) bilgi(`${o} oturumun sınav yerine, o saatte beden eğitimi dersinde olan ${n} sınıf yazıldı. Kontrol edip kaydedin.`, 'yesil'); else uyar('Telafi oturumlarının hiçbirinde beden eğitimi dersi olan sınıf yok.'); return true; }
