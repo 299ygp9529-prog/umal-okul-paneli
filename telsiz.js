@@ -249,7 +249,7 @@
     function otobusSayfa(o, sek0) {   // bir otobüs: toplanma + sayım (eksikler önde: foto, ad, koltuk · Geldi · Neredesin?)
       var bosK = null, D = null, kapali = false, zam = null, gelenAcik = false, T = toplanmalar(), m = null, PL0 = PLC[o] || null;
       for (var i = T.length - 1; i >= 0; i--) { var Lo = obListe(T[i].konum); if (!Lo || Lo.indexOf(o) >= 0) { m = T[i]; break; } }
-      var kok = null, kapat_ = null, PL = PL0, secK = null, gorSec = null, sek = cfg.plan ? 'plan' : 'say', Dimza = '', BK = {};   // K-955: BK = sunucuya giden ama henüz dönmeyen Geldi/geri al işaretleri   // K-873: plan ve sayım tek sayfada
+      var kok = null, kapat_ = null, PL = PL0, secK = null, gorSec = null, sek = cfg.plan ? 'plan' : 'say', Dimza = '', BK = {}, SF = (S.sfoto = S.sfoto || {}), SFO = (S.sfotoO = S.sfotoO || {});   // K-956: SF = yoklama fotoğrafları (bir kez)   // K-955: BK = sunucuya giden ama henüz dönmeyen Geldi/geri al işaretleri   // K-873: plan ve sayım tek sayfada
       // K-875: telsizdeki koltuk kartı — paneldeki kartla aynı işlemler (Yerini değiştir, ara / telefon gir, Mesaj, Başka otobüse al, Koltuktan çıkar)
       var tasiK = null;
       var kartHtml = function (k) { var ogr = k.tur === 'ogr', dz = !!(cfg.duzenle && P), B = [];
@@ -347,8 +347,12 @@
           (!D ? '<div class="tz-kdur">Yükleniyor…</div>' : sayUst() + sayAlt());
         sayBagla();
       };
-      var yenile = async function () { if (!cfg.sayim) return; var r = null; try { r = await cfg.sayim.durum(o); } catch (e) {} if (r && r.ok) { (r.kisiler || []).forEach(function (k) { var b = BK[k.no]; if (!b) return; if (!r.sayim || r.sayim.id !== b.s || !!k.var === b.v || Date.now() - b.t > 30000) delete BK[k.no]; else { k.var = b.v; if (b.v && !k.kim) k.kim = 'ogretmen'; } });   // K-955: sunucu gecikirse eski cevap Geldi'yi geri almasın
-        var im = JSON.stringify(r); D = r; if (im !== Dimza) { Dimza = im; if (kok && !kapali) yeniden(); } } };
+      var yenile = async function () { if (!cfg.sayim) return; var r = null;
+        try { if (cfg.sayim.hafif && !S.hafifYok) { r = await cfg.sayim.hafif(o); if (r && !r.ok) { if (/function|schema|could not find/i.test(r.hata || '')) S.hafifYok = true; r = null; } }   // K-956: 4 sn'lik yenileme fotoğrafsız
+          if (r && cfg.sayim.fotolar && !SFO[o]) { SFO[o] = 1; cfg.sayim.fotolar(o).then(function (f) { if (f && f.ok) { Object.keys(f.foto || {}).forEach(function (n) { SF[n] = f.foto[n]; }); Dimza = ''; if (!kapali) yenile(); } else SFO[o] = 0; }, function () { SFO[o] = 0; }); }
+          if (!r) r = await cfg.sayim.durum(o); } catch (e) {}
+        if (r && r.ok) { (r.kisiler || []).forEach(function (k) { var b = BK[k.no]; if (!b) return; if (!r.sayim || r.sayim.id !== b.s || !!k.var === b.v || Date.now() - b.t > 30000) delete BK[k.no]; else { k.var = b.v; if (b.v && !k.kim) k.kim = 'ogretmen'; } });   // K-955: sunucu gecikirse eski cevap Geldi'yi geri almasın
+        var im = JSON.stringify(r); if (r.hafif) (r.kisiler || []).forEach(function (k) { if (SF[k.no]) k.foto = SF[k.no]; }); D = r; if (im !== Dimza) { Dimza = im; if (kok && !kapali) yeniden(); } } };
       kapat_ = perde('<div data-sk></div>', function (p, kapat) { kok = p.querySelector('[data-sk]'); if (cfg.plan) { var sy_ = p.querySelector('.tz-sayfa'); if (sy_) sy_.classList.add('tam'); } var kapB = p.querySelector('.tz-kapat'); if (kapB) kapB.addEventListener('click', function () { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); }); p.addEventListener('click', function (e) { if (e.target === p) { kapali = true; clearInterval(zam); if (vrIz) vrIz.kapat(); } }); });
       ciz();   // önbellekte plan varsa anında; yenisi arka planda (pencerenin açılışı takılmasın)
       setTimeout(function () { if (kapali) return; if (cfg.plan) planYukle(); yenile(); }, 260);
@@ -536,7 +540,7 @@
       else if (P) { if (r.yetki) { S.yetki = r.yetki; planOnYukle(); } if (r.obsay) S.obsay = r.obsay; S.susL = r.sessiz || []; if (r.ozet) { cfg.gezi = Object.assign({}, cfg.gezi || {}, r.ozet); } if (r.sayimlar) S.sayimlar = r.sayimlar; }
       else { S.sayim = r.sayim || null; sayCiz(); if (!!r.sessiz !== S.sessiz || !!r.kilit !== !!S.kilit) { S.sessiz = !!r.sessiz; S.kilit = !!r.kilit; alt.dataset.d = ''; altCiz(); } }
       if (P && typeof r.kilit === 'boolean' && r.kilit !== !!cfg.kilitli) { cfg.kilitli = r.kilit; if (typeof kilitYaz === 'function') kilitYaz(); }   // K-879
-      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); if (L.length) S.hareket = Date.now(); }
+      if (degisti) { gezCiz(); akisCiz(); fotoYukle(); if (L.length && P) S.hareket = Date.now(); }   // K-956: öğrencide gelen mesaj hızlı yenilemeyi tetiklemez (kendi hareketi tetikler)
       topCiz();
       if (SK && SK.olc) SK.olc();   // alt sekme sonradan görünürse kutu onun üstüne çekilir
     }
@@ -627,7 +631,7 @@
     var yb = ekran.querySelector('[data-tzyok]'); if (yb) yb.onclick = function () { otobusSayfa(benimOto() || +cfg.sayim.otobus || 0); };   // K-822: gezi başkanı
     if (P && cfg.sayim) topEl.onclick = function (e) { var b = e.target.closest('[data-tzob]'); if (b) { var o = +b.dataset.tzob; obSec(S.obSec === o ? 0 : o); } };   // K-848: dokun → o otobüsün telsizi; tekrar dokun → bütün gezi
     if (P) { ak.onclick = function (e) { if (e.target.closest('.tz-harita')) return; var t = e.target.closest('[data-tzm]'); if (t) kisiAc(t.dataset.tzm); }; ekran.querySelector('.tz-sus-dug').onclick = susListe; }
-    function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(true); dongu(); }, d.hidden ? 15000 : (Date.now() - (S.hareket || 0) < 30000 ? 4000 : 10000)); }   // K-954: son 30 sn'de mesaj/hareket yoksa 10 sn'de bir sorar
+    function dongu() { clearTimeout(S.zam); if (S.olu) return; S.zam = setTimeout(async function () { if (!d.hidden && (!cfg.etkin || cfg.etkin())) await yukle(true); dongu(); }, (d.hidden ? 15000 : (Date.now() - (S.hareket || 0) < 30000 ? 4000 : 10000)) + Math.floor(Math.random() * 1500)); }   // K-956: telefonlar aynı anda sormasın   // K-954: son 30 sn'de mesaj/hareket yoksa 10 sn'de bir sorar
     function dur() { clearTimeout(S.zam); }
     var gor = function () { if (!d.hidden && !S.olu && S.acik) { yukle(); dongu(); } }; d.addEventListener('visibilitychange', gor);
     gezCiz(); altCiz(); akisCiz(); topCiz(); if (SK && SK.olc) SK.olc();

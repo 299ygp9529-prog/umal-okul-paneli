@@ -654,6 +654,7 @@
       kisi: no => r_('umal_gezi_telsiz_kisi', { p_anahtar: g.anahtar, p_no: no }),
       foto: fk => r_('umal_gezi_telsiz_fotolar', { p_anahtar: g.anahtar, p_fk: fk }),
       sayim: { baslat: o => r_('umal_gezi_sayim_baslat', { p_anahtar: g.anahtar, p_otobus: o }), durum: o => r_('umal_gezi_sayim_durum', { p_anahtar: g.anahtar, p_otobus: o }),
+        hafif: o => r_('umal_gezi_sayim_durum_hafif', { p_anahtar: g.anahtar, p_otobus: o }), fotolar: o => r_('umal_gezi_sayim_fotolar', { p_anahtar: g.anahtar, p_otobus: o }),   // K-956: fotoğrafsız yoklama, fotoğraflar bir kez
         isaret: (id, no, v) => r_('umal_gezi_sayim_isaret', { p_sayim: id, p_no: no, p_var: v }), ara: (id, no) => r_('umal_gezi_sayim_ara', { p_sayim: id, p_no: no }) },   // K-817
       konum: (la, lo, ac) => r_('umal_gezi_telsiz_konum', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac }),
       toplanma: (la, lo, ac, sa, no, ob) => r_('umal_gezi_telsiz_toplanma', { p_anahtar: g.anahtar, p_lat: la, p_lng: lo, p_acc: ac, p_saat: sa, p_not: no || null, p_otobusler: ob && ob.length ? ob : null }),
@@ -5458,7 +5459,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
         b.classList.toggle('sy-v', v === true); b.classList.toggle('sy-y', v === false); });
       if (el) { if (!d_) el.innerHTML = ''; else { const K = d_.kisiler || [], g = K.filter(x => x.var).length; el.innerHTML = `${KY_IK.tamam}Yoklama <b>${g}/${K.length}</b>${d_.sayim.bitti ? ' · tam' : ''}`; el.classList.toggle('tam', !!d_.sayim.bitti); } } };
     const sayYukle = async (zorla) => { const o_ = otoBul(aktif); if (!o_ || !TZ.L.some(x => x.anahtar === GZ_ANAH)) return; const x = SAY[o_.id]; if (!zorla && x && Date.now() - x.z < 5000) return;
-      SAY[o_.id] = { z: Date.now(), d: x && x.d }; let r = null; try { ({ data: r } = await sb.rpc('umal_gezi_sayim_durum', { p_anahtar: GZ_ANAH, p_otobus: +o_.no })); } catch (e) { return; }
+      SAY[o_.id] = { z: Date.now(), d: x && x.d }; let r = null; try { if (!window.__gzHafifYok) { let er; ({ data: r, error: er } = await sb.rpc('umal_gezi_sayim_durum_hafif', { p_anahtar: GZ_ANAH, p_otobus: +o_.no })); if (er) { r = null; if (/function|schema|could not find/i.test(er.message || '')) window.__gzHafifYok = true; } }   // K-956: fotoğrafsız
+        if (!r) ({ data: r } = await sb.rpc('umal_gezi_sayim_durum', { p_anahtar: GZ_ANAH, p_otobus: +o_.no })); } catch (e) { return; }
       if (r && r.ok) { SAY[o_.id] = { z: Date.now(), d: r }; if (D.bolum === 'gezi') sayBoya(); } };
     clearInterval(window.__gzSayZ); window.__gzSayZ = setInterval(() => { if (D.bolum !== 'gezi' || document.hidden) return; sayYukle(true); }, 8000);
     // K-867: telsizi o an açık olanlar — koltuktaki minik telsiz yeşil yanar; telsiz açık değilse ya da bağlantı kurulamadıysa simgeler gizli kalır
