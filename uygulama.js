@@ -1553,6 +1553,7 @@
     ac(ilk.id);
   }
   let yenileZamanlayici = null;
+  window.umalTelafiOtoAta = () => { D._tfOtoAc = true; ac('takvim'); };   // K-958b: Telafi Sınavı ekranından otomatik atama
   window.umalTelafiGorevAc = (tarih, ders) => { D._tfGorevAc = tarih + '|' + parseInt(ders, 10); ac('takvim'); };   // K-716cs: telafi programından görevli seçimi
   function ac(id) {
     const b = BOLUMLER.find(x => x.id === id && bolIzin(x));
@@ -6700,7 +6701,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611240658'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611240702'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
@@ -6735,7 +6736,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
     if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611200730');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611240658');   // K-625: idari işlemler
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611240702');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
@@ -7309,7 +7310,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           let eklenen = 0; L.forEach(r => { const sv = {}; Object.entries(r.sv).forEach(([v, ad]) => { sv[v] = { ad, yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; });
             if (E.sinavlar.some(x => x.tarih === r.tarih && x.n === r.n)) { const x = E.sinavlar.find(x => x.tarih === r.tarih && x.n === r.n); Object.assign(x.sv, sv); } else E.sinavlar.push({ id: nid++, tarih: r.tarih, n: r.n, sv }); eklenen++; });
           degisti = true; ciz(); const tb = $('#tdBilgi'); if (tb) tb.innerHTML = `<span class="yeşil">${eklenen} sınav aktarıldı — kontrol edip Kaydet deyin</span>`; };
-        try { if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611240658'; sc.onload = ok; sc.onerror = () => red(new Error('okuyucu yüklenemedi')); document.head.appendChild(sc); }); } catch (e) { uyar(e.message); return; }
+        try { if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611240702'; sc.onload = ok; sc.onerror = () => red(new Error('okuyucu yüklenemedi')); document.head.appendChild(sc); }); } catch (e) { uyar(e.message); return; }
         if (b.id === 'tdYapistir') { pencereAc(`<h2 style="margin-top:0">Takvimi yapıştır</h2><div class="soluk kucuk" style="margin-bottom:8px">Excel'de takvim tablosunu başlık satırıyla birlikte seçip kopyalayın, buraya yapıştırın.</div><textarea id="tdYap" rows="10" style="width:100%;box-sizing:border-box" data-bicim="yok"></textarea><div class="dugmeler"><button class="birincil" id="tdYapOk">Aktar</button></div>`);
           $('#tdYapOk').onclick = () => { const t = $('#tdYap').value; $('#pencere').classList.add('gizli'); isle(window.UmalIdari.tabloOku(t)); }; return; }
         const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.xlsx,.xls,.docx,.pdf,.csv,.txt';
@@ -7831,6 +7832,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     if (D.rol === 'bas' || D.rol === 'yonetici') {   // görevli atanmış oturumların listesi/saati/yeri değiştiyse öğretmenlere giden özet de güncellenir
       let d_ = false; tfOturum.forEach((x, i) => { const k = tfK(x), o = tfGorev.oturum[k]; if (!o) return; const y = tfOzet(i); if (JSON.stringify(y) !== JSON.stringify(o)) { tfGorev.oturum[k] = y; d_ = true; } });
       if (d_) tfGorevKaydet().catch(() => {}); }
+    if (D._tfOtoAc) { D._tfOtoAc = false; setTimeout(() => { if (typeof tfOtoAta === 'function') tfOtoAta(); }, 300); }   // K-958b
     if (D._tfGorevAc) { const k_ = D._tfGorevAc; D._tfGorevAc = null; setTimeout(() => { const i = tfOturum.findIndex(x => tfK(x) === k_); if (i >= 0) tfGorevliSec(i); else uyar('Bu telafi oturumu Sınav takviminde bulunamadı; programı kaydettiğinizden emin olun.'); }, 300); }
     const tfDurum = x => { const k = tfK(x), o = tfGorev.oturum[k] || {}, y = tfYk[k];
       if (y && Array.isArray(y.liste)) { const g = y.liste.filter(z => z.d === 'g').length, ek = y.liste.filter(z => z.ek).length, kim = (o.gozcu || []).find(z => String(z.eposta).toLowerCase() === String(y.gonderen || '').toLowerCase());
