@@ -3113,3 +3113,10 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 #cikis svg { flex: none; }
 
 @media (max-width: 760px) { #cikis { padding: 7px 12px; gap: 5px; } #cikis svg { width: 16px; height: 16px; } }
+
+/* 25 Kasım 2026: Yenile de Çıkış gibi yazılı düğme (masaüstü); telefonda yalnız simge kalır */
+@media (min-width: 761px) {
+  #yenileDug { display: inline-flex; align-items: center; gap: 7px; width: auto; height: auto; padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 15px; }
+  #yenileDug svg { width: 18px; height: 18px; flex: none; }
+}
+@media (max-width: 760px) { #yenileDug .yd-yazi { display: none; } }
