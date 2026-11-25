@@ -185,6 +185,19 @@
     const px = 6, y = i < 0 ? L.pY : L.rY + i * L.rH, hh = i < 0 ? L.pH : L.rH;
     return tuval(cikar(h.tam, h.H, L.cSoru - 1, y - 1, (L.x1 + 1) - (L.cSoru - 1), hh + 2, px)).toDataURL('image/jpeg', 0.85);
   }
+  // K-963: puanlar cihazın içinde okunur (yerel-oku.js); yapay zekâ beklenmez
+  let yerelSoz = null;
+  function yerelYukle() { if (window.UmalYerelOku && window.UmalYerelOku._hazir) return Promise.resolve(window.UmalYerelOku); if (yerelSoz) return yerelSoz;
+    yerelSoz = new Promise((ok, red) => { if (window.UmalYerelOku) return ok(); const sc = document.createElement('script'); sc.src = 'yerel-oku.js?v=20261125a'; sc.onload = ok; sc.onerror = () => red(new Error('Okuyucu yüklenemedi; internet bağlantısını kontrol edin.')); document.head.appendChild(sc); })
+      .then(() => window.UmalYerelOku.modelYukle('yerel-model.json?v=20261125a')).then(() => { window.UmalYerelOku._hazir = true; return window.UmalYerelOku; })
+      .catch(e => { yerelSoz = null; throw Object.assign(e, { atlas: true }); });
+    return yerelSoz; }
+  const bekle = () => new Promise(r => setTimeout(r, 30));   // ilerleme yazısı ekrana çizilsin
+  async function yerelOkuKarekod(h, n) {
+    const Y = await yerelYukle(), px = 7, xs = L.cSoru - 1, ys = L.pY - 1, xe = L.x1 + 1, ye = L.rY + n * L.rH + 1;
+    const id = cikar(h.tam, h.H, xs, ys, xe - xs, ye - ys, px);
+    return Y.oku(id, { n, q: L.sN, rY: (L.rY - ys) * px, rh: L.rH * px, pY: (L.pY - ys) * px, sutunlar: Array.from({ length: L.sN + 1 }, (_, i) => (L.cSoru + L.sW * i - xs) * px), topX: [(L.cTop - xs) * px, (L.x1 - xs) * px] });
+  }
   async function oku(sb, dosya, ilerle) {
     const h = await hazirla(dosya, ilerle);
     ilerle && ilerle('Kâğıt Atlas\'ta aranıyor…');
@@ -192,9 +205,8 @@
     if (e1 || !k || !k.ok) throw Object.assign(new Error((k && k.hata) || (e1 && e1.message) || 'Kâğıt bulunamadı'), { atlas: true });
     const n = k.satirlar.length;
     ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`, true);
-    const { data: r, error: e2 } = await sb.functions.invoke('atlas-not-oku', { body: { resim: tabloResmi(h, n), satir: n, soru: L.sN } });
-    if (e2) { let j = null; try { j = e2.context && typeof e2.context.json === 'function' ? await e2.context.json() : null; } catch (x) {} throw Object.assign(new Error((j && j.hata) || 'Okuma sunucusuna ulaşılamadı. Biraz sonra yeniden deneyin.'), { atlas: true }); }
-    if (!r || !r.ok) throw Object.assign(new Error((r && r.hata) || 'Puanlar okunamadı'), { atlas: true });
+    await bekle(); const r = await yerelOkuKarekod(h, n);
+    if (!r || !r.ok) throw Object.assign(new Error('Puanlar okunamadı. Kâğıdı düz ve aydınlık bir yerde yeniden çekin.'), { atlas: true });
     return { kagit: k, okunan: r, resim: i => satirResmi(h, i) };
   }
 
@@ -282,9 +294,10 @@
     if (e1 || !k || !k.ok) throw Object.assign(new Error(sec.sinif + ' için antetli not çizelgesinin listesi Atlas\'ta yok.'), { atlas: true });
     const h = await hazirlaEski(sb, cv, ilerle), n = k.satirlar.length;
     ilerle && ilerle(`${n} öğrencinin puanları okunuyor…`, true);
-    const { data: r, error: e2 } = await sb.functions.invoke('atlas-not-oku', { body: { resim: tabloResmiE(h), satir: n, soru: E.sN } });
-    if (e2) { let j = null; try { j = e2.context && typeof e2.context.json === 'function' ? await e2.context.json() : null; } catch (x) {} throw Object.assign(new Error((j && j.hata) || 'Okuma sunucusuna ulaşılamadı. Biraz sonra yeniden deneyin.'), { atlas: true }); }
-    if (!r || !r.ok) throw Object.assign(new Error((r && r.hata) || 'Puanlar okunamadı'), { atlas: true });
+    await bekle(); const Y = await yerelYukle(), px = 4, xs = E.cSoru - 2, ys = E.pY - 1, xe = E.x1 + 1, ye = E.y1 + 1;
+    const r = Y.oku(cikar(h.tam, h.H, xs, ys, xe - xs, ye - ys, px), { n, q: E.sN, rY: (E.rY - ys) * px, rh: (E.y1 - E.rY) / n * px, pY: (E.pY - ys) * px,
+      sutunlar: Array.from({ length: E.sN + 1 }, (_, i) => (E.cSoru + E.sW * i - xs) * px), topX: [(E.cTop - xs) * px, (E.x1 - xs) * px], ayiklama: !!window.UMAL_AYIKLA });
+    if (!r || !r.ok) throw Object.assign(new Error('Puanlar okunamadı. Kâğıdı düz ve aydınlık bir yerde yeniden çekin.'), { atlas: true });
     return { kagit: Object.assign({}, k, { ders: sec.ders, sinav: sec.sinav, sayfa: 1, sayfa_say: 1 }), okunan: r, resim: i => satirResmiE(h, i, n) };
   }
 
@@ -356,7 +369,7 @@
 
   // Fotoğraftan okuma + kontrol ekranı. c: { sb, D, esc, baslik, uyar, onayla, pencereAc, pencereKapat, geri, kaydet(kayit) -> Promise<{ok,hata}> }
   const FT = { k: null };
-  const BEKLE = '<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="kucuk" id="yzSure"></div><div class="soluk kucuk">Öğrenci adları yapay zekâya gönderilmez; yalnız puan kutuları okunur.</div></div>';
+  const BEKLE = '<div class="nk-oku"><div class="nk-donen"></div><b id="yzAsama">Fotoğraf hazırlanıyor…</b><div class="kucuk" id="yzSure"></div><div class="soluk kucuk">Puanlar bu cihazda okunur; yapay zekâ beklenmez.</div></div>';
   // karekodsuz kâğıt: antetli Sınav Not Çizelgesi için sınıf/ders/sınav seçimi
   async function eskiSec(c) {
     const L_ = await c.dersler(c.idare ? 'hepsi' : 'ben').catch(() => []);
@@ -385,7 +398,7 @@
     c.pencereAc(BEKLE);
     let r, sayac = null; const t0 = Date.now();
     const ilerle = (m, uzun) => { const e = document.getElementById('yzAsama'); if (e) e.textContent = m;
-      if (uzun && !sayac) sayac = setInterval(() => { const z = document.getElementById('yzSure'); if (z) z.textContent = `Kâğıttaki her kutu tek tek okunuyor; bu, yarım dakika kadar sürer · ${Math.round((Date.now() - t0) / 1000)} sn`; }, 1000); };
+      if (uzun && !sayac) sayac = setInterval(() => { const z = document.getElementById('yzSure'); if (z) z.textContent = `${Math.round((Date.now() - t0) / 1000)} sn`; }, 1000); };
     const hata = e => { clearInterval(sayac); c.pencereKapat(); c.uyar(e && e.atlas ? e.message : 'Fotoğraf okunamadı: ' + (e && e.message || e)); };
     try { r = await oku(c.sb, dosya, ilerle); }
     catch (e) {
@@ -405,7 +418,7 @@
     const maxRes = r.resim(-1); T.maxResim = T.maxResim || maxRes;
     k.satirlar.forEach((x, i) => { const y = o.satirlar[i] || { puan: [], toplam: '' };
       T.satir = T.satir.filter(z => z.no !== x.no);
-      T.satir.push({ no: x.no, ad: x.ad, sayfa: k.sayfa, s: x.s, puan: y.puan.slice(0, L.sN), toplam: y.toplam || '', belirsiz: y.belirsiz || [], resim: r.resim(i) }); });
+      T.satir.push({ no: x.no, ad: x.ad, sayfa: k.sayfa, s: x.s, puan: y.puan.slice(0, L.sN), toplam: y.toplam || '', belirsiz: y.belirsiz || [], yerel: r.okunan.model === 'yerel', resim: r.resim(i) }); });
     T.satir.sort((a, b) => (+a.no) - (+b.no));
     kontrolCiz(c);
   }
@@ -414,6 +427,7 @@
     T.satir.forEach(x => { const d = satirDenetle(x.puan, x.toplam, T.maxlar, Q); x.d = d;
       // toplam tutuyorsa (iki ayrı okuma hatasının birbirini götürmesi çok düşük olasılık) "emin değil" işareti satırı durdurmaz
       x.uyari = d.sorun.length ? d.sorun.slice() : (d.bos && (x.belirsiz || []).length ? ['Satır boş okundu ama kâğıtta silik bir yazı olabilir'] : []);
+      if (!x.uyari.length && x.yerel && (x.belirsiz || []).length) x.uyari = ['Emin olunamayan kutu: ' + x.belirsiz.map(k => k === 0 ? 'toplam' : k + '. soru').join(', ') + ' — fotoğrafla karşılaştırın'];   // K-963
       x.sorunlu = x.uyari.length > 0 && !T.onay.has(x.no); }); return Q; }
   function kontrolCiz(c) {
     const T = FT.k, Q = denetle(T), esc = c.esc, I = document.getElementById('icerik');
@@ -449,5 +463,5 @@
     if (t1) t1.onclick = () => kaydet(false); if (t2) t2.onclick = () => kaydet(true);
   }
 
-  window.UmalYazili = { _e: { tabloResmiE, satirResmiE }, E, hazirlaEski, sayfaBul, bandSkor, L, kagitPdf, oku, satirDenetle, sayi, yazdirPencere, fotoOku, FT, _t: { resimAl, griAl, isaretBul, homografi, cikar, tabloResmi, satirResmi, tuval } };
+  window.UmalYazili = { _e: { tabloResmiE, satirResmiE, okuEski }, E, hazirlaEski, sayfaBul, bandSkor, L, kagitPdf, oku, satirDenetle, sayi, yazdirPencere, fotoOku, FT, _t: { resimAl, griAl, isaretBul, homografi, cikar, tabloResmi, satirResmi, tuval } };
 })();
