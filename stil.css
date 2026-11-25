@@ -3100,3 +3100,8 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 .ky-goz { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: transparent; color: var(--soluk); display: grid; place-items: center; cursor: pointer; }
 .ky-goz svg { width: 22px; height: 22px; }
 #kyForm .ky-goz { width: 40px; height: 40px; padding: 0; margin: 0; }
+/* K-968: telefonda açık pencere alt sekme çubuğunun altında kalmasın (Yazıcıya gönder görünmüyordu) */
+@media (max-width: 760px) {
+  body.ogt-alt:has(#pencere:not(.gizli)) #ogtAlt { display: none !important; }
+  .yz-pen { max-height: calc(100dvh - 120px); }
+}
