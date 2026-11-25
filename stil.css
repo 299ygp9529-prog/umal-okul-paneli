@@ -3105,11 +3105,11 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
   body.ogt-alt:has(#pencere:not(.gizli)) #ogtAlt { display: none !important; }
   .yz-pen { max-height: calc(100dvh - 120px); }
 }
-/* K-985: Yenile ile Çıkış yan yana; Çıkış kırmızı kapı-dışı düğmesi (telefonda düzen aynı kalır) */
+/* K-985: Yenile ile Çıkış yan yana; Çıkış sarı kapı-dışı düğmesi (25 Kasım 2026: kırmızıdan sarıya) (telefonda düzen aynı kalır) */
 .ust-dug { display: flex; align-items: center; gap: 10px; }
 @media (max-width: 760px) { .ust-dug { display: contents; } }
-#cikis { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 999px; background: linear-gradient(180deg, #4a1820, #2c0e14); border: 1px solid rgba(255,107,114,.75); color: #ff8a8f; font-weight: 800; font-size: 15px; text-decoration: none; box-shadow: 0 0 12px rgba(255,80,90,.18); cursor: pointer; }
-#cikis:hover { background: linear-gradient(180deg, #5c1c26, #36101a); color: #ffb3b6; }
+#cikis { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 999px; background: linear-gradient(180deg, #ffd43b, #f2b705); border: 1px solid #ffe580; color: #2a1f00; font-weight: 800; font-size: 15px; text-decoration: none; box-shadow: 0 0 12px rgba(255,200,40,.35); cursor: pointer; }
+#cikis:hover { background: linear-gradient(180deg, #ffe066, #f5c518); color: #1a1300; }
 #cikis svg { flex: none; }
 
 @media (max-width: 760px) { #cikis { padding: 7px 12px; gap: 5px; } #cikis svg { width: 16px; height: 16px; } }
