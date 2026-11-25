@@ -1378,6 +1378,7 @@
     { id: 'giriskod', ad: 'Öğrenci Girişi', roller: ['bas', 'rehberlik', 'ogretmen'], ciz: ogrenciGirisi },   // K-506: giriş kodları ayrı sekmede
     // 7 Kas: "Gönder" (şerit) kaldırıldı; yalnız Acil Mesaj
     { id: 'soru', ad: 'Test Hazırla', roller: ['bas', 'yonetici', 'ogretmen'], ciz: soruHazirla },   // K-498: kitaptan soru seç → okul mizanpajında PDF
+    { id: 'yazili', ad: 'Yazılı Hazırla', roller: ['bas', 'yonetici', 'ogretmen'], ciz: yaziliHazirla },   // K-988: yazılı kâğıdı editörü (Word yerine)
     { id: 'testler', ad: 'Testler', roller: ['bas', 'yonetici', 'ogretmen'], ciz: testlerBolumu },   // K-510: havuzdaki testler
     { id: 'ogretmenler', ad: 'Öğretmenler', roller: ['bas', 'yonetici'], ciz: ogretmenlerBolumu },
     { id: 'telkur', ad: 'Telefona Atlas Kur', roller: ['bas'], ciz: telKurBolumu },   // K-855   // K-716y: idareye tam yetki   // K-498: yalnız Soru Hazırla'yı gören öğretmenler
@@ -1406,6 +1407,7 @@
     yonlendir: '<circle cx="9" cy="8" r="3.300"/><path d="M3 19.500c.5-3.300 2.800-5.200 6-5.200 1.200 0 2.300.3 3.200.8M14.500 17h6.500M18 14l3 3-3 3"/>',
     giriskod: '<circle cx="8" cy="14.500" r="3.800"/><path d="M10.800 11.800L19.500 3.500M15.500 7.500l2.800 2.800M18 5l2.300 2.300"/>',
     soru: '<path d="M13.500 3.500H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.500-5.500Z"/><path d="M13.500 3.500V9H19M12 12.500v5M9.500 15h5"/>',
+    yazili: '<path d="M6.500 3.500h8l4 4V19a1.500 1.500 0 0 1-1.500 1.500h-10.500A1.500 1.500 0 0 1 5 19V5a1.500 1.500 0 0 1 1.500-1.500Z" fill="currentColor" fill-opacity=".18"/><path d="M14.500 3.500v4h4M8 11h6M8 14.500h4"/><path d="M13.500 19.500l.8-2.600 4.300-4.300a1.200 1.200 0 0 1 1.700 1.700l-4.300 4.300z"/>',
     testler: '<path d="M12 3.500l8.500 4.300L12 12 3.500 7.800 12 3.500Z"/><path d="M3.500 12l8.500 4.200 8.500-4.200M3.500 16.200l8.500 4.300 8.500-4.300"/>',
     ogretmenler: '<circle cx="9" cy="8.500" r="3.200"/><path d="M3 19.500c.5-3.300 2.800-5.300 6-5.300s5.500 2 6 5.300"/><path d="M15.500 5.600a3.200 3.200 0 0 1 0 5.800M17.500 14.600c2 .7 3.200 2.400 3.500 4.900"/>',
     cikti: '<path d="M7 9V4h10v5"/><rect x="3.500" y="9" width="17" height="8" rx="2"/><path d="M7 14.500h10V20H7v-5.500Z"/><path d="M17 12h.01"/>',
@@ -1440,7 +1442,7 @@
   const ALT_SEKME = { ogretmen: ['dersyoklama', 'oprogram', 'dosyalar', 'mesajlar', 'menu'], yonetici: ['dersyoklama', 'gorev', 'harita', 'obil', 'menu'], bas: ['harita', 'dersyoklama', 'dosyalar', 'mesajlar', 'menu'] };
   const altta = id => telefon() && (ALT_SEKME[D.rol] || []).includes(id);
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'telkur', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'testler', 'yonlendir', 'sinifform', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'soru', 'yazili', 'testler', 'yonlendir', 'sinifform', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -1486,7 +1488,7 @@
       : `<button class="tm-oge ${id === sec ? 'secili' : ''} ${id === 'acil' ? 'acil' : ''}" style="--g:${rk}" data-tb="${id}">${menuIk(id)}<span>${ad(id)}</span></button>`;
     const G = grup && gruplar.find(x => grupKod(x[0]) === grup);
     let d = document.querySelector('.tumu-menu'); if (!d) { d = document.createElement('div'); d.className = 'tumu-menu'; document.body.appendChild(d); }
-    const KISA = { obil: 'bildirim', gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
+    const KISA = { obil: 'bildirim', gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', yazili: 'yazılı hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
     const OG_ACK = { otahta: 'Dersinizdeki tahtayı kilitle, aç, kapat', oprogram: 'Günlük ders programınız', obil: D.rol === 'ogretmen' ? 'İdareden gelen bildirimler' : 'Veliye, öğrenciye, öğretmene bildirim', gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
       notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
@@ -6819,6 +6821,24 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
+  }
+  // K-988: Yazılı Hazırla (ayrı dosya; ilk açılışta yüklenir). Yazılılar öğretmenin cihazında saklanır.
+  async function yaziliHazirla() {
+    if (!window.UmalYaziliHazirla) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili-hazirla/yh.js?v=202611260500'; sc.onload = ok; sc.onerror = () => red(new Error('Yazılı Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    const dersler = async () => {
+      await Promise.all([programYukle(), kisiAdlariYukle().catch(() => {})]);
+      const nk = x => String(x || '').replace(/\s+\d+$/, '').toLocaleLowerCase(tr).replace(/[^a-zçğıöşü]/g, '');
+      let ben = (await ogtEsle()) || KISI.get(String(D.eposta).toLowerCase()) || '';
+      if (ben) { const ad_ = new Set(); Object.values((D.program || {}).siniflar || {}).forEach(S => Object.values(S || {}).forEach(h => ((h && h.ogretmen) || []).forEach(o => ad_.add(String(o).replace(/\s+\d+$/, ''))))); ben = programAdBul(ben, [...ad_]) || ben; }
+      if (!ben) return [];
+      const haric = d => /rehberlik|beden|^bed\b|spor|ders\s*d[ıi]ş[ıi]|kul[üu]p|sosyal etkinlik|nöbet/i.test(d), M = new Map();
+      Object.entries((D.program || {}).siniflar || {}).forEach(([sf, S]) => Object.values(S || {}).forEach(h => { if (!h || !h.ders || haric(h.ders)) return;
+        if (!(h.ogretmen || []).some(o => nk(o) === nk(ben))) return; const k = sf + '|' + h.ders; if (!M.has(k)) M.set(k, { sinif: sf, ders: baslik(h.ders) }); }));
+      return [...M.values()].sort((a, b) => sinifSira(a.sinif, b.sinif) || a.ders.localeCompare(b.ders, tr));
+    };
+    const benimAd = async () => { await kisiAdlariYukle().catch(() => {}); const a = KISI.get(String(D.eposta).toLowerCase()) || (await ogtEsle()) || ''; return a ? baslik(a) : ''; };
+    const puanKagidi = () => { ac('notlar'); let n = 0; const t = setInterval(() => { const b = $('#ntKagit'); if (b) { clearInterval(t); b.click(); } else if (++n > 40) clearInterval(t); }, 150); };
+    window.UmalYaziliHazirla.ac($('#icerik'), { sb, D, betikYukle, okuldaYazdir, dersler, benimAd, puanKagidi, logo: new URL('okul-logo.png', location.href).href, taban: new URL('yazili-hazirla/', location.href).href });
   }
   async function soruHazirla() {
     await soruYukle();
