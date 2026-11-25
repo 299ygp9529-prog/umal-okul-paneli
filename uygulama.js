@@ -7996,8 +7996,8 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       tfOturum.forEach((x, i) => { const L = tfLis[i] || []; if (!L.length) return;
         const sa = tfSaat(x); if (!sa) return; const bs = sa.split('–')[0].replace('.', ':'), t = new Date(`${x.tarih}T${bs}:00`).getTime() / 1000;
         if (!(t > simdi) || t - simdi > 14 * 86400) return;
-        const gr = new Map(); L.forEach(z => { const k = z.o.sinif || ''; if (!gr.has(k)) gr.set(k, []); gr.get(k).push(baslik(z.o.ad || '') + (z.ders ? ' (' + z.ders + ')' : '')); });
-        let metin = `Saat ${sa}${x.yer ? ' · Yer: ' + x.yer : ''}\n\nSınava girecek öğrenciler:\n` + [...gr].sort((a, b) => sinifSira(a[0], b[0])).map(([sf, a]) => `${sf}: ${a.join(', ')}`).join('\n');
+        const gr = new Map(); L.forEach(z => { const k = z.o.sinif || ''; if (!gr.has(k)) gr.set(k, []); gr.get(k).push(`${z.o.no ? z.o.no + ' · ' : ''}${baslik(z.o.ad || '')}${z.ders ? ' (' + z.ders + ')' : ''}`); });
+        let metin = `Saat ${sa}${x.yer ? ' · Yer: ' + x.yer : ''}\n\nSınava girecek öğrenciler:\n` + [...gr].sort((a, b) => sinifSira(a[0], b[0])).map(([sf, a]) => `${sf}\n${a.map(y => '   ' + y).join('\n')}`).join('\n');
         if (metin.length > 1900) metin = metin.slice(0, 1880) + '…';
         const veri = { tur: 'bilgi', baslik: 'Mazeret sınavı 10 dakika sonra başlıyor', metin, hedef: ['*'], zaman: Math.floor(t - 600), baslangic: Math.floor(t - 600), bitis: Math.floor(t + 15 * 60), kapla: true, otomatik: 'telafi' };
         const id = `tfa-${x.tarih.replace(/-/g, '')}-${parseInt(x.ders, 10)}-${ozet(JSON.stringify(veri))}`; veri.id = id; kur.set(id, veri); });
