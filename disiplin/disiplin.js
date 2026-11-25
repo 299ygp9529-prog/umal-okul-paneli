@@ -804,8 +804,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
   function uyariBelge(r) {
     const v = r.veri, u = v.uyari, ay = S.ayar, m = MADDE().find(x => x[0] === v.madde), ad = C.baslik(v.ogr.ad);
     const sat = (b, d) => `<tr><th>${b}</th><td>${d || '&nbsp;'}</td></tr>`;
-    const g = `<table>${sat('Öğrencinin adı soyadı', esc(ad))}${sat('Sınıfı / okul no', esc(v.ogr.sinif + ' / ' + r.ogr_no))}${sat('Davranışın tarihi ve yeri', esc(tUzun(v.olay.tarih) + (v.olay.yer ? ' · ' + v.olay.yer : '')))}${sat('Davranış', esc(v.olay.ozet))}${sat('İlgili madde', esc(m ? m[0] + ' — ' + m[2] : ''))}
-      ${sat('Rehberlik değerlendirmesi', esc(u.degerlendirme))}${sat('Veli görüşme tarihi', esc(u.gorusme ? tUzun(u.gorusme) : ''))}${sat('Sosyal sorumluluk çalışması', esc(u.sosyal))}</table>
+    const g = `<table>${sat('Öğrencinin adı soyadı', esc(ad))}${sat('Sınıfı / okul no', esc(v.ogr.sinif + ' / ' + r.ogr_no))}${sat('Davranışın tarihi ve yeri', esc(tUzun(v.olay.tarih) + (v.olay.yer ? ' · ' + v.olay.yer : '')))}${sat('Davranış', esc(v.olay.ozet))}${sat('İlgili madde', esc(m ? m[0] + ' — ' + m[2] : ''))}</table>
       <p>Öğrenciniz ${esc(ad)}, yukarıda belirtilen davranışı ilk kez gerçekleştirdiğinden, sınıf rehber öğretmeni ve okul rehber öğretmeninin değerlendirme ve önerileri doğrultusunda <b>YAZILI OLARAK UYARILMIŞTIR</b>. Davranışın tekrarlanması hâlinde Okul Öğrenci Ödül ve Disiplin Kuruluna sevk edilecektir. Bu uyarı e-Okul'a işlenmez.</p>
       <div class="imza"><div>${esc(u.sinif_rehber || 'Sınıf rehber öğretmeni')}</div><div>${esc(u.rehber || 'Okul rehber öğretmeni')}</div><div>${esc(ay.mudur || '')}<br>Okul Müdürü</div></div>
       <div class="imza" style="grid-template-columns:1fr 1fr"><div>Tebellüğ eden öğrenci</div><div>Tebellüğ eden veli</div></div>`;
