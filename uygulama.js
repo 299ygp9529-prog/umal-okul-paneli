@@ -7988,6 +7988,28 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     if (D.rol === 'bas' || D.rol === 'yonetici') {   // K-962: saat() tanımlandıktan sonra çalışır (önce çalışınca 'Cannot access saat before initialization'). Görevli atanmış oturumların listesi/saati/yeri değiştiyse öğretmenlere giden özet de güncellenir
       let d_ = false; tfOturum.forEach((x, i) => { const k = tfK(x), o = tfGorev.oturum[k]; if (!o) return; const y = tfOzet(i); if (JSON.stringify(y) !== JSON.stringify(o)) { tfGorev.oturum[k] = y; d_ = true; } });
       if (d_) tfGorevKaydet().catch(() => {}); }
+    // K-964: mazeret (telafi) sınavı başlamadan 10 dakika önce bütün tahtalarda acil mesaj (tahtayı kaplar). Sınav takvimi her açıldığında
+    // önümüzdeki 14 günün oturumları için zamanlı mesajlar kurulur/güncellenir; oturum değişir ya da kalkarsa bekleyen eski mesaj silinir.
+    if (D.rol === 'bas' || D.rol === 'yonetici') (async () => {
+      const simdi = Date.now() / 1000, ozet = t => { let h = 5381; for (let k = 0; k < t.length; k++) h = ((h * 33) ^ t.charCodeAt(k)) >>> 0; return h.toString(36); };
+      const kur = new Map();
+      tfOturum.forEach((x, i) => { const L = tfLis[i] || []; if (!L.length) return;
+        const sa = tfSaat(x); if (!sa) return; const bs = sa.split('–')[0].replace('.', ':'), t = new Date(`${x.tarih}T${bs}:00`).getTime() / 1000;
+        if (!(t > simdi) || t - simdi > 14 * 86400) return;
+        const gr = new Map(); L.forEach(z => { const k = z.o.sinif || ''; if (!gr.has(k)) gr.set(k, []); gr.get(k).push(baslik(z.o.ad || '') + (z.ders ? ' (' + z.ders + ')' : '')); });
+        let metin = `Saat ${sa}${x.yer ? ' · Yer: ' + x.yer : ''}\n\nSınava girecek öğrenciler:\n` + [...gr].sort((a, b) => sinifSira(a[0], b[0])).map(([sf, a]) => `${sf}: ${a.join(', ')}`).join('\n');
+        if (metin.length > 1900) metin = metin.slice(0, 1880) + '…';
+        const veri = { tur: 'bilgi', baslik: 'Mazeret sınavı 10 dakika sonra başlıyor', metin, hedef: ['*'], zaman: Math.floor(t - 600), baslangic: Math.floor(t - 600), bitis: Math.floor(t + 15 * 60), kapla: true, otomatik: 'telafi' };
+        const id = `tfa-${x.tarih.replace(/-/g, '')}-${parseInt(x.ders, 10)}-${ozet(JSON.stringify(veri))}`; veri.id = id; kur.set(id, veri); });
+      try {
+        const { data } = await sb.from('umal_mesajlar').select('id,veri').eq('tur', 'bilgi').like('id', 'tfa-%');
+        const var_ = new Map((data || []).map(r => [r.id, r.veri || {}]));
+        const sil = [...var_].filter(([id, v]) => !kur.has(id) && +(v.baslangic || 0) > simdi).map(([id]) => id);
+        if (sil.length) await sb.from('umal_mesajlar').delete().in('id', sil);
+        const yeni = [...kur.values()].filter(v => !var_.has(v.id)).map(v => ({ id: v.id, tur: 'bilgi', veri: v, bitis: new Date(v.bitis * 1000).toISOString() }));
+        if (yeni.length) { const { error } = await sb.from('umal_mesajlar').insert(yeni); if (error) console.warn('telafi acil mesajı kurulamadı', error); }
+      } catch (e) { console.warn('telafi acil mesajı', e); }
+    })();
     if (D._tfOtoAc) { D._tfOtoAc = false; setTimeout(() => { if (typeof tfOtoAta === 'function') tfOtoAta(); }, 300); }   // K-958b
     if (D._tfGorevAc) { const k_ = D._tfGorevAc; D._tfGorevAc = null; setTimeout(() => { const i = tfOturum.findIndex(x => tfK(x) === k_); if (i >= 0) tfGorevliSec(i); else uyar('Bu telafi oturumu Sınav takviminde bulunamadı; programı kaydettiğinizden emin olun.'); }, 300); }
     const dersYaz = s => /ders/i.test(String(s.ders)) ? s.ders : `${s.ders}. Ders`;
