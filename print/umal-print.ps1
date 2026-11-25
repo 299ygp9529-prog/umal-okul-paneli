@@ -1,7 +1,7 @@
 # UMAL Print - okul bilgisayarindaki yazicilari DersMap ve tahtalara acar, gelen ciktilari yazdirir.
 # Kurulum: panel > Print sekmesi. Dosyalar: C:\ProgramData\UMAL-Print (ayar.json, umal-print.ps1, SumatraPDF.exe, gunluk.txt)
 param([switch]$Kullanici, [switch]$Dene)
-$Surum = '1.4'
+$Surum = '1.5'
 $ErrorActionPreference = 'Stop'
 $Klasor = Join-Path $env:ProgramData 'UMAL-Print'
 $KulKlasor = Join-Path $Klasor 'kullanici'
@@ -280,12 +280,13 @@ function Yazdir($is) {
     $ay += $olcek
     if ([string]$is.renk -eq 'siyah') { $ay += 'monochrome' } elseif ([string]$is.renk -eq 'renkli') { $ay += 'color' }
     $yon = [string]$is.yon; if ($yon -eq 'dikey') { $ay += 'portrait' } elseif ($yon -eq 'yatay') { $ay += 'landscape' }
-    $kg = [string]$is.kagit; if (@('A3', 'A5') -contains $kg) { $ay += ('paper=' + $kg) }
+    # K-969: A4 de acikca istenir; yoksa hizmet (SYSTEM) hesabinin varsayilani Letter (8,5x11) kalir ve yazici kagit bekler
+    $kg = [string]$is.kagit; if (@('A3', 'A5') -notcontains $kg) { $kg = 'A4' }; $ay += ('paper=' + $kg)
     $arg = '-print-to "' + $yaz + '" -print-settings "' + ($ay -join ',') + '" -silent -exit-when-done "' + $dosya + '"'
     [void](YaziciOnar $yaz)
     # 1) hizmet kendi yazdirir  2) olmazsa oturumu acik kullanicinin hesabinda  3) o da olmazsa yazicinin kendi ayarlariyla
     $kod1 = -9; $kod2 = -9; $kod3 = -9; $yol = ''
-    $arg3 = '-print-to "' + $yaz + '" -silent -exit-when-done "' + $dosya + '"'
+    $arg3 = '-print-to "' + $yaz + '" -print-settings "paper=' + $kg + '" -silent -exit-when-done "' + $dosya + '"'
     if ($bende) { $kod1 = SumatraCalistir $sum $arg; if ($kod1 -eq 0) { $yol = 'hizmet' } }
     if (-not $yol) { $kod2 = KullaniciYazdir $id $sum $arg; if ($kod2 -eq 0) { $yol = 'kullanici' } }
     if (-not $yol -and $kod2 -ne -3) {
