@@ -786,6 +786,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
       <label>Rehberlik değerlendirmesi ve öneri</label><textarea id="u_deger" rows="2">${esc(v.uyari.degerlendirme || '')}</textarea>
       <div class="ds-iki"><div><label>Uyarı tarihi</label><input type="date" id="u_t" value="${esc(v.uyari.tarih || '')}"></div><div><label>Veli görüşme tarihi</label><input type="date" id="u_g" value="${esc(v.uyari.gorusme || '')}"></div></div>
       <label>Sosyal sorumluluk çalışması (isteğe bağlı)</label><input id="u_sos" value="${esc(v.uyari.sosyal || '')}">
+      <div class="ds-iki"><div><label>Doğum tarihi / yeri (belgede)</label><input id="u_dogum" placeholder="28.11.2010 - Ümraniye" value="${esc(v.uyari.dogum || '')}"></div><div><label>Uyarı sayısı</label><input id="u_sayi" placeholder="1 - 29" value="${esc(v.uyari.sayi || '')}"></div></div>
       <div class="dugmeler" style="margin-top:14px"><button class="birincil" id="u_kaydet">Kaydet</button></div><div class="kucuk" id="u_bilgi"></div></div>`);
     maddeBagla('u_madde');
     const sec = r ? null : await ogrSeciciBagla(false, ilkOgr);
@@ -795,20 +796,46 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
       if (!g('u_ozet') || !g('u_t')) { bil.textContent = 'Davranış ve uyarı tarihi gerekli.'; return; }
       if (!r && DOS().some(x => x.ogr_no === o.no && ((x.veri.adim || {}).kurul || {}).yaptirim && yap(x.veri.adim.kurul.yaptirim).puan) && !await window.UmalSor.onayla('Bu öğrencinin önceden disiplin cezası var; yazılı uyarı yalnız ilk kez için uygulanır. Yine de kaydedilsin mi?')) return;
       const veri = { tur: 'uyari', ogr: { no: o.no, ad: o.ad, sinif: o.sinif }, olay: { tarih: g('u_ot'), yer: g('u_yer'), ozet: g('u_ozet') }, madde: g('u_madde'),
-        uyari: { tarih: g('u_t'), gorusme: g('u_g'), rehber: g('u_rehber'), sinif_rehber: g('u_sinifr'), degerlendirme: g('u_deger'), sosyal: g('u_sos') }, olusturan: C.eposta };
+        uyari: { tarih: g('u_t'), gorusme: g('u_g'), rehber: g('u_rehber'), sinif_rehber: g('u_sinifr'), degerlendirme: g('u_deger'), sosyal: g('u_sos'), dogum: g('u_dogum'), sayi: g('u_sayi') }, olusturan: C.eposta };
       if (r) { r.veri = veri; const { error } = await C.israrla(() => C.sb.from('umal_disiplin').update({ veri, guncel: new Date().toISOString() }).eq('id', r.id)); if (error) { bil.textContent = 'Kaydedilemedi: ' + C.hataYaz(error); return; } }
       else if (!(await satirEkle(veri, 'uyari'))) return;
       C.pencereKapat(); S.ekran = 'uyari'; ciz();
     };
   }
+  // K-967: Yazılı Uyarı Bildirimi — okulun kullandığı resmî form (tablo, metin, tebliğ çizelgesi, adres) birebir; başta okul amblemi
+  const CEZA_AD = { '163': 'YAZILI UYARI', '164': 'KINAMA CEZASI', '165': 'OKULDAN KISA SÜRELİ UZAKLAŞTIRMA CEZASI', '166': 'OKUL DEĞİŞTİRME CEZASI', '167': 'ÖRGÜN EĞİTİM DIŞINA ÇIKARMA CEZASI' };
   function uyariBelge(r) {
-    const v = r.veri, u = v.uyari, ay = S.ayar, m = MADDE().find(x => x[0] === v.madde), ad = C.baslik(v.ogr.ad);
-    const sat = (b, d) => `<tr><th>${b}</th><td>${d || '&nbsp;'}</td></tr>`;
-    const g = `<table>${sat('Öğrencinin adı soyadı', esc(ad))}${sat('Sınıfı / okul no', esc(v.ogr.sinif + ' / ' + r.ogr_no))}${sat('Davranışın tarihi ve yeri', esc(tUzun(v.olay.tarih) + (v.olay.yer ? ' · ' + v.olay.yer : '')))}${sat('Davranış', esc(v.olay.ozet))}${sat('İlgili madde', esc(m ? m[0] + ' — ' + m[2] : ''))}</table>
-      <p>Öğrenciniz ${esc(ad)}, yukarıda belirtilen davranışı ilk kez gerçekleştirdiğinden, sınıf rehber öğretmeni ve okul rehber öğretmeninin değerlendirme ve önerileri doğrultusunda <b>YAZILI OLARAK UYARILMIŞTIR</b>. Davranışın tekrarlanması hâlinde Okul Öğrenci Ödül ve Disiplin Kuruluna sevk edilecektir. Bu uyarı e-Okul'a işlenmez.</p>
-      <div class="imza"><div>${esc(u.sinif_rehber || 'Sınıf rehber öğretmeni')}</div><div>${esc(u.rehber || 'Okul rehber öğretmeni')}</div><div>${esc(ay.mudur || '')}<br>Okul Müdürü</div></div>
-      <div class="imza" style="grid-template-columns:1fr 1fr"><div>Tebellüğ eden öğrenci</div><div>Tebellüğ eden veli</div></div>`;
-    C.belgeOnizle(belgeKabuk('YAZILI UYARI BELGESİ', g), 'Yazılı uyarı · ' + ad);
+    const v = r.veri, u = v.uyari || {}, ay = S.ayar, m = MADDE().find(x => x[0] === v.madde), ad = C.baslik(v.ogr.ad), buyuk = t => String(t || '').toLocaleUpperCase('tr-TR');
+    const tNokta = t => { const z = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t || ''); return z ? `${z[3]}.${z[2]}.${z[1]}` : (t || ''); };
+    const ceza = m ? (CEZA_AD[String(m[0]).split(/[\/.]/)[0]] || '') : '';
+    const satir = (b, d) => `<tr><th>${b}</th><td>${d || '&nbsp;'}</td></tr>`;
+    const html = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Yazılı Uyarı Bildirimi · ${esc(ad)}</title><style>
+@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Verdana,"DejaVu Sans",Arial,sans-serif;color:#000;font-size:9.6pt}
+.sf{width:210mm;height:297mm;overflow:hidden;padding:12mm 18mm 10mm 22mm;display:flex;flex-direction:column}
+.ust{text-align:center;font-weight:bold;font-size:9.6pt;line-height:1.3}.ust img{height:19mm;display:block;margin:0 auto 2.5mm}
+h1{text-align:center;font-size:15pt;letter-spacing:.42em;margin:6mm 0 6mm;font-weight:bold}
+table{border-collapse:collapse;width:100%}.bt th,.bt td{border:1px solid #000;padding:2.6mm 2.5mm;text-align:left;vertical-align:middle;font-size:9.2pt}
+.bt th{width:30%;font-weight:normal}.bt td{line-height:1.35}
+.metin{margin-top:7mm;font-size:9.3pt;line-height:1.3}.metin p{margin:0 0 3.5mm;text-indent:12mm;text-align:justify}
+.imza{margin:6mm 10mm 0 auto;text-align:center;width:60mm;font-size:9.3pt}
+.tb{margin-top:14mm}.tb th,.tb td{border:1px solid #000;height:12.5mm;padding:2mm 3mm;font-size:9.2pt;vertical-align:middle}.tb th{font-weight:bold;text-align:center}.tb td:first-child{width:20%}
+.tb .tr td{vertical-align:bottom;text-align:center}
+.not{margin-top:4mm;font-size:9.3pt;line-height:1.35}.not .g{padding-left:15mm}
+.adres{margin-top:auto;border-top:1.6px solid #000;padding-top:1mm;font-style:italic;font-size:8.4pt;line-height:1.25}
+@media screen{body{background:#e9edf2}.sf{background:#fff;margin:10px auto;box-shadow:0 2px 12px rgba(0,0,0,.18)}}</style></head><body><div class="sf">
+<div class="ust"><img src="${esc(C.logo)}" alt="">T.C. ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ</div>
+<h1>YAZILI UYARI BİLDİRİMİ</h1>
+<table class="bt">${satir('ÖĞRENCİNİN ADI SOYADI<br>SINIFI VE NUMARASI :', esc(buyuk(ad) + ' / ' + v.ogr.sinif + ' - ' + r.ogr_no))}${satir('DOĞUM TARİHİ / YERİ :', esc(buyuk(u.dogum || '')))}
+${satir('CEZAYI GEREKTİREN<br>DAVRANIŞIN ÇEŞİDİ VE<br>YÖNETMELİK MADDESİ :', (ceza ? esc(ceza) + '<br>' : '') + (m ? 'YÖNETMELİK MADDESİ: ' + esc(m[0]) + '<br>' + esc(m[2]) : ''))}${satir('UYARI TARİH VE SAYISI:', esc(tNokta(u.tarih) + (u.sayi ? ' / ' + u.sayi : '')))}</table>
+<div class="metin"><p>Yukarıda belirtilen davranışınızın kusurlu olduğu tespit edilmiştir. MEB Ortaöğretim Kurumları Yönetmeliğinin 157. Maddesinin 7. Fıkrasına göre sizi YAZILI OLARAK UYARIR, Aynı madde gereğince Disiplin cezası gerektiren ikinci davranışınızda doğrudan Disiplin Kuruluna sevk edileceğinizi hatırlatırım.</p>
+<p>Olumsuz davranışlarınızın devamı hâlinde şahsınıza uygulanabilecek yaptırımlar MEB Ortaöğretim Kurumları Yönetmeliğinin Disiplin Cezaları başlıklı 163, 164, 165 ve 166. Maddelerinde açıkça belirtilmiştir. Bu kurallara uymanız ve dikkatli olmanız önem arzetmektedir. Bu Yazılı Uyarı Bildirimi size tebligat niteliğindedir.</p>
+<p>Gereğini bilgilerinize rica ederim.</p></div>
+<div class="imza">${esc(buyuk(ay.mudur || ''))}<br>Okul Müdürü</div>
+<table class="tb"><tr><th style="width:20%"></th><th>TEBLİĞ EDEN</th><th>TEBELLÜĞ EDEN</th></tr><tr class="tr"><td style="text-align:left;vertical-align:middle">TARİH</td><td>......../......../20......</td><td>......../......../20......</td></tr><tr><td>ADI SOYADI</td><td></td><td></td></tr><tr><td>İMZASI</td><td></td><td></td></tr></table>
+<div class="not">Bu yazılı bildirim 2 (iki) nüsha olarak düzenlenmiş, bir nüshası yukarıda imzası bulunan ilgiliye teslim edilmiştir.<br>Ayrıca bilgi amaçlı olarak İmzalı birer fotokopisi;<div class="g">Okul Ödül ve Disiplin Kurulu ile<br>Rehberlik Servisine gönderilmiştir.</div></div>
+<div class="adres">ADRES: Yamanevler, Küçüksu Cd. No:32, 34768 Ümraniye/İstanbul<br>TEL NO: (0216) 634 04 16<br>FAX NO:</div>
+</div></body></html>`;
+    C.belgeOnizle(html, 'Yazılı uyarı · ' + ad);
   }
   // ---- Belge listeleri (her dosya için ilgili belge düğmeleri)
   const LISTE_BELGE = { cagri: ['Çağrı pusulaları', [['cagri', 'Çağrı pusulası']]], formlar: ['Tutanak ve formlar', [['tutanak', 'Olay tutanağı'], ['ifade', 'İfade tutanağı'], ['savunma2', 'Savunma tutanağı'], ['evrak', 'Bilgi toplama formları']]],
