@@ -7835,11 +7835,6 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       return { tarih: x.tarih, ders: parseInt(x.ders, 10), saat: tfSaat(x), yer: x.yer || '', satir: Object.fromEntries(['9', '10', '11', '12'].map(v => [v, String(x['s' + v] || '')]).filter(z => z[1].trim())),
         gozcu: o.gozcu || [], sorumlu: o.sorumlu || [], liste: tfLis[i].map(z => ({ no: String(z.o.no), ad: z.o.ad, sinif: z.o.sinif, ders: z.ders })) }; };
     const tfGorevKaydet = async () => { tfGorev.z = Date.now(); const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'telafi_gorev', deger: JSON.stringify(tfGorev) }, { onConflict: 'anahtar' }); if (error) { uyar('Görevliler kaydedilemedi: ' + hataYaz(error)); return false; } return true; };
-    if (D.rol === 'bas' || D.rol === 'yonetici') {   // görevli atanmış oturumların listesi/saati/yeri değiştiyse öğretmenlere giden özet de güncellenir
-      let d_ = false; tfOturum.forEach((x, i) => { const k = tfK(x), o = tfGorev.oturum[k]; if (!o) return; const y = tfOzet(i); if (JSON.stringify(y) !== JSON.stringify(o)) { tfGorev.oturum[k] = y; d_ = true; } });
-      if (d_) tfGorevKaydet().catch(() => {}); }
-    if (D._tfOtoAc) { D._tfOtoAc = false; setTimeout(() => { if (typeof tfOtoAta === 'function') tfOtoAta(); }, 300); }   // K-958b
-    if (D._tfGorevAc) { const k_ = D._tfGorevAc; D._tfGorevAc = null; setTimeout(() => { const i = tfOturum.findIndex(x => tfK(x) === k_); if (i >= 0) tfGorevliSec(i); else uyar('Bu telafi oturumu Sınav takviminde bulunamadı; programı kaydettiğinizden emin olun.'); }, 300); }
     const tfDurum = x => { const k = tfK(x), o = tfGorev.oturum[k] || {}, y = tfYk[k];
       if (y && Array.isArray(y.liste)) { const g = y.liste.filter(z => z.d === 'g').length, ek = y.liste.filter(z => z.ek).length, kim = (o.gozcu || []).find(z => String(z.eposta).toLowerCase() === String(y.gonderen || '').toLowerCase());
         return `<span class="ch-tf ok">${g} / ${y.liste.length} geldi</span><small class="soluk">${esc(kim ? baslik(kim.ad) : (y.gonderen || ''))}${y.zaman ? ' · ' + new Date(+y.zaman).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }) : ''}${ek ? ` · <b style="color:#ffb547">${ek} listede yoktu</b>` : ''}</small>`; }
@@ -7990,6 +7985,11 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
     const zil = gun => { const z = ((D.program || {}).zil || {})[gun === 4 ? 'cuma' : 'normal'] || []; return z.length ? z : ZIL_Y[gun === 4 ? 'c' : 'n'].map(([bas, bit], i) => ({ ders: i + 1, bas, bit })); };
     const saat = s => { const g = (new Date(s.tarih + 'T12:00:00').getDay() + 6) % 7, z = zil(g).find(x => parseInt(x.ders, 10) === parseInt(s.ders, 10)); return z ? `${z.bas.replace(':', '.')}–${z.bit.replace(':', '.')}` : ''; };
     const bitti = s => { const z = saat(s).split('–')[1]; return new Date(`${s.tarih}T${(z || '23.59').replace('.', ':')}:00`) < new Date(); };
+    if (D.rol === 'bas' || D.rol === 'yonetici') {   // K-962: saat() tanımlandıktan sonra çalışır (önce çalışınca 'Cannot access saat before initialization'). Görevli atanmış oturumların listesi/saati/yeri değiştiyse öğretmenlere giden özet de güncellenir
+      let d_ = false; tfOturum.forEach((x, i) => { const k = tfK(x), o = tfGorev.oturum[k]; if (!o) return; const y = tfOzet(i); if (JSON.stringify(y) !== JSON.stringify(o)) { tfGorev.oturum[k] = y; d_ = true; } });
+      if (d_) tfGorevKaydet().catch(() => {}); }
+    if (D._tfOtoAc) { D._tfOtoAc = false; setTimeout(() => { if (typeof tfOtoAta === 'function') tfOtoAta(); }, 300); }   // K-958b
+    if (D._tfGorevAc) { const k_ = D._tfGorevAc; D._tfGorevAc = null; setTimeout(() => { const i = tfOturum.findIndex(x => tfK(x) === k_); if (i >= 0) tfGorevliSec(i); else uyar('Bu telafi oturumu Sınav takviminde bulunamadı; programı kaydettiğinizden emin olun.'); }, 300); }
     const dersYaz = s => /ders/i.test(String(s.ders)) ? s.ders : `${s.ders}. Ders`;
     const cipler = s => Object.entries(s.siniflar || {}).map(([sv, d]) => `<span class="tk-cip ${(s.yer || {})[sv] === 'sinif' ? 'sinifta' : ''}" style="--sv:${SEVIYE_RENK[sv] || '#5cc8ff'}"><b>${esc(sv)}</b>${esc(d)}${(s.yer || {})[sv] === 'sinif' ? '<i>sınıfta</i>' : ''}</span>`).join('');
     const yonetir = D.rol === 'bas' || D.rol === 'yonetici', ogrt = D.rol === 'ogretmen';   // K-615: öğretmen yalnız takvimi görür (gelmeyen / mazeret yok)
