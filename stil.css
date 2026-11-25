@@ -3118,5 +3118,8 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 @media (min-width: 761px) {
   #yenileDug { display: inline-flex; align-items: center; gap: 7px; width: auto; height: auto; padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 15px; }
   #yenileDug svg { width: 18px; height: 18px; flex: none; }
+  /* Sol sütunda Yenile üstte, Çıkış altında; ikisi aynı genişlikte ve yazılar yatay */
+  .yan .ust-dug { flex-direction: column; align-items: stretch; gap: 8px; }
+  .yan .ust-dug > #yenileDug, .yan .ust-dug > #cikis { justify-content: center; white-space: nowrap; }
 }
 @media (max-width: 760px) { #yenileDug .yd-yazi { display: none; } }
