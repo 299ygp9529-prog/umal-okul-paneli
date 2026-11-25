@@ -6063,7 +6063,8 @@ ${OTO.length ? `<div class="kart er-liste"><b class="neon">Kendi kaydolanlar · 
               <div class="gk2-belgeler">${B.map(([k, t]) => `<label><input type="checkbox" data-gkb="${k}" ${G.belge[k] ? 'checked' : ''}> ${t}</label>`).join('')}</div>
               ${li(G.belge.ustyazi ? true : false, '', ilDisi() ? 'İlçe MEM üst yazısı (kaymakamlık onayı için)' : 'İlçe MEM bilgi yazısı', `Gezi tarihinden en az 3 gün önce${G.tarih ? ' · en geç ' + trT(gunEkle(G.tarih, -3)) : ''}`, `<button class="gk2-bt" data-gkbelge="ustyazi">Taslağı aç</button><label class="gk2-kutu"><input type="checkbox" data-gkb="ustyazi" ${G.belge.ustyazi ? 'checked' : ''}> gönderildi</label>`)}
             </div>
-            <div class="gk2-sat" style="margin-top:14px"><button class="birincil yz-gonder" data-gkbelge="hepsi" style="margin:0">${KY_IK.dosya}Gezi dosyasını tek belge aç (yazdır / PDF / okulda yazdır)</button></div></div>`;
+            <div class="gk2-sat" style="margin-top:14px"><button class="birincil yz-gonder" data-gkbelge="hepsi" style="margin:0">${KY_IK.dosya}Gezi dosyasını tek belge aç (yazdır / PDF / okulda yazdır)</button></div>
+            <div class="gk2-sat" style="margin-top:8px"><button class="ikincil" data-gkbelge="rapor" style="margin:0">${KY_IK.dosya}Gezi raporu (gezi sonrası)</button></div></div>`;
         } else {
           const kat = Object.keys(G.yer).length, K = kesinL().length;
           govde = adim === 'otobus' ? `<div class="kart"><h3 style="margin-top:0">Otobüs</h3><p class="soluk">${K} kesin kayıtlı öğrenci · ${kat} kişi otobüslere yerleşti.</p><p class="soluk kucuk">Otobüs sayısı, plaka, şoför, koltuk yerleşimi ve biletler Gezi Otobüsleri bölümünde.</p><button class="birincil" data-gkgit="gezi">${KY_IK.otobus}Gezi Otobüsleri'ni aç</button></div>`
