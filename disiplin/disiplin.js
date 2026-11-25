@@ -76,6 +76,7 @@
     const t = await C.sb.from('umal_disiplin_ayar').select('id,veri').in('id', ['tutanak-' + (S.ayar.yil || S.yil) + '-bas', 'tutanak-' + (S.ayar.yil || S.yil) + '-son']);
     S.tut = {}; (t.data || []).forEach(x => { S.tut[x.id.endsWith('-bas') ? 'bas' : 'son'] = x.veri; });
     try { const k = await C.sb.from('umal_disiplin_ayar').select('veri').eq('id', 'ogr-kart').maybeSingle(); S.kart = (k.data && k.data.veri) || {}; } catch (e) { S.kart = {}; }   // K-714: öğrenci bilgi kartları
+    try { const c_ = await C.sb.from('umal_disiplin_ayar').select('veri').eq('id', 'cagri-pusulasi').maybeSingle(); S.cpKayit = (c_.data && c_.data.veri) || null; } catch (e) { S.cpKayit = null; }   // K-973
   }
   async function kaydet(r) {
     r.durum = durumKod(r.veri);
@@ -837,6 +838,101 @@ ${satir('CEZAYI GEREKTİREN<br>DAVRANIŞIN ÇEŞİDİ VE<br>YÖNETMELİK MADDES�
 </div></body></html>`;
     C.belgeOnizle(html, 'Yazılı uyarı · ' + ad);
   }
+  // K-973: Toplu çağrı pusulası — kurul üyeleri çağrı yazısı, öğrenci ifade / toplantı çağrı pusulaları ve liste (idarenin kullandığı programdaki düzen)
+  const CP_DURUM = { sanik: 'Suçlanan öğrenci', musteki: 'Müşteki', tanik: 'Tanık' };
+  const CP_STIL = `.cp-ust{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:14px;margin-top:6px}.cp-kutu{border:1px solid var(--cizgi);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.02)}
+.cp-kutu h3{margin:0 0 8px;font-size:13px;letter-spacing:.06em;color:var(--soluk);font-weight:700}.cp-kutu label{display:block;font-size:12.5px;color:var(--soluk);margin:6px 0 3px}.cp-kutu input{width:100%;box-sizing:border-box}
+.cp-gundem{display:flex;flex-direction:column;gap:6px}.cp-gundem>div{display:grid;grid-template-columns:22px 1fr 34px;gap:6px;align-items:center}.cp-gundem b{color:var(--soluk);font-size:13px;text-align:center}.cp-gundem button{padding:4px 0}
+.cp-filtre{display:flex;gap:6px;flex-wrap:wrap}.cp-filtre button{border-radius:20px;padding:6px 14px}.cp-filtre button.secili{background:var(--neon);color:#04121c;border-color:var(--neon)}
+.cp-alt{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 8px;flex-wrap:wrap}.cp-durum{font-size:12px;padding:3px 9px;border-radius:10px;background:#2a1b2e;color:#ff9db0;white-space:nowrap}
+.cp-durum.tanik{background:#17283d;color:#8cc8ff}.cp-durum.musteki{background:#2b2614;color:#ffd27a}.cp-yaz{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.cp-yaz button{min-height:54px;line-height:1.25}
+.cp-yaz button small{display:block;font-weight:500;opacity:.75;font-size:12px}.cp-tablo input[type=checkbox]{width:18px;height:18px}.cp-ekle{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin:8px 0}
+@media (max-width:760px){.cp-ust,.cp-yaz,.cp-ekle{grid-template-columns:1fr}}`;
+  function cpVarsayilan() {
+    return { sayi: '', konu: 'Okul Öğrenci Ödül ve Disiplin Kurulu toplantısı', tarih: bugun(), yer: S.ayar.yer || 'Müdür odası', ttarih: bugun(), saat: '',
+      gundem: ['Açılış ve yoklama', 'Ödül ve Disiplin Kuruluna gelen dosyaların görüşülmesi', 'Dilek ve temenniler', 'Kapanış'], ekler: [], secim: null, suz: 'sanik' };
+  }
+  function cpOgrenciler() {
+    const L = DOS().filter(r => !r.yil || r.yil === S.yil).map(r => { const k = (r.veri.adim || {}).kurul || {};
+      return { key: 'd:' + r.id, ad: C.baslik(r.veri.ogr.ad), sinif: r.veri.ogr.sinif || '', no: r.ogr_no || '', durum: 'sanik', dosya: r.dosya_no || '', karar: k.karar_no || '', bekliyor: !k.tarih, olay: (r.veri.olay || {}).tarih || '' }; });
+    L.sort((a, b) => (b.bekliyor - a.bekliyor) || String(a.dosya).localeCompare(String(b.dosya), tr));
+    return L.concat((S.cp.ekler || []).map((e, i) => ({ key: 'e:' + i, ad: e.ad, sinif: e.sinif || '', no: e.no || '', durum: e.durum || 'tanik', dosya: '', karar: '', ek: i })));
+  }
+  function cagriPusulasi() {
+    if (!document.getElementById('dsCpStil')) { const st = document.createElement('style'); st.id = 'dsCpStil'; st.textContent = CP_STIL; document.head.appendChild(st); }
+    S.cp = S.cp || Object.assign(cpVarsayilan(), S.cpKayit || {});
+    const F = S.cp, T = cpOgrenciler();
+    if (!F.secim) F.secim = T.filter(o => o.bekliyor).map(o => o.key);
+    const gor = T.filter(o => F.suz === 'tumu' || o.durum === F.suz), sec = new Set(F.secim);
+    C.pencereAc(`<h2 style="margin-top:0">Çağrı pusulası</h2><div class="cp-ust">
+      <div class="cp-kutu"><h3>KURUL ÜYELERİ ÇAĞRI YAZISI</h3><label>Sayısı</label><input id="cp_sayi" value="${esc(F.sayi)}" placeholder="E-…"><label>Konusu</label><input id="cp_konu" value="${esc(F.konu)}"><label>Tarihi</label><input type="date" id="cp_tarih" value="${esc(F.tarih)}"></div>
+      <div class="cp-kutu"><h3>İFADE / TOPLANTI</h3><label>Yeri</label><input id="cp_yer" value="${esc(F.yer)}"><div class="ds-iki"><div><label>Tarihi</label><input type="date" id="cp_ttarih" value="${esc(F.ttarih)}"></div><div><label>Saati</label><input type="time" id="cp_saat" value="${esc(F.saat)}"></div></div></div>
+      <div class="cp-kutu"><h3>GÜNDEM MADDELERİ</h3><div class="cp-gundem">${F.gundem.map((g, i) => `<div><b>${i + 1}</b><input data-cpg="${i}" value="${esc(g)}"><button class="ikincil" data-cpgsil="${i}" title="Maddeyi çıkar">×</button></div>`).join('')}<button class="bag" id="cp_gekle" style="align-self:flex-start">+ Madde ekle</button></div></div></div>
+      <div class="cp-alt"><b>İfadeye / toplantıya çağrılacak öğrenciler</b><div class="cp-filtre">${[['sanik', 'Suçlanan öğrenci'], ['musteki', 'Müşteki'], ['tanik', 'Tanık'], ['tumu', 'Tümü']].map(([k, a]) => `<button class="ikincil ${F.suz === k ? 'secili' : ''}" data-cpsuz="${k}">${a}</button>`).join('')}<button class="bag" id="cp_oekle">+ Öğrenci ekle</button></div></div>
+      <div id="cp_ekleform" style="display:none"><div class="cp-ekle"><input id="cpe_ad" placeholder="Adı soyadı"><input id="cpe_sinif" placeholder="Sınıf (örn. 10-B)"><input id="cpe_no" placeholder="Okul no" inputmode="numeric"><select id="cpe_durum"><option value="tanik">Tanık</option><option value="musteki">Müşteki</option><option value="sanik">Suçlanan öğrenci</option></select><button class="birincil" id="cpe_kay">Ekle</button></div></div>
+      ${gor.length ? `<table class="ds-tablo cp-tablo"><tr><th style="width:44px">Sıra</th><th style="width:50px"><input type="checkbox" id="cp_hepsi" ${gor.every(o => sec.has(o.key)) ? 'checked' : ''} title="Hepsini seç"></th><th>Ad soyad</th><th>Sınıf - No</th><th>Durumu</th><th>Dosya</th><th>Karar no</th><th></th></tr>
+      ${gor.map((o, i) => `<tr><td>${i + 1}</td><td><input type="checkbox" data-cpsec="${esc(o.key)}" ${sec.has(o.key) ? 'checked' : ''}></td><td>${esc(o.ad)}</td><td>${esc(o.sinif)} - ${esc(o.no)}</td><td><span class="cp-durum ${o.durum}">${CP_DURUM[o.durum]}</span></td><td>${esc(o.dosya)}</td><td>${esc(o.karar)}</td><td>${o.ek !== undefined ? `<button class="bag" data-cpesil="${o.ek}">Çıkar</button>` : ''}</td></tr>`).join('')}</table>`
+        : `<div class="kart ds-bos">${F.suz === 'sanik' ? 'Bu yıl kurul dosyası yok.' : 'Bu grupta öğrenci yok. “+ Öğrenci ekle” ile ekleyebilirsiniz.'}</div>`}
+      <div class="cp-yaz"><button class="birincil" data-cpyaz="ifade">Öğrenci ifade çağrı pusulası<small>seçili ${sec.size} öğrenci</small></button><button class="birincil" data-cpyaz="toplanti">Öğrenci toplantı çağrı pusulası<small>seçili ${sec.size} öğrenci</small></button>
+      <button class="birincil" data-cpyaz="uye">Üye toplantı çağrı yazısı<small>başkan ve üyeler</small></button><button class="ikincil" data-cpyaz="liste">Listeyi yazdır<small>seçili öğrenciler</small></button></div>`);
+    const P = document.getElementById('pencere'), $p = s => P.querySelector(s); const pi = $p('.pencere-ic'); if (pi) pi.classList.add('genis');
+    const oku = () => { ['sayi', 'konu', 'tarih', 'yer', 'ttarih', 'saat'].forEach(k => { const e = $p('#cp_' + k); if (e) F[k] = e.value.trim(); }); F.gundem = [...P.querySelectorAll('[data-cpg]')].map(e => e.value.trim()); };
+    P.querySelectorAll('[data-cpsuz]').forEach(b => b.onclick = () => { oku(); F.suz = b.dataset.cpsuz; cagriPusulasi(); });
+    P.querySelectorAll('[data-cpsec]').forEach(c => c.onchange = () => { const s_ = new Set(F.secim); c.checked ? s_.add(c.dataset.cpsec) : s_.delete(c.dataset.cpsec); F.secim = [...s_]; oku(); cagriPusulasi(); });
+    const hp = $p('#cp_hepsi'); if (hp) hp.onchange = () => { const s_ = new Set(F.secim); gor.forEach(o => hp.checked ? s_.add(o.key) : s_.delete(o.key)); F.secim = [...s_]; oku(); cagriPusulasi(); };
+    P.querySelectorAll('[data-cpgsil]').forEach(b => b.onclick = () => { oku(); F.gundem.splice(+b.dataset.cpgsil, 1); cagriPusulasi(); });
+    $p('#cp_gekle').onclick = () => { oku(); F.gundem.push(''); cagriPusulasi(); const L_ = P.querySelectorAll('[data-cpg]'); if (L_.length) L_[L_.length - 1].focus(); };
+    $p('#cp_oekle').onclick = () => { const f = $p('#cp_ekleform'); f.style.display = f.style.display === 'none' ? '' : 'none'; if (F.suz !== 'tumu' && F.suz !== 'sanik') $p('#cpe_durum').value = F.suz; $p('#cpe_ad').focus(); };
+    $p('#cpe_kay').onclick = () => { const ad_ = $p('#cpe_ad').value.trim(); if (!ad_) { $p('#cpe_ad').focus(); return; } oku();
+      F.ekler = (F.ekler || []).concat({ ad: C.baslik(ad_), sinif: $p('#cpe_sinif').value.trim().toLocaleUpperCase(tr), no: $p('#cpe_no').value.trim(), durum: $p('#cpe_durum').value });
+      F.secim = F.secim.concat('e:' + (F.ekler.length - 1)); cagriPusulasi(); };
+    P.querySelectorAll('[data-cpesil]').forEach(b => b.onclick = () => { oku(); const i = +b.dataset.cpesil; F.ekler.splice(i, 1);
+      F.secim = F.secim.filter(k => k !== 'e:' + i).map(k => { const z = /^e:(\d+)$/.exec(k); return z && +z[1] > i ? 'e:' + (+z[1] - 1) : k; }); cagriPusulasi(); });
+    P.querySelectorAll('[data-cpyaz]').forEach(b => b.onclick = () => { oku(); cpKaydet(); cpYazdir(b.dataset.cpyaz); });
+  }
+  async function cpKaydet() {
+    const F = S.cp, veri = { sayi: F.sayi, konu: F.konu, yer: F.yer, saat: F.saat, gundem: F.gundem.filter(Boolean), ekler: F.ekler || [] };
+    S.cpKayit = veri;
+    try { await C.israrla(() => C.sb.from('umal_disiplin_ayar').upsert({ id: 'cagri-pusulasi', veri, guncel: new Date().toISOString() }, { onConflict: 'id' })); } catch (e) {}
+  }
+  function cpYazdir(tur) {
+    const F = S.cp, ay = S.ayar, sec = new Set(F.secim), O = cpOgrenciler().filter(o => sec.has(o.key));
+    if (tur !== 'uye' && !O.length) { window.UmalSor.uyar('Önce listeden öğrenci seçin.'); return; }
+    const gun = F.ttarih ? tarih(F.ttarih).toLocaleDateString(tr, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }) : '…… / …… / 20……';
+    const saat = F.saat ? F.saat.replace(':', '.') : '…………', yer = F.yer || '……………………';
+    const UST = `<div class="ust"><img src="${esc(C.logo)}" alt="">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>`;
+    const ogrT = o => `<table><tr><th style="width:38%">Öğrencinin adı soyadı</th><td>${esc(o.ad)}</td></tr><tr><th>Sınıfı - No</th><td>${esc(o.sinif)} - ${esc(o.no)}</td></tr><tr><th>Durumu</th><td>${CP_DURUM[o.durum]}</td></tr>${zS}</table>`;
+    const imza = `<div class="imza2"><div>Tebellüğ eden öğrenci<br>…… / …… / 20……<br><br>İmza</div><div>Kurul Başkanı<br>${esc(ay.baskan || '')}<br><br>İmza</div></div>`;
+    const zS = `<tr><th>Tarih</th><td>${esc(gun)}</td></tr><tr><th>Saat</th><td>${esc(saat)}</td></tr><tr><th>Yer</th><td>${esc(yer)}</td></tr>`;
+    const zT = `<table><tr><th style="width:38%">Tarih</th><td>${esc(gun)}</td></tr><tr><th>Saat</th><td>${esc(saat)}</td></tr><tr><th>Yer</th><td>${esc(yer)}</td></tr></table>`;
+    const metin = o => tur === 'ifade'
+      ? `<p>${o.olay ? esc(tUzun(o.olay)) + ' tarihinde meydana gelen olayla' : 'Okul Öğrenci Ödül ve Disiplin Kuruluna gelen dosyayla'} ilgili ${o.durum === 'sanik' ? 'ifadenizin' : esc(CP_DURUM[o.durum].toLocaleLowerCase(tr)) + ' olarak ifadenizin'} alınması için aşağıda belirtilen gün, saat ve yerde hazır bulunmanız gerekmektedir.</p>`
+      : `<p>Okul Öğrenci Ödül ve Disiplin Kurulu aşağıda belirtilen gün, saat ve yerde toplanacaktır. ${o.durum === 'sanik' ? 'Hakkınızdaki disiplin dosyasının görüşülmesi sırasında sözlü savunmanızı yapmak üzere belirtilen gün ve saatte velinizle birlikte hazır bulunmanız gerekmektedir. Gelmediğiniz takdirde savunma hakkınızdan vazgeçmiş sayılırsınız.' : `Kurulda ${esc(CP_DURUM[o.durum].toLocaleLowerCase(tr))} olarak dinlenmek üzere belirtilen gün ve saatte hazır bulunmanız gerekmektedir.`}</p>`;
+    const kab = (bas, gov) => `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(bas)}</title><style>
+@page{size:A4;margin:0}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12pt;color:#000;margin:0}
+.sf{width:210mm;min-height:297mm;padding:10mm 16mm;page-break-after:always;break-after:page}.sf:last-child{page-break-after:auto;break-after:auto}
+.ust{text-align:center;font-weight:bold;line-height:1.4}.ust img{height:18mm;display:block;margin:0 auto 2mm}h1{font-size:13pt;text-align:center;margin:5mm 0 4mm}
+table{width:100%;border-collapse:collapse;margin:3mm 0}td,th{border:1px solid #000;padding:2mm 3mm;text-align:left;vertical-align:top}th{background:#f2f2f2}
+p{margin:2mm 0;text-align:justify;line-height:1.5}.sag{text-align:right}.pus{border:1px dashed #000;padding:5mm 7mm;height:136mm;margin-bottom:4mm;overflow:hidden;font-size:11pt}
+.pus .ust{font-size:10.5pt;line-height:1.3}.pus .ust img{height:13mm;margin-bottom:1mm}.pus h1{font-size:12pt;margin:3mm 0}.pus td,.pus th{padding:1.2mm 3mm}.pus p{line-height:1.4}
+.imza2{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:3mm;text-align:center}.ust2{display:flex;justify-content:space-between;gap:8mm}</style></head><body>${gov}</body></html>`;
+    if (tur === 'ifade' || tur === 'toplanti') {
+      const bas = tur === 'ifade' ? 'ÖĞRENCİ İFADE ÇAĞRI PUSULASI' : 'ÖĞRENCİ TOPLANTI ÇAĞRI PUSULASI', sf = [];
+      for (let i = 0; i < O.length; i += 2) sf.push(`<div class="sf">${O.slice(i, i + 2).map(o => `<div class="pus">${UST}<h1>${bas}</h1>${metin(o)}${ogrT(o)}${imza}</div>`).join('')}</div>`);
+      return C.belgeOnizle(kab(bas, sf.join('')), (tur === 'ifade' ? 'Öğrenci ifade çağrı pusulası' : 'Öğrenci toplantı çağrı pusulası') + ' · ' + O.length + ' öğrenci', false, { kenar: [0, 0, 0, 0] });
+    }
+    if (tur === 'uye') {
+      const U = [[ay.baskan, 'Başkan'], ...(ay.uyeler || []).filter(u => u && u !== ay.baskan).map(u => [u, 'Üye'])].filter(x => x[0]);
+      const gov = `<div class="sf">${UST}<div class="ust2" style="margin-top:6mm"><div>Sayı : ${esc(F.sayi || '……………………')}<br>Konu : ${esc(F.konu)}</div><div>${F.tarih ? tGoster(F.tarih).replace(/\//g, '.') : '…… / …… / 20……'}</div></div>
+<h1 style="margin-top:8mm">DAĞITIM YERLERİNE</h1><p style="text-indent:10mm">Okul Öğrenci Ödül ve Disiplin Kurulu, aşağıdaki gündem maddelerini görüşmek üzere belirtilen gün, saat ve yerde toplanacaktır. Kurul üyelerinin toplantıda hazır bulunmalarını rica ederim.</p>${zT}
+<p><b>GÜNDEM</b></p><p>${F.gundem.filter(Boolean).map((g, i) => `${i + 1}. ${esc(g)}`).join('<br>')}</p><div class="sag" style="margin:10mm 0 6mm">${esc(ay.mudur || '')}<br>Okul Müdürü</div>
+<table><tr><th style="width:8%">Sıra</th><th>Adı soyadı</th><th style="width:22%">Görevi</th><th style="width:26%">Tebellüğ imzası</th></tr>${(U.length ? U : [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]).map((u, i) => `<tr><td>${i + 1}</td><td>${esc(u[0])}</td><td>${esc(u[1])}</td><td>&nbsp;</td></tr>`).join('')}</table></div>`;
+      return C.belgeOnizle(kab('ÜYE TOPLANTI ÇAĞRI YAZISI', gov), 'Üye toplantı çağrı yazısı', false, { kenar: [0, 0, 0, 0] });
+    }
+    const gov = `<div class="sf">${UST}<h1>İFADEYE / TOPLANTIYA ÇAĞRILAN ÖĞRENCİLER</h1><p>Toplantı: ${esc(gun)} · ${esc(saat)} · ${esc(yer)}</p>
+<table><tr><th style="width:8%">Sıra</th><th>Adı soyadı</th><th>Sınıf - No</th><th>Durumu</th><th>Karar no</th><th style="width:20%">İmza</th></tr>${O.map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.ad)}</td><td>${esc(o.sinif)} - ${esc(o.no)}</td><td>${CP_DURUM[o.durum]}</td><td>${esc(o.karar)}</td><td>&nbsp;</td></tr>`).join('')}</table></div>`;
+    C.belgeOnizle(kab('ÇAĞRILAN ÖĞRENCİ LİSTESİ', gov), 'Çağrılan öğrenci listesi', false, { kenar: [0, 0, 0, 0] });
+  }
   // ---- Belge listeleri (her dosya için ilgili belge düğmeleri)
   const LISTE_BELGE = { cagri: ['Çağrı pusulaları', [['cagri', 'Çağrı pusulası']]], formlar: ['Tutanak ve formlar', [['tutanak', 'Olay tutanağı'], ['ifade', 'İfade tutanağı'], ['savunma2', 'Savunma tutanağı'], ['evrak', 'Bilgi toplama formları']]],
     karar: ['Karar', [['karar', 'Karar · EK-1']]], teblig: ['Ceza tebligatı', [['ogrteb', 'Öğrenci tebligat pusulası'], ['veliteb', 'Veli ceza bildirimi']]], dizi: ['Dizi pusulası', [['dizi', 'Dizi pusulası']]] };
@@ -850,7 +946,7 @@ ${satir('CEZAYI GEREKTİREN<br>DAVRANIŞIN ÇEŞİDİ VE<br>YÖNETMELİK MADDES�
       if (tur === 'teblig') return a.teblig && a.teblig.tarih ? `${tGoster(a.teblig.tarih)} tebliğ edildi` : `<button class="ikincil" data-adimid="${r.id}" data-k="${a.onay && a.onay.tarih ? 'teblig' : 'onay'}">${a.onay && a.onay.tarih ? 'Tebliğ gir' : 'Onay gir'}</button>`;
       if (tur === 'cagri') return k.tarih ? 'Toplantı ' + tGoster(k.tarih) : (a.sevk && a.sevk.tarih ? 'Karar son gün ' + tGoster(isGunuEkle(a.sevk.tarih, 10)) : 'Sevk edilmedi');
       return esc(siradaki(r.veri) >= adimlar(r.veri).length ? 'Kesinleşti' : adimlar(r.veri)[siradaki(r.veri)][1]); };
-    kok.innerHTML = `${geriBas(ad, tur === 'karar' ? '' : '')}<div class="ds-ara" style="margin-top:12px"><input id="dsAra" placeholder="Öğrenci adı, no ya da dosya no" value="${esc(S.ara)}"></div>
+    kok.innerHTML = `${geriBas(ad, tur === 'cagri' ? '<button class="birincil" data-cagripus>Çağrı pusulası</button>' : '')}<div class="ds-ara" style="margin-top:12px"><input id="dsAra" placeholder="Öğrenci adı, no ya da dosya no" value="${esc(S.ara)}"></div>
       ${L.length ? `<table class="ds-tablo"><tr><th>Dosya</th><th>Öğrenci</th><th>Olay</th><th>Durum</th><th>Belge</th></tr>${L.map(r => `<tr><td>${esc(r.dosya_no)}</td><td>${esc(C.baslik(r.veri.ogr.ad))} · ${esc(r.veri.ogr.sinif)}</td><td>${tGoster(r.veri.olay.tarih)} · ${esc(r.veri.olay.ozet)}</td><td>${durumYazi(r)}</td>
         <td style="white-space:nowrap">${B.map(([k, a]) => `<button class="ikincil" data-belge="${k}" data-id="${r.id}">${a}</button>`).join(' ')}</td></tr>`).join('')}</table>` : `<div class="kart ds-bos">${tur === 'teblig' ? 'Tebliğ edilecek karar yok.' : 'Dosya yok.'}</div>`}`;
     aramaBagla();
@@ -973,6 +1069,7 @@ ${satir('CEZAYI GEREKTİREN<br>DAVRANIŞIN ÇEŞİDİ VE<br>YÖNETMELİK MADDES�
       const oe = t.closest('[data-ogrsec]'); if (oe) { S.ogrSec = oe.dataset.ogrsec; ciz(); return; }
       const ekle = t.closest('[data-ekle]'); if (ekle) return yeniOlay(null, S.L.find(x => x.id === ekle.dataset.ekle));
       const tu = t.closest('[data-tut]'); if (tu) return kurulTutanakFormu(tu.dataset.tut);
+      if (t.closest('[data-cagripus]')) return cagriPusulasi();   // K-973
       const sl = t.closest('[data-satsil]'); if (sl) return satirSil(sl.dataset.satsil);
       const is = t.closest('[data-is]'); if (!is) return;
       if (is.dataset.is === 'yeni') return yeniOlay(null);
