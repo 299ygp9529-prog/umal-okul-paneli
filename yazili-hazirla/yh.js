@@ -19,7 +19,8 @@
     acik: { ad: 'Açık uçlu soru', kisa: 'Açık uçlu' }, coktan: { ad: 'Çoktan seçmeli', kisa: 'Çoktan seçmeli' }, bosluk: { ad: 'Boşluk doldurma', kisa: 'Boşluk doldurma' },
     dy: { ad: 'Doğru / Yanlış', kisa: 'Doğru / Yanlış' }, eslestir: { ad: 'Eşleştirme', kisa: 'Eşleştirme' }, metin: { ad: 'Metin / yönerge', kisa: 'Metin' }
   };
-  const HARF = 'ABCDE';
+  const HARF = 'ABCDEF';
+  const sikSayisi = () => { try { const n = +localStorage.getItem('yh-sik'); return n >= 2 && n <= 6 ? n : 4; } catch (e) { return 4; } };   // K-1011: son seçilen şık sayısı yeni sorulara gelir
   const SEMBOLLER = ['π', '√', '∠', '°', '≤', '≥', '≠', '≈', '±', '×', '÷', '·', '∞', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', 'ℝ', 'ℕ', 'ℤ', 'ℚ', '→', '⇒', '⇔', 'α', 'β', 'θ', 'Δ', 'Σ', '′', '″', '⊥', '∥', '△', '□', '≅', '∼'];
   const RENKLER = ['#111111', '#c0392b', '#1f5fbf', '#1e8449', '#7d3c98', '#b9770e', '#5d6d7e', '#ffffff'];
 
@@ -98,7 +99,8 @@
 .yh-s[data-tur="metin"] .yh-govde{font-style:normal}
 .yh-s[data-tur="metin"]{padding-bottom:3mm}
 .yh-metin-kutu .yh-govde{border:.3mm solid #999;border-radius:1.5mm;padding:2mm 3mm;background:#fafafa}
-.yh-secenekler{display:grid;gap:1.2mm 4mm;margin:1.6mm 0 0 6.6mm}
+.yh-secenekler{display:grid;gap:1.2mm 4mm;margin:1.6mm 0 0 6.6mm;position:relative}
+.yh-sik-ayar{display:none}
 .yh-secenekler.d-1{grid-template-columns:1fr}.yh-secenekler.d-2{grid-template-columns:1fr 1fr}.yh-secenekler.d-5{grid-template-columns:repeat(var(--n),1fr)}
 .yh-secenek{display:flex;gap:1.2mm;align-items:flex-start;min-width:0}
 .yh-secenek b{flex:none;color:var(--yh-vurgu)}
@@ -205,6 +207,8 @@ body.yh-acik #pencere{z-index:70}
 .mf-k{display:inline-block;min-width:.8em;min-height:1.1em;line-height:1.15;padding:0 .08em;outline:none;border-radius:3px;text-align:center;vertical-align:middle}
 .mf-k:empty{border:1.5px dashed #6bb7d8;background:#eef9fd}
 .mf-k:focus{background:#e2f6fb;box-shadow:0 0 0 1.5px #22c4e0}
+.yh-editor .yh-s.secili .yh-sik-ayar{display:flex;gap:4px;position:absolute;right:0;bottom:0;transform:translateY(calc(100% + 2px));z-index:3}
+.yh-sik-ayar button{font:600 11px 'YH Poppins',sans-serif;background:#0f2238;color:#cfe3ff;border:1px solid #2a4d75;border-radius:6px;padding:2px 8px;cursor:pointer}.yh-sik-ayar button:hover{border-color:#22c4e0;color:#22e8ff}
 .mf-y{cursor:pointer;border-radius:4px}.mf-y:hover{background:rgba(34,196,224,.08)}
 .mf-xsil{position:absolute;z-index:5;width:20px;height:20px;border-radius:50%;border:0;background:#ff5a64;color:#fff;font:700 14px/20px sans-serif;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}.yh-modal-ic{position:relative}.mf-y.mf-sec{background:#ffe7e7;box-shadow:0 0 0 2px #ff6b6b}
 .mf-kesir{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;font-size:.88em}
@@ -363,7 +367,7 @@ body.yh-acik #pencere{z-index:70}
     if (im.kapanis != null) h.kapanis = im.kapanis; return b; }
   function yeniSoru(tur) {
     const s = { id: uid(), tur, govde: '', puan: tur === 'metin' ? 0 : 10, cevap: '', ca: { tur: tur === 'acik' ? 'cizgi' : 'yok', boy: tur === 'acik' ? 5 : 3 } };
-    if (tur === 'coktan') { s.secenek = ['', '', '', '']; s.dizilim = 'oto'; s.dogru = ''; s.puan = 5; }
+    if (tur === 'coktan') { s.secenek = Array(sikSayisi()).fill(''); s.dizilim = 'oto'; s.dogru = ''; s.puan = 5; }
     if (tur === 'dy') { s.maddeler = ['', '', '']; s.dyCevap = []; s.govde = 'Aşağıdaki ifadelerin başına doğru ise <b>D</b>, yanlış ise <b>Y</b> yazınız.'; }
     if (tur === 'eslestir') { s.sol = ['', '', '']; s.sag = ['', '', '']; s.govde = 'Sol sütundaki ifadeleri sağ sütundaki uygun ifadelerle eşleştiriniz.'; }
     if (tur === 'bosluk') { s.kelimeler = ''; s.govde = 'Aşağıdaki cümlelerde boş bırakılan yerleri uygun ifadelerle doldurunuz.<div><br></div>'; }
@@ -721,7 +725,7 @@ body.yh-acik #pencere{z-index:70}
   function soruIc(el, s) {
     const ce = (alan, i, html) => `<div contenteditable="true" data-alan="${alan}"${i != null ? ` data-i="${i}"` : ''} data-ipucu="${esc(ipucu[alan] || '')}">${html || ''}</div>`;
     let ek = '';
-    if (s.tur === 'coktan') { const d = dizilim(s); ek = `<div class="yh-secenekler ${d}" style="--n:${s.secenek.length}">${s.secenek.map((x, i) => `<div class="yh-secenek"><b>${HARF[i]})</b>${ce('sec', i, x)}</div>`).join('')}</div>`; }
+    if (s.tur === 'coktan') { const d = dizilim(s); ek = `<div class="yh-secenekler ${d}" style="--n:${s.secenek.length}">${s.secenek.map((x, i) => `<div class="yh-secenek"><b>${HARF[i]})</b>${ce('sec', i, x)}</div>`).join('')}<div class="yh-sik-ayar" contenteditable="false">${s.secenek.length < 6 ? '<button data-sikekle title="Şık ekle">+ Şık</button>' : ''}${s.secenek.length > 2 ? '<button data-sikcikar title="Son şıkkı çıkar">− Şık</button>' : ''}</div></div>`; }
     if (s.tur === 'dy') ek = `<div class="yh-dy">${s.maddeler.map((x, i) => `<div class="yh-madde"><span class="yh-kutu">(     )</span>${ce('madde', i, x)}</div>`).join('')}</div>`;
     if (s.tur === 'eslestir') ek = `<div class="yh-esl"><div>${s.sol.map((x, i) => `<div class="yh-esl-s"><b>${i + 1}.</b>${ce('sol', i, x)}<span class="yh-kutu">(   )</span></div>`).join('')}</div><div>${s.sag.map((x, i) => `<div class="yh-esl-s"><b>${'abcdefghij'[i]})</b>${ce('sag', i, x)}</div>`).join('')}</div></div>`;
     if (s.tur === 'bosluk') ek = `<div class="yh-kelime" contenteditable="true" data-alan="kelimeler" data-ipucu="${esc(ipucu.kelimeler)}">${s.kelimeler || ''}</div>`;
@@ -823,7 +827,7 @@ body.yh-acik #pencere{z-index:70}
     const no = B.sorular.filter(x => x.tur !== 'metin').indexOf(s) + 1, ca = s.ca || { tur: 'yok', boy: 3 };
     const cip = (ad, deg, sec, veri) => `<button class="yh-cip ${sec ? 'on' : ''}" ${veri}="${esc(deg)}">${esc(ad)}</button>`;
     let ozel = '';
-    if (s.tur === 'coktan') ozel = `<div class="yh-satir"><label>Seçenek</label>${cip('4', 4, s.secenek.length === 4, 'data-secsay')}${cip('5', 5, s.secenek.length === 5, 'data-secsay')}${cip('3', 3, s.secenek.length === 3, 'data-secsay')}${cip('2', 2, s.secenek.length === 2, 'data-secsay')}</div>
+    if (s.tur === 'coktan') ozel = `<div class="yh-satir"><label>Şık sayısı</label>${[2, 3, 4, 5, 6].map(k => cip(String(k), k, s.secenek.length === k, 'data-secsay')).join('')}</div>
       <div class="yh-satir"><label>Dizilim</label>${cip('Otomatik', 'oto', !s.dizilim || s.dizilim === 'oto', 'data-diz')}${cip('Alt alta', 'd-1', s.dizilim === 'd-1', 'data-diz')}${cip('İkişer', 'd-2', s.dizilim === 'd-2', 'data-diz')}${cip('Yan yana', 'd-5', s.dizilim === 'd-5', 'data-diz')}</div>
       <div class="yh-satir"><label>Doğru cevap</label>${s.secenek.map((x, i) => cip(HARF[i], HARF[i], s.dogru === HARF[i], 'data-dogru')).join('')}</div>`;
     if (s.tur === 'dy') ozel = `<div class="yh-satir"><label>İfadeler</label><button class="yh-cip" data-madde="+">+ ekle</button><button class="yh-cip" data-madde="-">− çıkar</button></div><div class="yh-not" style="margin:-2px 0 6px">İmlecin bulunduğu ifade çıkarılır. Boş bir ifadede geri silme tuşu da onu siler; Enter yeni ifade açar.</div>
@@ -909,6 +913,7 @@ body.yh-acik #pencere{z-index:70}
     kap.addEventListener('click', ev => {
       const fig = ev.target.closest('.yh-fig'); if (fig) return;   // K-991: seçim pointerup'ta
       if (Date.now() - sonFigTik < 450) return;
+      const sk = ev.target.closest('[data-sikekle],[data-sikcikar]'); if (sk) { const el_ = sk.closest('.yh-s'), q = el_ && B.sorular.find(x => x.id === el_.dataset.id); if (q) { modelOku(); if (sk.hasAttribute('data-sikekle') && q.secenek.length < 6) q.secenek.push(''); else if (sk.hasAttribute('data-sikcikar') && q.secenek.length > 2) { q.secenek.pop(); if (q.dogru && HARF.indexOf(q.dogru) >= q.secenek.length) q.dogru = ''; } try { localStorage.setItem('yh-sik', q.secenek.length); } catch (e) {} soruYenile(q); degisti(true); sagCiz(); setTimeout(diz, 40); } return; }
       const ks = ev.target.closest('.yh-kesir'); if (ks) { kesirDiyalog(ks); return; }
       const kk = ev.target.closest('.yh-kok'); if (kk) { kokDiyalog(kk); return; }
       const mt = ev.target.closest('.yh-mat'); if (mt) { formulDiyalog(mt); return; }
@@ -993,7 +998,7 @@ body.yh-acik #pencere{z-index:70}
       const b = ev.target.closest('button,[data-sid]'); if (!b) return; const s = seciliSoru();
       if (b.dataset.lsil) { const q = B.sorular.find(x => x.id === b.dataset.lsil); if (q) { await soruIslem('sil', q); sagCiz(); } return; }   // K-1008: listeden tek dokunuşla sil
       if (b.dataset.sid && !ev.target.closest('input')) { secId = b.dataset.sid; secGoster(); sagCiz(); const el = EL.get(secId); if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
-      if (b.dataset.secsay && s) { modelOku(); const n = +b.dataset.secsay; while (s.secenek.length < n) s.secenek.push(''); s.secenek.length = n; if (s.dogru && HARF.indexOf(s.dogru) >= n) s.dogru = ''; soruYenile(s); degisti(true); return; }
+      if (b.dataset.secsay && s) { modelOku(); const n = +b.dataset.secsay; try { localStorage.setItem('yh-sik', n); } catch (e) {} while (s.secenek.length < n) s.secenek.push(''); s.secenek.length = n; if (s.dogru && HARF.indexOf(s.dogru) >= n) s.dogru = ''; soruYenile(s); degisti(true); return; }
       if (b.dataset.diz && s) { modelOku(); s.dizilim = b.dataset.diz; soruYenile(s); degisti(true); return; }
       if (b.dataset.dogru && s) { s.dogru = s.dogru === b.dataset.dogru ? '' : b.dataset.dogru; degisti(true); return; }
       if (b.dataset.madde && s) { modelOku(); if (b.dataset.madde === '+') s.maddeler.push(''); else if (s.maddeler.length > 1) { const od = sonOdak && sonOdak.dataset && sonOdak.dataset.alan === 'madde' && EL.get(s.id) && EL.get(s.id).contains(sonOdak) ? +sonOdak.dataset.i : s.maddeler.length - 1; s.maddeler.splice(od, 1); if (s.dyCevap) s.dyCevap.splice(od, 1); } soruYenile(s); degisti(true); setTimeout(diz, 40); return; }
@@ -1582,7 +1587,7 @@ body.yh-acik #pencere{z-index:70}
   // ------------------------------------------------------------------ ÇIKTI: yazdırma, PDF, Word
   function temizKopya() {   // editör izlerini (seçim, düzenleme) atılmış sayfalar
     diz(); const k = $e('#yhSayfalar').cloneNode(true);
-    k.querySelectorAll('.yh-olcu,.yh-uyari-tas,.yh-tut').forEach(x => x.remove());
+    k.querySelectorAll('.yh-olcu,.yh-uyari-tas,.yh-tut,.yh-sik-ayar').forEach(x => x.remove());
     k.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
     k.querySelectorAll('.secili,.tasti').forEach(x => x.classList.remove('secili', 'tasti'));
     k.querySelectorAll('[data-ipucu]').forEach(x => x.removeAttribute('data-ipucu'));
