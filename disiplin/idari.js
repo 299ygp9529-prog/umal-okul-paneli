@@ -1315,11 +1315,11 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
   // Tarihler ders kesimine göre önerilir; kesim değişince elle değiştirilmemiş tarihler birlikte kayar. Kayıt: umal_idari 'evrak:donemsonu:<yıl>:<1|2>'
   const DS_ALAN = {   // anahtar: [etiket, kesime göre gün farkı (1. dönem), (2. dönem)]
     kesim: ['Ders kesimi (karne günü)', 0, 0], not_son: ['Not girişi son gün', -4, -4], fis_bas: ['Puan çizelgesi kontrolü başlangıç', -4, -4], fis_bit: ['Puan çizelgesi teslimi son gün', -3, -3],
-    mazeret_bas: ['Mazeret sınavları başlangıç', -11, -11], mazeret_bit: ['Mazeret sınavları bitiş', -5, -5], gorus_son: ['Karne görüşleri ve sosyal etkinlik girişi son gün', -3, -3],
+    mazeret_bas: ['Mazeret sınavları başlangıç', -11, -11], mazeret_bit: ['Mazeret sınavları bitiş', -7, -7], gorus_son: ['Karne görüşleri ve sosyal etkinlik girişi son gün', -3, -3],
     onur_son: ['Onur belgesi önerileri son gün', -7, -7], kutuphane_son: ['Kütüphane ödünç vermenin durması', -7, -7], evrak_son: ['Dönem sonu evrak teslimi son gün', -2, -2],
-    karne_hazir: ['Karnelerin hazırlanıp teslimi', -1, -1], tatil_bas: ['Tatil başlangıcı', 3, 3], tatil_bit: ['Tatil bitişi', 14, 87],
-    mesleki_bas: ['Mesleki çalışma başlangıcı', 3, 3], mesleki_bit: ['Mesleki çalışma bitişi', 7, 14], yeni_bas: ['Derslerin başlaması', 17, 88],
-    sor_bas: ['Sorumluluk sınavları başlangıç', 17, 81], sor_bit: ['Sorumluluk sınavları bitiş', 26, 85], zumre_bas: ['Zümre toplantıları', 17, 81] };
+    karne_hazir: ['Karnelerin hazırlanıp teslimi', -1, -1], tatil_bas: ['Tatil başlangıcı', 3, 3], tatil_bit: ['Tatil bitişi', 14, 86],
+    mesleki_bas: ['Mesleki çalışma başlangıcı', 3, 3], mesleki_bit: ['Mesleki çalışma bitişi', 7, 14], yeni_bas: ['Derslerin başlaması', 17, 87],
+    sor_bas: ['Sorumluluk sınavları başlangıç', 17, 80], sor_bit: ['Sorumluluk sınavları bitiş', 26, 84], zumre_bas: ['Zümre toplantıları', 17, 80] };
   const DS_SAAT = { not_saat: ['Not girişi son saat', '23.59'], rehber_saat: ['Sınıf rehber öğretmenleri okulda', '08.15'], karne_saat: ['Karne dağıtımı', '08.30'], teslim_saat: ['Dağıtılamayan karnelerin teslimi', '09.30'], kurul_saat: ['Öğretmenler kurulu', '15.30'] };
   const DS = { d: '1', V: {}, yuk: {} };
   // saate Türkçe ek: 09.00'da, 08.15'te, 23.59'a, 10.40'a (son okunan sözcüğe göre ünlü uyumu ve sertleşme)
