@@ -1511,10 +1511,11 @@
     if (!G && D.gercekRol === 'bas') d.insertAdjacentHTML('afterbegin', `<div class="mod-sat">${modSecHtml()}</div>`);   // K-776
     if (!G && TZ.L.length) { d.insertAdjacentHTML('afterbegin', tzKartHtml()); const k = d.querySelector('.tz-kart'); if (k) k.onclick = ev => { ev.stopPropagation(); tumuKapat(); D._gridden = true; ac('telsiz'); }; }   // K-808
     if (!G && TFG.L.length) { d.insertAdjacentHTML('afterbegin', tfgKartHtml()); d.querySelectorAll('.tfg-kartlar [data-tfgy]').forEach(b => b.onclick = ev => { ev.stopPropagation(); tfgAc(b.dataset.tfgy); }); }   // K-716cr
+    if (!G) { try { telAraKur(d); } catch (e) {} } else D._araQ = '';   // K-990
     D._tmGrup = G ? G[0] : ''; icGeriGuncelle();
     d.onclick = ev => { if (ev.target.closest('[data-icg]')) { history.replaceState(null, '', '#bolumler'); return tumuAc(false); } const g = ev.target.closest('[data-tg]'); if (g) return tumuAc(true, g.dataset.tg); const b = ev.target.closest('[data-tb]'); if (b) { D._gridGrup = D._tmGrup || ''; tumuKapat(); D._gridden = true; ac(b.dataset.tb); } };
   }
-  function tumuKapat() { const d = document.querySelector('.tumu-menu'); if (d) d.remove(); document.body.classList.remove('tm-acik'); if (telefon()) $('#telGeri').classList.remove('gizli'); icGeriGuncelle(); }
+  function tumuKapat() { D._araQ = ''; const d = document.querySelector('.tumu-menu'); if (d) d.remove(); document.body.classList.remove('tm-acik'); if (telefon()) $('#telGeri').classList.remove('gizli'); icGeriGuncelle(); }
   const ICG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   // K-775: sayfanın en üstteki başlığı Geri ile aynı satırda ortalanır; sayfanın kendi iç Geri'si varsa (alt seviye) Menü düğmesi gizlenir
   function icgBaslik() { const m = document.getElementById('icerik'), B = document.body; if (!m) return;
@@ -1539,12 +1540,55 @@
     if (h === 'bolumler') return tumuAc(false);
     if (h.startsWith('bolumler-')) return tumuAc(false, h.slice(9));
     if (document.querySelector('.tumu-menu') && h) { tumuKapat(); if (h !== D.bolum) ac(h); } });
-  setInterval(() => { if (document.body.classList.contains('tm-acik') && !document.hidden) { const h = location.hash.slice(1), st = (document.querySelector('.tumu-menu') || {}).scrollTop; tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); const d = document.querySelector('.tumu-menu'); if (d && st) d.scrollTop = st; } }, 15000);   // bildirim sayıları güncel kalsın
+  setInterval(() => { if (document.body.classList.contains('tm-acik') && !document.hidden && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.tm-ara'))) { const h = location.hash.slice(1), st = (document.querySelector('.tumu-menu') || {}).scrollTop; tumuAc(false, h.startsWith('bolumler-') ? h.slice(9) : undefined); const d = document.querySelector('.tumu-menu'); if (d && st) d.scrollTop = st; } }, 15000);   // bildirim sayıları güncel kalsın
   window.matchMedia('(max-width: 760px)').addEventListener('change', e => { if (!e.matches) { tumuKapat(); $('#telGeri').classList.add('gizli'); } else if (!document.querySelector('.tumu-menu')) $('#telGeri').classList.remove('gizli'); });
+  // K-990: Atlas'ta ara — bölüm adları ve içlerindeki işlerin anahtar kelimeleriyle; yazdıkça süzülür
+  const ARA_EK = {
+    harita: 'öğrenci nerede konum sınıf yer bulucu', kontrol: 'akıllı tahta kilitle aç kapat tahtalar ekran', sinav: 'sınav kartı oturma salon yoklama gözetmen', takvim: 'yazılı ortak sınav tarih takvim program',
+    kelebek: 'oturma planı salon dağıtım sıra yerleşim', nobet: 'nöbetçi öğretmen nöbet çizelgesi', anket: 'anket form soru rehberlik', konu: 'sınav konuları kazanım konu dağılımı',
+    dosyalar: 'ders dosyaları atlas sınıf pdf havuzu belge dosya paylaş', dersprog: 'ders programı hazırla çizelge saat', gorev: 'boş ders görevlendirme izinli öğretmen ders doldurma', dpistek: 'ders programı isteği boş gün tercih',
+    gb: 'tebrik uyarı yazılı uyarı öğrenci veli mesaj takdir', veli: 'veli kodları veli kartı giriş kodu erişim', otahta: 'tahta kilitle aç kapat dersim', oprogram: 'ders programım günlük ders saat',
+    obil: 'bildirim duyuru okul bildirimi gönder', dersyoklama: 'yoklama devamsızlık gelmeyen ders', notlar: 'not yükle e-okul puan kâğıdı soru puan fotoğraf not', duyuru: 'duyuru öğrenci haber',
+    rehberlik: 'rehberlik form anket bep öğrenci', disiplin: 'disiplin kurul çağrı pusulası karar tutanak ifade telafi sorumluluk veli toplantısı idari işlemler sınıf oluşturma komisyon', mektup: 'mektup öğrenci',
+    randevu: 'randevu görüşme rehberlik', sorutakip: 'soru takibi net deneme', mesajlar: 'mesaj sohbet yazış', mesajsikayet: 'şikayet mesaj', bildirim: 'öğrenci bildirimleri', gezikayit: 'gezi kayıt izin belgesi gezi raporu gezi dosyası anket veli izni',
+    gezi: 'otobüs koltuk bilet gezi', telsiz: 'gezi telsizi konuşma otobüs', ozelders: 'özel ders', calismaplan: 'çalışma planı program öğrenci', yonlendirme: 'yönlendirme rehberlik öğretmen', sinifform: 'sınıf formları sınıf rehber öğretmen form',
+    yonlendir: 'rehberliğe yönlendir öğrenci', giriskod: 'öğrenci girişi kod şifre', sinavhaz: 'sınav hazırla yazılı test soru kâğıdı word pdf kitap', soru: 'test hazırla kitaptan soru pdf deneme', yazili: 'yazılı hazırla sınav kâğıdı word editör',
+    testler: 'testler pdf havuzu test listesi', ogretmenler: 'öğretmen listesi branş kişiler', telkur: 'telefona kur uygulama yükle', cikti: 'çıktı al yazdır print', print: 'yazıcı umal print kurulum', acil: 'acil mesaj alarm duyuru'
+  };
+  const araNorm = s => String(s || '').toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  function araSonuc(q) {
+    const kel = araNorm(q).split(/[\s,.;]+/).filter(Boolean); if (!kel.length) return [];
+    return BOLUMLER.filter(bolIzin).map(b => { const ad = araNorm(b.ad), adK = ad.split(/\s+/), ek = araNorm(ARA_EK[b.id] || ''), ekK = ek.split(/\s+/); let p = 0;
+      for (const k of kel) { if (ad.startsWith(k)) p += 6; else if (adK.some(w => w.startsWith(k))) p += 5; else if (ad.includes(k)) p += 3; else if (ekK.some(w => w.startsWith(k))) p += 2; else if (ek.includes(k)) p += 1; else return null; }
+      return [b, p - (b.ust ? .5 : 0)]; }).filter(Boolean).sort((a, c) => c[1] - a[1]).map(x => x[0]).slice(0, 12);
+  }
+  const araAlt = id => { const t = (ARA_EK[id] || '').split(' ').slice(0, 5).join(', '); return t; };
+  function menuAraKur() {   // masaüstü: menünün üstünde arama kutusu
+    if (telefon() || document.getElementById('menuAra')) return; const m = $('#menu'); if (!m) return;
+    m.insertAdjacentHTML('beforebegin', `<div class="mn-ara"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input id="menuAra" type="search" placeholder="Atlas'ta ara…" autocomplete="off" aria-label="Atlas'ta ara"><kbd>Ctrl K</kbd></div>`);
+    const i = $('#menuAra');
+    const yaz = () => { const q = i.value.trim(); m.classList.toggle('mn-arama', !!q); if (!q) { menuYaz(); return; } const L = araSonuc(q);
+      m.innerHTML = L.length ? L.map((b, k) => `<button class="menu-oge mn-sonuc ${k === 0 ? 'mn-ilk' : ''}" data-b="${b.id}">${menuIk(b.ust || b.id)}<span class="mn-yazi"><span class="mad">${esc(b.ad)}</span><small class="mn-ack">${esc(araAlt(b.id))}</small></span></button>`).join('') : '<div class="soluk kucuk" style="padding:8px 12px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
+    i.addEventListener('input', yaz);
+    i.addEventListener('keydown', ev => { if (ev.key === 'Enter') { const b = m.querySelector('.mn-sonuc'); if (b) { b.click(); } } else if (ev.key === 'Escape') { i.value = ''; m.classList.remove('mn-arama'); menuYaz(); i.blur(); } });
+    m.addEventListener('click', ev => { if (ev.target.closest('.mn-sonuc') && i.value) setTimeout(() => { i.value = ''; m.classList.remove('mn-arama'); menuYaz(); }, 0); }, true);
+    document.addEventListener('keydown', ev => { if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'k' && !document.querySelector('.yh-tamekran')) { ev.preventDefault(); i.focus(); i.select(); } });
+  }
+  function telAraKur(d) {   // telefon: bütün bölümler ekranının en üstünde arama
+    if (!d || d.querySelector('.tm-ara')) return;
+    d.insertAdjacentHTML('afterbegin', `<div class="tm-ara"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input type="search" placeholder="Atlas'ta ara…" autocomplete="off" aria-label="Atlas'ta ara"></div><div class="tm-ara-sonuc gizli"></div>`);
+    const i = d.querySelector('.tm-ara input'), so = d.querySelector('.tm-ara-sonuc');
+    if (D._araQ) i.value = D._araQ;
+    const yaz = () => { const q = i.value.trim(); D._araQ = q; const diger = [...d.children].filter(x => !x.classList.contains('tm-ara') && !x.classList.contains('tm-ara-sonuc'));
+      diger.forEach(x => { x.style.display = q ? 'none' : ''; }); so.classList.toggle('gizli', !q); if (!q) { so.innerHTML = ''; return; }
+      const L = araSonuc(q); so.innerHTML = L.length ? `<div class="tm-gruplar">${L.map(b => `<button class="tm-gk" style="--g:#22e8ff" data-tb="${b.id}">${menuIk(b.ust || b.id)}<span class="tm-yazi"><span class="tm-gad">${esc(b.ad)}</span><small>${esc(araAlt(b.id))}</small></span></button>`).join('')}</div>` : '<div class="soluk" style="padding:14px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
+    i.addEventListener('input', yaz); i.addEventListener('click', ev => ev.stopPropagation());
+    if (i.value) yaz();
+  }
   const bolIzin = b => b.roller.includes(D.rol) && (!b.kosul || b.kosul());   // K-808: bazı bölümler yalnız koşul varken (ör. açık Gezi Telsizi)
   function menuYaz() { let sira = BOLUMLER.filter(b => bolIzin(b) && !b.ust);
     if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
-    $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''} ${b.id === D.bolum ? 'secili' : ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join(''); }
+    $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''} ${b.id === D.bolum ? 'secili' : ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join(''); try { menuAraKur(); } catch (e) {} }
   function menuKur() {
     if (!document.getElementById('icGeri')) { const g = document.createElement('div'); g.id = 'icGeri'; g.className = 'ic-geri-sat gizli'; g.innerHTML = `<button type="button" class="ic-geri" aria-label="Geri">${ICG_SVG}<span>Menü</span></button>`; $('#icerik').before(g);   // K-774: telefonda menüden açılan bütün iç ekranlarda Geri
       g.onclick = ev => { if (!ev.target.closest('.ic-geri')) return; if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); }; }
