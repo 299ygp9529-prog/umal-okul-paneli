@@ -27,12 +27,13 @@
     evrak: 'M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5ZM8 12.5h8M8 15.5h5',
     zumre: 'M5 3.5h10l4 4V20.5H5zM15 3.5V7.5h4M8 11h8M8 14h8M8 17h5',
     devam: 'M4 5.5h16v15H4zM4 10h16M8.5 3.5v4M15.5 3.5v4M9 13.5l6 5M15 13.5l-6 5',
+    dyk: 'M3.5 5.5h17v14h-17zM3.5 10h17M8 5.5v14M12 13h6M12 16.5h4',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1091,6 +1092,108 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   function zmGirdi(ev) { const t = ev.target, d = t.dataset; if (!d.zm || !ZM.z) return; const x = zmKayit(ZM.V[ZM.don], ZM.z);
     if (d.zm === 'gundem') { if (t.value.trim() === zmDonemGundem(ZM.V[ZM.don], ZM.don).trim()) delete x.gundem; else x.gundem = t.value; } else x[d.zm] = t.value; ZM.degisti = true; }
 
+  // ================================================================ 10) DYK PROGRAMI (26 Kasım 2026)
+  // Hafta içi okul dersleri bittikten sonra yapılan destekleme ve yetiştirme kurslarının haftalık programı.
+  // Saat dilimleri Evraklar › Ders Zaman Çizelgesi'ndeki DYK ayarından gelir (yoksa 15.00'ten 40 + 10 dk, 2 ders).
+  // Veri: umal_idari 'dyk:<yıl>' → { K: [{ id, gun (0-4), dilim (1..n), ders, ogretmen, grup, salon }] }
+  const DY_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+  const DY = { M: null, degisti: false, D: [], f: { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [] }, sec: '', filtre: '' };
+  async function dyk() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    try { DY.M = (await oku(`dyk:${egitimYili()}`)) || { K: [] }; } catch (e) { kok.innerHTML = bas('DYK Programı') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    let Z = null; try { Z = await oku(`evrak:zaman:${egitimYili()}`); } catch (e) {}
+    const V = Object.assign(ZC_VAR(), Z || {}); V.dyk = 1; DY.D = zcDyk(V); if (!DY.D.length) DY.D = zcDyk(Object.assign(ZC_VAR(), { dyk: 1 }));
+    const enCok = Math.max(0, ...DY.M.K.map(k => +k.dilim || 0)); for (let i = DY.D.length + 1; i <= enCok; i++) { const s = DY.D[DY.D.length - 1]; DY.D.push({ ad: `${i}. DERS`, g: s.c + 10, c: s.c + 10 + (s.c - s.g) }); }
+    DY.degisti = false; DY.sec = ''; dyCiz();
+  }
+  const dySaat = n => { const d = DY.D[n - 1]; return d ? `${zcS(d.g)}–${zcS(d.c)}` : `${n}. ders`; };
+  function dyCakisma() {   // aynı gün ve saatte aynı öğretmen ya da aynı derslik
+    const C_ = new Set(), M = new Map();
+    for (const k of DY.M.K) for (const [t, v] of [['o', k.ogretmen], ['s', k.salon]]) { if (!String(v || '').trim()) continue; const a = `${t}|${k.gun}|${k.dilim}|${dersAn(v)}`; if (M.has(a)) { C_.add(k.id); C_.add(M.get(a)); } else M.set(a, k.id); }
+    return C_;
+  }
+  function dyCiz() {
+    const K = DY.M.K, F = DY.f, O = ogretmenler(), cak = dyCakisma(), fl = norm(DY.filtre);
+    const og = new Map(); for (const k of K) if (k.ogretmen) og.set(k.ogretmen, (og.get(k.ogretmen) || 0) + 1);
+    const goster = k => !fl || norm(`${k.ders} ${k.ogretmen} ${k.grup} ${k.salon}`).includes(fl);
+    const cip = (ad, A, k, v) => `<button class="cip ${A.includes(v) ? 'secili' : ''}" data-dysec="${k}|${v}">${ad}</button>`;
+    kok.innerHTML = bas('DYK Programı', `${egitimYili()} · hafta içi okul dersleri sonrası destekleme ve yetiştirme kursları`, '<button class="ikincil" data-dyx="ogretmen">Öğretmen programları</button><button class="ikincil" data-dyx="ozet">Ek ders özeti</button><button class="ikincil" data-dyx="kaydet">Kaydet</button><button class="birincil" data-dyx="yazdir">Programı yazdır</button>') +
+      `<div class="kart id-not">Saat dilimleri <b>Evraklar › Ders Zaman Çizelgesi</b>'ndeki DYK ayarından gelir: ${DY.D.map((d, i) => `<b>${i + 1}. ders ${zcS(d.g)}–${zcS(d.c)}</b>`).join(', ')}. Kurs eklemek için dersi, öğretmeni, grubu ve dersliği yazın; günleri ve saatleri seçip "Ekle"ye basın. Aynı saatte aynı öğretmen ya da derslik iki kez kullanılırsa kırmızıyla gösterilir.</div>
+      <div style="display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start">
+      <div class="kart" style="margin:0"><b style="font-size:15px">${DY.sec ? 'Kursu düzenle' : 'Kurs ekle'}</b>
+        <div class="id-form" style="grid-template-columns:1fr;margin-top:8px">
+          <label>Öğretmen<input list="dyOgr" data-dyf="ogretmen" value="${esc(F.ogretmen)}" placeholder="Adını yazın"></label>
+          <label>Ders<input list="dyDers" data-dyf="ders" value="${esc(F.ders)}" placeholder="ör. Matematik"></label>
+          <label>Grup / sınıf<input data-dyf="grup" value="${esc(F.grup)}" placeholder="ör. 12. sınıflar TYT, 11-A"></label>
+          <label>Derslik<input list="dySalon" data-dyf="salon" value="${esc(F.salon)}" placeholder="ör. 12-A"></label></div>
+        <datalist id="dyOgr">${O.map(o => `<option value="${esc(o.ad)}">${esc(o.brans || '')}</option>`).join('')}</datalist>
+        <datalist id="dyDers">${[...new Set(O.map(o => o.brans && zmBrans(o.brans)).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr)).map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        <datalist id="dySalon">${Object.keys((PRG && PRG.siniflar) || {}).sort(sinifSira).map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+        <span class="id-et">Günler</span><div class="cipler">${DY_GUN.map((g, i) => cip(g.slice(0, 3), F.gun, 'gun', i)).join('')}</div>
+        <span class="id-et">Saatler</span><div class="cipler">${DY.D.map((d, i) => cip(`${i + 1}. ders · ${zcS(d.g)}`, F.dilim, 'dilim', i + 1)).join('')}</div>
+        <div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0">${DY.sec ? '<button class="birincil" data-dyx="guncelle">Güncelle</button><button class="ikincil" data-dyx="sil">Sil</button><button class="bag" data-dyx="vazgec">Vazgeç</button>' : '<button class="birincil" data-dyx="ekle">Ekle</button><button class="bag" data-dyx="temizle">Temizle</button>'}</div>
+        <div id="idBilgi" class="id-bilgi"></div>
+        <span class="id-et">Öğretmenlerin haftalık DYK saati</span><div class="soluk kucuk" style="line-height:1.8">${[...og].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], tr)).map(([a, n]) => `<button class="bag" data-dyfil="${esc(a)}" style="padding:0">${esc(C.baslik(a))}</button> ${n}`).join(' · ') || 'Henüz kurs yok.'}</div></div>
+      <div class="kart" style="margin:0"><div class="id-satir" style="gap:8px;margin-bottom:8px"><input data-dyfiltre="1" value="${esc(DY.filtre)}" placeholder="Öğretmen, ders, grup ya da derslik ara" style="max-width:300px"><span class="soluk kucuk">${K.length} ders saati · ${og.size} öğretmen${cak.size ? ` · <b style="color:#fca5a5">${cak.size} çakışma</b>` : ''}</span></div>
+        <div style="overflow-x:auto"><table class="liste" style="table-layout:fixed;min-width:760px;width:100%"><colgroup><col style="width:96px">${DY_GUN.map(() => '<col>').join('')}</colgroup><thead><tr><th>Saat</th>${DY_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>
+        ${DY.D.map((d, i) => `<tr><td style="vertical-align:top"><b>${i + 1}. ders</b><div class="soluk kucuk">${zcS(d.g)}–${zcS(d.c)}</div></td>${DY_GUN.map((_, g) => `<td style="vertical-align:top">${K.filter(k => +k.gun === g && +k.dilim === i + 1 && goster(k)).map(k => `<button data-dyk="${esc(k.id)}" style="display:block;width:100%;text-align:left;margin:0 0 5px;padding:6px 8px;border-radius:8px;cursor:pointer;font:inherit;color:inherit;background:${cak.has(k.id) ? 'rgba(239,68,68,.18)' : DY.sec === k.id ? 'rgba(34,232,255,.18)' : 'rgba(255,255,255,.05)'};border:1px solid ${cak.has(k.id) ? '#ef4444' : DY.sec === k.id ? '#22e8ff' : 'rgba(255,255,255,.12)'}"><b>${esc(k.ders || '—')}</b><div class="kucuk">${esc(C.baslik(k.ogretmen || ''))}</div><div class="soluk kucuk">${esc([k.grup, k.salon].filter(Boolean).join(' · '))}</div></button>`).join('')}<button class="bag kucuk" data-dyhucre="${g}|${i + 1}">+ ekle</button></td>`).join('')}</tr>`).join('')}
+        </tbody></table></div></div></div>`;
+  }
+  function dyBelgeKabuk(baslik, govde, yatay) {
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>
+@page{size:A4 ${yatay ? 'landscape' : 'portrait'};margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,"Liberation Sans",sans-serif;font-size:9.5pt;color:#0f2147;margin:0;padding:12mm}@media print{body{padding:0}}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{position:relative;text-align:center;min-height:17mm;padding-top:1mm}.ust img{position:absolute;left:0;top:0;height:17mm}.ust b{display:block;font-size:13pt}.ust span{font-size:10pt;color:#444}
+h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{border-collapse:collapse;width:100%}th{background:#0f2147;color:#fff;padding:2mm;border:.3mm solid #0f2147;font-size:10pt}td{border:.3mm solid #8fa3bf;padding:1.6mm 2mm;vertical-align:top}td.s{width:24mm;text-align:center;background:#f1f4f9}
+.k{border-left:1mm solid #d4a64a;background:#fbf7ec;padding:1mm 1.6mm;margin-bottom:1.2mm;break-inside:avoid}.k b{display:block;font-size:9.5pt}.k i{font-style:normal;color:#444;font-size:8.5pt}tr{break-inside:avoid}thead{display:table-header-group}
+.imz{display:flex;justify-content:space-between;margin-top:9mm;text-align:center;break-inside:avoid}.imz div{width:65mm}.top{margin-top:3mm;font-size:10pt}
+</style></head><body>${govde}</body></html>`;
+  }
+  const dyUst = () => `<div class="ust"><img src="${LOGO()}" alt=""><b>ÜMRANİYE MERKEZ ANADOLU LİSESİ</b><span>${esc(egitimYili())} EĞİTİM ÖĞRETİM YILI</span></div>`;
+  function dyIzgara(K, ogrGoster) {
+    return `<table style="table-layout:fixed"><colgroup><col style="width:24mm">${DY_GUN.map(() => '<col>').join('')}</colgroup><thead><tr><th>Saat</th>${DY_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>${DY.D.map((d, i) => `<tr><td class="s"><b>${i + 1}. ders</b><br>${zcS(d.g)} – ${zcS(d.c)}</td>${DY_GUN.map((_, g) => `<td>${K.filter(k => +k.gun === g && +k.dilim === i + 1).sort((a, b) => String(a.ders).localeCompare(String(b.ders), tr)).map(k => `<div class="k"><b>${esc(k.ders || '')}</b>${ogrGoster ? `<i>${esc(C.baslik(k.ogretmen || ''))}</i><br>` : ''}<i>${esc([k.grup, k.salon].filter(Boolean).join(' · '))}</i></div>`).join('')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  const dyGenel = () => dyBelgeKabuk('DYK haftalık programı', `<section class="sy">${dyUst()}<h1>DESTEKLEME VE YETİŞTİRME KURSU HAFTALIK PROGRAMI</h1>${dyIzgara(DY.M.K, true)}<div class="imz"><div></div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`, true);
+  function dyOgretmenler() {
+    const A = [...new Set(DY.M.K.map(k => k.ogretmen).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr)), O = new Map(ogretmenler().map(o => [o.ad, o.brans]));
+    return dyBelgeKabuk('DYK öğretmen programları', A.map(a => { const K = DY.M.K.filter(k => k.ogretmen === a);
+      return `<section class="sy">${dyUst()}<h1>DYK ÖĞRETMEN PROGRAMI</h1><div style="margin-bottom:3mm;font-size:11pt"><b>${esc(C.baslik(a))}</b>${O.get(a) ? ' · ' + esc(O.get(a)) : ''}</div>${dyIzgara(K, false)}
+        <div class="top">Haftalık DYK ders saati: <b>${K.length}</b></div><div class="imz"><div>Tebliğ aldım<br><br>${esc(C.baslik(a))}<br>İmza</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`; }).join('') || '<section class="sy"><h1>Henüz kurs yok</h1></section>', true);
+  }
+  function dyOzet() {
+    const A = [...new Set(DY.M.K.map(k => k.ogretmen).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr)), O = new Map(ogretmenler().map(o => [o.ad, o.brans]));
+    const sat = A.map((a, i) => { const K = DY.M.K.filter(k => k.ogretmen === a), gn = DY_GUN.map((g, j) => [g, K.filter(k => +k.gun === j).length]).filter(x => x[1]);
+      return `<tr><td style="text-align:center">${i + 1}</td><td>${esc(C.baslik(a))}</td><td>${esc(O.get(a) || '')}</td><td>${esc([...new Set(K.map(k => k.ders))].join(', '))}</td><td>${esc(gn.map(([g, n]) => `${g} ${n}`).join(', '))}</td><td style="text-align:center"><b>${K.length}</b></td></tr>`; }).join('');
+    return dyBelgeKabuk('DYK ek ders özeti', `<section class="sy">${dyUst()}<h1>DYK HAFTALIK EK DERS ÖZETİ</h1><table><thead><tr><th style="width:10mm">#</th><th>Adı soyadı</th><th>Branşı</th><th>DYK dersi</th><th>Günlere göre saat</th><th style="width:22mm">Haftalık saat</th></tr></thead><tbody>${sat}
+      <tr><td colspan="5" style="text-align:right"><b>Toplam</b></td><td style="text-align:center"><b>${DY.M.K.filter(k => k.ogretmen).length}</b></td></tr></tbody></table><div class="imz"><div>Düzenleyen<br><br>Adı soyadı, imza</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`, false);
+  }
+  async function dyKaydet() { await yaz(`dyk:${egitimYili()}`, DY.M); DY.degisti = false; }
+  async function dyTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, F = DY.f;
+    if (d.dysec) { const [k, v] = d.dysec.split('|'), x = +v, A = F[k]; const j = A.indexOf(x); if (j >= 0) A.splice(j, 1); else A.push(x); dyCiz(); return true; }
+    if (d.dyhucre) { const [g, s] = d.dyhucre.split('|'); DY.sec = ''; F.gun = [+g]; F.dilim = [+s]; dyCiz(); const i = kok.querySelector('[data-dyf="ogretmen"]'); if (i) i.focus(); return true; }
+    if (d.dyk) { const k = DY.M.K.find(x => x.id === d.dyk); if (!k) return true; DY.sec = k.id; Object.assign(F, { ders: k.ders || '', ogretmen: k.ogretmen || '', grup: k.grup || '', salon: k.salon || '', gun: [+k.gun], dilim: [+k.dilim] }); dyCiz(); return true; }
+    if (d.dyfil !== undefined) { DY.filtre = d.dyfil; dyCiz(); return true; }
+    const x = d.dyx; if (!x) return false;
+    if (x === 'ekle' || x === 'guncelle') {
+      if (!F.ders.trim() && !F.ogretmen.trim()) { bilgi('Ders ya da öğretmen yazın.', 'kirmizi'); return true; }
+      if (!F.gun.length || !F.dilim.length) { bilgi('En az bir gün ve bir saat seçin.', 'kirmizi'); return true; }
+      if (x === 'guncelle') DY.M.K = DY.M.K.filter(k => k.id !== DY.sec);
+      for (const g of F.gun) for (const s of F.dilim) DY.M.K.push({ id: Math.random().toString(36).slice(2, 10), gun: g, dilim: s, ders: F.ders.trim(), ogretmen: F.ogretmen.trim(), grup: F.grup.trim(), salon: F.salon.trim() });
+      const n = F.gun.length * F.dilim.length; DY.sec = ''; F.gun = []; F.dilim = []; DY.degisti = true;
+      try { await dyKaydet(); dyCiz(); bilgi(`${n} ders saati ${x === 'ekle' ? 'eklendi' : 'güncellendi'} ve kaydedildi.` + (dyCakisma().size ? ' Çakışma var, kırmızı kutulara bakın.' : ''), dyCakisma().size ? 'kirmizi' : 'yesil'); } catch (e) { dyCiz(); bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); }
+      return true; }
+    if (x === 'sil') { if (!await onayla('Bu ders saati programdan silinsin mi?')) return true; DY.M.K = DY.M.K.filter(k => k.id !== DY.sec); DY.sec = ''; Object.assign(F, { gun: [], dilim: [] }); DY.degisti = true; try { await dyKaydet(); } catch (e) {} dyCiz(); bilgi('Silindi.', 'yesil'); return true; }
+    if (x === 'vazgec' || x === 'temizle') { DY.sec = ''; Object.assign(F, { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [] }); dyCiz(); return true; }
+    if (x === 'kaydet') { try { await dyKaydet(); bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (x === 'yazdir') { C.belgeOnizle(dyGenel(), 'DYK haftalık programı', true); return true; }
+    if (x === 'ogretmen') { C.belgeOnizle(dyOgretmenler(), 'DYK öğretmen programları', true); return true; }
+    if (x === 'ozet') { C.belgeOnizle(dyOzet(), 'DYK ek ders özeti', false); return true; }
+    return false;
+  }
+  function dyGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.dyfiltre) { DY.filtre = t.value; const p = t.selectionStart; dyCiz(); const y = kok.querySelector('[data-dyfiltre]'); if (y) { y.focus(); y.setSelectionRange(p, p); } return; }
+    if (d.dyf) { DY.f[d.dyf] = t.value; if (d.dyf === 'ogretmen' && !DY.f.ders) { const o = ogretmenler().find(o => o.ad === t.value); if (o && o.brans) { DY.f.ders = zmBrans(o.brans); const i = kok.querySelector('[data-dyf="ders"]'); if (i) i.value = DY.f.ders; } } } }
+
   // ================================================================ 9) DEVAMSIZLIK (26 Kasım 2026)
   // Kaynak: e-Okul devamsızlık Excel'i (özürlü / özürsüz / toplam gün). Kurallar: Ortaöğretim Kurumları Yönetmeliği md. 36 (lise):
   //  · özürsüz 10 günü ya da toplam sınırı (genel 30; özel durumlarda 40 / 60 / 70) geçen öğrenci devamsızlıktan başarısız sayılır
@@ -1673,7 +1776,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1681,13 +1784,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik }[aktif])(ev);
     };
     kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -1698,6 +1801,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'evrak') return evrak();
     if (id === 'zumre') return zumre();
     if (id === 'devam') return devam();
+    if (id === 'dyk') return dyk();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
