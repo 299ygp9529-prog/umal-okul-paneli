@@ -1094,7 +1094,6 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   // Kaynak: e-Okul devamsızlık Excel'i (özürlü / özürsüz / toplam gün). Kurallar: Ortaöğretim Kurumları Yönetmeliği md. 36 (lise):
   //  · özürsüz 10 günü ya da toplam sınırı (genel 30; özel durumlarda 40 / 60 / 70) geçen öğrenci devamsızlıktan başarısız sayılır
   //  · velisine devamsızlığın 5., 15., 25. günlerinde (özel durumlarda ayrıca 40. ve 55.) yazılı bildirim yapılır, tebligat kayda geçirilir
-  //  · özürsüz devamsızlığı 5 günü geçen öğrenci o dönem teşekkür / takdir belgesi alamaz
   // Veri: umal_idari 'devam:<yıl>' → { tarih, dosya, R:{no:{ol, oz, top, ad, sinif}}, ozel:{no:tür}, teb:{no:{gün: tarih}} }
   const DV_OZEL = { '': ['Genel', 10, 30, false], yakin: ['Birinci derece yakın kaybı', 10, 40, true], tedavi: ['Sürekli / yatarak tedavi, organ nakli', 10, 60, true], koruma: ['Koruma-bakım altında ya da tutuklu', 10, 60, true], kaynastirma: ['Tam zamanlı kaynaştırma / özel eğitim', 20, 70, true] };
   const DV = { M: null, degisti: false, filtre: 'uyari', sinif: '', ara: '' };
@@ -1108,7 +1107,6 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     else if (yakin) U.push(['tur', 'Sınıra yakın · ' + [d.oz >= oS - 2 ? `özürsüz ${dvS(oS - d.oz)}` : '', d.top >= tS - 5 ? `toplam ${dvS(tS - d.top)}` : ''].filter(Boolean).join(', ') + ' gün hakkı kaldı']);
     const teb = (DV.M.teb || {})[no] || {}, bek = dvGunler(no).filter(g => d.top >= g && !teb[g]);
     if (bek.length) U.push(['sar', `Veliye bildirim yapılmadı · ${bek.map(g => g + '. gün').join(', ')}`]);
-    if (d.oz > 5) U.push(['gri', 'Teşekkür / takdir belgesi alamaz']);
     return { d, bas, yakin, bek, U, risk: (bas ? 1000 : yakin ? 500 : 0) + (bek.length ? 200 : 0) + d.oz * 3 + d.top };
   }
   async function devam() {
@@ -1119,9 +1117,9 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   function dvCiz() {
     const M = DV.M, nl = Object.keys(M.R), ob = new Map(OGR.map(o => [String(o.no), o]));
     const L = nl.map(no => { const o = ob.get(no) || {}, d = M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', ...dvDurum(no) }; });
-    const say = { bas: L.filter(x => x.bas).length, yakin: L.filter(x => x.yakin).length, bek: L.filter(x => x.bek.length).length, belge: L.filter(x => x.d.oz > 5).length };
+    const say = { bas: L.filter(x => x.bas).length, yakin: L.filter(x => x.yakin).length, bek: L.filter(x => x.bek.length).length };
     const SL = [...new Set(L.map(x => x.sinif).filter(Boolean))].sort(sinifSira), a = norm(DV.ara);
-    const G = L.filter(x => (DV.filtre === 'hepsi' || (DV.filtre === 'uyari' ? x.U.length && (x.bas || x.yakin || x.bek.length) : DV.filtre === 'bas' ? x.bas : DV.filtre === 'yakin' ? x.yakin : DV.filtre === 'bek' ? x.bek.length : x.d.oz > 5))
+    const G = L.filter(x => (DV.filtre === 'hepsi' || (DV.filtre === 'uyari' ? x.U.length && (x.bas || x.yakin || x.bek.length) : DV.filtre === 'bas' ? x.bas : DV.filtre === 'yakin' ? x.yakin : x.bek.length))
       && (!DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)) && (!a || norm(x.ad + ' ' + x.no).includes(a))).sort((p, q) => q.risk - p.risk || sinifSira(p.sinif, q.sinif));
     const eski = M.tarih && (new Date(bugun()) - new Date(M.tarih)) / 864e5 > 7;
     const kutu = (k, n, ad, renk) => `<button data-dvf="${k}" class="kart" style="margin:0;text-align:left;cursor:pointer;${DV.filtre === k ? `border-color:${renk};background:${renk}14` : ''}"><b style="display:block;font-size:26px;color:${renk}">${n}</b><span class="soluk kucuk">${ad}</span></button>`;
@@ -1131,7 +1129,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
         <span class="soluk">${nl.length ? `${nl.length} öğrenci · ${esc(tGos(M.tarih))} tarihli liste${M.dosya ? ' · ' + esc(M.dosya) : ''}` : 'Henüz liste yüklenmedi'}</span></div>
         ${eski ? `<div style="margin-top:8px;color:#ffe066">Liste ${Math.floor((new Date(bugun()) - new Date(M.tarih)) / 864e5)} gün önce yüklendi; uyarıların doğru olması için e-Okul'dan güncel listeyi alıp yükleyin.</div>` : ''}
         <div class="soluk kucuk" style="margin-top:8px">e-Okul › Devamsızlık işlemleri › devamsızlık listesini (Excel) indirip buraya yükleyin. Okul No ile Özürlü / Özürsüz sütunları kendiliğinden bulunur; yeni liste eskisinin üstüne yazılır, özel durumlar ve veli bildirim kayıtları korunur.</div><div id="idBilgi" class="id-bilgi"></div></div>
-      ${nl.length ? `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0">${kutu('uyari', say.bas + say.yakin + L.filter(x => !x.bas && !x.yakin && x.bek.length).length, 'Uyarı alan öğrenci', '#22e8ff')}${kutu('bas', say.bas, 'Devamsızlıktan başarısız (sınır geçildi)', '#ef4444')}${kutu('yakin', say.yakin, 'Sınıra yakın', '#fb923c')}${kutu('bek', say.bek, 'Veliye bildirim bekliyor', '#ffd43b')}${kutu('belge', say.belge, 'Teşekkür / takdir alamaz (özürsüz > 5)', '#94a3b8')}</div>
+      ${nl.length ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0">${kutu('uyari', say.bas + say.yakin + L.filter(x => !x.bas && !x.yakin && x.bek.length).length, 'Uyarı alan öğrenci', '#22e8ff')}${kutu('bas', say.bas, 'Devamsızlıktan başarısız (sınır geçildi)', '#ef4444')}${kutu('yakin', say.yakin, 'Sınıra yakın', '#fb923c')}${kutu('bek', say.bek, 'Veliye bildirim bekliyor', '#ffd43b')}</div>
       <div class="kart"><div class="id-satir" style="flex-wrap:wrap;gap:8px"><input data-dvara="1" placeholder="Ad ya da numara" value="${esc(DV.ara)}" style="max-width:220px">
         <div class="cipler"><button class="cip ${!DV.sinif ? 'secili' : ''}" data-dvs="">Tümü</button>${SV.map(v => `<button class="cip ${DV.sinif === v ? 'secili' : ''}" data-dvs="${v}">${v}. sınıflar</button>`).join('')}</div>
         <select data-dvsinif="1" style="max-width:130px"><option value="">Şube</option>${SL.map(s => `<option ${DV.sinif === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select><button class="bag" data-dvf="hepsi">Bütün öğrenciler</button><span class="soluk kucuk">${G.length} öğrenci</span></div>
@@ -1145,7 +1143,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
         ${G.length > 400 ? '<div class="soluk kucuk">İlk 400 öğrenci gösteriliyor; şube ya da arama ile daraltın.</div>' : ''}</div>
       <div class="kart soluk kucuk" style="line-height:1.6"><b>Uygulanan kurallar (Ortaöğretim Kurumları Yönetmeliği md. 36)</b><br>
         Özürsüz devamsızlığı 10 günü ya da toplam devamsızlığı 30 günü geçen öğrenci, puanı ne olursa olsun devamsızlıktan başarısız sayılır. Birinci derece yakın kaybında toplam sınır 40, sürekli / yatarak tedavi ve organ naklinde, koruma-bakım altındaki ve tutuklu öğrencilerde 60, tam zamanlı kaynaştırma / özel eğitimde 70 gündür (özürsüz 20); öğrencinin özel durumu "Sınır" sütunundan seçilir.<br>
-        Devamsızlığın 5., 15. ve 25. günlerinde (özel durumlarda ayrıca 40. ve 55. günlerinde) veliye yazılı bildirim yapılır; bildirim yapılınca o günün düğmesine basılarak kayda geçirilir. "Sınıra yakın": özürsüz hakkı 2 günden, toplam hakkı 5 günden az kalan öğrenci. Özürsüz devamsızlığı 5 günü geçen öğrenci teşekkür / takdir belgesi alamaz. Art arda 2 gün özürsüz gelmeyen öğrencinin velisine ayrıca haber verilir; geç kalmalar ve günlük durum e-Okul'dan izlenir.</div>` : ''}`;
+        Devamsızlığın 5., 15. ve 25. günlerinde (özel durumlarda ayrıca 40. ve 55. günlerinde) veliye yazılı bildirim yapılır; bildirim yapılınca o günün düğmesine basılarak kayda geçirilir. "Sınıra yakın": özürsüz hakkı 2 günden, toplam hakkı 5 günden az kalan öğrenci. Art arda 2 gün özürsüz gelmeyen öğrencinin velisine ayrıca haber verilir; geç kalmalar ve günlük durum e-Okul'dan izlenir.</div>` : ''}`;
   }
   function dvVeliYazi(nolar) {
     const ob = new Map(OGR.map(o => [String(o.no), o]));
@@ -1155,7 +1153,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
         <p class="hit">Sayın ${esc(ad)} Velisi,</p>
         <p>Okulumuz ${esc(sn)} sınıfı, ${esc(no)} numaralı öğrencisi <b>${esc(ad)}</b>, ${esc(tGos(DV.M.tarih || bugun()))} tarihi itibarıyla aşağıdaki süre kadar devamsızlık yapmıştır:</p>
         <table><tr><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th></tr><tr><td>${dvS(d.ol)} gün</td><td>${dvS(d.oz)} gün</td><td><b>${dvS(d.top)} gün</b></td></tr></table>
-        <p>Ortaöğretim Kurumları Yönetmeliği'nin 36. maddesi gereğince özürsüz devamsızlığı ${oS} günü ya da toplam devamsızlığı ${tS} günü geçen öğrenci, ders puanları ne olursa olsun devamsızlıktan başarısız sayılır ve sınıf tekrar eder. Ayrıca özürsüz devamsızlığı 5 günü geçen öğrenci teşekkür ya da takdir belgesi alamaz.</p>
+        <p>Ortaöğretim Kurumları Yönetmeliği'nin 36. maddesi gereğince özürsüz devamsızlığı ${oS} günü ya da toplam devamsızlığı ${tS} günü geçen öğrenci, ders puanları ne olursa olsun devamsızlıktan başarısız sayılır ve sınıf tekrar eder.</p>
         <p>Öğrencinizin okula düzenli devamının sağlanması ve varsa özür belgelerinin okul idaresine teslim edilmesi için okulumuza gelmenizi rica ederim.</p>
         <div class="imz">${esc(MUDUR)}<br>Okul Müdürü</div>
         <div class="kes">TEBELLÜĞ</div><p>Öğrencim ${esc(ad)} (${esc(sn)} · ${esc(no)}) hakkındaki devamsızlık durumuna ilişkin bildirimi ……/……/20…… tarihinde tebellüğ ettim.</p>
