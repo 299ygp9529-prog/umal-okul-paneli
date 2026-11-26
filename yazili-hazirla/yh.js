@@ -203,6 +203,8 @@ body.yh-acik #pencere{z-index:70}
 .mf-k{display:inline-block;min-width:.8em;min-height:1.1em;line-height:1.15;padding:0 .08em;outline:none;border-radius:3px;text-align:center;vertical-align:middle}
 .mf-k:empty{border:1.5px dashed #6bb7d8;background:#eef9fd}
 .mf-k:focus{background:#e2f6fb;box-shadow:0 0 0 1.5px #22c4e0}
+.mf-y{cursor:pointer;border-radius:4px}.mf-y:hover{background:rgba(34,196,224,.08)}
+.mf-xsil{position:absolute;z-index:5;width:20px;height:20px;border-radius:50%;border:0;background:#ff5a64;color:#fff;font:700 14px/20px sans-serif;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}.yh-modal-ic{position:relative}.mf-y.mf-sec{background:#ffe7e7;box-shadow:0 0 0 2px #ff6b6b}
 .mf-kesir{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;font-size:.88em}
 .mf-kesir>:first-child{border-bottom:2px solid #111;padding:0 .2em .05em}.mf-kesir>:last-child{padding:.05em .2em 0}
 .mf-sabit span{text-align:center;font-style:italic}
@@ -1171,13 +1173,13 @@ body.yh-acik #pencere{z-index:70}
     let grup = 0;
     modal('', (m, kapat) => {
       const ic = m.querySelector('.yh-modal-ic'); ic.classList.add('genis'); ic.style.width = 'min(1040px,100%)';
-      ic.innerHTML = `<h2 style="margin-bottom:4px">${el ? 'Formülü düzenle' : 'Matematik formülü'}</h2><div class="yh-not" style="margin:0 0 10px">Aşağıdaki beyaz alana normal yazar gibi yazın. Kesir, kök, üs gibi düğmelere dokunun; çıkan kutucuklara yazın. Klavyede <b>^</b> üs, <b>_</b> alt indis açar; <b>/</b> ile kesir yapılır. <b>Tab</b> sonraki kutucuğa geçer.</div>
+      ic.innerHTML = `<h2 style="margin-bottom:4px">${el ? 'Formülü düzenle' : 'Matematik formülü'}</h2><div class="yh-not" style="margin:0 0 10px">Aşağıdaki beyaz alana normal yazar gibi yazın. Kesir, kök, üs gibi düğmelere dokunun; çıkan kutucuklara yazın. Klavyede <b>^</b> üs, <b>_</b> alt indis açar; <b>/</b> ile kesir yapılır. <b>Tab</b> sonraki kutucuğa geçer. Bir parçayı silmek için üstüne dokunun (kırmızı olur) ve <b>⌫</b> basın.</div>
         <div class="yh-fgrup">${MF_GRUP.map((g, i) => `<button class="yh-cip ${i === grup ? 'on' : ''}" data-fg="${i}">${esc(g[0])}</button>`).join('')}</div>
         <div class="yh-fpalet" id="fPalet"></div>
         <div class="mf-alan" id="fAlan" contenteditable="true" spellcheck="false" data-ipucu="Formülü buraya yazın…"></div>
         <div class="yh-satir" style="margin-top:8px"><label style="min-width:0">Görünüm</label><button class="yh-cip" data-fb="0">Satır içinde</button><button class="yh-cip" data-fb="1">Ortada, büyük</button><span class="yh-not" style="margin:0 0 0 auto">Kâğıtta böyle görünecek:</span></div>
         <div class="yh-fon" id="fOn" style="min-height:70px"></div>
-        <div class="yh-dugmeler" style="justify-content:flex-end">${el ? '<button class="yh-d k" data-s>Sil</button>' : ''}<button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-fok>${el ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
+        <div class="yh-dugmeler" style="justify-content:flex-end"><button class="yh-d" data-fsil title="Seçili parçayı ya da imlecin solundaki parçayı siler">⌫ Parçayı sil</button><button class="yh-d" data-ftemiz title="Formül alanını boşaltır">Temizle</button><span style="flex:1"></span>${el ? '<button class="yh-d k" data-s>Sil</button>' : ''}<button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-fok>${el ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
       const alan = ic.querySelector('#fAlan'); let blok = el ? el.dataset.blok === '1' : false, sonR = null;
       if (el) { if (el.dataset.yapi) alan.innerHTML = el.dataset.yapi; else if (el.dataset.tex) alan.innerHTML = mfHam(el.dataset.tex); }
       const on = () => { const t = mfTex(alan).trim(); ic.querySelector('#fOn').innerHTML = t ? kxCiz(t, true) : '<span style="color:#999;font-size:14px">Önizleme</span>'; };
@@ -1208,10 +1210,35 @@ body.yh-acik #pencere{z-index:70}
       ic.querySelector('#fPalet').addEventListener('click', ev => { const b = ev.target.closest('[data-fi]'); if (!b) return; const x = MF_GRUP[grup][1][+b.dataset.fi];
         if (x.length === 1) koy(mfHam(x[0])); else if (typeof x[1] === 'string') koy(esc(x[1])); else yapiKoy(x[1]); });
       ic.querySelectorAll('[data-fb]').forEach(b => { b.classList.toggle('on', (b.dataset.fb === '1') === blok); b.onclick = () => { blok = b.dataset.fb === '1'; ic.querySelectorAll('[data-fb]').forEach(x => x.classList.toggle('on', x === b)); }; });
-      alan.addEventListener('input', on);
+      alan.addEventListener('input', on); alan.addEventListener('keyup', on);
+      // K-1009: kesir, kök, üs gibi parçalar kolay silinir: parçaya dokunup seç → ⌫; boş kutucukta ⌫ → bütün parça; parçanın hemen arkasında ⌫ → parça
+      const bosMetin = n => n && n.nodeType === 3 && !n.nodeValue.replace(/\u200b/g, '');
+      const yapiYan = (r_, geri) => { if (!r_ || !r_.collapsed) return null; let n = r_.startContainer, o = r_.startOffset;
+        if (n.nodeType === 3) { const v = geri ? n.nodeValue.slice(0, o) : n.nodeValue.slice(o); if (v.replace(/\u200b/g, '')) return null; n = geri ? n.previousSibling : n.nextSibling; }
+        else n = geri ? n.childNodes[o - 1] : n.childNodes[o];
+        while (bosMetin(n)) n = geri ? n.previousSibling : n.nextSibling;
+        return n && n.nodeType === 1 && n.classList.contains('mf-y') ? n : null; };
+      const yapiSil = y => { const z = document.createTextNode('\u200b'); y.before(z); y.remove(); const r2 = document.createRange(); r2.setStart(z, 1); r2.collapse(true); imleceKoy(r2); on(); };
+      const kutuBasta = (k, r_) => { const r0 = document.createRange(); r0.selectNodeContents(k); r0.setEnd(r_.startContainer, r_.startOffset); return !r0.toString().replace(/\u200b/g, ''); };
+      alan.addEventListener('click', ev => { const y = ev.target.closest('.mf-y'); alan.querySelectorAll('.mf-sec').forEach(x => { if (x !== y) x.classList.remove('mf-sec'); }); if (y && !ev.target.closest('.mf-k')) y.classList.toggle('mf-sec'); });
+      const parcaSil = () => { const sec = alan.querySelector('.mf-sec'); if (sec) { yapiSil(sec); return true; } const s_ = window.getSelection(), r_ = s_.rangeCount ? s_.getRangeAt(0) : null; const y = yapiYan(r_, true) || (r_ && (r_.startContainer.nodeType === 1 ? r_.startContainer : r_.startContainer.parentElement).closest('.mf-y')) || [...alan.querySelectorAll(':scope > .mf-y')].pop(); if (y && alan.contains(y)) { yapiSil(y.closest('.mf-k') ? y : (y.parentElement.closest('.mf-y') && !y.parentElement.closest('.mf-k') ? y.parentElement.closest('.mf-y') : y)); return true; } return false; };
+      // üzerine gelinen parçanın köşesinde küçük bir sil düğmesi (alanın dışında durur, formüle karışmaz)
+      const xd = document.createElement('button'); xd.className = 'mf-xsil'; xd.type = 'button'; xd.title = 'Bu parçayı sil'; xd.textContent = '×'; xd.style.display = 'none'; ic.appendChild(xd); let xHedef = null;
+      alan.addEventListener('mousemove', ev => { const y = ev.target.closest && ev.target.closest('.mf-y'); if (!y || !alan.contains(y)) return; if (xHedef === y && xd.style.display !== 'none') return; xHedef = y; const a = y.getBoundingClientRect(), o = ic.getBoundingClientRect(); xd.style.display = ''; xd.style.left = (a.right - o.left - 9 + ic.scrollLeft) + 'px'; xd.style.top = (a.top - o.top - 9 + ic.scrollTop) + 'px'; });
+      alan.addEventListener('mouseleave', ev => { if (ev.relatedTarget !== xd) { xd.style.display = 'none'; xHedef = null; } });
+      xd.onmousedown = ev => ev.preventDefault(); xd.onclick = () => { if (xHedef && alan.contains(xHedef)) yapiSil(xHedef); xd.style.display = 'none'; xHedef = null; };
+      ic.querySelector('[data-fsil]').onmousedown = ev => ev.preventDefault();
+      ic.querySelector('[data-fsil]').onclick = () => { if (!parcaSil()) { alan.focus(); document.execCommand('delete'); on(); } };
+      ic.querySelector('[data-ftemiz]').onclick = () => { alan.innerHTML = ''; sonR = null; alan.focus(); on(); };
       alan.addEventListener('paste', ev => { ev.preventDefault(); const t = (ev.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, t); });
       alan.addEventListener('keydown', ev => {
         const s_ = window.getSelection(), r_ = s_.rangeCount ? s_.getRangeAt(0) : null, k_ = r_ && (r_.startContainer.nodeType === 1 ? r_.startContainer : r_.startContainer.parentElement).closest('.mf-k');
+        if (ev.key === 'Backspace' || ev.key === 'Delete') { const sec = alan.querySelector('.mf-sec'); if (sec) { ev.preventDefault(); yapiSil(sec); return; }
+          if (r_ && r_.collapsed) { const y = yapiYan(r_, ev.key === 'Backspace'); if (y) { ev.preventDefault(); yapiSil(y); return; }
+            if (k_ && ev.key === 'Backspace' && kutuBasta(k_, r_)) { ev.preventDefault(); const y2 = k_.closest('.mf-y'), L = [...y2.querySelectorAll('.mf-k')].filter(x => x.closest('.mf-y') === y2), i = L.indexOf(k_);
+              if (L.every(k => !k.textContent.replace(/\u200b/g, '').trim() && !k.querySelector('.mf-y'))) { yapiSil(y2); return; }
+              if (i > 0) imleceGit(L[i - 1]); else { const z = document.createTextNode('\u200b'); y2.before(z); const r2 = document.createRange(); r2.setStart(z, 1); r2.collapse(true); imleceKoy(r2); } return; } } }
+        else if (ev.key.length === 1 || ev.key === 'Enter') alan.querySelectorAll('.mf-sec').forEach(x => x.classList.remove('mf-sec'));
         if (ev.key === 'Tab') { ev.preventDefault(); if (!k_) { const n = bosKutu(null); if (n) imleceGit(n); return; }
           const y = k_.closest('.mf-y'), L = [...y.querySelectorAll('.mf-k')].filter(x => x.closest('.mf-y') === y), i = L.indexOf(k_);
           if (ev.shiftKey) { if (i > 0) imleceGit(L[i - 1]); return; }
