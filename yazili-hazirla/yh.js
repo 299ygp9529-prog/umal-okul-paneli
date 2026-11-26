@@ -135,6 +135,10 @@
 .yh-kok .ic{border-top:.28mm solid currentColor;padding:.06em .14em 0 .04em;margin-top:.04em;white-space:nowrap}
 .yh-kok .der{font-size:.55em;align-self:flex-start;margin-right:-.42em;margin-top:.1em;position:relative;z-index:1}
 .yh-bosluk{letter-spacing:.06em;white-space:nowrap}
+.yh-mat{display:inline-block;vertical-align:middle;margin:0 .1em;line-height:normal}
+.yh-mat .katex{font-size:1.08em}
+.yh-mat.blok{display:block;text-align:center;margin:1mm 0}
+.yh-mat.blok .katex-display{margin:0}
 .tema-sb{--yh-ana:#111;--yh-vurgu:#111;--yh-acik:#efefef}
 .tema-renkli{--yh-ana:#0d2a4a;--yh-vurgu:#0b7f95;--yh-acik:#e9f3f8}`;
   }
@@ -182,7 +186,20 @@ body.yh-acik #pencere{z-index:70}
 .yh-tut-nw{left:-8px;top:-8px;cursor:nwse-resize}.yh-tut-ne{right:-8px;top:-8px;cursor:nesw-resize}.yh-tut-sw{left:-8px;bottom:-8px;cursor:nesw-resize}.yh-tut-se{right:-8px;bottom:-8px;cursor:nwse-resize}
 .yh-hayalet{position:fixed;z-index:95;pointer-events:none;opacity:.8;border:2px solid #22c4e0;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.4);background:#fff}
 .yh-editor .yh-fig.secili{outline:2px solid #22c4e0;outline-offset:1px}
-.yh-editor .yh-kesir,.yh-editor .yh-kok{cursor:pointer;border-radius:2px}
+.yh-editor .yh-kesir,.yh-editor .yh-kok,.yh-editor .yh-mat{cursor:pointer;border-radius:2px}
+.yh-editor .yh-mat:hover{background:#e2f6fb}
+.yh-editor .yh-bas-yer{cursor:pointer;border-radius:2px;position:relative}
+.yh-editor .yh-bas-yer:hover{outline:1.5px dashed #22c4e0;outline-offset:1.5mm}
+.yh-editor .yh-bas-yer:hover:after{content:'Değiştirmek için çift tıklayın';position:absolute;right:0;top:-6.5mm;font:600 11px/1.2 sans-serif;color:#fff;background:#0b7f95;padding:3px 8px;border-radius:6px}
+.yh-fgrup{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.yh-fpalet{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;max-height:230px;overflow:auto;padding:2px}
+.yh-fdug{background:#fff;color:#111;border:1px solid #2a4468;border-radius:10px;min-height:54px;padding:4px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px}
+.yh-fdug:hover{outline:2px solid #22e8ff}
+.yh-fdug .katex{font-size:1.05em}
+.yh-fyaz{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.yh-fyaz textarea{width:100%;min-height:96px;background:#0b1626;border:1px solid var(--cizgi);color:#e8f1fc;border-radius:10px;padding:8px 10px;font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:vertical;box-sizing:border-box}
+.yh-fon{background:#fff;color:#111;border-radius:12px;display:flex;align-items:center;justify-content:center;min-height:120px;padding:10px;overflow:auto;font-size:20px}
+@media (max-width:760px){.yh-fyaz{grid-template-columns:1fr}}
 .yh-editor .yh-kesir:hover,.yh-editor .yh-kok:hover{background:#e2f6fb}
 .yh-editor .yh-puan{cursor:pointer}
 .yh-editor [contenteditable="true"]:focus{background:rgba(34,196,224,.05)}
@@ -553,6 +570,7 @@ body.yh-acik #pencere{z-index:70}
       <div class="yh-ana"><div class="yh-sol" id="yhSol"></div><div class="yh-orta" id="yhOrta"><div class="yh-sayfalar yh-editor" id="yhSayfalar"></div></div><div class="yh-sag" id="yhSag"></div></div>
       <div class="yh-tel-sekme"><button data-tel="sol">${ik('arti')}Ekle</button><button data-tel="">${ik('acik')}Kâğıt</button><button data-tel="sag">${ik('puan')}Sorular</button></div>`;
     seritCiz(); solCiz(); sayfalariKur(); sagCiz(); olaylar();
+    katexYukle().then(() => setTimeout(diz, 80)).catch(() => {});
     requestAnimationFrame(() => { diz(); });
     if (document.fonts && document.fonts.load) Promise.all([document.fonts.load(`400 12px "YH Poppins"`), document.fonts.load(`700 12px "YH Poppins"`)]).then(() => diz()).catch(() => {});
   }
@@ -575,7 +593,7 @@ body.yh-acik #pencere{z-index:70}
         <button class="yh-i" id="yhRenk" title="Yazı rengi"><span style="border-bottom:3px solid #ff6b6b;line-height:1">A</span></button><button class="yh-i" data-k="superscript" title="Üs">x²</button><button class="yh-i" data-k="subscript" title="Alt simge">x₂</button>
         <button class="yh-i" data-buyut="1.15" title="Seçili yazıyı büyüt">A+</button><button class="yh-i" data-buyut="0.87" title="Seçili yazıyı küçült">A−</button></div>
       <div class="yh-grup"><button class="yh-i" data-k="justifyLeft" title="Sola yasla">${ik('sola', 18)}</button><button class="yh-i" data-k="justifyCenter" title="Ortala">${ik('ortaya', 18)}</button><button class="yh-i" data-k="justifyRight" title="Sağa yasla">${ik('saga', 18)}</button><button class="yh-i" data-k="justifyFull" title="İki yana yasla">${ik('iki', 18)}</button></div>
-      <div class="yh-grup"><button class="yh-i" id="yhKesir" title="Kesir (üst üste)">${ik('kesir', 18)}</button><button class="yh-i" id="yhKok" title="Kök">${ik('kok', 18)}</button><button class="yh-i" id="yhSembol" title="Semboller (π, √, ∠, ≤ …)">π</button><button class="yh-i" id="yhBosl" title="Boşluk (……)" style="font-size:12px">…</button></div>
+      <div class="yh-grup"><button class="yh-i" id="yhFormul" title="Matematik formülü: log, ln, sin, cos, limit, türev, integral, toplam, matris, kök…" style="width:auto;padding:0 10px;gap:6px;color:#fff;background:linear-gradient(135deg,#1e5fbf,#0b7f95);border-color:#22c4e0"><span style="font-family:'KaTeX_Main',Georgia,serif;font-size:16px;font-style:italic">∫ƒ</span><span style="font-size:12px">Formül</span></button><button class="yh-i" id="yhKesir" title="Kesir (üst üste)">${ik('kesir', 18)}</button><button class="yh-i" id="yhKok" title="Kök">${ik('kok', 18)}</button><button class="yh-i" id="yhSembol" title="Semboller (π, √, ∠, ≤ …)">π</button><button class="yh-i" id="yhBosl" title="Boşluk (……)" style="font-size:12px">…</button></div>
       <div class="yh-grup"><button class="yh-i ${A.sutun === 1 ? 'on' : ''}" data-sutun="1" title="Tek sütun" style="width:auto;padding:0 8px;font-size:12px">Tek</button><button class="yh-i ${A.sutun === 2 ? 'on' : ''}" data-sutun="2" title="İki sütun" style="width:auto;padding:0 8px;font-size:12px">${ik('sutun', 16)}&nbsp;İki</button>
         <select class="yh-sec" id="yhKenar" title="Kenar boşluğu"><option value="dar" ${A.kenar === 'dar' ? 'selected' : ''}>Kenar: dar</option><option value="normal" ${A.kenar === 'normal' ? 'selected' : ''}>Kenar: normal</option><option value="genis" ${A.kenar === 'genis' ? 'selected' : ''}>Kenar: geniş</option></select>
         <select class="yh-sec" id="yhTema" title="Renk"><option value="sb" ${A.tema === 'sb' ? 'selected' : ''}>Siyah-beyaz</option><option value="renkli" ${A.tema === 'renkli' ? 'selected' : ''}>Renkli</option></select>
@@ -586,7 +604,7 @@ body.yh-acik #pencere{z-index:70}
   function solCiz() {
     $e('#yhSol').innerHTML = `<h3>SORU EKLE</h3><div class="yh-ekle">${['acik', 'coktan', 'bosluk', 'dy', 'eslestir', 'metin'].map(t => `<button data-ekle="${t}">${ik(t, 22)}${esc(TURLER[t].kisa)}</button>`).join('')}</div>
       <h3 style="margin-top:14px">KİTAPTAN</h3><div class="yh-ekle"><button data-ic="kitap" style="grid-column:1/-1">${ik('pdf', 22)}Kitaptan / PDF'ten soru al</button></div>
-      <h3 style="margin-top:14px">İÇİNE EKLE</h3><div class="yh-ekle"><button data-ic="foto">${ik('foto', 22)}Fotoğraf</button><button data-ic="sekil">${ik('sekil', 22)}Şekil</button><button data-ic="tablo">${ik('tablo', 22)}Tablo</button><button data-ic="cizgi">${ik('cizgi', 22)}Cevap alanı</button></div>
+      <h3 style="margin-top:14px">İÇİNE EKLE</h3><div class="yh-ekle"><button data-ic="foto">${ik('foto', 22)}Fotoğraf</button><button data-ic="sekil">${ik('sekil', 22)}Şekil</button><button data-ic="tablo">${ik('tablo', 22)}Tablo</button><button data-ic="cizgi">${ik('cizgi', 22)}Cevap alanı</button><button data-ic="formul" style="grid-column:1/-1">${ik('kok', 22)}Matematik formülü</button></div>
       <h3 style="margin-top:14px">KÂĞIT</h3><div class="yh-ekle"><button data-ic="baslik">${ik('baslik', 22)}Başlık bilgileri</button><button data-ic="dagit">${ik('dagit', 22)}Puanları dağıt</button></div>
       <input type="file" id="yhFotoIn" accept="image/*" style="display:none">
       <div class="yh-not">Fotoğrafı kâğıda sürükleyip bırakabilir ya da kopyalayıp yapıştırabilirsiniz. Word'deki sorularınızı kopyalayıp bir sorunun içine yapıştırabilirsiniz.</div>`;
@@ -766,6 +784,7 @@ body.yh-acik #pencere{z-index:70}
       if (b.dataset.buyut) { boyutla(+b.dataset.buyut); return; }
       if (b.dataset.sutun) { modelOku(); B.ayar.sutun = +b.dataset.sutun; seritCiz(); B.sorular.forEach(s => { if (s.tur === 'coktan') soruYenile(s); }); degisti(true); return; }
       if (b.id === 'yhRenk') { acilir(`<h4>Yazı rengi</h4><div class="yh-renk">${RENKLER.map(r => `<button style="background:${r}" data-r="${r}"></button>`).join('')}</div>`, b, a => a.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { acilirKapat(); komut('foreColor', x.dataset.r); })); return; }
+      if (b.id === 'yhFormul') { formulDiyalog(); return; }
       if (b.id === 'yhKesir') { kesirDiyalog(); return; }
       if (b.id === 'yhKok') { kokDiyalog(); return; }
       if (b.id === 'yhSembol') { acilir(`<h4>Semboller</h4><div class="yh-sembol">${SEMBOLLER.map(x => `<button data-sm="${esc(x)}">${esc(x)}</button>`).join('')}</div>`, b, a => a.querySelectorAll('[data-sm]').forEach(x => x.onclick = () => { metinKoy(x.dataset.sm); })); return; }
@@ -791,6 +810,7 @@ body.yh-acik #pencere{z-index:70}
       if (t === 'cizgi') { const s = seciliSoru(); if (!s) return; modelOku(); s.ca = { tur: 'cizgi', boy: (s.ca && s.ca.tur !== 'yok' ? +s.ca.boy + 2 : 4) }; soruYenile(s); degisti(true); return; }
       if (t === 'baslik') { baslikDiyalog(); return; }
       if (t === 'kitap') { kitaptanDiyalog(); telKapat(); return; }
+      if (t === 'formul') { formulDiyalog(); telKapat(); return; }
       if (t === 'dagit') { puanDagit(); return; }
     });
     $e('#yhFotoIn').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (f) fotoEkle(f); telKapat(); };
@@ -802,11 +822,13 @@ body.yh-acik #pencere{z-index:70}
       const fig = ev.target.closest('.yh-fig'); if (fig) return;   // K-991: seçim pointerup'ta
       const ks = ev.target.closest('.yh-kesir'); if (ks) { kesirDiyalog(ks); return; }
       const kk = ev.target.closest('.yh-kok'); if (kk) { kokDiyalog(kk); return; }
+      const mt = ev.target.closest('.yh-mat'); if (mt) { formulDiyalog(mt); return; }
       const pu = ev.target.closest('.yh-puan'); if (pu) { const el = pu.closest('.yh-s'); secId = el.dataset.id; secGoster(); sagCiz(); const inp = $e(`#yhSag .yh-kart input[data-puan]`); if (inp) { telAc('sag'); inp.focus(); inp.select(); } return; }
       const el = ev.target.closest('.yh-s'); if (el && el.dataset.id !== secId) { secId = el.dataset.id; secGoster(); sagCiz(); }
       if (!ev.target.closest('.yh-fig')) figurBirak();
     });
     kap.addEventListener('paste', yapistir);
+    kap.addEventListener('dblclick', ev => { if (ev.target.closest('.yh-bas-yer')) { ev.preventDefault(); baslikDiyalog(); } });   // K-993: başlığa çift tıklayınca başlık bilgileri
     // K-991: fotoğraf/şekil kâğıtta sürüklenerek taşınır (bırakılan yere ve yana göre sola/ortaya/sağa), köşesinden çekilerek büyütülür
     let fs = null;
     kap.addEventListener('pointerdown', ev => {
@@ -914,6 +936,13 @@ body.yh-acik #pencere{z-index:70}
     if (!araligaDon()) { const s = soruEkle('acik'); if (!s) return; araligaDon(); }
     document.execCommand('insertHTML', false, html); degisti(false);
   }
+  function dugumKoy(html) {   // HTML'i imlecin yerine düğüm olarak koyar, imleci arkasına alır (KaTeX gibi karmaşık parçalar için)
+    if (!araligaDon()) { soruEkle('acik'); araligaDon(); }
+    const sl = window.getSelection(); if (!sl.rangeCount) return; const r_ = sl.getRangeAt(0); r_.deleteContents();
+    const t = document.createElement('template'); t.innerHTML = html; const parca = t.content.firstChild, z = document.createTextNode('\u200b');
+    r_.insertNode(z); r_.insertNode(parca);
+    const r2 = document.createRange(); r2.setStartAfter(z); r2.collapse(true); sl.removeAllRanges(); sl.addRange(r2); sonAralik = r2.cloneRange(); degisti(false);
+  }
   function metinKoy(t) { if (!araligaDon()) return; document.execCommand('insertText', false, t); degisti(false); }
 
   // ---- soru işlemleri
@@ -941,6 +970,67 @@ body.yh-acik #pencere{z-index:70}
     const n = L.length, taban = Math.floor(100 / n); let artan = 100 - taban * n;
     L.forEach((s, i) => { s.puan = taban + (i >= n - artan ? 1 : 0); });
     L.forEach(s => soruYenile(s)); degisti(true);
+  }
+
+  // ---- K-992: Matematik formülü (KaTeX): kesir, kök (dereceli), üs, log, ln, trigonometri, limit, türev, integral, toplam, matris, parçalı fonksiyon, kümeler, geometri
+  const KX = { css: () => new URL('../katex/katex.min.css', TABAN).href, js: () => new URL('../katex/katex.min.js', TABAN).href };
+  let katexP = null;
+  function katexYukle() {
+    if (window.katex) return Promise.resolve(window.katex);
+    if (!document.getElementById('yhKatexCss')) { const l = document.createElement('link'); l.id = 'yhKatexCss'; l.rel = 'stylesheet'; l.href = KX.css(); document.head.appendChild(l); }
+    if (!katexP) katexP = new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = KX.js(); sc.onload = () => ok(window.katex); sc.onerror = () => { katexP = null; red(new Error('Formül aracı yüklenemedi')); }; document.head.appendChild(sc); });
+    return katexP;
+  }
+  const kxCiz = (tex, blok) => { try { return window.katex.renderToString(blok ? tex : '\\displaystyle ' + tex, { throwOnError: false, displayMode: !!blok, strict: 'ignore', trust: false, output: 'html' }); } catch (e) { return esc(tex); } };
+  const matHTML = (tex, blok) => `<span class="yh-mat${blok ? ' blok' : ''}" contenteditable="false" data-tex="${esc(tex)}" data-blok="${blok ? 1 : 0}">${kxCiz(tex, blok)}</span>`;
+  const Q = '\\square';
+  const FORMUL_GRUP = [
+    ['Temel', [`\\frac{${Q}}{${Q}}`, `${Q}^{${Q}}`, `${Q}_{${Q}}`, `\\sqrt{${Q}}`, `\\sqrt[${Q}]{${Q}}`, `\\left|${Q}\\right|`, `\\left(${Q}\\right)`, `\\left[${Q}\\right]`, `\\left\\{${Q}\\right\\}`, `${Q}\\tfrac{${Q}}{${Q}}`, `0,\\overline{${Q}}`, '\\pm', '\\mp', '\\cdot', '\\times', '\\div', '\\le', '\\ge', '\\ne', '\\approx', '\\equiv', '\\%', '\\infty']],
+    ['Fonksiyon', [`f(x)=${Q}`, '(f\\circ g)(x)', 'f^{-1}(x)', `f(x)=\\begin{cases}${Q}, & x<${Q}\\\\ ${Q}, & x\\ge ${Q}\\end{cases}`, `\\lfloor ${Q} \\rfloor`, `\\lceil ${Q} \\rceil`, 'f:\\mathbb{R}\\to\\mathbb{R}', `\\operatorname{sgn}(${Q})`, `y=a x^{2}+b x+c`, `\\text{T.K.}`, `\\text{G.K.}`]],
+    ['Trigonometri', [`\\sin ${Q}`, `\\cos ${Q}`, `\\tan ${Q}`, `\\cot ${Q}`, `\\sec ${Q}`, `\\csc ${Q}`, `\\sin^{2} ${Q}`, `\\cos^{2} ${Q}`, `\\arcsin ${Q}`, `\\arccos ${Q}`, `\\arctan ${Q}`, `\\operatorname{arccot} ${Q}`, `${Q}^{\\circ}`, '\\theta', '\\alpha', '\\beta', '\\pi', `\\frac{\\pi}{${Q}}`, '\\sin^{2}x+\\cos^{2}x=1']],
+    ['Logaritma · Üstel', [`\\log ${Q}`, `\\log_{${Q}} ${Q}`, `\\ln ${Q}`, `e^{${Q}}`, `${Q}^{${Q}}`, `\\log_{${Q}}\\left(${Q}\\right)`, '\\log_{a}(x\\cdot y)=\\log_{a}x+\\log_{a}y', '\\log_{a}x=\\frac{\\ln x}{\\ln a}', 'a^{\\log_{a}x}=x']],
+    ['Limit · Türev · İntegral', [`\\lim_{x\\to ${Q}} ${Q}`, `\\lim_{x\\to\\infty} ${Q}`, `\\lim_{x\\to ${Q}^{+}} ${Q}`, `\\frac{d}{dx}\\left(${Q}\\right)`, "f'(x)", "f''(x)", `\\frac{dy}{dx}`, `\\int ${Q}\\,dx`, `\\int_{${Q}}^{${Q}} ${Q}\\,dx`, `\\left.${Q}\\right|_{${Q}}^{${Q}}`, `\\sum_{k=${Q}}^{${Q}} ${Q}`, `\\prod_{k=${Q}}^{${Q}} ${Q}`, `\\binom{${Q}}{${Q}}`, `${Q}!`, `P(${Q},${Q})`, `C(${Q},${Q})`]],
+    ['Kümeler · Mantık', ['\\in', '\\notin', '\\subset', '\\subseteq', '\\not\\subset', '\\cup', '\\cap', '\\setminus', '\\emptyset', `A'`, `s(${Q})`, '\\mathbb{N}', '\\mathbb{Z}', '\\mathbb{Q}', '\\mathbb{R}', '\\mathbb{C}', '\\forall', '\\exists', '\\neg', '\\land', '\\lor', '\\Rightarrow', '\\Leftrightarrow', `\\{\\,${Q}\\,\\}`, `\\{\\,x \\mid ${Q}\\,\\}`, `[${Q},${Q})`]],
+    ['Geometri', [`\\widehat{${Q}}`, `m(\\widehat{${Q}})`, `\\angle ${Q}`, `\\triangle ${Q}`, '\\perp', '\\parallel', '\\cong', '\\sim', `\\overline{${Q}}`, `|${Q}|`, `\\overrightarrow{${Q}}`, `\\overset{\\frown}{${Q}}`, `\\vec{${Q}}`, `${Q}^{\\circ}`, `A(\\triangle ${Q})`, '\\pi r^{2}', '2\\pi r']],
+    ['Matris · Sistem', [`\\begin{bmatrix}${Q} & ${Q}\\\\ ${Q} & ${Q}\\end{bmatrix}`, `\\begin{bmatrix}${Q} & ${Q} & ${Q}\\\\ ${Q} & ${Q} & ${Q}\\\\ ${Q} & ${Q} & ${Q}\\end{bmatrix}`, `\\begin{vmatrix}${Q} & ${Q}\\\\ ${Q} & ${Q}\\end{vmatrix}`, `\\begin{pmatrix}${Q}\\\\ ${Q}\\end{pmatrix}`, `\\begin{cases}${Q}\\\\ ${Q}\\end{cases}`, `\\begin{cases}${Q}\\\\ ${Q}\\\\ ${Q}\\end{cases}`, `\\left(${Q},${Q}\\right)`]],
+    ['Yunan harfleri', ['\\alpha', '\\beta', '\\gamma', '\\delta', '\\varepsilon', '\\theta', '\\lambda', '\\mu', '\\pi', '\\rho', '\\sigma', '\\varphi', '\\omega', '\\Delta', '\\Sigma', '\\Omega', '\\Gamma']],
+    ['Hazır formüller', ['x_{1,2}=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}', '\\Delta=b^{2}-4ac', '(a+b)^{2}=a^{2}+2ab+b^{2}', 'a^{2}-b^{2}=(a-b)(a+b)', '\\sin^{2}x+\\cos^{2}x=1', '\\tan x=\\frac{\\sin x}{\\cos x}', '\\lim_{x\\to 0}\\frac{\\sin x}{x}=1', '\\sum_{k=1}^{n}k=\\frac{n(n+1)}{2}', '\\int_{0}^{1}x^{2}\\,dx=\\frac{1}{3}', 'a^{2}=b^{2}+c^{2}-2bc\\cos A', '\\frac{a}{\\sin A}=\\frac{b}{\\sin B}=\\frac{c}{\\sin C}', 'e^{i\\pi}+1=0']]
+  ];
+  async function formulDiyalog(el) {
+    try { await katexYukle(); } catch (e) { bildir(esc(e.message || e)); return; }
+    if (!el) araligaKaydet();
+    let grup = 0;
+    modal('', (m, kapat) => {
+      const ic = m.querySelector('.yh-modal-ic'); ic.classList.add('genis'); ic.style.width = 'min(1040px,100%)';
+      ic.innerHTML = `<h2 style="display:flex;align-items:center;gap:10px">${el ? 'Formülü düzenle' : 'Matematik formülü'}<span class="yh-not" style="margin:0;font-weight:400">Düğmeye dokunun, kutucukların (□) yerine yazın. Tab ile sonraki kutucuğa geçilir.</span></h2>
+        <div class="yh-fgrup">${FORMUL_GRUP.map((g, i) => `<button class="yh-cip ${i === grup ? 'on' : ''}" data-fg="${i}">${esc(g[0])}</button>`).join('')}</div>
+        <div class="yh-fpalet" id="fPalet"></div>
+        <div class="yh-fyaz"><div><label class="yh-not" style="margin:0 0 4px;display:block">Formül (LaTeX — düğmelerle yazılır, elle de düzenlenebilir)</label><textarea id="fTex" spellcheck="false" autocomplete="off" placeholder="Örnek: \\frac{x+1}{2}  ·  \\sqrt[3]{8}  ·  \\log_{2} 8  ·  \\int_0^1 x^2\\,dx"></textarea>
+          <div class="yh-satir" style="margin-top:6px"><label style="min-width:0">Görünüm</label><button class="yh-cip on" data-fb="0">Satır içinde</button><button class="yh-cip" data-fb="1">Ortada, büyük</button><span id="fHata" style="color:#ff8a8f;font-size:12px"></span></div></div>
+          <div class="yh-fon"><div id="fOn"></div></div></div>
+        <div class="yh-dugmeler" style="justify-content:flex-end">${el ? '<button class="yh-d k" data-s>Sil</button>' : ''}<button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-t>${el ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
+      const ta = ic.querySelector('#fTex'); let blok = el ? el.dataset.blok === '1' : false;
+      ta.value = el ? el.dataset.tex : '';
+      const on = () => { const t = ta.value.trim(); ic.querySelector('#fOn').innerHTML = t ? kxCiz(t, true) : '<span style="color:#999;font-size:14px">Önizleme</span>'; let h = ''; try { window.katex.renderToString(t || 'x', { throwOnError: true, strict: 'ignore' }); } catch (e) { h = 'Yazımda hata var: ' + String(e.message || '').replace(/^KaTeX parse error:\s*/, '').slice(0, 90); } ic.querySelector('#fHata').textContent = h; };
+      const kutuSec = (bas) => { const i = ta.value.indexOf(Q, bas); if (i >= 0) { ta.focus(); ta.setSelectionRange(i, i + Q.length); return true; } return false; };
+      const koy = t => { const a = ta.selectionStart ?? ta.value.length, b = ta.selectionEnd ?? a; const once = ta.value.slice(0, a), sonra = ta.value.slice(b); const bosluk = /[A-Za-z]$/.test(once) && /^\\/.test(t) ? '' : (/\\[A-Za-z]+$/.test(once) && /^[A-Za-z]/.test(t) ? ' ' : '');
+        ta.value = once + bosluk + t + sonra; const bas = a + bosluk.length; if (!kutuSec(bas) || ta.value.indexOf(Q, bas) > bas + t.length) { ta.focus(); ta.setSelectionRange(bas + t.length, bas + t.length); } on(); };
+      const paletCiz = () => { ic.querySelector('#fPalet').innerHTML = FORMUL_GRUP[grup][1].map((t, i) => `<button class="yh-fdug" data-fi="${i}" title="${esc(t)}">${kxCiz(t, false)}</button>`).join(''); };
+      paletCiz(); on();
+      ic.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { grup = +b.dataset.fg; ic.querySelectorAll('[data-fg]').forEach(x => x.classList.toggle('on', x === b)); paletCiz(); });
+      ic.querySelector('#fPalet').addEventListener('mousedown', ev => { if (ev.target.closest('[data-fi]')) ev.preventDefault(); });
+      ic.querySelector('#fPalet').addEventListener('click', ev => { const b = ev.target.closest('[data-fi]'); if (b) koy(FORMUL_GRUP[grup][1][+b.dataset.fi]); });
+      ic.querySelectorAll('[data-fb]').forEach(b => { b.classList.toggle('on', (b.dataset.fb === '1') === blok); b.onclick = () => { blok = b.dataset.fb === '1'; ic.querySelectorAll('[data-fb]').forEach(x => x.classList.toggle('on', x === b)); }; });
+      ta.addEventListener('input', on);
+      ta.addEventListener('keydown', ev => { if (ev.key === 'Tab') { ev.preventDefault(); if (!kutuSec(ta.selectionEnd)) kutuSec(0); } if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); tamam(); } });
+      ic.querySelector('[data-v]').onclick = kapat;
+      if (el) ic.querySelector('[data-s]').onclick = () => { el.remove(); kapat(); degisti(false); setTimeout(diz, 60); };
+      const tamam = () => { const t = ta.value.trim().replace(/\\square/g, '\\square'); if (!t) return; kapat();
+        if (el) { el.insertAdjacentHTML('afterend', matHTML(t, blok)); el.remove(); degisti(false); setTimeout(diz, 60); }
+        else { araligiGeriKoy(); dugumKoy(matHTML(t, blok)); setTimeout(diz, 60); } };
+      ic.querySelector('[data-t]').onclick = tamam;
+      setTimeout(() => ta.focus(), 40);
+    }, true);
   }
 
   // ---- kesir, kök
@@ -1252,7 +1342,7 @@ body.yh-acik #pencere{z-index:70}
     return k;
   }
   function yazdirmaBelgesi(govdeHTML, baslik) {
-    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>${sayfaCss()}
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><link rel="stylesheet" href="${KX.css()}"><style>${sayfaCss()}
       @page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff}
       .yh-sayfalar{display:block!important;width:210mm!important;margin:0!important;gap:0!important}
       .yh-sayfa{page-break-after:always;break-after:page;box-shadow:none!important}
@@ -1276,7 +1366,7 @@ body.yh-acik #pencere{z-index:70}
     let kaynak;
     if (anahtar) { kap.innerHTML = anahtarSayfalari(); kaynak = kap; }
     else { const k = temizKopya(); k.querySelectorAll('.yh-kok img').forEach(i => { i.src = kokPng(); }); k.style.cssText = 'display:block;width:210mm;gap:0;margin:0;' + sayfaStil(); k.querySelectorAll('.yh-sayfa').forEach(p => { p.style.boxShadow = 'none'; }); kap.appendChild(k); kaynak = k; }
-    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; await Promise.all([...kap.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; katexSvgResim(kap); await Promise.all([...kap.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
       const w = window.html2pdf().set({ margin: 0, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2.4, useCORS: true, backgroundColor: '#ffffff', logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: [] } }).from(kaynak);
       const pdf = await w.toPdf().get('pdf'); const istenen = anahtar ? 0 : kaynak.querySelectorAll('.yh-sayfa').length;
       if (istenen) while (pdf.internal.getNumberOfPages() > istenen) pdf.deletePage(pdf.internal.getNumberOfPages());
@@ -1346,6 +1436,7 @@ body.yh-acik #pencere{z-index:70}
           if (c.nodeType === 3) { cur.r += run(c.nodeValue.replace(/​/g, '').replace(/\s+/g, ' '), f); continue; }
           if (c.nodeType !== 1) continue; const t = c.tagName;
           if (c.classList.contains('yh-kesir')) { const tam = c.dataset.tam ? '' : ''; cur.r += `<m:oMath><m:f><m:num>${mr(c.dataset.pay)}</m:num><m:den>${mr(c.dataset.payda)}</m:den></m:f></m:oMath>` + tam; continue; }
+          if (c.classList.contains('yh-mat')) { const im = await matPng(c.dataset.tex, c.dataset.blok === '1'); if (im) { const r_ = await resimEkle(im.src); if (r_) { const wmm = Math.min(colMm - (girinti || 0), im.wmm); if (c.dataset.blok === '1') { kapat(); out.push({ p: satirIci(r_, wmm), hiza: 'center', girinti }); } else cur.r += satirIci(r_, wmm); } } continue; }
           if (c.classList.contains('yh-kok')) { cur.r += `<m:oMath><m:rad><m:radPr>${c.dataset.der ? '' : '<m:degHide m:val="1"/>'}</m:radPr><m:deg>${c.dataset.der ? mr(c.dataset.der) : ''}</m:deg><m:e>${mr(c.dataset.ic)}</m:e></m:rad></m:oMath>`; continue; }
           if (c.classList.contains('yh-fig')) { const im = c.querySelector('img'); const r = im && await resimEkle(im.getAttribute('src')); if (!r) continue; const gen = Math.max(10, Math.min(100, +c.dataset.gen || 50)) / 100 * (colMm - (girinti || 0)), hz = c.dataset.hiza;
             if (hz === 'sag' || hz === 'sol') { cur.bas += yuzen(r, gen, hz === 'sag' ? 'right' : 'left'); }
@@ -1415,6 +1506,22 @@ body.yh-acik #pencere{z-index:70}
     const core = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${X(belgeAdi(B))}</dc:title><dc:creator>${X(h.ogretmen || 'Atlas')}</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</dcterms:created></cp:coreProperties>`;
     const z = window.UmalZip.zip([['[Content_Types].xml', tipler], ['_rels/.rels', kokRel], ['word/document.xml', belge], ['word/styles.xml', stiller], ['word/_rels/document.xml.rels', belgeRel], ['docProps/core.xml', core], ...medya]);
     return new Blob([z], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+  function katexSvgResim(kok_) {   // html2canvas KaTeX'in kök ve büyük parantez SVG'lerini çizemiyor: aynı boyutta resme çevrilir
+    kok_.querySelectorAll('.yh-mat svg, .katex svg').forEach(sv => {
+      try { const kap = sv.parentElement, w = Math.max(1, Math.min(kap.getBoundingClientRect().width, sv.getBoundingClientRect().width)), h = Math.max(1, sv.getBoundingClientRect().height); if (!w || !h) return;
+        const k = sv.cloneNode(true); k.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); k.setAttribute('width', w); k.setAttribute('height', h);
+        const renk = getComputedStyle(kap).color || '#111'; const x = new XMLSerializer().serializeToString(k).replace(/currentColor/g, renk);
+        const im = document.createElement('img'); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(x); im.style.cssText = (sv.getAttribute('style') || '') + `;display:block;width:${w}px;height:${h}px`; sv.replaceWith(im); } catch (e) {}
+    });
+  }
+  async function matPng(tex, blok) {   // K-992: formül → PNG (Word için)
+    try { await katexYukle(); await C.betikYukle('html2pdf.bundle.min.js?v=0101');
+      const d = document.createElement('div'); d.style.cssText = `position:fixed;left:-10000px;top:0;background:#fff;color:#111;padding:2px 3px;display:inline-block;font-size:${B.ayar.boyut * 1.333}px;font-family:'${B.ayar.font}',Arial`; d.innerHTML = kxCiz(tex, blok); document.body.appendChild(d);
+      if (document.fonts && document.fonts.ready) await document.fonts.ready; katexSvgResim(d); await bekle(60);
+      const cv = await window.html2pdf().set({ html2canvas: { scale: 3, backgroundColor: '#ffffff', logging: false } }).from(d).toCanvas().get('canvas'); const wpx = d.getBoundingClientRect().width; d.remove();
+      return { src: cv.toDataURL('image/png'), wmm: wpx / 3.7795 };
+    } catch (e) { return null; }
   }
   async function svgPng(src) { const im = await resimYukle(src); const cv = document.createElement('canvas'); cv.width = im.naturalWidth || 640; cv.height = im.naturalHeight || 440; const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(im, 0, 0, cv.width, cv.height); return cv.toDataURL('image/png'); }
   async function wordIndir(b) {
