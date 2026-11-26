@@ -6879,7 +6879,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   }
   // K-988: Yazılı Hazırla (ayrı dosya; ilk açılışta yüklenir). Yazılılar öğretmenin cihazında saklanır.
   async function yaziliYukle() {
-    if (!window.UmalYaziliHazirla) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili-hazirla/yh.js?v=202611260645'; sc.onload = ok; sc.onerror = () => red(new Error('Yazılı Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalYaziliHazirla) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili-hazirla/yh.js?v=202611260650'; sc.onload = ok; sc.onerror = () => red(new Error('Yazılı Hazırla yüklenemedi')); document.head.appendChild(sc); });
   }
   function yaziliCtx(gomulu) {
     const dersler = async () => {

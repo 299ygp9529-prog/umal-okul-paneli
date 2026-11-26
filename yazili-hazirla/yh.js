@@ -2251,17 +2251,27 @@ table.yh-punnett th{background:#ededed;font-weight:700}table.yh-punnett th.k{bac
           k.querySelector('[data-u]').onclick = () => { if (!oneriUygula(o)) bildir('Bu ifade kâğıtta bulunamadı; elle düzeltin.'); o.bitti = true; ciz(); }; });
         ic.querySelector('[data-v]').onclick = kapat;
         const h = ic.querySelector('[data-hepsi]'); if (h) h.onclick = () => { let n = 0; L.filter(o => !o.bitti).sort((a, b) => b.i - a.i).forEach(o => { if (oneriUygula(o)) n++; o.bitti = true; }); setTimeout(diz, 80); ciz(); durum(n + ' düzeltme yapıldı'); };
-        ic.querySelector('[data-atlas]').onclick = async () => { if (!C.sb) { bildir('Atlas denetimi için panelden açın.'); return; } atlasDurum = 'bekle'; ciz();
-          const parcalar = []; denetimAlanlari().forEach(a => { const t = a.innerText.replace(/\s+\n/g, '\n').trim(); if (t && t.length > 3) parcalar.push(t); });
-          const metin = parcalar.join('\n---\n').slice(0, 12000);
+        ic.querySelector('[data-atlas]').onclick = async () => { if (!C.sb) { bildir('Atlas denetimi için panelden açın.'); return; }
+          // K-1007: metin küçük parçalara bölünür, parçalar aynı anda gönderilir; gelen öneriler hemen listeye eklenir; her parça en çok 30 sn beklenir
+          const gor = new Set(), parca = []; let cur = '';
+          denetimAlanlari().forEach(a => { const t = a.innerText.replace(/​/g, '').replace(/[ \t]+\n/g, '\n').trim(); if (!t || t.length < 4 || gor.has(t)) return; gor.add(t); if ((cur + '\n' + t).length > 1400 && cur) { parca.push(cur); cur = ''; } cur += (cur ? '\n---\n' : '') + t; });
+          if (cur) parca.push(cur); if (!parca.length) { bildir('Denetlenecek yazı yok.'); return; }
           const ek = ing ? 'You are a careful English proofreader for a high school exam. Check spelling, grammar and punctuation of the English sentences, and Turkish spelling/punctuation (TDK) of any Turkish instructions. Output ONLY lines in this exact format, one per error, nothing else: WRONG ⟦exact text as written⟧ RIGHT ⟦corrected text⟧ WHY ⟦short reason in Turkish⟧ . Keep WRONG as short as possible (1-4 words) and copy it exactly. If no errors, output: TAMAM'
             : 'Bu bir lise yazılı sınavı metni. Türk Dil Kurumu yazım kılavuzuna göre yazım ve noktalama hatalarını bul (de/da ve ki bağlaçlarının yazımı, soru eki, büyük harf, kesme işareti, birleşik kelimeler, noktalama). Anlamı değiştirme, üslup önerisi verme. YALNIZCA şu biçimde satırlar yaz, başka hiçbir şey yazma: WRONG ⟦metinde yazıldığı gibi⟧ RIGHT ⟦doğrusu⟧ WHY ⟦kısa neden⟧ . WRONG kısmını metinden aynen kopyala, olabildiğince kısa tut (1-4 kelime). Hata yoksa yalnız TAMAM yaz.';
-          try { const { data, error } = await C.sb.functions.invoke('atlas-asistan', { body: { gorev: 'serbest', bicim: 'duz', metin, ek } });
-            if (error || !data || !data.ok) throw error || new Error((data && data.hata) || 'yanıt yok');
-            const re = /WRONG\s*⟦([^⟧]+)⟧\s*RIGHT\s*⟦([^⟧]*)⟧\s*WHY\s*⟦([^⟧]*)⟧/g; let mm, n = 0;
-            while ((mm = re.exec(data.yazi || ''))) { const o = { yanlis: mm[1], dogru: mm[2], neden: mm[3], kaynak: 'atlas', i: 1e9 }; if (o.yanlis === o.dogru || L.some(x => x.yanlis === o.yanlis && x.dogru === o.dogru)) continue; const y = bul(o); if (!y) continue; const v = y.n.nodeValue; o.on = v.slice(Math.max(0, y.j - 28), y.j); o.arka = v.slice(y.j + o.yanlis.length, y.j + o.yanlis.length + 28); o.baglam = v.slice(Math.max(0, y.j - 12), y.j); L.push(o); n++; }
-            atlasDurum = 'bitti'; ciz(); if (!n) durum('Atlas ek bir hata bulmadı'); }
-          catch (e) { atlasDurum = ''; ciz(); bildir('Atlas denetimi yapılamadı: ' + esc(e.message || e)); } };
+          let biten = 0, n = 0, hata = 0; const t0 = Date.now(); atlasDurum = 'bekle';
+          const yaz = () => { const d = ic.querySelector('[data-atlas]'); if (d) d.textContent = `Atlas okuyor… ${biten}/${parca.length} · ${Math.round((Date.now() - t0) / 1000)} sn`; };
+          ciz(); yaz(); const sayac = setInterval(yaz, 1000);
+          const zaman = (pr, ms) => Promise.race([pr, new Promise((_, red) => setTimeout(() => red(new Error('zaman aşımı')), ms))]);
+          await Promise.all(parca.map(async metin => {
+            try { const { data, error } = await zaman(C.sb.functions.invoke('atlas-asistan', { body: { gorev: 'serbest', bicim: 'kisa', metin, ek } }), 30000);
+              if (error || !data || !data.ok) throw error || new Error((data && data.hata) || 'yanıt yok');
+              const re = /WRONG\s*⟦([^⟧]+)⟧\s*RIGHT\s*⟦([^⟧]*)⟧\s*WHY\s*⟦([^⟧]*)⟧/g; let mm, ekl = 0;
+              while ((mm = re.exec(data.yazi || ''))) { const o = { yanlis: mm[1], dogru: mm[2], neden: mm[3], kaynak: 'atlas', i: 1e9 }; if (o.yanlis === o.dogru || L.some(x => x.yanlis === o.yanlis && x.dogru === o.dogru)) continue; const y = bul(o); if (!y) continue; const v = y.n.nodeValue; o.on = v.slice(Math.max(0, y.j - 28), y.j); o.arka = v.slice(y.j + o.yanlis.length, y.j + o.yanlis.length + 28); o.baglam = v.slice(Math.max(0, y.j - 12), y.j); L.push(o); n++; ekl++; }
+              biten++; if (ekl && m.isConnected) ciz(); } catch (e) { hata++; biten++; }
+            if (m.isConnected) yaz(); }));
+          clearInterval(sayac); atlasDurum = 'bitti'; if (!m.isConnected) return; ciz();
+          const d = ic.querySelector('[data-atlas]'); if (d) d.textContent = hata === parca.length ? 'Atlas şu an yanıt vermedi · tekrar dene' : n ? `Atlas ${n} öneri ekledi` : 'Atlas ek bir hata bulmadı';
+          if (hata === parca.length && d) { d.disabled = false; atlasDurum = ''; } };
       };
       ciz(); }, true);
   }
