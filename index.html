@@ -143,7 +143,7 @@ html.atlas-yenile #acilis, #acilis.tikli { display: flex; position: fixed; inset
 <script src="bildirim.js?v=202611191405"></script>
 <script src="sohbet-klavye.js?v=202611211330"></script>
 <script src="telsiz.js?v=202611240400"></script>
-<script src="uygulama.js?v=202611261830"></script>
+<script src="uygulama.js?v=202611262300"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});</script>
 <!-- 26 Kasım 2026: OKUL SİTESİ MODU. Yalnız geniş ekranlı bilgisayarda, giriş ekranı açıkken ve uygulama olarak yüklenmemişken çalışır.
      Giriş ekranı okul sitesinin ana görseline dönüşür; giriş kutusu ve Atatürk köşesi aynı öğelerdir (aynı giriş sistemi). Telefonda ve giriş yapılmışken hiçbir şey değişmez. -->
@@ -155,7 +155,7 @@ body.okul-site #osUst { display: block; position: sticky; top: 0; z-index: 50; b
 #osUst .os-marka { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
 #osUst .os-marka img { width: 44px; height: 44px; border-radius: 50%; background: #fff; padding: 2px; }
 #osUst .os-marka b { display: block; font: 700 16px/1.2 Poppins, Inter, sans-serif; } #osUst .os-marka small { font-size: 11.5px; color: #c7cfdd; letter-spacing: .6px; }
-#osUst nav { display: flex; gap: 24px; font-weight: 600; font-size: 14px; } #osUst nav a { color: #e5e9f2; text-decoration: none; } #osUst nav a:hover { color: #e8a92a; }
+#osUst nav { display: flex; gap: 20px; font-weight: 600; font-size: 14px; } #osUst nav a { color: #e5e9f2; text-decoration: none; } #osUst nav a:hover { color: #e8a92a; }
 body.okul-site #giris { min-height: calc(100vh - 66px); justify-content: flex-end; padding-right: clamp(32px, 7vw, 120px); }
 body.okul-site #giris .gt-ust, body.okul-site #giris .gt-alt { display: none; }
 #osHero .gt-ata { position: static; margin-top: 30px; }
@@ -194,9 +194,10 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
 </style>
 <header id="osUst"><div class="os-ic">
   <a class="os-marka" href="#giris"><img src="okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
-  <nav><a href="#osOkul">Okulumuz</a><a href="#osSaat">Ders Saatleri</a><a href="#osIlt">İletişim</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a></nav>
+  <nav><a href="#osHaber">Haberler</a><a href="#osOkul">Okulumuz</a><a href="#osSaat">Ders Saatleri</a><a href="#osIlt">İletişim</a><a href="#osDilek">Dilek ve Şikâyet</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></nav>
 </div></header>
 <div id="osAlt">
+  <section class="os-bolum" id="osHaber"><h2>Son Haberler</h2><div class="os-alt">Okulumuzdan haberler</div><div data-haberler="okul/"></div></section>
   <section class="os-bolum" id="osOkul"><h2>Okulumuz</h2><div class="os-alt">Vizyonumuz, misyonumuz ve okulumuza ilişkin bilgiler</div>
     <div class="os-iki">
       <div class="os-kart"><h3>Vizyonumuz</h3><p>Toplumu çağdaş uygarlık düzeyine taşımaya aday, birey olabilecek özgüvene sahip, sosyal yönü güçlü, erdemli, anlayışı gelişmiş, başkalarının haklarına saygılı, Vatanını ve Milletini seven bireyler yetiştirmektir.</p></div>
@@ -224,12 +225,15 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
       <div class="os-dug" style="display:flex;gap:12px;margin-top:18px"><a class="os-d1" href="https://www.google.com/maps/search/?api=1&query=%C3%9Cmraniye+Merkez+Anadolu+Lisesi" target="_blank" rel="noopener">Yol tarifi al</a><a class="os-d1" style="background:#14213d;color:#fff" href="tel:+902166340416">Okulu ara</a></div></div>
       <div class="os-harita"><iframe title="Okul haritası" loading="lazy" data-src="https://maps.google.com/maps?q=%C3%9Cmraniye%20Merkez%20Anadolu%20Lisesi&z=16&output=embed"></iframe></div></div>
   </section>
+  <section class="os-bolum" id="osDilek"><h2>Dilek, Öneri ve Şikâyet</h2><div class="os-alt">Görüşlerinizi doğrudan okul idaresine iletin</div><div data-dilek-kutusu></div></section>
   <footer class="os-bant"><div class="os-bant-ic">
     <div class="os-bm"><img src="okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul · (216) 634 04 16</div></div>
     <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
     <div><b>Atlas</b><a href="#giris">Atlas Girişi</a><br><a href="ogrenci/">Öğrenci girişi</a><br><a href="veli/">Veli girişi</a></div>
   </div><div class="os-telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div></footer>
 </div>
+<script src="okul/dilek.js?v=202611262300"></script>
+<script src="okul/haberler.js?v=202611262300"></script>
 <script>/* okul sitesi modu: bilgisayar + giriş ekranı açık + uygulama olarak yüklenmemiş */
 (function () {
   var g = document.getElementById('giris'), ust = document.getElementById('osUst'), alt = document.getElementById('osAlt');

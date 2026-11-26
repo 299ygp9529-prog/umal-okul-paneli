@@ -28,12 +28,13 @@
     zumre: 'M5 3.5h10l4 4V20.5H5zM15 3.5V7.5h4M8 11h8M8 14h8M8 17h5',
     devam: 'M4 5.5h16v15H4zM4 10h16M8.5 3.5v4M15.5 3.5v4M9 13.5l6 5M15 13.5l-6 5',
     dyk: 'M3.5 5.5h17v14h-17zM3.5 10h17M8 5.5v14M12 13h6M12 16.5h4',
+    dilek: 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1092,6 +1093,57 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   function zmGirdi(ev) { const t = ev.target, d = t.dataset; if (!d.zm || !ZM.z) return; const x = zmKayit(ZM.V[ZM.don], ZM.z);
     if (d.zm === 'gundem') { if (t.value.trim() === zmDonemGundem(ZM.V[ZM.don], ZM.don).trim()) delete x.gundem; else x.gundem = t.value; } else x[d.zm] = t.value; ZM.degisti = true; }
 
+  // ================================================================ 11) DİLEK VE ŞİKÂYETLER (26 Kasım 2026)
+  // Okul sitesindeki formdan gelen dilek, öneri, şikâyet ve teşekkürler. Tablo: umal_dilek (yalnız bas/yonetici okur ve günceller).
+  const DL_TUR = { dilek: ['Dilek', '#60a5fa'], oneri: ['Öneri', '#a78bfa'], sikayet: ['Şikâyet', '#f87171'], tesekkur: ['Teşekkür', '#4ade80'] };
+  const DL_KIM = { veli: 'Veli', ogrenci: 'Öğrenci', mezun: 'Mezun', vatandas: 'Vatandaş', diger: 'Diğer' };
+  const DL_DUR = { yeni: ['Yeni', '#ffd43b'], inceleniyor: ['İnceleniyor', '#60a5fa'], cevaplandi: ['Cevaplandı', '#4ade80'], kapandi: ['Kapandı', '#94a3b8'] };
+  const DL = { L: [], filtre: 'acik', tur: '', ac: '', degisti: false };
+  async function dilek() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    const { data, error } = await C.sb.from('umal_dilek').select('*').order('tarih', { ascending: false }).limit(500);
+    if (error) { kok.innerHTML = bas('Dilek ve Şikâyetler') + `<div class="kart">${/umal_dilek|relation|does not exist|schema cache/i.test(error.message || '') ? 'Bu bölüm için veritabanı kurulumu gerekiyor: <b>veritabani/sql/20261126230000_umal_dilek.sql</b> dosyası Supabase SQL düzenleyicisinde bir kez çalıştırılmalı.' : esc(C.hataYaz(error))}</div>`; return; }
+    DL.L = data || []; dlCiz();
+  }
+  const dlTarih = t => { const d = new Date(t); return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); };
+  const dlEt = ([ad, r]) => `<span style="display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:700;background:${r}22;color:${r}">${ad}</span>`;
+  function dlCiz() {
+    const L = DL.L, say = k => L.filter(x => x.durum === k).length;
+    const G = L.filter(x => (DL.filtre === 'hepsi' || (DL.filtre === 'acik' ? ['yeni', 'inceleniyor'].includes(x.durum) : x.durum === DL.filtre)) && (!DL.tur || x.tur === DL.tur));
+    const cip = (k, ad, n) => `<button class="cip ${DL.filtre === k ? 'secili' : ''}" data-dlf="${k}">${ad}${n != null ? ` · ${n}` : ''}</button>`;
+    kok.innerHTML = bas('Dilek ve Şikâyetler', 'Okul sitesindeki formdan gelen mesajlar · yalnız idare görür', '<button class="ikincil" data-dlx="yenile">Yenile</button><button class="birincil" data-dlx="yazdir">Listeyi yazdır</button>') +
+      `<div class="kart"><div class="cipler">${cip('acik', 'Açık', say('yeni') + say('inceleniyor'))}${cip('yeni', 'Yeni', say('yeni'))}${cip('cevaplandi', 'Cevaplandı', say('cevaplandi'))}${cip('kapandi', 'Kapandı', say('kapandi'))}${cip('hepsi', 'Hepsi', L.length)}</div>
+        <div class="cipler" style="margin-top:8px"><button class="cip ${!DL.tur ? 'secili' : ''}" data-dlt="">Bütün türler</button>${Object.entries(DL_TUR).map(([k, v]) => `<button class="cip ${DL.tur === k ? 'secili' : ''}" data-dlt="${k}">${v[0]} · ${L.filter(x => x.tur === k).length}</button>`).join('')}</div><div id="idBilgi" class="id-bilgi"></div></div>
+      ${G.map(x => { const ac = DL.ac === x.id; return `<div class="kart" style="${x.durum === 'yeni' ? 'border-color:rgba(255,212,59,.55)' : ''}">
+        <button data-dlac="${esc(x.id)}" style="all:unset;cursor:pointer;display:block;width:100%">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${dlEt(DL_TUR[x.tur] || ['?', '#999'])}${dlEt(DL_DUR[x.durum] || ['?', '#999'])}<b style="font-size:15px">${esc(x.konu)}</b><span class="soluk kucuk" style="margin-left:auto">${esc(dlTarih(x.tarih))}</span></div>
+          <div class="soluk kucuk" style="margin-top:4px">${esc(DL_KIM[x.kim] || x.kim)}${x.ad ? ' · ' + esc(x.ad) : ' · adsız'}${x.iletisim ? ' · ' + esc(x.iletisim) : ''}</div>
+          <div style="margin-top:8px;white-space:pre-wrap;line-height:1.55;${ac ? '' : 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden'}">${esc(x.metin)}</div></button>
+        ${ac ? `<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><span class="id-et" style="margin-top:0">Durum</span><div class="cipler">${Object.entries(DL_DUR).map(([k, v]) => `<button class="cip ${x.durum === k ? 'secili' : ''}" data-dldur="${esc(x.id)}|${k}">${v[0]}</button>`).join('')}</div>
+          <label style="display:block;margin-top:10px">İdare notu <span class="soluk kucuk">(yalnız idare görür: kim ilgilendi, ne yapıldı)</span><textarea data-dlnot="${esc(x.id)}" rows="3" style="width:100%">${esc(x.idare_notu || '')}</textarea></label>
+          <div class="dugmeler" style="justify-content:flex-start;margin:8px 0 0"><button class="birincil" data-dlkaydet="${esc(x.id)}">Notu kaydet</button>${x.guncelleyen ? `<span class="soluk kucuk">Son işlem: ${esc(x.guncelleyen)} · ${esc(dlTarih(x.guncel))}</span>` : ''}</div></div>` : ''}</div>`; }).join('') || '<div class="kart soluk">Bu filtrede mesaj yok.</div>'}`;
+  }
+  async function dlGuncelle(id, alan) {
+    const { error } = await C.sb.from('umal_dilek').update({ ...alan, guncel: new Date().toISOString(), guncelleyen: C.eposta }).eq('id', id);
+    if (error) throw error; const x = DL.L.find(y => y.id === id); if (x) Object.assign(x, alan, { guncel: new Date().toISOString(), guncelleyen: C.eposta });
+  }
+  async function dlTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset;
+    if (d.dlf) { DL.filtre = d.dlf; dlCiz(); return true; }
+    if (d.dlt !== undefined) { DL.tur = d.dlt; dlCiz(); return true; }
+    if (d.dlac) { DL.ac = DL.ac === d.dlac ? '' : d.dlac; const x = DL.L.find(y => y.id === d.dlac);
+      if (DL.ac && x && x.durum === 'yeni') { try { await dlGuncelle(x.id, { durum: 'inceleniyor' }); } catch (e) {} } dlCiz(); return true; }
+    if (d.dldur) { const [id, k] = d.dldur.split('|'); try { await dlGuncelle(id, { durum: k }); dlCiz(); bilgi('Durum kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (d.dlkaydet) { const t = kok.querySelector(`[data-dlnot="${d.dlkaydet}"]`); try { await dlGuncelle(d.dlkaydet, { idare_notu: (t ? t.value : '').slice(0, 2000) || null }); DL.degisti = false; dlCiz(); bilgi('Not kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (d.dlx === 'yenile') { await dilek(); return true; }
+    if (d.dlx === 'yazdir') { const G = DL.L.filter(x => (DL.filtre === 'hepsi' || (DL.filtre === 'acik' ? ['yeni', 'inceleniyor'].includes(x.durum) : x.durum === DL.filtre)) && (!DL.tur || x.tur === DL.tur));
+      C.belgeOnizle(dyBelgeKabuk('Dilek ve şikâyetler', `<section class="sy">${dyUst()}<h1>DİLEK, ÖNERİ VE ŞİKÂYET LİSTESİ</h1><table><thead><tr><th style="width:8mm">#</th><th style="width:26mm">Tarih</th><th style="width:20mm">Tür</th><th style="width:34mm">Gönderen</th><th>Konu ve mesaj</th><th style="width:22mm">Durum</th><th style="width:50mm">İdare notu</th></tr></thead><tbody>
+        ${G.map((x, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${esc(dlTarih(x.tarih))}</td><td>${esc((DL_TUR[x.tur] || [''])[0])}</td><td>${esc(DL_KIM[x.kim] || '')}${x.ad ? '<br>' + esc(x.ad) : ''}${x.iletisim ? '<br>' + esc(x.iletisim) : ''}</td><td><b>${esc(x.konu)}</b><br>${esc(x.metin)}</td><td>${esc((DL_DUR[x.durum] || [''])[0])}</td><td>${esc(x.idare_notu || '')}</td></tr>`).join('')}</tbody></table>
+        <div class="imz"><div></div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`, true), 'Dilek ve şikâyet listesi', true); return true; }
+    return false;
+  }
+  function dlGirdi(ev) { if (ev.target.dataset.dlnot) DL.degisti = true; }
+
   // ================================================================ 10) DYK PROGRAMI (26 Kasım 2026)
   // Hafta içi okul dersleri bittikten sonra yapılan destekleme ve yetiştirme kurslarının haftalık programı.
   // Saat dilimleri Evraklar › Ders Zaman Çizelgesi'ndeki DYK ayarından gelir (yoksa 15.00'ten 40 + 10 dk, 2 ders).
@@ -1855,7 +1907,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1863,13 +1915,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik }[aktif])(ev);
     };
     kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -1881,6 +1933,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'zumre') return zumre();
     if (id === 'devam') return devam();
     if (id === 'dyk') return dyk();
+    if (id === 'dilek') return dilek();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;

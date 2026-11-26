@@ -52,7 +52,7 @@ nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;tex
 .alt-bant b{color:#fff;font-family:Poppins,sans-serif;display:block;margin-bottom:6px}.alt-bant a{color:#c7cfdd;text-decoration:none}.alt-bant a:hover{color:var(--hardal)}
 .alt-marka{display:flex;gap:14px;align-items:flex-start}.alt-marka img{width:58px;height:58px;border-radius:50%;background:#fff;padding:2px;flex:none}
 .telif{border-top:1px solid rgba(255,255,255,.08);text-align:center;padding:16px 24px;font-size:12.5px;color:#8a96ad}
-@media (max-width:900px){nav{display:none}.hizli{grid-template-columns:1fr 1fr}.iki,.iletisim,.alt-ic{grid-template-columns:1fr}}
+nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100px){nav{display:none}}@media (max-width:900px){.hizli{grid-template-columns:1fr 1fr}.iki,.iletisim,.alt-ic{grid-template-columns:1fr}}
 @media (max-width:520px){.ust-ic{padding:10px 16px}.marka b{font-size:14px}.marka small{display:none}.giris{padding:8px 12px;font-size:13px}
 .k-ic{padding:60px 16px 96px}.hizli{padding:0 16px;gap:10px}.hz{padding:14px;gap:10px}.hz i{width:38px;height:38px}.bolum{padding:56px 16px 0}.kart{padding:20px}.saat{font-size:14px}.saat th,.saat td{padding:9px 6px}}
 </style>
@@ -60,7 +60,7 @@ nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;tex
 <body>
 <header class="ust"><div class="ust-ic">
   <a class="marka" href="#"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi amblemi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
-  <nav><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a></nav>
+  <nav><a href="#haberler">Haberler</a><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="#dilek">Dilek ve Şikâyet</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></nav>
   <a class="giris" href="../">Atlas Girişi</a>
 </div></header>
 
@@ -77,6 +77,11 @@ nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;tex
   <a class="hz" href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener"><i style="background:#fff4dc"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c98a10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i><div><b>Duyurular</b><span>MEB okul sitemizde</span></div></a>
   <a class="hz" href="#iletisim"><i style="background:#e7f6ec"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1f9d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></i><div><b>Ulaşım</b><span>Adres ve yol tarifi</span></div></a>
 </div>
+
+<section class="bolum" id="haberler">
+  <h2>Son Haberler</h2><div class="alt">Okulumuzdan haberler</div>
+  <div data-haberler=""></div>
+</section>
 
 <section class="bolum" id="okulumuz">
   <h2>Okulumuz</h2><div class="alt">Vizyonumuz, misyonumuz ve okulumuza ilişkin bilgiler</div>
@@ -142,13 +147,20 @@ nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;tex
   </div>
 </section>
 
+<section class="bolum" id="dilek">
+  <h2>Dilek, Öneri ve Şikâyet</h2><div class="alt">Görüşlerinizi doğrudan okul idaresine iletin</div>
+  <div data-dilek-kutusu></div>
+</section>
+
 <footer class="alt-bant">
   <div class="alt-ic">
     <div class="alt-marka"><img src="../okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul · (216) 634 04 16</div></div>
-    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.meb.gov.tr" target="_blank" rel="noopener">Millî Eğitim Bakanlığı</a></div>
-    <div><b>Atlas</b><a href="../">Atlas Girişi</a><br><a href="#saatler">Ders saatleri</a><br><a href="#iletisim">İletişim</a></div>
+    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.meb.gov.tr" target="_blank" rel="noopener">Millî Eğitim Bakanlığı</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
+    <div><b>Atlas</b><a href="../">Atlas Girişi</a><br><a href="#saatler">Ders saatleri</a><br><a href="#dilek">Dilek ve şikâyet</a></div>
   </div>
   <div class="telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div>
 </footer>
+<script src="dilek.js?v=202611262300"></script>
+<script src="haberler.js?v=202611262300"></script>
 </body>
 </html>
