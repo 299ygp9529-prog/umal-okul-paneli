@@ -29,7 +29,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -954,7 +954,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
   // Sınıflar ve sınıf rehber öğretmenleri ders programından (Rehberlik dersini veren öğretmen) gelir, elle değiştirilebilir.
   // Okul rehber öğretmenleri programda yoktur: elle, seviyeye toplu ya da dosyadan (Excel, Word, PDF, CSV) girilir.
-  const EV = { M: null, degisti: false, sek: 'rehber', izSinif: '', izNo: '', fa: { ogretmen: '', brans: '', gorev: '', etkinlik: '', tarih: '', saat: '', sinif: '', ogr: [] } };
+  const EV = { M: null, degisti: false, sek: 'rehber', izSinif: '', izNo: '', fa: { ogretmen: '', brans: '', gorev: '', etkinlik: '', tarih: '', saat: '', sinif: '', ogr: [] }, gk: { sev: '10', tarih: '' } };
   const evSiniflar = () => [...new Set(Object.keys((PRG && PRG.siniflar) || {}).concat(siniflar()))].filter(s => /^\d+-/.test(s)).sort(sinifSira);
   function evProgRehber(s) { const L = new Set(); for (const h of Object.values(((PRG && PRG.siniflar) || {})[s] || {})) if (/rehberlik/i.test(h.ders || '')) (h.ogretmen || []).forEach(o => L.add(o)); return [...L].join(', '); }
   const evSR = s => (EV.M.so || {})[s] != null ? EV.M.so[s] : evProgRehber(s);
@@ -967,6 +967,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   function evCiz() {
     if (EV.sek === 'izin') return izCiz();
     if (EV.sek === 'faaliyet') return faCiz();
+    if (EV.sek === 'gec') return gkCiz();
     const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
     kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
       evSekmeler() + `
@@ -981,7 +982,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   }
 
   // ---- Evraklar sekmeleri
-  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
+  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
   // ---- İzin Belgesi (Veli Beyanıdır) · okulun basılı formunun aynısı; öğrenci seçilirse şube, numara ve ad doldurulur
   function izCiz() {
     const S = evSiniflar(), L = OGR.filter(o => o.sinif === EV.izSinif).sort((a, b) => (+a.no) - (+b.no));
@@ -1032,6 +1033,33 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
       <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="faOniz" title="Faaliyetli öğrenci belgesi önizleme" style="width:100%;height:1100px;border:0;background:#fff"></iframe></div>`;
     const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge();
   }
+  // Geç Kalan Öğrenci Çizelgesi: okulun basılı formunun aynısı (seviye başına bir sayfa, 35 satır, elle doldurulur)
+  function gkCiz() {
+    const G = EV.gk, sv = [['9', '9. Sınıflar'], ['10', '10. Sınıflar'], ['11', '11. Sınıflar'], ['12', '12. Sınıflar'], ['hepsi', 'Dört seviye (4 sayfa)']];
+    kok.innerHTML = bas('Evraklar', 'Geç Kalan Öğrenci Çizelgesi', '<button class="ikincil" data-gkx="bos">Tarihsiz yazdır</button><button class="birincil" data-gkx="yazdir">Yazdır</button>') + evSekmeler() +
+      `<div class="kart id-not">Okulun <b>Geç Kalan Öğrenci Çizelgesi</b>. Seviyeyi seçin; tarih girilirse çizelgede yazılı gelir, boş bırakılırsa elle doldurulur. Sınıf, numara, ad ve imza sütunları elle doldurulur.</div>
+      <div class="kart"><span class="id-et" style="margin-top:0">Seviye</span><div class="cipler id-sinif">${sv.map(([k, ad]) => `<button class="cip ${G.sev === k ? 'secili' : ''}" data-gksev="${k}">${ad}</button>`).join('')}</div>
+        <div class="id-form" style="margin-top:10px"><label>Tarih<input type="date" data-gk="tarih" value="${esc(G.tarih || '')}"></label></div></div>
+      <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="gkOniz" title="Geç kalan öğrenci çizelgesi önizleme" style="width:100%;height:1150px;border:0;background:#fff"></iframe></div>`;
+    const fr = kok.querySelector('#gkOniz'); if (fr) fr.srcdoc = gkBelge();
+  }
+  function gkBelge(bos) {
+    const G = EV.gk, bg = new Date(), y = bg.getFullYear(), ey = bg.getMonth() >= 8 ? y : y - 1;
+    const t = !bos && G.tarih ? G.tarih.split('-') : null;
+    const tarihY = t ? `${t[2]}/${t[1]}/${t[0]}` : `………./………/${y}`;
+    const sevler = G.sev === 'hepsi' ? ['9', '10', '11', '12'] : [G.sev];
+    const r = Array.from({ length: 35 }, (_, i) => `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td></tr>`).join('');
+    const tek = sv => `<section class="sy"><div class="ust">${ey}-${ey + 1} EĞİTİM ÖĞRETİM YILI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ GEÇ KALAN ÖĞRENCİ ÇİZELGESİDİR</div>
+      <div class="bas"><h1>${sv}. SINIFLAR</h1><span>TARİH</span></div><div class="tr">${esc(tarihY)}</div>
+      <table><tr><th style="width:8%">SIRA</th><th style="width:11%">SINIF</th><th style="width:12.5%">NO</th><th>ADI SOYADI</th><th style="width:20%">İMZASI</th></tr>${r}</table></section>`;
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Geç Kalan Öğrenci Çizelgesi</title><style>
+@page{size:A4 portrait;margin:12mm 15mm}*{box-sizing:border-box}body{font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;color:#000;margin:0;padding:12mm 15mm}@media print{body{padding:0}}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:10.5pt;font-weight:bold;line-height:1.35}
+.bas{position:relative;text-align:center;margin:2mm 0 0}.bas h1{font-size:28pt;margin:0;line-height:1.15}.bas span{position:absolute;left:73%;bottom:2.2mm;font-size:12pt;font-weight:bold}
+.tr{font-size:12pt;font-weight:bold;margin:1mm 0 .5mm}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;font-size:12pt;padding:0 1.5mm;height:6.55mm;vertical-align:middle}th{font-weight:bold;text-align:center;height:8mm}td:first-child{font-weight:bold}
+</style></head><body>${sevler.map(tek).join('')}</body></html>`;
+  }
   function faBelge(bos) {
     const F = bos ? { ogr: [] } : EV.fa, yil = new Date().getFullYear(), O = F.ogr || [], sayfa = Math.max(1, Math.ceil(O.length / 30));
     const tarihY = F.tarih ? tGos(F.tarih) : '';
@@ -1054,6 +1082,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 </style></head><body>${Array.from({ length: sayfa }, (_, i) => tek(i)).join('')}</body></html>`;
   }
   function evGirdi(ev) { const d = ev.target.dataset;
+    if (d.gk) { EV.gk[d.gk] = ev.target.value; const fr = kok.querySelector('#gkOniz'); if (fr) fr.srcdoc = gkBelge(); return; }
     if (d.fa) { EV.fa[d.fa] = ev.target.value; if (d.fa === 'ogretmen') { const o = ogretmenler().find(x => x.ad === ev.target.value); if (o && !EV.fa.brans) { EV.fa.brans = o.brans; const b = kok.querySelector('[data-fa="brans"]'); if (b) b.value = o.brans; } } const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge(); return; } if (d.evso) { EV.M.so[d.evso] = ev.target.value; EV.degisti = true; } if (d.evor) { EV.M.okul[d.evor] = ev.target.value; EV.degisti = true; } }
   // Dosya/yapıştırma satırlarından okul rehber öğretmenlerini çıkarır: bir satırda ad + bir ya da birkaç sınıf ("9-A, 9-B", "9/C", "9. sınıflar")
   function evDosyaIsle(R) {
@@ -1087,6 +1116,9 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (d.evsek) { if (EV.sek === 'rehber' && EV.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return; EV.sek = d.evsek; evCiz(); return; }
     if (d.izsinif != null) { EV.izSinif = d.izsinif; EV.izNo = ''; izCiz(); return; }
     if (d.izno) { EV.izNo = d.izno; izCiz(); return; }
+    if (d.gksev) { EV.gk.sev = d.gksev; gkCiz(); return; }
+    if (d.gkx === 'bos') { C.belgeOnizle(gkBelge(true), 'Geç Kalan Öğrenci Çizelgesi', false); return; }
+    if (d.gkx === 'yazdir') { C.belgeOnizle(gkBelge(), 'Geç Kalan Öğrenci Çizelgesi', false); return; }
     if (d.fasinif) { EV.fa.sinif = d.fasinif; faCiz(); return; }
     if (d.faekle) { const o = OGR.find(x => x.sinif === EV.fa.sinif && String(x.no) === String(d.faekle)); if (!o) return; const i = EV.fa.ogr.findIndex(x => x.sinif === o.sinif && String(x.no) === String(o.no)); if (i >= 0) EV.fa.ogr.splice(i, 1); else EV.fa.ogr.push({ sinif: o.sinif, no: o.no, ad: o.ad }); faCiz(); return; }
     if (d.facikar != null) { EV.fa.ogr.splice(+d.facikar, 1); faCiz(); return; }
