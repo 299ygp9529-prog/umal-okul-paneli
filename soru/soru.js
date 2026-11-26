@@ -26,7 +26,7 @@
   const kaydet = () => { try { localStorage.setItem(ayarAnahtar, JSON.stringify(ayar)); } catch (e) {} };
 
   // ------------------------------------------------------------------ Kütüphaneler
-  let pdfjs = null, taban = '', logoUrl = '', sbc = null, eposta = '';
+  let pdfjs = null, taban = '', logoUrl = '', sbc = null, eposta = '', yaziliyaCevir = null;   // K-989: Sınav Hazırla köprüsü
   async function yukle() {
     if (!pdfjs) { pdfjs = await import(taban + 'pdf.min.mjs'); pdfjs.GlobalWorkerOptions.workerSrc = taban + 'pdf.worker.min.mjs'; }
     if (!window.PDFLib) await new Promise((ok, red) => { const s = document.createElement('script'); s.src = taban + 'pdf-lib.min.js'; s.onload = ok; s.onerror = () => red(new Error('pdf-lib yüklenemedi')); document.head.appendChild(s); });
@@ -41,7 +41,7 @@
   let kok = null;
 
   async function ac(el, o) {
-    kok = el; taban = o.taban; logoUrl = o.logo; sbc = o.sb || null; eposta = o.eposta || '';
+    kok = el; taban = o.taban; logoUrl = o.logo; sbc = o.sb || null; eposta = o.eposta || ''; yaziliyaCevir = o.yaziliyaCevir || null;
     el.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     await yukle();
     el.innerHTML = `<div class="sh-ana">
@@ -396,6 +396,26 @@ body.rol-ogretmen .saat-kutu { display: none; }
     kok.querySelectorAll('[data-a]').forEach(i => { i.value = ayar[i.dataset.a] || ''; i.oninput = () => { ayar[i.dataset.a] = i.value; kaydet(); }; });
     q('#shIndir').onclick = () => uret(false);
     q('#shOnizle').onclick = () => uret(true);
+    if (yaziliyaCevir && !q('#shYazili')) {   // K-989: seçilen sorular Yazılı Hazırla'da düzenlenebilir kâğıda dönüşür
+      const d = document.createElement('button'); d.className = 'ikincil'; d.id = 'shYazili'; d.textContent = 'Yazılıya çevir'; d.title = 'Seçilen soruları Yazılı Hazırla\'da düzenlenebilir kâğıt olarak aç';
+      const yer = q('#shIndir').parentNode; yer.appendChild(d);
+      d.onclick = async () => { if (!S.secim.length) { bilgi('Önce soru seçin.'); return; } d.disabled = true; bilgi('Sorular yazılıya aktarılıyor…');
+        try { const L = await secimResimleri(); await yaziliyaCevir(L, { ders: ayar.baslik || '', sinif: ayar.sinif || '' }); } catch (e) { bilgi('Aktarılamadı: ' + (e.message || e)); }
+        d.disabled = false; };
+    }
+  }
+  async function secimResimleri() {   // K-989: her seçimin resmi (soru numarası maskelenmiş) ve cevabı
+    const out = [];
+    for (const k of S.secim) {
+      const D_ = S.dosyalar[k.d]; if (!D_) continue; const pg = await D_.doc.getPage(k.s), v = pg.getViewport({ scale: 3 });
+      const a = v.convertToViewportPoint(k.x0, k.y0), b = v.convertToViewportPoint(k.x1, k.y1), X0 = Math.max(0, Math.min(a[0], b[0])), Y0 = Math.max(0, Math.min(a[1], b[1])), X1 = Math.min(v.width, Math.max(a[0], b[0])), Y1 = Math.min(v.height, Math.max(a[1], b[1]));
+      const cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height; const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height);
+      await pg.render({ canvasContext: c, viewport: v }).promise;
+      (k.maske || []).forEach(m => { const p1 = v.convertToViewportPoint(m[0], m[1]), p2 = v.convertToViewportPoint(m[2], m[3]); c.fillStyle = '#fff'; c.fillRect(Math.min(p1[0], p2[0]), Math.min(p1[1], p2[1]), Math.abs(p2[0] - p1[0]), Math.abs(p2[1] - p1[1])); });
+      const w = Math.max(2, Math.round(X1 - X0)), h = Math.max(2, Math.round(Y1 - Y0)), cv2 = document.createElement('canvas'); cv2.width = w; cv2.height = h; const c2 = cv2.getContext('2d'); c2.fillStyle = '#fff'; c2.fillRect(0, 0, w, h); c2.drawImage(cv, X0, Y0, w, h, 0, 0, w, h);
+      out.push({ src: cv2.toDataURL('image/png'), cevap: k.cevap || '', w, h });
+    }
+    return out;
   }
   function ayarCiz() {
     const q = s => kok.querySelector(s);

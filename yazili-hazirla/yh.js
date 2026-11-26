@@ -268,7 +268,7 @@ body.yh-acik #pencere{z-index:70}
     o = o || {};
     return { id: uid(), eposta: (C && C.D && C.D.eposta) || '', olusturma: Date.now(), guncel: Date.now(),
       baslik: { yil: egitimYili(), okul: 'ÜMRANİYE MERKEZ ANADOLU LİSESİ', sinif: o.sinif || '', ders: o.ders || '', sinav: o.sinav || varsayilanSinav(), mazeret: !!o.mazeret,
-        sure: o.sure || '40', ogretmen: o.ogretmen || '', tarih: true, puanKutu: true, yonerge: 'Her sorunun puanı yanında yazılıdır. Cevaplarınızı soruların altındaki boşluğa yazınız.', kitapcik: '', basari: true },
+        sure: o.sure || '40', sinavTarihi: o.sinavTarihi || '', ogretmen: o.ogretmen || '', tarih: true, puanKutu: true, yonerge: 'Her sorunun puanı yanında yazılıdır. Cevaplarınızı soruların altındaki boşluğa yazınız.', kitapcik: '', basari: true },
       ayar: { sutun: o.sutun || 1, kenar: 'normal', tema: 'sb', font: 'YH Poppins', boyut: 10.5, satir: 1.42 },
       sorular: [], gorseller: {} };
   }
@@ -280,6 +280,8 @@ body.yh-acik #pencere{z-index:70}
     if (tur === 'bosluk') { s.kelimeler = ''; s.govde = 'Aşağıdaki cümlelerde boş bırakılan yerleri uygun ifadelerle doldurunuz.<div><br></div>'; }
     return s;
   }
+  const trTarih = t => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t || ''); return m ? `${m[3]}.${m[2]}.${m[1]}` : ''; };   // K-989: sınav tarihi
+  const tarihYazi = h => trTarih(h.sinavTarihi) || '…… / …… / 20……';
   const baslikMetni = b => { const h = b.baslik; return [h.sinif && `${h.sinif}`, h.ders, h.sinav].filter(Boolean).join(' · ') || 'Yeni yazılı'; };
   const belgeAdi = b => b.ad || baslikMetni(b);
 
@@ -467,9 +469,9 @@ body.yh-acik #pencere{z-index:70}
     try { const ep_ = (C.D || {}).eposta || ''; L = (await DB.hepsi() || []).filter(b => !b.eposta || !ep_ || b.eposta === ep_).sort((a, b) => b.guncel - a.guncel); }
     catch (e) { KOK.innerHTML = `<div class="kart kirmizi">Bu tarayıcıda kayıt yeri açılamadı: ${esc(e.message || e)}. Gizli pencerede olabilirsiniz.</div>`; return; }
     const tarih = t => new Date(t).toLocaleString(tr, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-    KOK.innerHTML = `<div class="yh-liste"><div class="ust" style="align-items:center;flex-wrap:wrap;gap:10px"><h1 style="margin:0">Yazılı Hazırla</h1><span class="soluk">Yazılı kâğıdınızı Word'e gerek kalmadan burada hazırlayın, yazdırın ya da PDF / Word olarak indirin.</span></div>
+    KOK.innerHTML = `<div class="yh-liste">${C.gomulu ? `<div class="soluk" style="margin-top:4px">Yazılı kâğıdınızı Word'e gerek kalmadan burada hazırlayın, yazdırın ya da PDF / Word olarak indirin.</div>` : `<div class="ust" style="align-items:center;flex-wrap:wrap;gap:10px"><h1 style="margin:0">Yazılı Hazırla</h1><span class="soluk">Yazılı kâğıdınızı Word'e gerek kalmadan burada hazırlayın, yazdırın ya da PDF / Word olarak indirin.</span></div>`}
       <div class="yh-dugmeler" style="margin-top:12px"><button class="yh-d n" id="yhYeni">${ik('arti')}Yeni yazılı</button><button class="yh-d" id="yhDosyadan">${ik('dosya')}Dosyadan aç</button><input type="file" id="yhDosyaIn" accept=".atlasyazili,.json,application/json" style="display:none"></div>
-      ${L.length ? `<div class="yh-belgeler">${L.map(b => `<div class="yh-belge" data-ac="${esc(b.id)}"><b>${esc(belgeAdi(b))}</b><small>${esc([b.baslik.sinif, b.baslik.ders].filter(Boolean).join(' · ') || '—')}</small><small>${b.sorular.filter(s => s.tur !== 'metin').length} soru · ${b.sorular.reduce((t, s) => t + (+s.puan || 0), 0)} puan · ${esc(tarih(b.guncel))}</small>
+      ${L.length ? `<div class="yh-belgeler">${L.map(b => `<div class="yh-belge" data-ac="${esc(b.id)}"><b>${esc(belgeAdi(b))}</b><small>${esc([b.baslik.sinif, b.baslik.ders, trTarih(b.baslik.sinavTarihi) && 'Sınav: ' + trTarih(b.baslik.sinavTarihi)].filter(Boolean).join(' · ') || '—')}</small><small>${b.sorular.filter(s => s.tur !== 'metin').length} soru · ${b.sorular.reduce((t, s) => t + (+s.puan || 0), 0)} puan · ${esc(tarih(b.guncel))}</small>
         <div class="yh-dugmeler"><button class="yh-d" data-cog="${esc(b.id)}">${ik('kopya', 16)}Çoğalt</button><button class="yh-d" data-dk="${esc(b.id)}">${ik('kaydet', 16)}Dosyaya kaydet</button><button class="yh-d k" data-sil="${esc(b.id)}">${ik('cop', 16)}Sil</button></div></div>`).join('')}</div>`
         : `<div class="yh-bos">Henüz yazılı yok. "Yeni yazılı" ile başlayın.<br><small>Yazılılarınız bu cihazda saklanır. Başka bilgisayarda açmak için "Dosyaya kaydet" ile dosyayı alıp orada "Dosyadan aç"ı kullanın.</small></div>`}</div>`;
     KOK.querySelector('#yhYeni').onclick = () => yeniSihirbaz();
@@ -505,11 +507,12 @@ body.yh-acik #pencere{z-index:70}
           <div class="yh-satir"><label>Ders</label><input id="yhD" value="${esc(S.ders)}" placeholder="Ör. Matematik" style="flex:1"></div>
           <div class="yh-satir"><label>Sınav</label><div style="display:flex;flex-wrap:wrap;gap:6px">${SINAVLAR.map(x => `<button class="yh-cip ${S.sinav === x ? 'on' : ''}" data-sv="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>
           <div class="yh-satir"><label></label><label style="min-width:0;color:#cfe3ff;display:flex;gap:6px;align-items:center"><input type="checkbox" id="yhM" ${S.mazeret ? 'checked' : ''}> Mazeret sınavı</label></div>
+          <div class="yh-satir"><label>Sınav tarihi</label><input id="yhTarih" type="date" value="${esc(S.sinavTarihi || '')}"></div>
           <div class="yh-satir"><label>Süre (dakika)</label><input id="yhSure" type="number" min="10" max="240" value="${esc(S.sure)}"></div>
           <div class="yh-satir"><label>Ders öğretmeni</label><input id="yhO" value="${esc(S.ogretmen)}" placeholder="Ad Soyad" style="flex:1"></div>
           <div class="yh-satir"><label>Düzen</label><button class="yh-cip ${S.sutun === 1 ? 'on' : ''}" data-st="1">Tek sütun</button><button class="yh-cip ${S.sutun === 2 ? 'on' : ''}" data-st="2">İki sütun</button></div>
           <div class="yh-dugmeler" style="justify-content:flex-end;margin-top:14px"><button class="yh-d" data-vz>Vazgeç</button><button class="yh-d n" data-tm>Başla</button></div>`;
-        const al = () => { S.sinif = m.querySelector('#yhS').value.trim(); S.ders = m.querySelector('#yhD').value.trim(); S.mazeret = m.querySelector('#yhM').checked; S.sure = m.querySelector('#yhSure').value.trim(); S.ogretmen = m.querySelector('#yhO').value.trim(); };
+        const al = () => { S.sinif = m.querySelector('#yhS').value.trim(); S.ders = m.querySelector('#yhD').value.trim(); S.mazeret = m.querySelector('#yhM').checked; S.sure = m.querySelector('#yhSure').value.trim(); S.sinavTarihi = m.querySelector('#yhTarih').value; S.ogretmen = m.querySelector('#yhO').value.trim(); };
         m.querySelectorAll('[data-cift]').forEach(b => b.onclick = () => { al(); const c = ciftler[+b.dataset.cift]; S.sinif = c.dz + '. SINIF'; S.ders = c.ders; ciz(); });
         m.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => { al(); S.sinav = b.dataset.sv; ciz(); });
         m.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { al(); S.sutun = +b.dataset.st; ciz(); });
@@ -571,6 +574,7 @@ body.yh-acik #pencere{z-index:70}
   // ---- sol (ekle)
   function solCiz() {
     $e('#yhSol').innerHTML = `<h3>SORU EKLE</h3><div class="yh-ekle">${['acik', 'coktan', 'bosluk', 'dy', 'eslestir', 'metin'].map(t => `<button data-ekle="${t}">${ik(t, 22)}${esc(TURLER[t].kisa)}</button>`).join('')}</div>
+      <h3 style="margin-top:14px">KİTAPTAN</h3><div class="yh-ekle"><button data-ic="kitap" style="grid-column:1/-1">${ik('pdf', 22)}Kitaptan / PDF'ten soru al</button></div>
       <h3 style="margin-top:14px">İÇİNE EKLE</h3><div class="yh-ekle"><button data-ic="foto">${ik('foto', 22)}Fotoğraf</button><button data-ic="sekil">${ik('sekil', 22)}Şekil</button><button data-ic="tablo">${ik('tablo', 22)}Tablo</button><button data-ic="cizgi">${ik('cizgi', 22)}Cevap alanı</button></div>
       <h3 style="margin-top:14px">KÂĞIT</h3><div class="yh-ekle"><button data-ic="baslik">${ik('baslik', 22)}Başlık bilgileri</button><button data-ic="dagit">${ik('dagit', 22)}Puanları dağıt</button></div>
       <input type="file" id="yhFotoIn" accept="image/*" style="display:none">
@@ -591,7 +595,7 @@ body.yh-acik #pencere{z-index:70}
     const h = b.baslik, logo = C.logo || '';
     const satirlar = [`${h.yil} EĞİTİM-ÖĞRETİM YILI`, BUY(h.okul), [BUY(h.sinif), h.ders && BUY(h.ders) + ' DERSİ'].filter(Boolean).join(' '), [BUY(h.sinav) + (h.sinav && !/sınav/i.test(h.sinav) ? ' SINAVI' : ''), h.mazeret ? 'MAZERET SINAVI' : '', h.kitapcik ? h.kitapcik + ' KİTAPÇIĞI' : ''].filter(Boolean).join(' · ')].filter(x => x && x.trim());
     return `<div class="yh-bas"><div class="yh-bas-ust">${logo ? `<img src="${esc(logo)}" alt="">` : '<span></span>'}<div class="yh-bas-ad">${satirlar.map(x => `<span>${esc(x)}</span>`).join('')}</div>${h.puanKutu ? '<div class="yh-puankutu">PUAN</div>' : '<span></span>'}</div>
-      <table class="yh-kim"><tr><td class="e">Adı Soyadı</td><td style="width:46%"></td><td class="e">Sınıf / No</td><td></td></tr>${h.tarih || h.sure ? `<tr><td class="e">${h.tarih ? 'Tarih' : 'Süre'}</td><td>${h.tarih ? '…… / …… / 20……' : esc(h.sure) + ' dakika'}</td><td class="e">${h.tarih && h.sure ? 'Süre' : ''}</td><td>${h.tarih && h.sure ? esc(h.sure) + ' dakika' : ''}</td></tr>` : ''}</table>
+      <table class="yh-kim"><tr><td class="e">Adı Soyadı</td><td style="width:46%"></td><td class="e">Sınıf / No</td><td></td></tr>${h.tarih || h.sure ? `<tr><td class="e">${h.tarih ? 'Tarih' : 'Süre'}</td><td>${h.tarih ? esc(tarihYazi(h)) : esc(h.sure) + ' dakika'}</td><td class="e">${h.tarih && h.sure ? 'Süre' : ''}</td><td>${h.tarih && h.sure ? esc(h.sure) + ' dakika' : ''}</td></tr>` : ''}</table>
       ${h.yonerge ? `<div class="yh-yonerge">${esc(h.yonerge)}</div>` : ''}</div>`;
   }
   function sonEl() {
@@ -775,6 +779,7 @@ body.yh-acik #pencere{z-index:70}
       if (t === 'tablo') { tabloDiyalog(); return; }
       if (t === 'cizgi') { const s = seciliSoru(); if (!s) return; modelOku(); s.ca = { tur: 'cizgi', boy: (s.ca && s.ca.tur !== 'yok' ? +s.ca.boy + 2 : 4) }; soruYenile(s); degisti(true); return; }
       if (t === 'baslik') { baslikDiyalog(); return; }
+      if (t === 'kitap') { kitaptanDiyalog(); telKapat(); return; }
       if (t === 'dagit') { puanDagit(); return; }
     });
     $e('#yhFotoIn').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (f) fotoEkle(f); telKapat(); };
@@ -1027,6 +1032,66 @@ body.yh-acik #pencere{z-index:70}
     }, true);
   }
 
+  // ---- K-989: kitaptan / PDF'ten soru (sayfada kutu çizilir, resim olarak soruya girer)
+  let pdfjsK = null;
+  async function pdfjsYukle() { if (!pdfjsK) { pdfjsK = await import(new URL('../soru/pdf.min.mjs', TABAN).href); pdfjsK.GlobalWorkerOptions.workerSrc = new URL('../soru/pdf.worker.min.mjs', TABAN).href; } return pdfjsK; }
+  function kitaptanDiyalog() {
+    const K = { doc: null, sayfa: 1, kutu: null, olcek: 1, cv: null, resim: null, tur: 'acik' };
+    modal(`<h2>Kitaptan / PDF'ten soru al</h2>
+      <div class="yh-dugmeler" style="margin-top:0;align-items:center"><label class="yh-d n" style="cursor:pointer">${ik('dosya', 18)}PDF ya da resim seç<input type="file" id="kpDosya" accept="application/pdf,image/*" hidden></label>
+        <button class="yh-d" id="kpOnce" disabled>‹</button><span id="kpSayfa" style="color:var(--soluk);font-size:12.5px">—</span><button class="yh-d" id="kpSonra" disabled>›</button>
+        <span style="flex:1"></span><span style="font-size:12px;color:var(--soluk)">Soru türü:</span><button class="yh-cip on" data-kt="acik">Açık uçlu</button><button class="yh-cip" data-kt="coktan">Test (şıklar resimde)</button></div>
+      <div id="kpAlan" style="position:relative;margin-top:10px;background:#0b1626;border:1px solid var(--cizgi);border-radius:12px;min-height:300px;max-height:62vh;overflow:auto;display:flex;justify-content:center;align-items:flex-start;touch-action:none">
+        <div class="yh-not" id="kpBos" style="padding:60px 20px;text-align:center">Kitabın ya da denemenin PDF'ini (veya sayfa fotoğrafını) seçin. Sonra sorunun çevresine parmağınızla ya da fareyle kutu çizin.<br>Dosya bilgisayarınızdan çıkmaz.</div>
+        <div id="kpSahne" style="position:relative;display:none;margin:10px"><canvas id="kpCv" style="display:block;background:#fff"></canvas><div id="kpKutu" style="position:absolute;border:2px solid #22e8ff;background:rgba(34,232,255,.12);display:none;pointer-events:none"></div></div></div>
+      <div class="yh-dugmeler" style="justify-content:flex-end"><span class="yh-not" id="kpBilgi" style="flex:1;margin:0"></span><button class="yh-d" data-v>Kapat</button><button class="yh-d n" id="kpEkle" disabled>Soruyu ekle</button></div>`, (m, kapat) => {
+      const q = s_ => m.querySelector(s_), cv = q('#kpCv'), kutu = q('#kpKutu');
+      const ciz = async () => {
+        if (K.resim) { const im = K.resim, gen = Math.min(q('#kpAlan').clientWidth - 24, 900), o = gen / im.naturalWidth; cv.width = Math.round(im.naturalWidth * o * 2); cv.height = Math.round(im.naturalHeight * o * 2); cv.style.width = (cv.width / 2) + 'px'; cv.style.height = (cv.height / 2) + 'px'; cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); }
+        else if (K.doc) { const pg = await K.doc.getPage(K.sayfa), v1 = pg.getViewport({ scale: 1 }), gen = Math.min(q('#kpAlan').clientWidth - 24, 900), o = gen / v1.width, v = pg.getViewport({ scale: o * 2 });
+          cv.width = Math.round(v.width); cv.height = Math.round(v.height); cv.style.width = (v.width / 2) + 'px'; cv.style.height = (v.height / 2) + 'px'; const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height); await pg.render({ canvasContext: c, viewport: v }).promise;
+          q('#kpSayfa').textContent = `Sayfa ${K.sayfa} / ${K.doc.numPages}`; q('#kpOnce').disabled = K.sayfa <= 1; q('#kpSonra').disabled = K.sayfa >= K.doc.numPages; }
+        q('#kpBos').style.display = 'none'; q('#kpSahne').style.display = 'block'; K.kutu = null; kutu.style.display = 'none'; q('#kpEkle').disabled = true;
+        q('#kpBilgi').textContent = 'Sorunun çevresine kutu çizin.';
+      };
+      q('#kpDosya').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (!f) return; q('#kpBilgi').textContent = 'Açılıyor…';
+        try { if (/^image\//.test(f.type)) { K.doc = null; K.resim = await resimYukle(await dosyaOku(f)); q('#kpSayfa').textContent = '—'; q('#kpOnce').disabled = q('#kpSonra').disabled = true; }
+          else { const lib = await pdfjsYukle(); K.resim = null; K.doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise; K.sayfa = 1; }
+          await ciz(); } catch (e) { q('#kpBilgi').textContent = 'Açılamadı: ' + (e.message || e); } };
+      q('#kpOnce').onclick = () => { if (K.sayfa > 1) { K.sayfa--; ciz(); } };
+      q('#kpSonra').onclick = () => { if (K.doc && K.sayfa < K.doc.numPages) { K.sayfa++; ciz(); } };
+      m.querySelectorAll('[data-kt]').forEach(b => b.onclick = () => { K.tur = b.dataset.kt; m.querySelectorAll('[data-kt]').forEach(x => x.classList.toggle('on', x === b)); });
+      let bas = null;
+      const nokta = ev => { const r = cv.getBoundingClientRect(); return [Math.max(0, Math.min(r.width, ev.clientX - r.left)), Math.max(0, Math.min(r.height, ev.clientY - r.top))]; };
+      cv.addEventListener('pointerdown', ev => { ev.preventDefault(); cv.setPointerCapture(ev.pointerId); bas = nokta(ev); K.kutu = null; kutu.style.display = 'block'; Object.assign(kutu.style, { left: bas[0] + 'px', top: bas[1] + 'px', width: '0px', height: '0px' }); });
+      cv.addEventListener('pointermove', ev => { if (!bas) return; const p = nokta(ev); Object.assign(kutu.style, { left: Math.min(bas[0], p[0]) + 'px', top: Math.min(bas[1], p[1]) + 'px', width: Math.abs(p[0] - bas[0]) + 'px', height: Math.abs(p[1] - bas[1]) + 'px' }); });
+      cv.addEventListener('pointerup', ev => { if (!bas) return; const p = nokta(ev); const x0 = Math.min(bas[0], p[0]), y0 = Math.min(bas[1], p[1]), w = Math.abs(p[0] - bas[0]), h = Math.abs(p[1] - bas[1]); bas = null;
+        if (w < 12 || h < 12) { kutu.style.display = 'none'; q('#kpEkle').disabled = true; return; } K.kutu = [x0, y0, w, h]; q('#kpEkle').disabled = false; q('#kpBilgi').textContent = '“Soruyu ekle” ile yazılıya ekleyin; başka kutu çizerek devam edebilirsiniz.'; });
+      q('[data-v]').onclick = kapat;
+      q('#kpEkle').onclick = async () => { if (!K.kutu) return; const [x, y, w, h] = K.kutu, o = cv.width / cv.getBoundingClientRect().width;
+        let k2 = document.createElement('canvas'); k2.width = Math.round(w * o); k2.height = Math.round(h * o); const c2 = k2.getContext('2d'); c2.fillStyle = '#fff'; c2.fillRect(0, 0, k2.width, k2.height); c2.drawImage(cv, x * o, y * o, w * o, h * o, 0, 0, k2.width, k2.height);
+        if (K.doc) { try { const pg = await K.doc.getPage(K.sayfa), v1 = pg.getViewport({ scale: 1 }), olc = Math.min(4, 1800 / v1.width), v = pg.getViewport({ scale: olc }), buyuk = document.createElement('canvas'); buyuk.width = v.width; buyuk.height = v.height; const cb = buyuk.getContext('2d'); cb.fillStyle = '#fff'; cb.fillRect(0, 0, v.width, v.height); await pg.render({ canvasContext: cb, viewport: v }).promise; const f = v.width / (cv.width); k2 = document.createElement('canvas'); k2.width = Math.round(w * o * f); k2.height = Math.round(h * o * f); const c3 = k2.getContext('2d'); c3.drawImage(buyuk, x * o * f, y * o * f, w * o * f, h * o * f, 0, 0, k2.width, k2.height); } catch (e) {} }
+        resimliSoruEkle(k2.toDataURL('image/png'), K.tur, ''); kutu.style.display = 'none'; K.kutu = null; q('#kpEkle').disabled = true; q('#kpBilgi').textContent = 'Eklendi. Başka bir soru için yeni kutu çizin.'; };
+    }, true);
+  }
+  function resimliSoruEkle(src, tur, cevap) {   // resim (kitaptan kesilen soru) tam genişlikte yeni soru olur
+    modelOku(); const s = yeniSoru('acik'), gid = uid(); B.gorseller[gid] = src;
+    s.govde = `<figure class="yh-fig yh-foto" contenteditable="false" data-gid="${gid}" data-hiza="tam" data-gen="100" style="width:100%"><img src="${src}" alt=""></figure>`;
+    s.ca = tur === 'coktan' ? { tur: 'yok', boy: 3 } : { tur: 'cizgi', boy: 4 }; s.cevap = cevap || ''; s.puan = tur === 'coktan' ? 5 : 10;
+    const i = B.sorular.findIndex(x => x.id === secId); B.sorular.splice(i < 0 ? B.sorular.length : i + 1, 0, s);
+    const el = soruEl(s); EL.set(s.id, el); $e('#yhOlcuSut').appendChild(el); secId = s.id; numaralar(); secGoster(); diz(); degisti(true);
+    setTimeout(() => { const e2 = EL.get(s.id); if (e2) e2.scrollIntoView({ block: 'center' }); }, 120);
+  }
+  async function testtenYazili(L, bilgi) {   // K-989: Test Hazırla'da seçilen sorular → yeni yazılı
+    stilKoy(); bilgi = bilgi || {};
+    const b = yeniBelge({ ders: bilgi.ders || '', sinif: bilgi.sinif || '', ogretmen: (C.benimAd && await C.benimAd().catch(() => '')) || '' });
+    b.baslik.yonerge = 'Her sorunun puanı yanında yazılıdır.';
+    (L || []).forEach(x => { const s = yeniSoru('acik'), gid = uid(); b.gorseller[gid] = x.src; s.govde = `<figure class="yh-fig yh-foto" contenteditable="false" data-gid="${gid}" data-hiza="tam" data-gen="100" style="width:100%"><img src="${x.src}" alt=""></figure>`; s.ca = { tur: 'yok', boy: 3 }; s.cevap = x.cevap || ''; b.sorular.push(s); });
+    const n = b.sorular.length; if (n) { const tb = Math.floor(100 / n), ar = 100 - tb * n; b.sorular.forEach((s, i) => { s.puan = tb + (i >= n - ar ? 1 : 0); }); }
+    b.ad = [bilgi.ders, 'yazılı (testten)'].filter(Boolean).join(' · ');
+    await DB.yaz(b); editorAc(b);
+  }
+
   // ---- tablo
   function tabloDiyalog() {
     araligaKaydet();
@@ -1076,6 +1141,7 @@ body.yh-acik #pencere{z-index:70}
       <div class="yh-satir"><label>Ders</label><input id="bD" value="${esc(h.ders)}" style="flex:1"></div>
       <div class="yh-satir"><label>Sınav</label><input id="bSv" value="${esc(h.sinav)}" style="flex:1"></div>
       <div class="yh-satir"><label></label><div style="display:flex;flex-wrap:wrap;gap:6px">${SINAVLAR.map(x => `<button class="yh-cip" data-sv="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>
+      <div class="yh-satir"><label>Sınav tarihi</label><input id="bTr" type="date" value="${esc(h.sinavTarihi || '')}"><span class="yh-not" style="margin:0">Boş bırakılırsa kâğıtta “…… / …… / 20……” yazar.</span></div>
       <div class="yh-satir"><label>Kitapçık</label><input id="bK" value="${esc(h.kitapcik)}" placeholder="A ya da B (boş bırakılabilir)" style="width:200px"></div>
       <div class="yh-satir"><label>Süre (dakika)</label><input id="bSu" value="${esc(h.sure)}" style="width:80px"></div>
       <div class="yh-satir"><label>Ders öğretmeni</label><input id="bO" value="${esc(h.ogretmen)}" style="flex:1"></div>
@@ -1085,7 +1151,7 @@ body.yh-acik #pencere{z-index:70}
       m.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => { m.querySelector('#bSv').value = b.dataset.sv; });
       m.querySelector('[data-v]').onclick = k;
       m.querySelector('[data-t]').onclick = () => { const v = id => m.querySelector(id).value.trim(), c = id => m.querySelector(id).checked;
-        Object.assign(h, { yil: v('#bY'), okul: v('#bOk'), sinif: v('#bS'), ders: v('#bD'), sinav: v('#bSv'), kitapcik: BUY(v('#bK')).slice(0, 3), sure: v('#bSu'), ogretmen: v('#bO'), yonerge: v('#bYo'), mazeret: c('#bM'), tarih: c('#bT'), puanKutu: c('#bP'), basari: c('#bB') });
+        Object.assign(h, { sinavTarihi: m.querySelector('#bTr').value, yil: v('#bY'), okul: v('#bOk'), sinif: v('#bS'), ders: v('#bD'), sinav: v('#bSv'), kitapcik: BUY(v('#bK')).slice(0, 3), sure: v('#bSu'), ogretmen: v('#bO'), yonerge: v('#bYo'), mazeret: c('#bM'), tarih: c('#bT'), puanKutu: c('#bP'), basari: c('#bB') });
         k(); modelOku(); const yeni = sonEl(); SONEL.replaceWith(yeni); SONEL = yeni; const ad = $e('#yhAd'); if (ad && !B.ad) ad.value = belgeAdi(B); degisti(true); };
     }, true);
   }
@@ -1278,7 +1344,7 @@ body.yh-acik #pencere{z-index:70}
       + hucre(24, `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>${h.puanKutu ? run('PUAN', { b: 1, sz: 15 }) : ''}</w:p>`, '<w:vAlign w:val="top"/>'.replace('top', 'top')) + '</w:tr></w:tbl>';
     const kc = [26, tamW / 2 - 26, 26, tamW / 2 - 26], et = (t) => `<w:p><w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr>${run(t, { b: 1, sz: 19 })}</w:p>`, bosP = t => `<w:p><w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr>${run(t || '', { sz: 19 })}</w:p>`, gri = '<w:shd w:val="clear" w:color="auto" w:fill="EFEFEF"/>';
     bas += `<w:tbl><w:tblPr><w:tblW w:w="${TW(tamW)}" w:type="dxa"/><w:tblLayout w:type="fixed"/>${kenarlik}</w:tblPr><w:tblGrid>${kc.map(w => `<w:gridCol w:w="${TW(w)}"/>`).join('')}</w:tblGrid><w:tr>${hucre(kc[0], et('Adı Soyadı'), gri)}${hucre(kc[1], bosP())}${hucre(kc[2], et('Sınıf / No'), gri)}${hucre(kc[3], bosP())}</w:tr>`
-      + (h.tarih || h.sure ? `<w:tr>${hucre(kc[0], et(h.tarih ? 'Tarih' : 'Süre'), gri)}${hucre(kc[1], bosP(h.tarih ? '…… / …… / 20……' : h.sure + ' dakika'))}${hucre(kc[2], et(h.tarih && h.sure ? 'Süre' : ''), gri)}${hucre(kc[3], bosP(h.tarih && h.sure ? h.sure + ' dakika' : ''))}</w:tr>` : '') + '</w:tbl>';
+      + (h.tarih || h.sure ? `<w:tr>${hucre(kc[0], et(h.tarih ? 'Tarih' : 'Süre'), gri)}${hucre(kc[1], bosP(h.tarih ? tarihYazi(h) : h.sure + ' dakika'))}${hucre(kc[2], et(h.tarih && h.sure ? 'Süre' : ''), gri)}${hucre(kc[3], bosP(h.tarih && h.sure ? h.sure + ' dakika' : ''))}</w:tr>` : '') + '</w:tbl>';
     if (h.yonerge) bas += `<w:p><w:pPr><w:spacing w:before="100" w:after="60"/><w:pBdr><w:top w:val="single" w:sz="4" w:space="2" w:color="AAAAAA"/><w:left w:val="single" w:sz="4" w:space="4" w:color="AAAAAA"/><w:bottom w:val="single" w:sz="4" w:space="2" w:color="AAAAAA"/><w:right w:val="single" w:sz="4" w:space="4" w:color="AAAAAA"/></w:pBdr></w:pPr>${run(h.yonerge, { sz: 18 })}</w:p>`;
     const sayfa = `<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="${TW(ken)}" w:right="${TW(ken)}" w:bottom="${TW(ken)}" w:left="${TW(ken)}" w:header="0" w:footer="0" w:gutter="0"/>`;
     const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"';
@@ -1319,5 +1385,5 @@ body.yh-acik #pencere{z-index:70}
     C = ctx || {}; KOK = el; TABAN = (C.taban || new URL('yazili-hazirla/', location.href).href);
     stilKoy(); await liste();
   }
-  window.UmalYaziliHazirla = { ac, _t: { temizle, sekilSVG, kesirHTML, kokHTML, fotoUygula, yeniBelge, yeniSoru, DB, get B() { return B; }, diz, editorAc } };
+  window.UmalYaziliHazirla = { ac, testtenYazili: async (L, bilgi, ctx) => { if (ctx) { C = ctx; TABAN = C.taban || TABAN; } if (!KOK) KOK = document.getElementById('icerik'); return testtenYazili(L, bilgi); }, _t: { temizle, sekilSVG, kesirHTML, kokHTML, fotoUygula, yeniBelge, yeniSoru, DB, get B() { return B; }, diz, editorAc } };
 })();
