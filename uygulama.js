@@ -1565,7 +1565,7 @@
   const araAlt = id => { const t = (ARA_EK[id] || '').split(' ').slice(0, 5).join(', '); return t; };
   function menuAraKur() {   // masaüstü: menünün üstünde arama kutusu
     if (telefon() || document.getElementById('menuAra')) return; const m = $('#menu'); if (!m) return;
-    m.insertAdjacentHTML('beforebegin', `<div class="mn-ara"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input id="menuAra" type="search" placeholder="Atlas'ta ara…" autocomplete="off" aria-label="Atlas'ta ara"><kbd>Ctrl K</kbd></div>`);
+    m.insertAdjacentHTML('beforebegin', `<div class="mn-ara"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input id="menuAra" type="search" placeholder="Ne yapmak istersiniz?" title="Ara (Ctrl+K)" autocomplete="off" aria-label="Atlas'ta ara"><kbd>Ctrl K</kbd></div>`);
     const i = $('#menuAra');
     const yaz = () => { const q = i.value.trim(); m.classList.toggle('mn-arama', !!q); if (!q) { menuYaz(); return; } const L = araSonuc(q);
       m.innerHTML = L.length ? L.map((b, k) => `<button class="menu-oge mn-sonuc ${k === 0 ? 'mn-ilk' : ''}" data-b="${b.id}">${menuIk(b.ust || b.id)}<span class="mn-yazi"><span class="mad">${esc(b.ad)}</span><small class="mn-ack">${esc(araAlt(b.id))}</small></span></button>`).join('') : '<div class="soluk kucuk" style="padding:8px 12px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
@@ -1576,7 +1576,7 @@
   }
   function telAraKur(d) {   // telefon: bütün bölümler ekranının en üstünde arama
     if (!d || d.querySelector('.tm-ara')) return;
-    d.insertAdjacentHTML('afterbegin', `<div class="tm-ara"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input type="search" placeholder="Atlas'ta ara…" autocomplete="off" aria-label="Atlas'ta ara"></div><div class="tm-ara-sonuc gizli"></div>`);
+    d.insertAdjacentHTML('afterbegin', `<div class="tm-ara"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input type="search" placeholder="Ne yapmak istersiniz?" autocomplete="off" aria-label="Atlas'ta ara"></div><div class="tm-ara-sonuc gizli"></div>`);
     const i = d.querySelector('.tm-ara input'), so = d.querySelector('.tm-ara-sonuc');
     if (D._araQ) i.value = D._araQ;
     const yaz = () => { const q = i.value.trim(); D._araQ = q; const diger = [...d.children].filter(x => !x.classList.contains('tm-ara') && !x.classList.contains('tm-ara-sonuc'));
