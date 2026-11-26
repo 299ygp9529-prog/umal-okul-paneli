@@ -24,12 +24,13 @@
     kurul: 'M12 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM5 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 5 7ZM19 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 19 7ZM6.5 20c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6M1.5 18c0-2.2 1.4-3.8 3.5-4.2M22.5 18c0-2.2-1.4-3.8-3.5-4.2',
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7zM7 7.5h0M17 7.5h0',
     evrak: 'M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5ZM8 12.5h8M8 15.5h5',
+    zumre: 'M5 3.5h10l4 4V20.5H5zM15 3.5V7.5h4M8 11h8M8 14h8M8 17h5',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -951,6 +952,143 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   }
   function skGirdi(ev) { const t = ev.target, d = t.dataset, M = SK.M; if (!M) return; if (d.sk) { M[d.sk] = t.value; SK.degisti = true; } if (d.skso) { M.so = M.so || {}; M.so[d.skso] = t.value; SK.degisti = true; } }
 
+  // ================================================================ 8) ZÜMRE TUTANAKLARI (26 Kasım 2026)
+  // Üç toplantı: Eylül (yıl başı), Şubat (2. dönem başı), Haziran (yıl sonu). Zümreler ders programındaki öğretmenlerin branşından gelir.
+  // MEB'in zümre yazısı (PDF / Word / metin) yüklenince gündem maddeleri yazıdan çıkarılır, onaylanınca o dönemin bütün zümrelerine uygulanır.
+  // Veri: umal_idari 'zumre:<yıl>:<dönem>' → { yazi:{ad, metin, tarih}, gundem, Z:{ zümre: {tarih, saat, yer, baskan, yok:[], ek:[], gundem?, gorusme, karar} } }
+  const ZM_DONEM = [['eylul', 'Eylül toplantısı', 'Eğitim-öğretim yılı başı', 'EYLÜL'], ['subat', 'Şubat toplantısı', '2. dönem başı', 'ŞUBAT'], ['haziran', 'Haziran toplantısı', 'Yıl sonu', 'HAZİRAN']];
+  const ZM_GUNDEM = {
+    eylul: 'Açılış ve yoklama\nBir önceki öğretim yılı sonunda yapılan zümre toplantısında alınan kararların değerlendirilmesi\nÖğretim programlarının incelenmesi, yıllık planların hazırlanması\nÖlçme ve değerlendirme: ortak sınavlar, sınav sayısı ve tarihleri\nDers araç-gereçleri, kaynaklar ve laboratuvar kullanımı\nBaşarıyı artırmaya yönelik önlemler ve öğretmenler arası iş birliği\nDilek ve temenniler, kapanış',
+    subat: 'Açılış ve yoklama\nEylül ayı zümre toplantısında alınan kararların değerlendirilmesi\nBirinci dönem öğrenci başarısının ve ortak sınav sonuçlarının değerlendirilmesi\nÖğretim programlarının uygulanmasında karşılaşılan sorunlar ve çözüm önerileri\nİkinci dönem ölçme ve değerlendirme uygulamaları, ortak sınav tarihleri\nBaşarıyı artırmaya yönelik önlemler, destekleme ve yetiştirme çalışmaları\nDilek ve temenniler, kapanış',
+    haziran: 'Açılış ve yoklama\nŞubat ayı zümre toplantısında alınan kararların değerlendirilmesi\nÖğretim yılı boyunca öğrenci başarısının ve ortak sınav sonuçlarının değerlendirilmesi\nÖğretim programlarının uygulanmasının değerlendirilmesi\nGelecek öğretim yılı için ders kitapları, kaynaklar ve araç-gereç ihtiyacı\nGelecek öğretim yılı için öneriler\nDilek ve temenniler, kapanış' };
+  const ZM = { yil: egitimYili(), don: 'eylul', V: {}, z: '', degisti: false, oneri: null };
+  const zmBos = () => ({ yazi: null, gundem: '', Z: {} });
+  const zmDonemGundem = (V, dn) => (V && V.gundem) || ZM_GUNDEM[dn];
+  // dersi zümre adına çevirir: seçmeli ön eki atılır, din dersleri Din Kültürü, sanat dersleri Görsel Sanatlar zümresine
+  const zmBrans = d => { let x = String(d || '').split('/')[0].replace(/\s*\([^)]*\)\s*$/, '').trim().replace(/^(seçmeli|s\s*\.)\s*/i, '').trim(); const k = dersAn(x);
+    if (/din kült|peygamber|kuran|kur'an|temel dini|adab|siyer|hadis|akaid|fıkıh/.test(k)) return 'Din Kültürü ve Ahlak Bilgisi';
+    if (/görsel sanat|sanat eğitimi|resim/.test(k)) return 'Görsel Sanatlar'; if (/müzik/.test(k)) return 'Müzik'; if (/beden eğitimi|spor/.test(k)) return 'Beden Eğitimi ve Spor';
+    if (/ingilizce|yabancı dil/.test(k)) return 'İngilizce'; if (/türk dili|edebiyat|dil ve anlatım/.test(k)) return 'Türk Dili ve Edebiyatı'; if (/coğrafya/.test(k)) return 'Coğrafya'; if (/tarih|inkılap/.test(k)) return 'Tarih';
+    if (/matematik/.test(k)) return 'Matematik'; if (/bilişim|bilgisayar/.test(k)) return 'Bilişim Teknolojileri'; if (/felsefe|mantık|psikoloji|sosyoloji/.test(k)) return 'Felsefe';
+    return x; };
+  function zmZumreler() {   // branş → öğretmenler (ders programından; her öğretmen en çok girdiği dersin zümresinde)
+    const T = new Map();
+    for (const H of Object.values((PRG && PRG.siniflar) || {})) for (const h of Object.values(H || {})) { if (!h.ders || /rehberlik|hedef temelli|htde|sosyal etkinlik/i.test(h.ders)) continue; const z = zmBrans(h.ders);
+      for (const ad of (h.ogretmen || [])) { const x = T.get(ad) || {}; x[z] = (x[z] || 0) + 1; T.set(ad, x); } }
+    const M = new Map();
+    for (const [ad, x] of T) { const z = Object.entries(x).sort((a, b) => b[1] - a[1])[0][0]; if (!M.has(z)) M.set(z, { ad: z, O: [] }); M.get(z).O.push(ad); }
+    for (const z of M.values()) z.O.sort((a, b) => a.localeCompare(b, tr));
+    return [...M.values()].sort((a, b) => a.ad.localeCompare(b.ad, tr));
+  }
+  const zmKayit = (V, z) => (V.Z = V.Z || {}, V.Z[z] = V.Z[z] || { tarih: '', saat: '', yer: 'Öğretmenler odası', baskan: '', yok: [], ek: [], gorusme: '', karar: '' });
+  const zmDurum = x => !x ? '' : (x.tarih && String(x.karar || '').trim() ? 'hazir' : 'taslak');
+  async function zumre() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    try { for (const [k] of ZM_DONEM) ZM.V[k] = (await oku(`zumre:${ZM.yil}:${k}`)) || zmBos(); } catch (e) { kok.innerHTML = bas('Zümre Tutanakları') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    const m = new Date().getMonth(); ZM.don = m >= 1 && m <= 4 ? 'subat' : m >= 5 && m <= 7 ? 'haziran' : 'eylul';
+    const L = zmZumreler(); ZM.z = ZM.z || (L[0] ? L[0].ad : ''); ZM.degisti = false; ZM.oneri = null; zmCiz();
+  }
+  function zmCiz() {
+    const V = ZM.V[ZM.don], L = zmZumreler(), Z = L.find(x => x.ad === ZM.z), x = Z ? (V.Z || {})[Z.ad] : null, d = ZM_DONEM.find(q => q[0] === ZM.don);
+    const sayi = k => { const W = ZM.V[k] || {}; return L.filter(z => zmDurum((W.Z || {})[z.ad]) === 'hazir').length; };
+    const et = s => s === 'hazir' ? '<small style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.15);color:#4ade80">Hazır</small>' : s === 'taslak' ? '<small style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(255,212,59,.13);color:#ffd43b">Taslak</small>' : '<small class="soluk">—</small>';
+    const y = V.yazi, g = (x && x.gundem) || zmDonemGundem(V, ZM.don);
+    const kat = Z ? [...Z.O, ...((x && x.ek) || [])] : [], yok = new Set((x && x.yok) || []);
+    const alan = (k, ad, ek = '') => `<label>${ad}<input data-zm="${k}" value="${esc((x || {})[k] || '')}" ${ek}></label>`;
+    kok.innerHTML = bas('Zümre Tutanakları', `${esc(ZM.yil)} · Zümre öğretmenler kurulu toplantı tutanakları`, '<button class="ikincil" data-zmx="bos">Boş yazdır</button><button class="ikincil" data-zmx="kaydet">Kaydet</button><button class="birincil" data-zmx="yazdir">Yazdır</button>') +
+      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px">${ZM_DONEM.map(([k, ad, alt]) => `<button data-zmdon="${k}" class="kart" style="text-align:left;margin:0;cursor:pointer;${ZM.don === k ? 'border-color:#ffd43b;background:rgba(255,212,59,.08)' : ''}"><b style="display:block;font-size:15px;${ZM.don === k ? 'color:#ffe580' : ''}">${ad}</b><span class="soluk kucuk">${alt} · ${sayi(k)} / ${L.length} zümre hazır${(ZM.V[k] || {}).yazi ? ' · MEB yazısı yüklü' : ''}</span></button>`).join('')}</div>
+      <div class="kart"><span class="id-et" style="margin-top:0">MEB resmî yazısı · ${d[1]}</span>
+        ${y ? `<div style="margin:4px 0 8px"><b>${esc(y.ad)}</b> <span class="soluk kucuk">· ${esc(tGos(y.tarih))} yüklendi · gündem bu yazıdan alındı</span></div>` : '<div class="soluk kucuk" style="margin:4px 0 8px">Henüz yazı yüklenmedi; gündem için okulun hazır maddeleri kullanılıyor. MEB yazısı yayımlanınca buraya yükleyin (PDF, Word ya da metin); gündem maddeleri yazıdan çıkarılır, onayınızla bu dönemin bütün zümrelerine uygulanır.</div>'}
+        <div class="dugmeler" style="justify-content:flex-start;margin:0"><label class="ikincil" style="cursor:pointer">${y ? 'Yeni yazı yükle' : 'Yazıyı yükle'}<input type="file" data-zmdosya="1" accept=".pdf,.docx,.txt" style="display:none"></label><button class="ikincil" data-zmx="yapistir">Yazının metnini yapıştır</button>${y ? '<button class="bag" data-zmx="yazisil">Yazıyı kaldır, hazır gündeme dön</button>' : ''}</div>
+        ${ZM.oneri ? `<div style="margin-top:10px;border:1px solid #ffd43b;border-radius:10px;padding:10px"><b style="color:#ffe580">Yazıdan çıkarılan gündem (${ZM.oneri.G.length} madde)</b><span class="soluk kucuk"> · kontrol edin, gerekirse düzeltin</span>
+          <textarea data-zmoneri="1" rows="${Math.min(16, ZM.oneri.G.length + 2)}" style="width:100%;margin-top:6px">${esc(ZM.oneri.G.join('\n'))}</textarea>
+          <div class="dugmeler" style="justify-content:flex-start;margin:6px 0 0"><button class="birincil" data-zmx="uygula">Bu dönemin bütün zümrelerine uygula</button><button class="bag" data-zmx="vazgec">Vazgeç</button></div></div>` : ''}
+        <div id="idBilgi" class="id-bilgi"></div></div>
+      ${L.length ? `<div style="display:grid;grid-template-columns:280px 1fr;gap:14px;align-items:start">
+        <div class="kart" style="margin:0"><span class="id-et" style="margin-top:0">Zümreler (ders programından)</span>${L.map(z => `<button data-zmz="${esc(z.ad)}" style="display:flex;width:100%;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;margin-top:3px;text-align:left;color:inherit;font:inherit;cursor:pointer;${z.ad === ZM.z ? 'background:#1b2f50;border:1px solid rgba(34,232,255,.4)' : 'background:transparent;border:1px solid transparent'}"><span>${esc(z.ad)} <span class="soluk kucuk">${z.O.length}</span></span>${et(zmDurum((V.Z || {})[z.ad]))}</button>`).join('')}
+          <button class="ikincil" data-zmx="hepsi" style="width:100%;margin-top:10px">Bütün zümreler · tek PDF</button></div>
+        <div class="kart" style="margin:0">${Z ? `<b style="font-size:16px">${esc(Z.ad)} zümresi · ${d[1]}</b>
+          <div class="id-form" style="margin-top:8px"><label>Toplantı tarihi<input type="date" data-zm="tarih" value="${esc((x || {}).tarih || '')}"></label>${alan('saat', 'Saat', 'placeholder="ör. 10:00"')}${alan('yer', 'Yer', 'placeholder="Öğretmenler odası"')}
+            <label>Zümre başkanı<select data-zm="baskan"><option value="">Seçin</option>${kat.map(a => `<option ${((x || {}).baskan || '') === a ? 'selected' : ''}>${esc(C.baslik(a))}</option>`).join('')}</select></label></div>
+          <span class="id-et">Öğretmenler · katılmayana tıklayın</span><div class="cipler">${kat.map(a => `<button class="cip ${yok.has(a) ? '' : 'secili'}" data-zmogr="${esc(a)}">${yok.has(a) ? '' : '✓ '}${esc(C.baslik(a))}${yok.has(a) ? ' · katılmadı' : ''}</button>`).join('')}<button class="cip" data-zmx="ogrekle">+ öğretmen ekle</button></div>
+          <label class="genis" style="display:block;margin-top:10px">Gündem${x && x.gundem ? ' <span class="soluk kucuk">· bu zümreye özel</span> <button class="bag" data-zmx="gundemdon">dönemin gündemine dön</button>' : ` <span class="soluk kucuk">· ${y ? 'MEB yazısından' : 'hazır gündem'}, düzenlenebilir</span>`}<textarea rows="${Math.min(14, g.split('\n').length + 1)}" data-zm="gundem" style="width:100%">${esc(g)}</textarea></label>
+          <label class="genis" style="display:block;margin-top:8px">Gündem maddelerinin görüşülmesi<textarea rows="6" data-zm="gorusme" style="width:100%" placeholder="Boş bırakılırsa çıktıda elle yazılacak satırlar gelir">${esc((x || {}).gorusme || '')}</textarea></label>
+          <label class="genis" style="display:block;margin-top:8px">Alınan kararlar<textarea rows="5" data-zm="karar" style="width:100%" placeholder="Boş bırakılırsa çıktıda elle yazılacak satırlar gelir">${esc((x || {}).karar || '')}</textarea></label>` : '<div class="soluk">Soldan bir zümre seçin.</div>'}</div></div>`
+      : '<div class="kart soluk">Ders programında öğretmen bulunamadı.</div>'}`;
+  }
+  function zmGundemCikar(metin) {   // yazıdaki numaralı gündem maddeleri
+    const satir = String(metin || '').split(/\n/).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    let bas_ = satir.findIndex(s => /^g[üu]ndem\b|g[üu]ndem maddeleri|görüşülecek (konular|hususlar)|gündemi?:?$/i.test(s)); const no = /^(\d{1,2})\s*[.)\-–]\s*(.*)$/;
+    const tara = i0 => { const G = []; let bek = 1; for (let i = i0; i < satir.length; i++) { const m = no.exec(satir[i]);
+        if (m && +m[1] === bek) { G.push(m[2]); bek++; continue; }
+        if (m && +m[1] === 1 && G.length) break;
+        if (G.length) { if (/^(ek|ekler|dağıtım|gereğini|bilgilerinizi|arz|rica)\b|^\S+\s+\S+\s*$/i.test(satir[i]) && satir[i].length < 40) break; G[G.length - 1] += ' ' + satir[i]; } }
+      return G.map(s => s.replace(/\s+/g, ' ').replace(/[,;]\s*$/, '').trim()).filter(Boolean); };
+    let G = bas_ >= 0 ? tara(bas_ + 1) : [];
+    if (G.length < 2) { let en = []; satir.forEach((s, i) => { const m = no.exec(s); if (m && +m[1] === 1) { const T = tara(i); if (T.length > en.length) en = T; } }); G = en; }
+    return G.map(s => s.length > 400 ? s.slice(0, 400) + '…' : s);
+  }
+  async function zmYaziIsle(ad, metin) {
+    const G = zmGundemCikar(metin);
+    ZM.oneri = { ad, metin: String(metin).slice(0, 60000), G: G.length ? G : ['(Yazıda numaralı gündem maddesi bulunamadı; maddeleri buraya her satıra bir madde olacak şekilde yazın)'] };
+    zmCiz(); bilgi(G.length ? `${G.length} gündem maddesi bulundu. Kontrol edip "uygula"ya basın.` : 'Numaralı madde bulunamadı; maddeleri elle yazın.', G.length ? 'yesil' : 'kirmizi');
+  }
+  async function zmDosya(ev) {
+    const t = ev.target; if (!t.dataset || !t.dataset.zmdosya || !t.files.length) return; const f = t.files[0]; t.value = '';
+    try { const R = await dosyaSatirlar(f); await zmYaziIsle(f.name, R.map(r => r.join(' ')).join('\n')); } catch (e) { uyar(`${f.name}: ${e.message || e}. Yazının metnini kopyalayıp "Yazının metnini yapıştır" ile girebilirsiniz.`); }
+  }
+  async function zmKaydet() { await yaz(`zumre:${ZM.yil}:${ZM.don}`, ZM.V[ZM.don]); ZM.degisti = false; }
+  function zmBelge(zler, bos) {
+    const V = ZM.V[ZM.don], d = ZM_DONEM.find(q => q[0] === ZM.don), L = zmZumreler();
+    const satirlar = n => `<div class="sat">${'<i></i>'.repeat(n)}</div>`;
+    const metin = s => esc(s).split('\n').map(l => l.trim()).filter(Boolean).map(l => `<p>${l}</p>`).join('');
+    const tek = zad => { const Z = L.find(q => q.ad === zad) || { ad: zad, O: [] }, x = bos ? {} : ((V.Z || {})[zad] || {}), yok = new Set(x.yok || []);
+      const O = [...Z.O, ...(x.ek || [])], G = String(x.gundem || zmDonemGundem(V, ZM.don)).split('\n').map(s => s.trim()).filter(Boolean);
+      const zaman = x.tarih ? `${tGos(x.tarih)} ${gunAd(x.tarih)}${x.saat ? ' · saat ' + esc(x.saat) : ''}` : '……/……/20……  ·  saat ……:……';
+      const gS = Math.max(4, 12 - G.length), kS = Math.max(4, 9 - Math.floor(G.length / 2));
+      return `<section class="sy"><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+        <h1>${esc(ZM.yil)} EĞİTİM ÖĞRETİM YILI ${d[3]} AYI<br>${esc(BUYUK(Z.ad))} ZÜMRE ÖĞRETMENLER KURULU TOPLANTI TUTANAĞI</h1>
+        <table class="k"><tr><th>Toplantı tarihi ve saati</th><td>${zaman}</td></tr><tr><th>Toplantı yeri</th><td>${esc(x.yer || '')}</td></tr><tr><th>Zümre başkanı</th><td>${esc(x.baskan || '')}</td></tr>
+        <tr><th>Katılan öğretmenler</th><td>${bos ? '' : esc(O.filter(a => !yok.has(a)).map(a => C.baslik(a)).join(', '))}</td></tr>${!bos && yok.size ? `<tr><th>Katılmayan öğretmenler</th><td>${esc([...yok].map(a => C.baslik(a)).join(', '))}</td></tr>` : ''}</table>
+        <h2>GÜNDEM</h2><ol>${G.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+        <h2>GÜNDEM MADDELERİNİN GÖRÜŞÜLMESİ</h2>${String(x.gorusme || '').trim() ? metin(x.gorusme) : satirlar(gS)}
+        <h2>ALINAN KARARLAR</h2>${String(x.karar || '').trim() ? metin(x.karar) : satirlar(kS)}
+        <div class="son"><h2>KATILAN ÖĞRETMENLER</h2><table class="i"><thead><tr><th style="width:10mm">Sıra</th><th>Adı soyadı</th><th style="width:38mm">Branşı</th><th style="width:32mm">Görevi</th><th style="width:38mm">İmza</th></tr></thead><tbody>
+        ${(bos ? Array.from({ length: Math.max(6, Z.O.length) }, () => '') : O.filter(a => !yok.has(a))).map((a, i) => `<tr><td class="c">${i + 1}</td><td>${esc(a ? C.baslik(a) : '')}</td><td>${a ? esc(Z.ad) : ''}</td><td>${a && C.baslik(a) === x.baskan ? 'Zümre Başkanı' : (a ? 'Üye' : '')}</td><td></td></tr>`).join('')}</tbody></table>
+        <div class="alt"><div>${esc(x.baskan || '……………………………')}<br>Zümre Başkanı</div><div>UYGUNDUR<br>…./…./20…<br><br>${esc(MUDUR)}<br>Okul Müdürü</div></div></div></section>`; };
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Zümre Öğretmenler Kurulu Toplantı Tutanağı</title><style>
+@page{size:A4 portrait;margin:14mm 16mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11.5pt;color:#000;margin:0;padding:14mm 16mm}@media print{body{padding:0}}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.35}h1{text-align:center;font-size:12pt;margin:5mm 0 4mm;line-height:1.4}
+h2{font-size:11.5pt;margin:5mm 0 2mm}ol{margin:0;padding-left:7mm}li{margin:.8mm 0;line-height:1.35}p{margin:1mm 0;line-height:1.45;text-align:justify}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:1.4mm 2mm;text-align:left;vertical-align:middle;font-weight:normal}table.k th{width:48mm;font-weight:bold}table.i th{font-weight:bold;text-align:center}table.i td{height:7mm}table.i thead{display:table-header-group}h2{break-after:avoid}.c{text-align:center}
+table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bottom:.3mm solid #000}.alt{display:flex;justify-content:space-between;margin-top:10mm;text-align:center;break-inside:avoid}.alt div{min-width:60mm}
+</style></head><body>${zler.map(tek).join('')}</body></html>`;
+  }
+  const BUYUK = s => String(s || '').toLocaleUpperCase(tr);
+  async function zmTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, V = ZM.V[ZM.don], k = d.zmx;
+    if (d.zmdon) { if (ZM.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return true; if (ZM.degisti) { ZM.V[ZM.don] = (await oku(`zumre:${ZM.yil}:${ZM.don}`)) || zmBos(); } ZM.don = d.zmdon; ZM.oneri = null; ZM.degisti = false; zmCiz(); return true; }
+    if (d.zmz) { ZM.z = d.zmz; zmCiz(); return true; }
+    if (d.zmogr) { const x = zmKayit(V, ZM.z), S_ = new Set(x.yok || []); if (S_.has(d.zmogr)) S_.delete(d.zmogr); else S_.add(d.zmogr); x.yok = [...S_]; ZM.degisti = true; zmCiz(); return true; }
+    if (k === 'ogrekle') { const a = await girdiAl('Eklenecek öğretmenin adı soyadı', ''); if (!a || !a.trim()) return true; const x = zmKayit(V, ZM.z); x.ek = [...(x.ek || []), a.trim()]; ZM.degisti = true; zmCiz(); return true; }
+    if (k === 'gundemdon') { const x = zmKayit(V, ZM.z); delete x.gundem; ZM.degisti = true; zmCiz(); return true; }
+    if (k === 'kaydet') { try { await zmKaydet(); zmCiz(); bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (k === 'yapistir') { const t = await girdiAl('MEB yazısının metnini buraya yapıştırın', ''); if (t && t.trim()) await zmYaziIsle('Yapıştırılan metin', t); return true; }
+    if (k === 'vazgec') { ZM.oneri = null; zmCiz(); return true; }
+    if (k === 'uygula') { const ta = kok.querySelector('[data-zmoneri]'), G = String(ta ? ta.value : '').split('\n').map(s => s.trim()).filter(Boolean); if (!G.length) { uyar('Gündem boş.'); return true; }
+      const ozel = Object.values(V.Z || {}).filter(x => x.gundem).length;
+      if (!await onayla(`Bu ${G.length} madde ${ZM_DONEM.find(q => q[0] === ZM.don)[1].toLocaleLowerCase(tr)}nın gündemi olacak${ozel ? `; ${ozel} zümrenin kendine özel gündemi de bununla değişecek` : ''}. Uygulansın mı?`)) return true;
+      V.yazi = { ad: ZM.oneri.ad, metin: ZM.oneri.metin, tarih: bugun() }; V.gundem = G.join('\n'); for (const x of Object.values(V.Z || {})) delete x.gundem; ZM.oneri = null;
+      try { await zmKaydet(); zmCiz(); bilgi('Gündem bu dönemin bütün zümrelerine uygulandı ve kaydedildi.', 'yesil'); } catch (e) { ZM.degisti = true; zmCiz(); bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (k === 'yazisil') { if (!await onayla('Yüklenen yazı kaldırılsın, gündem okulun hazır maddelerine dönsün mü?')) return true; V.yazi = null; V.gundem = ''; try { await zmKaydet(); } catch (e) { ZM.degisti = true; } zmCiz(); return true; }
+    if (k === 'yazdir') { if (!ZM.z) return true; C.belgeOnizle(zmBelge([ZM.z]), `Zümre tutanağı · ${ZM.z}`, false); return true; }
+    if (k === 'bos') { if (!ZM.z) return true; C.belgeOnizle(zmBelge([ZM.z], true), `Zümre tutanağı · ${ZM.z} · boş`, false); return true; }
+    if (k === 'hepsi') { const L = zmZumreler(); if (!L.length) return true; C.belgeOnizle(zmBelge(L.map(z => z.ad)), 'Zümre tutanakları · ' + ZM_DONEM.find(q => q[0] === ZM.don)[1], false); return true; }
+    return false;
+  }
+  function zmGirdi(ev) { const t = ev.target, d = t.dataset; if (!d.zm || !ZM.z) return; const x = zmKayit(ZM.V[ZM.don], ZM.z);
+    if (d.zm === 'gundem') { if (t.value.trim() === zmDonemGundem(ZM.V[ZM.don], ZM.don).trim()) delete x.gundem; else x.gundem = t.value; } else x[d.zm] = t.value; ZM.degisti = true; }
+
   // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
   // Sınıflar ve sınıf rehber öğretmenleri ders programından (Rehberlik dersini veren öğretmen) gelir, elle değiştirilebilir.
   // Okul rehber öğretmenleri programda yoktur: elle, seviyeye toplu ya da dosyadan (Excel, Word, PDF, CSV) girilir.
@@ -1137,7 +1275,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1145,13 +1283,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -1160,6 +1298,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'veli') return veli();
     if (id === 'sok') return sok();
     if (id === 'evrak') return evrak();
+    if (id === 'zumre') return zumre();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
@@ -1195,7 +1334,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 @media (max-width:760px){.id-sb{grid-template-columns:1fr}.id-yan{position:static}.id-iki{grid-template-columns:1fr}.id-kurullar{grid-template-columns:1fr}}`;
     document.head.appendChild(s);
   }
-  window.UmalIdari = { ac, MODULLER, ikon, _test: { sbOtomatik, sbCakisma, soDagit: () => soDagit, tabloOku, evDosyaIsle: R => { EV.M = { so: {}, okul: {} }; const n = evDosyaIsle(R); return { n, okul: EV.M.okul }; }, evSiniflarAyarla: (o, p) => { OGR = o; PRG = p; } } };
+  window.UmalIdari = { ac, MODULLER, ikon, _test: { zmGundemCikar, sbOtomatik, sbCakisma, soDagit: () => soDagit, tabloOku, evDosyaIsle: R => { EV.M = { so: {}, okul: {} }; const n = evDosyaIsle(R); return { n, okul: EV.M.okul }; }, evSiniflarAyarla: (o, p) => { OGR = o; PRG = p; } } };
   window.UmalIdari.dosyaOku = async (f, yard) => { const c0 = C; if (!C) C = yard; try { return await dosyaSatirlar(f); } finally { C = c0; } };   // K-760: takvim aktarımı da kullanır
   window.UmalIdari.tabloOku = tabloOku;
 })();
