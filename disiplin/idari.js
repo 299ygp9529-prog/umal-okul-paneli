@@ -31,7 +31,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1245,6 +1245,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
     if (EV.sek === 'izin') return izCiz();
     if (EV.sek === 'faaliyet') return faCiz();
     if (EV.sek === 'gec') return gkCiz();
+    if (EV.sek === 'donem') return dsCiz();
     const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
     kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
       evSekmeler() + `
@@ -1259,7 +1260,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
   }
 
   // ---- Evraklar sekmeleri
-  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
+  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi'], ['donem', 'Dönem Sonu İş ve İşlemleri']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
   // ---- İzin Belgesi (Veli Beyanıdır) · okulun basılı formunun aynısı; öğrenci seçilirse şube, numara ve ad doldurulur
   function izCiz() {
     const S = evSiniflar(), L = OGR.filter(o => o.sinif === EV.izSinif).sort((a, b) => (+a.no) - (+b.no));
@@ -1310,6 +1311,108 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
       <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="faOniz" title="Faaliyetli öğrenci belgesi önizleme" style="width:100%;height:1100px;border:0;background:#fff"></iframe></div>`;
     const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge();
   }
+  // Dönem Sonu İş ve İşlemleri (26 Kasım 2026): okul matbularından derlenen sabit metin; yalnız tarihler ve saatler değiştirilir.
+  // Tarihler ders kesimine göre önerilir; kesim değişince elle değiştirilmemiş tarihler birlikte kayar. Kayıt: umal_idari 'evrak:donemsonu:<yıl>:<1|2>'
+  const DS_ALAN = {   // anahtar: [etiket, kesime göre gün farkı (1. dönem), (2. dönem)]
+    kesim: ['Ders kesimi (karne günü)', 0, 0], not_son: ['Not girişi son gün', -4, -4], fis_bas: ['Puan çizelgesi kontrolü başlangıç', -4, -4], fis_bit: ['Puan çizelgesi teslimi son gün', -3, -3],
+    mazeret_bas: ['Mazeret sınavları başlangıç', -11, -11], mazeret_bit: ['Mazeret sınavları bitiş', -5, -5], gorus_son: ['Karne görüşleri ve sosyal etkinlik girişi son gün', -3, -3],
+    onur_son: ['Onur belgesi önerileri son gün', -7, -7], kutuphane_son: ['Kütüphane ödünç vermenin durması', -7, -7], evrak_son: ['Dönem sonu evrak teslimi son gün', -2, -2],
+    karne_hazir: ['Karnelerin hazırlanıp teslimi', -1, -1], tatil_bas: ['Tatil başlangıcı', 3, 3], tatil_bit: ['Tatil bitişi', 14, 87],
+    mesleki_bas: ['Mesleki çalışma başlangıcı', 3, 3], mesleki_bit: ['Mesleki çalışma bitişi', 7, 14], yeni_bas: ['Derslerin başlaması', 17, 88],
+    sor_bas: ['Sorumluluk sınavları başlangıç', 17, 81], sor_bit: ['Sorumluluk sınavları bitiş', 26, 85], zumre_bas: ['Zümre toplantıları', 17, 81] };
+  const DS_SAAT = { not_saat: ['Not girişi son saat', '23.59'], rehber_saat: ['Sınıf rehber öğretmenleri okulda', '08.15'], karne_saat: ['Karne dağıtımı', '08.30'], teslim_saat: ['Dağıtılamayan karnelerin teslimi', '09.30'], kurul_saat: ['Öğretmenler kurulu', '15.30'] };
+  const DS = { d: '1', V: {}, yuk: {} };
+  // saate Türkçe ek: 09.00'da, 08.15'te, 23.59'a, 10.40'a (son okunan sözcüğe göre ünlü uyumu ve sertleşme)
+  const dsEk = (saat, tur) => { const m = /(\d{1,2})\D?(\d{2})?/.exec(String(saat || '')); if (!m) return '';
+    const sa = +m[1], dk = +(m[2] || 0), n = dk || sa, B = ['sıfır', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'], O = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli'];
+    const soz = n % 10 ? B[n % 10] : O[Math.floor(n / 10)] || 'sıfır', un = [...soz].reverse().find(c => 'aeıioöuü'.includes(c)), kalin = 'aıou'.includes(un), sert = /[fstkçşhp]$/.test(soz), unlu = /[aeıioöuü]$/.test(soz);
+    return "'" + (tur === 'de' ? (sert ? 't' : 'd') + (kalin ? 'a' : 'e') : (unlu ? 'y' : '') + (kalin ? 'a' : 'e')); };
+  const dsGun = (t, n) => { const g = new Date(t + 'T12:00:00'); g.setDate(g.getDate() + n); return g.toISOString().slice(0, 10); };
+  function dsKesimOneri(d) {   // 1. dönem: ocak ayının 3. cuması; 2. dönem: haziranın 3. cuması
+    const yb = +String(egitimYili()).slice(0, 4), y = yb + 1, ay = d === '1' ? 0 : 5, g = new Date(y, ay, 1, 12); let c = 0;
+    while (true) { if (g.getDay() === 5 && ++c === 3) break; g.setDate(g.getDate() + 1); } return g.toISOString().slice(0, 10);
+  }
+  function dsVeri() {
+    const d = DS.d, V = DS.V[d] = DS.V[d] || { el: {} }; V.el = V.el || {}; const kes = V.el.kesim || dsKesimOneri(d), T = {};
+    for (const [k, a] of Object.entries(DS_ALAN)) T[k] = V.el[k] || dsGun(kes, a[d === '1' ? 1 : 2]);
+    const S = {}; for (const [k, a] of Object.entries(DS_SAAT)) S[k] = (V.el[k] || a[1]); return { T, S, V };
+  }
+  async function dsCiz() {
+    const d = DS.d;
+    if (!DS.yuk[d]) { try { DS.V[d] = (await oku(`evrak:donemsonu:${egitimYili()}:${d}`)) || { el: {} }; } catch (e) { DS.V[d] = { el: {} }; } DS.yuk[d] = 1; }
+    const { T, S, V } = dsVeri(), deg = k => V.el[k] ? ' <span class="soluk kucuk">· değiştirildi</span>' : '';
+    const ta = k => `<label>${DS_ALAN[k][0]}${deg(k)}<input type="date" data-ds="${k}" value="${esc(T[k])}"></label>`;
+    const sa = k => `<label>${DS_SAAT[k][0]} (saat)${deg(k)}<input data-ds="${k}" value="${esc(S[k])}" placeholder="${DS_SAAT[k][1]}"></label>`;
+    const gr = (ad, ic) => `<span class="id-et">${ad}</span><div class="id-form">${ic}</div>`;
+    kok.innerHTML = bas('Evraklar', 'Dönem Sonu İş ve İşlemleri', '<button class="ikincil" data-dsx="sifirla">Önerilen tarihlere dön</button><button class="ikincil" data-dsx="kaydet">Kaydet</button><button class="birincil" data-dsx="yazdir">Yazdır</button>') + evSekmeler() +
+      `<div class="kart id-not">Öğretmenlere dağıtılacak <b>dönem sonu iş ve işlemleri</b> yazısı. Metin okul matbularından derlendi ve sabittir; yalnız tarihleri ve saatleri değiştirirsiniz. Ders kesimini değiştirince elle değiştirmediğiniz tarihler ona göre kayar. Yazının sonuna öğretmenlerin imzalayacağı tebellüğ listesi eklenir.</div>
+      <div class="kart"><div class="cipler id-sinif"><button class="cip ${d === '1' ? 'secili' : ''}" data-dsd="1">1. dönem sonu (yarıyıl)</button><button class="cip ${d === '2' ? 'secili' : ''}" data-dsd="2">2. dönem sonu (ders yılı sonu)</button></div>
+        ${gr('Ders kesimi ve karne', ta('kesim') + ta('karne_hazir') + sa('rehber_saat') + sa('karne_saat') + sa('teslim_saat'))}
+        ${gr('Not ve sınav işlemleri', ta('not_son') + sa('not_saat') + ta('mazeret_bas') + ta('mazeret_bit') + ta('fis_bas') + ta('fis_bit'))}
+        ${gr('Sınıf rehberliği, etkinlik ve evrak', ta('gorus_son') + ta('onur_son') + ta('evrak_son') + ta('kutuphane_son'))}
+        ${gr(d === '1' ? 'Yarıyıl tatili ve 2. dönem' : 'Yaz tatili ve yeni ders yılı', ta('tatil_bas') + ta('tatil_bit') + ta('mesleki_bas') + ta('mesleki_bit') + ta('yeni_bas') + sa('kurul_saat') + ta('sor_bas') + ta('sor_bit') + ta('zumre_bas'))}
+        <div id="idBilgi" class="id-bilgi"></div></div>
+      <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="dsOniz" title="Dönem sonu iş ve işlemleri önizleme" style="width:100%;height:1150px;border:0;background:#fff"></iframe></div>`;
+    const fr = kok.querySelector('#dsOniz'); if (fr) fr.srcdoc = dsBelge();
+  }
+  function dsBelge() {
+    const d = DS.d, { T, S } = dsVeri(), y = egitimYili(), t = k => `<b>${esc(tGos(T[k]))} ${esc(gunAd(T[k]))}</b>`, ta = k => `<b>${esc(tGos(T[k]))}</b>`, s = k => `<b>${esc(S[k])}</b>`;
+    const bir = d === '1', don = bir ? '1. dönem' : '2. dönem', DON = bir ? '1. DÖNEM' : '2. DÖNEM';
+    const B = [
+      ['Ders öğretmenleri', [
+        `Yazılı ve uygulamalı sınav, performans ve proje puanları en geç ${t('not_son')} günü saat ${s('not_saat')}${dsEk(S.not_saat, 'e')} kadar e-Okul'a girilir. Sınava özürsüz olarak girmeyen öğrenciye "G" girilir; e-Okul bu saatten sonra not girişine kapanır.`,
+        `Özürlü olarak sınava giremeyen öğrencilerin mazeret sınavları ${ta('mazeret_bas')} – ${ta('mazeret_bit')} tarihleri arasında yapılır ve puanları aynı süre içinde e-Okul'a girilir.`,
+        `Proje ödevi alan öğrencilerin proje puanları not girişi son gününe kadar e-Okul'a işlenir. Her derste ${don} için en az iki sınav ve gerekli performans puanlarının girilmiş olduğu kontrol edilir.`,
+        `Puan çizelgeleri ${ta('fis_bas')} – ${ta('fis_bit')} tarihlerinde müdür yardımcısından alınır, e-Okul ile karşılaştırılarak kontrol edilir, imzalanıp teslim edilir. Hatalı puan bulunursa düzeltme için dilekçeyle müdürlüğe başvurulur.`,
+        `Sınav soruları ve cevap anahtarları, sınav analizleri, zümre ve şube öğretmenler kurulu tutanakları ile eksik planlar en geç ${t('evrak_son')} günü ilgili müdür yardımcısına teslim edilir.`,
+        `Sınıf defterlerinde eksik kalan kazanım/konu ve imzalar ${ta('evrak_son')} tarihine kadar tamamlanır.`,
+        `Ders kesimine kadar dersler planlandığı şekilde işlenir; öğrenciler ders saatinde sınıfta tutulur, sınavını erken bitiren öğrenci dışarı çıkarılmaz.`]],
+      ['Sınıf rehber öğretmenleri', [
+        `Öğrencilere özgü karne görüşleri, okunan kitap sayısı ve sosyal etkinlik durumu en geç ${t('gorus_son')} günü e-Okul'a girilir.`,
+        `Sınıfın devamsızlıkları e-Okul'dan kontrol edilir; özür belgesi teslim edilmemiş ya da devamsızlık sınırına yaklaşmış öğrencilerin velilerine bilgi verilir.`,
+        `Onur belgesi önerileri ${ta('onur_son')} tarihine kadar okul öğrenci ödül ve disiplin kuruluna iletilir. Teşekkür ve takdir belgesi alacak öğrenciler e-Okul listesinden kontrol edilir.`,
+        `${don} sınıf rehberlik faaliyet raporu ve sınıf rehberlik dosyası ${ta('gorus_son')} tarihine kadar okul rehberlik servisine teslim edilir.`,
+        `Karneler ve belgeler ${t('karne_hazir')} günü hazırlanır, imzalatılıp mühürletilir ve dağıtıma hazır hâle getirilir.`,
+        `Karneler ${t('kesim')} günü saat ${s('karne_saat')}${dsEk(S.karne_saat, 'de')} sınıflarda öğrencilere verilir. Sınıf rehber öğretmenleri saat ${s('rehber_saat')}${dsEk(S.rehber_saat, 'de')} okulda bulunur. Dağıtılamayan karneler saat ${s('teslim_saat')}${dsEk(S.teslim_saat, 'de')} müdür yardımcısına teslim edilir.`]],
+      ['Kulüp, sosyal etkinlik ve kütüphane', [
+        `Kulüp çalışmaları ile sosyal, kültürel, sportif, bilimsel etkinlikler ve toplum hizmeti kayıtları ${ta('gorus_son')} tarihine kadar e-Okul Sosyal Etkinlikler modülüne girilir; kulüp ${don} raporları kulüp dosyasına konur.`,
+        `Belirli gün ve haftalara ilişkin raporlar ilgili öğretmenlerce hazırlanıp dosyalanır.`,
+        `Kütüphanede ${ta('kutuphane_son')} tarihinden sonra ödünç kitap verilmez; iade edilmeyen kitaplar tespit edilip müdürlüğe bildirilir.`]],
+      ['Nöbet ve derslikler', [
+        `Nöbetçi öğretmenler ders kesimine kadar nöbet yerlerinde görevlerini sürdürür; boş geçen dersler nöbetçi müdür yardımcısına bildirilir.`,
+        `Ders kesimi günü dersliklerde son ders öğretmeni akıllı tahta ve elektrikli cihazların kapatıldığını, pencerelerin kapandığını kontrol eder; derslik temiz ve düzenli bırakılır.`]],
+      [bir ? 'Yarıyıl tatili ve 2. dönem' : 'Ders yılı sonu', bir ? [
+        `Yarıyıl tatili ${ta('tatil_bas')} – ${ta('tatil_bit')} tarihleri arasındadır. Öğretmenlerin mesleki çalışmaları ${ta('mesleki_bas')} – ${ta('mesleki_bit')} tarihleri arasında yapılacak olup programı ayrıca duyurulacaktır.`,
+        `2. dönem ${t('yeni_bas')} günü başlar. 2. dönem başı öğretmenler kurulu toplantısı aynı gün saat ${s('kurul_saat')}${dsEk(S.kurul_saat, 'de')} yapılır.`,
+        `Sorumluluk sınavları ${ta('sor_bas')} – ${ta('sor_bit')} tarihleri arasında yapılır; görev belgeleri öğretmenler kurulunda dağıtılır.`,
+        `Şubat ayı zümre öğretmenler kurulu toplantıları ${ta('zumre_bas')} tarihinden itibaren yapılır, tutanaklar Atlas Zümre Tutanakları bölümünden hazırlanır.`] : [
+        `Mesleki çalışmalar ${ta('mesleki_bas')} – ${ta('mesleki_bit')} tarihleri arasında yapılacak olup programı ayrıca duyurulacaktır. Yıl sonu öğretmenler kurulu bu dönemde yapılır.`,
+        `Haziran ayı zümre toplantı tutanakları ve yıl sonu raporları mesleki çalışma bitimine kadar müdürlüğe teslim edilir.`,
+        `Sorumluluk sınavları ${ta('sor_bas')} – ${ta('sor_bit')} tarihleri arasında yapılır; görev belgeleri ayrıca dağıtılır.`,
+        `Yaz tatili ${ta('tatil_bas')} – ${ta('tatil_bit')} tarihleri arasındadır. Yeni eğitim öğretim yılı ${t('yeni_bas')} günü başlar.`]]];
+    let n = 0;
+    const takvim = [['Not girişi son gün', `${tGos(T.not_son)} · saat ${S.not_saat}`], ['Mazeret sınavları', `${tGos(T.mazeret_bas)} – ${tGos(T.mazeret_bit)}`], ['Puan çizelgesi kontrolü', `${tGos(T.fis_bas)} – ${tGos(T.fis_bit)}`],
+      ['Karne görüşleri, sosyal etkinlik girişi', tGos(T.gorus_son)], ['Dönem sonu evrak teslimi', tGos(T.evrak_son)], ['Ders kesimi, karne', `${tGos(T.kesim)} ${gunAd(T.kesim)} · saat ${S.karne_saat}`],
+      [bir ? 'Yarıyıl tatili' : 'Yaz tatili', `${tGos(T.tatil_bas)} – ${tGos(T.tatil_bit)}`], ['Mesleki çalışma', `${tGos(T.mesleki_bas)} – ${tGos(T.mesleki_bit)}`], ['Sorumluluk sınavları', `${tGos(T.sor_bas)} – ${tGos(T.sor_bit)}`], [bir ? '2. dönem başlangıcı' : 'Yeni ders yılı', tGos(T.yeni_bas)]];
+    const O = ogretmenler().slice().sort((a, b) => a.ad.localeCompare(b.ad, tr));
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Dönem Sonu İş ve İşlemleri</title><style>
+@page{size:A4 portrait;margin:14mm 16mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11pt;color:#000;margin:0;padding:14mm 16mm}@media print{body{padding:0}}
+.ust{text-align:center;font-weight:bold;line-height:1.35}.ss{display:flex;justify-content:space-between;margin-top:5mm}h1{text-align:center;font-size:12.5pt;margin:4mm 0 3mm}
+h2{font-size:11pt;margin:3.5mm 0 1mm;text-decoration:underline}ol{margin:0;padding-left:7mm}li{margin:.9mm 0;line-height:1.4;text-align:justify;break-inside:avoid}p{line-height:1.45;margin:1.5mm 0;text-align:justify}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:1.2mm 2mm;text-align:left}th{text-align:center}.tk{margin-top:3mm;break-inside:avoid}.tk td:first-child{width:62%}.imz{text-align:center;margin:7mm 0 0 auto;width:70mm;break-inside:avoid}
+.yeni{page-break-before:always}.tb td{height:7.5mm}.tb thead{display:table-header-group}.tb tr{break-inside:avoid}.c{text-align:center}
+</style></head><body><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+<div class="ss"><span>Sayı : ……………………</span><span>${tGos(bugun())}</span></div><div>Konu : ${esc(y)} eğitim öğretim yılı ${DON.toLocaleLowerCase(tr)} sonu iş ve işlemleri</div>
+<h1>${esc(y)} EĞİTİM ÖĞRETİM YILI ${DON} SONU İŞ VE İŞLEMLERİ</h1>
+<p>${esc(y)} eğitim öğretim yılı ${don} sonunda yapılacak iş ve işlemler aşağıda belirtilmiştir. Bütün öğretmenlerimizin belirtilen tarih ve saatlere uyması önemle rica olunur.</p>
+${B.map(([ad, M]) => `<h2>${ad}</h2><ol start="${n + 1}">${M.map(m => (n++, `<li>${m}</li>`)).join('')}</ol>`).join('')}
+<table class="tk"><tr><th colspan="2">ÖNEMLİ TARİHLER</th></tr>${takvim.map(([a, b]) => `<tr><td>${a}</td><td>${esc(b)}</td></tr>`).join('')}</table>
+<div class="imz">${esc(MUDUR)}<br>Okul Müdürü</div>
+<section class="yeni"><h1>TEBELLÜĞ LİSTESİ</h1><p>${esc(y)} eğitim öğretim yılı ${don} sonu iş ve işlemleri yazısını okudum, tebellüğ ettim.</p>
+<table class="tb"><thead><tr><th style="width:10mm">Sıra</th><th>Adı soyadı</th><th style="width:45mm">Branşı</th><th style="width:28mm">Tarih</th><th style="width:35mm">İmza</th></tr></thead><tbody>
+${(O.length ? O : Array.from({ length: 30 }, () => ({ ad: '', brans: '' }))).map((o, i) => `<tr><td class="c">${i + 1}</td><td>${esc(o.ad ? C.baslik(o.ad) : '')}</td><td>${esc(o.brans || '')}</td><td></td><td></td></tr>`).join('')}</tbody></table></section></body></html>`;
+  }
+  async function dsKaydet() { const V = DS.V[DS.d] || { el: {} }; await yaz(`evrak:donemsonu:${egitimYili()}:${DS.d}`, V); }
   // Geç Kalan Öğrenci Çizelgesi: okulun basılı formunun aynısı (seviye başına bir sayfa, 35 satır, elle doldurulur)
   function gkCiz() {
     const G = EV.gk, sv = [['9', '9. Sınıflar'], ['10', '10. Sınıflar'], ['11', '11. Sınıflar'], ['12', '12. Sınıflar'], ['hepsi', 'Dört seviye (4 sayfa)']];
@@ -1359,6 +1462,8 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 </style></head><body>${Array.from({ length: sayfa }, (_, i) => tek(i)).join('')}</body></html>`;
   }
   function evGirdi(ev) { const d = ev.target.dataset;
+    if (d.ds) { const V = DS.V[DS.d] = DS.V[DS.d] || { el: {} }; V.el = V.el || {}; const v = ev.target.value.trim(); if (v) V.el[d.ds] = v; else delete V.el[d.ds]; EV.degisti = true;
+      if (ev.target.type === 'date') { dsCiz(); return; } const fr = kok.querySelector('#dsOniz'); if (fr) fr.srcdoc = dsBelge(); return; }
     if (d.gk) { EV.gk[d.gk] = ev.target.value; const fr = kok.querySelector('#gkOniz'); if (fr) fr.srcdoc = gkBelge(); return; }
     if (d.fa) { EV.fa[d.fa] = ev.target.value; if (d.fa === 'ogretmen') { const o = ogretmenler().find(x => x.ad === ev.target.value); if (o && !EV.fa.brans) { EV.fa.brans = o.brans; const b = kok.querySelector('[data-fa="brans"]'); if (b) b.value = o.brans; } } const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge(); return; } if (d.evso) { EV.M.so[d.evso] = ev.target.value; EV.degisti = true; } if (d.evor) { EV.M.okul[d.evor] = ev.target.value; EV.degisti = true; } }
   // Dosya/yapıştırma satırlarından okul rehber öğretmenlerini çıkarır: bir satırda ad + bir ya da birkaç sınıf ("9-A, 9-B", "9/C", "9. sınıflar")
@@ -1393,6 +1498,10 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (d.evsek) { if (EV.sek === 'rehber' && EV.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return; EV.sek = d.evsek; evCiz(); return; }
     if (d.izsinif != null) { EV.izSinif = d.izsinif; EV.izNo = ''; izCiz(); return; }
     if (d.izno) { EV.izNo = d.izno; izCiz(); return; }
+    if (d.dsd) { DS.d = d.dsd; dsCiz(); return; }
+    if (d.dsx === 'yazdir') { C.belgeOnizle(dsBelge(), 'Dönem sonu iş ve işlemleri', false); return; }
+    if (d.dsx === 'sifirla') { if (!await onayla('Bütün tarih ve saatler önerilen değerlere dönsün mü?')) return; DS.V[DS.d] = { el: {} }; EV.degisti = true; dsCiz(); return; }
+    if (d.dsx === 'kaydet') { try { await dsKaydet(); EV.degisti = false; bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return; }
     if (d.gksev) { EV.gk.sev = d.gksev; gkCiz(); return; }
     if (d.gkx === 'bos') { C.belgeOnizle(gkBelge(true), 'Geç Kalan Öğrenci Çizelgesi', false); return; }
     if (d.gkx === 'yazdir') { C.belgeOnizle(gkBelge(), 'Geç Kalan Öğrenci Çizelgesi', false); return; }
