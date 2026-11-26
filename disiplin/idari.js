@@ -1097,7 +1097,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   // Saat dilimleri Evraklar › Ders Zaman Çizelgesi'ndeki DYK ayarından gelir (yoksa 15.00'ten 40 + 10 dk, 2 ders).
   // Veri: umal_idari 'dyk:<yıl>' → { K: [{ id, gun (0-4), dilim (1..n), ders, ogretmen, grup, salon }] }
   const DY_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'], DY_KISA = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum'];
-  const DY = { M: null, degisti: false, D: [], f: { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [], saat: 2 }, sec: '', filtre: '' };
+  const DY = { M: null, degisti: false, D: [], f: { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [], saat: 2 }, sec: '', filtre: '', sek: 'program', ay: new Date().toISOString().slice(0, 7) };
   // öğretmenin ders programındaki günleri: o gün son dersi kaçıncı saat, okulun o günkü son dersi kaçıncı saat
   function dyOgrGunler(ad) {
     const G = new Map(), okulSon = {};
@@ -1121,12 +1121,55 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     for (const k of DY.M.K) for (const [t, v] of [['o', k.ogretmen], ['s', k.salon]]) { if (!String(v || '').trim()) continue; const a = `${t}|${k.gun}|${k.dilim}|${dersAn(v)}`; if (M.has(a)) { C_.add(k.id); C_.add(M.get(a)); } else M.set(a, k.id); }
     return C_;
   }
+  // DYK ek ders çizelgesi (26 Kasım 2026): ay seçilir; her öğretmen için programdaki DYK günleri tarih tarih kendiliğinden dolar.
+  // Girilmeyen ders "girmedi" yapılır ya da saati değiştirilir; tatil günleri sütundan kapatılır. Kayıt: DY.M.E = { g: {tarih: {öğretmen: saat}}, t: {tarih: 1|0} }
+  const DY_RESMI = ['10-29', '01-01', '04-23', '05-01', '05-19', '07-15'];   // sabit tarihli resmî tatiller (dinî bayramlar ve ara tatil elle işaretlenir)
+  const dySekme = () => `<div class="id-adimlar">${[['program', 'Haftalık program'], ['ek', 'Ek ders çizelgesi']].map(([k, ad]) => `<button data-dysek="${k}" ${DY.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('dyk', 18)}${ad}</button>`).join('')}</div>`;
+  const dyTatil = t => { const E = DY.M.E || {}, v = (E.t || {})[t]; return v === 1 || (v !== 0 && DY_RESMI.includes(t.slice(5))); };
+  function dyAyGunleri(ay) { const [y, m] = ay.split('-').map(Number), G = []; for (let d = new Date(y, m - 1, 1, 12); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) { const w = (d.getDay() + 6) % 7; if (w < 5) G.push({ t: d.toISOString().slice(0, 10), w }); } return G; }
+  function dyEkHesap(ay) {   // { G: [tarih], O: [{ad, plan:{t:n}, yap:{t:n}, P, Y}] }
+    const G = dyAyGunleri(ay).filter(g => DY.M.K.some(k => k.ogretmen && +k.gun === g.w)), E = (DY.M.E || {}).g || {};
+    const A = [...new Set(DY.M.K.map(k => k.ogretmen).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr));
+    const O = A.map(ad => { const plan = {}, yap = {}; let P = 0, Y = 0;
+      for (const g of G) { const n = DY.M.K.filter(k => k.ogretmen === ad && +k.gun === g.w).length; if (!n) continue; const tat = dyTatil(g.t); plan[g.t] = tat ? 0 : n;
+        const e = (E[g.t] || {})[ad]; yap[g.t] = tat ? 0 : (e == null ? n : +e); P += plan[g.t]; Y += yap[g.t]; }
+      return { ad, plan, yap, P, Y }; });
+    return { G, O };
+  }
+  function dyEkCiz() {
+    const H = dyEkHesap(DY.ay), og = new Map(ogretmenler().map(o => [o.ad, o.brans])), tp = H.O.reduce((t, o) => t + o.Y, 0), tpp = H.O.reduce((t, o) => t + o.P, 0);
+    kok.innerHTML = bas('DYK Programı', `${egitimYili()} · DYK ek ders çizelgesi`, '<button class="ikincil" data-dyx="ekexcel">Excel olarak indir</button><button class="birincil" data-dyx="ekyazdir">Çizelgeyi yazdır</button>') + dySekme() +
+      `<div class="kart id-not">Seçilen ayda her öğretmenin DYK saatleri <b>haftalık programdan tarih tarih kendiliğinden</b> gelir. Öğretmen o gün girmediyse kutuya <b>0</b> yazın ya da eksik saati girin; tatil olan günü sütun başından <b>tatil</b> yapın (29 Ekim, 1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz kendiliğinden tatildir). Değişiklikler kendiliğinden kaydedilir.</div>
+      <div class="kart"><div class="id-satir" style="gap:10px;flex-wrap:wrap"><label style="margin:0">Ay<input type="month" data-dyay="1" value="${esc(DY.ay)}"></label>
+        <span class="soluk">Planlanan <b>${tpp}</b> saat · Yapılan <b style="color:#4ade80">${tp}</b> saat${tpp - tp ? ` · Girilmeyen <b style="color:#fca5a5">${tpp - tp}</b> saat` : ''}</span></div><div id="idBilgi" class="id-bilgi"></div>
+      ${H.G.length && H.O.length ? `<div style="overflow-x:auto;margin-top:10px"><table class="liste" style="min-width:${300 + H.G.length * 62}px"><thead><tr><th style="position:sticky;left:0;background:#13213a;min-width:170px">Öğretmen</th><th style="text-align:center">Plan</th><th style="text-align:center">Yapılan</th>
+        ${H.G.map(g => { const tat = dyTatil(g.t); return `<th style="text-align:center;min-width:56px;${tat ? 'background:rgba(148,163,184,.15)' : ''}">${g.t.slice(8)}.${g.t.slice(5, 7)}<div class="soluk kucuk">${DY_KISA[g.w]}</div><button class="bag kucuk" data-dytatil="${g.t}" style="padding:0">${tat ? 'tatil ✓' : 'tatil'}</button></th>`; }).join('')}
+        </tr></thead><tbody>
+        ${H.O.map(o => `<tr><td style="position:sticky;left:0;background:#13213a"><b>${esc(C.baslik(o.ad))}</b><div class="soluk kucuk">${esc(og.get(o.ad) ? zmBrans(og.get(o.ad)) : '')}</div></td><td style="text-align:center">${o.P}</td><td style="text-align:center;${o.Y < o.P ? 'color:#fca5a5' : 'color:#4ade80'}"><b>${o.Y}</b></td>
+          ${H.G.map(g => { if (!(g.t in o.plan)) return '<td></td>'; const tat = dyTatil(g.t); if (tat) return '<td style="text-align:center;background:rgba(148,163,184,.1)" class="soluk">T</td>';
+            const n = o.plan[g.t], y = o.yap[g.t], fark = y !== n; return `<td style="text-align:center;${y === 0 ? 'background:rgba(239,68,68,.15)' : fark ? 'background:rgba(255,212,59,.13)' : ''}"><input type="number" min="0" max="12" data-dyek="${g.t}|${esc(o.ad)}" value="${y}" style="width:48px;text-align:center;padding:4px" title="Plan: ${n} saat"></td>`; }).join('')}
+          </tr>`).join('')}</tbody></table></div>
+        <div class="soluk kucuk" style="margin-top:8px">Kırmızı: girmedi (0) · sarı: plandan farklı saat · T: tatil</div>` : '<div class="soluk" style="margin-top:10px">Bu ay için programda DYK dersi yok. Önce "Haftalık program" sekmesinden kursları ekleyin.</div>'}</div>`;
+  }
+  let dyEkZam = 0;
+  const dyEkKaydet = () => { clearTimeout(dyEkZam); dyEkZam = setTimeout(async () => { try { await dyKaydet(); if (DY.sek === 'ek') { const f = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.dyek : null; dyCiz(); if (f) { const i = [...kok.querySelectorAll('[data-dyek]')].find(x => x.dataset.dyek === f); if (i) i.focus(); } } bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } }, 900); };
+  function dyEkBelge() {
+    const H = dyEkHesap(DY.ay), og = new Map(ogretmenler().map(o => [o.ad, o.brans])), [y, m] = DY.ay.split('-'), AY = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'][+m - 1];
+    const sat = H.O.map((o, i) => { const gir = H.G.filter(g => g.t in o.plan && !dyTatil(g.t) && o.yap[g.t] < o.plan[g.t]).map(g => `${g.t.slice(8)}.${g.t.slice(5, 7)}${o.yap[g.t] ? ` (${o.yap[g.t]}/${o.plan[g.t]})` : ''}`);
+      return `<tr><td class="c">${i + 1}</td><td>${esc(C.baslik(o.ad))}</td><td>${esc(og.get(o.ad) ? zmBrans(og.get(o.ad)) : '')}</td>${H.G.map(g => `<td class="c ${dyTatil(g.t) ? 'tt' : ''}">${g.t in o.plan ? (dyTatil(g.t) ? 'T' : o.yap[g.t]) : ''}</td>`).join('')}<td class="c">${o.P}</td><td class="c"><b>${o.Y}</b></td><td class="gy">${esc(gir.join(', '))}</td><td></td></tr>`; }).join('');
+    return dyBelgeKabuk('DYK ek ders çizelgesi', `<section class="sy">${dyUst()}<h1>${y} ${AY} AYI DESTEKLEME VE YETİŞTİRME KURSU EK DERS ÇİZELGESİ</h1>
+      <style>td.c{text-align:center}td.tt{background:#eceff4;color:#777}td.gy{font-size:8pt}th{font-size:8.5pt;padding:1.4mm}td{padding:1.2mm 1.4mm;vertical-align:middle}</style>
+      <table><thead><tr><th>#</th><th>Adı soyadı</th><th>Branşı</th>${H.G.map(g => `<th>${g.t.slice(8)}.${g.t.slice(5, 7)}<br>${DY_KISA[g.w]}</th>`).join('')}<th>Plan</th><th>Yapılan</th><th>Girilmeyen günler</th><th style="width:22mm">İmza</th></tr></thead><tbody>${sat}
+      <tr><td colspan="${3 + H.G.length}" style="text-align:right"><b>Toplam</b></td><td class="c"><b>${H.O.reduce((t, o) => t + o.P, 0)}</b></td><td class="c"><b>${H.O.reduce((t, o) => t + o.Y, 0)}</b></td><td colspan="2"></td></tr></tbody></table>
+      <div style="font-size:8.5pt;margin-top:2mm">T: tatil · Sayılar o gün yapılan DYK ders saatidir.</div><div class="imz"><div>Düzenleyen<br><br>Adı soyadı, imza</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`, true);
+  }
   function dyCiz() {
+    if (DY.sek === 'ek') return dyEkCiz();
     const K = DY.M.K, F = DY.f, O = ogretmenler(), cak = dyCakisma(), fl = norm(DY.filtre);
     const og = new Map(); for (const k of K) if (k.ogretmen) og.set(k.ogretmen, (og.get(k.ogretmen) || 0) + 1);
     const goster = k => !fl || norm(`${k.ders} ${k.ogretmen} ${k.grup} ${k.salon}`).includes(fl);
     const cip = (ad, A, k, v) => `<button class="cip ${A.includes(v) ? 'secili' : ''}" data-dysec="${k}|${v}">${ad}</button>`;
-    kok.innerHTML = bas('DYK Programı', `${egitimYili()} · hafta içi okul dersleri sonrası destekleme ve yetiştirme kursları`, '<button class="ikincil" data-dyx="ogretmen">Öğretmen programları</button><button class="ikincil" data-dyx="ozet">Ek ders özeti</button><button class="ikincil" data-dyx="kaydet">Kaydet</button><button class="birincil" data-dyx="yazdir">Programı yazdır</button>') +
+    kok.innerHTML = bas('DYK Programı', `${egitimYili()} · hafta içi okul dersleri sonrası destekleme ve yetiştirme kursları`, '<button class="ikincil" data-dyx="ogretmen">Öğretmen programları</button><button class="ikincil" data-dyx="ozet">Ek ders özeti</button><button class="ikincil" data-dyx="kaydet">Kaydet</button><button class="birincil" data-dyx="yazdir">Programı yazdır</button>') + dySekme() +
       `<div class="kart id-not">Saat dilimleri <b>Evraklar › Ders Zaman Çizelgesi</b>'ndeki DYK ayarından gelir: ${DY.D.map((d, i) => `<b>${i + 1}. ders ${zcS(d.g)}–${zcS(d.c)}</b>`).join(', ')}. Kurs eklemek için dersi, öğretmeni, grubu ve dersliği yazın; günleri ve saatleri seçip "Ekle"ye basın. Aynı saatte aynı öğretmen ya da derslik iki kez kullanılırsa kırmızıyla gösterilir.</div>
       <div style="display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start">
       <div class="kart" style="margin:0"><b style="font-size:15px">${DY.sec ? 'Kursu düzenle' : 'Kurs ekle'}</b>
@@ -1185,6 +1228,10 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
     if (d.dysec) { const [k, v] = d.dysec.split('|'), x = +v, A = F[k]; const j = A.indexOf(x); if (j >= 0) A.splice(j, 1); else A.push(x); dyCiz(); return true; }
     if (d.dyhucre) { const [g, s] = d.dyhucre.split('|'); DY.sec = ''; F.gun = [+g]; F.dilim = [+s]; dyCiz(); const i = kok.querySelector('[data-dyf="ogretmen"]'); if (i) i.focus(); return true; }
     if (d.dyk) { const k = DY.M.K.find(x => x.id === d.dyk); if (!k) return true; DY.sec = k.id; Object.assign(F, { ders: k.ders || '', ogretmen: k.ogretmen || '', grup: k.grup || '', salon: k.salon || '', gun: [+k.gun], dilim: [+k.dilim] }); dyCiz(); return true; }
+    if (d.dysek) { DY.sek = d.dysek; dyCiz(); return true; }
+    if (d.dytatil) { const E = DY.M.E = DY.M.E || {}; E.t = E.t || {}; const t = d.dytatil, simdi = dyTatil(t), resmi = DY_RESMI.includes(t.slice(5)); if (simdi) { if (resmi) E.t[t] = 0; else delete E.t[t]; } else { if (resmi) delete E.t[t]; else E.t[t] = 1; } DY.degisti = true; dyEkKaydet(); dyCiz(); return true; }
+    if (d.dyx === 'ekyazdir') { C.belgeOnizle(dyEkBelge(), 'DYK ek ders çizelgesi', true); return true; }
+    if (d.dyx === 'ekexcel') { const H = dyEkHesap(DY.ay); indir(`DYK ek ders ${DY.ay}`, [['Adı soyadı', 'Branşı', ...H.G.map(g => g.t.split('-').reverse().join('.')), 'Plan', 'Yapılan'], ...H.O.map(o => [C.baslik(o.ad), zmBrans((ogretmenler().find(x => x.ad === o.ad) || {}).brans || ''), ...H.G.map(g => g.t in o.plan ? (dyTatil(g.t) ? 'T' : o.yap[g.t]) : ''), o.P, o.Y])]); return true; }
     if (d.dyfil !== undefined) { DY.filtre = d.dyfil; dyCiz(); return true; }
     const x = d.dyx; if (!x) return false;
     if (x === 'ekle' || x === 'guncelle') {
@@ -1217,6 +1264,10 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
     return false;
   }
   function dyGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.dyay) { if (/^\d{4}-\d{2}$/.test(t.value)) { DY.ay = t.value; dyCiz(); } return; }
+    if (d.dyek) { const [tarih, ad] = d.dyek.split('|'), E = DY.M.E = DY.M.E || {}; E.g = E.g || {}; const plan = DY.M.K.filter(k => k.ogretmen === ad && +k.gun === (new Date(tarih + 'T12:00:00').getDay() + 6) % 7).length, v = Math.max(0, Math.min(12, +t.value || 0));
+      E.g[tarih] = E.g[tarih] || {}; if (t.value !== '' && v !== plan) E.g[tarih][ad] = v; else delete E.g[tarih][ad]; if (!Object.keys(E.g[tarih]).length) delete E.g[tarih];
+      const td = t.closest('td'); if (td) td.style.background = v === 0 ? 'rgba(239,68,68,.15)' : v !== plan ? 'rgba(255,212,59,.13)' : ''; DY.degisti = true; dyEkKaydet(); return; }
     if (d.dyfiltre) { DY.filtre = t.value; const p = t.selectionStart; dyCiz(); const y = kok.querySelector('[data-dyfiltre]'); if (y) { y.focus(); y.setSelectionRange(p, p); } return; }
     if (d.dyf) { DY.f[d.dyf] = t.value; if (d.dyf === 'ogretmen') { const b_ = kok.querySelector('#dyGunBilgi'); if (b_) b_.textContent = dyGunYazi(t.value.trim()); }
       if (d.dyf === 'ders') DY.f.dersOto = false;
