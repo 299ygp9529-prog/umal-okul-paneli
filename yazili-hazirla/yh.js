@@ -237,13 +237,14 @@ body.yh-acik #pencere{z-index:70}
 .yh-editor .yh-puan{cursor:pointer}
 .yh-editor [contenteditable="true"]:focus{background:rgba(34,196,224,.05)}
 .yh-uyari-tas{position:absolute;right:0;bottom:0;font:600 10px/1.3 sans-serif;color:#fff;background:#e74c3c;padding:2px 6px;border-radius:4px}
-.yh-liste-s{display:grid;grid-template-columns:22px 1fr 46px 22px;gap:6px;align-items:center;background:var(--kart);border:1px solid var(--cizgi);border-radius:10px;padding:6px 7px;font-size:12px;margin-bottom:5px;cursor:pointer}
+.yh-liste-s{display:grid;grid-template-columns:20px 1fr 46px 26px 20px;gap:6px;align-items:center;background:var(--kart);border:1px solid var(--cizgi);border-radius:10px;padding:6px 7px;font-size:12px;margin-bottom:5px;cursor:pointer}
 .yh-liste-s.on{border-color:var(--neon)}
 .yh-liste-s b{color:var(--neon);text-align:center}
 .yh-liste-s span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dfe9f5}
 .yh-liste-s input{width:44px;background:#0b1626;border:1px solid var(--cizgi);color:#fff;border-radius:6px;text-align:center;padding:3px 2px;font-family:inherit}
-.yh-liste-s .tut{cursor:grab;color:var(--soluk);text-align:center;user-select:none}
+.yh-liste-s .tut{overflow:visible;cursor:grab;color:var(--soluk);text-align:center;user-select:none}
 .yh-liste-s.surukle{opacity:.4}
+.yh-liste-sil{width:26px;height:26px;display:grid;place-items:center;padding:0;border-radius:7px;background:transparent;border:1px solid transparent;color:#ff8a8f;cursor:pointer;opacity:.7}.yh-liste-sil:hover{opacity:1;background:rgba(255,90,100,.14);border-color:rgba(255,90,100,.45)}
 .yh-toplam{margin:8px 0;padding:8px 10px;border-radius:10px;font-weight:700;font-size:12.5px}
 .yh-toplam.tam{background:#123a2a;border:1px solid #2fbf71;color:#7ef0b0}
 .yh-toplam.eksik{background:#3a2a12;border:1px solid #f59e0b;color:#ffd27a}
@@ -798,16 +799,18 @@ body.yh-acik #pencere{z-index:70}
     const top = B.sorular.reduce((t, s) => t + (+s.puan || 0), 0), s = B.sorular.find(x => x.id === secId);
     const kisa = x => (x.govde || '').replace(/<figure[\s\S]*?<\/figure>/g, ' [şekil] ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || TURLER[x.tur].ad;
     let n = 0;
-    $e('#yhSag').innerHTML = `<h3>SORULAR</h3><div id="yhListe">${B.sorular.map(x => { const no = x.tur === 'metin' ? '–' : ++n; return `<div class="yh-liste-s ${x.id === secId ? 'on' : ''}" draggable="true" data-sid="${esc(x.id)}"><b>${no}</b><span title="${esc(kisa(x))}">${esc(kisa(x))}</span>${x.tur === 'metin' ? '<span></span>' : `<input type="number" min="0" max="100" step="0.5" value="${+x.puan || 0}" data-puan="${esc(x.id)}" aria-label="Puan">`}<span class="tut" title="Sürükleyerek taşıyın">⋮⋮</span></div>`; }).join('') || '<div class="yh-not">Soldan bir soru türü seçin.</div>'}</div>
-      <div class="yh-toplam ${Math.abs(top - 100) < .01 ? 'tam' : 'eksik'}" id="yhToplam">${toplamYazi(top)}</div>
-      ${s ? soruAyarHTML(s) : ''}
+    $e('#yhSag').innerHTML = `${s ? soruAyarHTML(s) : ''}
       ${tabloAyarHTML()}
+      <h3>SORULAR</h3><div id="yhListe">${B.sorular.map(x => { const no = x.tur === 'metin' ? '–' : ++n; return `<div class="yh-liste-s ${x.id === secId ? 'on' : ''}" draggable="true" data-sid="${esc(x.id)}"><b>${no}</b><span title="${esc(kisa(x))}">${esc(kisa(x))}</span>${x.tur === 'metin' ? '<span></span>' : `<input type="number" min="0" max="100" step="0.5" value="${+x.puan || 0}" data-puan="${esc(x.id)}" aria-label="Puan">`}<button class="yh-liste-sil" data-lsil="${esc(x.id)}" title="Bu soruyu sil" aria-label="Soruyu sil">${ik('cop', 15)}</button><span class="tut" title="Sürükleyerek taşıyın">⋮⋮</span></div>`; }).join('') || '<div class="yh-not">Soldan bir soru türü seçin.</div>'}</div>
+      <div class="yh-toplam ${Math.abs(top - 100) < .01 ? 'tam' : 'eksik'}" id="yhToplam">${toplamYazi(top)}</div>
       <div class="yh-kart"><h4>Kâğıt</h4><div class="yh-dugmeler">
         <button class="yh-d" data-is="anahtar">${ik('anahtar', 16)}Cevap anahtarı</button><button class="yh-d" data-is="kitapcik">${ik('kitapcik', 16)}B kitapçığı oluştur</button>
         <button class="yh-d" data-is="kopya">${ik('kopya', 16)}Başka sınıf için kopyala</button><button class="yh-d" data-is="dosya">${ik('kaydet', 16)}Dosyaya kaydet</button>
         ${C.puanKagidi ? `<button class="yh-d" data-is="puankagidi">${ik('puan', 16)}Soru puan kâğıdı</button>` : ''}${C.sb ? `<button class="yh-d" data-is="tahta">${ik('tahta', 16)}Sınavdan sonra tahtalara gönder</button>` : ''}</div>
         <div class="yh-not">Yazılılar yalnız bu cihazda saklanır; sınavdan önce kimseyle paylaşılmaz.</div></div>`;
+    if (sagSonSec !== secId) { sagSonSec = secId; const sg = $e('#yhSag'); if (sg) sg.scrollTop = 0; }   // K-1008: seçilen sorunun ayarları üstte görünsün
   }
+  let sagSonSec = null;
   const toplamYazi = t => Math.abs(t - 100) < .01 ? 'Toplam 100 puan' : t < 100 ? `Toplam ${fmt(t)} / 100 · ${fmt(100 - t)} puan eksik` : `Toplam ${fmt(t)} / 100 · ${fmt(t - 100)} puan fazla`;
   const fmt = v => String(Math.round(v * 100) / 100).replace('.', ',');
   function sagPuanTazele() { const t = B.sorular.reduce((a, s) => a + (+s.puan || 0), 0), e = $e('#yhToplam'); if (e) { e.textContent = toplamYazi(t); e.className = 'yh-toplam ' + (Math.abs(t - 100) < .01 ? 'tam' : 'eksik'); } }
@@ -982,6 +985,7 @@ body.yh-acik #pencere{z-index:70}
     });
     sag.addEventListener('click', async ev => {
       const b = ev.target.closest('button,[data-sid]'); if (!b) return; const s = seciliSoru();
+      if (b.dataset.lsil) { const q = B.sorular.find(x => x.id === b.dataset.lsil); if (q) { await soruIslem('sil', q); sagCiz(); } return; }   // K-1008: listeden tek dokunuşla sil
       if (b.dataset.sid && !ev.target.closest('input')) { secId = b.dataset.sid; secGoster(); sagCiz(); const el = EL.get(secId); if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
       if (b.dataset.secsay && s) { modelOku(); const n = +b.dataset.secsay; while (s.secenek.length < n) s.secenek.push(''); s.secenek.length = n; if (s.dogru && HARF.indexOf(s.dogru) >= n) s.dogru = ''; soruYenile(s); degisti(true); return; }
       if (b.dataset.diz && s) { modelOku(); s.dizilim = b.dataset.diz; soruYenile(s); degisti(true); return; }
