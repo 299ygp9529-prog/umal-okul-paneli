@@ -1096,8 +1096,17 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   // Hafta içi okul dersleri bittikten sonra yapılan destekleme ve yetiştirme kurslarının haftalık programı.
   // Saat dilimleri Evraklar › Ders Zaman Çizelgesi'ndeki DYK ayarından gelir (yoksa 15.00'ten 40 + 10 dk, 2 ders).
   // Veri: umal_idari 'dyk:<yıl>' → { K: [{ id, gun (0-4), dilim (1..n), ders, ogretmen, grup, salon }] }
-  const DY_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-  const DY = { M: null, degisti: false, D: [], f: { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [] }, sec: '', filtre: '' };
+  const DY_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'], DY_KISA = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum'];
+  const DY = { M: null, degisti: false, D: [], f: { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [], saat: 2 }, sec: '', filtre: '' };
+  // öğretmenin ders programındaki günleri: o gün son dersi kaçıncı saat, okulun o günkü son dersi kaçıncı saat
+  function dyOgrGunler(ad) {
+    const G = new Map(), okulSon = {};
+    for (const H of Object.values((PRG && PRG.siniflar) || {})) for (const [k, h] of Object.entries(H || {})) { const [g, sa] = k.split('-').map(Number); if (!(g >= 0 && g <= 4) || !sa) continue;
+      okulSon[g] = Math.max(okulSon[g] || 0, sa); if ((h.ogretmen || []).includes(ad)) { const x = G.get(g) || { gun: g, son: 0, sayi: 0 }; x.son = Math.max(x.son, sa); x.sayi++; G.set(g, x); } }
+    return [...G.values()].map(x => ({ ...x, okulSon: okulSon[x.gun], cikista: x.son >= okulSon[x.gun] })).sort((a, b) => (b.cikista - a.cikista) || (b.son - a.son) || (a.gun - b.gun));
+  }
+  const dyGunYazi = ad => { const L = dyOgrGunler(ad); if (!L.length) return ad ? 'Ders programında bu öğretmen bulunamadı.' : '';
+    return 'Ders programına göre son dersi: ' + L.slice().sort((a, b) => a.gun - b.gun).map(x => `${DY_KISA[x.gun]} ${x.son}. saat${x.cikista ? ' (çıkışta okulda)' : ''}`).join(', '); };
   async function dyk() {
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     try { DY.M = (await oku(`dyk:${egitimYili()}`)) || { K: [] }; } catch (e) { kok.innerHTML = bas('DYK Programı') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
@@ -1126,10 +1135,14 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
           <label>Ders<input list="dyDers" data-dyf="ders" value="${esc(F.ders)}" placeholder="ör. Matematik"></label>
           <label>Grup / sınıf<input data-dyf="grup" value="${esc(F.grup)}" placeholder="ör. 12. sınıflar TYT, 11-A"></label>
           <label>Derslik<input list="dySalon" data-dyf="salon" value="${esc(F.salon)}" placeholder="ör. 12-A"></label></div>
+        <div id="dyGunBilgi" class="soluk kucuk" style="margin-top:6px;line-height:1.5">${esc(dyGunYazi(F.ogretmen.trim()))}</div>
+        ${DY.sec ? '' : `<div style="margin-top:10px;border:1px solid rgba(34,232,255,.35);border-radius:10px;padding:10px"><b>Ders programına göre otomatik yerleştir</b><div class="soluk kucuk" style="margin:4px 0 8px">Öğretmenin dersinin olduğu ve çıkışta okulda bulunduğu günlere konur; çakışma olan saat atlanır. Sonra kutuya tıklayıp değiştirebilirsiniz.</div>
+          <div class="id-satir" style="gap:8px"><label style="margin:0">Haftalık saat<input type="number" min="1" max="20" data-dyf="saat" value="${esc(F.saat)}" style="width:80px"></label><button class="birincil" data-dyx="oto">Otomatik yerleştir</button></div></div>
+          <div class="soluk kucuk" style="margin:10px 0 0">ya da günleri ve saatleri elle seçin:</div>`}
         <datalist id="dyOgr">${O.map(o => `<option value="${esc(o.ad)}">${esc(o.brans || '')}</option>`).join('')}</datalist>
         <datalist id="dyDers">${[...new Set(O.map(o => o.brans && zmBrans(o.brans)).filter(Boolean))].sort((a, b) => a.localeCompare(b, tr)).map(b => `<option value="${esc(b)}">`).join('')}</datalist>
         <datalist id="dySalon">${Object.keys((PRG && PRG.siniflar) || {}).sort(sinifSira).map(s => `<option value="${esc(s)}">`).join('')}</datalist>
-        <span class="id-et">Günler</span><div class="cipler">${DY_GUN.map((g, i) => cip(g.slice(0, 3), F.gun, 'gun', i)).join('')}</div>
+        <span class="id-et">Günler</span><div class="cipler">${DY_GUN.map((g, i) => cip(DY_KISA[i], F.gun, 'gun', i)).join('')}</div>
         <span class="id-et">Saatler</span><div class="cipler">${DY.D.map((d, i) => cip(`${i + 1}. ders · ${zcS(d.g)}`, F.dilim, 'dilim', i + 1)).join('')}</div>
         <div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0">${DY.sec ? '<button class="birincil" data-dyx="guncelle">Güncelle</button><button class="ikincil" data-dyx="sil">Sil</button><button class="bag" data-dyx="vazgec">Vazgeç</button>' : '<button class="birincil" data-dyx="ekle">Ekle</button><button class="bag" data-dyx="temizle">Temizle</button>'}</div>
         <div id="idBilgi" class="id-bilgi"></div>
@@ -1182,6 +1195,19 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
       const n = F.gun.length * F.dilim.length; DY.sec = ''; F.gun = []; F.dilim = []; DY.degisti = true;
       try { await dyKaydet(); dyCiz(); bilgi(`${n} ders saati ${x === 'ekle' ? 'eklendi' : 'güncellendi'} ve kaydedildi.` + (dyCakisma().size ? ' Çakışma var, kırmızı kutulara bakın.' : ''), dyCakisma().size ? 'kirmizi' : 'yesil'); } catch (e) { dyCiz(); bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); }
       return true; }
+    if (x === 'oto') {
+      const ad = F.ogretmen.trim(), n = Math.max(1, Math.min(20, +F.saat || 2)); if (!ad) { bilgi('Önce öğretmeni yazın.', 'kirmizi'); return true; }
+      const L = dyOgrGunler(ad); if (!L.length) { bilgi('Bu öğretmen ders programında bulunamadı; günleri elle seçin.', 'kirmizi'); return true; }
+      const dolu = (g, s) => DY.M.K.some(k => +k.gun === g && +k.dilim === s && ((ad && dersAn(k.ogretmen || '') === dersAn(ad)) || (F.salon.trim() && dersAn(k.salon || '') === dersAn(F.salon.trim()))));
+      const Y = []; for (const x_ of L.filter(x_ => x_.cikista).concat(L.filter(x_ => !x_.cikista))) { for (let s_ = 1; s_ <= DY.D.length && Y.length < n; s_++) if (!dolu(x_.gun, s_)) Y.push([x_.gun, s_]); if (Y.length >= n) break; }
+      if (!Y.length) { bilgi('Uygun boş saat bulunamadı.', 'kirmizi'); return true; }
+      const ders = F.ders.trim() || zmBrans((ogretmenler().find(o => o.ad === ad) || {}).brans || '');
+      for (const [g, s_] of Y) DY.M.K.push({ id: Math.random().toString(36).slice(2, 10), gun: g, dilim: s_, ders, ogretmen: ad, grup: F.grup.trim(), salon: F.salon.trim(), oto: 1 });
+      const cik = Y.filter(([g]) => (L.find(x_ => x_.gun === g) || {}).cikista).length;
+      DY.degisti = true; try { await dyKaydet(); } catch (e) {}
+      Object.assign(F, { gun: [], dilim: [] }); dyCiz();
+      bilgi(`${Y.length} saat yerleştirildi: ${[...new Set(Y.map(([g]) => DY_GUN[g]))].join(', ')}.` + (cik < Y.length ? ` ${Y.length - cik} saat, öğretmenin çıkışta okulda olmadığı güne kondu.` : '') + (Y.length < n ? ` ${n - Y.length} saat için uygun yer bulunamadı.` : ''), cik < Y.length || Y.length < n ? 'kirmizi' : 'yesil');
+      return true; }
     if (x === 'sil') { if (!await onayla('Bu ders saati programdan silinsin mi?')) return true; DY.M.K = DY.M.K.filter(k => k.id !== DY.sec); DY.sec = ''; Object.assign(F, { gun: [], dilim: [] }); DY.degisti = true; try { await dyKaydet(); } catch (e) {} dyCiz(); bilgi('Silindi.', 'yesil'); return true; }
     if (x === 'vazgec' || x === 'temizle') { DY.sec = ''; Object.assign(F, { ders: '', ogretmen: '', grup: '', salon: '', gun: [], dilim: [] }); dyCiz(); return true; }
     if (x === 'kaydet') { try { await dyKaydet(); bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
@@ -1192,7 +1218,9 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
   }
   function dyGirdi(ev) { const t = ev.target, d = t.dataset;
     if (d.dyfiltre) { DY.filtre = t.value; const p = t.selectionStart; dyCiz(); const y = kok.querySelector('[data-dyfiltre]'); if (y) { y.focus(); y.setSelectionRange(p, p); } return; }
-    if (d.dyf) { DY.f[d.dyf] = t.value; if (d.dyf === 'ogretmen' && !DY.f.ders) { const o = ogretmenler().find(o => o.ad === t.value); if (o && o.brans) { DY.f.ders = zmBrans(o.brans); const i = kok.querySelector('[data-dyf="ders"]'); if (i) i.value = DY.f.ders; } } } }
+    if (d.dyf) { DY.f[d.dyf] = t.value; if (d.dyf === 'ogretmen') { const b_ = kok.querySelector('#dyGunBilgi'); if (b_) b_.textContent = dyGunYazi(t.value.trim()); }
+      if (d.dyf === 'ders') DY.f.dersOto = false;
+      if (d.dyf === 'ogretmen' && (!DY.f.ders || DY.f.dersOto)) { const o = ogretmenler().find(o => o.ad === t.value); if (o && o.brans) { DY.f.ders = zmBrans(o.brans); DY.f.dersOto = true; const i = kok.querySelector('[data-dyf="ders"]'); if (i) i.value = DY.f.ders; } } } }
 
   // ================================================================ 9) DEVAMSIZLIK (26 Kasım 2026)
   // Kaynak: e-Okul devamsızlık Excel'i (özürlü / özürsüz / toplam gün). Kurallar: Ortaöğretim Kurumları Yönetmeliği md. 36 (lise):
