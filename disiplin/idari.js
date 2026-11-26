@@ -32,7 +32,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1247,6 +1247,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
     if (EV.sek === 'faaliyet') return faCiz();
     if (EV.sek === 'gec') return gkCiz();
     if (EV.sek === 'donem') return dsCiz();
+    if (EV.sek === 'kayit') return kyCiz();
     const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
     kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
       evSekmeler() + `
@@ -1261,7 +1262,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
   }
 
   // ---- Evraklar sekmeleri
-  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi'], ['donem', 'Dönem Sonu İş ve İşlemleri']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
+  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi'], ['donem', 'Dönem Sonu İş ve İşlemleri'], ['kayit', 'Öğrenci Kayıt Dosyası']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
   // ---- İzin Belgesi (Veli Beyanıdır) · okulun basılı formunun aynısı; öğrenci seçilirse şube, numara ve ad doldurulur
   function izCiz() {
     const S = evSiniflar(), L = OGR.filter(o => o.sinif === EV.izSinif).sort((a, b) => (+a.no) - (+b.no));
@@ -1311,6 +1312,74 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
         <div id="idBilgi" class="id-bilgi"></div></div>
       <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="faOniz" title="Faaliyetli öğrenci belgesi önizleme" style="width:100%;height:1100px;border:0;background:#fff"></iframe></div>`;
     const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge();
+  }
+  // Öğrenci Kayıt Dosyası (26 Kasım 2026): kayda gelen veliye verilen dosya. Vizyon, misyon ve okul bilgileri okulun resmî sitesinden
+  // (umraniyemerkezal.meb.k12.tr › Okulumuz Hakkında) aynen alındı. Öğrenci ve veli bilgileri boş form olarak elle doldurulur.
+  const KY = { kopya: 1 };
+  function kyCiz() {
+    kok.innerHTML = bas('Evraklar', 'Öğrenci Kayıt Dosyası', '<button class="birincil" data-kyx="yazdir">Yazdır</button>') + evSekmeler() +
+      `<div class="kart id-not">Kayıt için gelen velilere verilen dosya: kapak, okulumuzun vizyonu, misyonu ve tanıtımı (okulun resmî sitesinden), öğrenci bilgi formu, veli bilgi formu, veli beyanı ve kişisel verilerin korunması bilgilendirmesi. Formlar veli tarafından elle doldurulur.</div>
+      <div class="kart"><div class="id-form"><label>Kaç dosya basılsın<input type="number" min="1" max="60" data-ky="kopya" value="${KY.kopya}"></label></div><div id="idBilgi" class="id-bilgi"></div></div>
+      <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="kyOniz" title="Öğrenci kayıt dosyası önizleme" style="width:100%;height:1150px;border:0;background:#fff"></iframe></div>`;
+    const fr = kok.querySelector('#kyOniz'); if (fr) fr.srcdoc = kyBelge(1);
+  }
+  function kyBelge(kopya) {
+    const y = egitimYili(), L = LOGO(), sat = (ad, gen) => `<tr><th>${ad}</th><td${gen ? ' colspan="3"' : ''}></td></tr>`, cift = (a, b) => `<tr><th>${a}</th><td></td><th>${b}</th><td></td></tr>`;
+    const ust = `<div class="ust"><img class="lg" src="${L}" alt="">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>`;
+    const kisi = ad => `<h3>${ad}</h3><table class="f">${cift('Adı soyadı', 'T.C. kimlik no')}${cift('Doğum tarihi', 'Sağ / vefat')}${cift('Öğrenim durumu', 'Mesleği')}${sat('İş yeri ve adresi', 1)}${cift('Cep telefonu', 'E-posta')}</table>`;
+    const tek = () => `
+<section class="sy kapak"><img src="${L}" alt="" class="kl"><div class="kb">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+  <div class="kt">ÖĞRENCİ KAYIT DOSYASI</div><div class="ky">${esc(y)} EĞİTİM ÖĞRETİM YILI</div>
+  <table class="f kf"><tr><th>Öğrencinin adı soyadı</th><td></td></tr><tr><th>Sınıfı / şubesi</th><td></td></tr><tr><th>Okul numarası</th><td></td></tr><tr><th>Kayıt tarihi</th><td>……/……/20……</td></tr></table>
+  <div class="kalt">Yamanevler Mah. Küçüksu Cad. No:32 Ümraniye / İSTANBUL<br>Telefon: (216) 634 04 16 · Faks: (216) 632 88 25 · umraniyemerkezal.meb.k12.tr</div></section>
+<section class="sy">${ust}<h1>OKULUMUZ</h1>
+  <h2>Vizyonumuz</h2><p class="vm">Toplumu çağdaş uygarlık düzeyine taşımaya aday, birey olabilecek özgüvene sahip, sosyal yönü güçlü, erdemli, anlayışı gelişmiş, başkalarının haklarına saygılı, Vatanını ve Milletini seven bireyler yetiştirmektir.</p>
+  <h2>Misyonumuz</h2><p class="vm">Öğrencileri sadece üniversiteye değil aynı zamanda yaşamın her alanında ayakta kalabilen, kendi iradesini ortaya koyabilen, teknolojik, bilimsel, kültürel, modern dünya ihtiyaçlarını benimsemiş öncü ve lider insan olarak yetiştirmektir.</p>
+  <h2>Okulumuzu tanıyalım</h2>
+  <p>Ümraniye Merkez Anadolu Lisesi, 1965 yılından bu yana Ümraniye'de eğitim veren köklü bir ortaöğretim kurumudur. Okulumuz Millî Eğitim Bakanlığına bağlı bir Anadolu lisesi olup dört yıllık eğitim süresinde öğrencilerimizi yükseköğretime ve hayata hazırlar.</p>
+  <table class="f bilgi"><tr><th>Yabancı dil</th><td>İngilizce</td></tr><tr><th>Eğitim ortamları</th><td>Derslikler, fizik laboratuvarı, kütüphane, çok amaçlı salon, revir</td></tr>
+  <tr><th>Altyapı</th><td>Doğalgaz ile ısınma, Fatih Projesi fiber internet bağlantısı</td></tr><tr><th>Servis</th><td>Okul servis hizmeti vardır</td></tr>
+  <tr><th>Ulaşım</th><td>Üsküdar – Sancaktepe metro hattı Yamanevler istasyonu; İETT otobüsleri Haldun Alagaş durağı</td></tr>
+  <tr><th>Adres</th><td>Yamanevler Mah. Küçüksu Cad. No:32 Ümraniye / İSTANBUL</td></tr><tr><th>Telefon / faks</th><td>(216) 634 04 16 / (216) 632 88 25</td></tr><tr><th>İnternet sitesi</th><td>umraniyemerkezal.meb.k12.tr</td></tr></table>
+  <h2>Velilerimizden beklentilerimiz</h2><ul>
+  <li>Öğrencinin okula düzenli ve zamanında devamını sağlamak; devamsızlığı e-Okul Veli Bilgilendirme Sistemi'nden takip etmek.</li>
+  <li>Adres, telefon ve e-posta bilgilerinde değişiklik olduğunda okul idaresine hemen bildirmek.</li>
+  <li>Veli toplantılarına katılmak; sınıf rehber öğretmeni ve okul rehberlik servisiyle iş birliği yapmak.</li>
+  <li>Öğrencinin sağlık durumu, kullandığı ilaçlar ve özel gereksinimleri hakkında okulu bilgilendirmek.</li>
+  <li>Okulun kılık-kıyafet, disiplin ve güvenlik kurallarına öğrencinin uymasını desteklemek.</li></ul></section>
+<section class="sy">${ust}<h1>ÖĞRENCİ BİLGİ FORMU</h1>
+  <div class="foto">Fotoğraf</div>
+  <table class="f ogr">${sat('Adı soyadı', 1)}${cift('T.C. kimlik no', 'Cinsiyeti')}${cift('Doğum yeri', 'Doğum tarihi')}${sat('Mezun olduğu ortaokul', 1)}${cift('Yerleştirme türü', 'Kayıt olduğu sınıf')}</table>
+  <table class="f">${sat('Ev adresi', 1)}<tr><th></th><td colspan="3"></td></tr>${cift('Öğrencinin cep telefonu', 'Öğrencinin e-postası')}${cift('Kardeş sayısı', 'Kaçıncı çocuk')}${sat('Okulumuzda okuyan kardeşi (adı, sınıfı)', 1)}${cift('Anne-baba durumu', 'Velayet kimde')}${cift('Kiminle yaşıyor', 'Servis kullanacak mı')}</table>
+  <h3>Sağlık bilgileri</h3><table class="f">${sat('Sürekli bir hastalığı var mı', 1)}${sat('Sürekli kullandığı ilaç', 1)}${sat('Alerjisi (ilaç, besin vb.)', 1)}${sat('Kan grubu', 1)}${sat('Okulun bilmesi gereken özel durum', 1)}</table>
+  <h3>İlgi ve yetenekler</h3><table class="f">${sat('Hobileri, ilgi alanları', 1)}${sat('Lisanslı spor / sanat dalı', 1)}${sat('Katılmak istediği kulüp', 1)}${sat('Düşündüğü meslek / alan', 1)}</table></section>
+<section class="sy">${ust}<h1>VELİ BİLGİ FORMU</h1>
+  ${kisi('Annenin bilgileri')}${kisi('Babanın bilgileri')}
+  <h3>Velinin bilgileri <span class="ince">(anne veya baba dışında biri veli ise)</span></h3><table class="f">${cift('Adı soyadı', 'Yakınlığı')}${cift('T.C. kimlik no', 'Cep telefonu')}${sat('Adresi', 1)}</table>
+  <h3>Acil durumda ulaşılacak kişi</h3><table class="f">${cift('Adı soyadı', 'Yakınlığı')}${cift('Cep telefonu', 'Diğer telefon')}</table>
+  <h3>Öğrenciyi okuldan alabilecek kişiler</h3><table class="f"><tr><th class="c">Adı soyadı</th><th class="c">Yakınlığı</th><th class="c">Telefonu</th></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></table></section>
+<section class="sy">${ust}<h1>VELİ BEYANI VE BİLGİLENDİRME</h1>
+  <h2>Veli beyanı</h2>
+  <p>Bu dosyada verdiğim bilgilerin doğru olduğunu; adres, telefon ve diğer bilgilerimde değişiklik olduğunda okul idaresine bildireceğimi; öğrencimin okula düzenli devamını takip edeceğimi, okul kurallarına uymasını destekleyeceğimi ve veli toplantılarına katılacağımı beyan ederim.</p>
+  <h2>Kişisel verilerin korunması hakkında bilgilendirme</h2>
+  <p>6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında bu formlarla alınan öğrenci ve veli bilgileri; öğrencinin kayıt, eğitim öğretim, rehberlik, sağlık, güvenlik ve iletişim işlemlerinin yürütülmesi amacıyla Ümraniye Merkez Anadolu Lisesi Müdürlüğünce işlenir ve saklanır. Bilgiler mevzuatın öngördüğü durumlar dışında üçüncü kişilerle paylaşılmaz. Veli, Kanun'un 11. maddesindeki haklarını okul müdürlüğüne yazılı başvuruyla kullanabilir.</p>
+  <h2>Fotoğraf ve görüntü izni</h2>
+  <p>Okulda yapılan eğitim, sosyal, kültürel ve sportif etkinliklerde çekilen ve öğrencimin yer aldığı fotoğraf ve görüntülerin okulun resmî internet sitesinde ve resmî tanıtım çalışmalarında kullanılmasına</p>
+  <div class="izin"><span>☐ İzin veriyorum</span><span>☐ İzin vermiyorum</span></div>
+  <div class="imz"><div>……/……/20……<br><br>Velinin adı soyadı<br><br>İmzası</div></div>
+  <h2 style="margin-top:12mm">Okul tarafından doldurulacaktır</h2><table class="f">${cift('Dosyayı teslim alan', 'Teslim tarihi')}${cift('e-Okul kaydı yapıldı', 'Sınıf / şube')}</table>
+  <div class="imz"><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`;
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci Kayıt Dosyası</title><style>
+@page{size:A4 portrait;margin:14mm 16mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:"Times New Roman",Times,serif;font-size:11pt;color:#000;margin:0;padding:14mm 16mm}@media print{body{padding:0}}
+.sy{page-break-after:always;position:relative}.sy:last-child{page-break-after:auto}.ust{position:relative;text-align:center;font-weight:bold;line-height:1.35;min-height:20mm}.lg{position:absolute;left:0;top:0;height:20mm}
+h1{text-align:center;font-size:14pt;letter-spacing:1px;margin:5mm 0 4mm;padding-bottom:2mm;border-bottom:.6mm double #000}h2{font-size:12pt;margin:5mm 0 1.5mm;color:#9b1c1c}h3{font-size:11pt;margin:4mm 0 1.5mm}.ince{font-weight:normal;font-size:10pt}
+p{line-height:1.5;text-align:justify;margin:1.5mm 0}.vm{font-style:italic;border-left:1mm solid #9b1c1c;padding:1mm 0 1mm 4mm}ul{margin:1mm 0;padding-left:6mm}li{line-height:1.5;margin:.6mm 0}
+table.f{border-collapse:collapse;width:100%}table.f th,table.f td{border:.3mm solid #000;padding:1.6mm 2mm;height:8.5mm;font-size:10.5pt;vertical-align:middle;text-align:left}table.f th{font-weight:bold;width:26%;background:#f2f2f2}table.f td{width:24%}table.f th.c{text-align:center;width:auto}
+table.bilgi th{width:28%}table.bilgi td{height:auto}.ogr{width:calc(100% - 36mm)!important}.foto{position:absolute;right:0;top:46mm;width:32mm;height:40mm;border:.3mm solid #000;display:flex;align-items:center;justify-content:center;color:#666;font-size:10pt}
+.imz{display:flex;justify-content:flex-end;margin-top:8mm;text-align:center}.imz div{width:70mm}.izin{display:flex;gap:20mm;margin:3mm 0 0 6mm;font-size:12pt}
+.kapak{text-align:center;padding-top:22mm;min-height:250mm}.kl{height:52mm}.kb{font-weight:bold;line-height:1.5;margin-top:8mm;font-size:12pt}.kt{font-size:26pt;font-weight:bold;letter-spacing:2px;margin:28mm 0 3mm;color:#13305a}.ky{font-size:13pt;margin-bottom:22mm}
+.kf{width:120mm!important;margin:0 auto}.kf th{width:45%!important}.kf td{width:55%!important}.kalt{position:absolute;bottom:0;left:0;right:0;font-size:10pt;line-height:1.5;border-top:.3mm solid #000;padding-top:3mm}
+</style></head><body>${Array.from({ length: Math.max(1, Math.min(60, +kopya || 1)) }, tek).join('')}</body></html>`;
   }
   // Dönem Sonu İş ve İşlemleri (26 Kasım 2026): okul matbularından derlenen sabit metin; yalnız tarihler ve saatler değiştirilir.
   // Tarihler ders kesimine göre önerilir; kesim değişince elle değiştirilmemiş tarihler birlikte kayar. Kayıt: umal_idari 'evrak:donemsonu:<yıl>:<1|2>'
@@ -1463,6 +1532,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 </style></head><body>${Array.from({ length: sayfa }, (_, i) => tek(i)).join('')}</body></html>`;
   }
   function evGirdi(ev) { const d = ev.target.dataset;
+    if (d.ky) { KY.kopya = Math.max(1, Math.min(60, +ev.target.value || 1)); return; }
     if (d.ds) { const V = DS.V[DS.d] = DS.V[DS.d] || { el: {} }; V.el = V.el || {}; const v = ev.target.value.trim(); if (v) V.el[d.ds] = v; else delete V.el[d.ds]; EV.degisti = true;
       if (ev.target.type === 'date') { dsCiz(); return; } const fr = kok.querySelector('#dsOniz'); if (fr) fr.srcdoc = dsBelge(); return; }
     if (d.gk) { EV.gk[d.gk] = ev.target.value; const fr = kok.querySelector('#gkOniz'); if (fr) fr.srcdoc = gkBelge(); return; }
@@ -1499,6 +1569,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (d.evsek) { if (EV.sek === 'rehber' && EV.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return; EV.sek = d.evsek; evCiz(); return; }
     if (d.izsinif != null) { EV.izSinif = d.izsinif; EV.izNo = ''; izCiz(); return; }
     if (d.izno) { EV.izNo = d.izno; izCiz(); return; }
+    if (d.kyx === 'yazdir') { C.belgeOnizle(kyBelge(KY.kopya), 'Öğrenci kayıt dosyası', false); return; }
     if (d.dsd) { DS.d = d.dsd; dsCiz(); return; }
     if (d.dsx === 'yazdir') { C.belgeOnizle(dsBelge(), 'Dönem sonu iş ve işlemleri', false); return; }
     if (d.dsx === 'sifirla') { if (!await onayla('Bütün tarih ve saatler önerilen değerlere dönsün mü?')) return; DS.V[DS.d] = { el: {} }; EV.degisti = true; dsCiz(); return; }
