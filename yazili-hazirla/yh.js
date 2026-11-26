@@ -117,6 +117,8 @@
 .yh-ca.kareli{box-sizing:content-box;width:calc(100% - 6.6mm - .5mm)}
 @supports (width:round(down,100%,5mm)){.yh-ca.kareli{width:round(down,calc(100% - 6.6mm - .5mm),5mm)}}
 .yh-ca.kareli{background-position:0 0;background-origin:padding-box}
+.yh-s[data-tur="metin"] .yh-ca{margin-left:0}.yh-s[data-tur="metin"] .yh-ca.kareli{width:calc(100% - .5mm)}
+@supports (width:round(down,100%,5mm)){.yh-s[data-tur="metin"] .yh-ca.kareli{width:round(down,calc(100% - .5mm),5mm)}}
 .yh-ca.cizgi>i{display:block;height:8mm;border-bottom:.25mm solid #9a9a9a}
 .yh-ca.kareli{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M0 .5H20M.5 0V20' stroke='%23cfcfcf' stroke-width='1' fill='none'/%3E%3C/svg%3E");background-size:5mm 5mm;border:.25mm solid #bbb}
 .yh-son{display:flex;justify-content:space-between;align-items:flex-end;padding-top:5mm;font-size:9.5pt;color:#111}
@@ -624,6 +626,7 @@ body.yh-acik #pencere{z-index:70}
 
   function editorAc(b) {
     stilKoy(); acilirKapat();
+    (b.sorular || []).forEach(s => { if (s.tur === 'metin' && s.ca && s.ca.tur && s.ca.tur !== 'yok') { s.tur = 'acik'; s.puan = +s.puan || 10; delete s.kutu; } });   // K-1010
     B = b; B.gorseller = B.gorseller || {}; EL = new Map(); SONEL = null; secId = (B.sorular[0] || {}).id || null; secFig = null; gecmis = [JSON.stringify(B)]; ileri = [];
     if (EK) EK.remove();
     EK = document.createElement('div'); EK.className = 'yh-tamekran'; document.body.appendChild(EK); document.body.classList.add('yh-acik');
@@ -827,7 +830,8 @@ body.yh-acik #pencere{z-index:70}
       <div class="yh-satir"><label>Cevaplar</label>${s.maddeler.map((x, i) => `<button class="yh-cip ${(s.dyCevap || [])[i] ? 'on' : ''}" data-dyc="${i}">${i + 1}: ${esc((s.dyCevap || [])[i] || '?')}</button>`).join('')}</div>`;
     if (s.tur === 'eslestir') ozel = `<div class="yh-satir"><label>Satır</label><button class="yh-cip" data-esl="+">+ ekle</button><button class="yh-cip" data-esl="-">− çıkar</button></div>`;
     if (s.tur === 'bosluk') ozel = `<div class="yh-satir"><label>Boşluk</label><button class="yh-cip" data-bosluk="1">Yazının içine …… koy</button></div>`;
-    if (s.tur === 'metin') ozel = `<div class="yh-satir"><label>Görünüm</label>${cip('Düz', '0', !s.kutu, 'data-kutu')}${cip('Çerçeveli', '1', !!s.kutu, 'data-kutu')}</div>`;
+    if (s.tur === 'metin') ozel = `<div class="yh-satir"><label>Görünüm</label>${cip('Düz', '0', !s.kutu, 'data-kutu')}${cip('Çerçeveli', '1', !!s.kutu, 'data-kutu')}</div>
+      <div class="yh-satir"><label></label><button class="yh-cip" data-soruyap="1">Soruya çevir (numara ve puan ver)</button></div>`;
     return `<div class="yh-kart"><h4>${s.tur === 'metin' ? 'Metin / yönerge' : no + '. soru'} · <span style="color:var(--soluk);font-weight:500">${esc(TURLER[s.tur].ad)}</span></h4>
       ${s.tur !== 'metin' ? `<div class="yh-satir"><label>Puan</label><input type="number" min="0" max="100" step="0.5" value="${+s.puan || 0}" data-puan="${esc(s.id)}"></div>` : ''}
       ${ozel}
@@ -997,7 +1001,10 @@ body.yh-acik #pencere{z-index:70}
       if (b.dataset.esl && s) { modelOku(); if (b.dataset.esl === '+') { s.sol.push(''); s.sag.push(''); } else if (s.sol.length > 1) { const od = sonOdak && sonOdak.dataset && /^(sol|sag)$/.test(sonOdak.dataset.alan || '') && EL.get(s.id) && EL.get(s.id).contains(sonOdak) ? +sonOdak.dataset.i : s.sol.length - 1; s.sol.splice(od, 1); s.sag.splice(od, 1); } soruYenile(s); degisti(true); return; }
       if (b.dataset.bosluk) { metinKoy(' ……………… '); return; }
       if (b.dataset.kutu != null && s) { modelOku(); s.kutu = b.dataset.kutu === '1'; soruYenile(s); degisti(true); return; }
-      if (b.dataset.ca && s) { modelOku(); s.ca = { tur: b.dataset.ca, boy: s.ca && s.ca.boy ? s.ca.boy : (b.dataset.ca === 'cizgi' ? 5 : 4) }; soruYenile(s); degisti(true); return; }
+      if (b.dataset.ca && s) { modelOku(); s.ca = { tur: b.dataset.ca, boy: s.ca && s.ca.boy ? s.ca.boy : (b.dataset.ca === 'cizgi' ? 5 : 4) };
+        if (s.tur === 'metin' && s.ca.tur !== 'yok') { s.tur = 'acik'; s.puan = +s.puan || 10; delete s.kutu; durum('Cevap alanı eklendi; metin soru oldu, numara ve puan verildi'); }   // K-1010: cevap alanı olan metin bir sorudur
+        soruYenile(s); degisti(true); sagCiz(); setTimeout(diz, 40); return; }
+      if (b.dataset.soruyap && s && s.tur === 'metin') { modelOku(); s.tur = 'acik'; s.puan = +s.puan || 10; delete s.kutu; if (!s.ca || s.ca.tur === 'yok') s.ca = { tur: 'cizgi', boy: 5 }; soruYenile(s); degisti(true); sagCiz(); setTimeout(diz, 40); return; }
       if (b.dataset.sis && s) { await soruIslem(b.dataset.sis, s); return; }
       if (b.dataset.tb) { tabloIslem(b.dataset.tb); return; }
       if (b.dataset.is) { await belgeIslem(b.dataset.is); return; }
