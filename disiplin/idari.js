@@ -25,12 +25,13 @@
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7zM7 7.5h0M17 7.5h0',
     evrak: 'M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5ZM8 12.5h8M8 15.5h5',
     zumre: 'M5 3.5h10l4 4V20.5H5zM15 3.5V7.5h4M8 11h8M8 14h8M8 17h5',
+    devam: 'M4 5.5h16v15H4zM4 10h16M8.5 3.5v4M15.5 3.5v4M9 13.5l6 5M15 13.5l-6 5',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1089,6 +1090,124 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   function zmGirdi(ev) { const t = ev.target, d = t.dataset; if (!d.zm || !ZM.z) return; const x = zmKayit(ZM.V[ZM.don], ZM.z);
     if (d.zm === 'gundem') { if (t.value.trim() === zmDonemGundem(ZM.V[ZM.don], ZM.don).trim()) delete x.gundem; else x.gundem = t.value; } else x[d.zm] = t.value; ZM.degisti = true; }
 
+  // ================================================================ 9) DEVAMSIZLIK (26 Kasım 2026)
+  // Kaynak: e-Okul devamsızlık Excel'i (özürlü / özürsüz / toplam gün). Kurallar: Ortaöğretim Kurumları Yönetmeliği md. 36 (lise):
+  //  · özürsüz 10 günü ya da toplam sınırı (genel 30; özel durumlarda 40 / 60 / 70) geçen öğrenci devamsızlıktan başarısız sayılır
+  //  · velisine devamsızlığın 5., 15., 25. günlerinde (özel durumlarda ayrıca 40. ve 55.) yazılı bildirim yapılır, tebligat kayda geçirilir
+  //  · özürsüz devamsızlığı 5 günü geçen öğrenci o dönem teşekkür / takdir belgesi alamaz
+  // Veri: umal_idari 'devam:<yıl>' → { tarih, dosya, R:{no:{ol, oz, top, ad, sinif}}, ozel:{no:tür}, teb:{no:{gün: tarih}} }
+  const DV_OZEL = { '': ['Genel', 10, 30, false], yakin: ['Birinci derece yakın kaybı', 10, 40, true], tedavi: ['Sürekli / yatarak tedavi, organ nakli', 10, 60, true], koruma: ['Koruma-bakım altında ya da tutuklu', 10, 60, true], kaynastirma: ['Tam zamanlı kaynaştırma / özel eğitim', 20, 70, true] };
+  const DV = { M: null, degisti: false, filtre: 'uyari', sinif: '', ara: '' };
+  const dvSinir = no => DV_OZEL[(DV.M.ozel || {})[no] || ''] || DV_OZEL[''];
+  const dvGunler = no => dvSinir(no)[3] ? [5, 15, 25, 40, 55] : [5, 15, 25];
+  const dvS = x => String(Math.round(x * 10) / 10).replace('.', ',');
+  function dvDurum(no) {   // öğrencinin devamsızlık durumu ve uyarıları
+    const d = DV.M.R[no], [, oS, tS] = dvSinir(no), U = [];
+    const bas = d.oz > oS || d.top > tS, yakin = !bas && (d.oz >= oS - 2 || d.top >= tS - 5);
+    if (bas) U.push(['kir', d.oz > oS ? `Özürsüz ${oS} günü geçti` : `Toplam ${tS} günü geçti`]);
+    else if (yakin) U.push(['tur', 'Sınıra yakın · ' + [d.oz >= oS - 2 ? `özürsüz ${dvS(oS - d.oz)}` : '', d.top >= tS - 5 ? `toplam ${dvS(tS - d.top)}` : ''].filter(Boolean).join(', ') + ' gün hakkı kaldı']);
+    const teb = (DV.M.teb || {})[no] || {}, bek = dvGunler(no).filter(g => d.top >= g && !teb[g]);
+    if (bek.length) U.push(['sar', `Veliye bildirim yapılmadı · ${bek.map(g => g + '. gün').join(', ')}`]);
+    if (d.oz > 5) U.push(['gri', 'Teşekkür / takdir belgesi alamaz']);
+    return { d, bas, yakin, bek, U, risk: (bas ? 1000 : yakin ? 500 : 0) + (bek.length ? 200 : 0) + d.oz * 3 + d.top };
+  }
+  async function devam() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    try { DV.M = (await oku(`devam:${egitimYili()}`)) || { tarih: '', dosya: '', R: {}, ozel: {}, teb: {} }; } catch (e) { kok.innerHTML = bas('Devamsızlık') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    DV.M.R = DV.M.R || {}; DV.M.ozel = DV.M.ozel || {}; DV.M.teb = DV.M.teb || {}; DV.degisti = false; dvCiz();
+  }
+  function dvCiz() {
+    const M = DV.M, nl = Object.keys(M.R), ob = new Map(OGR.map(o => [String(o.no), o]));
+    const L = nl.map(no => { const o = ob.get(no) || {}, d = M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', ...dvDurum(no) }; });
+    const say = { bas: L.filter(x => x.bas).length, yakin: L.filter(x => x.yakin).length, bek: L.filter(x => x.bek.length).length, belge: L.filter(x => x.d.oz > 5).length };
+    const SL = [...new Set(L.map(x => x.sinif).filter(Boolean))].sort(sinifSira), a = norm(DV.ara);
+    const G = L.filter(x => (DV.filtre === 'hepsi' || (DV.filtre === 'uyari' ? x.U.length && (x.bas || x.yakin || x.bek.length) : DV.filtre === 'bas' ? x.bas : DV.filtre === 'yakin' ? x.yakin : DV.filtre === 'bek' ? x.bek.length : x.d.oz > 5))
+      && (!DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)) && (!a || norm(x.ad + ' ' + x.no).includes(a))).sort((p, q) => q.risk - p.risk || sinifSira(p.sinif, q.sinif));
+    const eski = M.tarih && (new Date(bugun()) - new Date(M.tarih)) / 864e5 > 7;
+    const kutu = (k, n, ad, renk) => `<button data-dvf="${k}" class="kart" style="margin:0;text-align:left;cursor:pointer;${DV.filtre === k ? `border-color:${renk};background:${renk}14` : ''}"><b style="display:block;font-size:26px;color:${renk}">${n}</b><span class="soluk kucuk">${ad}</span></button>`;
+    const etR = { kir: 'background:rgba(239,68,68,.16);color:#fca5a5', tur: 'background:rgba(251,146,60,.16);color:#fdba74', sar: 'background:rgba(255,212,59,.14);color:#ffe066', gri: 'background:rgba(148,163,184,.14);color:#cbd5e1' };
+    kok.innerHTML = bas('Devamsızlık', `${egitimYili()} · e-Okul devamsızlık listesi · Ortaöğretim Kurumları Yönetmeliği md. 36`, nl.length ? '<button class="ikincil" data-dvx="liste">Uyarı listesini yazdır</button><button class="birincil" data-dvx="kaydet">Kaydet</button>' : '') +
+      `<div class="kart"><div class="id-satir" style="flex-wrap:wrap;gap:10px"><label class="ikincil" style="cursor:pointer">e-Okul devamsızlık Excel'ini yükle<input type="file" data-dvdosya="1" accept=".xls,.xlsx,.csv,.html,.htm,.xml" multiple style="display:none"></label>
+        <span class="soluk">${nl.length ? `${nl.length} öğrenci · ${esc(tGos(M.tarih))} tarihli liste${M.dosya ? ' · ' + esc(M.dosya) : ''}` : 'Henüz liste yüklenmedi'}</span></div>
+        ${eski ? `<div style="margin-top:8px;color:#ffe066">Liste ${Math.floor((new Date(bugun()) - new Date(M.tarih)) / 864e5)} gün önce yüklendi; uyarıların doğru olması için e-Okul'dan güncel listeyi alıp yükleyin.</div>` : ''}
+        <div class="soluk kucuk" style="margin-top:8px">e-Okul › Devamsızlık işlemleri › devamsızlık listesini (Excel) indirip buraya yükleyin. Okul No ile Özürlü / Özürsüz sütunları kendiliğinden bulunur; yeni liste eskisinin üstüne yazılır, özel durumlar ve veli bildirim kayıtları korunur.</div><div id="idBilgi" class="id-bilgi"></div></div>
+      ${nl.length ? `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0">${kutu('uyari', say.bas + say.yakin + L.filter(x => !x.bas && !x.yakin && x.bek.length).length, 'Uyarı alan öğrenci', '#22e8ff')}${kutu('bas', say.bas, 'Devamsızlıktan başarısız (sınır geçildi)', '#ef4444')}${kutu('yakin', say.yakin, 'Sınıra yakın', '#fb923c')}${kutu('bek', say.bek, 'Veliye bildirim bekliyor', '#ffd43b')}${kutu('belge', say.belge, 'Teşekkür / takdir alamaz (özürsüz > 5)', '#94a3b8')}</div>
+      <div class="kart"><div class="id-satir" style="flex-wrap:wrap;gap:8px"><input data-dvara="1" placeholder="Ad ya da numara" value="${esc(DV.ara)}" style="max-width:220px">
+        <div class="cipler"><button class="cip ${!DV.sinif ? 'secili' : ''}" data-dvs="">Tümü</button>${SV.map(v => `<button class="cip ${DV.sinif === v ? 'secili' : ''}" data-dvs="${v}">${v}. sınıflar</button>`).join('')}</div>
+        <select data-dvsinif="1" style="max-width:130px"><option value="">Şube</option>${SL.map(s => `<option ${DV.sinif === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select><button class="bag" data-dvf="hepsi">Bütün öğrenciler</button><span class="soluk kucuk">${G.length} öğrenci</span></div>
+        <div style="overflow-x:auto;margin-top:10px"><table class="liste"><thead><tr><th>Şube</th><th>No</th><th>Öğrenci</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır</th><th>Uyarılar</th><th>Veli bildirimi</th><th></th></tr></thead><tbody>
+        ${G.slice(0, 400).map(x => { const [ozAd, oS, tS] = dvSinir(x.no), teb = (M.teb || {})[x.no] || {};
+          return `<tr><td>${esc(x.sinif)}</td><td>${esc(x.no)}</td><td><b>${esc(C.baslik(x.ad))}</b></td><td class="c">${dvS(x.d.ol)}</td><td class="c" style="${x.d.oz > oS ? 'color:#fca5a5;font-weight:800' : ''}">${dvS(x.d.oz)}</td><td class="c" style="${x.d.top > tS ? 'color:#fca5a5;font-weight:800' : ''}"><b>${dvS(x.d.top)}</b></td>
+            <td><select data-dvozel="${esc(x.no)}" title="Özel durum (md. 36)" style="max-width:150px">${Object.entries(DV_OZEL).map(([k, v]) => `<option value="${k}" ${((M.ozel || {})[x.no] || '') === k ? 'selected' : ''}>${v[1]} / ${v[2]} · ${v[0]}</option>`).join('')}</select></td>
+            <td>${x.U.map(([r, t]) => `<span style="display:inline-block;margin:1px 3px 1px 0;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;${etR[r]}">${esc(t)}</span>`).join('') || '<span class="soluk">—</span>'}</td>
+            <td>${dvGunler(x.no).filter(g => x.d.top >= g).map(g => `<button class="cip ${teb[g] ? 'secili' : ''}" data-dvteb="${esc(x.no)}|${g}" title="${teb[g] ? tGos(teb[g]) + ' tarihinde bildirildi' : 'Bildirim yapıldı olarak işaretle'}">${g}. gün${teb[g] ? ' ✓' : ''}</button>`).join(' ') || '<span class="soluk">—</span>'}</td>
+            <td><button class="ikincil" data-dvyazi="${esc(x.no)}">Veli yazısı</button></td></tr>`; }).join('') || '<tr><td colspan="10" class="soluk">Bu filtrede öğrenci yok.</td></tr>'}</tbody></table></div>
+        ${G.length > 400 ? '<div class="soluk kucuk">İlk 400 öğrenci gösteriliyor; şube ya da arama ile daraltın.</div>' : ''}</div>
+      <div class="kart soluk kucuk" style="line-height:1.6"><b>Uygulanan kurallar (Ortaöğretim Kurumları Yönetmeliği md. 36)</b><br>
+        Özürsüz devamsızlığı 10 günü ya da toplam devamsızlığı 30 günü geçen öğrenci, puanı ne olursa olsun devamsızlıktan başarısız sayılır. Birinci derece yakın kaybında toplam sınır 40, sürekli / yatarak tedavi ve organ naklinde, koruma-bakım altındaki ve tutuklu öğrencilerde 60, tam zamanlı kaynaştırma / özel eğitimde 70 gündür (özürsüz 20); öğrencinin özel durumu "Sınır" sütunundan seçilir.<br>
+        Devamsızlığın 5., 15. ve 25. günlerinde (özel durumlarda ayrıca 40. ve 55. günlerinde) veliye yazılı bildirim yapılır; bildirim yapılınca o günün düğmesine basılarak kayda geçirilir. "Sınıra yakın": özürsüz hakkı 2 günden, toplam hakkı 5 günden az kalan öğrenci. Özürsüz devamsızlığı 5 günü geçen öğrenci teşekkür / takdir belgesi alamaz. Art arda 2 gün özürsüz gelmeyen öğrencinin velisine ayrıca haber verilir; geç kalmalar ve günlük durum e-Okul'dan izlenir.</div>` : ''}`;
+  }
+  function dvVeliYazi(nolar) {
+    const ob = new Map(OGR.map(o => [String(o.no), o]));
+    const tek = no => { const d = DV.M.R[no], o = ob.get(no) || {}, [, oS, tS] = dvSinir(no), ad = C.baslik(o.ad || d.ad || ''), sn = o.sinif || d.sinif || '';
+      return `<section class="sy"><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+        <div class="ss"><span>Sayı : ……………………</span><span>${tGos(bugun())}</span></div><div>Konu : Öğrenci devamsızlığı</div>
+        <p class="hit">Sayın ${esc(ad)} Velisi,</p>
+        <p>Okulumuz ${esc(sn)} sınıfı, ${esc(no)} numaralı öğrencisi <b>${esc(ad)}</b>, ${esc(tGos(DV.M.tarih || bugun()))} tarihi itibarıyla aşağıdaki süre kadar devamsızlık yapmıştır:</p>
+        <table><tr><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th></tr><tr><td>${dvS(d.ol)} gün</td><td>${dvS(d.oz)} gün</td><td><b>${dvS(d.top)} gün</b></td></tr></table>
+        <p>Ortaöğretim Kurumları Yönetmeliği'nin 36. maddesi gereğince özürsüz devamsızlığı ${oS} günü ya da toplam devamsızlığı ${tS} günü geçen öğrenci, ders puanları ne olursa olsun devamsızlıktan başarısız sayılır ve sınıf tekrar eder. Ayrıca özürsüz devamsızlığı 5 günü geçen öğrenci teşekkür ya da takdir belgesi alamaz.</p>
+        <p>Öğrencinizin okula düzenli devamının sağlanması ve varsa özür belgelerinin okul idaresine teslim edilmesi için okulumuza gelmenizi rica ederim.</p>
+        <div class="imz">${esc(MUDUR)}<br>Okul Müdürü</div>
+        <div class="kes">TEBELLÜĞ</div><p>Öğrencim ${esc(ad)} (${esc(sn)} · ${esc(no)}) hakkındaki devamsızlık durumuna ilişkin bildirimi ……/……/20…… tarihinde tebellüğ ettim.</p>
+        <div class="tb"><div>Tebliğ eden<br><br>Adı soyadı, imza</div><div>Tebellüğ eden (veli)<br><br>Adı soyadı, imza</div></div></section>`; };
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık bildirimi</title><style>
+@page{size:A4 portrait;margin:16mm 18mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12pt;color:#000;margin:0;padding:16mm 18mm}@media print{body{padding:0}}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.4;margin-bottom:6mm}.ss{display:flex;justify-content:space-between}
+p{line-height:1.6;text-align:justify;margin:3mm 0}.hit{margin-top:8mm}table{border-collapse:collapse;margin:3mm auto;width:110mm}td,th{border:1px solid #000;padding:2mm;text-align:center}
+.imz{text-align:center;margin:10mm 0 0 auto;width:70mm}.kes{margin-top:14mm;border-top:1px dashed #000;padding-top:3mm;text-align:center;font-weight:bold;letter-spacing:2px}.tb{display:flex;justify-content:space-between;margin-top:6mm;text-align:center}.tb div{width:70mm}
+</style></head><body>${nolar.map(tek).join('')}</body></html>`;
+  }
+  function dvListeBelge() {
+    const ob = new Map(OGR.map(o => [String(o.no), o]));
+    const L = Object.keys(DV.M.R).map(no => { const o = ob.get(no) || {}, d = DV.M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', ...dvDurum(no) }; })
+      .filter(x => x.bas || x.yakin || x.bek.length).filter(x => !DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)).sort((p, q) => sinifSira(p.sinif, q.sinif) || q.risk - p.risk);
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık uyarı listesi</title><style>
+@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm}.alt{text-align:center;color:#444;margin-bottom:4mm}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}table{border-collapse:collapse;width:100%}th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}td{border:.3mm solid #8fa3bf;padding:1.3mm 2mm}td.c{text-align:center}tr.b td{background:#fee2e2}tr{break-inside:avoid}thead{display:table-header-group}
+</style></head><body><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK UYARI LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci</div>
+<table><thead><tr><th>#</th><th>Şube</th><th>No</th><th>Adı soyadı</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır (özürsüz / toplam)</th><th>Durum</th></tr></thead><tbody>
+${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas ? 'b' : ''}"><td class="c">${i + 1}</td><td class="c">${esc(x.sinif)}</td><td class="c">${esc(x.no)}</td><td>${esc(C.baslik(x.ad))}</td><td class="c">${dvS(x.d.ol)}</td><td class="c">${dvS(x.d.oz)}</td><td class="c"><b>${dvS(x.d.top)}</b></td><td class="c">${oS} / ${tS}</td><td>${esc(x.U.map(u => u[1]).join(' · '))}</td></tr>`; }).join('')}</tbody></table></body></html>`;
+  }
+  async function dvDosya(ev) {
+    const t = ev.target; if (!t.dataset || !t.dataset.dvdosya || !t.files.length) return; const R = {}; let hata = '', ad = [];
+    for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
+        const r = vtDevamOku(sat), k = vtSutun(sat); if (!r.n) { hata = `${f.name}: ${r.hata}`; continue; }
+        const bs = k ? sat[k.i].map(x => String(x || '').toLocaleLowerCase(tr).trim()) : [], ks = bs.findIndex(x => /^(sınıf|sinif|şube|sube|sınıfı|şubesi)/.test(x)), ka = bs.findIndex(x => /ad/.test(x) && !/no/.test(x));
+        if (k) for (const s of sat.slice(k.i + 1)) { const no = String(s[k.no] || '').replace(/\D/g, ''); if (!r.R[no]) continue; if (ka >= 0) r.R[no].ad = String(s[ka] || '').trim(); if (ks >= 0) r.R[no].sinif = String(s[ks] || '').trim().replace(/\s*\/\s*/, '-').replace(/\s+/g, '').replace(/\.Sınıf/i, ''); }
+        Object.assign(R, r.R); ad.push(f.name); } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
+    t.value = ''; if (hata) uyar(hata); if (!ad.length) return;
+    DV.M.R = R; DV.M.tarih = bugun(); DV.M.dosya = ad.join(', ');
+    try { await yaz(`devam:${egitimYili()}`, DV.M); DV.degisti = false; } catch (e) { DV.degisti = true; }
+    DV.filtre = 'uyari'; dvCiz(); const n = Object.keys(R).length, es = Object.keys(R).filter(no => OGR.some(o => String(o.no) === no)).length;
+    bilgi(`${n} öğrencinin devamsızlığı yüklendi ve kaydedildi (${es} öğrenci okul listesiyle eşleşti).`, 'yesil');
+  }
+  async function dvTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, M = DV.M;
+    if (d.dvf) { DV.filtre = d.dvf; dvCiz(); return true; }
+    if (d.dvs !== undefined) { DV.sinif = d.dvs; dvCiz(); return true; }
+    if (d.dvteb) { const [no, g] = d.dvteb.split('|'); M.teb[no] = M.teb[no] || {};
+      if (M.teb[no][g]) { if (!await onayla(`${g}. gün bildirimi kaydı silinsin mi?`)) return true; delete M.teb[no][g]; } else M.teb[no][g] = bugun();
+      try { await yaz(`devam:${egitimYili()}`, M); } catch (e) { DV.degisti = true; } dvCiz(); return true; }
+    if (d.dvyazi) { C.belgeOnizle(dvVeliYazi([d.dvyazi]), 'Devamsızlık bildirimi', false); return true; }
+    if (d.dvx === 'liste') { C.belgeOnizle(dvListeBelge(), 'Devamsızlık uyarı listesi', true); return true; }
+    if (d.dvx === 'kaydet') { try { await yaz(`devam:${egitimYili()}`, M); DV.degisti = false; bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    return false;
+  }
+  function dvGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.dvara) { DV.ara = t.value; const p = t.selectionStart; dvCiz(); const y = kok.querySelector('[data-dvara]'); if (y) { y.focus(); y.setSelectionRange(p, p); } return; }
+    if (d.dvsinif !== undefined) { DV.sinif = t.value; dvCiz(); return; }
+    if (d.dvozel) { if (t.value) DV.M.ozel[d.dvozel] = t.value; else delete DV.M.ozel[d.dvozel]; DV.degisti = true; dvCiz(); } }
+
   // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
   // Sınıflar ve sınıf rehber öğretmenleri ders programından (Rehberlik dersini veren öğretmen) gelir, elle değiştirilebilir.
   // Okul rehber öğretmenleri programda yoktur: elle, seviyeye toplu ya da dosyadan (Excel, Word, PDF, CSV) girilir.
@@ -1275,7 +1394,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1283,13 +1402,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -1299,6 +1418,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'sok') return sok();
     if (id === 'evrak') return evrak();
     if (id === 'zumre') return zumre();
+    if (id === 'devam') return devam();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
