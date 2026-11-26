@@ -176,7 +176,11 @@ body.yh-acik #pencere{z-index:70}
 .yh-editor .yh-s:hover{outline:1px dashed #9fd8e6;outline-offset:1.5mm}
 .yh-editor .yh-s.secili{outline:1.6px solid #22c4e0;outline-offset:1.5mm}
 .yh-editor .yh-s.tasti{outline:2px solid #e74c3c!important}
-.yh-editor .yh-fig{cursor:pointer}
+.yh-editor .yh-fig{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.yh-editor .yh-fig img{-webkit-user-drag:none;pointer-events:none}
+.yh-tut{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #22c4e0;border-radius:3px;z-index:3;line-height:0}
+.yh-tut-nw{left:-8px;top:-8px;cursor:nwse-resize}.yh-tut-ne{right:-8px;top:-8px;cursor:nesw-resize}.yh-tut-sw{left:-8px;bottom:-8px;cursor:nesw-resize}.yh-tut-se{right:-8px;bottom:-8px;cursor:nwse-resize}
+.yh-hayalet{position:fixed;z-index:95;pointer-events:none;opacity:.8;border:2px solid #22c4e0;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.4);background:#fff}
 .yh-editor .yh-fig.secili{outline:2px solid #22c4e0;outline-offset:1px}
 .yh-editor .yh-kesir,.yh-editor .yh-kok{cursor:pointer;border-radius:2px}
 .yh-editor .yh-kesir:hover,.yh-editor .yh-kok:hover{background:#e2f6fb}
@@ -451,8 +455,15 @@ body.yh-acik #pencere{z-index:70}
   let acilirEl = null;
   function acilir(html, hedef, bagla) {
     acilirKapat(); const a = document.createElement('div'); a.className = 'yh-acilir'; a.innerHTML = html; document.querySelector('.yh-tamekran').appendChild(a); acilirEl = a;
-    const r = hedef.getBoundingClientRect(), w = a.offsetWidth, h = a.offsetHeight;
-    let x = Math.min(window.innerWidth - w - 8, Math.max(8, r.left)), y = r.bottom + 6; if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 6);
+    a.style.maxHeight = 'calc(100vh - 16px)'; a.style.overflow = 'auto';
+    const r = hedef.getBoundingClientRect(), w = a.offsetWidth, h = Math.min(a.offsetHeight, window.innerHeight - 16), W = window.innerWidth, H = window.innerHeight;   // K-991: sığdığı yere (alta, üste, yana) konur
+    const sik = (v, en, boy) => Math.max(8, Math.min(v, boy - en - 8));
+    let x, y;
+    if (r.bottom + 6 + h <= H - 8) { x = sik(r.left, w, W); y = r.bottom + 6; }
+    else if (r.top - 6 - h >= 8) { x = sik(r.left, w, W); y = r.top - h - 6; }
+    else if (r.right + 10 + w <= W - 8) { x = r.right + 10; y = sik(r.top, h, H); }
+    else if (r.left - 10 - w >= 8) { x = r.left - w - 10; y = sik(r.top, h, H); }
+    else { x = W - w - 8; y = sik(r.top, h, H); }
     a.style.left = x + 'px'; a.style.top = y + 'px';
     a.addEventListener('mousedown', ev => { if (!ev.target.closest('input,textarea,select')) ev.preventDefault(); });
     bagla && bagla(a);
@@ -672,7 +683,7 @@ body.yh-acik #pencere{z-index:70}
       el.querySelectorAll('[data-alan]').forEach(a => { const al = a.dataset.alan, i = a.dataset.i != null ? +a.dataset.i : null, h = alanHTML(a);
         if (al === 'govde') s.govde = h; else if (al === 'sec') s.secenek[i] = h; else if (al === 'madde') s.maddeler[i] = h; else if (al === 'sol') s.sol[i] = h; else if (al === 'sag') s.sag[i] = h; else if (al === 'kelimeler') s.kelimeler = h; }); });
   }
-  function alanHTML(a) { const k = a.cloneNode(true); k.querySelectorAll('.yh-uyari-tas').forEach(x => x.remove()); k.querySelectorAll('.secili').forEach(x => x.classList.remove('secili')); let h = k.innerHTML; if (h === '<br>') h = ''; return h; }
+  function alanHTML(a) { const k = a.cloneNode(true); k.querySelectorAll('.yh-uyari-tas,.yh-tut').forEach(x => x.remove()); k.querySelectorAll('.secili').forEach(x => x.classList.remove('secili')); let h = k.innerHTML; if (h === '<br>') h = ''; return h; }
   function degisti(yapisal) {
     if (!B) return; B.guncel = Date.now(); durum('Kaydediliyor…');
     clearTimeout(kayitZ); kayitZ = setTimeout(() => { modelOku(); kaydetSimdi(); }, 700);
@@ -788,7 +799,7 @@ body.yh-acik #pencere{z-index:70}
     document.addEventListener('selectionchange', aralikTut);
     kap.addEventListener('input', ev => { if (ev.target.closest('[contenteditable="true"]')) degisti(false); });
     kap.addEventListener('click', ev => {
-      const fig = ev.target.closest('.yh-fig'); if (fig) { figurSec(fig); return; }
+      const fig = ev.target.closest('.yh-fig'); if (fig) return;   // K-991: seçim pointerup'ta
       const ks = ev.target.closest('.yh-kesir'); if (ks) { kesirDiyalog(ks); return; }
       const kk = ev.target.closest('.yh-kok'); if (kk) { kokDiyalog(kk); return; }
       const pu = ev.target.closest('.yh-puan'); if (pu) { const el = pu.closest('.yh-s'); secId = el.dataset.id; secGoster(); sagCiz(); const inp = $e(`#yhSag .yh-kart input[data-puan]`); if (inp) { telAc('sag'); inp.focus(); inp.select(); } return; }
@@ -796,6 +807,43 @@ body.yh-acik #pencere{z-index:70}
       if (!ev.target.closest('.yh-fig')) figurBirak();
     });
     kap.addEventListener('paste', yapistir);
+    // K-991: fotoğraf/şekil kâğıtta sürüklenerek taşınır (bırakılan yere ve yana göre sola/ortaya/sağa), köşesinden çekilerek büyütülür
+    let fs = null;
+    kap.addEventListener('pointerdown', ev => {
+      const tut = ev.target.closest('.yh-tut'), fig = ev.target.closest('.yh-fig'); if (!fig || ev.button > 0) return;
+      ev.preventDefault();
+      if (tut) { const kapsam = fig.parentElement.getBoundingClientRect().width || 1; fs = { tur: 'boy', fig, x0: ev.clientX, w0: fig.getBoundingClientRect().width, kapsam, k: tut.dataset.tut, id: ev.pointerId }; }
+      else fs = { tur: 'tasi', fig, x0: ev.clientX, y0: ev.clientY, basladi: false, id: ev.pointerId };
+      try { kap.setPointerCapture(ev.pointerId); } catch (e) {}
+    });
+    kap.addEventListener('pointermove', ev => {
+      if (!fs || ev.pointerId !== fs.id) return;
+      if (fs.tur === 'boy') { const yon = /e$/.test(fs.k) ? 1 : -1, kat = fs.fig.dataset.hiza === 'orta' || fs.fig.dataset.hiza === 'tam' ? 2 : 1;
+        const pct = Math.max(10, Math.min(100, (fs.w0 + yon * kat * (ev.clientX - fs.x0)) / fs.kapsam * 100)); fs.pct = Math.round(pct);
+        fs.fig.style.width = fs.pct + '%'; fs.fig.dataset.gen = fs.pct; if (fs.fig.dataset.hiza === 'tam' && fs.pct < 100) fs.fig.dataset.hiza = 'orta'; return; }
+      const dx = ev.clientX - fs.x0, dy = ev.clientY - fs.y0;
+      if (!fs.basladi) { if (Math.hypot(dx, dy) < 7) return; fs.basladi = true; acilirKapat(); fs.fig.style.opacity = '.35';
+        const im = fs.fig.querySelector('img'), g = document.createElement('img'); g.src = im ? im.src : ''; g.className = 'yh-hayalet'; const rr = fs.fig.getBoundingClientRect(); g.style.width = Math.min(220, rr.width) + 'px'; EK.appendChild(g); fs.g = g; }
+      fs.g.style.left = (ev.clientX + 12) + 'px'; fs.g.style.top = (ev.clientY + 12) + 'px';
+      const orta = $e('#yhOrta'), or = orta.getBoundingClientRect(); if (ev.clientY > or.bottom - 60) orta.scrollTop += 18; else if (ev.clientY < or.top + 60) orta.scrollTop -= 18;   // kenara gelince kaydır
+    });
+    const fsBitir = ev => {
+      if (!fs || (ev && ev.pointerId !== fs.id)) return; const f = fs; fs = null; try { kap.releasePointerCapture(f.id); } catch (e) {}
+      if (f.tur === 'boy') { degisti(false); setTimeout(() => { diz(); figurSec(f.fig); }, 60); return; }
+      if (!f.basladi) { figurSec(f.fig); return; }
+      f.fig.style.opacity = ''; if (f.g) f.g.remove(); if (!ev || ev.type === 'pointercancel') return;
+      let r = null; if (document.caretRangeFromPoint) r = document.caretRangeFromPoint(ev.clientX, ev.clientY); else if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(ev.clientX, ev.clientY); if (p) { r = document.createRange(); r.setStart(p.offsetNode, p.offset); } }
+      const n = r && (r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement);
+      let ce = n && n.closest && n.closest('[contenteditable="true"]');
+      if (!ce || !EK.contains(ce) || f.fig.contains(ce)) { const el = document.elementFromPoint(ev.clientX, ev.clientY), s_ = el && el.closest && el.closest('.yh-s'); ce = s_ && s_.querySelector('.yh-govde'); r = null; }
+      if (!ce) return;
+      if (r && f.fig.contains(r.startContainer)) r = null;
+      figurYerlestir(f.fig, ce, r);
+      if (f.fig.dataset.hiza !== 'tam') { const cr = ce.getBoundingClientRect(), o = (ev.clientX - cr.left) / (cr.width || 1); f.fig.dataset.hiza = o < .34 ? 'sol' : o > .66 ? 'sag' : 'orta'; }
+      const s_ = ce.closest('.yh-s'); if (s_ && s_.dataset.id !== secId) { secId = s_.dataset.id; secGoster(); }
+      degisti(true); setTimeout(() => { diz(); figurSec(f.fig); }, 80);
+    };
+    kap.addEventListener('pointerup', fsBitir); kap.addEventListener('pointercancel', fsBitir);
     kap.addEventListener('dragover', ev => { if ([...(ev.dataTransfer.items || [])].some(i => i.kind === 'file')) ev.preventDefault(); });
     kap.addEventListener('drop', ev => { const f = [...(ev.dataTransfer.files || [])].find(x => /^image\//.test(x.type)); if (!f) return; ev.preventDefault();
       let r = null; if (document.caretRangeFromPoint) r = document.caretRangeFromPoint(ev.clientX, ev.clientY); else if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(ev.clientX, ev.clientY); if (p) { r = document.createRange(); r.setStart(p.offsetNode, p.offset); } }
@@ -942,6 +990,15 @@ body.yh-acik #pencere{z-index:70}
       figurKoy(`<figure class="yh-fig yh-foto" contenteditable="false" data-gid="${gid}" data-hiza="${hz}" data-gen="${gn}" style="width:${gn}%"><img src="${src}" alt=""></figure>`);
     } catch (e) { bildir('Fotoğraf eklenemedi: ' + esc(e.message || e)); }
   }
+  function figurYerlestir(fig, ce, r) {   // figürü imlecin bulunduğu satırın (paragrafın) başına koyar
+    let blok;
+    if (!r) blok = ce.firstChild;
+    else if (r.startContainer === ce) blok = ce.childNodes[r.startOffset] || null;
+    else { blok = r.startContainer; while (blok && blok.parentNode && blok.parentNode !== ce) blok = blok.parentNode; if (!blok || blok.parentNode !== ce) blok = ce.firstChild; }
+    const satirIci = n => n && (n.nodeType === 3 || (n.nodeType === 1 && !/^(BR|DIV|P|TABLE|UL|OL|FIGURE)$/.test(n.tagName)));
+    if (blok && satirIci(blok)) { while (satirIci(blok.previousSibling)) blok = blok.previousSibling; }
+    if (blok === fig) return; ce.insertBefore(fig, blok || null);
+  }
   function figurKoy(html) {
     araligaDon() || soruEkle('acik');
     const s = window.getSelection(); let r = s.rangeCount ? s.getRangeAt(0) : null; const ce = r && (r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement).closest('[contenteditable="true"]');
@@ -957,7 +1014,7 @@ body.yh-acik #pencere{z-index:70}
     degisti(false); setTimeout(() => { figurSec(fig); diz(); }, 60);
   }
   function figurSec(fig) {
-    figurBirak(); secFig = fig; fig.classList.add('secili');
+    figurBirak(); secFig = fig; fig.classList.add('secili'); tutamakKoy(fig);
     const el = fig.closest('.yh-s'); if (el && el.dataset.id !== secId) { secId = el.dataset.id; secGoster(); sagCiz(); }
     const foto = fig.classList.contains('yh-foto'), d = fig.dataset;
     const hz = (v, a) => `<button class="yh-cip ${d.hiza === v ? 'on' : ''}" data-hz="${v}">${a}</button>`;
@@ -979,7 +1036,9 @@ body.yh-acik #pencere{z-index:70}
         else if (f === 'yukari' || f === 'asagi') { const p = fig.parentNode; if (f === 'yukari' && fig.previousSibling) p.insertBefore(fig, fig.previousSibling); else if (f === 'asagi' && fig.nextSibling) p.insertBefore(fig, fig.nextSibling.nextSibling); degisti(false); figurSec(fig); } });
     });
   }
-  function figurBirak() { if (secFig) secFig.classList.remove('secili'); secFig = null; }
+  function tutamakKoy(fig) { tutamakKaldir(); ['nw', 'ne', 'sw', 'se'].forEach(k => { const t = document.createElement('span'); t.className = 'yh-tut yh-tut-' + k; t.dataset.tut = k; t.contentEditable = 'false'; t.title = 'Çekerek büyütün ya da küçültün'; fig.appendChild(t); }); }
+  function tutamakKaldir() { if (EK) EK.querySelectorAll('.yh-tut').forEach(x => x.remove()); }
+  function figurBirak() { if (secFig) secFig.classList.remove('secili'); secFig = null; tutamakKaldir(); }
   function figurSil() { if (!secFig) return; secFig.remove(); secFig = null; acilirKapat(); degisti(false); }
   async function fotoYenile(fig) {
     const d = fig.dataset, orj = B.gorseller[d.gid]; if (!orj) return;
@@ -1184,7 +1243,7 @@ body.yh-acik #pencere{z-index:70}
   // ------------------------------------------------------------------ ÇIKTI: yazdırma, PDF, Word
   function temizKopya() {   // editör izlerini (seçim, düzenleme) atılmış sayfalar
     diz(); const k = $e('#yhSayfalar').cloneNode(true);
-    k.querySelectorAll('.yh-olcu,.yh-uyari-tas').forEach(x => x.remove());
+    k.querySelectorAll('.yh-olcu,.yh-uyari-tas,.yh-tut').forEach(x => x.remove());
     k.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
     k.querySelectorAll('.secili,.tasti').forEach(x => x.classList.remove('secili', 'tasti'));
     k.querySelectorAll('[data-ipucu]').forEach(x => x.removeAttribute('data-ipucu'));
