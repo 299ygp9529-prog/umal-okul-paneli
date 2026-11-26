@@ -1096,7 +1096,10 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   //  · velisine devamsızlığın 5., 15., 25. günlerinde (özel durumlarda ayrıca 40. ve 55.) yazılı bildirim yapılır, tebligat kayda geçirilir
   // Veri: umal_idari 'devam:<yıl>' → { tarih, dosya, R:{no:{ol, oz, top, ad, sinif}}, ozel:{no:tür}, teb:{no:{gün: tarih}} }
   const DV_OZEL = { '': ['Genel', 10, 30, false], yakin: ['Birinci derece yakın kaybı', 10, 40, true], tedavi: ['Sürekli / yatarak tedavi, organ nakli', 10, 60, true], koruma: ['Koruma-bakım altında ya da tutuklu', 10, 60, true], kaynastirma: ['Tam zamanlı kaynaştırma / özel eğitim', 20, 70, true] };
-  const DV = { M: null, degisti: false, filtre: 'uyari', sinif: '', ara: '' };
+  const DV = { M: null, degisti: false, filtre: 'uyari', sinif: '', ara: '', zam: 0 };
+  // öğrencinin durum bilgisi (idarenin girdiği): M.not[no] = { durum, aciklama, tarih, kim }
+  const DV_DURUM = ['Veli arandı', 'Veli okula çağrıldı', 'Veli ile görüşüldü', 'Öğrenci ile görüşüldü', 'Rehberlik servisine yönlendirildi', 'Sağlık raporu bekleniyor', 'Sağlık raporu teslim edildi', 'Sağlık sorunu var', 'Ailevi / sosyal durum', 'Nakil işlemi', 'Takipte', 'Diğer'];
+  function dvNotKaydet() { clearTimeout(DV.zam); DV.zam = setTimeout(async () => { try { await yaz(`devam:${egitimYili()}`, DV.M); DV.degisti = false; bilgi('Durum bilgisi kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } }, 1200); }
   const dvSinir = no => DV_OZEL[(DV.M.ozel || {})[no] || ''] || DV_OZEL[''];
   const dvGunler = no => dvSinir(no)[3] ? [5, 15, 25, 40, 55] : [5, 15, 25];
   const dvS = x => String(Math.round(x * 10) / 10).replace('.', ',');
@@ -1112,7 +1115,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   async function devam() {
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     try { DV.M = (await oku(`devam:${egitimYili()}`)) || { tarih: '', dosya: '', R: {}, ozel: {}, teb: {} }; } catch (e) { kok.innerHTML = bas('Devamsızlık') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
-    DV.M.R = DV.M.R || {}; DV.M.ozel = DV.M.ozel || {}; DV.M.teb = DV.M.teb || {}; DV.degisti = false; dvCiz();
+    DV.M.R = DV.M.R || {}; DV.M.ozel = DV.M.ozel || {}; DV.M.teb = DV.M.teb || {}; DV.M.not = DV.M.not || {}; DV.degisti = false; dvCiz();
   }
   function dvCiz() {
     const M = DV.M, nl = Object.keys(M.R), ob = new Map(OGR.map(o => [String(o.no), o]));
@@ -1124,7 +1127,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     const eski = M.tarih && (new Date(bugun()) - new Date(M.tarih)) / 864e5 > 7;
     const kutu = (k, n, ad, renk) => `<button data-dvf="${k}" class="kart" style="margin:0;text-align:left;cursor:pointer;${DV.filtre === k ? `border-color:${renk};background:${renk}14` : ''}"><b style="display:block;font-size:26px;color:${renk}">${n}</b><span class="soluk kucuk">${ad}</span></button>`;
     const etR = { kir: 'background:rgba(239,68,68,.16);color:#fca5a5', tur: 'background:rgba(251,146,60,.16);color:#fdba74', sar: 'background:rgba(255,212,59,.14);color:#ffe066', gri: 'background:rgba(148,163,184,.14);color:#cbd5e1' };
-    kok.innerHTML = bas('Devamsızlık', `${egitimYili()} · e-Okul devamsızlık listesi · Ortaöğretim Kurumları Yönetmeliği md. 36`, nl.length ? '<button class="ikincil" data-dvx="liste">Uyarı listesini yazdır</button><button class="birincil" data-dvx="kaydet">Kaydet</button>' : '') +
+    kok.innerHTML = bas('Devamsızlık', `${egitimYili()} · e-Okul devamsızlık listesi · Ortaöğretim Kurumları Yönetmeliği md. 36`, nl.length ? '<button class="ikincil" data-dvx="liste">Uyarı listesini yazdır</button><button class="ikincil" data-dvx="durumliste">Durum listesini yazdır</button><button class="birincil" data-dvx="kaydet">Kaydet</button>' : '') +
       `<div class="kart"><div class="id-satir" style="flex-wrap:wrap;gap:10px"><label class="ikincil" style="cursor:pointer">e-Okul devamsızlık Excel'ini yükle<input type="file" data-dvdosya="1" accept=".xls,.xlsx,.csv,.html,.htm,.xml" multiple style="display:none"></label>
         <span class="soluk">${nl.length ? `${nl.length} öğrenci · ${esc(tGos(M.tarih))} tarihli liste${M.dosya ? ' · ' + esc(M.dosya) : ''}` : 'Henüz liste yüklenmedi'}</span></div>
         ${eski ? `<div style="margin-top:8px;color:#ffe066">Liste ${Math.floor((new Date(bugun()) - new Date(M.tarih)) / 864e5)} gün önce yüklendi; uyarıların doğru olması için e-Okul'dan güncel listeyi alıp yükleyin.</div>` : ''}
@@ -1133,13 +1136,14 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
       <div class="kart"><div class="id-satir" style="flex-wrap:wrap;gap:8px"><input data-dvara="1" placeholder="Ad ya da numara" value="${esc(DV.ara)}" style="max-width:220px">
         <div class="cipler"><button class="cip ${!DV.sinif ? 'secili' : ''}" data-dvs="">Tümü</button>${SV.map(v => `<button class="cip ${DV.sinif === v ? 'secili' : ''}" data-dvs="${v}">${v}. sınıflar</button>`).join('')}</div>
         <select data-dvsinif="1" style="max-width:130px"><option value="">Şube</option>${SL.map(s => `<option ${DV.sinif === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select><button class="bag" data-dvf="hepsi">Bütün öğrenciler</button><span class="soluk kucuk">${G.length} öğrenci</span></div>
-        <div style="overflow-x:auto;margin-top:10px"><table class="liste"><thead><tr><th>Şube</th><th>No</th><th>Öğrenci</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır</th><th>Uyarılar</th><th>Veli bildirimi</th><th></th></tr></thead><tbody>
+        <div style="overflow-x:auto;margin-top:10px"><table class="liste"><thead><tr><th>Şube</th><th>No</th><th>Öğrenci</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır</th><th>Uyarılar</th><th>Durum bilgisi</th><th>Veli bildirimi</th><th></th></tr></thead><tbody>
         ${G.slice(0, 400).map(x => { const [ozAd, oS, tS] = dvSinir(x.no), teb = (M.teb || {})[x.no] || {};
           return `<tr><td>${esc(x.sinif)}</td><td>${esc(x.no)}</td><td><b>${esc(C.baslik(x.ad))}</b></td><td class="c">${dvS(x.d.ol)}</td><td class="c" style="${x.d.oz > oS ? 'color:#fca5a5;font-weight:800' : ''}">${dvS(x.d.oz)}</td><td class="c" style="${x.d.top > tS ? 'color:#fca5a5;font-weight:800' : ''}"><b>${dvS(x.d.top)}</b></td>
             <td><select data-dvozel="${esc(x.no)}" title="Özel durum (md. 36)" style="max-width:150px">${Object.entries(DV_OZEL).map(([k, v]) => `<option value="${k}" ${((M.ozel || {})[x.no] || '') === k ? 'selected' : ''}>${v[1]} / ${v[2]} · ${v[0]}</option>`).join('')}</select></td>
             <td>${x.U.map(([r, t]) => `<span style="display:inline-block;margin:1px 3px 1px 0;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;${etR[r]}">${esc(t)}</span>`).join('') || '<span class="soluk">—</span>'}</td>
+            <td style="min-width:220px">${(() => { const n = (M.not || {})[x.no] || {}; return `<select data-dvdurum="${esc(x.no)}" style="width:100%"><option value="">Durum seçin</option>${[...new Set([...DV_DURUM, ...(n.durum && !DV_DURUM.includes(n.durum) ? [n.durum] : [])])].map(t => `<option ${n.durum === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><input data-dvacik="${esc(x.no)}" value="${esc(n.aciklama || '')}" placeholder="Açıklama, görüşme notu" style="width:100%;margin-top:4px">${n.tarih ? `<div class="soluk kucuk">${esc(tGos(n.tarih))}${n.kim ? ' · ' + esc(n.kim) : ''}</div>` : ''}`; })()}</td>
             <td>${dvGunler(x.no).filter(g => x.d.top >= g).map(g => `<button class="cip ${teb[g] ? 'secili' : ''}" data-dvteb="${esc(x.no)}|${g}" title="${teb[g] ? tGos(teb[g]) + ' tarihinde bildirildi' : 'Bildirim yapıldı olarak işaretle'}">${g}. gün${teb[g] ? ' ✓' : ''}</button>`).join(' ') || '<span class="soluk">—</span>'}</td>
-            <td><button class="ikincil" data-dvyazi="${esc(x.no)}">Veli yazısı</button></td></tr>`; }).join('') || '<tr><td colspan="10" class="soluk">Bu filtrede öğrenci yok.</td></tr>'}</tbody></table></div>
+            <td><button class="ikincil" data-dvyazi="${esc(x.no)}">Veli yazısı</button></td></tr>`; }).join('') || '<tr><td colspan="11" class="soluk">Bu filtrede öğrenci yok.</td></tr>'}</tbody></table></div>
         ${G.length > 400 ? '<div class="soluk kucuk">İlk 400 öğrenci gösteriliyor; şube ya da arama ile daraltın.</div>' : ''}</div>
       <div class="kart soluk kucuk" style="line-height:1.6"><b>Uygulanan kurallar (Ortaöğretim Kurumları Yönetmeliği md. 36)</b><br>
         Özürsüz devamsızlığı 10 günü ya da toplam devamsızlığı 30 günü geçen öğrenci, puanı ne olursa olsun devamsızlıktan başarısız sayılır. Birinci derece yakın kaybında toplam sınır 40, sürekli / yatarak tedavi ve organ naklinde, koruma-bakım altındaki ve tutuklu öğrencilerde 60, tam zamanlı kaynaştırma / özel eğitimde 70 gündür (özürsüz 20); öğrencinin özel durumu "Sınır" sütunundan seçilir.<br>
@@ -1176,6 +1180,21 @@ p{line-height:1.6;text-align:justify;margin:3mm 0}.hit{margin-top:8mm}table{bord
 <table><thead><tr><th>#</th><th>Şube</th><th>No</th><th>Adı soyadı</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır (özürsüz / toplam)</th><th>Durum</th></tr></thead><tbody>
 ${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas ? 'b' : ''}"><td class="c">${i + 1}</td><td class="c">${esc(x.sinif)}</td><td class="c">${esc(x.no)}</td><td>${esc(C.baslik(x.ad))}</td><td class="c">${dvS(x.d.ol)}</td><td class="c">${dvS(x.d.oz)}</td><td class="c"><b>${dvS(x.d.top)}</b></td><td class="c">${oS} / ${tS}</td><td>${esc(x.U.map(u => u[1]).join(' · '))}</td></tr>`; }).join('')}</tbody></table></body></html>`;
   }
+  function dvDurumBelge() {   // uyarı alan ya da durum bilgisi girilen öğrenciler, durum ve açıklamayla
+    const ob = new Map(OGR.map(o => [String(o.no), o]));
+    const L = Object.keys(DV.M.R).map(no => { const o = ob.get(no) || {}, d = DV.M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', n: (DV.M.not || {})[no] || {}, ...dvDurum(no) }; })
+      .filter(x => x.bas || x.yakin || x.bek.length || x.n.durum || x.n.aciklama).filter(x => !DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)).sort((p, q) => sinifSira(p.sinif, q.sinif) || q.risk - p.risk);
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık durum listesi</title><style>
+@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9.5pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm}.alt{text-align:center;color:#444;margin-bottom:4mm}
+table{border-collapse:collapse;width:100%}th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}td{border:.3mm solid #8fa3bf;padding:1.3mm 2mm;vertical-align:top}td.c{text-align:center}tr.b td{background:#fee2e2}tr{break-inside:avoid}thead{display:table-header-group}
+.imz{display:flex;justify-content:space-between;margin-top:10mm;text-align:center}.imz div{width:70mm}
+</style></head><body><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK DURUM LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci · ${tGos(bugun())}</div>
+<table><thead><tr><th>#</th><th>Şube</th><th>No</th><th>Adı soyadı</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Uyarı</th><th>Veli bildirimi</th><th>Durum</th><th>Açıklama</th></tr></thead><tbody>
+${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(teb).sort((a, b) => a - b).map(g => `${g}. gün (${tGos(teb[g])})`).join(', ');
+  return `<tr class="${x.bas ? 'b' : ''}"><td class="c">${i + 1}</td><td class="c">${esc(x.sinif)}</td><td class="c">${esc(x.no)}</td><td>${esc(C.baslik(x.ad))}</td><td class="c">${dvS(x.d.ol)}</td><td class="c">${dvS(x.d.oz)}</td><td class="c"><b>${dvS(x.d.top)}</b></td>
+    <td>${esc(x.bas ? 'Devamsızlıktan başarısız' : x.yakin ? 'Sınıra yakın' : '—')}</td><td>${esc(tb || (x.bek.length ? 'Yapılmadı' : '—'))}</td><td>${esc(x.n.durum || '')}</td><td>${esc(x.n.aciklama || '')}</td></tr>`; }).join('')}</tbody></table>
+<div class="imz"><div>Düzenleyen<br><br>Adı soyadı, imza</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></body></html>`;
+  }
   async function dvDosya(ev) {
     const t = ev.target; if (!t.dataset || !t.dataset.dvdosya || !t.files.length) return; const R = {}; let hata = '', ad = [];
     for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
@@ -1197,6 +1216,7 @@ ${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas
       if (M.teb[no][g]) { if (!await onayla(`${g}. gün bildirimi kaydı silinsin mi?`)) return true; delete M.teb[no][g]; } else M.teb[no][g] = bugun();
       try { await yaz(`devam:${egitimYili()}`, M); } catch (e) { DV.degisti = true; } dvCiz(); return true; }
     if (d.dvyazi) { C.belgeOnizle(dvVeliYazi([d.dvyazi]), 'Devamsızlık bildirimi', false); return true; }
+    if (d.dvx === 'durumliste') { C.belgeOnizle(dvDurumBelge(), 'Devamsızlık durum listesi', true); return true; }
     if (d.dvx === 'liste') { C.belgeOnizle(dvListeBelge(), 'Devamsızlık uyarı listesi', true); return true; }
     if (d.dvx === 'kaydet') { try { await yaz(`devam:${egitimYili()}`, M); DV.degisti = false; bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
     return false;
@@ -1204,6 +1224,8 @@ ${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas
   function dvGirdi(ev) { const t = ev.target, d = t.dataset;
     if (d.dvara) { DV.ara = t.value; const p = t.selectionStart; dvCiz(); const y = kok.querySelector('[data-dvara]'); if (y) { y.focus(); y.setSelectionRange(p, p); } return; }
     if (d.dvsinif !== undefined) { DV.sinif = t.value; dvCiz(); return; }
+    if (d.dvdurum || d.dvacik !== undefined) { const no = d.dvdurum || d.dvacik, n = DV.M.not[no] = DV.M.not[no] || {}; if (d.dvdurum) n.durum = t.value; else n.aciklama = t.value;
+      n.tarih = bugun(); n.kim = C.eposta || ''; if (!n.durum && !String(n.aciklama || '').trim()) delete DV.M.not[no]; DV.degisti = true; dvNotKaydet(); return; }
     if (d.dvozel) { if (t.value) DV.M.ozel[d.dvozel] = t.value; else delete DV.M.ozel[d.dvozel]; DV.degisti = true; dvCiz(); } }
 
   // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
