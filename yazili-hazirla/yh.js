@@ -2004,13 +2004,30 @@ table.yh-punnett th{background:#ededed;font-weight:700}table.yh-punnett th.k{bac
     if (o.ad) g += `<text x="${W - R}" y="${H - 7}" font-size="11.5" font-weight="700" text-anchor="end">${TAM(o.ad)}</text>`;
     return g + '</svg>';
   }
-  const IKLIM_ORNEK = { akdeniz: ['Akdeniz', [10, 11, 13, 17, 21, 26, 28, 28, 25, 20, 15, 11], [240, 160, 100, 50, 30, 8, 3, 3, 15, 70, 150, 250]], karadeniz: ['Karadeniz', [7, 7, 8, 11, 15, 20, 23, 23, 20, 16, 12, 9], [80, 70, 60, 55, 50, 55, 35, 45, 70, 100, 95, 85]], karasal: ['Karasal', [0, 2, 6, 11, 16, 20, 24, 23, 19, 13, 7, 2], [40, 35, 38, 45, 50, 35, 15, 10, 18, 25, 32, 45]], bos: ['Boş', Array(12).fill(''), Array(12).fill('')] };
+  // K-1016: bütün makro iklimler (temsilî istasyonların yaklaşık uzun yıllar ortalamaları); [ad, sıcaklık °C, yağış mm, istasyon]
+  const IKLIM_ORNEK = {
+    ekvatoral: ['Ekvatoral', [26.5, 27.1, 27.5, 28, 28.3, 28.3, 27.9, 27.9, 27.6, 27.6, 27, 26.5], [234, 114, 176, 154, 171, 130, 158, 176, 173, 159, 250, 307], 'Singapur'],
+    savan: ['Savan', [21.6, 24.1, 28, 31, 30.5, 28, 26, 25.3, 26.3, 27, 24.6, 22], [0, 0, 2, 8, 60, 120, 200, 280, 130, 15, 0, 0], 'Kano (Nijerya)'],
+    muson: ['Muson', [24.4, 25.1, 26.9, 28.7, 30.1, 29, 27.6, 27.3, 27.8, 28.9, 28.1, 26.2], [0, 1, 0, 1, 11, 537, 840, 530, 334, 88, 21, 2], 'Mumbai (Hindistan)'],
+    sicakcol: ['Sıcak çöl', [14.3, 17, 21.4, 26.9, 32.6, 35.3, 36.6, 36.2, 33.4, 27.9, 20.9, 15.9], [12, 8, 22, 25, 8, 0, 0, 0, 0, 1, 6, 13], 'Riyad (Suudi Arabistan)'],
+    akdeniz: ['Akdeniz', [10.1, 10.6, 12.8, 16.2, 20.5, 25.3, 28.4, 28.1, 24.9, 20.3, 15.2, 11.7], [233, 163, 93, 49, 30, 8, 4, 3, 13, 75, 169, 264], 'Antalya'],
+    okyanusal: ['Ilıman okyanusal', [5.2, 5.3, 7.6, 9.9, 13.3, 16.4, 18.7, 18.5, 15.7, 12, 8, 5.5], [55, 41, 42, 44, 49, 45, 45, 50, 49, 69, 59, 55], 'Londra (İngiltere)'],
+    karadeniz: ['Karadeniz', [7, 7, 8.6, 12, 16, 20.2, 22.9, 23.3, 20.2, 16.4, 12.4, 9], [236, 186, 160, 98, 98, 145, 155, 195, 265, 307, 260, 244], 'Rize'],
+    karasal: ['Karasal (bozkır)', [0.3, 2, 6.2, 11.4, 16, 20.2, 23.7, 23.5, 19.2, 13.2, 7.1, 2.4], [41, 37, 40, 47, 49, 35, 14, 11, 18, 30, 36, 46], 'Ankara'],
+    nemlikarasal: ['Nemli karasal', [-6.5, -6.7, -1, 6.7, 13.2, 17, 19.2, 17, 11.3, 5.6, -1.2, -5.2], [52, 41, 35, 37, 49, 80, 85, 82, 68, 71, 55, 52], 'Moskova (Rusya)'],
+    tayga: ['Sert karasal (tayga)', [-38.6, -33.8, -20.1, -4.8, 7.5, 16.4, 19.5, 15.2, 6.1, -7.8, -27, -37.6], [9, 8, 6, 10, 19, 35, 42, 38, 23, 17, 14, 10], 'Yakutsk (Rusya)'],
+    sogukcol: ['Orta kuşak çölü', [-5.3, 0, 8.6, 16.5, 21.5, 25, 26.7, 25.6, 20.6, 12.9, 4.3, -3], [3, 4, 7, 6, 9, 8, 10, 7, 4, 2, 2, 2], 'Kaşgar (Çin)'],
+    tundra: ['Tundra', [-25.6, -27.8, -26.2, -17.8, -6.2, 1.8, 4.8, 3.4, -0.4, -8.8, -17.4, -23.4], [4, 4, 4, 4, 4, 9, 24, 27, 17, 11, 6, 4], 'Utqiagvik (Alaska)'],
+    kutup: ['Kutup', [-41, -47, -40, -31, -20, -15, -11, -18, -22, -36, -43, -38], [8, 6, 6, 5, 4, 3, 4, 5, 6, 7, 8, 9], 'Grönland iç kesimi'],
+    bos: ['Boş', Array(12).fill(''), Array(12).fill('')] };
   function iklimDiyalog(fig) {
-    let o = fig ? figVeri(fig) : { ad: '', s: IKLIM_ORNEK.akdeniz[1].slice(), y: IKLIM_ORNEK.akdeniz[2].slice() };
+    let o = fig ? figVeri(fig) : { ad: '', s: IKLIM_ORNEK.akdeniz[1].slice(), y: IKLIM_ORNEK.akdeniz[2].slice(), tip: 'Akdeniz', ist: 'Antalya' };
     if (!fig) araligaKaydet();
     modal('', (m, kapat) => { const ic = m.querySelector('.yh-modal-ic'); ic.classList.add('genis'); ic.style.width = 'min(980px,100%)';
       const ciz = () => {
-        ic.innerHTML = `<h2>İklim grafiği</h2><div class="yh-satir" style="gap:6px;flex-wrap:wrap"><label style="min-width:0">Hazır değerler</label>${Object.entries(IKLIM_ORNEK).map(([k, v]) => `<button class="yh-cip" data-or="${k}">${v[0]}</button>`).join('')}</div>
+        ic.innerHTML = `<h2>İklim grafiği</h2><div class="yh-satir" style="gap:6px;flex-wrap:wrap;align-items:flex-start"><label style="min-width:0">Makro iklimler</label><div style="display:flex;flex-wrap:wrap;gap:6px;flex:1">${Object.entries(IKLIM_ORNEK).map(([k, v]) => `<button class="yh-cip ${o.tip === v[0] ? 'on' : ''}" data-or="${k}" title="${esc(v[3] ? 'Temsilî istasyon: ' + v[3] : 'Boş tablo')}">${v[0]}</button>`).join('')}</div></div>
+          ${o.tip ? `<div class="yh-not" style="margin:-2px 0 6px">${esc(o.tip)} iklimi · temsilî istasyon: ${esc(o.ist || '')}. Değerler yaklaşık uzun yıllar ortalamasıdır; tabloda değiştirebilirsiniz.</div>` : ''}
+          <div class="yh-satir"><label></label><label class="yh-onay"><input type="checkbox" data-ank ${o.anahtar !== false ? 'checked' : ''}> İklim tipini cevap anahtarına yaz</label></div>
           <div class="yh-izgara2"><div><table class="yh-iklim-t"><tr><th></th>${AYLAR.map(a => `<th>${a}</th>`).join('')}</tr>
             <tr><th>°C</th>${o.s.map((v, i) => `<td><input data-s="${i}" value="${esc(v)}" inputmode="decimal"></td>`).join('')}</tr>
             <tr><th>mm</th>${o.y.map((v, i) => `<td><input data-y="${i}" value="${esc(v)}" inputmode="decimal"></td>`).join('')}</tr></table>
@@ -2018,12 +2035,15 @@ table.yh-punnett th{background:#ededed;font-weight:700}table.yh-punnett th.k{bac
             <div class="yh-on"><img id="iOn" alt=""></div></div>
           <div class="yh-dugmeler" style="justify-content:flex-end"><button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-ok>${fig ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
         const on = () => { ic.querySelector('#iOn').src = svgUri(iklimSVG(o)); }; on();
-        ic.querySelectorAll('[data-or]').forEach(b => b.onclick = () => { const v = IKLIM_ORNEK[b.dataset.or]; o.s = v[1].slice(); o.y = v[2].slice(); ciz(); });
+        ic.querySelectorAll('[data-or]').forEach(b => b.onclick = () => { const v = IKLIM_ORNEK[b.dataset.or]; o.s = v[1].slice(); o.y = v[2].slice(); o.tip = b.dataset.or === 'bos' ? '' : v[0]; o.ist = v[3] || ''; ciz(); });
         ic.querySelectorAll('[data-s]').forEach(i => i.oninput = () => { o.s[+i.dataset.s] = i.value; on(); });
         ic.querySelectorAll('[data-y]').forEach(i => i.oninput = () => { o.y[+i.dataset.y] = i.value; on(); });
         ic.querySelector('[data-ad]').oninput = ev => { o.ad = ev.target.value; on(); };
         ic.querySelector('[data-v]').onclick = kapat;
-        ic.querySelector('[data-ok]').onclick = () => { kapat(); aracYaz(fig, 'iklim', o, iklimSVG(o), 72, 'orta'); };
+        const ank = ic.querySelector('[data-ank]'); if (ank) ank.onchange = () => { o.anahtar = ank.checked; };
+        ic.querySelector('[data-ok]').onclick = () => { kapat();
+          if (o.tip && o.anahtar !== false) { const q = fig ? B.sorular.find(x => x.id === (fig.closest('.yh-s') || {}).dataset?.id) : seciliSoru(); if (q) { q.cevap = [(q.cevap || '').split('\n').filter(l => !/^İklim: /.test(l)).join('\n').trim(), `İklim: ${o.tip}${o.ist ? ' — ' + o.ist : ''}`].filter(Boolean).join('\n'); setTimeout(sagCiz, 80); } }   // K-1016
+          aracYaz(fig, 'iklim', o, iklimSVG(o), 72, 'orta'); };
       }; ciz(); }, true);
   }
 
