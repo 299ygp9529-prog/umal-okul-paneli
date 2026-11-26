@@ -18,6 +18,7 @@
   const gunEkle = (t, n) => { const d = new Date(t + 'T12:00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const egitimYili = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? `${y}-${y + 1}` : `${y - 1}-${y}`; };
   const MUDUR = 'Erdoğan AKKAYA';
+  const LOGO = () => new URL('okul-logo.png', location.href).href;   // 26 Kasım 2026: bugünkü evraklarda resmî yazışmadaki gibi sol üstte okul amblemi
   const IK = {
     sorumluluk: 'M5 4.5h14v16H5zM9 4.5V3h6v1.5M8.5 10h7M8.5 13.5h7M8.5 17h4',
     telafi: 'M4 6h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3M13 14.5h3M8 17.5h3',
@@ -1047,7 +1048,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
       const O = [...Z.O, ...(x.ek || [])], G = String(x.gundem || zmDonemGundem(V, ZM.don)).split('\n').map(s => s.trim()).filter(Boolean);
       const zaman = x.tarih ? `${tGos(x.tarih)} ${gunAd(x.tarih)}${x.saat ? ' · saat ' + esc(x.saat) : ''}` : '……/……/20……  ·  saat ……:……';
       const gS = Math.max(4, 12 - G.length), kS = Math.max(4, 9 - Math.floor(G.length / 2));
-      return `<section class="sy"><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+      return `<section class="sy"><div class="ust" style="position:relative"><img class="lg" src="${LOGO()}" alt="">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
         <h1>${esc(ZM.yil)} EĞİTİM ÖĞRETİM YILI ${d[3]} AYI<br>${esc(BUYUK(Z.ad))} ZÜMRE ÖĞRETMENLER KURULU TOPLANTI TUTANAĞI</h1>
         <table class="k"><tr><th>Toplantı tarihi ve saati</th><td>${zaman}</td></tr><tr><th>Toplantı yeri</th><td>${esc(x.yer || '')}</td></tr><tr><th>Zümre başkanı</th><td>${esc(x.baskan || '')}</td></tr>
         <tr><th>Katılan öğretmenler</th><td>${bos ? '' : esc(O.filter(a => !yok.has(a)).map(a => C.baslik(a)).join(', '))}</td></tr>${!bos && yok.size ? `<tr><th>Katılmayan öğretmenler</th><td>${esc([...yok].map(a => C.baslik(a)).join(', '))}</td></tr>` : ''}</table>
@@ -1059,7 +1060,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
         <div class="alt"><div>${esc(x.baskan || '……………………………')}<br>Zümre Başkanı</div><div>UYGUNDUR<br>…./…./20…<br><br>${esc(MUDUR)}<br>Okul Müdürü</div></div></div></section>`; };
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Zümre Öğretmenler Kurulu Toplantı Tutanağı</title><style>
 @page{size:A4 portrait;margin:14mm 16mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11.5pt;color:#000;margin:0;padding:14mm 16mm}@media print{body{padding:0}}
-.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.35}h1{text-align:center;font-size:12pt;margin:5mm 0 4mm;line-height:1.4}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.35}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:21mm}h1{text-align:center;font-size:12pt;margin:5mm 0 4mm;line-height:1.4}
 h2{font-size:11.5pt;margin:5mm 0 2mm}ol{margin:0;padding-left:7mm}li{margin:.8mm 0;line-height:1.35}p{margin:1mm 0;line-height:1.45;text-align:justify}
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:1.4mm 2mm;text-align:left;vertical-align:middle;font-weight:normal}table.k th{width:48mm;font-weight:bold}table.i th{font-weight:bold;text-align:center}table.i td{height:7mm}table.i thead{display:table-header-group}h2{break-after:avoid}.c{text-align:center}
 table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bottom:.3mm solid #000}.alt{display:flex;justify-content:space-between;margin-top:10mm;text-align:center;break-inside:avoid}.alt div{min-width:60mm}
@@ -1152,7 +1153,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   function dvVeliYazi(nolar) {
     const ob = new Map(OGR.map(o => [String(o.no), o]));
     const tek = no => { const d = DV.M.R[no], o = ob.get(no) || {}, [, oS, tS] = dvSinir(no), ad = C.baslik(o.ad || d.ad || ''), sn = o.sinif || d.sinif || '';
-      return `<section class="sy"><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+      return `<section class="sy"><div class="ust" style="position:relative"><img class="lg" src="${LOGO()}" alt="">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
         <div class="ss"><span>Sayı : ……………………</span><span>${tGos(bugun())}</span></div><div>Konu : Öğrenci devamsızlığı</div>
         <p class="hit">Sayın ${esc(ad)} Velisi,</p>
         <p>Okulumuz ${esc(sn)} sınıfı, ${esc(no)} numaralı öğrencisi <b>${esc(ad)}</b>, ${esc(tGos(DV.M.tarih || bugun()))} tarihi itibarıyla aşağıdaki süre kadar devamsızlık yapmıştır:</p>
@@ -1164,7 +1165,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
         <div class="tb"><div>Tebliğ eden<br><br>Adı soyadı, imza</div><div>Tebellüğ eden (veli)<br><br>Adı soyadı, imza</div></div></section>`; };
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık bildirimi</title><style>
 @page{size:A4 portrait;margin:16mm 18mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12pt;color:#000;margin:0;padding:16mm 18mm}@media print{body{padding:0}}
-.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.4;margin-bottom:6mm}.ss{display:flex;justify-content:space-between}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-weight:bold;line-height:1.4;margin-bottom:6mm}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:21mm}.ss{display:flex;justify-content:space-between}
 p{line-height:1.6;text-align:justify;margin:3mm 0}.hit{margin-top:8mm}table{border-collapse:collapse;margin:3mm auto;width:110mm}td,th{border:1px solid #000;padding:2mm;text-align:center}
 .imz{text-align:center;margin:10mm 0 0 auto;width:70mm}.kes{margin-top:14mm;border-top:1px dashed #000;padding-top:3mm;text-align:center;font-weight:bold;letter-spacing:2px}.tb{display:flex;justify-content:space-between;margin-top:6mm;text-align:center}.tb div{width:70mm}
 </style></head><body>${nolar.map(tek).join('')}</body></html>`;
@@ -1174,9 +1175,9 @@ p{line-height:1.6;text-align:justify;margin:3mm 0}.hit{margin-top:8mm}table{bord
     const L = Object.keys(DV.M.R).map(no => { const o = ob.get(no) || {}, d = DV.M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', ...dvDurum(no) }; })
       .filter(x => x.bas || x.yakin || x.bek.length).filter(x => !DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)).sort((p, q) => sinifSira(p.sinif, q.sinif) || q.risk - p.risk);
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık uyarı listesi</title><style>
-@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm}.alt{text-align:center;color:#444;margin-bottom:4mm}
+@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm;padding-top:2mm}.alt{text-align:center;color:#444;margin-bottom:4mm}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:14mm}
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact}table{border-collapse:collapse;width:100%}th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}td{border:.3mm solid #8fa3bf;padding:1.3mm 2mm}td.c{text-align:center}tr.b td{background:#fee2e2}tr{break-inside:avoid}thead{display:table-header-group}
-</style></head><body><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK UYARI LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci</div>
+</style></head><body><div style="position:relative;min-height:15mm"><img class="lg" src="${LOGO()}" alt=""><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK UYARI LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci</div></div>
 <table><thead><tr><th>#</th><th>Şube</th><th>No</th><th>Adı soyadı</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Sınır (özürsüz / toplam)</th><th>Durum</th></tr></thead><tbody>
 ${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas ? 'b' : ''}"><td class="c">${i + 1}</td><td class="c">${esc(x.sinif)}</td><td class="c">${esc(x.no)}</td><td>${esc(C.baslik(x.ad))}</td><td class="c">${dvS(x.d.ol)}</td><td class="c">${dvS(x.d.oz)}</td><td class="c"><b>${dvS(x.d.top)}</b></td><td class="c">${oS} / ${tS}</td><td>${esc(x.U.map(u => u[1]).join(' · '))}</td></tr>`; }).join('')}</tbody></table></body></html>`;
   }
@@ -1185,10 +1186,10 @@ ${L.map((x, i) => { const [, oS, tS] = dvSinir(x.no); return `<tr class="${x.bas
     const L = Object.keys(DV.M.R).map(no => { const o = ob.get(no) || {}, d = DV.M.R[no]; return { no, ad: o.ad || d.ad || '', sinif: o.sinif || d.sinif || '', n: (DV.M.not || {})[no] || {}, ...dvDurum(no) }; })
       .filter(x => x.bas || x.yakin || x.bek.length || x.n.durum || x.n.aciklama).filter(x => !DV.sinif || (DV.sinif.length <= 2 ? seviye(x.sinif) === DV.sinif : x.sinif === DV.sinif)).sort((p, q) => sinifSira(p.sinif, q.sinif) || q.risk - p.risk);
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Devamsızlık durum listesi</title><style>
-@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9.5pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm}.alt{text-align:center;color:#444;margin-bottom:4mm}
+@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:Arial,sans-serif;font-size:9.5pt;margin:0;padding:12mm}@media print{body{padding:0}}h1{font-size:14pt;text-align:center;margin:0 0 1mm;padding-top:2mm}.alt{text-align:center;color:#444;margin-bottom:4mm}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:14mm}
 table{border-collapse:collapse;width:100%}th{background:#13305a;color:#fff;padding:1.6mm;border:.3mm solid #0b2142}td{border:.3mm solid #8fa3bf;padding:1.3mm 2mm;vertical-align:top}td.c{text-align:center}tr.b td{background:#fee2e2}tr{break-inside:avoid}thead{display:table-header-group}
 .imz{display:flex;justify-content:space-between;margin-top:10mm;text-align:center}.imz div{width:70mm}
-</style></head><body><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK DURUM LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci · ${tGos(bugun())}</div>
+</style></head><body><div style="position:relative;min-height:15mm"><img class="lg" src="${LOGO()}" alt=""><h1>ÜMRANİYE MERKEZ ANADOLU LİSESİ · DEVAMSIZLIK DURUM LİSTESİ</h1><div class="alt">${egitimYili()} · e-Okul listesi: ${tGos(DV.M.tarih)} · ${DV.sinif ? (DV.sinif.length <= 2 ? DV.sinif + '. sınıflar' : DV.sinif) : 'bütün sınıflar'} · ${L.length} öğrenci · ${tGos(bugun())}</div></div>
 <table><thead><tr><th>#</th><th>Şube</th><th>No</th><th>Adı soyadı</th><th>Özürlü</th><th>Özürsüz</th><th>Toplam</th><th>Uyarı</th><th>Veli bildirimi</th><th>Durum</th><th>Açıklama</th></tr></thead><tbody>
 ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(teb).sort((a, b) => a - b).map(g => `${g}. gün (${tGos(teb[g])})`).join(', ');
   return `<tr class="${x.bas ? 'b' : ''}"><td class="c">${i + 1}</td><td class="c">${esc(x.sinif)}</td><td class="c">${esc(x.no)}</td><td>${esc(C.baslik(x.ad))}</td><td class="c">${dvS(x.d.ol)}</td><td class="c">${dvS(x.d.oz)}</td><td class="c"><b>${dvS(x.d.top)}</b></td>
@@ -1279,13 +1280,13 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
     const sat = `<tr><td>…. / …. / ${yil}</td><td></td></tr>`;
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Veli Beyanıdır</title><style>
 @page{size:A4 portrait;margin:18mm 20mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12.5pt;color:#000;margin:0;padding:18mm 20mm;line-height:1.6}
-@media print{body{padding:0}}h1{text-align:center;font-size:17pt;font-weight:normal;letter-spacing:.5px;margin:2mm 0 7mm}
+@media print{body{padding:0}}h1{text-align:center;font-size:17pt;font-weight:normal;letter-spacing:.5px;margin:2mm 0 7mm;padding:3mm 0}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:18mm}
 .mud{display:flex;justify-content:center;align-items:flex-end;gap:16mm;font-weight:bold;font-size:11.5pt;margin-bottom:8mm}.mud span:last-child{margin-top:4mm}
 p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Arial,sans-serif;font-weight:bold}.dl{font-weight:bold}
 .alt{display:flex;justify-content:space-between;margin-top:12mm}.sol div{margin-bottom:5mm}.sag{text-align:center;width:65mm}.sag .t{margin-bottom:20mm;text-align:right}
 .alt u{text-decoration:underline}table{border-collapse:collapse;margin-top:10mm;width:120mm}td,th{border:1.2px solid #000;padding:3mm 4mm;font-weight:normal;text-align:left}th{text-align:center}td:first-child{width:38mm;text-align:center}
 </style></head><body>
-<h1>VELİ BEYANIDIR</h1>
+<div style="position:relative"><img class="lg" src="${LOGO()}" alt=""><h1>VELİ BEYANIDIR</h1></div>
 <div class="mud"><span>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜNE</span><span>ÜMRANİYE</span></div>
 <p>Okulunuz ${d(sv, 5)}/${d(sb, 5)} şubesi ${d(o && o.no, 7)} numaralı öğrencisi ${d(o && o.ad, 60)}’nın velisiyim. Öğrencim aşağıda belirttiğim tarihlerde mazereti nedeniyle …… (………) gün süreyle bilgim dahilinde okula gelememiştir/ gelemeyecektir.</p>
 <p>Bugün itibariyle özürlü devamsızlık süresi …….. gün, özürsüz devamsızlık süresi ………… gündür. 08/09/2023 tarih ve 32303 sayılı Resmi Gazetede yayımlanan Milli Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliğinin <span class="kal">“Devamsızlık süresi özürsüz 10 günü, toplamda 30 günü aşan öğrenciler, ders puanları ne olursa olsun başarısız sayılır”</span> hükmünü bildiğimi ve madde 36 (5) fıkrası gereğince belirttiğim tarihte / tarihlerde izinli sayılmasını arz ederim.</p>
@@ -1397,11 +1398,11 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
     const O = ogretmenler().slice().sort((a, b) => a.ad.localeCompare(b.ad, tr));
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Dönem Sonu İş ve İşlemleri</title><style>
 @page{size:A4 portrait;margin:14mm 16mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11pt;color:#000;margin:0;padding:14mm 16mm}@media print{body{padding:0}}
-.ust{text-align:center;font-weight:bold;line-height:1.35}.ss{display:flex;justify-content:space-between;margin-top:5mm}h1{text-align:center;font-size:12.5pt;margin:4mm 0 3mm}
+.ust{text-align:center;font-weight:bold;line-height:1.35}.lg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:21mm}.ss{display:flex;justify-content:space-between;margin-top:5mm}h1{text-align:center;font-size:12.5pt;margin:4mm 0 3mm}
 h2{font-size:11pt;margin:3.5mm 0 1mm;text-decoration:underline}ol{margin:0;padding-left:7mm}li{margin:.9mm 0;line-height:1.4;text-align:justify;break-inside:avoid}p{line-height:1.45;margin:1.5mm 0;text-align:justify}
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:1.2mm 2mm;text-align:left}th{text-align:center}.tk{margin-top:3mm;break-inside:avoid}.tk td:first-child{width:62%}.imz{text-align:center;margin:7mm 0 0 auto;width:70mm;break-inside:avoid}
 .yeni{page-break-before:always}.tb td{height:7.5mm}.tb thead{display:table-header-group}.tb tr{break-inside:avoid}.c{text-align:center}
-</style></head><body><div class="ust">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
+</style></head><body><div class="ust" style="position:relative"><img class="lg" src="${LOGO()}" alt="">T.C.<br>ÜMRANİYE KAYMAKAMLIĞI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜ</div>
 <div class="ss"><span>Sayı : ……………………</span><span>${tGos(bugun())}</span></div><div>Konu : ${esc(y)} eğitim öğretim yılı ${DON.toLocaleLowerCase(tr)} sonu iş ve işlemleri</div>
 <h1>${esc(y)} EĞİTİM ÖĞRETİM YILI ${DON} SONU İŞ VE İŞLEMLERİ</h1>
 <p>${esc(y)} eğitim öğretim yılı ${don} sonunda yapılacak iş ve işlemler aşağıda belirtilmiştir. Bütün öğretmenlerimizin belirtilen tarih ve saatlere uyması önemle rica olunur.</p>
@@ -1429,12 +1430,12 @@ ${(O.length ? O : Array.from({ length: 30 }, () => ({ ad: '', brans: '' }))).map
     const tarihY = t ? `${t[2]}/${t[1]}/${t[0]}` : `………./………/${y}`;
     const sevler = G.sev === 'hepsi' ? ['9', '10', '11', '12'] : [G.sev];
     const r = Array.from({ length: 35 }, (_, i) => `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td></tr>`).join('');
-    const tek = sv => `<section class="sy"><div class="ust">${ey}-${ey + 1} EĞİTİM ÖĞRETİM YILI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ GEÇ KALAN ÖĞRENCİ ÇİZELGESİDİR</div>
+    const tek = sv => `<section class="sy"><div class="ust" style="position:relative"><img class="lg" src="${LOGO()}" alt="">${ey}-${ey + 1} EĞİTİM ÖĞRETİM YILI<br>ÜMRANİYE MERKEZ ANADOLU LİSESİ GEÇ KALAN ÖĞRENCİ ÇİZELGESİDİR</div>
       <div class="bas"><h1>${sv}. SINIFLAR</h1><span>TARİH</span></div><div class="tr">${esc(tarihY)}</div>
       <table><tr><th style="width:8%">SIRA</th><th style="width:11%">SINIF</th><th style="width:12.5%">NO</th><th>ADI SOYADI</th><th style="width:20%">İMZASI</th></tr>${r}</table></section>`;
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Geç Kalan Öğrenci Çizelgesi</title><style>
 @page{size:A4 portrait;margin:12mm 15mm}*{box-sizing:border-box}body{font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;color:#000;margin:0;padding:12mm 15mm}@media print{body{padding:0}}
-.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:10.5pt;font-weight:bold;line-height:1.35}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:10.5pt;font-weight:bold;line-height:1.35}.lg{position:absolute;left:0;top:0;height:22mm}
 .bas{position:relative;text-align:center;margin:2mm 0 0}.bas h1{font-size:28pt;margin:0;line-height:1.15}.bas span{position:absolute;left:73%;bottom:2.2mm;font-size:12pt;font-weight:bold}
 .tr{font-size:12pt;font-weight:bold;margin:1mm 0 .5mm}
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;font-size:12pt;padding:0 1.5mm;height:6.55mm;vertical-align:middle}th{font-weight:bold;text-align:center;height:8mm}td:first-child{font-weight:bold}
@@ -1445,7 +1446,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;font-size:
     const tarihY = F.tarih ? tGos(F.tarih) : '';
     const tek = sn => { const P = O.slice(sn * 30, sn * 30 + 30); let r = '';
       for (let i = 0; i < 30; i++) { const o = P[i]; r += `<tr><td class="c">${sn * 30 + i + 1}</td><td class="c">${o ? esc(o.sinif) : ''}</td><td class="c">${o ? esc(o.no) : ''}</td><td>${o ? esc(o.ad) : ''}</td><td></td></tr>`; }
-      return `<section class="sy"><div class="ust">ÜMRANİYE MERKEZ ANADOLU LİSESİ<br>ÖĞRENCİ FAALİYET GÖREV UYGUNLUK BELGESİ</div>
+      return `<section class="sy"><div class="ust" style="position:relative"><img class="lg" src="${LOGO()}" alt="">ÜMRANİYE MERKEZ ANADOLU LİSESİ<br>ÖĞRENCİ FAALİYET GÖREV UYGUNLUK BELGESİ</div>
       <div class="ogt"><table class="t1"><tr><th colspan="2">ÖĞRENCİ GÖREV OLURU TALEP EDEN ÖĞRETMENİN</th></tr><tr><td class="e">ADI SOYADI</td><td>${esc(F.ogretmen || '')}</td></tr><tr><td class="e">BRANŞI</td><td>${esc(F.brans || '')}</td></tr><tr><td class="e">GÖREVİ</td><td>${esc(F.gorev || '')}</td></tr></table>
         <table class="t2"><tr><th>ÖĞRETMEN İMZA</th></tr><tr><td></td></tr></table></div>
       <table class="t3"><tr><th style="width:40%">GÖREVİN/ETKİNLİĞİN ADI</th><th style="width:30%">GÖREVİN TARİHİ</th><th>SAAT ARALIĞI</th></tr><tr><td>${esc(F.etkinlik || '')}</td><td class="c">${esc(tarihY)}</td><td class="c">${esc(F.saat || '')}</td></tr></table>
@@ -1454,7 +1455,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;font-size:
       <div class="alt">…./…../${yil}<div style="height:3mm"></div>UYGUNDUR<br>${esc(MUDUR)}<br>Okul Müdürü</div></section>`; };
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci Faaliyet Görev Uygunluk Belgesi</title><style>
 @page{size:A4 portrait;margin:10mm 14mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:10.5pt;color:#000;margin:0;padding:10mm 14mm}@media print{body{padding:0}}
-.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:11pt;line-height:1.3;margin-bottom:5mm}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:11pt;line-height:1.3;margin-bottom:5mm;padding-top:1.5mm}.lg{position:absolute;left:0;top:0;height:15mm}
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6mm 2mm;font-weight:normal;vertical-align:middle}th{text-align:center}.c{text-align:center}
 .ogt{display:flex;gap:0;margin-bottom:4mm}.t1{width:60%}.t1 td{height:6mm}.t1 .e{width:35%}.t2{width:40%;border-left:0}.t2 th{border-left:0}.t2 td{border-left:0;height:18mm}
 .t3{margin-bottom:4mm}.t3 td{height:11mm}.t4 td{height:5.3mm;font-size:10pt}.t4 th{font-size:10pt}
