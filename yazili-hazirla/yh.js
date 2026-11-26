@@ -113,6 +113,10 @@
 .yh-esl-s b{flex:none;color:var(--yh-vurgu)}
 .yh-kelime{margin:1.8mm 0 0 6.6mm;border:.3mm dashed #777;border-radius:1.2mm;padding:1.4mm 2.5mm;outline:none;font-weight:500}
 .yh-ca{margin:1.6mm 0 0 6.6mm}
+/* K-996: kareli alan tam kareyle biter, sorunun altına oturur (yarım kare kalmaz) */
+.yh-ca.kareli{box-sizing:content-box;width:calc(100% - 6.6mm - .5mm)}
+@supports (width:round(down,100%,5mm)){.yh-ca.kareli{width:round(down,calc(100% - 6.6mm - .5mm),5mm)}}
+.yh-ca.kareli{background-position:0 0;background-origin:padding-box}
 .yh-ca.cizgi>i{display:block;height:8mm;border-bottom:.25mm solid #9a9a9a}
 .yh-ca.kareli{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M0 .5H20M.5 0V20' stroke='%23cfcfcf' stroke-width='1' fill='none'/%3E%3C/svg%3E");background-size:5mm 5mm;border:.25mm solid #bbb}
 .yh-son{display:flex;justify-content:space-between;align-items:flex-end;padding-top:5mm;font-size:9.5pt;color:#111}
@@ -192,6 +196,34 @@ body.yh-acik #pencere{z-index:70}
 .yh-editor .yh-bas-yer:hover{outline:1.5px dashed #22c4e0;outline-offset:1.5mm}
 .yh-editor .yh-bas-yer:hover:after{content:'Değiştirmek için çift tıklayın';position:absolute;right:0;top:-6.5mm;font:600 11px/1.2 sans-serif;color:#fff;background:#0b7f95;padding:3px 8px;border-radius:6px}
 .yh-fgrup{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.mf-alan{background:#fff;color:#111;border-radius:12px;min-height:84px;padding:14px 16px;font:22px/1.9 'Cambria Math','STIX Two Math','Times New Roman',serif;outline:none;border:2px solid #22c4e0;margin-top:10px;overflow-x:auto;white-space:nowrap}
+.mf-alan:empty:before{content:attr(data-ipucu);color:#9aa;font:16px 'YH Poppins',sans-serif}
+.mf-y{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .08em;white-space:nowrap}
+.mf-k{display:inline-block;min-width:.8em;min-height:1.1em;line-height:1.15;padding:0 .08em;outline:none;border-radius:3px;text-align:center;vertical-align:middle}
+.mf-k:empty{border:1.5px dashed #6bb7d8;background:#eef9fd}
+.mf-k:focus{background:#e2f6fb;box-shadow:0 0 0 1.5px #22c4e0}
+.mf-kesir{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;font-size:.88em}
+.mf-kesir>:first-child{border-bottom:2px solid #111;padding:0 .2em .05em}.mf-kesir>:last-child{padding:.05em .2em 0}
+.mf-sabit span{text-align:center;font-style:italic}
+.mf-ust{font-size:.62em;vertical-align:.9em;display:inline-block}.mf-alt{font-size:.62em;vertical-align:-.45em;display:inline-block}
+.mf-ust .mf-k,.mf-alt .mf-k{min-height:1em}
+.mf-y>.mf-ust{position:relative;top:-.6em;vertical-align:0}.mf-y>.mf-alt{position:relative;top:.4em;vertical-align:0}
+.mf-kok{display:inline-flex;align-items:stretch;position:relative}.mf-kis{font-size:1.15em;line-height:1;transform:scaleY(1.15);margin-right:-.05em}.mf-kic{border-top:2px solid #111;padding:.05em .1em 0;display:inline-flex;align-items:center}
+.mf-kder{font-size:.55em;position:absolute;left:-.1em;top:-.35em}.mf-kder .mf-k{min-width:.6em;min-height:.9em}
+.mf-sar{font-size:1.2em;line-height:1;padding:0 .04em}
+.mf-ustcizgi,.mf-vektor,.mf-yay,.mf-sapka{display:inline-block;position:relative;padding-top:.25em}
+.mf-ustcizgi{border-top:2px solid #111;padding-top:0}
+.mf-vektor:before{content:'→';position:absolute;left:0;right:0;top:-.55em;text-align:center;font-size:.8em}
+.mf-yay:before{content:'⌒';position:absolute;left:0;right:0;top:-.6em;text-align:center;font-size:.9em}
+.mf-sapka:before{content:'︿';position:absolute;left:0;right:0;top:-.55em;text-align:center;font-size:.8em}
+.mf-limit{display:inline-flex;flex-direction:column;align-items:center;line-height:1.1;margin-right:.15em}.mf-kucuk{font-size:.55em;white-space:nowrap}
+.mf-buyuk{font-size:1.5em;line-height:1}.mf-sinir{display:inline-flex;flex-direction:column;font-size:.55em;margin:0 .15em 0 -.1em;line-height:1.3}
+.mf-buyukdik{display:inline-flex;flex-direction:column;align-items:center;font-size:.6em;line-height:1.1;margin-right:.1em}.mf-buyukdik .mf-buyuk{font-size:2.4em}
+.mf-dikey{display:inline-flex;flex-direction:column;align-items:center;font-size:.8em;line-height:1.3}.mf-sola{align-items:flex-start}
+.mf-matris{display:inline-grid;grid-template-columns:repeat(var(--s),auto);gap:.1em .6em;border-left:2px solid #111;border-right:2px solid #111;padding:.1em .3em;border-radius:3px;font-size:.85em}
+.mf-matris:not(.mf-det):not(.mf-acik){border-radius:0;box-shadow:inset 6px 0 0 -4px #111,inset -6px 0 0 -4px #111}
+.mf-acik{border:0;box-shadow:none}
+.mf-ham{font-size:.85em}
 .yh-fpalet{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;max-height:230px;overflow:auto;padding:2px}
 .yh-fdug{background:#fff;color:#111;border:1px solid #2a4468;border-radius:10px;min-height:54px;padding:4px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px}
 .yh-fdug:hover{outline:2px solid #22e8ff}
@@ -983,18 +1015,68 @@ body.yh-acik #pencere{z-index:70}
   }
   const kxCiz = (tex, blok) => { try { return window.katex.renderToString(blok ? tex : '\\displaystyle ' + tex, { throwOnError: false, displayMode: !!blok, strict: 'ignore', trust: false, output: 'html' }); } catch (e) { return esc(tex); } };
   const matHTML = (tex, blok) => `<span class="yh-mat${blok ? ' blok' : ''}" contenteditable="false" data-tex="${esc(tex)}" data-blok="${blok ? 1 : 0}">${kxCiz(tex, blok)}</span>`;
-  const Q = '\\square';
-  const FORMUL_GRUP = [
-    ['Temel', [`\\frac{${Q}}{${Q}}`, `${Q}^{${Q}}`, `${Q}_{${Q}}`, `\\sqrt{${Q}}`, `\\sqrt[${Q}]{${Q}}`, `\\left|${Q}\\right|`, `\\left(${Q}\\right)`, `\\left[${Q}\\right]`, `\\left\\{${Q}\\right\\}`, `${Q}\\tfrac{${Q}}{${Q}}`, `0,\\overline{${Q}}`, '\\pm', '\\mp', '\\cdot', '\\times', '\\div', '\\le', '\\ge', '\\ne', '\\approx', '\\equiv', '\\%', '\\infty']],
-    ['Fonksiyon', [`f(x)=${Q}`, '(f\\circ g)(x)', 'f^{-1}(x)', `f(x)=\\begin{cases}${Q}, & x<${Q}\\\\ ${Q}, & x\\ge ${Q}\\end{cases}`, `\\lfloor ${Q} \\rfloor`, `\\lceil ${Q} \\rceil`, 'f:\\mathbb{R}\\to\\mathbb{R}', `\\operatorname{sgn}(${Q})`, `y=a x^{2}+b x+c`, `\\text{T.K.}`, `\\text{G.K.}`]],
-    ['Trigonometri', [`\\sin ${Q}`, `\\cos ${Q}`, `\\tan ${Q}`, `\\cot ${Q}`, `\\sec ${Q}`, `\\csc ${Q}`, `\\sin^{2} ${Q}`, `\\cos^{2} ${Q}`, `\\arcsin ${Q}`, `\\arccos ${Q}`, `\\arctan ${Q}`, `\\operatorname{arccot} ${Q}`, `${Q}^{\\circ}`, '\\theta', '\\alpha', '\\beta', '\\pi', `\\frac{\\pi}{${Q}}`, '\\sin^{2}x+\\cos^{2}x=1']],
-    ['Logaritma · Üstel', [`\\log ${Q}`, `\\log_{${Q}} ${Q}`, `\\ln ${Q}`, `e^{${Q}}`, `${Q}^{${Q}}`, `\\log_{${Q}}\\left(${Q}\\right)`, '\\log_{a}(x\\cdot y)=\\log_{a}x+\\log_{a}y', '\\log_{a}x=\\frac{\\ln x}{\\ln a}', 'a^{\\log_{a}x}=x']],
-    ['Limit · Türev · İntegral', [`\\lim_{x\\to ${Q}} ${Q}`, `\\lim_{x\\to\\infty} ${Q}`, `\\lim_{x\\to ${Q}^{+}} ${Q}`, `\\frac{d}{dx}\\left(${Q}\\right)`, "f'(x)", "f''(x)", `\\frac{dy}{dx}`, `\\int ${Q}\\,dx`, `\\int_{${Q}}^{${Q}} ${Q}\\,dx`, `\\left.${Q}\\right|_{${Q}}^{${Q}}`, `\\sum_{k=${Q}}^{${Q}} ${Q}`, `\\prod_{k=${Q}}^{${Q}} ${Q}`, `\\binom{${Q}}{${Q}}`, `${Q}!`, `P(${Q},${Q})`, `C(${Q},${Q})`]],
-    ['Kümeler · Mantık', ['\\in', '\\notin', '\\subset', '\\subseteq', '\\not\\subset', '\\cup', '\\cap', '\\setminus', '\\emptyset', `A'`, `s(${Q})`, '\\mathbb{N}', '\\mathbb{Z}', '\\mathbb{Q}', '\\mathbb{R}', '\\mathbb{C}', '\\forall', '\\exists', '\\neg', '\\land', '\\lor', '\\Rightarrow', '\\Leftrightarrow', `\\{\\,${Q}\\,\\}`, `\\{\\,x \\mid ${Q}\\,\\}`, `[${Q},${Q})`]],
-    ['Geometri', [`\\widehat{${Q}}`, `m(\\widehat{${Q}})`, `\\angle ${Q}`, `\\triangle ${Q}`, '\\perp', '\\parallel', '\\cong', '\\sim', `\\overline{${Q}}`, `|${Q}|`, `\\overrightarrow{${Q}}`, `\\overset{\\frown}{${Q}}`, `\\vec{${Q}}`, `${Q}^{\\circ}`, `A(\\triangle ${Q})`, '\\pi r^{2}', '2\\pi r']],
-    ['Matris · Sistem', [`\\begin{bmatrix}${Q} & ${Q}\\\\ ${Q} & ${Q}\\end{bmatrix}`, `\\begin{bmatrix}${Q} & ${Q} & ${Q}\\\\ ${Q} & ${Q} & ${Q}\\\\ ${Q} & ${Q} & ${Q}\\end{bmatrix}`, `\\begin{vmatrix}${Q} & ${Q}\\\\ ${Q} & ${Q}\\end{vmatrix}`, `\\begin{pmatrix}${Q}\\\\ ${Q}\\end{pmatrix}`, `\\begin{cases}${Q}\\\\ ${Q}\\end{cases}`, `\\begin{cases}${Q}\\\\ ${Q}\\\\ ${Q}\\end{cases}`, `\\left(${Q},${Q}\\right)`]],
-    ['Yunan harfleri', ['\\alpha', '\\beta', '\\gamma', '\\delta', '\\varepsilon', '\\theta', '\\lambda', '\\mu', '\\pi', '\\rho', '\\sigma', '\\varphi', '\\omega', '\\Delta', '\\Sigma', '\\Omega', '\\Gamma']],
-    ['Hazır formüller', ['x_{1,2}=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}', '\\Delta=b^{2}-4ac', '(a+b)^{2}=a^{2}+2ab+b^{2}', 'a^{2}-b^{2}=(a-b)(a+b)', '\\sin^{2}x+\\cos^{2}x=1', '\\tan x=\\frac{\\sin x}{\\cos x}', '\\lim_{x\\to 0}\\frac{\\sin x}{x}=1', '\\sum_{k=1}^{n}k=\\frac{n(n+1)}{2}', '\\int_{0}^{1}x^{2}\\,dx=\\frac{1}{3}', 'a^{2}=b^{2}+c^{2}-2bc\\cos A', '\\frac{a}{\\sin A}=\\frac{b}{\\sin B}=\\frac{c}{\\sin C}', 'e^{i\\pi}+1=0']]
+  // K-995: Görsel formül düzenleyici — öğretmen kodu hiç görmez; kesir kesir gibi, kök kök gibi kutucuklara yazılır.
+  // Yapı: .mf-alan içinde .mf-y (yapı, düzenlenemez kabuk) ve onun içindeki .mf-k (yazılan kutucuk). Kâğıda KaTeX ile basılır.
+  const MF_TIP = {   // tip → [kutucuk adları, görsel iskelet, LaTeX]
+    kesir: { k: ['p', 'd'], h: k => `<span class="mf-kesir">${k.p}${k.d}</span>`, t: k => `\\frac{${k.p}}{${k.d}}` },
+    us: { k: ['a', 'u'], h: k => `${k.a}<sup class="mf-ust">${k.u}</sup>`, t: k => `{${k.a}}^{${k.u}}` },
+    alt: { k: ['a', 'i'], h: k => `${k.a}<sub class="mf-alt">${k.i}</sub>`, t: k => `{${k.a}}_{${k.i}}` },
+    kok: { k: ['r'], h: k => `<span class="mf-kok"><span class="mf-kis">√</span><span class="mf-kic">${k.r}</span></span>`, t: k => `\\sqrt{${k.r}}` },
+    nkok: { k: ['n', 'r'], h: k => `<span class="mf-kok"><sup class="mf-kder">${k.n}</sup><span class="mf-kis">√</span><span class="mf-kic">${k.r}</span></span>`, t: k => `\\sqrt[${k.n}]{${k.r}}` },
+    mutlak: { k: ['x'], h: k => `<span class="mf-sar">|</span>${k.x}<span class="mf-sar">|</span>`, t: k => `\\left|${k.x}\\right|` },
+    parantez: { k: ['x'], h: k => `<span class="mf-sar">(</span>${k.x}<span class="mf-sar">)</span>`, t: k => `\\left(${k.x}\\right)` },
+    koseli: { k: ['x'], h: k => `<span class="mf-sar">[</span>${k.x}<span class="mf-sar">]</span>`, t: k => `\\left[${k.x}\\right]` },
+    kume: { k: ['x'], h: k => `<span class="mf-sar">{</span>${k.x}<span class="mf-sar">}</span>`, t: k => `\\left\\{${k.x}\\right\\}` },
+    devir: { k: ['x'], h: k => `<span class="mf-ustcizgi">${k.x}</span>`, t: k => `\\overline{${k.x}}` },
+    vektor: { k: ['x'], h: k => `<span class="mf-vektor">${k.x}</span>`, t: k => `\\overrightarrow{${k.x}}` },
+    yay: { k: ['x'], h: k => `<span class="mf-yay">${k.x}</span>`, t: k => `\\overset{\\frown}{${k.x}}` },
+    sapka: { k: ['x'], h: k => `<span class="mf-sapka">${k.x}</span>`, t: k => `\\widehat{${k.x}}` },
+    log: { k: ['b', 'x'], h: k => `log<sub class="mf-alt">${k.b}</sub>${k.x}`, t: k => `\\log_{${k.b}}{${k.x}}` },
+    lim: { k: ['v', 'a', 'x'], h: k => `<span class="mf-limit"><span>lim</span><span class="mf-kucuk">${k.v}→${k.a}</span></span>${k.x}`, t: k => `\\lim_{${k.v}\\to ${k.a}}{${k.x}}` },
+    int: { k: ['x', 'd'], h: k => `<span class="mf-buyuk">∫</span>${k.x}<span> d</span>${k.d}`, t: k => `\\int ${k.x}\\,d${k.d}` },
+    bint: { k: ['ust', 'alt', 'x', 'd'], h: k => `<span class="mf-buyuk">∫</span><span class="mf-sinir">${k.ust}${k.alt}</span>${k.x}<span> d</span>${k.d}`, t: k => `\\int_{${k.alt}}^{${k.ust}} ${k.x}\\,d${k.d}` },
+    toplam: { k: ['ust', 'alt', 'x'], h: k => `<span class="mf-buyukdik">${k.ust}<span class="mf-buyuk">∑</span>${k.alt}</span>${k.x}`, t: k => `\\sum_{${k.alt}}^{${k.ust}}{${k.x}}` },
+    carpim: { k: ['ust', 'alt', 'x'], h: k => `<span class="mf-buyukdik">${k.ust}<span class="mf-buyuk">∏</span>${k.alt}</span>${k.x}`, t: k => `\\prod_{${k.alt}}^{${k.ust}}{${k.x}}` },
+    turev: { k: ['x'], h: k => `<span class="mf-kesir mf-sabit"><span>d</span><span>dx</span></span><span class="mf-sar">(</span>${k.x}<span class="mf-sar">)</span>`, t: k => `\\frac{d}{dx}\\left(${k.x}\\right)` },
+    kombin: { k: ['n', 'r'], h: k => `<span class="mf-sar">(</span><span class="mf-dikey">${k.n}${k.r}</span><span class="mf-sar">)</span>`, t: k => `\\binom{${k.n}}{${k.r}}` },
+    matris2: { k: ['a', 'b', 'c', 'd'], h: k => `<span class="mf-matris" style="--s:2">${k.a}${k.b}${k.c}${k.d}</span>`, t: k => `\\begin{bmatrix}${k.a} & ${k.b}\\\\ ${k.c} & ${k.d}\\end{bmatrix}` },
+    matris3: { k: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'], h: k => `<span class="mf-matris" style="--s:3">${'abcdefghi'.split('').map(x => k[x]).join('')}</span>`, t: k => `\\begin{bmatrix}${k.a} & ${k.b} & ${k.c}\\\\ ${k.d} & ${k.e} & ${k.f}\\\\ ${k.g} & ${k.h} & ${k.i}\\end{bmatrix}` },
+    det: { k: ['a', 'b', 'c', 'd'], h: k => `<span class="mf-matris mf-det" style="--s:2">${k.a}${k.b}${k.c}${k.d}</span>`, t: k => `\\begin{vmatrix}${k.a} & ${k.b}\\\\ ${k.c} & ${k.d}\\end{vmatrix}` },
+    sistem: { k: ['a', 'b'], h: k => `<span class="mf-sar mf-buyuk">{</span><span class="mf-dikey mf-sola">${k.a}${k.b}</span>`, t: k => `\\begin{cases}${k.a}\\\\ ${k.b}\\end{cases}` },
+    parcali: { k: ['a', 'ka', 'b', 'kb'], h: k => `<span class="mf-sar mf-buyuk">{</span><span class="mf-matris mf-acik" style="--s:2">${k.a}${k.ka}${k.b}${k.kb}</span>`, t: k => `\\begin{cases}${k.a}, & ${k.ka}\\\\ ${k.b}, & ${k.kb}\\end{cases}` }
+  };
+  const MF_SEMBOL = [['≤', '\\le '], ['≥', '\\ge '], ['≠', '\\ne '], ['≈', '\\approx '], ['≡', '\\equiv '], ['±', '\\pm '], ['∓', '\\mp '], ['×', '\\times '], ['÷', '\\div '], ['·', '\\cdot '], ['∞', '\\infty '], ['π', '\\pi '], ['θ', '\\theta '], ['α', '\\alpha '], ['β', '\\beta '], ['γ', '\\gamma '], ['δ', '\\delta '], ['ε', '\\varepsilon '], ['λ', '\\lambda '], ['μ', '\\mu '], ['σ', '\\sigma '], ['φ', '\\varphi '], ['ω', '\\omega '], ['ρ', '\\rho '], ['τ', '\\tau '], ['Δ', '\\Delta '], ['Σ', '\\Sigma '], ['Ω', '\\Omega '], ['∈', '\\in '], ['∉', '\\notin '], ['⊂', '\\subset '], ['⊆', '\\subseteq '], ['⊄', '\\not\\subset '], ['∪', '\\cup '], ['∩', '\\cap '], ['∖', '\\setminus '], ['∅', '\\emptyset '], ['ℕ', '\\mathbb{N}'], ['ℤ', '\\mathbb{Z}'], ['ℚ', '\\mathbb{Q}'], ['ℝ', '\\mathbb{R}'], ['ℂ', '\\mathbb{C}'], ['∀', '\\forall '], ['∃', '\\exists '], ['¬', '\\neg '], ['∧', '\\land '], ['∨', '\\lor '], ['⇒', '\\Rightarrow '], ['⇔', '\\Leftrightarrow '], ['→', '\\to '], ['°', '^{\\circ}'], ['∠', '\\angle '], ['△', '\\triangle '], ['⊥', '\\perp '], ['∥', '\\parallel '], ['≅', '\\cong '], ['∼', '\\sim '], ['′', "'"], ['%', '\\%'], ['∘', '\\circ '], ['ı', '\\imath '], ['…', '\\dots ']];
+  const MF_HARITA = new Map(MF_SEMBOL);
+  const MF_FONK = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'lim', 'max', 'min', 'det', 'sgn'];
+  function mfKutu(ad) { return `<span class="mf-k" contenteditable="true" data-r="${ad}"></span>`; }
+  function mfYapi(tip) { const T = MF_TIP[tip], k = {}; T.k.forEach(a => { k[a] = mfKutu(a); }); return `<span class="mf-y" contenteditable="false" data-t="${tip}">${T.h(k)}</span>`; }
+  function mfHam(tex) { return `<span class="mf-y mf-ham" contenteditable="false" data-t="ham" data-tex="${esc(tex)}">${kxCiz(tex, false)}</span>`; }
+  function mfTex(n) {   // görsel yapı → LaTeX
+    let out = '';
+    n.childNodes.forEach(c => {
+      if (c.nodeType === 3) { let t = c.nodeValue.replace(/​/g, '');
+        t = t.replace(new RegExp('\\b(' + MF_FONK.join('|') + ')\\b', 'g'), '\u0001$1\u0002');
+        let s = ''; for (const ch of t) { if (MF_HARITA.has(ch)) s += MF_HARITA.get(ch); else if ('{}#$&_^\\'.includes(ch)) s += ch === '\\' ? '\\backslash ' : '\\' + ch; else if (ch === ' ' || ch === '\u00a0') s += ' '; else s += ch; }
+        out += s.replace(/\u0001(arcsin|arccos|arctan|sgn)\u0002/g, '\\operatorname{$1}').replace(/\u0001(\w+)\u0002/g, '\\$1 '); return; }
+      if (c.nodeType !== 1) return;
+      if (c.classList.contains('mf-y')) { const tip = c.dataset.t; if (tip === 'ham') { out += '{' + (c.dataset.tex || '') + '}'; return; }
+        const T = MF_TIP[tip]; if (!T) return; const k = {}; T.k.forEach(a => { const kk = [...c.querySelectorAll('.mf-k')].find(x => x.dataset.r === a && x.closest('.mf-y') === c); k[a] = kk ? (mfTex(kk) || '\\square') : '\\square'; }); out += T.t(k); return; }
+      if (c.tagName === 'BR') return;
+      out += mfTex(c);
+    });
+    return out;
+  }
+  const MF_GRUP = [
+    ['Temel', [['\\frac{a}{b}', { y: 'kesir' }, 'Kesir'], ['x^{2}', { y: 'us' }, 'Üs'], ['x_{1}', { y: 'alt' }, 'Alt indis'], ['\\sqrt{x}', { y: 'kok' }, 'Karekök'], ['\\sqrt[n]{x}', { y: 'nkok' }, 'n. dereceden kök'], ['|x|', { y: 'mutlak' }, 'Mutlak değer'], ['(x)', { y: 'parantez' }], ['[x]', { y: 'koseli' }], ['\\{x\\}', { y: 'kume' }], ['0,\\overline{3}', { y: 'devir' }, 'Devirli ondalık / üst çizgi'], ['\\pm', '±'], ['\\cdot', '·'], ['\\times', '×'], ['\\div', '÷'], ['\\le', '≤'], ['\\ge', '≥'], ['\\ne', '≠'], ['\\approx', '≈'], ['\\%', '%'], ['\\infty', '∞'], ['\\pi', 'π']]],
+    ['Fonksiyon', [['f(x)', 'f(x)'], ['f\\circ g', '∘'], ['f^{-1}', { y: 'us', a: 'f', u: '−1' }], ['\\begin{cases}a,&x<0\\\\b,&x\\ge0\\end{cases}', { y: 'parcali' }, 'Parçalı fonksiyon'], ['\\to', '→'], ['\\mathbb{R}', 'ℝ'], ['\\operatorname{sgn}', 'sgn']]],
+    ['Trigonometri', [['\\sin', 'sin '], ['\\cos', 'cos '], ['\\tan', 'tan '], ['\\cot', 'cot '], ['\\sec', 'sec '], ['\\csc', 'csc '], ['\\sin^{2}', { y: 'us', a: 'sin', u: '2' }], ['\\cos^{2}', { y: 'us', a: 'cos', u: '2' }], ['\\arcsin', 'arcsin '], ['\\arccos', 'arccos '], ['\\arctan', 'arctan '], ['x^{\\circ}', '°'], ['\\theta', 'θ'], ['\\alpha', 'α'], ['\\beta', 'β'], ['\\pi', 'π'], ['\\frac{\\pi}{2}', { y: 'kesir', p: 'π', d: '2' }]]],
+    ['Logaritma · Üstel', [['\\log', 'log '], ['\\log_{a}b', { y: 'log' }, 'Tabanlı logaritma'], ['\\ln', 'ln '], ['e^{x}', { y: 'us', a: 'e' }], ['a^{x}', { y: 'us' }]]],
+    ['Limit · Türev · İntegral', [['\\lim_{x\\to a}', { y: 'lim', v: 'x' }, 'Limit'], ['\\frac{d}{dx}', { y: 'turev' }, 'Türev'], ["f'(x)", "f′(x)"], ["f''(x)", "f′′(x)"], ['\\int', { y: 'int', d: 'x' }, 'İntegral'], ['\\int_{a}^{b}', { y: 'bint', d: 'x' }, 'Belirli integral'], ['\\sum', { y: 'toplam' }, 'Toplam sembolü'], ['\\prod', { y: 'carpim' }], ['\\binom{n}{r}', { y: 'kombin' }, 'Kombinasyon'], ['n!', '!'], ['\\infty', '∞'], ['\\Delta', 'Δ']]],
+    ['Kümeler · Mantık', [['\\in', '∈'], ['\\notin', '∉'], ['\\subset', '⊂'], ['\\subseteq', '⊆'], ['\\cup', '∪'], ['\\cap', '∩'], ['\\setminus', '∖'], ['\\emptyset', '∅'], ['\\mathbb{N}', 'ℕ'], ['\\mathbb{Z}', 'ℤ'], ['\\mathbb{Q}', 'ℚ'], ['\\mathbb{R}', 'ℝ'], ['\\forall', '∀'], ['\\exists', '∃'], ['\\neg', '¬'], ['\\land', '∧'], ['\\lor', '∨'], ['\\Rightarrow', '⇒'], ['\\Leftrightarrow', '⇔'], ['\\{\\,\\}', { y: 'kume' }]]],
+    ['Geometri', [['\\widehat{A}', { y: 'sapka' }, 'Açı (şapka)'], ['\\angle', '∠'], ['\\triangle', '△'], ['\\perp', '⊥'], ['\\parallel', '∥'], ['\\cong', '≅'], ['\\sim', '∼'], ['\\overline{AB}', { y: 'devir' }, 'Doğru parçası'], ['\\overrightarrow{AB}', { y: 'vektor' }, 'Vektör'], ['\\overset{\\frown}{AB}', { y: 'yay' }, 'Yay'], ['x^{\\circ}', '°']]],
+    ['Matris · Sistem', [['\\begin{bmatrix}a&b\\\\c&d\\end{bmatrix}', { y: 'matris2' }, '2×2 matris'], ['\\begin{bmatrix}\\cdot&\\cdot&\\cdot\\\\\\cdot&\\cdot&\\cdot\\\\\\cdot&\\cdot&\\cdot\\end{bmatrix}', { y: 'matris3' }, '3×3 matris'], ['\\begin{vmatrix}a&b\\\\c&d\\end{vmatrix}', { y: 'det' }, 'Determinant'], ['\\begin{cases}x+y=5\\\\x-y=1\\end{cases}', { y: 'sistem' }, 'Denklem sistemi']]],
+    ['Yunan harfleri', [['\\alpha', 'α'], ['\\beta', 'β'], ['\\gamma', 'γ'], ['\\delta', 'δ'], ['\\varepsilon', 'ε'], ['\\theta', 'θ'], ['\\lambda', 'λ'], ['\\mu', 'μ'], ['\\pi', 'π'], ['\\rho', 'ρ'], ['\\sigma', 'σ'], ['\\tau', 'τ'], ['\\varphi', 'φ'], ['\\omega', 'ω'], ['\\Delta', 'Δ'], ['\\Sigma', 'Σ'], ['\\Omega', 'Ω']]],
+    ['Hazır formüller', [['x_{1,2}=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}'], ['\\Delta=b^{2}-4ac'], ['(a+b)^{2}=a^{2}+2ab+b^{2}'], ['a^{2}-b^{2}=(a-b)(a+b)'], ['\\sin^{2}x+\\cos^{2}x=1'], ['\\tan x=\\frac{\\sin x}{\\cos x}'], ['\\lim_{x\\to 0}\\frac{\\sin x}{x}=1'], ['\\sum_{k=1}^{n}k=\\frac{n(n+1)}{2}'], ['\\int_{0}^{1}x^{2}\\,dx=\\frac{1}{3}'], ['a^{2}=b^{2}+c^{2}-2bc\\cos A'], ['\\log_{a}x=\\frac{\\ln x}{\\ln a}'], ['\\frac{a}{\\sin A}=\\frac{b}{\\sin B}']]]
   ];
   async function formulDiyalog(el) {
     try { await katexYukle(); } catch (e) { bildir(esc(e.message || e)); return; }
@@ -1002,34 +1084,65 @@ body.yh-acik #pencere{z-index:70}
     let grup = 0;
     modal('', (m, kapat) => {
       const ic = m.querySelector('.yh-modal-ic'); ic.classList.add('genis'); ic.style.width = 'min(1040px,100%)';
-      ic.innerHTML = `<h2 style="display:flex;align-items:center;gap:10px">${el ? 'Formülü düzenle' : 'Matematik formülü'}<span class="yh-not" style="margin:0;font-weight:400">Düğmeye dokunun, kutucukların (□) yerine yazın. Tab ile sonraki kutucuğa geçilir.</span></h2>
-        <div class="yh-fgrup">${FORMUL_GRUP.map((g, i) => `<button class="yh-cip ${i === grup ? 'on' : ''}" data-fg="${i}">${esc(g[0])}</button>`).join('')}</div>
+      ic.innerHTML = `<h2 style="margin-bottom:4px">${el ? 'Formülü düzenle' : 'Matematik formülü'}</h2><div class="yh-not" style="margin:0 0 10px">Aşağıdaki beyaz alana normal yazar gibi yazın. Kesir, kök, üs gibi düğmelere dokunun; çıkan kutucuklara yazın. Klavyede <b>^</b> üs, <b>_</b> alt indis açar; <b>/</b> ile kesir yapılır. <b>Tab</b> sonraki kutucuğa geçer.</div>
+        <div class="yh-fgrup">${MF_GRUP.map((g, i) => `<button class="yh-cip ${i === grup ? 'on' : ''}" data-fg="${i}">${esc(g[0])}</button>`).join('')}</div>
         <div class="yh-fpalet" id="fPalet"></div>
-        <div class="yh-fyaz"><div><label class="yh-not" style="margin:0 0 4px;display:block">Formül (LaTeX — düğmelerle yazılır, elle de düzenlenebilir)</label><textarea id="fTex" spellcheck="false" autocomplete="off" placeholder="Örnek: \\frac{x+1}{2}  ·  \\sqrt[3]{8}  ·  \\log_{2} 8  ·  \\int_0^1 x^2\\,dx"></textarea>
-          <div class="yh-satir" style="margin-top:6px"><label style="min-width:0">Görünüm</label><button class="yh-cip on" data-fb="0">Satır içinde</button><button class="yh-cip" data-fb="1">Ortada, büyük</button><span id="fHata" style="color:#ff8a8f;font-size:12px"></span></div></div>
-          <div class="yh-fon"><div id="fOn"></div></div></div>
-        <div class="yh-dugmeler" style="justify-content:flex-end">${el ? '<button class="yh-d k" data-s>Sil</button>' : ''}<button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-t>${el ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
-      const ta = ic.querySelector('#fTex'); let blok = el ? el.dataset.blok === '1' : false;
-      ta.value = el ? el.dataset.tex : '';
-      const on = () => { const t = ta.value.trim(); ic.querySelector('#fOn').innerHTML = t ? kxCiz(t, true) : '<span style="color:#999;font-size:14px">Önizleme</span>'; let h = ''; try { window.katex.renderToString(t || 'x', { throwOnError: true, strict: 'ignore' }); } catch (e) { h = 'Yazımda hata var: ' + String(e.message || '').replace(/^KaTeX parse error:\s*/, '').slice(0, 90); } ic.querySelector('#fHata').textContent = h; };
-      const kutuSec = (bas) => { const i = ta.value.indexOf(Q, bas); if (i >= 0) { ta.focus(); ta.setSelectionRange(i, i + Q.length); return true; } return false; };
-      const koy = t => { const a = ta.selectionStart ?? ta.value.length, b = ta.selectionEnd ?? a; const once = ta.value.slice(0, a), sonra = ta.value.slice(b); const bosluk = /[A-Za-z]$/.test(once) && /^\\/.test(t) ? '' : (/\\[A-Za-z]+$/.test(once) && /^[A-Za-z]/.test(t) ? ' ' : '');
-        ta.value = once + bosluk + t + sonra; const bas = a + bosluk.length; if (!kutuSec(bas) || ta.value.indexOf(Q, bas) > bas + t.length) { ta.focus(); ta.setSelectionRange(bas + t.length, bas + t.length); } on(); };
-      const paletCiz = () => { ic.querySelector('#fPalet').innerHTML = FORMUL_GRUP[grup][1].map((t, i) => `<button class="yh-fdug" data-fi="${i}" title="${esc(t)}">${kxCiz(t, false)}</button>`).join(''); };
+        <div class="mf-alan" id="fAlan" contenteditable="true" spellcheck="false" data-ipucu="Formülü buraya yazın…"></div>
+        <div class="yh-satir" style="margin-top:8px"><label style="min-width:0">Görünüm</label><button class="yh-cip" data-fb="0">Satır içinde</button><button class="yh-cip" data-fb="1">Ortada, büyük</button><span class="yh-not" style="margin:0 0 0 auto">Kâğıtta böyle görünecek:</span></div>
+        <div class="yh-fon" id="fOn" style="min-height:70px"></div>
+        <div class="yh-dugmeler" style="justify-content:flex-end">${el ? '<button class="yh-d k" data-s>Sil</button>' : ''}<button class="yh-d" data-v>Vazgeç</button><button class="yh-d n" data-fok>${el ? 'Kaydet' : 'Kâğıda ekle'}</button></div>`;
+      const alan = ic.querySelector('#fAlan'); let blok = el ? el.dataset.blok === '1' : false, sonR = null;
+      if (el) { if (el.dataset.yapi) alan.innerHTML = el.dataset.yapi; else if (el.dataset.tex) alan.innerHTML = mfHam(el.dataset.tex); }
+      const on = () => { const t = mfTex(alan).trim(); ic.querySelector('#fOn').innerHTML = t ? kxCiz(t, true) : '<span style="color:#999;font-size:14px">Önizleme</span>'; };
+      const tut = () => { const s_ = window.getSelection(); if (s_.rangeCount && alan.contains(s_.getRangeAt(0).startContainer)) sonR = s_.getRangeAt(0).cloneRange(); };
+      document.addEventListener('selectionchange', tut);
+      const kapat2 = () => { document.removeEventListener('selectionchange', tut); kapat(); };
+      const ev_ = n => (n.nodeType === 1 ? n : n.parentElement).closest('.mf-k') || alan;
+      const imleceKoy = r_ => { const h = ev_(r_.startContainer); h.focus({ preventScroll: true }); const s_ = window.getSelection(); s_.removeAllRanges(); s_.addRange(r_); sonR = r_.cloneRange(); };
+      const imleceGit = n => { const r_ = document.createRange(); r_.selectNodeContents(n); r_.collapse(false); imleceKoy(r_); };
+      const disariCik = k => { const y = k.closest('.mf-y'); if (!y) return; let z = y.nextSibling; if (!z || z.nodeType !== 3) { z = document.createTextNode('\u200b'); y.after(z); } const r_ = document.createRange(); r_.setStart(z, z.nodeValue.startsWith('\u200b') ? 1 : 0); r_.collapse(true); imleceKoy(r_); };
+      const oncekiAl = r_ => { if (!r_ || !r_.collapsed || r_.startContainer.nodeType !== 3) return ''; const tn = r_.startContainer, once = tn.nodeValue.slice(0, r_.startOffset), mm = /([0-9A-Za-zÇĞİÖŞÜçğıöşüπθαβ,.]+)$/.exec(once.replace(/\u200b/g, '')); if (!mm) return ''; const pay = mm[1], bas = once.lastIndexOf(pay); tn.nodeValue = once.slice(0, bas) + tn.nodeValue.slice(r_.startOffset); const r3 = document.createRange(); r3.setStart(tn, bas); r3.collapse(true); imleceKoy(r3); return pay; };
+      const bosKutu = (bas) => { const L = [...alan.querySelectorAll('.mf-k')]; const bos = L.filter(k => !k.textContent.replace(/​/g, '').trim() && !k.querySelector('.mf-y')); if (!bos.length) return null; if (!bas) return bos[0]; const i = L.indexOf(bas); return bos.find(k => L.indexOf(k) > i) || bos[0]; };
+      const koy = (html, odak) => {
+        const s_ = window.getSelection(); let r_ = sonR && alan.contains(sonR.startContainer) ? sonR : null;
+        if (!r_) { r_ = document.createRange(); r_.selectNodeContents(alan); r_.collapse(false); }
+        imleceKoy(r_); r_ = s_.getRangeAt(0); r_.deleteContents();
+        const t = document.createElement('template'); t.innerHTML = html; const L = [...t.content.childNodes], z = document.createTextNode('​'); r_.insertNode(z); L.reverse().forEach(n => r_.insertNode(n));
+        const ilkK = L.map(n => n.nodeType === 1 && (n.matches('.mf-k') ? n : n.querySelector && n.querySelector('.mf-k'))).filter(Boolean).pop();
+        const kk = odak || (ilkK && [...L].reverse().map(n => n.nodeType === 1 && n.querySelector ? [...n.querySelectorAll('.mf-k')].find(k => !k.textContent.trim()) : null).find(Boolean));
+        if (kk) imleceGit(kk); else { const r2 = document.createRange(); r2.setStart(z, 1); r2.collapse(true); imleceKoy(r2); }
+        on();
+      };
+      const yapiKoy = (o) => { const tip = o.y, T = MF_TIP[tip]; const k = {}; T.k.forEach(a => { k[a] = `<span class="mf-k" contenteditable="true" data-r="${a}">${o[a] ? esc(o[a]) : ''}</span>`; }); koy(`<span class="mf-y" contenteditable="false" data-t="${tip}">${T.h(k)}</span>`); };
+      const paletCiz = () => { ic.querySelector('#fPalet').innerHTML = MF_GRUP[grup][1].map((x, i) => `<button class="yh-fdug" data-fi="${i}" title="${esc(x[2] || '')}">${kxCiz(x[0], false)}</button>`).join(''); };
       paletCiz(); on();
       ic.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { grup = +b.dataset.fg; ic.querySelectorAll('[data-fg]').forEach(x => x.classList.toggle('on', x === b)); paletCiz(); });
       ic.querySelector('#fPalet').addEventListener('mousedown', ev => { if (ev.target.closest('[data-fi]')) ev.preventDefault(); });
-      ic.querySelector('#fPalet').addEventListener('click', ev => { const b = ev.target.closest('[data-fi]'); if (b) koy(FORMUL_GRUP[grup][1][+b.dataset.fi]); });
+      ic.querySelector('#fPalet').addEventListener('click', ev => { const b = ev.target.closest('[data-fi]'); if (!b) return; const x = MF_GRUP[grup][1][+b.dataset.fi];
+        if (x.length === 1) koy(mfHam(x[0])); else if (typeof x[1] === 'string') koy(esc(x[1])); else yapiKoy(x[1]); });
       ic.querySelectorAll('[data-fb]').forEach(b => { b.classList.toggle('on', (b.dataset.fb === '1') === blok); b.onclick = () => { blok = b.dataset.fb === '1'; ic.querySelectorAll('[data-fb]').forEach(x => x.classList.toggle('on', x === b)); }; });
-      ta.addEventListener('input', on);
-      ta.addEventListener('keydown', ev => { if (ev.key === 'Tab') { ev.preventDefault(); if (!kutuSec(ta.selectionEnd)) kutuSec(0); } if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); tamam(); } });
-      ic.querySelector('[data-v]').onclick = kapat;
-      if (el) ic.querySelector('[data-s]').onclick = () => { el.remove(); kapat(); degisti(false); setTimeout(diz, 60); };
-      const tamam = () => { const t = ta.value.trim().replace(/\\square/g, '\\square'); if (!t) return; kapat();
-        if (el) { el.insertAdjacentHTML('afterend', matHTML(t, blok)); el.remove(); degisti(false); setTimeout(diz, 60); }
-        else { araligiGeriKoy(); dugumKoy(matHTML(t, blok)); setTimeout(diz, 60); } };
-      ic.querySelector('[data-t]').onclick = tamam;
-      setTimeout(() => ta.focus(), 40);
+      alan.addEventListener('input', on);
+      alan.addEventListener('paste', ev => { ev.preventDefault(); const t = (ev.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, t); });
+      alan.addEventListener('keydown', ev => {
+        const s_ = window.getSelection(), r_ = s_.rangeCount ? s_.getRangeAt(0) : null, k_ = r_ && (r_.startContainer.nodeType === 1 ? r_.startContainer : r_.startContainer.parentElement).closest('.mf-k');
+        if (ev.key === 'Tab') { ev.preventDefault(); if (!k_) { const n = bosKutu(null); if (n) imleceGit(n); return; }
+          const y = k_.closest('.mf-y'), L = [...y.querySelectorAll('.mf-k')].filter(x => x.closest('.mf-y') === y), i = L.indexOf(k_);
+          if (ev.shiftKey) { if (i > 0) imleceGit(L[i - 1]); return; }
+          if (i < L.length - 1) imleceGit(L[i + 1]); else disariCik(k_); return; }
+        if (ev.key === 'ArrowRight' && k_ && r_.collapsed) { const son = document.createRange(); son.selectNodeContents(k_); son.collapse(false); if (r_.compareBoundaryPoints(Range.START_TO_START, son) >= 0) { ev.preventDefault(); const y = k_.closest('.mf-y'), L = [...y.querySelectorAll('.mf-k')].filter(x => x.closest('.mf-y') === y), i = L.indexOf(k_); if (i < L.length - 1) imleceGit(L[i + 1]); else disariCik(k_); return; } }
+        if (ev.key === 'Enter') { ev.preventDefault(); if (ev.ctrlKey || ev.metaKey) tamam(); return; }
+        if (ev.key === '^' || ev.key === '_') { ev.preventDefault(); tut(); const a = oncekiAl(r_), tip = ev.key === '^' ? 'us' : 'alt', o = { y: tip }; o.a = a; yapiKoy(o); if (a) { const y_ = [...alan.querySelectorAll(`.mf-y[data-t="${tip}"]`)].find(x => [...x.querySelectorAll('.mf-k')].some(k => !k.textContent.trim())); if (y_) imleceGit([...y_.querySelectorAll('.mf-k')].find(k => !k.textContent.trim())); } return; }
+        if (ev.key === '/') { ev.preventDefault(); tut(); const pay = oncekiAl(r_);
+          const T = MF_TIP.kesir; koy(`<span class="mf-y" contenteditable="false" data-t="kesir">${T.h({ p: `<span class="mf-k" contenteditable="true" data-r="p">${esc(pay)}</span>`, d: mfKutu('d') })}</span>`); if (pay) { const d_ = [...alan.querySelectorAll('.mf-k[data-r="d"]')].find(x => !x.textContent.trim()); if (d_) imleceGit(d_); } return; }
+      });
+      ic.querySelector('[data-v]').onclick = kapat2;
+      if (el) ic.querySelector('[data-s]').onclick = () => { el.remove(); kapat2(); degisti(false); setTimeout(diz, 60); };
+      const tamam = () => { const t = mfTex(alan).trim(); if (!t) return; const yapi = alan.innerHTML; kapat2();
+        const yeni = matHTML(t, blok).replace('<span class="yh-mat', `<span data-yapi="${esc(yapi)}" class="yh-mat`);
+        if (el) { el.insertAdjacentHTML('afterend', yeni); el.remove(); degisti(false); setTimeout(diz, 60); }
+        else { araligiGeriKoy(); dugumKoy(yeni); setTimeout(diz, 60); } };
+      ic.querySelector('[data-fok]').onclick = tamam;
+      setTimeout(() => { alan.focus(); const r_ = document.createRange(); r_.selectNodeContents(alan); r_.collapse(false); const s_ = window.getSelection(); s_.removeAllRanges(); s_.addRange(r_); }, 40);
     }, true);
   }
 

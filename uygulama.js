@@ -1640,6 +1640,14 @@
     const bu = surum(document.documentElement.innerHTML); let son = Date.now();
     ['click', 'keydown', 'touchstart'].forEach(t => document.addEventListener(t, () => { son = Date.now(); }, { passive: true }));
     const tazeleHemen = async () => { try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {} const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };
+    // K-997: Yenile durum çipi — "Güncel · N dk önce"; yeni sürüm bulununca sarı "Yeni sürüm hazır · dokun"
+    const ydCip = (() => { const d = document.getElementById('yenileDug'); if (!d) return null; const t0 = Date.now();
+      const y = d.querySelector('.yd-yazi'); if (y) y.textContent = 'Güncel'; d.insertAdjacentHTML('afterbegin', '<span class="yd-nokta" aria-hidden="true"></span>');
+      if (y) y.insertAdjacentHTML('afterend', '<span class="yd-zaman"></span>');
+      const z = d.querySelector('.yd-zaman'); d.title = 'Yenile';
+      const yaz = () => { if (d.classList.contains('yd-yeni')) return; const dk = Math.floor((Date.now() - t0) / 60000); if (z) z.textContent = '· ' + (dk < 1 ? 'az önce' : dk < 60 ? dk + ' dk önce' : Math.floor(dk / 60) + ' sa önce'); };
+      yaz(); setInterval(yaz, 30000);
+      return { yeni: () => { d.classList.add('yd-yeni'); if (y) y.textContent = 'Yeni sürüm hazır'; d.title = 'Yeni sürümü aç'; } }; })();
     const yd = document.getElementById('yenileDug'); if (yd) yd.onclick = () => { yd.classList.add('donuyor'); try { sessionStorage.setItem('atlasYenile', '1'); } catch (e) {} tazeleHemen(); };   // K-744: elle yenile · K-755: Atlas açılışı
     if (window.__atlasYenile) { const v = window.__atlasYenile, t0 = Date.now(); window.__atlasYenile = null;   // K-788: yenileyince tam ekran açılış yok; panel hazır olunca Atlas başparmakla "Yenilendi" der (yoklamadaki kart)
       const bit = () => { const s_ = surumSatiri().replace(/<[^>]+>/g, '').replace(/^Atlas · /, '').replace(/ · k.*$/, ''); atlasOnay(v === 'mod:ogretmen' ? 'Öğretmen modu' : v === 'mod:bas' ? 'Kurucu modu' : 'Yenilendi', v.startsWith('mod:') ? 'Panel bu görevle açıldı' : (s_ ? 'Atlas güncel · ' + s_ : 'Atlas güncel')); };
@@ -1650,6 +1658,7 @@
       const yeni = surum(h); if (!yeni || yeni === bu) return;
       const tazele = () => { const u = new URL(location.href); u.searchParams.set('s', Date.now()); location.replace(u.toString()); };   // önbelleğe takılmadan yeni sürümü açar
       if (canliGuvenli() && Date.now() - son > 20000) { tazele(); return; }
+      if (ydCip) ydCip.yeni();
       if (!document.getElementById('surumUyari')) { const u = document.createElement('button'); u.id = 'surumUyari'; u.className = 'surum-uyari'; u.textContent = 'Yeni sürüm hazır · Yenile'; u.onclick = tazele; document.body.appendChild(u); }
     };
     setInterval(denetle, 60000);
@@ -6870,7 +6879,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   }
   // K-988: Yazılı Hazırla (ayrı dosya; ilk açılışta yüklenir). Yazılılar öğretmenin cihazında saklanır.
   async function yaziliYukle() {
-    if (!window.UmalYaziliHazirla) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili-hazirla/yh.js?v=202611260610'; sc.onload = ok; sc.onerror = () => red(new Error('Yazılı Hazırla yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalYaziliHazirla) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'yazili-hazirla/yh.js?v=202611260630'; sc.onload = ok; sc.onerror = () => red(new Error('Yazılı Hazırla yüklenemedi')); document.head.appendChild(sc); });
   }
   function yaziliCtx(gomulu) {
     const dersler = async () => {

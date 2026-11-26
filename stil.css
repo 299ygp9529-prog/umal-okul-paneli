@@ -3152,3 +3152,26 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
   .yan #menu.mn-arama .menu-oge.mn-ilk { background: rgba(255,225,77,.1); outline: 1px solid rgba(255,225,77,.55); color: #fff6c2; }
 }
 
+/* K-997: Yenile → durum çipi ("Güncel · 2 dk önce"); yeni sürüm gelince sarı yanar. Dokununca yine yeniler. */
+#yenileDug .yd-nokta { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 8px #3ddc84; flex: none; }
+#yenileDug .yd-zaman { color: #8fa9c8; font-weight: 500; }
+#yenileDug.yd-yeni .yd-nokta { background: #ffd43b; box-shadow: 0 0 8px #ffd43b; }
+@media (min-width: 761px) {
+  #yenileDug { background: #0f2238; border: 1px solid #1f3a5c; color: #b9cde5; font-weight: 500; font-size: 13.5px; padding: 8px 14px; border-radius: 12px; box-shadow: none; }
+  #yenileDug:hover { background: #142b47; border-color: #2c5480; color: #dbe8f6; }
+  #yenileDug svg { width: 15px; height: 15px; margin-left: 4px; color: #6f93ba; }
+  #yenileDug.yd-yeni { background: #2a2200; border-color: #ffd43b; color: #ffe14d; font-weight: 700; }
+  #yenileDug.yd-yeni svg, #yenileDug.yd-yeni .yd-zaman { display: none; }
+  .yan .ust-dug { grid-template-columns: 1fr; }
+  .yan .ust-dug > #yenileDug { justify-content: flex-start; background: #0f2238; border: 1px solid #1f3a5c; color: #b9cde5; font-size: 13.5px; font-weight: 500; padding: 0 12px; }
+  .yan .ust-dug > #yenileDug:hover { background: #142b47; border-color: #2c5480; }
+  .yan .ust-dug > #yenileDug svg { margin-left: auto; width: 15px; height: 15px; }
+  .yan .ust-dug > #yenileDug.yd-yeni { background: #2a2200; border-color: #ffd43b; color: #ffe14d; font-weight: 700; }
+}
+@media (max-width: 760px) {
+  #yenileDug { position: relative; }
+  #yenileDug .yd-nokta { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; }
+  #yenileDug .yd-zaman { display: none; }
+  #yenileDug.yd-yeni { border-color: #ffd43b; color: #ffd43b; }
+}
+@media (min-width: 761px) { #yenileDug svg { order: 3; } #yenileDug .yd-yazi, #yenileDug .yd-zaman { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } #yenileDug .yd-zaman { flex: 0 1 auto; min-width: 0; } }
