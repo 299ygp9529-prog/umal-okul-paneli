@@ -23,12 +23,13 @@
     telafi: 'M4 6h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3M13 14.5h3M8 17.5h3',
     kurul: 'M12 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM5 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 5 7ZM19 7a2.3 2.3 0 1 1 0 4.6A2.3 2.3 0 0 1 19 7ZM6.5 20c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6M1.5 18c0-2.2 1.4-3.8 3.5-4.2M22.5 18c0-2.2-1.4-3.8-3.5-4.2',
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7zM7 7.5h0M17 7.5h0',
+    evrak: 'M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5ZM8 12.5h8M8 15.5h5',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -950,9 +951,73 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   }
   function skGirdi(ev) { const t = ev.target, d = t.dataset, M = SK.M; if (!M) return; if (d.sk) { M[d.sk] = t.value; SK.degisti = true; } if (d.skso) { M.so = M.so || {}; M.so[d.skso] = t.value; SK.degisti = true; } }
 
+  // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
+  // Sınıflar ve sınıf rehber öğretmenleri ders programından (Rehberlik dersini veren öğretmen) gelir, elle değiştirilebilir.
+  // Okul rehber öğretmenleri programda yoktur: elle, seviyeye toplu ya da dosyadan (Excel, Word, PDF, CSV) girilir.
+  const EV = { M: null, degisti: false };
+  const evSiniflar = () => [...new Set(Object.keys((PRG && PRG.siniflar) || {}).concat(siniflar()))].filter(s => /^\d+-/.test(s)).sort(sinifSira);
+  function evProgRehber(s) { const L = new Set(); for (const h of Object.values(((PRG && PRG.siniflar) || {})[s] || {})) if (/rehberlik/i.test(h.ders || '')) (h.ogretmen || []).forEach(o => L.add(o)); return [...L].join(', '); }
+  const evSR = s => (EV.M.so || {})[s] != null ? EV.M.so[s] : evProgRehber(s);
+  const evOR = s => (EV.M.okul || {})[s] || '';
+  async function evrak() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    try { EV.M = (await oku('evrak:rehber')) || {}; } catch (e) { kok.innerHTML = bas('Evraklar') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    EV.M.so = EV.M.so || {}; EV.M.okul = EV.M.okul || {}; EV.M.yil = EV.M.yil || egitimYili(); EV.degisti = false; evCiz();
+  }
+  function evCiz() {
+    const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
+    kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
+      `<div class="id-adimlar"><button class="secili" style="border-color:#ffd43b;color:#ffe580">${ikon('evrak', 18)}Sınıf Rehberlik Listesi</button></div>
+      <div class="kart id-not">Sınıf rehber öğretmeni ders programındaki <b>Rehberlik</b> dersinden gelir; değiştirilebilir. <b>Okul rehber öğretmeni</b> ders programında olmadığı için burada girilir: aşağıdan seviyeye toplu, tek tek ya da <b>Dosyadan doldur</b> ile okulun listesinden (Excel, Word, PDF). ${bosOR ? `<b style="color:#ff9a3a">${bosOR} sınıfta okul rehber öğretmeni boş.</b>` : '<b style="color:#3ef08a">Bütün sınıflar dolu.</b>'}</div>
+      <div class="kart"><span class="id-et" style="margin-top:0">Seviyeye toplu okul rehber öğretmeni</span><div class="id-form">${SV.map(v => `<label>${v}. sınıflar<div class="id-satir"><input data-evsv="${v}" list="evAdlar" placeholder="Ad Soyad"><button class="ikincil" data-evuyg="${v}">Uygula</button></div></label>`).join('')}</div></div>
+      <div class="kart"><div class="id-kaydir"><table class="id-liste" style="width:100%"><thead><tr><th style="width:80px">Sınıf</th><th>Sınıf rehber öğretmeni</th><th>Okul rehber öğretmeni</th></tr></thead><tbody>
+      ${S.map(s => `<tr><td><b style="border-left:3px solid ${SVR[seviye(s)] || '#22e8ff'};padding-left:7px">${esc(s)}</b></td>
+        <td><input data-evso="${esc(s)}" list="evAdlar" value="${esc(evSR(s))}" style="width:100%"></td>
+        <td><input data-evor="${esc(s)}" list="evAdlar" value="${esc(evOR(s))}" placeholder="Seçilmedi" style="width:100%"></td></tr>`).join('')}
+      </tbody></table></div><datalist id="evAdlar">${adlar.map(a => `<option value="${esc(a)}">`).join('')}</datalist><div id="idBilgi" class="id-bilgi"></div></div>
+      <input type="file" id="evDosya" data-evdosya="1" accept=".xlsx,.xls,.docx,.doc,.pdf,.csv,.txt" style="display:none">`;
+  }
+  function evGirdi(ev) { const d = ev.target.dataset; if (d.evso) { EV.M.so[d.evso] = ev.target.value; EV.degisti = true; } if (d.evor) { EV.M.okul[d.evor] = ev.target.value; EV.degisti = true; } }
+  // Dosya/yapıştırma satırlarından okul rehber öğretmenlerini çıkarır: bir satırda ad + bir ya da birkaç sınıf ("9-A, 9-B", "9/C", "9. sınıflar")
+  function evDosyaIsle(R) {
+    const S = evSiniflar(), Sset = new Set(S); let n = 0;
+    for (const r of R) {
+      const satir = r.map(c => String(c == null ? '' : c)).join(' | '), hedef = new Set();
+      for (const m of satir.matchAll(/(?:^|[^\d])(9|1[0-2])\s*[-/. ]?\s*\(?([A-JÇ])\)?(?![a-zçğıöşü])/gi)) { const s = m[1] + '-' + m[2].toLocaleUpperCase(tr); if (Sset.has(s)) hedef.add(s); }
+      for (const m of satir.matchAll(/(?:^|[^\d])(9|1[0-2])\s*\.?\s*sınıf/gi)) S.filter(s => seviye(s) === m[1]).forEach(s => hedef.add(s));
+      if (!hedef.size) continue;
+      const ad = r.map(c => String(c == null ? '' : c).trim()).filter(c => c && !/\d/.test(c) && !/sınıf|şube|rehber|öğretmen|danışman/i.test(c) && /\p{L}{2,}\s+\p{L}{2,}/u.test(c)).sort((a, b) => b.length - a.length)[0];
+      if (!ad) continue;
+      hedef.forEach(s => { EV.M.okul[s] = ad; n++; });
+    }
+    return n;
+  }
+  async function evDosya(ev) {
+    const t = ev.target; if (!t.dataset || !t.dataset.evdosya || !t.files.length) return;
+    try { const R = await dosyaSatirlar(t.files[0]); const n = evDosyaIsle(R); t.value = ''; EV.degisti = EV.degisti || n > 0; evCiz();
+      bilgi(n ? `${n} sınıfa okul rehber öğretmeni yazıldı. Kontrol edip Kaydet'e basın.` : 'Dosyada sınıf ve ad eşleşmesi bulunamadı. Satırlarda "Ad Soyad" ve "9-A" gibi sınıflar olmalı.', n ? 'yesil' : 'kirmizi');
+    } catch (e) { uyar(e.message || 'Dosya okunamadı.'); }
+  }
+  function evBelge() {
+    const S = evSiniflar();
+    const govde = `<table><thead><tr><th style="width:9%">S.No</th><th style="width:13%">Sınıf</th><th>Sınıf Rehber Öğretmeni</th><th>Okul Rehber Öğretmeni</th></tr></thead><tbody>
+      ${S.map((s, i) => `<tr><td>${i + 1}</td><td><b>${esc(s)}</b></td><td>${esc(evSR(s))}</td><td>${esc(evOR(s))}</td></tr>`).join('')}</tbody></table>
+      <div class="imza"><div>${esc(MUDUR)}<br><small>Okul Müdürü</small></div></div>`;
+    return belgeKabuk('Sınıf Rehberlik Listesi', govde, false, esc(`${EV.M.yil} Eğitim Öğretim Yılı · Sınıf ve Okul Rehber Öğretmenleri`));
+  }
+  async function evTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return; const d = b.dataset;
+    if (d.evuyg) { const v = d.evuyg, ad = (kok.querySelector(`[data-evsv="${v}"]`) || {}).value || ''; if (!ad.trim()) { uyar('Önce adı yazın.'); return; }
+      evSiniflar().filter(s => seviye(s) === v).forEach(s => { EV.M.okul[s] = ad.trim(); }); EV.degisti = true; evCiz(); bilgi(`${v}. sınıfların okul rehber öğretmeni: ${ad.trim()}. Kaydet'e basın.`, 'yesil'); return; }
+    if (d.evx === 'dosya') { kok.querySelector('#evDosya').click(); return; }
+    if (d.evx === 'kaydet') { try { await yaz('evrak:rehber', EV.M); EV.degisti = false; bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return; }
+    if (d.evx === 'excel') { indir('Sinif_Rehberlik_Listesi_' + EV.M.yil, [['Sınıf', 'Sınıf Rehber Öğretmeni', 'Okul Rehber Öğretmeni'], ...evSiniflar().map(s => [s, evSR(s), evOR(s)])]); return; }
+    if (d.evx === 'yazdir') { belgeGoster(evBelge(), 'Sınıf Rehberlik Listesi', false); return; }
+  }
+
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -960,13 +1025,13 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -974,6 +1039,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     if (id === 'sinifOlustur') return sinifOlustur();
     if (id === 'veli') return veli();
     if (id === 'sok') return sok();
+    if (id === 'evrak') return evrak();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
@@ -1009,7 +1075,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
 @media (max-width:760px){.id-sb{grid-template-columns:1fr}.id-yan{position:static}.id-iki{grid-template-columns:1fr}.id-kurullar{grid-template-columns:1fr}}`;
     document.head.appendChild(s);
   }
-  window.UmalIdari = { ac, MODULLER, ikon, _test: { sbOtomatik, sbCakisma, soDagit: () => soDagit, tabloOku } };
+  window.UmalIdari = { ac, MODULLER, ikon, _test: { sbOtomatik, sbCakisma, soDagit: () => soDagit, tabloOku, evDosyaIsle: R => { EV.M = { so: {}, okul: {} }; const n = evDosyaIsle(R); return { n, okul: EV.M.okul }; }, evSiniflarAyarla: (o, p) => { OGR = o; PRG = p; } } };
   window.UmalIdari.dosyaOku = async (f, yard) => { const c0 = C; if (!C) C = yard; try { return await dosyaSatirlar(f); } finally { C = c0; } };   // K-760: takvim aktarımı da kullanır
   window.UmalIdari.tabloOku = tabloOku;
 })();
