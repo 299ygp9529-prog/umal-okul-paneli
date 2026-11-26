@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ümraniye Merkez Anadolu Lisesi</title>
+<meta name="description" content="Ümraniye Merkez Anadolu Lisesi: okulumuz, vizyon ve misyon, ders saatleri, ulaşım ve iletişim bilgileri.">
+<link rel="icon" href="../okul-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Okul tanıtım sitesi (26 Kasım 2026). Bilgiler okulun resmî MEB sitesinden (umraniyemerkezal.meb.k12.tr) alınmıştır. */
+:root{--lacivert:#14213d;--koyu:#0f1a30;--hardal:#e8a92a;--zemin:#f6f4ef;--metin:#1f2937;--soluk:#5b6472;--cizgi:#e4e0d6}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--metin);background:var(--zemin);line-height:1.6}
+a{color:inherit}
+.ust{background:var(--lacivert);color:#fff;position:sticky;top:0;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.ust-ic{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 24px}
+.marka{display:flex;align-items:center;gap:12px;text-decoration:none}.marka img{width:46px;height:46px;border-radius:50%;background:#fff;padding:2px}
+.marka b{font:700 16px/1.2 Poppins,sans-serif;display:block}.marka small{font-size:11.5px;color:#c7cfdd;letter-spacing:.6px}
+nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;text-decoration:none}nav a:hover{color:var(--hardal)}
+.giris{background:var(--hardal);color:#1a1300;padding:9px 16px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.kahraman{position:relative;min-height:500px;background:url(../giris-bina.jpg) center 35%/cover;display:flex;align-items:center}
+.kahraman:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,26,48,.93) 0%,rgba(15,26,48,.7) 50%,rgba(15,26,48,.2) 100%)}
+.k-ic{position:relative;z-index:1;max-width:1180px;width:100%;margin:0 auto;padding:90px 24px 110px;color:#fff}
+.k-ic .yer{color:var(--hardal);font-weight:700;letter-spacing:2px;font-size:13px}
+.k-ic h1{font:800 clamp(34px,6vw,54px)/1.08 Poppins,sans-serif;margin:14px 0 18px}
+.k-ic p{font-size:17px;color:#dbe2ee;max-width:560px}
+.dugmeler{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.d1,.d2{padding:13px 22px;border-radius:12px;font-weight:700;text-decoration:none;font-size:15px}.d1{background:var(--hardal);color:#1a1300}.d2{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.hizli{max-width:1180px;margin:-56px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative;z-index:2}
+.hz{background:#fff;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(15,26,48,.12);display:flex;gap:14px;align-items:center;text-decoration:none}
+.hz i{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none}
+.hz b{display:block;font-size:15px;color:var(--lacivert)}.hz span{font-size:13px;color:var(--soluk)}
+.bolum{max-width:1180px;margin:0 auto;padding:72px 24px 0}
+.bolum h2{font:700 28px Poppins,sans-serif;color:var(--lacivert);margin-bottom:6px}.bolum .alt{color:var(--soluk);margin-bottom:26px}
+.iki{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.kart{background:#fff;border-radius:18px;padding:26px;box-shadow:0 6px 20px rgba(15,26,48,.07)}
+.kart h3{font:700 19px Poppins,sans-serif;color:var(--lacivert);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.kart h3:before{content:"";width:6px;height:22px;border-radius:3px;background:var(--hardal)}
+.vm{font-size:16px;color:#374151}
+.bilgi{width:100%;border-collapse:collapse;font-size:15px}.bilgi th,.bilgi td{text-align:left;padding:11px 4px;border-bottom:1px solid var(--cizgi);vertical-align:top}
+.bilgi th{width:36%;color:var(--soluk);font-weight:600}.bilgi tr:last-child th,.bilgi tr:last-child td{border-bottom:0}
+.saat{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--cizgi);border-radius:14px;overflow:hidden;font-size:15px}
+.saat th{background:var(--lacivert);color:#fff;padding:12px;font-weight:600}.saat td{padding:11px 12px;text-align:center;border-top:1px solid var(--cizgi)}
+.saat td:first-child{text-align:left;font-weight:600}.saat tr.ogle td{background:#fbf3df;color:#7a5410;font-weight:700}
+.not{margin-top:14px;background:#fbf3df;border-radius:12px;padding:12px 14px;font-size:14px;color:#6b4c0f}
+.iletisim{display:grid;grid-template-columns:1fr 1.2fr;gap:24px}
+.harita{border-radius:18px;overflow:hidden;min-height:340px;box-shadow:0 6px 20px rgba(15,26,48,.07);background:#dde3ec}.harita iframe{width:100%;height:100%;min-height:340px;border:0;display:block}
+.alt-bant{margin-top:80px;background:var(--koyu);color:#c7cfdd;font-size:14px}
+.alt-ic{max-width:1180px;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:30px;line-height:1.9}
+.alt-bant b{color:#fff;font-family:Poppins,sans-serif;display:block;margin-bottom:6px}.alt-bant a{color:#c7cfdd;text-decoration:none}.alt-bant a:hover{color:var(--hardal)}
+.alt-marka{display:flex;gap:14px;align-items:flex-start}.alt-marka img{width:58px;height:58px;border-radius:50%;background:#fff;padding:2px;flex:none}
+.telif{border-top:1px solid rgba(255,255,255,.08);text-align:center;padding:16px 24px;font-size:12.5px;color:#8a96ad}
+@media (max-width:900px){nav{display:none}.hizli{grid-template-columns:1fr 1fr}.iki,.iletisim,.alt-ic{grid-template-columns:1fr}}
+@media (max-width:520px){.ust-ic{padding:10px 16px}.marka b{font-size:14px}.marka small{display:none}.giris{padding:8px 12px;font-size:13px}
+.k-ic{padding:60px 16px 96px}.hizli{padding:0 16px;gap:10px}.hz{padding:14px;gap:10px}.hz i{width:38px;height:38px}.bolum{padding:56px 16px 0}.kart{padding:20px}.saat{font-size:14px}.saat th,.saat td{padding:9px 6px}}
+</style>
+</head>
+<body>
+<header class="ust"><div class="ust-ic">
+  <a class="marka" href="#"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi amblemi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
+  <nav><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a></nav>
+  <a class="giris" href="../">Atlas Girişi</a>
+</div></header>
+
+<section class="kahraman"><div class="k-ic">
+  <div class="yer">ANADOLU LİSESİ · ÜMRANİYE</div>
+  <h1>Ümraniye Merkez<br>Anadolu Lisesi</h1>
+  <p>1965 yılından bu yana Ümraniye'de eğitim veren, Millî Eğitim Bakanlığına bağlı dört yıllık Anadolu lisesi.</p>
+  <div class="dugmeler"><a class="d1" href="#okulumuz">Okulumuzu tanıyın</a><a class="d2" href="#iletisim">İletişim ve ulaşım</a></div>
+</div></section>
+
+<div class="hizli">
+  <a class="hz" href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener"><i style="background:#fdeaea"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#d64545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></i><div><b>e-Okul</b><span>Not ve devamsızlık</span></div></a>
+  <a class="hz" href="#saatler"><i style="background:#e6eefc"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2f6fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></i><div><b>Ders Saatleri</b><span>Giriş ve çıkış saatleri</span></div></a>
+  <a class="hz" href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener"><i style="background:#fff4dc"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c98a10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i><div><b>Duyurular</b><span>MEB okul sitemizde</span></div></a>
+  <a class="hz" href="#iletisim"><i style="background:#e7f6ec"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1f9d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></i><div><b>Ulaşım</b><span>Adres ve yol tarifi</span></div></a>
+</div>
+
+<section class="bolum" id="okulumuz">
+  <h2>Okulumuz</h2><div class="alt">Vizyonumuz, misyonumuz ve okulumuza ilişkin bilgiler</div>
+  <div class="iki">
+    <div class="kart"><h3>Vizyonumuz</h3><p class="vm">Toplumu çağdaş uygarlık düzeyine taşımaya aday, birey olabilecek özgüvene sahip, sosyal yönü güçlü, erdemli, anlayışı gelişmiş, başkalarının haklarına saygılı, Vatanını ve Milletini seven bireyler yetiştirmektir.</p></div>
+    <div class="kart"><h3>Misyonumuz</h3><p class="vm">Öğrencileri sadece üniversiteye değil aynı zamanda yaşamın her alanında ayakta kalabilen, kendi iradesini ortaya koyabilen, teknolojik, bilimsel, kültürel, modern dünya ihtiyaçlarını benimsemiş öncü ve lider insan olarak yetiştirmektir.</p></div>
+  </div>
+  <div class="kart" style="margin-top:24px"><h3>Okulumuz hakkında</h3>
+    <table class="bilgi">
+      <tr><th>Okul türü</th><td>Anadolu lisesi (dört yıllık)</td></tr>
+      <tr><th>Kuruluş</th><td>1965</td></tr>
+      <tr><th>Yabancı dil</th><td>İngilizce</td></tr>
+      <tr><th>Eğitim ortamları</th><td>Derslikler, fizik laboratuvarı, kütüphane, çok amaçlı salon, revir</td></tr>
+      <tr><th>Altyapı</th><td>Doğalgaz ile ısınma, Fatih Projesi fiber internet bağlantısı</td></tr>
+      <tr><th>Servis</th><td>Okul servis hizmeti vardır</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="bolum" id="saatler">
+  <h2>Ders Saatleri</h2><div class="alt">2026-2027 eğitim öğretim yılı ders zaman çizelgesi</div>
+  <div class="iki">
+    <div>
+      <table class="saat"><thead><tr><th>Ders</th><th>Giriş</th><th>Çıkış</th></tr></thead><tbody>
+        <tr><td>Derse hazırlık ve toplanma</td><td>07.30</td><td>08.00</td></tr>
+        <tr><td>1. ders</td><td>08.00</td><td>08.40</td></tr>
+        <tr><td>2. ders</td><td>08.50</td><td>09.30</td></tr>
+        <tr><td>3. ders</td><td>09.40</td><td>10.20</td></tr>
+        <tr><td>4. ders</td><td>10.30</td><td>11.10</td></tr>
+        <tr><td>5. ders</td><td>11.20</td><td>12.00</td></tr>
+        <tr class="ogle"><td>Öğle arası</td><td>12.00</td><td>12.30</td></tr>
+        <tr><td>6. ders</td><td>12.30</td><td>13.10</td></tr>
+        <tr><td>7. ders</td><td>13.20</td><td>14.00</td></tr>
+        <tr><td>8. ders</td><td>14.10</td><td>14.50</td></tr>
+      </tbody></table>
+      <div class="not"><b>Cuma günleri</b> öğle arası 6. dersten sonradır: 6. ders 12.10–12.50, öğle arası 12.50–13.20.</div>
+    </div>
+    <div>
+      <div class="kart"><h3>Destekleme ve yetiştirme kursu (DYK)</h3>
+        <table class="saat" style="margin-top:6px"><thead><tr><th>Ders</th><th>Giriş</th><th>Çıkış</th></tr></thead><tbody>
+          <tr><td>1. ders</td><td>15.00</td><td>15.40</td></tr><tr><td>2. ders</td><td>15.50</td><td>16.30</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bolum" id="iletisim">
+  <h2>İletişim ve Ulaşım</h2><div class="alt">Okulumuza ulaşmak için</div>
+  <div class="iletisim">
+    <div class="kart"><h3>İletişim bilgileri</h3>
+      <table class="bilgi">
+        <tr><th>Adres</th><td>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul</td></tr>
+        <tr><th>Telefon</th><td><a href="tel:+902166340416">(216) 634 04 16</a></td></tr>
+        <tr><th>Faks</th><td>(216) 632 88 25</td></tr>
+        <tr><th>Metro</th><td>Üsküdar – Sancaktepe metro hattı, Yamanevler istasyonu</td></tr>
+        <tr><th>Otobüs</th><td>İETT, Haldun Alagaş durağı</td></tr>
+        <tr><th>Resmî site</th><td><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">umraniyemerkezal.meb.k12.tr</a></td></tr>
+      </table>
+      <div class="dugmeler" style="margin-top:18px"><a class="d1" href="https://www.google.com/maps/search/?api=1&query=%C3%9Cmraniye+Merkez+Anadolu+Lisesi" target="_blank" rel="noopener">Yol tarifi al</a><a class="d1" style="background:var(--lacivert);color:#fff" href="tel:+902166340416">Okulu ara</a></div>
+    </div>
+    <div class="harita"><iframe title="Ümraniye Merkez Anadolu Lisesi haritası" loading="lazy" src="https://maps.google.com/maps?q=%C3%9Cmraniye%20Merkez%20Anadolu%20Lisesi&z=16&output=embed"></iframe></div>
+  </div>
+</section>
+
+<footer class="alt-bant">
+  <div class="alt-ic">
+    <div class="alt-marka"><img src="../okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul · (216) 634 04 16</div></div>
+    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.meb.gov.tr" target="_blank" rel="noopener">Millî Eğitim Bakanlığı</a></div>
+    <div><b>Atlas</b><a href="../">Atlas Girişi</a><br><a href="#saatler">Ders saatleri</a><br><a href="#iletisim">İletişim</a></div>
+  </div>
+  <div class="telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div>
+</footer>
+</body>
+</html>
