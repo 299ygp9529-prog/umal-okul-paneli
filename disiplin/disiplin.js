@@ -516,7 +516,7 @@ ${y && y.onay ? `<div class="onay">${y.onay === 'Okul müdürü' ? 'ONAY<br>…�
     C.belgeOnizle(html, 'Karar · EK-1 · ' + C.baslik(v.ogr.ad), false, { kenar: [0, 0, 0, 0] });
   }
   // K-651: Disiplin evrak seti — idarenin verdiği örneklerle birebir yapı (ifade, savunma, 5 bilgi toplama formu, öğrenci tebligat pusulası, veli ceza bildirimi)
-  const EVRAK = [['ifade', 'İfade tutanağı', 'öğrenci'], ['savunma2', 'Savunma tutanağı', 'kurul önünde'], ['bt_olay', 'Bilgi toplama · Olay', 'tanık öğrenciler'],
+  const EVRAK = [['ifade', 'İfade tutanağı', 'öğrenci'], ['tanik', 'Tanık ifade tutanağı', 'tanık öğrenci / kişi'], ['savunma2', 'Savunma tutanağı', 'kurul önünde'], ['bt_olay', 'Bilgi toplama · Olay', 'tanık öğrenciler'],
     ['bt_ogretmen', 'Bilgi toplama · Öğretmen', 'ders öğretmenleri'], ['bt_rehber', 'Bilgi toplama · Sınıf rehber', 'sınıf rehber öğretmeni'], ['bt_veli', 'Bilgi toplama · Veli', 'veli'],
     ['bt_ogrenci', 'Bilgi toplama · Öğrenci', 'arkadaşları'], ['ogrteb', 'Öğrenci tebligat pusulası', 'karar tebliği'], ['veliteb', 'Veli ceza bildirimi', 'karar tebliği']];
   const EVRAK_AD = Object.fromEntries(EVRAK.map(x => [x[0], x[1]]));
@@ -559,6 +559,12 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
     const dogum = esc(t_.dogum || '……………… / ………………');
     if (tur === 'ifade') return `<div class="sf"><h1>İFADE TUTANAĞI</h1><p>Öğrencinin adı soyadı / sınıfı - numarası :<span class="b" style="margin-left:22mm">${esc(kimlik)}</span></p>
       <p class="b" style="margin-top:4mm">OLAY:</p><p class="olay">${olayM}. BU KONU HAKKINDAKİ İFADENİZİ AŞAĞIYA YAZINIZ.</p><div style="height:14mm"></div>
+      <div style="display:flex;align-items:flex-end;gap:6mm"><div class="k8" style="flex:1">İfadenizi yazmaya buradan başlayınız. Ön sayfa yetmez ise arka sayfaya geçiniz.<br>İfadenizin sonuna -BU İFADE BANA AİTTİR- yazıp, adınızı ve soyadınızı yazarak imzalayınız.</div>${imzaBas(false)}</div>
+      <div class="cizgi" style="margin-top:2mm"></div></div>`;
+    if (tur === 'tanik') return `<div class="sf"><h1>TANIK İFADE TUTANAĞI</h1><p><span style="display:inline-block;width:78mm">Hakkında işlem yapılan öğrenci / sınıfı - numarası</span>: <span class="b">${esc(kimlik)}</span></p>
+      <p style="margin-top:3mm"><span style="display:inline-block;width:78mm">Tanığın adı soyadı</span>: ..............................................................................</p>
+      <p style="margin-top:3mm"><span style="display:inline-block;width:78mm">Tanığın sınıfı - numarası / görevi</span>: ..............................................................................</p>
+      <p class="b" style="margin-top:4mm">OLAY:</p><p class="olay">${olayM}. BU OLAYLA İLGİLİ GÖRDÜKLERİNİZİ VE BİLDİKLERİNİZİ AŞAĞIYA YAZINIZ.</p><div style="height:10mm"></div>
       <div style="display:flex;align-items:flex-end;gap:6mm"><div class="k8" style="flex:1">İfadenizi yazmaya buradan başlayınız. Ön sayfa yetmez ise arka sayfaya geçiniz.<br>İfadenizin sonuna -BU İFADE BANA AİTTİR- yazıp, adınızı ve soyadınızı yazarak imzalayınız.</div>${imzaBas(false)}</div>
       <div class="cizgi" style="margin-top:2mm"></div></div>`;
     if (tur === 'savunma2') { const uy = (k.katilan && k.katilan.length ? k.katilan : (ay.uyeler || [])).filter(u => u && u !== bas);
@@ -1182,5 +1188,5 @@ p{margin:2mm 0;text-align:justify;line-height:1.5}.sag{text-align:right}.pus{bor
     S.yil = S.ayar.yil || S.yil;
     bagla(); ciz();
   }
-  window.UmalDisiplin = { ac, _test: { S, isGunuEkle, isGunuArasi, puanDurumu, siradaki, sure } };
+  window.UmalDisiplin = { ac, _test: { S, evrakSayfa, evrakKabuk, isGunuEkle, isGunuArasi, puanDurumu, siradaki, sure } };
 })();
