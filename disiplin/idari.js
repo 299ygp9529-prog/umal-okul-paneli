@@ -29,7 +29,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -954,7 +954,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   // ================================================================ 7) EVRAKLAR · Sınıf Rehberlik Listesi (26 Kasım 2026)
   // Sınıflar ve sınıf rehber öğretmenleri ders programından (Rehberlik dersini veren öğretmen) gelir, elle değiştirilebilir.
   // Okul rehber öğretmenleri programda yoktur: elle, seviyeye toplu ya da dosyadan (Excel, Word, PDF, CSV) girilir.
-  const EV = { M: null, degisti: false, sek: 'rehber', izSinif: '', izNo: '' };
+  const EV = { M: null, degisti: false, sek: 'rehber', izSinif: '', izNo: '', fa: { ogretmen: '', brans: '', gorev: '', etkinlik: '', tarih: '', saat: '', sinif: '', ogr: [] } };
   const evSiniflar = () => [...new Set(Object.keys((PRG && PRG.siniflar) || {}).concat(siniflar()))].filter(s => /^\d+-/.test(s)).sort(sinifSira);
   function evProgRehber(s) { const L = new Set(); for (const h of Object.values(((PRG && PRG.siniflar) || {})[s] || {})) if (/rehberlik/i.test(h.ders || '')) (h.ogretmen || []).forEach(o => L.add(o)); return [...L].join(', '); }
   const evSR = s => (EV.M.so || {})[s] != null ? EV.M.so[s] : evProgRehber(s);
@@ -966,6 +966,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   }
   function evCiz() {
     if (EV.sek === 'izin') return izCiz();
+    if (EV.sek === 'faaliyet') return faCiz();
     const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
     kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
       evSekmeler() + `
@@ -980,7 +981,7 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
   }
 
   // ---- Evraklar sekmeleri
-  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
+  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
   // ---- İzin Belgesi (Veli Beyanıdır) · okulun basılı formunun aynısı; öğrenci seçilirse şube, numara ve ad doldurulur
   function izCiz() {
     const S = evSiniflar(), L = OGR.filter(o => o.sinif === EV.izSinif).sort((a, b) => (+a.no) - (+b.no));
@@ -998,12 +999,12 @@ p{margin:2mm 0;line-height:1.45}.k{font-size:9pt}.sayfa{page-break-after:always}
     const d = (v, n) => v ? `<b class="dl">${esc(v)}</b>` : '.'.repeat(n);
     const sat = `<tr><td>…. / …. / ${yil}</td><td></td></tr>`;
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Veli Beyanıdır</title><style>
-@page{size:A4 portrait;margin:18mm 20mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12.5pt;color:#000;margin:0;padding:18mm 20mm;line-height:1.75}
-@media print{body{padding:0}}h1{text-align:center;font-size:17pt;font-weight:normal;letter-spacing:.5px;margin:6mm 0 9mm}
+@page{size:A4 portrait;margin:18mm 20mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:12.5pt;color:#000;margin:0;padding:18mm 20mm;line-height:1.6}
+@media print{body{padding:0}}h1{text-align:center;font-size:17pt;font-weight:normal;letter-spacing:.5px;margin:2mm 0 7mm}
 .mud{display:flex;justify-content:center;align-items:flex-end;gap:16mm;font-weight:bold;font-size:11.5pt;margin-bottom:8mm}.mud span:last-child{margin-top:4mm}
 p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Arial,sans-serif;font-weight:bold}.dl{font-weight:bold}
-.alt{display:flex;justify-content:space-between;margin-top:16mm}.sol div{margin-bottom:6mm}.sag{text-align:center;width:65mm}.sag .t{margin-bottom:24mm;text-align:right}
-.alt u{text-decoration:underline}table{border-collapse:collapse;margin-top:16mm;width:120mm}td,th{border:1.2px solid #000;padding:3mm 4mm;font-weight:normal;text-align:left}th{text-align:center}td:first-child{width:38mm;text-align:center}
+.alt{display:flex;justify-content:space-between;margin-top:12mm}.sol div{margin-bottom:5mm}.sag{text-align:center;width:65mm}.sag .t{margin-bottom:20mm;text-align:right}
+.alt u{text-decoration:underline}table{border-collapse:collapse;margin-top:10mm;width:120mm}td,th{border:1.2px solid #000;padding:3mm 4mm;font-weight:normal;text-align:left}th{text-align:center}td:first-child{width:38mm;text-align:center}
 </style></head><body>
 <h1>VELİ BEYANIDIR</h1>
 <div class="mud"><span>ÜMRANİYE MERKEZ ANADOLU LİSESİ MÜDÜRLÜĞÜNE</span><span>ÜMRANİYE</span></div>
@@ -1014,7 +1015,46 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
 <table><tr><th>TARİH</th><th>MAZERET (DEVAMSIZLIK NEDENİ)</th></tr>${sat.repeat(5)}</table>
 </body></html>`;
   }
-  function evGirdi(ev) { const d = ev.target.dataset; if (d.evso) { EV.M.so[d.evso] = ev.target.value; EV.degisti = true; } if (d.evor) { EV.M.okul[d.evor] = ev.target.value; EV.degisti = true; } }
+
+  // ---- Faaliyetli Öğrenci Belgesi (Öğrenci Faaliyet Görev Uygunluk Belgesi) · okulun basılı formunun aynısı
+  function faCiz() {
+    const F = EV.fa, S = evSiniflar(), L = OGR.filter(o => o.sinif === F.sinif).sort((a, b) => (+a.no) - (+b.no)), sec = new Set(F.ogr.map(o => o.sinif + '|' + o.no)), Og = ogretmenler();
+    const alan = (k, ad, ek = '') => `<label>${ad}<input data-fa="${k}" value="${esc(F[k] || '')}" ${ek}></label>`;
+    kok.innerHTML = bas('Evraklar', 'Faaliyetli Öğrenci Belgesi · Öğrenci Faaliyet Görev Uygunluk Belgesi', '<button class="ikincil" data-fax="bos">Boş yazdır</button><button class="ikincil" data-fax="temizle">Temizle</button><button class="birincil" data-fax="yazdir">Yazdır</button>') + evSekmeler() +
+      `<div class="kart id-not">Okulun <b>Öğrenci Faaliyet Görev Uygunluk Belgesi</b>. <b>Boş yazdır</b> elle doldurulacak formu verir. Öğretmen, etkinlik ve öğrenciler seçilirse formda yazılı gelir; 30'dan fazla öğrenci ikinci sayfaya geçer. Katılım durumu sütunu elle doldurulur.</div>
+      <div class="kart"><div class="id-form">${alan('ogretmen', 'Öğretmenin adı soyadı', 'list="faOgr"')}${alan('brans', 'Branşı')}${alan('gorev', 'Görevi', 'placeholder="ör. Öğretmen, Kulüp danışmanı"')}
+        ${alan('etkinlik', 'Görevin / etkinliğin adı')}<label>Görevin tarihi<input type="date" data-fa="tarih" value="${esc(F.tarih || '')}"></label>${alan('saat', 'Saat aralığı', 'placeholder="ör. 09:00 – 12:00"')}</div>
+        <datalist id="faOgr">${Og.map(o => `<option value="${esc(o.ad)}">${esc(o.brans)}</option>`).join('')}</datalist></div>
+      <div class="kart"><span class="id-et" style="margin-top:0">Öğrenci ekle · sınıf seçin, öğrencilere tıklayın</span><div class="cipler id-sinif">${S.map(x => `<button class="cip ${F.sinif === x ? 'secili' : ''}" style="border-color:${SVR[seviye(x)]}" data-fasinif="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+        ${F.sinif ? (L.length ? `<div class="id-ogr" style="margin-top:8px">${L.map(o => `<button data-faekle="${esc(o.no)}" style="${sec.has(o.sinif + '|' + o.no) ? 'border-color:#ffd43b;background:rgba(255,212,59,.12)' : ''}"><b>${esc(o.no)}</b>${esc(o.ad)}</button>`).join('')}</div>` : '<div class="soluk kucuk">Bu sınıfta öğrenci bulunamadı.</div>') : ''}
+        <span class="id-et">Seçilen öğrenciler · ${F.ogr.length}</span>${F.ogr.length ? `<div class="cipler">${F.ogr.map((o, i) => `<button class="cip mini" data-facikar="${i}" title="Çıkar">${i + 1}. ${esc(o.sinif)} · ${esc(o.no)} ${esc(o.ad)} ✕</button>`).join('')}</div>` : '<div class="soluk kucuk">Henüz öğrenci seçilmedi.</div>'}
+        <div id="idBilgi" class="id-bilgi"></div></div>
+      <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="faOniz" title="Faaliyetli öğrenci belgesi önizleme" style="width:100%;height:1100px;border:0;background:#fff"></iframe></div>`;
+    const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge();
+  }
+  function faBelge(bos) {
+    const F = bos ? { ogr: [] } : EV.fa, yil = new Date().getFullYear(), O = F.ogr || [], sayfa = Math.max(1, Math.ceil(O.length / 30));
+    const tarihY = F.tarih ? tGos(F.tarih) : '';
+    const tek = sn => { const P = O.slice(sn * 30, sn * 30 + 30); let r = '';
+      for (let i = 0; i < 30; i++) { const o = P[i]; r += `<tr><td class="c">${sn * 30 + i + 1}</td><td class="c">${o ? esc(o.sinif) : ''}</td><td class="c">${o ? esc(o.no) : ''}</td><td>${o ? esc(o.ad) : ''}</td><td></td></tr>`; }
+      return `<section class="sy"><div class="ust">ÜMRANİYE MERKEZ ANADOLU LİSESİ<br>ÖĞRENCİ FAALİYET GÖREV UYGUNLUK BELGESİ</div>
+      <div class="ogt"><table class="t1"><tr><th colspan="2">ÖĞRENCİ GÖREV OLURU TALEP EDEN ÖĞRETMENİN</th></tr><tr><td class="e">ADI SOYADI</td><td>${esc(F.ogretmen || '')}</td></tr><tr><td class="e">BRANŞI</td><td>${esc(F.brans || '')}</td></tr><tr><td class="e">GÖREVİ</td><td>${esc(F.gorev || '')}</td></tr></table>
+        <table class="t2"><tr><th>ÖĞRETMEN İMZA</th></tr><tr><td></td></tr></table></div>
+      <table class="t3"><tr><th style="width:40%">GÖREVİN/ETKİNLİĞİN ADI</th><th style="width:30%">GÖREVİN TARİHİ</th><th>SAAT ARALIĞI</th></tr><tr><td>${esc(F.etkinlik || '')}</td><td class="c">${esc(tarihY)}</td><td class="c">${esc(F.saat || '')}</td></tr></table>
+      <table class="t4"><tr><th rowspan="2" style="width:8%">Sıra</th><th colspan="3">GÖREVLENDİRMEK İSTENEN ÖĞRENCİNİN</th><th rowspan="2" style="width:13%">Katılım Durumu<br>( + veya - )</th></tr>
+        <tr><th style="width:10%">Sınıfı</th><th style="width:12%">Numarası</th><th>Adı Soyadı</th></tr>${r}</table>
+      <div class="alt">…./…../${yil}<div style="height:3mm"></div>UYGUNDUR<br>${esc(MUDUR)}<br>Okul Müdürü</div></section>`; };
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Öğrenci Faaliyet Görev Uygunluk Belgesi</title><style>
+@page{size:A4 portrait;margin:10mm 14mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:10.5pt;color:#000;margin:0;padding:10mm 14mm}@media print{body{padding:0}}
+.sy{page-break-after:always}.sy:last-child{page-break-after:auto}.ust{text-align:center;font-size:11pt;line-height:1.3;margin-bottom:5mm}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6mm 2mm;font-weight:normal;vertical-align:middle}th{text-align:center}.c{text-align:center}
+.ogt{display:flex;gap:0;margin-bottom:4mm}.t1{width:60%}.t1 td{height:6mm}.t1 .e{width:35%}.t2{width:40%;border-left:0}.t2 th{border-left:0}.t2 td{border-left:0;height:18mm}
+.t3{margin-bottom:4mm}.t3 td{height:11mm}.t4 td{height:5.3mm;font-size:10pt}.t4 th{font-size:10pt}
+.alt{text-align:center;margin-top:3mm;line-height:1.3}
+</style></head><body>${Array.from({ length: sayfa }, (_, i) => tek(i)).join('')}</body></html>`;
+  }
+  function evGirdi(ev) { const d = ev.target.dataset;
+    if (d.fa) { EV.fa[d.fa] = ev.target.value; if (d.fa === 'ogretmen') { const o = ogretmenler().find(x => x.ad === ev.target.value); if (o && !EV.fa.brans) { EV.fa.brans = o.brans; const b = kok.querySelector('[data-fa="brans"]'); if (b) b.value = o.brans; } } const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge(); return; } if (d.evso) { EV.M.so[d.evso] = ev.target.value; EV.degisti = true; } if (d.evor) { EV.M.okul[d.evor] = ev.target.value; EV.degisti = true; } }
   // Dosya/yapıştırma satırlarından okul rehber öğretmenlerini çıkarır: bir satırda ad + bir ya da birkaç sınıf ("9-A, 9-B", "9/C", "9. sınıflar")
   function evDosyaIsle(R) {
     const S = evSiniflar(), Sset = new Set(S); let n = 0;
@@ -1047,6 +1087,12 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
     if (d.evsek) { if (EV.sek === 'rehber' && EV.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return; EV.sek = d.evsek; evCiz(); return; }
     if (d.izsinif != null) { EV.izSinif = d.izsinif; EV.izNo = ''; izCiz(); return; }
     if (d.izno) { EV.izNo = d.izno; izCiz(); return; }
+    if (d.fasinif) { EV.fa.sinif = d.fasinif; faCiz(); return; }
+    if (d.faekle) { const o = OGR.find(x => x.sinif === EV.fa.sinif && String(x.no) === String(d.faekle)); if (!o) return; const i = EV.fa.ogr.findIndex(x => x.sinif === o.sinif && String(x.no) === String(o.no)); if (i >= 0) EV.fa.ogr.splice(i, 1); else EV.fa.ogr.push({ sinif: o.sinif, no: o.no, ad: o.ad }); faCiz(); return; }
+    if (d.facikar != null) { EV.fa.ogr.splice(+d.facikar, 1); faCiz(); return; }
+    if (d.fax === 'temizle') { if (!await onayla('Formdaki bilgiler ve seçilen öğrenciler silinsin mi?')) return; EV.fa = { ogretmen: '', brans: '', gorev: '', etkinlik: '', tarih: '', saat: '', sinif: '', ogr: [] }; faCiz(); return; }
+    if (d.fax === 'bos') { C.belgeOnizle(faBelge(true), 'Faaliyetli Öğrenci Belgesi', false); return; }
+    if (d.fax === 'yazdir') { C.belgeOnizle(faBelge(), 'Faaliyetli Öğrenci Belgesi', false); return; }
     if (d.izx === 'bos') { C.belgeOnizle(izBelge(true), 'İzin Belgesi', false); return; }
     if (d.izx === 'yazdir') { C.belgeOnizle(izBelge(), 'İzin Belgesi', false); return; }
     if (d.evuyg) { const v = d.evuyg, ad = (kok.querySelector(`[data-evsv="${v}"]`) || {}).value || ''; if (!ad.trim()) { uyar('Önce adı yazın.'); return; }
