@@ -32,7 +32,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1248,6 +1248,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
     if (EV.sek === 'gec') return gkCiz();
     if (EV.sek === 'donem') return dsCiz();
     if (EV.sek === 'kayit') return kyCiz();
+    if (EV.sek === 'zaman') return zcCiz();
     const S = evSiniflar(), bosOR = S.filter(s => !evOR(s)).length, adlar = ogretmenler().map(o => o.ad);
     kok.innerHTML = bas('Evraklar', 'Sınıf Rehberlik Listesi · ' + esc(EV.M.yil), '<button class="ikincil" data-evx="dosya">Dosyadan doldur</button><button class="ikincil" data-evx="excel">Excel</button><button class="ikincil" data-evx="yazdir">Yazdır</button><button class="birincil" data-evx="kaydet">Kaydet</button>') +
       evSekmeler() + `
@@ -1262,7 +1263,7 @@ ${L.map((x, i) => { const teb = (DV.M.teb || {})[x.no] || {}, tb = Object.keys(t
   }
 
   // ---- Evraklar sekmeleri
-  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi'], ['donem', 'Dönem Sonu İş ve İşlemleri'], ['kayit', 'Öğrenci Kayıt Dosyası']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
+  const evSekmeler = () => `<div class="id-adimlar">${[['rehber', 'Sınıf Rehberlik Listesi'], ['izin', 'İzin Belgesi'], ['faaliyet', 'Faaliyetli Öğrenci Belgesi'], ['gec', 'Geç Kalan Öğrenci Çizelgesi'], ['donem', 'Dönem Sonu İş ve İşlemleri'], ['kayit', 'Öğrenci Kayıt Dosyası'], ['zaman', 'Ders Zaman Çizelgesi']].map(([k, ad]) => `<button data-evsek="${k}" ${EV.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('evrak', 18)}${ad}</button>`).join('')}</div>`;
   // ---- İzin Belgesi (Veli Beyanıdır) · okulun basılı formunun aynısı; öğrenci seçilirse şube, numara ve ad doldurulur
   function izCiz() {
     const S = evSiniflar(), L = OGR.filter(o => o.sinif === EV.izSinif).sort((a, b) => (+a.no) - (+b.no));
@@ -1312,6 +1313,76 @@ p{margin:0 0 3mm;text-align:justify;text-indent:16mm}.kal{font-family:Calibri,Ar
         <div id="idBilgi" class="id-bilgi"></div></div>
       <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="faOniz" title="Faaliyetli öğrenci belgesi önizleme" style="width:100%;height:1100px;border:0;background:#fff"></iframe></div>`;
     const fr = kok.querySelector('#faOniz'); if (fr) fr.srcdoc = faBelge();
+  }
+  // Ders Zaman Çizelgesi (26 Kasım 2026): saatler elle yazılmaz, hesaplanır. Başlangıç, ders ve teneffüs süresi, öğle arasının yeri
+  // girilir; çizelge, Cuma farkı ve DYK saatleri kendiliğinden çıkar. Çıktı: A4 afiş ya da bir A4'e iki A5 (sınıf kapıları için).
+  // Kayıt: umal_idari 'evrak:zaman:<yıl>'
+  const ZC_VAR = () => ({ bas: '07.30', top: 30, topAd: 'Derse Hazırlık ve Bahçede Toplanma', ders: 40, ten: 10, sayi: 8, ogleSonra: 5, ogle: 30, ozel: {}, cuma: 6, dyk: 1, dykBas: '15.00', dykSayi: 2, dykDers: 40, dykTen: 10, boyut: 'a4' });
+  const ZC = { V: null, yuk: false };
+  const zcDk = s => { const m = /^(\d{1,2})[.:,](\d{2})$/.exec(String(s || '').trim()); return m ? +m[1] * 60 + +m[2] : null; };
+  const zcS = d => `${String(Math.floor(d / 60) % 24).padStart(2, '0')}.${String(d % 60).padStart(2, '0')}`;
+  function zcHesap(V, ogleSonra) {   // [{ad, g, c, tur}]
+    const R = [], b = zcDk(V.bas); if (b == null) return R; let t = b;
+    if (+V.top > 0) { R.push({ ad: V.topAd || 'Toplanma', g: t, c: t + +V.top, tur: 'top' }); t += +V.top; }
+    for (let i = 1; i <= +V.sayi; i++) {
+      R.push({ ad: `${i}. DERS`, g: t, c: t + +V.ders, tur: 'ders', i }); t += +V.ders;
+      if (i === +V.sayi) break;
+      if (i === +ogleSonra && +V.ogle > 0) { R.push({ ad: 'ÖĞLE ARASI', g: t, c: t + +V.ogle, tur: 'ogle' }); t += +V.ogle; }
+      else t += +((V.ozel || {})[i] ?? V.ten);
+    }
+    return R;
+  }
+  function zcDyk(V) { const R = [], b = zcDk(V.dykBas); if (!+V.dyk || b == null) return R; let t = b; for (let i = 1; i <= +V.dykSayi; i++) { R.push({ ad: `${i}. DERS`, g: t, c: t + +V.dykDers }); t += +V.dykDers + +V.dykTen; } return R; }
+  function zcCumaFark(V) {   // Cuma günü farklı olan satırlar
+    if (!+V.cuma || +V.cuma === +V.ogleSonra) return [];
+    const N = zcHesap(V, V.ogleSonra), F = zcHesap(V, V.cuma), k = r => r.ad + r.g + '-' + r.c, S = new Set(N.map(k));
+    return F.filter(r => !S.has(k(r)));
+  }
+  async function zcCiz() {
+    if (!ZC.yuk) { try { ZC.V = (await oku(`evrak:zaman:${egitimYili()}`)) || null; } catch (e) { ZC.V = null; } ZC.V = Object.assign(ZC_VAR(), ZC.V || {}); ZC.yuk = true; }
+    const V = ZC.V, R = zcHesap(V, V.ogleSonra), son = R.length ? R[R.length - 1].c : 0, uyari = zcDk(V.bas) == null ? 'Başlangıç saatini 07.30 biçiminde yazın.' : (+V.dyk && zcDk(V.dykBas) != null && zcDk(V.dykBas) < son ? 'DYK, son ders bitmeden başlıyor.' : '');
+    const sy = (k, ad, ek = '') => `<label>${ad}<input type="number" min="0" data-zc="${k}" value="${esc(V[k])}" ${ek}></label>`, tx = (k, ad, ph) => `<label>${ad}<input data-zc="${k}" value="${esc(V[k])}" placeholder="${ph}"></label>`;
+    const tenl = Array.from({ length: Math.max(0, +V.sayi - 1) }, (_, j) => j + 1).filter(i => i !== +V.ogleSonra);
+    kok.innerHTML = bas('Evraklar', 'Ders Zaman Çizelgesi', '<button class="ikincil" data-zcx="sifirla">Varsayılana dön</button><button class="ikincil" data-zcx="kaydet">Kaydet</button><button class="birincil" data-zcx="yazdir">Yazdır</button>') + evSekmeler() +
+      `<div class="kart id-not">Saatleri tek tek yazmayın: <b>başlangıç saati, ders ve teneffüs süresi, öğle arasının yeri</b> girildiğinde çizelge kendiliğinden hesaplanır. Cuma günü öğle arası farklıysa fark eden saatler nota yazılır. Çıktı A4 afiş ya da sınıf kapıları için bir A4'e iki A5 olarak alınır.</div>
+      <div class="kart"><span class="id-et" style="margin-top:0">Ders saatleri</span><div class="id-form">${tx('bas', 'Okula giriş / toplanma', '07.30')}${sy('top', 'Toplanma süresi (dk, 0 = yok)')}${tx('topAd', 'Toplanma satırının adı', 'Derse Hazırlık ve Bahçede Toplanma')}${sy('ders', 'Ders süresi (dk)')}${sy('ten', 'Teneffüs (dk)')}${sy('sayi', 'Günlük ders sayısı', 'max="12"')}${sy('ogleSonra', 'Öğle arası kaçıncı dersten sonra')}${sy('ogle', 'Öğle arası (dk, 0 = yok)')}${sy('cuma', 'Cuma öğle arası kaçıncı dersten sonra (0 = aynı)')}</div>
+        ${tenl.length ? `<span class="id-et">Teneffüs süresi farklı olanlar <span class="soluk kucuk">· boş bırakılan ${esc(V.ten)} dk</span></span><div class="id-form">${tenl.map(i => `<label>${i}. dersten sonra (dk)<input type="number" min="0" data-zcten="${i}" value="${esc((V.ozel || {})[i] ?? '')}" placeholder="${esc(V.ten)}"></label>`).join('')}</div>` : ''}
+        <span class="id-et">DYK (destekleme ve yetiştirme kursu)</span><div class="id-form"><label>DYK çizelgesi<select data-zc="dyk"><option value="1" ${+V.dyk ? 'selected' : ''}>Gösterilsin</option><option value="0" ${!+V.dyk ? 'selected' : ''}>Gösterilmesin</option></select></label>${tx('dykBas', 'DYK başlangıç', '15.00')}${sy('dykSayi', 'DYK ders sayısı')}${sy('dykDers', 'DYK ders süresi (dk)')}${sy('dykTen', 'DYK teneffüs (dk)')}</div>
+        <span class="id-et">Çıktı</span><div class="cipler"><button class="cip ${V.boyut === 'a4' ? 'secili' : ''}" data-zcb="a4">A4 afiş</button><button class="cip ${V.boyut === 'a5' ? 'secili' : ''}" data-zcb="a5">Bir A4'e iki A5 (sınıf kapıları)</button></div>
+        <div class="soluk kucuk" style="margin-top:8px">Son ders bitişi: <b>${R.length ? zcS(R[R.length - 1].c) : '—'}</b>${uyari ? ' · <span style="color:#fca5a5">' + uyari + '</span>' : ''}</div><div id="idBilgi" class="id-bilgi"></div></div>
+      <div class="kart" style="background:#fff;padding:0;overflow:hidden"><iframe id="zcOniz" title="Ders zaman çizelgesi önizleme" style="width:100%;height:1150px;border:0;background:#fff"></iframe></div>`;
+    zcOnizle();
+  }
+  const zcOnizle = () => { const fr = kok.querySelector('#zcOniz'); if (fr) fr.srcdoc = zcBelge(); };
+  function zcBelge() {
+    const V = ZC.V, R = zcHesap(V, V.ogleSonra), F = zcCumaFark(V), D = zcDyk(V), a5 = V.boyut === 'a5';
+    const zil = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#d4a64a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M12 3v2"/></svg>';
+    const tablo = (S, ilk) => `<table><thead><tr><th>${ilk}</th><th>GİRİŞ</th><th>ÇIKIŞ</th></tr></thead><tbody>${S.map(r => `<tr class="${r.tur || ''}"><td class="ad">${esc(r.tur === 'top' ? r.ad : r.ad)}</td><td>${zcS(r.g)}</td><td>${zcS(r.c)}</td></tr>`).join('')}</tbody></table>`;
+    const yuz = () => `<section class="sy"><div class="cer"><div class="ic"><div class="tm">
+      <div class="bas"><img src="${LOGO()}" alt=""><div><div class="okul">ÜMRANİYE MERKEZ ANADOLU LİSESİ</div><div class="yil"><i></i>${esc(egitimYili())} EĞİTİM ÖĞRETİM YILI<i></i></div></div></div>
+      <h1>DERS ZAMAN ÇİZELGESİ</h1><div class="sus"><i></i><b>◆</b><i></i></div>
+      ${tablo(R, 'DERSLER')}
+      ${F.length ? `<div class="not"><div class="zil">${zil}</div><div><b>NOT:</b> CUMA GÜNLERİ ÖĞLE ARASI ${+V.cuma}. DERSTEN SONRA UYGULANIR.<div class="fk">${F.map(r => `<span>${esc(r.ad)}:</span><span>${zcS(r.g)} – ${zcS(r.c)}</span>`).join('')}</div></div></div>` : ''}
+      ${D.length ? `<h2><i></i>DYK ZAMAN ÇİZELGESİ<i></i></h2>${tablo(D, 'DERSLER')}` : ''}</div>
+      <div class="mud">${esc(MUDUR.toLocaleUpperCase(tr))}<small>OKUL MÜDÜRÜ</small></div></div></div></section>`;
+    const k = a5 ? 0.68 : 1;
+    return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Ders Zaman Çizelgesi</title><style>
+@page{size:A4 ${a5 ? 'landscape' : 'portrait'};margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0;background:#fff}
+body{font-family:Georgia,"Noto Serif","DejaVu Serif","Times New Roman",serif;color:#0f2147}${a5 ? '.sayfa{display:flex;width:297mm;height:210mm}.sy{width:148.5mm;height:210mm}' : '.sy{width:210mm;height:297mm}'}
+.sy{padding:${7 * k}mm;page-break-after:always;overflow:hidden}.sy:last-child{page-break-after:auto}
+.cer{height:100%;background:#0f2147;padding:${3.2 * k}mm;border-radius:${4 * k}mm}.ic{height:100%;background:#fdfcf8;border:${0.6 * k}mm solid #d4a64a;border-radius:${3 * k}mm;padding:${8 * k}mm ${9 * k}mm ${6 * k}mm;display:flex;flex-direction:column}
+.bas{display:flex;align-items:center;gap:${5 * k}mm}.bas img{height:${27 * k}mm}.bas>div{flex:1;text-align:center;padding-right:${10 * k}mm}
+.okul{font-size:${15 * k}pt;font-weight:bold;letter-spacing:.4px}.yil{font-size:${12 * k}pt;margin-top:${1.5 * k}mm;display:flex;align-items:center;justify-content:center;gap:${3 * k}mm}.yil i,.sus i,h2 i{display:block;height:.35mm;width:${14 * k}mm;background:#d4a64a}
+h1{text-align:center;font-size:${27 * k}pt;margin:${5 * k}mm 0 ${1 * k}mm;letter-spacing:.5px}.sus{display:flex;align-items:center;justify-content:center;gap:${3 * k}mm;color:#d4a64a;font-size:${9 * k}pt;margin-bottom:${5 * k}mm}.sus i{width:${55 * k}mm}
+table{width:100%;border-collapse:separate;border-spacing:0;border:${0.5 * k}mm solid #d4a64a;border-radius:${2.5 * k}mm;overflow:hidden}
+th{background:#0f2147;color:#fff;font-size:${14 * k}pt;padding:${3.2 * k}mm;border-right:${0.4 * k}mm solid #d4a64a}th:last-child{border-right:0}
+td{text-align:center;font-size:${15 * k}pt;padding:${2.2 * k}mm;border-top:${0.3 * k}mm solid #c9c9c9;border-right:${0.3 * k}mm solid #c9c9c9}td:last-child{border-right:0}td.ad{font-size:${13 * k}pt;font-weight:bold;width:40%}
+tr.top td.ad{font-weight:normal;font-size:${11 * k}pt}tr.ogle td{background:#e4e8f0;color:#0f2147;font-weight:bold}
+.not{display:flex;gap:${4 * k}mm;align-items:center;margin-top:${5 * k}mm;border:${0.4 * k}mm solid #d4a64a;border-radius:${2.5 * k}mm;padding:${3 * k}mm ${4 * k}mm;font-size:${11 * k}pt;background:#fbf7ec}
+.zil{flex:none;width:${15 * k}mm;height:${15 * k}mm;border-radius:50%;background:#0f2147;padding:${3 * k}mm}.fk{display:grid;grid-template-columns:auto 1fr;gap:${1 * k}mm ${5 * k}mm;margin-top:${1.5 * k}mm;font-weight:bold}
+h2{display:flex;align-items:center;justify-content:center;gap:${4 * k}mm;font-size:${19 * k}pt;margin:${6 * k}mm 0 ${3 * k}mm}h2 i{width:${22 * k}mm}
+.mud{margin-top:auto;text-align:center;font-size:${15 * k}pt;font-weight:bold;letter-spacing:.5px;padding-top:${4 * k}mm}.mud small{display:block;font-size:${10 * k}pt;font-weight:normal;letter-spacing:1.5px;margin-top:${1 * k}mm}
+</style></head><body>${a5 ? `<div class="sayfa">${yuz()}${yuz()}</div>` : yuz()}<script>(function(){function sig(){document.querySelectorAll('.ic').forEach(function(ic){var tm=ic.querySelector('.tm'),z=1;tm.style.zoom=1;while(ic.scrollHeight>ic.clientHeight+1&&z>0.55){z-=0.02;tm.style.zoom=z;}});}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(sig);sig();window.addEventListener('load',sig);})();<\/script></body></html>`;
   }
   // Öğrenci Kayıt Dosyası (26 Kasım 2026): kayda gelen veliye verilen dosya. Vizyon, misyon ve okul bilgileri okulun resmî sitesinden
   // (umraniyemerkezal.meb.k12.tr › Okulumuz Hakkında) aynen alındı. Öğrenci ve veli bilgileri boş form olarak elle doldurulur.
@@ -1532,6 +1603,9 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 </style></head><body>${Array.from({ length: sayfa }, (_, i) => tek(i)).join('')}</body></html>`;
   }
   function evGirdi(ev) { const d = ev.target.dataset;
+    if (d.zc || d.zcten) { const t = ev.target, V = ZC.V; if (d.zcten) { V.ozel = V.ozel || {}; if (t.value === '') delete V.ozel[d.zcten]; else V.ozel[d.zcten] = Math.max(0, +t.value); }
+      else V[d.zc] = t.type === 'number' ? Math.max(0, Math.min(d.zc === 'sayi' ? 12 : 600, +t.value || 0)) : t.value; EV.degisti = true;
+      if (['sayi', 'ogleSonra', 'dyk'].includes(d.zc)) { zcCiz(); return; } zcOnizle(); return; }
     if (d.ky) { KY.kopya = Math.max(1, Math.min(60, +ev.target.value || 1)); return; }
     if (d.ds) { const V = DS.V[DS.d] = DS.V[DS.d] || { el: {} }; V.el = V.el || {}; const v = ev.target.value.trim(); if (v) V.el[d.ds] = v; else delete V.el[d.ds]; EV.degisti = true;
       if (ev.target.type === 'date') { dsCiz(); return; } const fr = kok.querySelector('#dsOniz'); if (fr) fr.srcdoc = dsBelge(); return; }
@@ -1569,6 +1643,10 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (d.evsek) { if (EV.sek === 'rehber' && EV.degisti && !await onayla('Kaydedilmemiş değişiklikler var. Yine de geçilsin mi?')) return; EV.sek = d.evsek; evCiz(); return; }
     if (d.izsinif != null) { EV.izSinif = d.izsinif; EV.izNo = ''; izCiz(); return; }
     if (d.izno) { EV.izNo = d.izno; izCiz(); return; }
+    if (d.zcb) { ZC.V.boyut = d.zcb; EV.degisti = true; zcCiz(); return; }
+    if (d.zcx === 'yazdir') { C.belgeOnizle(zcBelge(), 'Ders zaman çizelgesi', ZC.V.boyut === 'a5'); return; }
+    if (d.zcx === 'sifirla') { if (!await onayla('Bütün değerler varsayılana dönsün mü?')) return; ZC.V = ZC_VAR(); EV.degisti = true; zcCiz(); return; }
+    if (d.zcx === 'kaydet') { try { await yaz(`evrak:zaman:${egitimYili()}`, ZC.V); EV.degisti = false; bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return; }
     if (d.kyx === 'yazdir') { C.belgeOnizle(kyBelge(KY.kopya), 'Öğrenci kayıt dosyası', false); return; }
     if (d.dsd) { DS.d = d.dsd; dsCiz(); return; }
     if (d.dsx === 'yazdir') { C.belgeOnizle(dsBelge(), 'Dönem sonu iş ve işlemleri', false); return; }
