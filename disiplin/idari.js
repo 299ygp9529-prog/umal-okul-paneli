@@ -33,13 +33,19 @@
     evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5',
     sosyal: 'M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8zM4 21h16',
     turnuva: 'M7 4h10v4a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20.5h7M9.5 17h5v3.5h-5z',
+    tahliye: 'M12 3.5 21 19.5H3zM12 9.5v4.5M12 16.8v.2',
+    ariza: 'M14.5 5.5a4 4 0 0 0-5.3 5.3L4 16l4 4 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.6 2.6-2.4-.6-.6-2.4z',
+    kutuphane: 'M4 4.5h4v15H4zM9.5 4.5h4v15h-4zM15 5.5l3.8-1 3.2 14-3.8 1z',
+    ziyaretci: 'M9 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM3.5 20c0-3.3 2.4-5.8 5.5-5.8s5.5 2.5 5.5 5.8M16 8h5M18.5 5.5v5M15.5 14.5h5',
+    demirbas: 'M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16zM3.5 8 12 12.5 20.5 8M12 12.5v8',
+    mezun: 'M2.5 9 12 4.5 21.5 9 12 13.5zM6.5 11v5c2.5 2.2 8.5 2.2 11 0v-5M21.5 9v5',
     site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler'], ['turnuva', 'Okul Turnuvası', 'satranç / mangala: kayıt, lig, eleme, belgeler']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler'], ['turnuva', 'Okul Turnuvası', 'satranç / mangala: kayıt, lig, eleme, belgeler'], ['tahliye', 'Tahliye Yoklaması', 'tatbikat ve acil durumda sınıf sınıf sayım'], ['ariza', 'Arıza ve Bakım', 'fotoğraflı bildirim, yapıldı takibi'], ['kutuphane', 'Kütüphane', 'kitaplar, ödünç, geciken'], ['ziyaretci', 'Ziyaretçi Kaydı', 'giriş-çıkış, kimi görmeye geldi'], ['demirbas', 'Demirbaş', 'yer yer liste, sayım'], ['mezun', 'Mezunlar', 'yerleşme, yıllara göre başarı']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1453,6 +1459,203 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     return false;
   }
 
+  // ================================================================ 17–22) TAHLİYE · ARIZA · KÜTÜPHANE · ZİYARETÇİ · DEMİRBAŞ · MEZUNLAR (27 Kasım 2026)
+  // Ortak liste motoru: alan tanımlarından ekle / düzenle / ara / sil, Excel'den aktar, Excel'e ver, yazdır. Kayıtlar umal_idari'de (yalnız idare).
+  const LM = { cfg: null, V: null, ara: '', ac: '', filtre: '', degisti: false };
+  const lmBugun = () => bugun(), lmSaat = () => new Date().toTimeString().slice(0, 5);
+  const LMC = {
+    ariza: { baslik: 'Arıza ve Bakım', alt: 'fotoğraflı bildirim · yapıldı takibi · bekleme süresi', anahtar: () => 'ariza', yeni: '+ Arıza bildir', foto: true,
+      alanlar: [['yer', 'Yer (sınıf / oda)', 'text'], ['tur', 'Türü', 'select', ['Elektrik', 'Su / tesisat', 'Mobilya (sıra, masa, dolap)', 'Kapı / pencere', 'Bilişim / projeksiyon / tahta', 'Isıtma', 'Temizlik', 'Bahçe / dış alan', 'Diğer']],
+        ['aciklama', 'Açıklama', 'textarea'], ['bildiren', 'Bildiren', 'text'], ['tarih', 'Bildirim tarihi', 'date'], ['durum', 'Durum', 'select', ['Açık', 'Yapılıyor', 'Yapıldı']], ['kapanis', 'Yapıldığı tarih', 'date'], ['sorumlu', 'İlgilenen', 'text']],
+      bos: () => ({ tarih: lmBugun(), durum: 'Açık', tur: 'Diğer' }),
+      filtreler: [['', 'Hepsi'], ['acik', 'Açık olanlar', x => x.durum !== 'Yapıldı'], ['kapali', 'Yapılanlar', x => x.durum === 'Yapıldı']], varsayilanFiltre: 'acik',
+      sirala: (a, b) => (a.durum === 'Yapıldı') - (b.durum === 'Yapıldı') || String(a.tarih).localeCompare(String(b.tarih)),
+      bas: x => `${esc(x.yer || 'Yer yok')} · ${esc(x.tur || '')}`, sag: x => { const g = x.tarih ? Math.round(((x.durum === 'Yapıldı' && x.kapanis ? new Date(x.kapanis) : new Date()) - new Date(x.tarih)) / 864e5) : 0; return `<span style="color:${x.durum === 'Yapıldı' ? '#3ef08a' : g > 7 ? '#ff6b6b' : '#ff9a3a'}">${esc(x.durum)}${x.durum === 'Yapıldı' ? ` · ${g} günde` : ` · ${g} gündür`}</span>`; },
+      altSatir: x => esc(String(x.aciklama || '').slice(0, 120)),
+      hizli: x => x.durum !== 'Yapıldı' ? `<button class="ikincil id-mini" data-lmhizli="${esc(x.id)}">Yapıldı</button>` : '',
+      hizliYap: x => { x.durum = 'Yapıldı'; x.kapanis = lmBugun(); },
+      ozet: L => { const a = L.filter(x => x.durum !== 'Yapıldı'); return [[a.length, 'açık arıza'], [a.filter(x => x.tarih && (Date.now() - new Date(x.tarih)) / 864e5 > 7).length, '7 günden uzun bekleyen'], [L.filter(x => x.durum === 'Yapıldı').length, 'yapıldı']]; } },
+    kutuphane: { baslik: 'Kütüphane', alt: 'kitaplar · ödünç verme · geciken kitaplar · en çok okuyan sınıflar', anahtar: () => 'kutuphane', yeni: '+ Kitap ekle', sekmeler: [['L', 'Kitaplar'], ['O', 'Ödünç']],
+      alanlar: [['ad', 'Kitabın adı', 'text'], ['yazar', 'Yazarı', 'text'], ['tur', 'Türü', 'text'], ['yayinevi', 'Yayınevi', 'text'], ['demirbas', 'Demirbaş / kayıt no', 'text'], ['adet', 'Adet', 'number'], ['raf', 'Raf', 'text']],
+      bos: () => ({ adet: 1 }), sirala: (a, b) => String(a.ad).localeCompare(String(b.ad), tr),
+      bas: x => `${esc(x.ad || 'Adsız kitap')}`, sag: x => { const o = (LM.V.O || []).filter(y => y.kitap === x.id && !y.donus).length; return `<span class="soluk">${esc(x.yazar || '')}</span> · ${o ? `<span style="color:#ff9a3a">${o}/${+x.adet || 1} ödünçte</span>` : `<span style="color:#3ef08a">rafta</span>`}`; },
+      altSatir: x => esc([x.tur, x.yayinevi, x.demirbas ? 'No ' + x.demirbas : '', x.raf ? 'Raf ' + x.raf : ''].filter(Boolean).join(' · ')),
+      hizli: x => `<button class="ikincil id-mini" data-lmodunc="${esc(x.id)}">Ödünç ver</button>`,
+      ozet: L => { const O = LM.V.O || [], acik = O.filter(y => !y.donus); return [[L.reduce((t, x) => t + (+x.adet || 1), 0), 'kitap'], [acik.length, 'ödünçte'], [acik.filter(y => y.son && y.son < lmBugun()).length, 'geciken']]; } },
+    ziyaretci: { baslik: 'Ziyaretçi Kaydı', alt: 'giriş-çıkış saati · kimi görmeye geldiği', anahtar: () => 'ziyaretci:' + egitimYili(), yeni: '+ Ziyaretçi girişi',
+      alanlar: [['ad', 'Ziyaretçinin adı soyadı', 'text'], ['yakinlik', 'Kim', 'select', ['Veli', 'Mezun', 'Resmî görevli', 'Tedarikçi / teknik servis', 'Misafir', 'Diğer']], ['kime', 'Kimi görmeye geldi', 'text'], ['neden', 'Ziyaret nedeni', 'text'],
+        ['tarih', 'Tarih', 'date'], ['giris', 'Giriş saati', 'time'], ['cikis', 'Çıkış saati', 'time'], ['kart', 'Ziyaretçi kartı no', 'text']],
+      bos: () => ({ tarih: lmBugun(), giris: lmSaat(), yakinlik: 'Veli' }),
+      filtreler: [['bugun', 'Bugün', x => x.tarih === lmBugun()], ['iceride', 'İçeride olanlar', x => !x.cikis], ['', 'Hepsi']], varsayilanFiltre: 'bugun',
+      sirala: (a, b) => String(b.tarih + b.giris).localeCompare(String(a.tarih + a.giris)),
+      bas: x => `${esc(x.ad || 'Adsız')} <span class="soluk">· ${esc(x.yakinlik || '')}</span>`, sag: x => `${esc(tGos(x.tarih))} ${esc(x.giris || '')}–${x.cikis ? esc(x.cikis) : '<span style="color:#ff9a3a">içeride</span>'}`,
+      altSatir: x => esc([x.kime ? 'Görüşülen: ' + x.kime : '', x.neden].filter(Boolean).join(' · ')),
+      hizli: x => !x.cikis ? `<button class="ikincil id-mini" data-lmhizli="${esc(x.id)}">Çıkış yaptı</button>` : '', hizliYap: x => { x.cikis = lmSaat(); },
+      ozet: L => [[L.filter(x => x.tarih === lmBugun()).length, 'bugünkü ziyaretçi'], [L.filter(x => !x.cikis && x.tarih === lmBugun()).length, 'şu an içeride'], [L.length, 'bu yıl toplam']] },
+    demirbas: { baslik: 'Demirbaş', alt: 'yer yer taşınır listesi · durum · sayım', anahtar: () => 'demirbas', yeni: '+ Demirbaş ekle',
+      alanlar: [['yer', 'Bulunduğu yer', 'text'], ['ad', 'Malzemenin adı', 'text'], ['adet', 'Adet', 'number'], ['durum', 'Durumu', 'select', ['Sağlam', 'Onarım gerekli', 'Kullanılamaz']], ['no', 'Taşınır / demirbaş no', 'text'], ['marka', 'Marka / model', 'text'], ['yil', 'Edinme yılı', 'text'], ['not', 'Not', 'text']],
+      bos: () => ({ adet: 1, durum: 'Sağlam' }), filtreler: [['', 'Hepsi'], ['onarim', 'Onarım / kullanılamaz', x => x.durum !== 'Sağlam']],
+      sirala: (a, b) => sinifSira(a.yer || '', b.yer || '') || String(a.ad).localeCompare(String(b.ad), tr), grup: x => x.yer || 'Yer belirtilmemiş',
+      bas: x => `${esc(x.ad || 'Adsız')} <span class="soluk">× ${esc(x.adet || 1)}</span>`, sag: x => `<span style="color:${x.durum === 'Sağlam' ? '#3ef08a' : x.durum === 'Kullanılamaz' ? '#ff6b6b' : '#ff9a3a'}">${esc(x.durum || '')}</span>`,
+      altSatir: x => esc([x.no ? 'No ' + x.no : '', x.marka, x.yil, x.not].filter(Boolean).join(' · ')),
+      ozet: L => [[new Set(L.map(x => x.yer)).size, 'yer'], [L.reduce((t, x) => t + (+x.adet || 1), 0), 'malzeme'], [L.filter(x => x.durum !== 'Sağlam').reduce((t, x) => t + (+x.adet || 1), 0), 'onarım / kullanılamaz']] },
+    mezun: { baslik: 'Mezunlar', alt: 'yerleştikleri üniversite ve bölüm · yıllara göre başarı', anahtar: () => 'mezun', yeni: '+ Mezun ekle',
+      alanlar: [['yil', 'Mezuniyet yılı', 'text'], ['ad', 'Adı soyadı', 'text'], ['sinif', 'Son sınıfı', 'text'], ['universite', 'Üniversite', 'text'], ['bolum', 'Bölüm', 'text'], ['tur', 'Program', 'select', ['Lisans', 'Önlisans', 'Yurt dışı', 'Yerleşmedi / tekrar', 'Diğer']], ['il', 'İl', 'text'], ['puan', 'Sıralama / puan', 'text'], ['not', 'Not', 'text']],
+      bos: () => ({ yil: String(new Date().getFullYear()), tur: 'Lisans' }), sirala: (a, b) => String(b.yil).localeCompare(String(a.yil)) || String(a.ad).localeCompare(String(b.ad), tr), grup: x => (x.yil || 'Yıl yok') + ' mezunları',
+      bas: x => `${esc(x.ad || 'Adsız')} <span class="soluk">${esc(x.sinif || '')}</span>`, sag: x => `${esc(x.universite || '')}${x.bolum ? ' · ' + esc(x.bolum) : ''}`, altSatir: x => esc([x.tur, x.il, x.puan].filter(Boolean).join(' · ')),
+      ozet: L => { const y = String(Math.max(0, ...L.map(x => +x.yil || 0)) || ''), S = L.filter(x => x.yil === y); return [[L.length, 'mezun kaydı'], [S.length, (y || '—') + ' mezunu'], [S.filter(x => x.tur === 'Lisans').length, (y || '') + ' lisansa yerleşen']]; } }
+  };
+  const LM_ODUNC = [['kitap', 'Kitap', 'kitap'], ['ogr', 'Öğrenci', 'ogr'], ['verilis', 'Veriliş', 'date'], ['son', 'Son iade günü', 'date'], ['donus', 'İade edildiği gün', 'date']];
+  async function lmAc(id) {
+    LM.cfg = LMC[id]; LM.ara = ''; LM.ac = ''; LM.sek = 'L'; LM.filtre = LM.cfg.varsayilanFiltre || '';
+    try { LM.V = (await oku(LM.cfg.anahtar())) || { L: [] }; } catch (e) { kok.innerHTML = bas(LM.cfg.baslik) + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    LM.V.L = LM.V.L || []; if (id === 'kutuphane') LM.V.O = LM.V.O || []; LM.degisti = false; lmCiz();
+  }
+  async function lmKaydet(sessiz) { try { await yaz(LM.cfg.anahtar(), LM.V); LM.degisti = false; if (!sessiz) bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } }
+  const lmOdunc = () => LM.sek === 'O';
+  const lmAlanlar = () => lmOdunc() ? LM_ODUNC : LM.cfg.alanlar;
+  function lmGirdiHtml(x, [k, ad, tip, sec]) {
+    const v = x[k] ?? '', d = `data-lmalan="${esc(x.id)}|${k}"`;
+    if (tip === 'select') return `<label>${ad}<select ${d}>${[...new Set([...(sec || []), v].filter(Boolean))].map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+    if (tip === 'textarea') return `<label class="genis">${ad}<textarea ${d} rows="2">${esc(v)}</textarea></label>`;
+    if (tip === 'ogr') return `<label>${ad}<input ${d} list="lmOgrL" value="${esc(v ? (seOgr(v) ? `${v} · ${seOgr(v).ad} · ${seOgr(v).sinif}` : v) : '')}" placeholder="No ya da ad yazın"></label>`;
+    if (tip === 'kitap') return `<label>${ad}<select ${d}><option value="">Kitap seçin…</option>${LM.V.L.slice().sort(LM.cfg.sirala).map(b => `<option value="${esc(b.id)}" ${b.id === v ? 'selected' : ''}>${esc(b.ad)}${b.yazar ? ' · ' + esc(b.yazar) : ''}</option>`).join('')}</select></label>`;
+    return `<label>${ad}<input ${d} ${tip !== 'text' ? `type="${tip}"` : ''} value="${esc(v)}"></label>`;
+  }
+  function lmCiz() {
+    const c = LM.cfg, O = lmOdunc(), L0 = O ? LM.V.O : LM.V.L, q = norm(LM.ara);
+    const f = (c.filtreler || []).find(z => z[0] === LM.filtre && z[2]);
+    const metin = x => O ? norm([(LM.V.L.find(b => b.id === x.kitap) || {}).ad, x.ogr, (seOgr(x.ogr) || {}).ad, (seOgr(x.ogr) || {}).sinif].join(' ')) : norm(c.alanlar.map(([k]) => x[k]).join(' '));
+    const L = L0.filter(x => (O ? (LM.filtre === 'iade' ? x.donus : LM.filtre === 'gec' ? !x.donus && x.son && x.son < lmBugun() : LM.filtre === 'hepsi' ? true : !x.donus) : (!f || f[2](x))) && (!q || metin(x).includes(q)))
+      .sort(O ? (a, b) => String(a.son).localeCompare(String(b.son)) : c.sirala);
+    const ozet = c.ozet(LM.V.L);
+    const satir = x => {
+      if (O) { const b = LM.V.L.find(k => k.id === x.kitap) || {}, gec = !x.donus && x.son && x.son < lmBugun();
+        return `<div class="kart" style="padding:10px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button data-lmac="${esc(x.id)}" style="all:unset;cursor:pointer;flex:1"><b>${esc(b.ad || 'Silinmiş kitap')}</b> <span class="soluk">→ ${esc(x.ogr ? seOgrAd(x.ogr) : '—')}</span><div class="soluk kucuk">Veriliş ${esc(tGos(x.verilis))} · son gün ${esc(tGos(x.son))}${x.donus ? ' · iade ' + esc(tGos(x.donus)) : ''}</div></button>
+          <span style="color:${x.donus ? '#3ef08a' : gec ? '#ff6b6b' : '#ff9a3a'}">${x.donus ? 'İade edildi' : gec ? 'Gecikti' : 'Ödünçte'}</span>${!x.donus ? `<button class="ikincil id-mini" data-lmiade="${esc(x.id)}">İade alındı</button>` : ''}</div>${LM.ac === x.id ? lmForm(x) : ''}</div>`; }
+      return `<div class="kart" style="padding:10px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button data-lmac="${esc(x.id)}" style="all:unset;cursor:pointer;flex:1;min-width:200px"><b>${c.bas(x)}</b>${c.altSatir ? `<div class="soluk kucuk">${c.altSatir(x)}</div>` : ''}</button><span>${c.sag(x)}</span>${c.hizli ? c.hizli(x) : ''}</div>
+        ${c.foto && (x.foto || []).length && LM.ac !== x.id ? `<div style="display:flex;gap:6px;margin-top:6px">${x.foto.slice(0, 4).map(p => `<img data-sefotoyol="${esc(p.yol)}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:7px;background:var(--koyu)">`).join('')}</div>` : ''}${LM.ac === x.id ? lmForm(x) : ''}</div>`;
+    };
+    let govde = '', grp = '';
+    L.forEach(x => { const g = !O && c.grup ? c.grup(x) : ''; if (g && g !== grp) { grp = g; govde += `<h3 style="margin:14px 2px 6px;font-size:14px;letter-spacing:.04em;color:var(--soluk)">${esc(g)}</h3>`; } govde += satir(x); });
+    const filt = O ? [['', 'Ödünçte'], ['gec', 'Geciken'], ['iade', 'İade edilen'], ['hepsi', 'Hepsi']] : (c.filtreler || []);
+    kok.innerHTML = bas(c.baslik, esc(c.alt) + ' · yalnız idare görür', `<button class="birincil" data-lm="kaydet">Kaydet</button>`) +
+      `<div class="id-say">${ozet.map(([n, a]) => `<div><b>${n}</b><span>${esc(a)}</span></div>`).join('')}</div>
+      ${c.sekmeler ? `<div class="id-adimlar">${c.sekmeler.map(([k, a]) => `<button data-lmsek="${k}" style="${LM.sek === k ? 'border-color:var(--neon);color:#fff' : ''}">${a}</button>`).join('')}${LM.sek === 'O' ? '<button data-lm="okuyan">En çok okuyan sınıflar</button>' : ''}</div>` : ''}
+      <div class="kart"><div class="id-satir"><input data-lmara="1" placeholder="Ara…" value="${esc(LM.ara)}"><button class="birincil" data-lm="yeni">${O ? '+ Ödünç ver' : esc(c.yeni)}</button>
+        ${!O ? `<label class="ikincil id-mini" style="cursor:pointer">Excel'den aktar<input type="file" data-lmexcel="1" accept=".xlsx,.xls,.csv,.txt" hidden></label>` : ''}<button class="ikincil id-mini" data-lm="excel">Excel</button><button class="ikincil id-mini" data-lm="yazdir">Yazdır</button></div>
+        ${filt.length ? `<div class="oy-cip" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${filt.map(([k, a]) => `<button class="cip mini" data-lmfiltre="${k}" style="${LM.filtre === k ? 'border-color:var(--neon);color:var(--neon);background:rgba(34,232,255,.12)' : ''}">${esc(a)}</button>`).join('')}</div>` : ''}<div id="idBilgi" class="id-bilgi"></div></div>
+      ${govde || '<div class="kart soluk">Kayıt yok.</div>'}<datalist id="lmOgrL">${OGR.map(o => `<option value="${esc(o.no)} · ${esc(o.ad)} · ${esc(o.sinif)}">`).join('')}</datalist><div id="lmEk"></div>`;
+    if (c.foto) seFotoYukle();
+  }
+  function lmForm(x) {
+    const c = LM.cfg;
+    return `<div class="id-form" style="margin-top:10px">${lmAlanlar().map(a => lmGirdiHtml(x, a)).join('')}</div>
+      ${c.foto && !lmOdunc() ? `<span class="id-et">Fotoğraflar</span><div style="display:flex;flex-wrap:wrap;gap:8px">${(x.foto || []).map((f, i) => `<div style="position:relative"><img data-sefotoyol="${esc(f.yol)}" alt="" style="width:120px;height:90px;object-fit:cover;border-radius:10px;background:var(--koyu)"><button data-lmfotosil="${esc(x.id)}|${i}" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:0;color:#fff;border-radius:8px;cursor:pointer">✕</button></div>`).join('')}
+        <label class="ikincil" style="cursor:pointer;width:120px;height:90px;display:grid;place-items:center;border-radius:10px;border:1.5px dashed var(--cizgi);text-align:center">+ Fotoğraf<input type="file" data-lmfoto="${esc(x.id)}" accept="image/*" multiple hidden></label></div>` : ''}
+      <div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0"><button class="birincil" data-lm="kaydet">Kaydet</button><button class="bag" style="color:var(--kirmizi);margin-left:auto" data-lmsil="${esc(x.id)}">Sil</button></div>`;
+  }
+  const lmListe = () => lmOdunc() ? LM.V.O : LM.V.L;
+  function lmGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.lmara) { LM.ara = t.value; const p = t.selectionStart; lmCiz(); const i = kok.querySelector('[data-lmara]'); if (i) { i.focus(); i.setSelectionRange(p, p); } return; }
+    if (d.lmalan) { const [id, k] = d.lmalan.split('|'), x = lmListe().find(z => z.id === id); if (!x) return; let v = t.value;
+      if (k === 'ogr') { const no = (v.match(/^\s*(\d{1,6})\b/) || [])[1]; const o = no ? seOgr(no) : OGR.find(z => norm(z.ad) === norm(v)); if (o) v = String(o.no); else return; }
+      x[k] = v; LM.degisti = true; if (t.tagName === 'SELECT') { if (k === 'durum' && v === 'Yapıldı' && !x.kapanis) x.kapanis = lmBugun(); } } }
+  async function lmDosya(ev) { const t = ev.target, d = t.dataset || {};
+    if (d.lmfoto && t.files.length) { const x = LM.V.L.find(z => z.id === d.lmfoto), F = [...t.files]; t.value = ''; let n = 0, hata = ''; bilgi(`${F.length} fotoğraf yükleniyor…`);
+      for (const f of F) { try { const j = await seJpeg(f); const yol = `${LM.cfg.anahtar()}/${x.id}/${crypto.randomUUID ? crypto.randomUUID() : uid()}.jpg`;
+          const { error } = await C.sb.storage.from('umal-etkinlik').upload(yol, j, { contentType: 'image/jpeg', upsert: false }); if (error) throw error; (x.foto = x.foto || []).push({ yol }); n++; } catch (e) { hata = `${f.name}: ${e.message || e}`; } }
+      if (n) await lmKaydet(true); lmCiz(); if (n) bilgi(`${n} fotoğraf eklendi.`, 'yesil'); if (hata) uyar(hata); return; }
+    if (d.lmexcel && t.files.length) { const f = t.files[0]; t.value = '';
+      try { const R = (await dosyaSatirlar(f)).map(r => (Array.isArray(r) ? r : [r]).map(z => String(z ?? '').trim())); const A = LM.cfg.alanlar;
+        const TAKMA = { ad: ['kitap', 'kitap adi', 'eser', 'eser adi', 'kitabin adi', 'malzeme', 'malzeme adi', 'cinsi', 'adi soyadi', 'ad soyad', 'ziyaretci', 'isim'], yazar: ['yazari'], yer: ['bulundugu yer', 'oda', 'sinif', 'konum', 'yeri'], adet: ['miktar', 'sayi', 'adedi'],
+          demirbas: ['demirbas no', 'kayit no', 'demirbas'], no: ['tasinir no', 'sicil no', 'demirbas no'], universite: ['universite', 'kazandigi universite', 'okul'], bolum: ['bolum', 'kazandigi bolum', 'program adi'], yil: ['mezuniyet yili', 'yil', 'mezuniyet'] };
+        const esle = h => { const n = norm(h); if (!n) return -1; let i = A.findIndex(([k, ad]) => n === norm(ad) || n === norm(k)); if (i >= 0) return i;
+          i = A.findIndex(([k]) => (TAKMA[k] || []).includes(n)); if (i >= 0) return i; return A.findIndex(([k, ad]) => { const a = norm(ad); return a.includes(n) || n.includes(a.split(' ')[0]); }); };
+        let bi = R.findIndex(r => r.filter(h => esle(h) >= 0).length >= 2); if (bi < 0) { uyar('Başlık satırı tanınmadı. İlk satırda sütun adları olsun (ör. ' + A.slice(0, 4).map(a => a[1]).join(', ') + ').'); return; }
+        const map = R[bi].map(esle); let n = 0;
+        R.slice(bi + 1).forEach(r => { if (!r.some(Boolean)) return; const x = Object.assign({ id: uid() }, LM.cfg.bos ? LM.cfg.bos() : {}); map.forEach((m, i) => { if (m >= 0 && r[i]) x[A[m][0]] = r[i]; }); LM.V.L.push(x); n++; });
+        LM.degisti = true; lmCiz(); bilgi(`${f.name}: ${n} kayıt eklendi (${map.filter(m => m >= 0).length} sütun eşleşti). Kontrol edip Kaydet'e basın.`, 'yesil'); } catch (e) { uyar(`${f.name}: ${e.message || e}`); } }
+  }
+  async function lmTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, c = LM.cfg;
+    if (d.lm === 'kaydet') { await lmKaydet(); return true; }
+    if (d.lmsek) { LM.sek = d.lmsek; LM.ac = ''; LM.filtre = d.lmsek === 'O' ? '' : (c.varsayilanFiltre || ''); lmCiz(); return true; }
+    if (d.lmfiltre !== undefined) { LM.filtre = d.lmfiltre; lmCiz(); return true; }
+    if (d.lmac) { LM.ac = LM.ac === d.lmac ? '' : d.lmac; lmCiz(); return true; }
+    if (d.lm === 'yeni') { const x = lmOdunc() ? { id: uid(), kitap: '', ogr: '', verilis: lmBugun(), son: gunEkle(lmBugun(), 15), donus: '' } : Object.assign({ id: uid() }, c.bos ? c.bos() : {});
+      lmListe().unshift(x); LM.ac = x.id; LM.filtre = lmOdunc() ? '' : ''; LM.ara = ''; LM.degisti = true; lmCiz(); return true; }
+    if (d.lmodunc) { const x = { id: uid(), kitap: d.lmodunc, ogr: '', verilis: lmBugun(), son: gunEkle(lmBugun(), 15), donus: '' }; LM.V.O.unshift(x); LM.sek = 'O'; LM.filtre = ''; LM.ac = x.id; LM.ara = ''; LM.degisti = true; lmCiz(); return true; }
+    if (d.lmiade) { const x = LM.V.O.find(z => z.id === d.lmiade); if (x) { x.donus = lmBugun(); await lmKaydet(true); lmCiz(); bilgi('İade alındı.', 'yesil'); } return true; }
+    if (d.lmhizli) { const x = LM.V.L.find(z => z.id === d.lmhizli); if (x) { c.hizliYap(x); await lmKaydet(true); lmCiz(); } return true; }
+    if (d.lmsil) { const L = lmListe(), x = L.find(z => z.id === d.lmsil); if (!x || !await onayla('Bu kayıt silinsin mi?')) return true;
+      if ((x.foto || []).length) await C.sb.storage.from('umal-etkinlik').remove(x.foto.map(f => f.yol)); L.splice(L.indexOf(x), 1); await lmKaydet(true); lmCiz(); return true; }
+    if (d.lmfotosil) { const [id, i] = d.lmfotosil.split('|'), x = LM.V.L.find(z => z.id === id), f = x && x.foto[+i]; if (!f || !await onayla('Fotoğraf silinsin mi?')) return true; await C.sb.storage.from('umal-etkinlik').remove([f.yol]); x.foto.splice(+i, 1); await lmKaydet(true); lmCiz(); return true; }
+    if (d.lm === 'okuyan') { const S = {}; LM.V.O.forEach(x => { const o = seOgr(x.ogr); if (o) S[o.sinif] = (S[o.sinif] || 0) + 1; });
+      C.pencereAc(`<h2 style="margin-top:0">En çok okuyan sınıflar</h2><table class="ds-tablo">${Object.entries(S).sort((a, b) => b[1] - a[1]).map(([s, n], i) => `<tr><td>${i + 1}</td><td>${esc(s)}</td><td>${n} kitap</td></tr>`).join('') || '<tr><td>Henüz ödünç kaydı yok.</td></tr>'}</table>`); return true; }
+    if (d.lm === 'excel' || d.lm === 'yazdir') { const A = lmAlanlar(), L = lmListe().slice().sort(lmOdunc() ? (a, b) => String(a.son).localeCompare(String(b.son)) : c.sirala);
+      const deger = (x, [k, , tip]) => tip === 'kitap' ? ((LM.V.L.find(z => z.id === x[k]) || {}).ad || '') : tip === 'ogr' ? (x[k] ? seOgrAd(x[k]) : '') : tip === 'date' ? (x[k] ? tGos(x[k]) : '') : String(x[k] ?? '');
+      const ad = c.baslik + (lmOdunc() ? ' - Ödünç' : '');
+      if (d.lm === 'excel') { indir(ad.replace(/\s+/g, '_') + '_' + lmBugun(), [A.map(a => a[1]), ...L.map(x => A.map(a => deger(x, a)))]); return true; }
+      C.belgeOnizle(dyBelgeKabuk(ad, `<section class="sy">${dyUst()}<h1>${esc(ad.toLocaleUpperCase(tr))}</h1><table><thead><tr><th style="width:8mm">#</th>${A.filter(a => a[2] !== 'textarea').map(a => `<th>${esc(a[1])}</th>`).join('')}</tr></thead><tbody>${L.map((x, i) => `<tr><td>${i + 1}</td>${A.filter(a => a[2] !== 'textarea').map(a => `<td>${esc(deger(x, a))}</td>`).join('')}</tr>`).join('')}</tbody></table>${seImza()}</section>`, A.length > 6), ad, A.length > 6); return true; }
+    return false;
+  }
+
+  // ---- Tahliye yoklaması: tatbikatta ya da gerçek olayda sınıf sınıf sayım. İnternet kesilirse işaretler telefonda saklanır, bağlantı gelince gönderilir.
+  const TH = { V: null, ac: '', degisti: false };
+  const TH_YEDEK = 'umal_tahliye_yedek';
+  async function tahliye() {
+    let V = null; try { V = await oku('tahliye'); } catch (e) {}
+    let y = null; try { y = JSON.parse(localStorage.getItem(TH_YEDEK) || 'null'); } catch (e) {}
+    if (y && (!V || (y.guncel || '') > (V.guncel || ''))) V = y;   // gönderilmemiş yerel işaretler önde
+    TH.V = V || { L: [] }; TH.V.L = TH.V.L || []; thCiz(); thGonder();
+    if (!TH.dinle) { TH.dinle = true; window.addEventListener('online', () => thGonder()); }
+  }
+  function thYerel() { TH.V.guncel = new Date().toISOString(); try { localStorage.setItem(TH_YEDEK, JSON.stringify(TH.V)); } catch (e) {} }
+  async function thGonder() { try { await yaz('tahliye', TH.V); localStorage.removeItem(TH_YEDEK); TH.cevrimdisi = false; } catch (e) { TH.cevrimdisi = true; } const s = kok && kok.querySelector('#thAg'); if (s) s.innerHTML = thAgYazi(); }
+  const thAgYazi = () => TH.cevrimdisi ? '<span style="color:#ff9a3a">● Bağlantı yok: işaretler bu cihazda saklanıyor, bağlantı gelince gönderilecek.</span>' : '<span style="color:#3ef08a">● Kaydedildi</span>';
+  const thSure = (a, b) => { const s = Math.max(0, Math.round((new Date(b || Date.now()) - new Date(a)) / 1000)); return `${Math.floor(s / 60)} dk ${String(s % 60).padStart(2, '0')} sn`; };
+  function thCiz() {
+    const A = TH.V.L.find(x => !x.bitis), S = siniflar();
+    if (!A) { kok.innerHTML = bas('Tahliye Yoklaması', 'tatbikat ya da acil durumda sınıf sınıf sayım · yalnız idare görür') +
+      `<div class="kart"><b style="font-size:15px">Yeni tahliye başlat</b><div class="soluk kucuk" style="margin:4px 0 10px">Toplanma alanında her sınıfı "tam" ya da eksik öğrencileriyle işaretleyin. İnternet kesilse bile işaretler bu telefonda saklanır, bağlantı gelince gönderilir. Bunun için sayfayı tatbikattan önce açmış olmanız yeterli.</div>
+        <div class="id-satir"><select id="thTur"><option>Deprem tatbikatı</option><option>Yangın tatbikatı</option><option>Gerçek olay</option><option>Diğer</option></select><button class="birincil" data-th="baslat">Tahliyeyi başlat</button></div><div id="idBilgi" class="id-bilgi"></div></div>
+        ${TH.V.L.length ? `<div class="kart"><b>Geçmiş tahliyeler</b>${TH.V.L.slice().reverse().map(x => { const v = Object.values(x.sinif || {}); return `<div class="id-satir" style="margin-top:8px"><span style="flex:1">${esc(tGos(x.baslangic.slice(0, 10)))} · ${esc(x.tur)} · ${v.length}/${x.toplam} sınıf · ${v.reduce((t, s) => t + (s.eksik || []).length, 0)} eksik · süre ${esc(thSure(x.baslangic, x.bitis))}</span><button class="ikincil id-mini" data-thrapor="${esc(x.id)}">Rapor</button></div>`; }).join('')}</div>` : ''}`; return; }
+    const sayilan = S.filter(s => A.sinif[s]), eksikTop = Object.values(A.sinif).reduce((t, s) => t + (s.eksik || []).length, 0);
+    const sec = TH.ac && S.includes(TH.ac) ? TH.ac : '';
+    kok.innerHTML = bas('Tahliye Yoklaması', `${esc(A.tur)} · başlangıç ${esc(new Date(A.baslangic).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))}`, `<button class="birincil" data-th="bitir">Tahliyeyi bitir</button>`) +
+      `<div class="id-say"><div><b>${sayilan.length}/${S.length}</b><span>sınıf sayıldı</span></div><div><b style="color:${eksikTop ? '#ff6b6b' : '#3ef08a'}">${eksikTop}</b><span>eksik öğrenci</span></div><div><b id="thSaat">${esc(thSure(A.baslangic))}</b><span>geçen süre</span></div></div>
+      <div id="thAg" class="soluk kucuk" style="margin-bottom:8px">${thAgYazi()}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px">${S.map(s => { const k = A.sinif[s]; const r = !k ? 'var(--kart)' : (k.eksik || []).length ? 'rgba(255,107,107,.25)' : 'rgba(62,240,138,.22)';
+        return `<button data-thsinif="${esc(s)}" style="padding:14px 6px;border-radius:12px;border:1.5px solid ${sec === s ? 'var(--neon)' : 'var(--cizgi)'};background:${r};color:#fff;font-weight:800;font-size:17px;cursor:pointer">${esc(s)}<small style="display:block;font-weight:600;font-size:11.5px;color:var(--soluk)">${!k ? 'sayılmadı' : (k.eksik || []).length ? k.eksik.length + ' eksik' : 'tam'}</small></button>`; }).join('')}</div>
+      ${sec ? thSinifPanel(A, sec) : ''}${eksikTop ? `<div class="kart" style="border-color:rgba(255,107,107,.6)"><b>Eksik öğrenciler</b>${Object.entries(A.sinif).filter(([, k]) => (k.eksik || []).length).sort((a, b) => sinifSira(a[0], b[0])).map(([s, k]) => `<div style="margin-top:6px"><b>${esc(s)}:</b> ${k.eksik.map(no => esc((seOgr(no) || { ad: no }).ad)).join(', ')}</div>`).join('')}</div>` : ''}`;
+    clearInterval(TH.z); TH.z = setInterval(() => { const e = document.getElementById('thSaat'); if (!e) { clearInterval(TH.z); return; } e.textContent = thSure(A.baslangic); }, 1000);
+  }
+  function thSinifPanel(A, s) {
+    const k = A.sinif[s] || { eksik: [] }, O = OGR.filter(o => o.sinif === s).sort((a, b) => a.ad.localeCompare(b.ad, tr));
+    return `<div class="kart" style="border-color:var(--neon);margin-top:12px"><div class="id-satir"><b style="flex:1;font-size:17px">${esc(s)} · ${O.length} öğrenci</b><button class="birincil" data-thtam="${esc(s)}" style="min-height:48px">Sınıf tam</button></div>
+      <div class="soluk kucuk" style="margin:6px 0">Eksik öğrenci varsa adına dokunun (kırmızı = eksik), sonra "Eksikleri kaydet".</div>
+      <div class="id-ogr" style="max-height:none">${O.map(o => `<button data-theksik="${esc(s)}|${esc(o.no)}" style="${(k.eksik || []).includes(String(o.no)) ? 'border-color:#ff6b6b;background:rgba(255,107,107,.22);color:#fff' : ''}"><b>${esc(o.no)}</b>${esc(o.ad)}</button>`).join('')}</div>
+      <div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0"><button class="ikincil" data-thkaydet="${esc(s)}">Eksikleri kaydet</button></div></div>`;
+  }
+  function thRapor(x) {
+    const S = Object.keys(x.sinif || {}).sort(sinifSira);
+    return dyBelgeKabuk('Tahliye raporu', `<section class="sy">${dyUst()}<h1>TAHLİYE YOKLAMA RAPORU</h1><div style="margin-bottom:3mm">${esc(x.tur)} · ${esc(tGos(x.baslangic.slice(0, 10)))} · başlangıç ${esc(new Date(x.baslangic).toLocaleTimeString(tr, { hour: '2-digit', minute: '2-digit' }))} · toplam süre ${esc(thSure(x.baslangic, x.bitis))} · ${S.length}/${x.toplam} sınıf sayıldı</div>
+      <table><thead><tr><th style="width:18mm">Sınıf</th><th style="width:32mm">Sayım süresi</th><th style="width:18mm">Durum</th><th>Eksik öğrenciler</th></tr></thead><tbody>${S.map(s => { const k = x.sinif[s]; return `<tr><td>${esc(s)}</td><td>${esc(thSure(x.baslangic, k.saat))}</td><td>${(k.eksik || []).length ? k.eksik.length + ' eksik' : 'Tam'}</td><td>${esc((k.eksik || []).map(no => (seOgr(no) || { ad: no }).ad).join(', '))}</td></tr>`; }).join('')}</tbody></table>${seImza()}</section>`, false);
+  }
+  async function thTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset, A = TH.V.L.find(x => !x.bitis);
+    if (d.th === 'baslat') { TH.V.L.push({ id: uid(), tur: kok.querySelector('#thTur').value, baslangic: new Date().toISOString(), toplam: siniflar().length, sinif: {} }); TH.ac = ''; thYerel(); thCiz(); thGonder(); return true; }
+    if (d.thsinif) { TH.ac = TH.ac === d.thsinif ? '' : d.thsinif; thCiz(); return true; }
+    if (d.theksik && A) { const [s, no] = d.theksik.split('|'); A._tas = A._tas || {}; const k = A._tas[s] || (A._tas[s] = [...((A.sinif[s] || {}).eksik || [])]); const i = k.indexOf(no); if (i >= 0) k.splice(i, 1); else k.push(no);
+      b.style.cssText = k.includes(no) ? 'border-color:#ff6b6b;background:rgba(255,107,107,.22);color:#fff' : ''; return true; }
+    if ((d.thtam || d.thkaydet) && A) { const s = d.thtam || d.thkaydet; A.sinif[s] = { eksik: d.thtam ? [] : [...((A._tas || {})[s] || ((A.sinif[s] || {}).eksik || []))], saat: new Date().toISOString() }; if (A._tas) delete A._tas[s];
+      TH.ac = ''; thYerel(); thCiz(); thGonder(); return true; }
+    if (d.th === 'bitir' && A) { if (!await onayla(`Tahliye bitirilsin mi? ${siniflar().filter(s => A.sinif[s]).length}/${siniflar().length} sınıf sayıldı.`)) return true; delete A._tas; A.bitis = new Date().toISOString(); thYerel(); await thGonder(); thCiz(); C.belgeOnizle(thRapor(A), 'Tahliye raporu', false); return true; }
+    if (d.thrapor) { const x = TH.V.L.find(z => z.id === d.thrapor); if (x) C.belgeOnizle(thRapor(x), 'Tahliye raporu', false); return true; }
+    return false;
+  }
+
   // ================================================================ 14) EVDE EĞİTİM ALAN ÖĞRENCİLER (27 Kasım 2026)
   // Resmî yazı (PDF, Word ya da metni yapıştırarak) okunur: öğrenci okul listesinden bulunur, yazının sayısı/tarihi ve eğitim dönemi alınır;
   // öğrencinin aldığı dersler, haftalık saatleri ve dersin öğretmenleri sınıfının ders programından kendiliğinden yazılır.
@@ -2470,7 +2673,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti, sosyal: SE.degisti, turnuva: false }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti, sosyal: SE.degisti, turnuva: false, tahliye: false, ariza: LM.degisti, kutuphane: LM.degisti, ziyaretci: LM.degisti, demirbas: LM.degisti, mezun: LM.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -2478,13 +2681,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik, turnuva: trTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik, turnuva: trTik, tahliye: thTik, ariza: lmTik, kutuphane: lmTik, ziyaretci: lmTik, demirbas: lmTik, mezun: lmTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (LMC[aktif]) { const t_ = ev.target; if (t_.dataset && (t_.dataset.lmfoto || t_.dataset.lmexcel)) return lmDosya(ev); return lmGirdi(ev); } if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi, sosyal: seGirdi, turnuva: () => {} }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi, sosyal: seGirdi, turnuva: () => {}, tahliye: () => {}, ariza: lmGirdi, kutuphane: lmGirdi, ziyaretci: lmGirdi, demirbas: lmGirdi, mezun: lmGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -2502,6 +2705,8 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'evde') return evde();
     if (id === 'sosyal') return sosyal();
     if (id === 'turnuva') return turnuva();
+    if (id === 'tahliye') return tahliye();
+    if (LMC[id]) return lmAc(id);
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
