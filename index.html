@@ -174,6 +174,12 @@ body.okul-site #osSag { display: block; position: absolute; right: clamp(32px, 4
 #osSag .gt-cerceve { height: clamp(84px, 11vh, 120px) !important; }
 #osSag .gt-ata q { font-size: clamp(15px, 1.15vw, 20px) !important; }
 #osSag .gt-ata cite { white-space: normal !important; letter-spacing: .1em !important; font-size: 10px !important; line-height: 1.5; }
+body.okul-site #osHero { top: 46%; }
+#osHero .gt-ata { width: 100%; box-sizing: border-box; margin-top: 26px !important; }
+#osHero .gt-ata figcaption { max-width: none !important; min-width: 0; flex: 1; }
+#osHero .gt-cerceve { height: clamp(80px, 11vh, 116px) !important; }
+#osHero .gt-ata q { font-size: clamp(15px, 1.15vw, 20px) !important; }
+#osHero .gt-ata cite { white-space: normal !important; letter-spacing: .1em !important; font-size: 10px !important; line-height: 1.5; }
 #osHero .os-yer { color: #e8a92a; font-weight: 700; letter-spacing: 2px; font-size: 13px; }
 #osHero h1 { font: 800 clamp(38px, 4.2vw, 60px)/1.06 Poppins, Inter, sans-serif; margin: 14px 0 16px; text-shadow: 0 4px 24px rgba(0,0,0,.45); }
 #osHero p { font-size: 17px; line-height: 1.6; color: #dbe2ee; max-width: 520px; margin: 0; }
@@ -267,7 +273,7 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
   function bak() {
     var ac = genis && genis.matches && !yuklu() && !g.classList.contains('gizli');
     document.body.classList.toggle('okul-site', !!ac);
-    if (ata) { if (ac && ata.parentNode !== sag) sag.appendChild(ata); else if (!ac && ata.parentNode === sag) ataYer.insertBefore(ata, ataSonra); }
+    if (ata) { if (ac && ata.parentNode !== h) h.appendChild(ata); else if (!ac && ata.parentNode === h) ataYer.insertBefore(ata, ataSonra); }   // Atatürk köşesi solda, okul adının altında
     if (ac) { var f = alt.querySelector('iframe[data-src]'); if (f && !f.src) f.src = f.getAttribute('data-src'); }
   }
   new MutationObserver(bak).observe(g, { attributes: true, attributeFilter: ['class'] });
