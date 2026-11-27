@@ -1371,6 +1371,7 @@
     { id: 'gezikayit', ad: 'Gezi', roller: ['bas', 'yonetici'], ciz: () => geziBolumu('kayit') },   // K-827: Gezi tek başlık: İlan → Kayıt → Belgeler → Otobüsler → Telsiz   // K-716bt: ilan, başvuru, ödeme, MEB gezi dosyası
     { id: 'gezi', ad: 'Gezi Otobüsleri', roller: ['bas', 'yonetici'], ciz: () => geziBolumu(), ust: 'gezikayit' },   // K-702: otobüs koltuk yerleşimi + biletler
     { id: 'telsiz', ad: 'Gezi Telsizi', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => telsizBolumu(), kosul: () => TZ.L.length > 0 || TZ.kurucu, get ust() { return ['bas', 'yonetici'].includes(D.rol) ? 'gezikayit' : undefined; } },   // K-808: gezi günü canlı yazılı grup (yalnız açıkken ve gezideyken)
+    { id: 'atlasdas', ad: 'Atlasdaş', roller: ['bas', 'yonetici', 'rehberlik', 'ogretmen'], ciz: () => atlasdasBolumu() },   // 27 Kasım 2026: okulun ortak kitaplığı (atlasdas/atlasdas.js)
     { id: 'ozelders', ad: 'Özel Ders', roller: ['bas'], ciz: ozelDersBolumu },   // K-591: okul dışı özel ders öğrencileri (yalnız baş yönetici)
     { id: 'calismaplan', ad: 'Çalışma planları', roller: ['bas', 'rehberlik'], ciz: calismaPlanlariBolumu, ust: 'rehberlik' },   // K-579
     { id: 'yonlendirme', ad: 'Yönlendirmeler', roller: ['bas', 'rehberlik'], ciz: yonlendirmelerBolumu, ust: 'rehberlik' },   // K-571
@@ -1390,6 +1391,7 @@
   ];
   // K-618: menü simgeleri (çizgi SVG) — masaüstünde simge üstte, ad altta
   const MENU_IK = {
+    atlasdas: '<path d="M3.500 5.500c2.800-1 5.700-.8 8.500 1 2.800-1.800 5.700-2 8.500-1V19c-2.800-1-5.700-.8-8.500 1-2.800-1.800-5.700-2-8.500-1Z" fill="currentColor" fill-opacity=".18"/><path d="M3.500 5.500c2.800-1 5.700-.8 8.500 1 2.800-1.800 5.700-2 8.500-1V19c-2.800-1-5.700-.8-8.500 1-2.800-1.800-5.700-2-8.500-1Z"/><path d="M12 6.500V20"/>',
     otahta: '<rect x="2.800" y="4" width="18.400" height="12.500" rx="2.200" fill="currentColor" fill-opacity=".18"/><rect x="2.800" y="4" width="18.400" height="12.500" rx="2.200"/><path d="M8.500 20.200h7M12 16.500v3.700"/><rect x="9.300" y="9.300" width="5.400" height="4.200" rx="1"/><path d="M10.300 9.300V8.200a1.700 1.700 0 0 1 3.400 0v1.100"/>',
     oprogram: '<rect x="3.500" y="4.500" width="17" height="15.500" rx="2.800" fill="currentColor" fill-opacity=".18"/><rect x="3.500" y="4.500" width="17" height="15.500" rx="2.800"/><path d="M8 2.800v3.400M16 2.800v3.400M3.500 9.500h17M8 13.500h2.200M12.500 13.500h3.500M8 16.800h2.200"/>',
     harita: '<path d="M12 21s-6.500-5.600-6.500-11a6.500 6.500 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.400"/>',
@@ -1445,7 +1447,7 @@
   const ALT_SEKME = { ogretmen: ['dersyoklama', 'oprogram', 'dosyalar', 'mesajlar', 'menu'], yonetici: ['dersyoklama', 'gorev', 'harita', 'obil', 'menu'], bas: ['harita', 'dersyoklama', 'dosyalar', 'mesajlar', 'menu'] };
   const altta = id => telefon() && (ALT_SEKME[D.rol] || []).includes(id);
   const MENU_GRUP = [['Okul', '#22e8ff', ['harita', 'kontrol', 'ogretmenler', 'telkur', 'print']], ['Sınav', '#ffb867', ['sinav', 'takvim', 'kelebek', 'konu']],
-    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'sinavhaz', 'testler', 'yonlendir', 'sinifform', 'dpistek']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
+    ['Öğrenci', '#5ee08a', ['giriskod', 'veli', 'duyuru', 'anket', 'gezikayit', 'gezi', 'telsiz', 'bildirim', 'mesajlar']], ['Öğretmen', '#7fb2ff', ['dersyoklama', 'gb', 'obil', 'notlar', 'sinavhaz', 'testler', 'yonlendir', 'sinifform', 'dpistek', 'atlasdas']], ['Rehberlik', '#c99bff', ['rehberlik', 'mektup', 'mesajsikayet']], ['İdare', '#ff8a8a', ['disiplin', 'nobet', 'gorev', 'dersprog', 'acil']]];
   const telefon = () => window.matchMedia('(max-width: 760px)').matches;
   const menuSayAnahtar = () => 'atlasMenuSay:' + (D.eposta || '');
   const menuSay = () => { try { return JSON.parse(localStorage.getItem(menuSayAnahtar()) || '{}') || {}; } catch (e) { return {}; } };
@@ -1494,7 +1496,7 @@
     const KISA = { obil: 'bildirim', gb: 'tebrik · uyarı', veli: 'veli kodları', dersyoklama: 'yoklama', gorev: 'görevlendirme', dersprog: 'ders programı', dpistek: 'program isteği', cikti: 'Çıktı al', sinav: 'Sınav merkezi', takvim: 'takvim', kelebek: 'kelebek', konu: 'konular', giriskod: 'Giriş kodları', duyuru: 'duyuru', anket: 'anket', gezikayit: 'gezi kaydı', gezi: 'gezi', harita: 'Kim nerede', kontrol: 'tahtalar', ogretmenler: 'öğretmenler', print: 'yazıcılar', notlar: 'Not', soru: 'test hazırla', yazili: 'yazılı hazırla', sinavhaz: 'sınav hazırla', testler: 'testler', yonlendir: 'yönlendirme' };
     const grupAck = L => { const t = L.map(id => KISA[id] || '').filter(Boolean).join(', '); return t ? t.charAt(0).toLocaleUpperCase('tr') + t.slice(1) : ''; };   // K-716ai
     const OG_ACK = { otahta: 'Dersinizdeki tahtayı kilitle, aç, kapat', oprogram: 'Günlük ders programınız', obil: D.rol === 'ogretmen' ? 'İdareden gelen bildirimler' : 'Veliye, öğrenciye, öğretmene bildirim', gb: 'Öğrenciye ve veliye tebrik, uyarı', veli: 'Veli giriş kodları ve kartları', dersyoklama: 'Tahtada alınan yoklamalar', gorev: 'Gelmeyen öğretmenin derslerine görevli', dersprog: 'Dersleri dağıt, taslak, yayın', dpistek: 'Boş gün, uygun olmadığın saatler', cikti: 'PDF seç, okul yazıcısına gönder', takvim: 'Hangi sınav, hangi gün', konu: 'Sınav konusu ve senaryo seç', giriskod: 'Öğrenci giriş kodlarını yazdır', duyuru: 'Sınıfa duyuru, kim okudu',
-      notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
+      atlasdas: 'Kitap paylaş, ödünç al', notlar: 'e-Okul notlarını öğrenciye aç', disiplin: 'Kurullar, telafi, veli toplantısı', rehberlik: 'Öğrenci formları ve anketler', randevu: 'Öğrenci randevu istekleri', yonlendirme: 'Öğretmenlerin bildirdikleri', sorutakip: 'Öğrencilerin soru ve netleri', calismaplan: 'Öğrenciye çalışma planı', mektup: 'Öğrencilerden gelen mektuplar', anket: 'Öğrenci anketleri ve sonuçlar', gezikayit: 'İlan, başvuru, ödeme, veli izni', gezi: 'Gezi otobüsleri ve biletler', harita: 'Sınıf, ders ve öğretmen haritası', kontrol: 'Tahtaları kilitle ya da aç', ogretmenler: 'Öğretmen ekle, rol ver, zümreler', print: 'Okul yazıcılarından çıktı', nobet: 'Nöbet çizelgesi', acil: 'Bütün tahtalara acil duyuru', soru: 'Sorulardan PDF test hazırla', testler: 'Hazırlanan testleri indir', yonlendir: 'Öğrenciyi rehberliğe bildir' };
     if (!G && D.rol === 'ogretmen') {   // K-716m: öğretmende bütün bölümler doğrudan kutu: Ders Dosyaları tam satır, diğerleri ikişer
       const VS = MENU_GRUP.flatMap(g => g[2]).concat(['rehberlik', 'randevu', 'yonlendirme', 'sorutakip', 'calismaplan']), vs = id => { const i = VS.indexOf(id); return i < 0 ? 999 : i; };   // varsayılan sıra
       const L = (t => gruplar.flatMap(([g, rk, I]) => I.map(id => [id, rk, g])).concat(izin.has('dosyalar') ? [['dosyalar', '#7fb2ff', '']] : []).concat(izin.has('cikti') ? [['cikti', '#22e8ff', '']] : []).sort((a, b) => (t[b[0]] || 0) - (t[a[0]] || 0) || vs(a[0]) - vs(b[0])))(menuSon());   // K-716da
@@ -4547,6 +4549,13 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
     }, 15);
   }
   // ------------------------------------------------------------------ K-591: Özel Ders (okul dışı öğrenciler; yalnız baş yönetici)
+  // 27 Kasım 2026: Atlasdaş — öğretmenler de rafına kitap koyar, ödünç alır; uygunsuz kitabı kaldırır (öğrenci tarafıyla aynı ekran)
+  async function atlasdasBolumu() {
+    D.altG = false; const I = $('#icerik'); I.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
+    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'atlasdas/atlasdas.js?v=202611272300'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { I.innerHTML = '<div class="kart">Atlasdaş yüklenemedi; bağlantınızı kontrol edin.</div>'; return; } }
+    I.innerHTML = '<div id="kdKok"></div>';
+    window.UmalAtlasdas.ac({ sb, kok: $('#kdKok'), ogretmen: true, uyar, onayla });
+  }
   async function ozelDersBolumu() {
     D.altG = false;
     $('#icerik').innerHTML = '<div class="kart soluk">Yükleniyor…</div>';

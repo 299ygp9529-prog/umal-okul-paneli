@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz', 's-oyun'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz', 's-oyun', 's-atlasdas'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -261,6 +261,7 @@
     reh: '<path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M12.4 14.6s-3-1.8-3-3.7a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.9-3 3.7-3 3.7Z"/>',
     anket: '<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><path d="m8.5 10 1.5 1.5 3-3M8.5 15.5l1.5 1.5 3-3"/><path d="M15 10.5h1.5M15 16h1.5"/>',
     oyun: '<path d="M8 20.5h8M9 17.5h6l-.6-3.2c1.8-.9 2.9-2.6 2.9-4.6V8.2l-3.3-3.6-3.9 1.6L8 5l1.2 3.3L7.4 12.8 9 14.3z"/><circle cx="12.5" cy="8.2" r=".7"/>',
+    atlasdas: '<path d="M4 5.5c2.6-1 5.3-.8 8 1 2.7-1.8 5.4-2 8-1V19c-2.6-1-5.3-.8-8 1-2.7-1.8-5.4-2-8-1z"/><path d="M12 6.5V20"/>',
     plan: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/><path d="m15.5 8.5 4-4M17 4.5h2.5V7"/>',
     yer: '<path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
     soru: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
@@ -358,6 +359,7 @@
       + kutu('mektup', 'zarf', '#b06bff', 'Rehberliğe mektup', 'Yalnız rehber öğretmenler okur')   // K-791: mektup ve randevu ana sayfada ayrı kutu
       + kutu('randevu', 'saat', '#22e8ff', 'Rehberlik randevusu', rvYakin() ? (rvYakin().durum === 'davet' ? 'Davet: ' : 'Randevun: ') + rvKisa(rvYakin().zaman) : RV.M.length ? 'Boş saat seç ya da iste' : 'Randevu iste', true, rvYeni())
       + kutu('oyun', 'oyun', '#ffd43b', 'Oyunlar', 'Satranç · Mangala', true, false, 'YENİ')   // 27 Kasım 2026: öğrenci oyunları (oyun/oyun.js)
+      + kutu('atlasdas', 'atlasdas', '#f5c542', 'Atlasdaş', 'Kitabını paylaş · arkadaşının kitabını oku', true, false, 'YENİ')   // 27 Kasım 2026: okulun ortak kitaplığı (atlasdas/atlasdas.js)
       + kutu('s-anket', 'anket', '#ffd166', 'Anketler', acikForm ? acikForm + ' doldurulacak form' : (S.formlar.length ? 'Hepsini doldurdun' : 'Açık form yok'), true, false, acikForm ? (acikForm > 1 ? acikForm + ' yeni anket' : 'Yeni anket') : '')
       + kutu('plan', 'plan', '#ff6b8a', 'Çalışma planım', rpYeni() ? 'Rehberlikten yeni plan' : (b => b && b.n ? `Bugün ${b.ok}/${b.n} görev` : 'Haftanı planla')(plBugun()), true, rpYeni());
     { const tk = $('#tzAnaKart'), th = tzKutu(); if (tk && tk.dataset.h !== th) { tk.dataset.h = th; tk.innerHTML = th; } }   // K-808: gezi günü en üstte
@@ -386,7 +388,7 @@
     const ph = sl.map(e => { const c = document.createComment(''); e.before(c); return c; }); ph.forEach((c, i) => c.replaceWith(sr[i])); }
   $('#kutular').addEventListener('click', ev => { const e = ev.target.closest('#kutular > *'); if (!e || e.disabled || e.classList.contains('genis')) return; const a = kAnahtar(e); if (!a) return; try { const t = kSon(); t[a] = Date.now(); localStorage.setItem(kSonAn(), JSON.stringify(t)); } catch (x) {} }, true);
   $('#kutular').onclick = ev => { const b = ev.target.closest('[data-git]'); if (!b || b.disabled) return; const id = b.dataset.git;
-    if (id === 'bild') return blAc(); if (id === 'telsiz') return tzoAc(); if (id === 'oyun') return oyunAc(); blUrlOku(id);
+    if (id === 'bild') return blAc(); if (id === 'telsiz') return tzoAc(); if (id === 'oyun') return oyunAc(); if (id === 'atlasdas') return kdAc(); blUrlOku(id);
     if (id === 's-anket') return listeCiz(); if (id === 's-sinav') { sinavCiz(); haritaCiz(); sinavlarYukle().then(() => { if (!$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); konuYukle().then(d => { if (d && !$('#s-sinav').classList.contains('gizli')) sinavCiz(); }); } if (id === 's-program') programCiz(); if (id === 's-reh') return rehAc(); if (id === 'mektup') { RV.dis = true; return mkAc(); } if (id === 'randevu') { RV.dis = true; return rvAc(); } if (id === 'duy') return dyAc(); if (id === 'plan') return plAc(); if (id === 'bld') return bdAc(); if (id === 'msj') return msAc(); if (id === 'soru') return soAc(); if (id === 'notlar') return noAc(); if (id === 'gezi') return gzAc(+b.dataset.gz || 0); if (id === 'ilan') return ilAc(+b.dataset.il || 0); if (id === 'bsk') return bskAc(+b.dataset.bsk || 0); if (id === 'gbil') return gbAc(+b.dataset.gb || 0); if (id === 'dd') return ddAc(); goster(id); window.scrollTo(0, 0); };
   const GERI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   function atlasOnay(b_, a_) { const kay = document.querySelector('#acilis .atl'); let t = document.getElementById('atlOnay');   // K-788: Atlas başparmakla kısa onay kartı
@@ -400,6 +402,13 @@
     goster('s-oyun'); window.scrollTo(0, 0);
     const g = $('#s-oyun [data-ana]'); if (g && !g.dataset.oy) { g.dataset.oy = '1'; g.addEventListener('click', () => window.UmalOyun && window.UmalOyun.kapat(), true); }
     window.UmalOyun.ac({ sb, kok: $('#oyunKok'), no: () => S.no, kod: () => S.kod, uyar, onayla });
+  }
+  // 27 Kasım 2026: Atlasdaş — öğrencilerin kendi kitaplarından oluşan ortak kitaplık (kod ilk açılışta yüklenir)
+  async function kdAc() {
+    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = '../atlasdas/atlasdas.js?v=202611272300'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { uyar('Atlasdaş yüklenemedi; bağlantını kontrol et.'); return; } }
+    goster('s-atlasdas'); window.scrollTo(0, 0);
+    const g = $('#s-atlasdas [data-ana]'); if (g && !g.dataset.kd) { g.dataset.kd = '1'; g.addEventListener('click', () => window.UmalAtlasdas && window.UmalAtlasdas.kapat(), true); }
+    window.UmalAtlasdas.ac({ sb, kok: $('#kdKok'), no: () => S.no, kod: () => S.kod, uyar, onayla });
   }
   function geriGit() { const p = YIGIN.pop(); if (!p || p === 'liste' || !$('#' + p)) { YIGIN.length = 0; anaCiz(); return; }
     geriDonus = true; try { goster(p); } finally { geriDonus = false; } window.scrollTo(0, 0); if (p === 's-msj') msAc(); }
