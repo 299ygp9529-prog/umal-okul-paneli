@@ -31,7 +31,9 @@ self.addEventListener('push', e => {
   // Kilit ekranı: okul logosu sağda büyük simge; soldaki küçük simge şeffaf (Android o yeri tamamen kaldırmaya izin vermiyor)
   // Uygulama simgesindeki sayı = okunmamış bildirim sayısı (d.sayi); bilinmiyorsa değiştirilmez
   const rozet = typeof d.sayi === 'number' && self.navigator.setAppBadge ? (d.sayi > 0 ? self.navigator.setAppBadge(d.sayi) : self.navigator.clearAppBadge()).catch(() => {}) : Promise.resolve();
-  e.waitUntil(Promise.all([rozet, self.registration.showNotification(d.baslik || 'Atlas', {
+  // K-ANLIK (27 Kasım 2026): panel açıksa bildirim sayfaya da iletilir; panel ekranı kaplayan 3 sn'lik kartla gösterir
+  const ilet = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(L => L.forEach(c => { try { c.postMessage({ tur: 'anlik', baslik: d.baslik || 'Atlas', metin: d.metin || '', url: d.url || '/', acil, tag: d.tag || '' }); } catch (x) {} })).catch(() => {});
+  e.waitUntil(Promise.all([rozet, ilet, self.registration.showNotification(d.baslik || 'Atlas', {
     body: d.metin || '', icon: '/simge-192.png', badge: '/bildirim-bos.png', tag: d.tag || undefined, renotify: true, timestamp: Date.now(),
     requireInteraction: acil, vibrate: acil ? [400, 150, 400, 150, 400, 150, 600] : [200, 100, 200], silent: false, data: { url: d.url || '/' }, lang: 'tr'
   })]));

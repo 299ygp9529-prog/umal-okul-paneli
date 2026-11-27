@@ -1141,6 +1141,7 @@
     else $('#rolEtiket').textContent = { yonetici: 'Yönetici (idare)', rehberlik: 'Rehberlik', ogretmen: 'Öğretmen' }[rol] || rol;
     document.body.classList.toggle('rol-ogretmen', rol === 'ogretmen');
     menuKur();
+    anlikBaslat();   // K-ANLIK
     sb.rpc('umal_sinif_ogretmeni_siniflarim').then(({ data }) => { if (Array.isArray(data) && data.length) { D.sinifOgrt = data; menuYaz(); if (location.hash === '#sinifform') ac('sinifform'); } }, () => {});   // K-951
     panelSelam().catch(e => console.warn('karşılama', e));
     setTimeout(() => siradakiBaslat().catch(e => console.warn('sıradaki', e)), 1500);
@@ -1589,6 +1590,113 @@
   function menuYaz() { let sira = BOLUMLER.filter(b => bolIzin(b) && !b.ust);
     if (telefon()) { const m = menuSay(), ac_ = sira.filter(b => b.id === 'acil'); sira = sira.filter(b => b.id !== 'acil').map((b, i) => [b, i]).sort((a, c) => (m[c[0].id] || 0) - (m[a[0].id] || 0) || a[1] - c[1]).map(x => x[0]).concat(ac_); }
     $('#menu').innerHTML = sira.map(b => `<button class="menu-oge ${b.sinif || ''} ${b.id === D.bolum ? 'secili' : ''}" data-b="${b.id}">${menuIk(b.id)}<span class="mad">${b.ad}</span></button>`).join(''); try { menuAraKur(); } catch (e) {} }
+  // ---------------------------------------------------------------- K-ANLIK (27 Kasım 2026): ekranı kaplayan 3 sn'lik anlık uyarı
+  // Kaynaklar: (1) okul sitesinden gelen dilek/öneri/şikâyet (yalnız bas/yonetici; 30 sn'de bir bakılır), (2) panel açıkken gelen her Atlas bildirimi (sw.js iletir).
+  // Kurallar: aynı anda birden çok → tek özet kart; 10 dk'da 5'ten fazla → 10 dk köşe sayacı; panel kapalıyken birikenler → tek "siz yokken" kartı;
+  // yazı yazılırken / önizleme açıkken araya girmez; aynı mesaj iki kez gösterilmez; çok sekmede yalnız biri gösterir; "1 saat sessiz"; acil her zaman kartla.
+  const AN = { kuyruk: [], acik: false, gosterilen: [], yogunBitis: 0, sayac: 0, sayacDilek: false, zam: null, kuruldu: false };
+  const anDepo = { al: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, yaz: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const AN_TUR = { dilek: 'Yeni dilek', oneri: 'Yeni öneri', sikayet: 'Yeni şikâyet', tesekkur: 'Yeni teşekkür' };
+  const AN_KIM = { veli: 'Veli', ogrenci: 'Öğrenci', mezun: 'Mezun', vatandas: 'Vatandaş', diger: 'Ziyaretçi' };
+  function anStil() {
+    if (document.getElementById('anStil')) return; const st = document.createElement('style'); st.id = 'anStil';
+    st.textContent = `.an-perde{position:fixed;inset:0;z-index:2147483000;background:rgba(5,10,22,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;animation:anGel .18s ease-out}
+@keyframes anGel{from{opacity:0}to{opacity:1}}
+.an-k{width:min(560px,100%);background:linear-gradient(160deg,#16294a,#0f1b33);border:2px solid #ffd43b;border-radius:28px;padding:34px 32px 28px;text-align:center;color:#fff;box-shadow:0 0 0 10px rgba(255,212,59,.08),0 30px 80px rgba(0,0,0,.6);font-family:Inter,system-ui,sans-serif}
+.an-k.acil{border-color:#ff6b6b;box-shadow:0 0 0 10px rgba(255,107,107,.12),0 30px 80px rgba(0,0,0,.6)}
+.an-i{width:80px;height:80px;margin:0 auto 16px;border-radius:24px;background:rgba(255,212,59,.14);display:grid;place-items:center;color:#ffd43b}.an-k.acil .an-i{background:rgba(255,107,107,.16);color:#ff8a8a}
+.an-t{font:700 13px Inter,sans-serif;letter-spacing:2px;color:#ffd43b;text-transform:uppercase}.an-k.acil .an-t{color:#ff8a8a}
+.an-b{font:800 28px/1.25 Poppins,Inter,sans-serif;margin:10px 0 8px;word-break:break-word}.an-m{color:#c7d2e6;font-size:16.5px;line-height:1.5;word-break:break-word;white-space:pre-line}
+.an-l{list-style:none;margin:12px 0 0;padding:0;text-align:left}.an-l li{background:rgba(255,255,255,.06);border-radius:12px;padding:9px 14px;margin-top:7px;font-size:15px}.an-l li b{color:#ffd43b;font-weight:700;margin-right:6px}
+.an-d{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}.an-d button{border:0;border-radius:14px;padding:12px 24px;font:700 15.5px Inter,sans-serif;cursor:pointer}
+.an-d .a1{background:#ffd43b;color:#14213d}.an-d .a2{background:rgba(255,255,255,.1);color:#fff}.an-d .a3{background:transparent;color:#9fb0c8;padding:12px 10px}
+.an-s{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:20px;overflow:hidden}.an-s i{display:block;height:100%;width:0;background:#ffd43b}.an-k.acil .an-s i{background:#ff6b6b}
+.an-say{position:fixed;top:14px;right:14px;z-index:2147482999;background:#ffd43b;color:#14213d;border:0;border-radius:999px;padding:9px 16px;font:800 14px Inter,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer}
+@media (prefers-reduced-motion:reduce){.an-perde{animation:none}}`;
+    document.head.appendChild(st);
+  }
+  const anSessiz = () => +(anDepo.al('atlas-anlik-sessiz') || 0) > Date.now();
+  function anMesgul() {
+    const a = document.activeElement;
+    if (a && (a.tagName === 'TEXTAREA' || a.isContentEditable || (a.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|color|file|reset)$/i.test(a.type)) || a.tagName === 'SELECT')) return true;
+    const pen = document.getElementById('pencere'); if (pen && !pen.classList.contains('gizli')) return true;
+    if (document.getElementById('panelSelam')) return true;
+    return document.hidden;
+  }
+  function anSekmeAl(anahtar) {   // çok sekmede yalnız biri gösterir
+    const k = 'atlas-anlik-sekme:' + anahtar, v = anDepo.al(k); if (v && Date.now() - +v < 15000) return false; anDepo.yaz(k, String(Date.now())); return true;
+  }
+  function anEkle(o) {   // o: { baslik, metin, tur, acil, url, dilek:true|false, anahtar }
+    if (o.anahtar && !anSekmeAl(o.anahtar)) return;
+    AN.kuyruk.push(o); clearTimeout(AN.zam); AN.zam = setTimeout(anIsle, 1200);   // 1,2 sn içinde gelenler birlikte (özet kart)
+  }
+  function anSayac(n, dilek) {
+    AN.sayac += n; AN.sayacDilek = AN.sayacDilek || dilek; anStil();
+    let b = document.querySelector('.an-say'); if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'an-say'; document.body.appendChild(b);
+      b.onclick = () => { const d = AN.sayacDilek; AN.sayac = 0; AN.sayacDilek = false; b.remove(); if (d) anDilegeGit(); }; }
+    b.textContent = AN.sayac + ' yeni bildirim'; b.setAttribute('aria-label', AN.sayac + ' yeni bildirim, açmak için dokunun');
+  }
+  function anDilegeGit() {
+    ac('disiplin'); let n = 0; const t = setInterval(() => { const k = document.querySelector('#icerik [data-ekran="dilek"]'); if (k) { clearInterval(t); k.click(); } else if (++n > 30) clearInterval(t); }, 100);
+  }
+  function anIsle() {
+    if (!AN.kuyruk.length) return;
+    if (AN.acik) { AN.zam = setTimeout(anIsle, 800); return; }
+    const acilVar = AN.kuyruk.some(x => x.acil);
+    if (!acilVar && anMesgul()) { AN.zam = setTimeout(anIsle, 2000); return; }   // yazı yazılırken araya girmez
+    const L = AN.kuyruk.splice(0), simdi = Date.now();
+    AN.gosterilen = AN.gosterilen.filter(t => simdi - t < 600000);
+    const acil = L.filter(x => x.acil), normal = L.filter(x => !x.acil);
+    if (normal.length && !acil.length) {
+      if (anSessiz() || simdi < AN.yogunBitis) { anSayac(normal.length, normal.some(x => x.dilek)); return; }
+      if (AN.gosterilen.length + normal.length > 5) { AN.yogunBitis = simdi + 600000; AN.gosterilen = []; anSayac(normal.length, normal.some(x => x.dilek)); return; }
+    }
+    normal.forEach(() => AN.gosterilen.push(simdi));
+    anKart(acil.length ? acil.concat(normal) : normal, !!acil.length);
+  }
+  function anKart(L, acil) {
+    anStil(); AN.acik = true;
+    const tek = L.length === 1 ? L[0] : null, ozet = L.find(x => x.ozet);
+    const ikon = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + (L.every(x => x.dilek) ? 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5' : 'M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0') + '"/></svg>';
+    let ic;
+    if (ozet) ic = `<div class="an-t">Siz yokken</div><div class="an-b">${esc(ozet.baslik)}</div><div class="an-m">${esc(ozet.metin || '')}</div>`;
+    else if (tek) ic = `<div class="an-t">${esc(tek.tur || 'Yeni bildirim')}</div><div class="an-b">${esc(tek.baslik || 'Atlas')}</div>${tek.metin ? `<div class="an-m">${esc(tek.metin)}</div>` : ''}`;
+    else ic = `<div class="an-t">${L.length} yeni bildirim</div><ul class="an-l">${L.slice(0, 3).map(x => `<li><b>${esc(x.tur || 'Bildirim')}</b>${esc(x.baslik || '')}</li>`).join('')}</ul>${L.length > 3 ? `<div class="an-m" style="margin-top:8px">+${L.length - 3} daha</div>` : ''}`;
+    const p = document.createElement('div'); p.className = 'an-perde'; p.setAttribute('role', 'alertdialog'); p.setAttribute('aria-modal', 'true'); p.setAttribute('aria-label', tek ? (tek.tur || 'Bildirim') + ': ' + (tek.baslik || '') : L.length + ' yeni bildirim');
+    p.innerHTML = `<div class="an-k${acil ? ' acil' : ''}"><div class="an-i">${ikon}</div>${ic}<div class="an-d"><button type="button" class="a1" data-an="ac">Aç</button><button type="button" class="a2" data-an="kapat">Kapat</button><button type="button" class="a3" data-an="sessiz">1 saat sessiz</button></div><div class="an-s"><i></i></div></div>`;
+    (document.fullscreenElement || document.body).appendChild(p);
+    const cubuk = p.querySelector('.an-s i'), SURE = 3000; let gecen = 0, onceki = performance.now(), dur = false, bitti = false;
+    const kapat = () => { if (bitti) return; bitti = true; p.remove(); AN.acik = false; if (AN.kuyruk.length) AN.zam = setTimeout(anIsle, 400); };
+    const adim = t => { if (bitti) return; if (!dur) gecen += t - onceki; onceki = t; cubuk.style.width = Math.min(100, gecen / SURE * 100) + '%'; if (gecen >= SURE) kapat(); else requestAnimationFrame(adim); };
+    requestAnimationFrame(adim);
+    p.addEventListener('mouseenter', () => { dur = true; }); p.addEventListener('mouseleave', () => { dur = false; });
+    p.addEventListener('click', ev => { const b = ev.target.closest('[data-an]'); if (!b) { if (ev.target === p) kapat(); return; }
+      const k = b.dataset.an; kapat();
+      if (k === 'sessiz') anDepo.yaz('atlas-anlik-sessiz', String(Date.now() + 3600000));
+      if (k === 'ac') { if (L.some(x => x.dilek)) anDilegeGit(); else { const u = (L.find(x => x.url) || {}).url; if (u) { try { const h = new URL(u, location.origin); if (h.origin === location.origin) location.href = h.href; } catch (e) {} } } }
+    });
+    document.addEventListener('keydown', function es(ev) { if (ev.key === 'Escape') { document.removeEventListener('keydown', es); kapat(); } });
+    setTimeout(() => { const b = p.querySelector('.a1'); if (b) b.focus({ preventScroll: true }); }, 30);
+  }
+  async function anDilekBak(ilk) {
+    const k = 'atlas-anlik-dilek:' + String(D.eposta || '').toLowerCase(), son = anDepo.al(k);
+    if (!son) { anDepo.yaz(k, new Date().toISOString()); return; }   // ilk kez: eskileri gösterme
+    const { data, error } = await sb.from('umal_dilek').select('id,tarih,tur,kim,ad,konu,metin').gt('tarih', son).order('tarih', { ascending: true }).limit(50);
+    if (error || !data || !data.length) return;
+    anDepo.yaz(k, data[data.length - 1].tarih);
+    if (ilk && data.length > 1) { anEkle({ ozet: true, dilek: true, baslik: `${data.length} yeni mesaj geldi`, metin: 'Okul sitesinden gelen dilek, öneri ve şikâyetler', anahtar: 'dilek-ozet-' + data[data.length - 1].id }); return; }
+    data.forEach(x => anEkle({ dilek: true, tur: (AN_TUR[x.tur] || 'Yeni mesaj') + ' · Okul sitesi', baslik: x.konu, metin: `${AN_KIM[x.kim] || ''}${x.ad ? ' · ' + x.ad : ''}\n"${String(x.metin || '').slice(0, 110)}${String(x.metin || '').length > 110 ? '…' : ''}"`, anahtar: 'dilek-' + x.id }));
+  }
+  function anlikBaslat() {
+    if (AN.kuruldu) return; AN.kuruldu = true;
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', ev => { const m = ev.data || {}; if (m.tur !== 'anlik') return;
+      anEkle({ tur: 'Bildirim', baslik: m.baslik || 'Atlas', metin: m.metin || '', url: m.url || '', acil: !!m.acil, anahtar: 'push-' + (m.tag || '') + '-' + Math.floor(Date.now() / 10000) + '-' + String(m.baslik || '').slice(0, 30) }); });
+    if (D.gercekRol === 'bas' || D.rol === 'yonetici' || D.rol === 'bas') {
+      anDilekBak(true).catch(() => {});
+      setInterval(() => { if (!document.hidden) anDilekBak(false).catch(() => {}); }, 30000);
+    }
+  }
+  window.UmalAnlik = { goster: o => anEkle(Object.assign({}, o)) };   // deneme ve diğer modüller için
   function menuKur() {
     if (!document.getElementById('icGeri')) { const g = document.createElement('div'); g.id = 'icGeri'; g.className = 'ic-geri-sat gizli'; g.innerHTML = `<button type="button" class="ic-geri" aria-label="Geri">${ICG_SVG}<span>Menü</span></button>`; $('#icerik').before(g);   // K-774: telefonda menüden açılan bütün iç ekranlarda Geri
       g.onclick = ev => { if (!ev.target.closest('.ic-geri')) return; if (D._gridden) { D._gridden = false; history.back(); } else tumuAc(); }; }
@@ -6837,7 +6945,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   const idariBaglam = () => ({ sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
     pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
   async function idariAc(id, geri) {
-    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611270700'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+    if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611270800'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
     await ogrencileriYukle().catch(() => []); window.UmalIdari.ac(id, $('#icerik'), idariBaglam(), geri);
   }
   async function dersDosyalariBolumu() {   // K-716
@@ -6871,8 +6979,8 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611270700');
-    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611270700');   // K-625: idari işlemler
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611270800');
+    if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611270800');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,
       pencereKapat: () => $('#pencere').classList.add('gizli'), logo: new URL('okul-logo.png', location.href).href, programYukle, takvimAl, raporYazdir, raporBant, fotolar: () => D.fotolar, ogrenciler: () => D.ogrenciler, xlsxSatirlar, xlsSatirlar });
@@ -7482,7 +7590,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           let eklenen = 0; L.forEach(r => { const sv = {}; Object.entries(r.sv).forEach(([v, ad]) => { sv[v] = { ad, yer: 'kelebek', fark: {}, dahil: new Set(sinifSv(v)), senaryo: '' }; });
             if (E.sinavlar.some(x => x.tarih === r.tarih && x.n === r.n)) { const x = E.sinavlar.find(x => x.tarih === r.tarih && x.n === r.n); Object.assign(x.sv, sv); } else E.sinavlar.push({ id: nid++, tarih: r.tarih, n: r.n, sv }); eklenen++; });
           degisti = true; ciz(); const tb = $('#tdBilgi'); if (tb) tb.innerHTML = `<span class="yeşil">${eklenen} sınav aktarıldı — kontrol edip Kaydet deyin</span>`; };
-        try { if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611270700'; sc.onload = ok; sc.onerror = () => red(new Error('okuyucu yüklenemedi')); document.head.appendChild(sc); }); } catch (e) { uyar(e.message); return; }
+        try { if (!window.UmalIdari) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'disiplin/idari.js?v=202611270800'; sc.onload = ok; sc.onerror = () => red(new Error('okuyucu yüklenemedi')); document.head.appendChild(sc); }); } catch (e) { uyar(e.message); return; }
         if (b.id === 'tdYapistir') { pencereAc(`<h2 style="margin-top:0">Takvimi yapıştır</h2><div class="soluk kucuk" style="margin-bottom:8px">Excel'de takvim tablosunu başlık satırıyla birlikte seçip kopyalayın, buraya yapıştırın.</div><textarea id="tdYap" rows="10" style="width:100%;box-sizing:border-box" data-bicim="yok"></textarea><div class="dugmeler"><button class="birincil" id="tdYapOk">Aktar</button></div>`);
           $('#tdYapOk').onclick = () => { const t = $('#tdYap').value; $('#pencere').classList.add('gizli'); isle(window.UmalIdari.tabloOku(t)); }; return; }
         const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.xlsx,.xls,.docx,.pdf,.csv,.txt';

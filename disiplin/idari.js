@@ -36,7 +36,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul Sitesi', 'duyuru, etkinlik takvimi, müdür mesajı, kadro, kulüpler'], ['video', 'Site Videoları', 'YouTube linkiyle okul sitesine video']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, müdür mesajı, kadro, kulüpler'], ['video', 'Site Videoları', 'YouTube linkiyle okul sitesine video']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1166,7 +1166,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   async function siteIcerik() {
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     const { data, error } = await C.sb.from('umal_site_icerik').select('*').order('sira').order('tarih', { ascending: false });
-    if (error) { kok.innerHTML = bas('Okul Sitesi') + `<div class="kart">${/umal_site_icerik|relation|does not exist|schema cache/i.test(error.message || '') ? 'Bu bölüm için veritabanı kurulumu gerekiyor: <b>veritabani/sql/20261127070000_umal_site_icerik.sql</b> dosyası Supabase SQL düzenleyicisinde bir kez çalıştırılmalı.' : esc(C.hataYaz(error))}</div>`; return; }
+    if (error) { kok.innerHTML = bas('Okul İnternet Sitesi') + `<div class="kart">${/umal_site_icerik|relation|does not exist|schema cache/i.test(error.message || '') ? 'Bu bölüm için veritabanı kurulumu gerekiyor: <b>veritabani/sql/20261127070000_umal_site_icerik.sql</b> dosyası Supabase SQL düzenleyicisinde bir kez çalıştırılmalı.' : esc(C.hataYaz(error))}</div>`; return; }
     SI.L = data || []; SI.f = { tarih: siBugun() }; siCiz();
   }
   function siCiz() {
@@ -1190,7 +1190,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
           <div class="dugmeler" style="margin:0">${['duyuru', 'etkinlik', 'mezun', 'oab', 'yerlesim', 'ogretmen'].includes(SI.tur) ? '' : `<button class="ikincil" data-siyukari="${x.id}" ${i ? '' : 'disabled'} aria-label="Yukarı taşı">↑</button><button class="ikincil" data-siasagi="${x.id}" ${i < L.length - 1 ? '' : 'disabled'} aria-label="Aşağı taşı">↓</button>`}
             <button class="ikincil" data-siduz="${x.id}">Düzenle</button><button class="ikincil" data-sigoster="${x.id}">${x.yayinda ? 'Gizle' : 'Yayınla'}</button><button class="ikincil" data-sisil="${x.id}" style="color:#ff6b6b">Sil</button></div></div>`).join('') || '<div class="kart soluk">Bu bölümde henüz içerik yok; sitede görünmüyor.</div>'}`;
     }
-    kok.innerHTML = bas('Okul Sitesi', 'Okul sitesindeki bölümler · yalnız idare yazar · boş bölüm sitede görünmez', '<a class="ikincil" href="okul/" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') +
+    kok.innerHTML = bas('Okul İnternet Sitesi', 'Okul sitesindeki bölümler · yalnız idare yazar · boş bölüm sitede görünmez', '<a class="ikincil" href="okul/" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') +
       `<div class="kart"><div class="cipler">${cip}</div><div id="idBilgi" class="id-bilgi"></div></div>${ic}`;
   }
   function siGirdi(ev) { const t = ev.target; if (t.dataset.sialan) { SI.f[t.dataset.sialan] = t.value; SI.degisti = true; } if (t.dataset.sisayfa || t.dataset.sisayfaad) SI.degisti = true; }

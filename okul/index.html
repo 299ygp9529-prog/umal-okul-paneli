@@ -55,13 +55,17 @@ nav{display:flex;gap:22px;font-weight:600;font-size:14px}nav a{color:#e5e9f2;tex
 nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100px){nav{display:none}}@media (max-width:900px){.hizli{grid-template-columns:1fr 1fr}.iki,.iletisim,.alt-ic{grid-template-columns:1fr}}
 @media (max-width:520px){.ust-ic{padding:10px 16px}.marka b{font-size:14px}.marka small{display:none}.giris{padding:8px 12px;font-size:13px}
 .k-ic{padding:60px 16px 96px}.hizli{padding:0 16px;gap:10px}.hz{padding:14px;gap:10px}.hz i{width:38px;height:38px}.bolum{padding:56px 16px 0}.kart{padding:20px}.saat{font-size:14px}.saat th,.saat td{padding:9px 6px}}
+
+/* 27 Kasım 2026: üst menü tek satır; dış bağlantılar "Bağlantılar" menüsünde */
+.bg-ac{position:relative}.bg-ac summary{list-style:none;cursor:pointer;color:#e5e9f2;font-weight:600;white-space:nowrap}.bg-ac summary::-webkit-details-marker{display:none}.bg-ac summary:hover,.bg-ac[open] summary{color:#e8a92a}.bg-ac>div{position:absolute;right:0;top:calc(100% + 12px);background:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.25);padding:8px;min-width:190px;display:flex;flex-direction:column;z-index:20}.bg-ac>div a{color:#14213d!important;padding:9px 12px;border-radius:8px;text-decoration:none;font-weight:600}.bg-ac>div a:hover{background:#fbf3df}
+nav{flex-wrap:nowrap!important;align-items:center}nav a{white-space:nowrap}
 </style>
 </head>
 <body>
 <header class="ust"><div class="ust-ic">
   <a class="marka" href="#"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi amblemi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
-  <nav><a href="#haberler">Haberler</a><a href="#videolar">Videolar</a><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="#dilek">Dilek ve Şikâyet</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></nav>
-  <div style="display:flex;gap:10px;align-items:center"><button type="button" data-site-ara aria-label="Sitede ara" style="flex:none;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button><a class="giris" href="../">Atlas Girişi</a></div>
+  <nav><a href="#haberler">Haberler</a><a href="#videolar">Videolar</a><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="#dilek">Dilek ve Şikâyet</a><details class="bg-ac"><summary>Bağlantılar <span aria-hidden="true">▾</span></summary><div><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><a href="https://www.eba.gov.tr" target="_blank" rel="noopener">EBA</a><a href="https://mebbis.meb.gov.tr" target="_blank" rel="noopener">MEBBİS</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div></details></nav>
+  <div style="display:flex;gap:10px;align-items:center"><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener" aria-label="Okulumuzun Instagram hesabı" title="Instagram" style="flex:none;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg></a><button type="button" data-site-ara aria-label="Sitede ara" style="flex:none;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button><a class="giris" href="../">Atlas Girişi</a></div>
 </div></header>
 
 <section class="kahraman"><div class="k-ic">
@@ -169,6 +173,7 @@ nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100p
   </div>
   <div class="telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div>
 </footer>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.bg-ac[open]").forEach(function(d){if(!d.contains(e.target))d.removeAttribute("open");});});</script>
 <script src="dilek.js?v=202611270705"></script>
 <script src="haberler.js?v=202611262300"></script>
 <script src="videolar.js?v=202611270600"></script>
