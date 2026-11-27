@@ -639,7 +639,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
     dyk: 'M3.5 5.5h17v14h-17zM3.5 10h17M8 5.5v14M12 13h6M12 16.5h4',
     dilek: 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
     video: 'M3.5 6h17v12h-17zM10 9.5v5l4.5-2.5z',
-    evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5',
+    evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5', sosyal: 'M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8zM4 21h16',
     site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     evrak: 'M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5ZM8 12.5h8M8 15.5h5',
     sinifOlustur: 'M3.5 4h7v7h-7zM13.5 4h7v7h-7zM3.5 14h7v7h-7zM13.5 14h7v7h-7z', sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8', veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
@@ -658,7 +658,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
   ];
   // K-629: menüde "İdari İşlemler"; açılış ekranı panellerden oluşur, Disiplin bunlardan biri
   const IDARI = [['ana', 'Disiplin', 'Okul Öğrenci Ödül ve Disiplin Kurulu: olay, dosya, karar, tebliğ'], ['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci/ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, günde 3 sınav'],
-    ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'], ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları'], ['devam', 'Devamsızlık', 'yüksek devamsızlık uyarıları, veli bildirimi'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler']];
+    ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'], ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları'], ['devam', 'Devamsızlık', 'yüksek devamsızlık uyarıları, veli bildirimi'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler']];
   function cizIdari() {
     const acik = DOS().filter(r => durumKod(r.veri) !== 'kesin').length, isS = isler().length;
     kok.innerHTML = `<div class="ds-ust"><div><h1>İdari İşlemler</h1><span class="soluk">Ümraniye Merkez Anadolu Lisesi · ${esc(S.yil)}</span></div></div>
@@ -670,7 +670,7 @@ table.t{width:100%;border-collapse:collapse;font-size:8.6pt}table.t td{border:.3
     if (S.ekran === 'genel') { S.ekran = 'ana'; ayarFormu(); }
     if (S.ekran === 'olay') { S.ekran = 'ana'; yeniOlay(null); }
     if (S.ekran === 'yonetmelik') { S.ekran = 'ana'; yonetmelik(); }
-    if (['sorumluluk', 'telafi', 'kurul', 'sinifOlustur', 'veli', 'sok', 'evrak', 'zumre', 'devam', 'dyk', 'dilek', 'site', 'video', 'evde'].includes(S.ekran) && window.UmalIdari) { const id = S.ekran; S.ekran = 'ana'; kok.onclick = null; window.UmalIdari.ac(id, kok, C, { ad: 'İdari İşlemler', fn: () => { S.ekran = 'idari'; bagla(); ciz(); } }); return; }   // K-625
+    if (['sorumluluk', 'telafi', 'kurul', 'sinifOlustur', 'veli', 'sok', 'evrak', 'zumre', 'devam', 'dyk', 'dilek', 'site', 'video', 'evde', 'sosyal'].includes(S.ekran) && window.UmalIdari) { const id = S.ekran; S.ekran = 'ana'; kok.onclick = null; window.UmalIdari.ac(id, kok, C, { ad: 'İdari İşlemler', fn: () => { S.ekran = 'idari'; bagla(); ciz(); } }); return; }   // K-625
     (E[S.ekran] || cizAna)();
   }
   // sıradaki iş: { r, k, ad, dugme, hizli, son (ISO son gün), kalan (iş günü), bekle }

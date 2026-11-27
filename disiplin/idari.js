@@ -31,13 +31,14 @@
     dilek: 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
     video: 'M3.5 6h17v12h-17zM10 9.5v5l4.5-2.5z',
     evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5',
+    sosyal: 'M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8zM4 21h16',
     site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1147,6 +1148,242 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   }
   function dlGirdi(ev) { if (ev.target.dataset.dlnot) DL.degisti = true; }
 
+  // ================================================================ 15) SOSYAL ETKİNLİKLER (27 Kasım 2026)
+  // Dayanak: Ortaöğretim Kurumları Yönetmeliği m.18 (kulüp faaliyetleri, sosyal sorumluluk çalışmaları, geziler, törenler okulda ya da
+  // müdürlükçe belirlenen yerde) ve bu maddenin bağlandığı MEB Eğitim Kurumları Sosyal Etkinlikler Yönetmeliği: her öğrenci en az bir
+  // kulübe üye (m.8/4), kulüp danışman öğretmeni ve öğrenci temsilcisi (m.16, m.17), Sosyal Etkinlikler Kurulu (m.6: müdür/müdür yrd.,
+  // 3 öğretmen, 2 öğrenci, 1 veli), izinler (m.13: okul/ilçe/il içi müdürlük, ilçe dışında 3 gün önce MEM'e bilgi, il dışı mülki amir,
+  // yurt dışı valilik), gezi (m.10: 40 öğrenciye 1–2 öğretmen + kafile başkanı, EK-5 veli izin belgesi), belgeler (EK-1 katılım,
+  // EK-2 başarı, EK-3 teşekkür). Kayıt: umal_idari 'sosyal:<yıl>'. Fotoğraflar özel depoda (umal-etkinlik), yalnız idare görür.
+  const SE = { yil: egitimYili(), V: null, sek: 'etkinlik', ac: '', degisti: false, url: {}, ara: '', hedef: '' };
+  const SE_TUR = ['Gezi', 'Yarışma', 'Tören', 'Belirli gün / hafta', 'Konferans · panel · söyleşi', 'Sergi · fuar · kermes', 'Tiyatro · gösteri · konser', 'Spor · turnuva', 'Sosyal sorumluluk / toplum hizmeti', 'Proje', 'Ziyaret', 'Kampanya', 'Diğer'];
+  const SE_KAPSAM = [['okul', 'Okul içinde', 'Okul müdürlüğünün izni yeterlidir (m.13/1).'], ['ilce', 'İlçe içinde', 'Okul müdürlüğünün izni yeterlidir (m.13/1).'],
+    ['il', 'İl içinde, ilçe dışında', 'Okul müdürlüğü izin verir; etkinlikten en az 3 gün önce ilçe millî eğitim müdürlüğüne resmî yazıyla bilgi verilir (m.13/1).'],
+    ['ildisi', 'İl dışında', 'Mülki idare amirinin (kaymakamlık) izni gerekir; en az 3 gün önce millî eğitim müdürlüğüne bilgi verilir (m.13/1).'], ['yurtdisi', 'Yurt dışında', 'Valilik izni gerekir (m.13/1).']];
+  const SE_KULUP_ONERI = ['Afetlere Hazırlık', 'Bilim, Fen ve Teknoloji', 'Bilişim ve İnternet', 'Çevre Koruma', 'Değerler Eğitimi', 'Demokrasi, İnsan Hakları ve Yurttaşlık', 'Engellilerle Dayanışma', 'Felsefe', 'Gezi, Tanıtma ve Turizm', 'Girişimcilik',
+    'Halk Oyunları', 'Hayvanları Sevme ve Koruma', 'İzcilik', 'Kültür ve Edebiyat', 'Kütüphanecilik', 'Medya ve İletişim', 'Münazara', 'Müzik', 'Resim', 'Sağlık, Temizlik ve Beslenme', 'Satranç', 'Sivil Savunma', 'Sosyal Dayanışma ve Yardımlaşma', 'Spor', 'Tiyatro', 'Trafik Güvenliği ve İlkyardım', 'Yeşilay'];
+  const seBos = () => ({ kurul: { baskan: '', ogretmen: ['', '', ''], ogrenci: ['', ''], veli: '' }, kulupler: [], etkinlikler: [] });
+  const seOgr = no => OGR.find(o => String(o.no) === String(no));
+  const seOgrAd = no => { const o = seOgr(no); return o ? `${o.ad} (${o.sinif})` : `${no} (listede yok)`; };
+  const seHedef = h => { const [t, id] = String(h).split(':'); return t === 'k' ? SE.V.kulupler.find(k => k.id === id) : SE.V.etkinlikler.find(e => e.id === id); };
+  async function sosyal() {
+    try { SE.V = (await oku('sosyal:' + SE.yil)) || seBos(); } catch (e) { kok.innerHTML = bas('Sosyal Etkinlikler') + `<div class="kart">${kurulumHata(e)}</div>`; return; }
+    SE.V = Object.assign(seBos(), SE.V); SE.degisti = false; seCiz();
+  }
+  async function seKaydet(sessiz) { try { await yaz('sosyal:' + SE.yil, SE.V); SE.degisti = false; if (!sessiz) bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } }
+  function seCiz() {
+    const V = SE.V, uyeli = new Set(V.kulupler.flatMap(k => k.uyeler.map(String))), kulupsuz = OGR.filter(o => !uyeli.has(String(o.no))).length;
+    const sek = [['etkinlik', `Etkinlikler (${V.etkinlikler.length})`], ['kulup', `Kulüpler (${V.kulupler.length})`], ['ogrenci', 'Öğrenci durumu'], ['kurul', 'Sosyal Etkinlikler Kurulu']];
+    kok.innerHTML = bas('Sosyal Etkinlikler', `${esc(SE.yil)} · kulüpler, etkinlikler, fotoğraflar ve belgeler · yalnız idare görür`, `<button class="birincil" data-sex="kaydet">Kaydet</button>`) +
+      `<div class="id-say"><div><b>${V.etkinlikler.length}</b><span>etkinlik</span></div><div><b>${V.kulupler.length}</b><span>kulüp</span></div><div><b>${new Set(V.etkinlikler.flatMap(e => e.ogrenciler.map(String))).size}</b><span>etkinliğe katılan öğrenci</span></div><div><b style="color:${kulupsuz ? '#ff9a3a' : '#3ef08a'}">${kulupsuz}</b><span>kulübü olmayan öğrenci</span></div></div>
+      <div class="id-adimlar">${sek.map(([k, ad]) => `<button data-sesek="${k}" style="${SE.sek === k ? 'border-color:var(--neon);color:#fff' : ''}">${ad}</button>`).join('')}</div><div id="idBilgi" class="id-bilgi"></div>` +
+      ({ etkinlik: seEtkinlikler, kulup: seKulupler, ogrenci: seOgrenciDurum, kurul: seKurul }[SE.sek])();
+    seFotoYukle();
+  }
+  // ---- öğrenci / öğretmen ekleme (tek tek, sınıf sınıf, yapıştırarak, Excel ile) ----
+  function seEkleAlani(h, X) {
+    const sinif = [...new Set(OGR.map(o => o.sinif))].sort(sinifSira);
+    return `<span class="id-et">Öğrenci ekle</span><div class="id-satir"><input data-seara="${h}" placeholder="Ad ya da okul no yazın…" value="${SE.hedef === h ? esc(SE.ara) : ''}">
+        <select data-sesinifsec="${h}"><option value="">Sınıfın tamamı…</option>${sinif.map(s => `<option>${esc(s)}</option>`).join('')}</select>
+        <button class="ikincil id-mini" data-seyapistir="${h}">Liste yapıştır</button><label class="ikincil id-mini" style="cursor:pointer">Excel / PDF'ten<input type="file" data-selist="${h}" accept=".xlsx,.xls,.csv,.txt,.pdf,.docx" hidden></label></div>
+      <div class="id-ogr" id="seSonuc" style="margin-top:6px;max-height:180px">${SE.hedef === h ? seSonuclar(h) : ''}</div>`;
+  }
+  function seSonuclar(h) {
+    const q = norm(SE.ara); if (!q) return ''; const X = seHedef(h), var_ = new Set((X.ogrenciler || X.uyeler).map(String));
+    return OGR.filter(o => norm(o.ad).includes(q) || String(o.no).startsWith(q)).slice(0, 40).map(o => `<button data-seogrekle="${h}|${esc(o.no)}" class="${var_.has(String(o.no)) ? 'secili' : ''}"><b>${esc(o.no)}</b>${esc(o.ad)} · ${esc(o.sinif)}</button>`).join('') || '<span class="soluk kucuk">Eşleşen öğrenci yok.</span>';
+  }
+  function seListeyeEkle(h, nolar) { const X = seHedef(h); if (!X) return 0; const L = X.ogrenciler || X.uyeler, v = new Set(L.map(String)); let n = 0; nolar.forEach(no => { if (!v.has(String(no))) { L.push(String(no)); v.add(String(no)); n++; } }); if (n) SE.degisti = true; return n; }
+  function seMetindenOgr(satirlar) {   // satırlardan okul no ya da ad soyad
+    const bul = new Set(), bulunamayan = [];
+    for (const r of satirlar) { const hucre = (Array.isArray(r) ? r : [r]).map(x => String(x ?? '').trim()).filter(Boolean); if (!hucre.length) continue;
+      let o = null; for (const c of hucre) { if (/^\d{1,6}$/.test(c)) o = seOgr(c); if (o) break; }
+      if (!o) { const tum = norm(hucre.join(' ')); o = OGR.find(x => { const a = norm(x.ad); return a.split(' ').length >= 2 && tum.includes(a); }); }
+      if (o) bul.add(String(o.no)); else if (hucre.join(' ').length > 3 && !/^(s[ıi]ra|no|ad|ad[ıi] soyad[ıi]|s[ıi]n[ıi]f)/i.test(hucre[0])) bulunamayan.push(hucre.join(' ').slice(0, 40)); }
+    return { nolar: [...bul], bulunamayan };
+  }
+  function seOgretmenAlani(h, L, et) {
+    const T = ogretmenler();
+    return `<span class="id-et">${et}</span><div class="id-uyeler">${L.map((a, i) => `<span class="id-uye">${esc(C.baslik(a))}<button data-seogrtsil="${h}|${i}" aria-label="Çıkar">✕</button></span>`).join('') || '<span class="soluk kucuk">Henüz yok.</span>'}</div>
+      <div class="id-satir" style="margin-top:6px"><input list="seOgrtL" data-seogrtgir="${h}" placeholder="Öğretmen adı (listeden ya da yazarak)"><button class="ikincil id-mini" data-seogrtekle="${h}">Ekle</button><button class="ikincil id-mini" data-seogrttoplu="${h}">Birden çok ekle</button></div>
+      <datalist id="seOgrtL">${T.map(o => `<option value="${esc(o.ad)}">${esc(o.brans)}</option>`).join('')}</datalist>`;
+  }
+  // ---- etkinlikler ----
+  function seEtkinlikler() {
+    const L = SE.V.etkinlikler.slice().sort((a, b) => String(b.tarih).localeCompare(String(a.tarih)));
+    return `<div class="kart"><div class="id-satir"><b style="font-size:15px;flex:1">Etkinlik ekle</b><button class="birincil" data-sex="etkinlikYeni">+ Yeni etkinlik</button>${L.length ? '<button class="ikincil" data-sex="yillik">Yıllık etkinlik raporu</button><button class="ikincil" data-sex="excelE">Excel</button>' : ''}</div>
+      <div class="soluk kucuk" style="margin-top:6px">Her etkinliğe öğretmen, öğrenci (tek tek, sınıf sınıf, liste yapıştırarak ya da Excel'den) ve fotoğraf eklenebilir. Katılım, başarı, teşekkür belgeleri ve gezide veli izin belgeleri buradan yazdırılır.</div></div>
+      ${L.map(seEtkinlikKart).join('') || '<div class="kart soluk">Henüz etkinlik yok.</div>'}`;
+  }
+  function seIzinNotu(e) {
+    const k = SE_KAPSAM.find(x => x[0] === e.kapsam) || SE_KAPSAM[0], n = e.ogrenciler.length, gerek = Math.max(1, Math.ceil(n / 40)), ogrt = e.ogretmenler.filter(a => a !== e.kafile).length + (e.kafile ? 1 : 0);
+    let s = `<b>İzin:</b> ${esc(k[2])}`;
+    if (e.tur === 'Gezi') s += `<br><b>Gezi (m.10):</b> 1 kafile başkanı ve her 40 öğrenciye en az 1, en çok 2 öğretmen. ${n} öğrenci için en az ${gerek} öğretmen + kafile başkanı gerekir; şu an ${ogrt} öğretmen ${ogrt >= gerek + 1 ? '<span class="yesil">✓</span>' : '<span class="turuncu">eksik</span>'}. Her öğrenciden Veli İzin Belgesi (EK-5) alınır; sigortalı ve güvenli araç kullanılır.`;
+    if (e.kapsam !== 'okul' && e.tur !== 'Gezi') s += `<br>Okul dışına çıkılıyorsa her öğrenciden Veli İzin Belgesi alınması önerilir.`;
+    return `<div class="id-uyari" style="border-color:rgba(34,232,255,.45);background:rgba(34,232,255,.06)">${s}</div>`;
+  }
+  function seEtkinlikKart(e) {
+    const ac = SE.ac === e.id, kl = SE.V.kulupler.find(k => k.id === e.kulup);
+    const ust = `<button data-seac="${esc(e.id)}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;flex-wrap:wrap"><b style="font-size:15px">${esc(e.ad || 'Adsız etkinlik')}</b><span class="soluk">${esc(tGos(e.tarih))} · ${esc(e.tur)}${kl ? ' · ' + esc(kl.ad) : ''}</span><span class="soluk kucuk" style="margin-left:auto">${e.ogrenciler.length} öğrenci · ${e.ogretmenler.length} öğretmen · ${e.foto.length} fotoğraf</span></button>`;
+    if (!ac) return `<div class="kart">${ust}</div>`;
+    const h = 'e:' + e.id, alan = (a, et, tip) => `<label>${et}<input ${tip ? `type="${tip}"` : ''} data-sealan="${h}|${a}" value="${esc(e[a] || '')}"></label>`;
+    return `<div class="kart" style="border-color:rgba(34,232,255,.45)">${ust}
+      <div class="id-form" style="margin-top:12px">${alan('ad', 'Etkinliğin adı')}${alan('tarih', 'Tarih', 'date')}${alan('bitis', 'Bitiş (birden çok gün ise)', 'date')}
+        <label>Türü<select data-sealan="${h}|tur">${SE_TUR.map(t => `<option ${t === e.tur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+        <label>Düzenleyen kulüp<select data-sealan="${h}|kulup"><option value="">— Okul / kulüpsüz —</option>${SE.V.kulupler.map(k => `<option value="${esc(k.id)}" ${k.id === e.kulup ? 'selected' : ''}>${esc(k.ad)}</option>`).join('')}</select></label>
+        <label>Nerede<select data-sealan="${h}|kapsam">${SE_KAPSAM.map(([k, ad]) => `<option value="${k}" ${k === e.kapsam ? 'selected' : ''}>${esc(ad)}</option>`).join('')}</select></label>
+        ${alan('yer', 'Yer / adres')}${e.tur === 'Gezi' ? alan('kafile', 'Kafile başkanı') : ''}
+        <label class="genis">Açıklama · yapılanlar<textarea data-sealan="${h}|aciklama" rows="3">${esc(e.aciklama || '')}</textarea></label></div>
+      ${seIzinNotu(e)}
+      ${seOgretmenAlani(h, e.ogretmenler, `Görevli öğretmenler (${e.ogretmenler.length})`)}
+      <span class="id-et">Katılan öğrenciler (${e.ogrenciler.length}) · ★ ile başarı belgesi alacakları işaretleyin</span>
+      <div class="id-uyeler" style="max-height:200px;overflow:auto">${e.ogrenciler.map(no => `<span class="id-uye" style="${e.basari.includes(String(no)) ? 'border-color:#ffd24a' : ''}"><button data-sebasari="${h}|${esc(no)}" title="Başarı belgesi" style="color:${e.basari.includes(String(no)) ? '#ffd24a' : '#5c7699'}">★</button>${esc(seOgrAd(no))}<button data-seogrsil="${h}|${esc(no)}" aria-label="Çıkar">✕</button></span>`).join('') || '<span class="soluk kucuk">Henüz öğrenci yok.</span>'}</div>
+      ${seEkleAlani(h, e)}
+      <span class="id-et">Fotoğraflar (${e.foto.length}) · öğrenci fotoğrafları yalnız idarece görülür; paylaşım için velilerden KVKK onayı alınmalıdır</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${e.foto.map((f, i) => `<div style="position:relative"><img data-sefotoyol="${esc(f.yol)}" alt="" style="width:132px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--cizgi);background:var(--koyu)"><button data-sefotosil="${h}|${i}" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:0;color:#fff;border-radius:8px;cursor:pointer">✕</button></div>`).join('')}
+        <label class="ikincil" style="cursor:pointer;width:132px;height:96px;display:grid;place-items:center;border-radius:10px;border:1.5px dashed var(--cizgi);text-align:center">+ Fotoğraf ekle<input type="file" data-sefoto="${h}" accept="image/*" multiple hidden></label></div>
+      <div class="dugmeler" style="justify-content:flex-start;margin:12px 0 0;flex-wrap:wrap"><button class="birincil" data-sex="kaydet">Kaydet</button><button class="ikincil" data-serapor="${esc(e.id)}">Etkinlik raporu (fotoğraflı)</button>
+        <button class="ikincil" data-sebelge="${esc(e.id)}|katilim">Katılım belgeleri</button><button class="ikincil" data-sebelge="${esc(e.id)}|basari">Başarı belgeleri (${e.basari.length})</button><button class="ikincil" data-sebelge="${esc(e.id)}|tesekkur">Öğretmenlere teşekkür belgesi</button>
+        ${e.tur === 'Gezi' || e.kapsam !== 'okul' ? `<button class="ikincil" data-sebelge="${esc(e.id)}|veli">Veli izin belgeleri</button><button class="ikincil" data-sebelge="${esc(e.id)}|liste">Katılımcı listesi</button>` : `<button class="ikincil" data-sebelge="${esc(e.id)}|liste">Katılımcı listesi</button>`}
+        <button class="bag" style="color:var(--kirmizi);margin-left:auto" data-sesil="${h}">Etkinliği sil</button></div></div>`;
+  }
+  // ---- kulüpler ----
+  function seKulupler() {
+    const L = SE.V.kulupler, var_ = new Set(L.map(k => norm(k.ad)));
+    return `<div class="kart"><b style="font-size:15px">Kulüp ekle</b><div class="soluk kucuk" style="margin:4px 0 8px">Her öğrencinin en az bir kulübe üye olması zorunludur (m.8/4). Kulübün danışman öğretmenini, öğrenci temsilcisini ve üyelerini girin. Üyeler sınıf sınıf ya da Excel listesiyle toplu eklenebilir.</div>
+      <div class="id-satir"><input id="seKulupAd" list="seKulupL" placeholder="Kulübün adı"><button class="birincil" data-sex="kulupYeni">Ekle</button></div><datalist id="seKulupL">${SE_KULUP_ONERI.filter(a => !var_.has(norm(a))).map(a => `<option value="${esc(a)} Kulübü">`).join('')}</datalist>
+      ${L.length ? '<div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0"><button class="ikincil" data-sex="kulupListe">Kulüp listesi yazdır</button><button class="ikincil" data-sex="excelK">e-Okul için Excel (kulüp üyeleri)</button></div>' : ''}</div>
+      ${L.map(k => { const ac = SE.ac === k.id, h = 'k:' + k.id;
+        const ust = `<button data-seac="${esc(k.id)}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;flex-wrap:wrap"><b style="font-size:15px">${esc(k.ad)}</b><span class="soluk">${k.danisman.length ? esc(k.danisman.map(a => C.baslik(a)).join(', ')) : 'danışman yok'}</span><span class="soluk kucuk" style="margin-left:auto">${k.uyeler.length} üye · ${SE.V.etkinlikler.filter(e => e.kulup === k.id).length} etkinlik</span></button>`;
+        if (!ac) return `<div class="kart">${ust}</div>`;
+        return `<div class="kart" style="border-color:rgba(34,232,255,.45)">${ust}<div class="id-form" style="margin-top:10px"><label>Kulübün adı<input data-sealan="${h}|ad" value="${esc(k.ad)}"></label>
+            <label>Öğrenci temsilcisi<select data-sealan="${h}|temsilci"><option value="">—</option>${k.uyeler.map(no => `<option value="${esc(no)}" ${String(no) === String(k.temsilci) ? 'selected' : ''}>${esc(seOgrAd(no))}</option>`).join('')}</select></label></div>
+          ${seOgretmenAlani(h, k.danisman, 'Danışman öğretmen(ler)')}
+          <span class="id-et">Üyeler (${k.uyeler.length})</span><div class="id-uyeler" style="max-height:220px;overflow:auto">${k.uyeler.map(no => `<span class="id-uye">${esc(seOgrAd(no))}<button data-seogrsil="${h}|${esc(no)}" aria-label="Çıkar">✕</button></span>`).join('') || '<span class="soluk kucuk">Henüz üye yok.</span>'}</div>
+          ${seEkleAlani(h, k)}
+          <div class="dugmeler" style="justify-content:flex-start;margin:12px 0 0;flex-wrap:wrap"><button class="birincil" data-sex="kaydet">Kaydet</button><button class="ikincil" data-sekulupyaz="${esc(k.id)}">Üye listesi yazdır</button><button class="bag" style="color:var(--kirmizi);margin-left:auto" data-sesil="${h}">Kulübü sil</button></div></div>`; }).join('')}`;
+  }
+  // ---- öğrenci durumu ----
+  function seOgrenciDurum() {
+    const K = new Map(), E = new Map(); SE.V.kulupler.forEach(k => k.uyeler.forEach(no => (K.get(String(no)) || K.set(String(no), []).get(String(no))).push(k.ad)));
+    SE.V.etkinlikler.forEach(e => e.ogrenciler.forEach(no => E.set(String(no), (E.get(String(no)) || 0) + 1)));
+    const sinif = [...new Set(OGR.map(o => o.sinif))].sort(sinifSira), kulupsuz = OGR.filter(o => !K.has(String(o.no)));
+    return `<div class="kart"><b>Sınıflara göre</b><div class="id-kaydir"><table class="ds-tablo" style="margin-top:8px"><tr><th>Sınıf</th><th>Öğrenci</th><th>Kulübü olan</th><th>Kulübü olmayan</th><th>Etkinliğe katılan</th></tr>
+      ${sinif.map(s => { const O = OGR.filter(o => o.sinif === s), k = O.filter(o => K.has(String(o.no))).length; return `<tr><td>${esc(s)}</td><td>${O.length}</td><td>${k}</td><td style="color:${O.length - k ? '#ff9a3a' : '#3ef08a'}">${O.length - k}</td><td>${O.filter(o => E.has(String(o.no))).length}</td></tr>`; }).join('')}</table></div></div>
+      <div class="kart"><div class="id-satir"><b style="flex:1">Kulübü olmayan öğrenciler (${kulupsuz.length})</b>${kulupsuz.length ? '<button class="ikincil id-mini" data-sex="excelKS">Excel</button>' : ''}</div>
+      <div class="id-ogr" style="margin-top:8px">${kulupsuz.slice(0, 400).map(o => `<button disabled><b>${esc(o.no)}</b>${esc(o.ad)} · ${esc(o.sinif)}</button>`).join('') || '<span class="yesil">Her öğrenci en az bir kulübe üye.</span>'}</div></div>`;
+  }
+  // ---- kurul ----
+  function seKurul() {
+    const K = SE.V.kurul, T = ogretmenler(), inp = (a, i, ph) => `<input list="seOgrtL" data-sekurul="${a}${i === undefined ? '' : '|' + i}" value="${esc(i === undefined ? K[a] : K[a][i])}" placeholder="${ph}">`;
+    return `<div class="kart"><b style="font-size:15px">Sosyal Etkinlikler Kurulu (m.6)</b><div class="soluk kucuk" style="margin:4px 0 10px">Müdür ya da görevlendireceği müdür yardımcısının başkanlığında; müdürün belirlediği 3 danışman öğretmen, kulüp temsilcilerinin aralarından seçtiği 2 öğrenci ve okul-aile birliğinin belirlediği 1 veliden oluşur. Kurul eylülde yıllık çalışma planını hazırlar, başarı belgesi alacak öğrencileri belirleyip müdür onayına sunar.</div>
+      <div class="id-form"><label>Başkan (müdür / müdür yardımcısı)${inp('baskan', undefined, 'Ad soyad')}</label>${[0, 1, 2].map(i => `<label>Öğretmen üye ${i + 1}${inp('ogretmen', i, 'Danışman öğretmen')}</label>`).join('')}
+        ${[0, 1].map(i => `<label>Öğrenci üye ${i + 1}<select data-sekurul="ogrenci|${i}"><option value="">—</option>${SE.V.kulupler.filter(k => k.temsilci).map(k => `<option value="${esc(k.temsilci)}" ${String(k.temsilci) === String(K.ogrenci[i]) ? 'selected' : ''}>${esc(seOgrAd(k.temsilci))} · ${esc(k.ad)} temsilcisi</option>`).join('')}</select></label>`).join('')}
+        <label>Veli üye${inp('veli', undefined, 'Okul-aile birliğinin belirlediği veli')}</label></div>
+      <datalist id="seOgrtL">${T.map(o => `<option value="${esc(o.ad)}">`).join('')}</datalist>
+      <div class="dugmeler" style="justify-content:flex-start;margin:12px 0 0"><button class="birincil" data-sex="kaydet">Kaydet</button><button class="ikincil" data-sex="kurulYaz">Kurul listesini yazdır</button></div></div>`;
+  }
+  // ---- fotoğraflar (özel depo, imzalı bağlantıyla görünür) ----
+  async function seUrller(yollar) {
+    const eksik = yollar.filter(y => !SE.url[y]); if (eksik.length) { const { data, error } = await C.sb.storage.from('umal-etkinlik').createSignedUrls(eksik, 3600); if (!error) (data || []).forEach(d => { if (d.signedUrl) SE.url[d.path] = d.signedUrl; }); }
+    return yollar.map(y => SE.url[y] || '');
+  }
+  async function seFotoYukle() { const I = [...kok.querySelectorAll('img[data-sefotoyol]')]; if (!I.length) return; await seUrller(I.map(i => i.dataset.sefotoyol)); I.forEach(i => { if (SE.url[i.dataset.sefotoyol]) i.src = SE.url[i.dataset.sefotoyol]; }); }
+  async function seJpeg(f) { const bmp = await createImageBitmap(f), o = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * o); c.height = Math.round(bmp.height * o);
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(bmp, 0, 0, c.width, c.height); return new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.85)); }
+  async function seDosya(ev) {
+    const t = ev.target, d = t.dataset || {};
+    if (d.sefoto && t.files.length) { const e = seHedef(d.sefoto), F = [...t.files]; t.value = ''; let n = 0, hata = '';
+      bilgi(`${F.length} fotoğraf yükleniyor…`);
+      for (const f of F) { try { const j = await seJpeg(f); if (!j) throw new Error('resim okunamadı'); const yol = `${SE.yil}/${e.id}/${crypto.randomUUID ? crypto.randomUUID() : uid()}.jpg`;
+          const { error } = await C.sb.storage.from('umal-etkinlik').upload(yol, j, { contentType: 'image/jpeg', upsert: false }); if (error) throw error; e.foto.push({ yol, ad: f.name.slice(0, 80) }); n++; }
+        catch (x) { hata = `${f.name}: ${/bucket|not found/i.test(x.message || '') ? 'fotoğraf deposu kurulmamış (Supabase\'de 20261127090000_umal_sosyal_etkinlik.sql çalıştırılmalı)' : (x.message || x)}`; } }
+      if (n) { await seKaydet(true); } seCiz(); if (n) bilgi(`${n} fotoğraf eklendi.`, 'yesil'); if (hata) uyar(hata); return; }
+    if (d.selist && t.files.length) { const f = t.files[0]; t.value = ''; try { const R = await dosyaSatirlar(f), r = seMetindenOgr(R), n = seListeyeEkle(d.selist, r.nolar); seCiz();
+        bilgi(`${f.name}: ${r.nolar.length} öğrenci bulundu, ${n} yeni eklendi.${r.bulunamayan.length ? ` Listede bulunamayan ${r.bulunamayan.length} satır: ${r.bulunamayan.slice(0, 6).join(' · ')}${r.bulunamayan.length > 6 ? ' …' : ''}` : ''} Kaydet'e basmayı unutmayın.`, n ? 'yesil' : ''); }
+      catch (e) { uyar(`${f.name}: ${e.message || e}`); } }
+  }
+  function seGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.seara) { SE.ara = t.value; SE.hedef = d.seara; const s = kok.querySelector('#seSonuc'); if (s) s.innerHTML = seSonuclar(d.seara); return; }
+    if (d.sealan) { const [h, a] = d.sealan.split('|'), X = seHedef(h); if (X) { X[a] = t.value; SE.degisti = true; if (['tur', 'kapsam', 'kulup'].includes(a)) seCiz(); } return; }
+    if (d.sekurul) { const [a, i] = d.sekurul.split('|'); if (i === undefined) SE.V.kurul[a] = t.value; else SE.V.kurul[a][+i] = t.value; SE.degisti = true; return; }
+    if (d.sesinifsec && t.value) { const n = seListeyeEkle(d.sesinifsec, OGR.filter(o => o.sinif === t.value).map(o => o.no)); seCiz(); bilgi(`${t.value}: ${n} öğrenci eklendi.`, 'yesil'); }
+  }
+  function seOgrtEkle(h, adlar) { const X = seHedef(h), L = X.ogretmenler || X.danisman, T = ogretmenler(); let n = 0;
+    adlar.map(a => a.trim()).filter(Boolean).forEach(a => { const o = T.find(x => norm(x.ad) === norm(a)) || T.find(x => norm(x.ad).includes(norm(a))); const ad = o ? o.ad : a; if (!L.includes(ad)) { L.push(ad); n++; } }); if (n) SE.degisti = true; return n; }
+  // ---- belgeler ----
+  const seTarihYazi = e => e.bitis && e.bitis !== e.tarih ? `${tGos(e.tarih)} – ${tGos(e.bitis)} tarihleri arasında` : `${tGos(e.tarih)} tarihinde`;
+  const seImza = () => `<div class="imz"><div></div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div>`;
+  function seBelgeSayfa(baslik, metin) { return `<section class="sy" style="display:flex;flex-direction:column;min-height:250mm">${dyUst()}<div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;border:1.2mm double #0f2147;padding:14mm;margin-top:8mm"><h1 style="font-size:22pt;margin-bottom:10mm">${baslik}</h1><p style="font-size:13pt;line-height:1.8;text-align:justify">${metin}</p>${seImza()}</div></section>`; }
+  function seBelge(e, tur) {
+    const kl = SE.V.kulupler.find(k => k.id === e.kulup), ad = `“${esc(e.ad || 'Sosyal etkinlik')}”`, kulup = kl ? ` ${esc(kl.ad)} tarafından düzenlenen` : ' okulumuzca düzenlenen';
+    if (tur === 'katilim' || tur === 'basari') { const L = tur === 'katilim' ? e.ogrenciler : e.basari; if (!L.length) { uyar(tur === 'basari' ? 'Önce ★ ile başarı belgesi alacak öğrencileri işaretleyin.' : 'Etkinliğe öğrenci eklenmemiş.'); return null; }
+      return dyBelgeKabuk(tur === 'katilim' ? 'Katılım belgeleri' : 'Başarı belgeleri', L.map(no => { const o = seOgr(no) || { ad: no, sinif: '', no };
+        return seBelgeSayfa(tur === 'katilim' ? 'SOSYAL ETKİNLİK KATILIM BELGESİ' : 'SOSYAL ETKİNLİK BAŞARI BELGESİ', `Okulumuz ${esc(o.sinif)} sınıfı ${esc(o.no)} numaralı öğrencisi <b>${esc(o.ad)}</b>, ${esc(seTarihYazi(e))}${kulup} ${ad} etkinliğine ${tur === 'katilim' ? 'katılmıştır' : 'katılmış ve gösterdiği üstün gayretle başarılı olmuştur'}. Bu belge, kendisine Eğitim Kurumları Sosyal Etkinlikler Yönetmeliği gereğince ${tur === 'katilim' ? 'katılım' : 'başarısından dolayı'} belgesi olarak verilmiştir.`); }).join(''), false); }
+    if (tur === 'tesekkur') { if (!e.ogretmenler.length) { uyar('Etkinliğe öğretmen eklenmemiş.'); return null; }
+      return dyBelgeKabuk('Teşekkür belgeleri', e.ogretmenler.map(a => seBelgeSayfa('SOSYAL ETKİNLİK TEŞEKKÜR BELGESİ', `Sayın <b>${esc(C.baslik(a))}</b>, ${esc(seTarihYazi(e))}${kulup} ${ad} etkinliğinin hazırlanması ve yürütülmesinde gösterdiğiniz özveri ve katkılarınızdan dolayı teşekkür ederim.`)).join(''), false); }
+    if (tur === 'veli') { if (!e.ogrenciler.length) { uyar('Etkinliğe öğrenci eklenmemiş.'); return null; }
+      return dyBelgeKabuk('Veli izin belgeleri', e.ogrenciler.map(no => { const o = seOgr(no) || { ad: no, sinif: '', no };
+        return `<section class="sy">${dyUst()}<h1>VELİ İZİN BELGESİ</h1><table><tbody><tr><th style="text-align:left;width:50mm">Öğrencinin adı soyadı</th><td>${esc(o.ad)}</td></tr><tr><th style="text-align:left">Sınıfı / No</th><td>${esc(o.sinif)} / ${esc(o.no)}</td></tr>
+          <tr><th style="text-align:left">Etkinlik</th><td>${esc(e.ad)} (${esc(e.tur)})</td></tr><tr><th style="text-align:left">Tarih</th><td>${esc(tGos(e.tarih))}${e.bitis && e.bitis !== e.tarih ? ' – ' + esc(tGos(e.bitis)) : ''}</td></tr><tr><th style="text-align:left">Yer</th><td>${esc(e.yer || '')}</td></tr>
+          <tr><th style="text-align:left">Sorumlu öğretmen(ler)</th><td>${esc([e.kafile ? e.kafile + ' (kafile başkanı)' : '', ...e.ogretmenler].filter(Boolean).map(a => C.baslik(a)).join(', '))}</td></tr></tbody></table>
+          <p style="font-size:11pt;line-height:1.8;margin-top:8mm">Velisi bulunduğum yukarıda bilgileri yazılı öğrencinin, belirtilen tarihte okul tarafından düzenlenen etkinliğe katılmasına izin veriyorum.</p>
+          <table style="margin-top:8mm"><tbody><tr><th style="text-align:left;width:50mm">Velinin adı soyadı</th><td style="height:10mm"></td></tr><tr><th style="text-align:left">Telefonu</th><td style="height:10mm"></td></tr><tr><th style="text-align:left">Tarih / İmza</th><td style="height:16mm"></td></tr></tbody></table></section>`; }).join(''), false); }
+    if (tur === 'liste') return dyBelgeKabuk('Katılımcı listesi', `<section class="sy">${dyUst()}<h1>${esc((e.ad || 'ETKİNLİK').toLocaleUpperCase(tr))} · KATILIMCI LİSTESİ</h1><div style="margin-bottom:3mm">${esc(seTarihYazi(e))} · ${esc(e.tur)}${e.yer ? ' · ' + esc(e.yer) : ''}</div>
+      <table><thead><tr><th style="width:8mm">#</th><th>Öğretmen</th><th style="width:40mm">Görev</th><th style="width:30mm">İmza</th></tr></thead><tbody>${[...(e.kafile ? [[e.kafile, 'Kafile başkanı']] : []), ...e.ogretmenler.map(a => [a, 'Görevli öğretmen'])].map(([a, g], i) => `<tr><td>${i + 1}</td><td>${esc(C.baslik(a))}</td><td>${g}</td><td></td></tr>`).join('')}</tbody></table>
+      <table style="margin-top:4mm"><thead><tr><th style="width:8mm">#</th><th style="width:16mm">No</th><th>Adı soyadı</th><th style="width:18mm">Sınıf</th><th style="width:30mm">Veli izni</th><th style="width:30mm">İmza</th></tr></thead><tbody>${e.ogrenciler.map(seOgr).filter(Boolean).sort((a, b) => sinifSira(a.sinif, b.sinif) || +a.no - +b.no).map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.no)}</td><td>${esc(o.ad)}</td><td>${esc(o.sinif)}</td><td></td><td></td></tr>`).join('')}</tbody></table>${seImza()}</section>`, false);
+    return null;
+  }
+  async function seRapor(L, baslik) {
+    const yollar = L.flatMap(e => e.foto.map(f => f.yol)); await seUrller(yollar);
+    return dyBelgeKabuk(baslik, L.map(e => { const kl = SE.V.kulupler.find(k => k.id === e.kulup);
+      return `<section class="sy">${dyUst()}<h1>SOSYAL ETKİNLİK RAPORU</h1><table><tbody><tr><th style="text-align:left;width:42mm">Etkinlik</th><td>${esc(e.ad)}</td></tr><tr><th style="text-align:left">Türü</th><td>${esc(e.tur)}${kl ? ' · ' + esc(kl.ad) : ''}</td></tr>
+        <tr><th style="text-align:left">Tarih / yer</th><td>${esc(seTarihYazi(e))}${e.yer ? ' · ' + esc(e.yer) : ''}</td></tr><tr><th style="text-align:left">Görevli öğretmenler</th><td>${esc(e.ogretmenler.map(a => C.baslik(a)).join(', ') || '—')}</td></tr>
+        <tr><th style="text-align:left">Katılan öğrenci</th><td>${e.ogrenciler.length} öğrenci${(() => { const S = {}; e.ogrenciler.map(seOgr).filter(Boolean).forEach(o => S[o.sinif] = (S[o.sinif] || 0) + 1); const k = Object.keys(S).sort(sinifSira); return k.length ? ' (' + k.map(s => `${s}: ${S[s]}`).join(', ') + ')' : ''; })()}</td></tr></tbody></table>
+        ${e.aciklama ? `<p style="font-size:10.5pt;line-height:1.6;white-space:pre-wrap">${esc(e.aciklama)}</p>` : ''}
+        ${e.foto.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin-top:4mm">${e.foto.slice(0, 8).map(f => SE.url[f.yol] ? `<img src="${esc(SE.url[f.yol])}" style="width:100%;height:62mm;object-fit:cover;border-radius:2mm">` : '').join('')}</div>` : ''}${seImza()}</section>`; }).join(''), false);
+  }
+  async function seTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset;
+    if (d.sesek) { SE.sek = d.sesek; SE.ac = ''; seCiz(); return true; }
+    if (d.seac) { SE.ac = SE.ac === d.seac ? '' : d.seac; SE.ara = ''; SE.hedef = ''; seCiz(); return true; }
+    if (d.sex === 'kaydet') { await seKaydet(); return true; }
+    if (d.sex === 'etkinlikYeni') { const e = { id: uid(), ad: '', tarih: bugun(), bitis: '', tur: 'Belirli gün / hafta', kulup: '', kapsam: 'okul', yer: '', kafile: '', aciklama: '', ogretmenler: [], ogrenciler: [], basari: [], foto: [] };
+      SE.V.etkinlikler.push(e); SE.ac = e.id; SE.degisti = true; seCiz(); const i = kok.querySelector(`[data-sealan="e:${e.id}|ad"]`); if (i) i.focus(); return true; }
+    if (d.sex === 'kulupYeni') { const a = (kok.querySelector('#seKulupAd') || {}).value || ''; if (!a.trim()) { bilgi('Kulübün adını yazın.', 'kirmizi'); return true; }
+      if (SE.V.kulupler.some(k => norm(k.ad) === norm(a))) { bilgi('Bu kulüp zaten var.', 'kirmizi'); return true; }
+      const k = { id: uid(), ad: a.trim(), danisman: [], temsilci: '', uyeler: [] }; SE.V.kulupler.push(k); SE.V.kulupler.sort((x, y) => x.ad.localeCompare(y.ad, tr)); SE.ac = k.id; SE.degisti = true; seCiz(); return true; }
+    if (d.seogrekle) { const [h, no] = d.seogrekle.split('|'), X = seHedef(h), L = X.ogrenciler || X.uyeler; if (L.map(String).includes(String(no))) { L.splice(L.map(String).indexOf(String(no)), 1); if (X.basari) X.basari = X.basari.filter(x => String(x) !== String(no)); } else L.push(String(no)); SE.degisti = true; seCiz(); const i = kok.querySelector(`[data-seara="${h}"]`); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } return true; }
+    if (d.seogrsil) { const [h, no] = d.seogrsil.split('|'), X = seHedef(h); if (X.ogrenciler) { X.ogrenciler = X.ogrenciler.filter(x => String(x) !== no); X.basari = X.basari.filter(x => String(x) !== no); } else { X.uyeler = X.uyeler.filter(x => String(x) !== no); if (String(X.temsilci) === no) X.temsilci = ''; } SE.degisti = true; seCiz(); return true; }
+    if (d.sebasari) { const [h, no] = d.sebasari.split('|'), X = seHedef(h); X.basari = X.basari.includes(no) ? X.basari.filter(x => x !== no) : [...X.basari, no]; SE.degisti = true; seCiz(); return true; }
+    if (d.seyapistir) { C.pencereAc(`<h2 style="margin-top:0">Öğrenci listesini yapıştırın</h2><div class="soluk kucuk" style="margin-bottom:8px">Her satıra bir öğrenci: okul numarası ya da ad soyad (e-Okul'dan ya da Excel'den kopyalanabilir).</div><textarea id="seYap" rows="12" style="width:100%;box-sizing:border-box"></textarea><div class="dugmeler"><button class="birincil" id="seYapOk">Ekle</button></div>`);
+      document.getElementById('seYapOk').onclick = () => { const r = seMetindenOgr(document.getElementById('seYap').value.split(/\r?\n/).map(s => s.split(/\t|;|,/))); C.pencereKapat(); const n = seListeyeEkle(d.seyapistir, r.nolar); seCiz();
+        bilgi(`${r.nolar.length} öğrenci bulundu, ${n} yeni eklendi.${r.bulunamayan.length ? ` Bulunamayan: ${r.bulunamayan.slice(0, 8).join(' · ')}` : ''}`, n ? 'yesil' : ''); }; return true; }
+    if (d.seogrtekle) { const i = kok.querySelector(`[data-seogrtgir="${d.seogrtekle}"]`); if (!i || !i.value.trim()) return true; seOgrtEkle(d.seogrtekle, [i.value]); seCiz(); return true; }
+    if (d.seogrttoplu) { C.pencereAc(`<h2 style="margin-top:0">Öğretmenleri yapıştırın</h2><div class="soluk kucuk" style="margin-bottom:8px">Her satıra bir öğretmen adı. Ders programındaki adlarla eşleştirilir.</div><textarea id="seOgYap" rows="10" style="width:100%;box-sizing:border-box"></textarea><div class="dugmeler"><button class="birincil" id="seOgYapOk">Ekle</button></div>`);
+      document.getElementById('seOgYapOk').onclick = () => { const n = seOgrtEkle(d.seogrttoplu, document.getElementById('seOgYap').value.split(/\r?\n|,|;/)); C.pencereKapat(); seCiz(); bilgi(`${n} öğretmen eklendi.`, 'yesil'); }; return true; }
+    if (d.seogrtsil) { const [h, i] = d.seogrtsil.split('|'), X = seHedef(h); (X.ogretmenler || X.danisman).splice(+i, 1); SE.degisti = true; seCiz(); return true; }
+    if (d.sefotosil) { const [h, i] = d.sefotosil.split('|'), X = seHedef(h), f = X.foto[+i]; if (!f || !await onayla('Bu fotoğraf silinsin mi?')) return true;
+      await C.sb.storage.from('umal-etkinlik').remove([f.yol]); X.foto.splice(+i, 1); await seKaydet(true); seCiz(); return true; }
+    if (d.sesil) { const X = seHedef(d.sesil); if (!X || !await onayla(`“${X.ad || 'Adsız'}” silinsin mi?${X.foto && X.foto.length ? ' Fotoğrafları da silinir.' : ''}`)) return true;
+      if (X.foto && X.foto.length) await C.sb.storage.from('umal-etkinlik').remove(X.foto.map(f => f.yol));
+      if (d.sesil.startsWith('k:')) { SE.V.kulupler = SE.V.kulupler.filter(k => k !== X); SE.V.etkinlikler.forEach(e => { if (e.kulup === X.id) e.kulup = ''; }); } else SE.V.etkinlikler = SE.V.etkinlikler.filter(e => e !== X);
+      await seKaydet(true); seCiz(); return true; }
+    if (d.sebelge) { const [id, tur] = d.sebelge.split('|'), e = SE.V.etkinlikler.find(x => x.id === id), h = seBelge(e, tur); if (h) C.belgeOnizle(h, ({ katilim: 'Katılım belgeleri', basari: 'Başarı belgeleri', tesekkur: 'Teşekkür belgeleri', veli: 'Veli izin belgeleri', liste: 'Katılımcı listesi' }[tur]) + ' · ' + (e.ad || ''), false); return true; }
+    if (d.serapor) { const e = SE.V.etkinlikler.find(x => x.id === d.serapor); C.belgeOnizle(await seRapor([e], 'Etkinlik raporu'), 'Etkinlik raporu · ' + (e.ad || ''), false); return true; }
+    if (d.sex === 'yillik') { const L = SE.V.etkinlikler.slice().sort((a, b) => String(a.tarih).localeCompare(String(b.tarih))); C.belgeOnizle(await seRapor(L, 'Yıllık sosyal etkinlik raporu'), 'Sosyal etkinlikler ' + SE.yil, false); return true; }
+    if (d.sex === 'excelE') { indir('Sosyal_Etkinlikler_' + SE.yil, [['Tarih', 'Etkinlik', 'Tür', 'Kulüp', 'Yer', 'Öğretmenler', 'Öğrenci sayısı', 'Fotoğraf'], ...SE.V.etkinlikler.slice().sort((a, b) => String(a.tarih).localeCompare(String(b.tarih))).map(e => [tGos(e.tarih), e.ad, e.tur, (SE.V.kulupler.find(k => k.id === e.kulup) || {}).ad || '', e.yer, e.ogretmenler.join(', '), e.ogrenciler.length, e.foto.length])]); return true; }
+    if (d.sex === 'excelK') { indir('Kulup_Uyeleri_' + SE.yil, [['Okul No', 'Adı Soyadı', 'Sınıf', 'Kulüp', 'Danışman', 'Temsilci'], ...SE.V.kulupler.flatMap(k => k.uyeler.map(no => { const o = seOgr(no) || { no, ad: '', sinif: '' }; return [o.no, o.ad, o.sinif, k.ad, k.danisman.join(', '), String(k.temsilci) === String(no) ? 'Evet' : '']; }))]); return true; }
+    if (d.sex === 'excelKS') { const uy = new Set(SE.V.kulupler.flatMap(k => k.uyeler.map(String))); indir('Kulubu_Olmayanlar_' + SE.yil, [['Okul No', 'Adı Soyadı', 'Sınıf'], ...OGR.filter(o => !uy.has(String(o.no))).sort((a, b) => sinifSira(a.sinif, b.sinif) || +a.no - +b.no).map(o => [o.no, o.ad, o.sinif])]); return true; }
+    if (d.sekulupyaz || d.sex === 'kulupListe') { const L = d.sekulupyaz ? SE.V.kulupler.filter(k => k.id === d.sekulupyaz) : SE.V.kulupler;
+      C.belgeOnizle(dyBelgeKabuk('Kulüp listesi', L.map(k => `<section class="sy">${dyUst()}<h1>${esc(k.ad.toLocaleUpperCase(tr))} · ÜYE LİSTESİ</h1><div style="margin-bottom:3mm">Danışman öğretmen: <b>${esc(k.danisman.map(a => C.baslik(a)).join(', ') || '—')}</b> · Öğrenci temsilcisi: <b>${esc(k.temsilci ? seOgrAd(k.temsilci) : '—')}</b></div>
+        <table><thead><tr><th style="width:8mm">#</th><th style="width:16mm">No</th><th>Adı soyadı</th><th style="width:18mm">Sınıf</th></tr></thead><tbody>${k.uyeler.map(seOgr).filter(Boolean).sort((a, b) => sinifSira(a.sinif, b.sinif) || +a.no - +b.no).map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.no)}</td><td>${esc(o.ad)}</td><td>${esc(o.sinif)}</td></tr>`).join('')}</tbody></table>
+        <div class="imz"><div>${esc(k.danisman.map(a => C.baslik(a)).join(', '))}<br>Danışman Öğretmen</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`).join(''), false), 'Kulüp listesi', false); return true; }
+    if (d.sex === 'kurulYaz') { const K = SE.V.kurul, R = [['Başkan', K.baskan], ...K.ogretmen.map(a => ['Öğretmen üye', a]), ...K.ogrenci.map(no => ['Öğrenci üye', no ? seOgrAd(no) : '']), ['Veli üye', K.veli]];
+      C.belgeOnizle(dyBelgeKabuk('Sosyal Etkinlikler Kurulu', `<section class="sy">${dyUst()}<h1>SOSYAL ETKİNLİKLER KURULU</h1><table><thead><tr><th style="width:8mm">#</th><th style="width:40mm">Görevi</th><th>Adı soyadı</th><th style="width:34mm">İmza</th></tr></thead><tbody>${R.map(([g, a], i) => `<tr><td>${i + 1}</td><td>${g}</td><td>${esc(a || '')}</td><td style="height:9mm"></td></tr>`).join('')}</tbody></table>
+        <p style="margin-top:5mm;font-size:9.5pt">Eğitim Kurumları Sosyal Etkinlikler Yönetmeliği m.6 gereğince oluşturulmuştur.</p>${seImza()}</section>`, false), 'Sosyal Etkinlikler Kurulu', false); return true; }
+    return false;
+  }
+
   // ================================================================ 14) EVDE EĞİTİM ALAN ÖĞRENCİLER (27 Kasım 2026)
   // Resmî yazı (PDF, Word ya da metni yapıştırarak) okunur: öğrenci okul listesinden bulunur, yazının sayısı/tarihi ve eğitim dönemi alınır;
   // öğrencinin aldığı dersler, haftalık saatleri ve dersin öğretmenleri sınıfının ders programından kendiliğinden yazılır.
@@ -2164,7 +2401,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti, sosyal: SE.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -2172,13 +2409,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi, sosyal: seGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -2194,6 +2431,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'video') return video();
     if (id === 'site') return siteIcerik();
     if (id === 'evde') return evde();
+    if (id === 'sosyal') return sosyal();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
