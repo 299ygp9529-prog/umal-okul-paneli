@@ -26,6 +26,22 @@ p{margin:8px 0;font-size:16.5px}ul{margin:8px 0 8px 22px;font-size:16.5px}li{mar
 .kutu{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 6px 20px rgba(15,26,48,.07);margin-top:14px}
 .giris{display:inline-block;margin-top:14px;background:var(--hardal);color:#1a1300;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px}
 footer{background:var(--koyu);color:#c7cfdd;text-align:center;padding:22px;font-size:13.5px}footer a{color:#ffd43b;text-decoration:none}
+/* Klip: görsele dokununca açılır; video yalnız tıklanınca iner (preload none) */
+.klip{position:relative;display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;border-radius:18px;overflow:hidden;margin-bottom:30px;box-shadow:0 10px 30px rgba(15,26,48,.15);text-align:left;font:inherit}
+.klip img.gorsel{margin:0;box-shadow:none;border-radius:0;transition:transform .4s}.klip:hover img.gorsel{transform:scale(1.015)}
+.klip:focus-visible{outline:3px solid #e8a92a;outline-offset:3px}
+.klip-dug{position:absolute;left:6.5%;bottom:3.5%;display:flex;align-items:center;gap:12px;background:rgba(7,14,32,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid rgba(255,212,59,.55);border-radius:999px;padding:7px 20px 7px 7px;color:#fff;font-family:Inter,system-ui,sans-serif;line-height:1.25}
+.klip-oyn{flex:none;width:44px;height:44px;border-radius:50%;background:#ffd43b;display:grid;place-items:center;box-shadow:0 0 0 5px rgba(255,212,59,.22),0 0 24px rgba(34,232,255,.55);animation:klipNabiz 2.2s ease-in-out infinite}
+@keyframes klipNabiz{50%{box-shadow:0 0 0 9px rgba(255,212,59,.10),0 0 30px rgba(34,232,255,.7)}}
+.klip-oyn i{width:0;height:0;border-left:14px solid #14213d;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.klip-dug b{display:block;font:800 17px Poppins,Inter,sans-serif}
+.klip-dug small{display:block;font:600 11.5px Inter,sans-serif;color:#9fdcf0;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:2px}
+.klip-sure{font:700 13px Inter,sans-serif;color:#ffd43b;margin-left:6px;padding-left:12px;border-left:1px solid rgba(255,255,255,.25)}
+@media (max-width:640px){.klip{border-radius:14px}.klip-dug{left:4%;bottom:4%;gap:7px;padding:3px 10px 3px 3px;border-width:1px}.klip-oyn{width:24px;height:24px;box-shadow:0 0 0 3px rgba(255,212,59,.22),0 0 12px rgba(34,232,255,.5);animation:none}.klip-oyn i{border-left-width:8px;border-top-width:5px;border-bottom-width:5px;margin-left:2px}.klip-dug small{display:none}.klip-dug b{font-size:11px}.klip-sure{font-size:10px;padding-left:7px;margin-left:1px}}
+@media (prefers-reduced-motion:reduce){.klip-oyn{animation:none}.klip img.gorsel{transition:none}}
+.klip-perde{position:fixed;inset:0;z-index:50;background:rgba(5,10,22,.92);display:none;align-items:center;justify-content:center;padding:20px}
+.klip-perde.acik{display:flex}.klip-perde video{width:min(100%,calc((100vh - 40px) * 16 / 9));aspect-ratio:16/9;border-radius:14px;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.klip-kapat{position:absolute;top:14px;right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font:400 28px/44px Inter,sans-serif;cursor:pointer}.klip-kapat:hover{background:rgba(255,255,255,.22)}
 </style>
 </head>
 <body>
@@ -34,7 +50,7 @@ footer{background:var(--koyu);color:#c7cfdd;text-align:center;padding:22px;font-
   <div class="tarih">26 KASIM 2026</div>
   <h1>Atlas artık yayında</h1>
   <p class="ozet">Okulumuzda geliştirilen Atlas, okul yönetiminden sınıftaki akıllı tahtaya, öğretmenden veliye okulun günlük işlerini tek bir sistemde topluyor. Atlas iki parçadan oluşuyor: <b>umalatlas.com.tr</b> adresindeki okul paneli ve sınıflardaki akıllı tahtalarda çalışan <b>Atlas Tahta</b>.</p>
-  <img class="gorsel" src="atlas-yayinda.jpg" alt="Atlas maskotu ve okul amblemi">
+  <button type="button" class="klip" id="klipAc" aria-label="Atlas klibini oynat: Okulun Hafızası, 2 dakika 1 saniye"><img class="gorsel" src="atlas-yayinda.jpg" alt="Atlas maskotu ve okul amblemi"><span class="klip-dug" aria-hidden="true"><span class="klip-oyn"><i></i></span><span><small>Atlas · Okulun Hafızası</small><b>İstersen kendimi anlatayım</b></span><span class="klip-sure">2:01</span></span></button>
 
   <h2>Atlas Tahta: sınıftaki akıllı tahtada</h2>
   <ul>
@@ -90,5 +106,17 @@ footer{background:var(--koyu);color:#c7cfdd;text-align:center;padding:22px;font-
   </div>
 </main>
 <footer>© Ümraniye Merkez Anadolu Lisesi · <a href="../">Okul sitesi</a> · <a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></footer>
+<div class="klip-perde" id="klipPerde" role="dialog" aria-modal="true" aria-label="Atlas klibi: Okulun Hafızası"><button type="button" class="klip-kapat" id="klipKapat" aria-label="Kapat">×</button><video id="klipVideo" controls playsinline preload="none" poster="atlas-yayinda.jpg"></video></div>
+<script>
+(function () {
+  var ac = document.getElementById('klipAc'), perde = document.getElementById('klipPerde'), v = document.getElementById('klipVideo'), kapat = document.getElementById('klipKapat');
+  function goster() { if (!v.getAttribute('src')) v.src = 'atlas-klip.mp4?v=1'; perde.classList.add('acik'); document.body.style.overflow = 'hidden'; var p = v.play(); if (p && p.catch) p.catch(function () {}); kapat.focus(); }
+  function gizle() { v.pause(); perde.classList.remove('acik'); document.body.style.overflow = ''; ac.focus(); }
+  ac.addEventListener('click', goster);
+  kapat.addEventListener('click', gizle);
+  perde.addEventListener('click', function (e) { if (e.target === perde) gizle(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && perde.classList.contains('acik')) gizle(); });
+})();
+</script>
 </body>
 </html>
