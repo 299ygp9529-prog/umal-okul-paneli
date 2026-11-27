@@ -178,7 +178,7 @@ body.okul-site #osHero { top: 46%; }
 #osSag .os-sd { background: rgba(8,18,38,.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(198,40,40,.55); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); font-family: Inter, system-ui, sans-serif; }
 #osSag .os-sd-k { display: none; color: #fff; text-decoration: none; } #osSag .os-sd-k.acik { display: block; animation: osSdGir .5s ease; }
 @keyframes osSdGir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-#osSag .os-sd-res { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; } #osSag .os-sd-res img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
+#osSag .os-sd-res { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; } #osSag .os-sd-res img { width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; transition: transform .5s; }
 #osSag .os-sd-k:hover img { transform: scale(1.04); }
 #osSag .os-sd-et { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 7px; background: #c62828; color: #fff; font-weight: 800; font-size: 11.5px; letter-spacing: 1.2px; padding: 5px 11px; border-radius: 99px; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
 #osSag .os-sd-et i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: osSdNabiz 1.4s infinite; } @keyframes osSdNabiz { 50% { opacity: .25; } }
@@ -265,7 +265,7 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
 </div>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.bg-ac[open]").forEach(function(d){if(!d.contains(e.target))d.removeAttribute("open");});});</script>
 <script src="okul/dilek.js?v=202611270705"></script>
-<script src="okul/haberler.js?v=202611270755"></script>
+<script src="okul/haberler.js?v=202611270800"></script>
 <script src="okul/videolar.js?v=202611270600"></script>
 <script src="okul/icerik.js?v=202611270700"></script>
 <script>/* okul sitesi modu: bilgisayar + giriş ekranı açık + uygulama olarak yüklenmemiş */
