@@ -1,6 +1,7 @@
 /* Okul sitesi haberleri (26 Kasım 2026). Yeni haber en üste eklenir. Adresler okul/ klasörüne göredir. */
 (function () {
   var HABERLER = [
+    { tarih: '27 KASIM 2026 · YENİ', baslik: 'Okul Satranç Turnuvası başlıyor: kayıtlar açık', ozet: "Bütün okul tek turnuvada. Maçlar Atlas'tan oynanıyor, final tahtalarda canlı. Birinciye 500 TL, ikinciye 300 TL, üçüncüye 200 TL.", gorsel: 'haber/turnuva.jpg', adres: 'haber/turnuva.html', son: true },
     { tarih: '27 KASIM 2026 · YENİ', baslik: "Atlas'ta satranç ve mangala: okul arkadaşlarınla canlı oyna", ozet: "Öğrencilerimiz artık Atlas üzerinden birbirleriyle canlı satranç ve mangala oynayabiliyor. Rakip bul, arkadaşını davet et ya da kodla oyna.", gorsel: 'haber/oyunlar.jpg', adres: 'haber/oyunlar.html', son: true },
     { tarih: '27 KASIM 2026 · YENİ', baslik: "Çanakkale'deydik: Tarihin kalbinde unutulmaz bir gün", ozet: "Öğrencilerimiz Çanakkale Savaşları Gelibolu Tarihi Alanı'nı ziyaret etti; Şehitler Abidesi'nde saygı duruşunda bulunduk. Gezimizi fotoğraflarla anlattık.", gorsel: 'haber/canakkale-2.jpg', adres: 'haber/canakkale-gezisi.html', son: true },
     { tarih: '26 KASIM 2026', baslik: 'Atlas artık yayında', ozet: 'Okul paneli ve sınıflardaki Atlas Tahta yayında. İdare, öğretmen, rehberlik ve velilerin Atlas ile neler yapabildiğini haberimizde bulabilirsiniz.', gorsel: 'haber/atlas-yayinda.jpg', adres: 'haber/atlas-yayinda.html' }
