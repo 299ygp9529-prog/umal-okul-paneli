@@ -8639,13 +8639,60 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
   }
 
   // ------------------------------------------------------------------ Gönder (tahtalara duyuru)
+  // 27 Kasım 2026: Acil Mesaj › Hazır mesajlar. Dokununca başlık ve metin dolar; köşeli parantezli yerler doldurulmak üzere seçilir.
+  // İdarenin kendi kaydettiği hazır mesajlar umal_ayarlar 'acil_hazir' anahtarında (bütün yöneticiler ortak görür).
+  const ACIL_HAZIR = [
+    ['Sınavlar', [
+      ['Telafi sınavı başlıyor', 'Telafi sınavınız birazdan başlıyor. Sınava girecek öğrencilerin sınav salonlarına geçmesi gerekmektedir.'],
+      ['Sınav programı yayımlandı', 'Sınav programı yayımlanmıştır. Okul sitesinden ve okulumuzun sosyal medya hesaplarından takip edebilirsiniz.'],
+      ['Sınav raporları', 'Sınav zamanlarında aldığınız raporları 2 gün içinde okul idaresine teslim etmezseniz telafi sınavlarına giremezsiniz.'],
+      ['Sınav salonlarına geçiş', 'Sınav birazdan başlıyor. Öğrencilerin sınav salonlarındaki yerlerine geçmesi, öğretmenlerimizin salonlarına gitmesi gerekmektedir.'],
+      ['Sorumluluk sınavı', 'Sorumluluk sınavına girecek öğrencilerin sınav programını kontrol etmesi ve sınav saatinden önce salonda hazır bulunması gerekmektedir.']]],
+    ['Rapor ve belgeler', [
+      ['Rapor teslimi', 'Aldığınız raporları 3 gün içerisinde okul idaresine teslim etmeniz gerekmektedir.'],
+      ['İzin belgesi', 'Okuldan izinli ayrılacak öğrencilerin izin belgesini velisine imzalatıp okul idaresine teslim etmesi gerekmektedir.'],
+      ['Eksik evrak', 'Okul idaresine teslim edilmesi gereken belgesi eksik olan öğrencilerin [tarih] tarihine kadar idareye uğraması gerekmektedir.']]],
+    ['Okul duyuruları', [
+      ['Veli toplantısı', 'Veli toplantımız [tarih] günü saat [saat]\'te sınıflarda yapılacaktır. Velilerimizin katılımını rica ederiz.'],
+      ['Ders saatleri değişti', 'Bugün ders saatleri değişmiştir. Güncel ders zaman çizelgesi okul sitesinde yayımlanmıştır.'],
+      ['Servis', 'Servis öğrencilerinin dersten sonra servis bekleme alanında toplanması gerekmektedir.'],
+      ['İdareye çağrı', '[Sınıf] sınıfından [öğrenci adı] adlı öğrencinin okul idaresine gelmesi gerekmektedir.']]],
+    ['Tören ve tatbikat', [
+      ['Tören', 'Tören birazdan başlıyor. Öğrencilerin öğretmenleri eşliğinde okul bahçesinde toplanması gerekmektedir.'],
+      ['Deprem tatbikatı', 'TATBİKAT: Deprem tatbikatı başlıyor. Çök, kapan, tutun pozisyonu alın; sarsıntı bittiğinde öğretmeninizle birlikte sakin bir şekilde toplanma alanına çıkın.'],
+      ['Yangın tatbikatı', 'TATBİKAT: Yangın tatbikatı başlıyor. Koşmadan, öğretmeninizin yönlendirmesiyle en yakın çıkıştan toplanma alanına çıkın.']]],
+    ['Öğretmenlere', [
+      ['Öğretmenler toplantısı', 'Öğretmenler toplantısı [saat]\'te öğretmenler odasında yapılacaktır. Öğretmenlerimizin katılımını rica ederiz.'],
+      ['Yoklama', 'e-Okul ders yoklamalarının ders bitmeden girilmesini rica ederiz.'],
+      ['Nöbetçi öğretmen', 'Nöbetçi öğretmenlerimizin teneffüslerde nöbet yerlerinde bulunmasını rica ederiz.']]]];
+  async function acilHazir() {
+    const k = document.getElementById('gHazir'); if (!k) return; let kendi = [], acik = '';
+    try { const { data } = await sb.from('umal_ayarlar').select('deger').eq('anahtar', 'acil_hazir').maybeSingle(); kendi = data && data.deger ? JSON.parse(data.deger) : []; if (!Array.isArray(kendi)) kendi = []; } catch (e) { kendi = []; }
+    const G = () => (kendi.length ? [['Kaydettiklerim', kendi.map(x => [x.b, x.m])]] : []).concat(ACIL_HAZIR);
+    const ciz = () => { const L = G(); if (!acik || !L.some(g => g[0] === acik)) acik = L[0][0];
+      k.innerHTML = `<h2>Hazır mesajlar</h2><div class="soluk kucuk" style="margin:-2px 0 8px">Birine dokunun; başlık ve mesaj dolar, isterseniz değiştirip gönderin. Köşeli parantezli yerleri kendiniz doldurun.</div>
+        <div class="cipler" style="margin-bottom:8px">${L.map(g => `<button class="cip ${g[0] === acik ? 'secili' : ''}" data-hg="${esc(g[0])}">${esc(g[0])}</button>`).join('')}</div>
+        <div class="cipler">${(L.find(g => g[0] === acik) || L[0])[1].map((m, i) => `<button class="cip" data-hm="${i}" title="${esc(m[1])}" style="border-style:dashed">${esc(m[0])}</button>${acik === 'Kaydettiklerim' ? `<button class="bag kucuk" data-hx="${i}" aria-label="${esc(m[0])} sil" style="color:var(--kirmizi);margin:0 6px 0 -4px">×</button>` : ''}`).join('')}</div>
+        <div class="dugmeler" style="justify-content:flex-start;margin:8px 0 0"><button class="bag kucuk" data-hk="1">Yazdığımı hazır mesaj olarak kaydet</button></div>`; };
+    ciz();
+    k.onclick = async ev => { const b = ev.target.closest('button'); if (!b) return; ev.preventDefault();
+      if (b.dataset.hg) { acik = b.dataset.hg; ciz(); return; }
+      if (b.dataset.hm != null) { const m = (G().find(g => g[0] === acik) || [0, []])[1][+b.dataset.hm]; if (!m) return; $('#gBaslik').value = m[0]; const t = $('#gMetin'); t.value = m[1]; t.focus();
+        const a = m[1].indexOf('['); if (a >= 0) t.setSelectionRange(a, m[1].indexOf(']', a) + 1); return; }
+      if (b.dataset.hk) { const bs = ($('#gBaslik').value || '').trim(), mt = ($('#gMetin').value || '').trim(); if (!mt) { uyar('Önce kaydedilecek mesajı yazın.'); return; }
+        const ad = bs || mt.slice(0, 40); kendi = kendi.filter(x => x.b !== ad).concat([{ b: ad.slice(0, 60), m: mt.slice(0, 2000) }]).slice(-30);
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'acil_hazir', deger: JSON.stringify(kendi) }, { onConflict: 'anahtar' });
+        if (error) { uyar('Kaydedilemedi: ' + hataYaz(error)); return; } acik = 'Kaydettiklerim'; ciz(); uyar('Hazır mesajlara eklendi. Bütün yöneticiler görür.'); return; }
+      if (b.dataset.hx != null) { const x = kendi[+b.dataset.hx]; if (!x || !(await onayla(`"${x.b}" hazır mesajlardan silinsin mi?`))) return; kendi = kendi.filter(y => y !== x);
+        const { error } = await sb.from('umal_ayarlar').upsert({ anahtar: 'acil_hazir', deger: JSON.stringify(kendi) }, { onConflict: 'anahtar' }); if (error) { uyar('Silinemedi: ' + hataYaz(error)); return; } ciz(); } };
+  }
   async function gonder(kapla) {
     const { data: ay } = await sb.from('umal_ayarlar').select('anahtar,deger').eq('anahtar', 'siniflar').maybeSingle();
     const siniflar = String((ay && ay.deger) || '').split('\n').map(s => s.trim()).filter(Boolean);
     const hedef = new Set(['*']);
     $('#icerik').innerHTML = `<h1>${kapla ? 'Acil Mesaj' : 'Gönder'}</h1>${kapla ? '<div class="turuncu" style="margin-top:4px">Açık olan tahtalar en geç 20 saniyede öne gelir, ekranı kaplar ve uyarı sesi çalar. Öğretmen "Okudum" deyince ya da siz aşağıdan "Kaldır" deyince kalkar. Sınavdaki salonlarda da çıkar.</div>' : '<div class="soluk kucuk">Tahtanın üstünde şerit olarak görünür; yazıyı kapatmaz.</div>'}
       <div class="kart ${kapla ? 'acil-kart' : ''}" style="margin-top:12px">${kapla ? '<h2 style="margin-top:0">Nereye</h2><div class="cipler" id="nereye"><button class="cip secili" data-y="tahta">Tahtalar</button><button class="cip" data-y="web">Öğrenci web paneli</button></div><div class="soluk kucuk" style="margin-top:4px">Öğrenci web panelinde açık olan öğrencilerin ekranı en geç 20 saniyede kaplanır; sayfayı açan öğrenci de görür. (Fotoğraf yalnız tahtalarda.)</div>' : ''}<h2 style="${kapla ? '' : 'margin-top:0'}">${kapla ? 'Hangi sınıflar' : 'Hangi tahtalar'}</h2><div class="cipler" id="hedef"><button class="cip secili" data-h="*">Bütün tahtalar</button>${siniflar.map(s => `<button class="cip" data-h="${esc(s)}">${esc(s)}</button>`).join('')}</div>
-      <h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
+      ${kapla ? '<div id="gHazir"></div>' : ''}<h2>Başlık (isteğe bağlı)</h2><input id="gBaslik" maxlength="120" style="width:100%">
       <h2>Mesaj</h2><textarea id="gMetin" maxlength="2000" placeholder="Mesajınızı yazın"></textarea>
       ${kapla ? `<h2>Fotoğraf (isteğe bağlı)</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><label class="ikincil" style="cursor:pointer">📷 Fotoğraf seç<input type="file" id="gResim" accept="image/*" hidden></label><span class="kucuk soluk" id="gResimAd">Seçilmedi</span><button class="bag gizli" id="gResimSil">Kaldır</button></div><img id="gResimOn" class="gizli" style="max-height:140px;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--cizgi)">
       <h2>Ne zaman</h2><div class="dugmeler" style="justify-content:flex-start;align-items:center;margin:0"><div class="cipler" id="ne" style="margin:0"><button class="cip secili" data-n="simdi">Hemen</button><button class="cip" data-n="saat">Saatinde</button></div><input type="time" id="gSaat" value="09:05" class="gizli" style="width:auto"><span class="kucuk turuncu" id="gSaatBilgi">Saatinde gösterim ve fotoğraf Pro 63 tahtalarda; eski sürümdeki tahta mesajı hemen gösterir.</span></div>` : ''}
@@ -8653,6 +8700,7 @@ ${imzali && satir.length ? `<div class="imza"><h3>ZÜMRE BAŞKANLARI</h3><p clas
       <div class="dugmeler"><button class="birincil" id="gGonder">Gönder</button></div><div class="kucuk" id="gBilgi"></div></div>
       <div class="kart" style="margin-top:12px"><h2 style="margin-top:0">Yayındaki mesajlar</h2><div class="soluk kucuk">"Kaldır" deyince tahtalardan en geç 20 saniyede kalkar; kimsenin "Okudum"a basması gerekmez.</div><div id="gListe" style="margin-top:8px"></div></div>`;
     let sure = 'gun', ne = 'simdi', resim = null;   // K-415: fotoğraf ve zamanlı gösterim
+    if (kapla) acilHazir();   // 27 Kasım 2026: hazır mesajlar
     const yer = new Set(['tahta']);   // K-597: tahtalar / öğrenci web paneli
     if (kapla) {
       $('#nereye').onclick = ev => { const b = ev.target.closest('[data-y]'); if (!b) return; const y = b.dataset.y; yer.has(y) ? yer.delete(y) : yer.add(y); if (!yer.size) yer.add(y === 'tahta' ? 'web' : 'tahta'); document.querySelectorAll('#nereye .cip').forEach(c => c.classList.toggle('secili', yer.has(c.dataset.y))); $('#gGonder').textContent = (yer.has('tahta') && yer.has('web') ? 'Tahtalara ve öğrencilere gönder' : yer.has('web') ? 'Öğrencilere gönder' : 'Tahtalara gönder') + ' (ekranı kaplar)'; };
