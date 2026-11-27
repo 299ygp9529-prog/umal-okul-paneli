@@ -143,7 +143,7 @@ html.atlas-yenile #acilis, #acilis.tikli { display: flex; position: fixed; inset
 <script src="bildirim.js?v=202611191405"></script>
 <script src="sohbet-klavye.js?v=202611211330"></script>
 <script src="telsiz.js?v=202611240400"></script>
-<script src="uygulama.js?v=202611270600"></script>
+<script src="uygulama.js?v=202611270700"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});</script>
 <!-- 26 Kasım 2026: OKUL SİTESİ MODU. Yalnız geniş ekranlı bilgisayarda, giriş ekranı açıkken ve uygulama olarak yüklenmemişken çalışır.
      Giriş ekranı okul sitesinin ana görseline dönüşür; giriş kutusu ve Atatürk köşesi aynı öğelerdir (aynı giriş sistemi). Telefonda ve giriş yapılmışken hiçbir şey değişmez. -->
@@ -195,10 +195,12 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
 <header id="osUst"><div class="os-ic">
   <a class="os-marka" href="#giris"><img src="okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
   <nav><a href="#osHaber">Haberler</a><a href="#osVideo">Videolar</a><a href="#osOkul">Okulumuz</a><a href="#osSaat">Ders Saatleri</a><a href="#osIlt">İletişim</a><a href="#osDilek">Dilek ve Şikâyet</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></nav>
+  <button type="button" data-site-ara aria-label="Sitede ara" style="flex:none;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
 </div></header>
 <div id="osAlt">
   <section class="os-bolum" id="osHaber"><h2>Son Haberler</h2><div class="os-alt">Okulumuzdan haberler</div><div data-haberler="okul/"></div></section>
   <section class="os-bolum" id="osVideo"><h2>Videolar</h2><div class="os-alt">Okulumuzdan videolar</div><div data-videolar="okul/"></div></section>
+  <div data-site-icerik="ust" data-bolum="os-bolum" data-alt="os-alt"></div>
   <section class="os-bolum" id="osOkul"><h2>Okulumuz</h2><div class="os-alt">Vizyonumuz, misyonumuz ve okulumuza ilişkin bilgiler</div>
     <div class="os-iki">
       <div class="os-kart"><h3>Vizyonumuz</h3><p>Toplumu çağdaş uygarlık düzeyine taşımaya aday, birey olabilecek özgüvene sahip, sosyal yönü güçlü, erdemli, anlayışı gelişmiş, başkalarının haklarına saygılı, Vatanını ve Milletini seven bireyler yetiştirmektir.</p></div>
@@ -209,6 +211,7 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
       <tr><th>Eğitim ortamları</th><td>Derslikler, fizik laboratuvarı, kütüphane, çok amaçlı salon, revir</td></tr>
       <tr><th>Altyapı</th><td>Doğalgaz ile ısınma, Fatih Projesi fiber internet bağlantısı</td></tr><tr><th>Servis</th><td>Okul servis hizmeti vardır</td></tr></table></div>
   </section>
+  <div data-site-icerik="alt" data-bolum="os-bolum" data-alt="os-alt"></div>
   <section class="os-bolum" id="osSaat"><h2>Ders Saatleri</h2><div class="os-alt">2026-2027 eğitim öğretim yılı ders zaman çizelgesi</div>
     <div class="os-iki"><div><table class="os-saat"><thead><tr><th>Ders</th><th>Giriş</th><th>Çıkış</th></tr></thead><tbody>
       <tr><td>Derse hazırlık ve toplanma</td><td>07.30</td><td>08.00</td></tr><tr><td>1. ders</td><td>08.00</td><td>08.40</td></tr><tr><td>2. ders</td><td>08.50</td><td>09.30</td></tr>
@@ -229,13 +232,14 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
   <section class="os-bolum" id="osDilek"><h2>Dilek, Öneri ve Şikâyet</h2><div class="os-alt">Görüşlerinizi doğrudan okul idaresine iletin</div><div data-dilek-kutusu></div></section>
   <footer class="os-bant"><div class="os-bant-ic">
     <div class="os-bm"><img src="okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul · (216) 634 04 16</div></div>
-    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
-    <div><b>Atlas</b><a href="#giris">Atlas Girişi</a><br><a href="ogrenci/">Öğrenci girişi</a><br><a href="veli/">Veli girişi</a></div>
+    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.eba.gov.tr" target="_blank" rel="noopener">EBA</a><br><a href="https://mebbis.meb.gov.tr" target="_blank" rel="noopener">MEBBİS</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
+    <div><b>Atlas</b><a href="#giris">Atlas Girişi</a><br><a href="ogrenci/">Öğrenci girişi</a><br><a href="veli/">Veli girişi</a><br><a href="okul/kvkk.html">Kişisel verilerin korunması</a></div>
   </div><div class="os-telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div></footer>
 </div>
-<script src="okul/dilek.js?v=202611262300"></script>
+<script src="okul/dilek.js?v=202611270705"></script>
 <script src="okul/haberler.js?v=202611262300"></script>
 <script src="okul/videolar.js?v=202611270600"></script>
+<script src="okul/icerik.js?v=202611270700"></script>
 <script>/* okul sitesi modu: bilgisayar + giriş ekranı açık + uygulama olarak yüklenmemiş */
 (function () {
   var g = document.getElementById('giris'), ust = document.getElementById('osUst'), alt = document.getElementById('osAlt');

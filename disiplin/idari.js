@@ -30,12 +30,13 @@
     dyk: 'M3.5 5.5h17v14h-17zM3.5 10h17M8 5.5v14M12 13h6M12 16.5h4',
     dilek: 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
     video: 'M3.5 6h17v12h-17zM10 9.5v5l4.5-2.5z',
+    site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['video', 'Site Videoları', 'YouTube linkiyle okul sitesine video']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul Sitesi', 'duyuru, etkinlik takvimi, müdür mesajı, kadro, kulüpler'], ['video', 'Site Videoları', 'YouTube linkiyle okul sitesine video']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1145,6 +1146,104 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   }
   function dlGirdi(ev) { if (ev.target.dataset.dlnot) DL.degisti = true; }
 
+  // ================================================================ 13) OKUL SİTESİ İÇERİKLERİ (27 Kasım 2026)
+  // Okul sitesindeki duyuru, etkinlik takvimi, sayılar, müdür mesajı, kadro, rehberlik, kayıt, yerleşim, kulüp, mezun ve okul aile birliği bölümleri.
+  // Tablo: umal_site_icerik (yazma yalnız bas/yonetici). İçeriği olmayan bölüm sitede görünmez.
+  const SI_TUR = {
+    duyuru: { ad: 'Duyurular', alt: 'Sitede en yeni 8 duyuru görünür', alan: [['baslik', 'Duyuru başlığı', 160], ['tarih', 'Tarih'], ['metin', 'Duyuru metni (isteğe bağlı)', 4000]] },
+    etkinlik: { ad: 'Etkinlik takvimi', alt: 'Yaklaşan etkinlikler tarih sırasıyla, geçmiş son 4 etkinlik soluk görünür', alan: [['baslik', 'Etkinlik adı', 160], ['tarih', 'Tarih'], ['metin', 'Yer, saat ya da kısa açıklama (isteğe bağlı)', 600]] },
+    sayi: { ad: 'Sayılarla okulumuz', alt: 'Sitede büyük rakamlarla görünür', alan: [['deger', 'Sayı (ör. 1965, 1.120, %98)', 40], ['baslik', 'Açıklama (ör. Öğrenci sayısı)', 80]] },
+    kadro: { ad: 'Yönetim kadrosu', alt: 'Müdür ve müdür yardımcıları', alan: [['baslik', 'Ad soyad', 80], ['deger', 'Görevi (ör. Müdür Yardımcısı)', 80]] },
+    ogretmen: { ad: 'Eğitim kadrosu', alt: 'Öğretmenler; sitede branşlarına göre gruplanır', alan: [['baslik', 'Ad soyad', 80], ['deger', 'Branş (ör. Matematik)', 80]] },
+    yerlesim: { ad: 'Üniversite yerleşimleri', alt: 'Yıllara göre yükseköğretim yerleşimleri', alan: [['baslik', 'Yıl (ör. 2026)', 10], ['deger', 'Yerleşen (ör. 214 öğrenci)', 80], ['metin', 'Öne çıkan üniversite ve bölümler (isteğe bağlı)', 1000]] },
+    kulup: { ad: 'Kulüpler', alt: 'Öğrenci kulüpleri ve sosyal etkinlikler', alan: [['baslik', 'Kulüp adı', 120], ['metin', 'Kısa tanıtım (isteğe bağlı)', 600]] },
+    mezun: { ad: 'Mezunlar', alt: 'Mezunlarımıza duyurular', alan: [['baslik', 'Başlık', 160], ['tarih', 'Tarih'], ['metin', 'Metin (isteğe bağlı)', 4000]] },
+    oab: { ad: 'Okul aile birliği', alt: 'Genel kurul, rapor ve duyurular', alan: [['baslik', 'Başlık', 160], ['tarih', 'Tarih'], ['metin', 'Metin (isteğe bağlı)', 4000]] },
+    sayfa: { ad: 'Sayfalar', alt: 'Müdür mesajı, rehberlik servisi, kayıt ve nakil' } };
+  const SI_SAYFA = [['mudur', 'Okul müdürümüzün mesajı', 'Sitede "Okul Müdürümüzün Mesajı" başlığıyla, altında müdürün adıyla görünür.'], ['rehberlik', 'Rehberlik servisi', 'Rehberlik servisinin tanıtımı, görüşme saatleri, veli bilgilendirmeleri.'], ['kayit', 'Kayıt ve nakil', '9. sınıf kayıt dönemi, nakil işlemleri, istenen belgeler.']];
+  const SI = { L: [], tur: 'duyuru', duz: '', f: {}, degisti: false };
+  const siBugun = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  async function siteIcerik() {
+    kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
+    const { data, error } = await C.sb.from('umal_site_icerik').select('*').order('sira').order('tarih', { ascending: false });
+    if (error) { kok.innerHTML = bas('Okul Sitesi') + `<div class="kart">${/umal_site_icerik|relation|does not exist|schema cache/i.test(error.message || '') ? 'Bu bölüm için veritabanı kurulumu gerekiyor: <b>veritabani/sql/20261127070000_umal_site_icerik.sql</b> dosyası Supabase SQL düzenleyicisinde bir kez çalıştırılmalı.' : esc(C.hataYaz(error))}</div>`; return; }
+    SI.L = data || []; SI.f = { tarih: siBugun() }; siCiz();
+  }
+  function siCiz() {
+    const T = SI_TUR[SI.tur], L = SI.L.filter(x => x.tur === SI.tur); if (SI.tur === 'ogretmen') L.sort((a, b) => (a.deger || '').localeCompare(b.deger || '', tr) || a.baslik.localeCompare(b.baslik, tr));
+    const cip = Object.entries(SI_TUR).map(([k, v]) => `<button class="cip ${SI.tur === k ? 'secili' : ''}" data-situr="${k}">${v.ad}${k !== 'sayfa' ? ' · ' + SI.L.filter(x => x.tur === k).length : ''}</button>`).join('');
+    let ic = '';
+    if (SI.tur === 'sayfa') {
+      ic = SI_SAYFA.map(([k, ad, alt]) => { const x = SI.L.find(y => y.tur === 'sayfa' && y.baslik === k) || {}; return `<div class="kart"><b style="font-size:15px">${ad}</b><div class="soluk kucuk" style="margin:3px 0 8px">${alt}${x.guncel ? ' · son güncelleme ' + esc(new Date(x.guncel).toLocaleDateString('tr-TR')) : ''}</div>
+        ${k === 'mudur' ? `<label class="soluk kucuk" style="display:block;margin-bottom:8px">Müdürün adı soyadı<input data-sisayfaad="${k}" value="${esc(x.deger != null ? x.deger : MUDUR)}" maxlength="80" style="display:block;width:100%;margin-top:4px"></label>` : ''}
+        <textarea data-sisayfa="${k}" rows="8" maxlength="8000" style="width:100%" placeholder="Paragrafları boş satırla ayırın.">${esc(x.metin || '')}</textarea>
+        <div class="dugmeler" style="justify-content:flex-start;margin:8px 0 0"><button class="birincil" data-sisayfakaydet="${k}">Kaydet</button>${x.id ? `<button class="ikincil" data-sisayfagoster="${k}">${x.yayinda ? 'Sitede gizle' : 'Sitede göster'}</button><span class="soluk kucuk">${x.yayinda ? 'Sitede görünüyor' : 'Gizli'}</span>` : '<span class="soluk kucuk">Henüz yazılmadı; sitede görünmüyor.</span>'}</div></div>`; }).join('');
+    } else {
+      const duz = SI.duz ? SI.L.find(x => x.id === SI.duz) : null;
+      const aktar = ['kadro', 'ogretmen'].includes(SI.tur) ? `<div class="kart"><b style="font-size:15px">Ders programından aktar</b><div class="soluk kucuk" style="margin:3px 0 8px">Öğretmenler ders programından branşlarıyla (en çok girdikleri ders) eklenir. Okul müdürü eklenir; panelde İdare yetkisi olanlar <b>gizli</b> olarak "Müdür Yardımcısı" diye eklenir, kontrol edip doğru olanları yayınlayın. Listede zaten olanlar tekrar eklenmez.</div><button class="birincil" data-six="aktar">Aktar</button></div>` : '';
+      ic = aktar + `<div class="kart"><b style="font-size:15px">${duz ? 'Düzenle' : 'Yeni ekle'}</b><div class="soluk kucuk" style="margin:3px 0 8px">${T.alt}</div><div class="id-form">
+        ${T.alan.map(([a, et, uz]) => a === 'metin' ? `<label class="genis">${et}<textarea data-sialan="metin" rows="3" maxlength="${uz}">${esc(SI.f.metin || '')}</textarea></label>` : a === 'tarih' ? `<label>${et}<input type="date" data-sialan="tarih" value="${esc(SI.f.tarih || '')}"></label>` : `<label>${et}<input data-sialan="${a}" maxlength="${uz}" value="${esc(SI.f[a] || '')}"></label>`).join('')}</div>
+        <div class="dugmeler" style="justify-content:flex-start;margin:12px 0 0"><button class="birincil" data-six="kaydet">${duz ? 'Değişikliği kaydet' : 'Ekle ve yayınla'}</button>${duz ? '<button class="ikincil" data-six="vazgec">Vazgeç</button>' : ''}</div></div>
+        ${L.map((x, i) => `<div class="kart" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;${x.yayinda ? '' : 'opacity:.6'}${SI.duz === x.id ? ';border-color:rgba(255,212,59,.6)' : ''}">
+          <div style="flex:1;min-width:200px">${x.tarih ? `<span class="soluk kucuk">${esc(new Date(x.tarih + 'T12:00').toLocaleDateString('tr-TR'))}</span> ` : ''}${x.deger && SI.tur === 'sayi' ? `<b style="color:#ffd43b;font-size:18px;margin-right:6px">${esc(x.deger)}</b>` : ''}<b style="font-size:15px">${esc(x.baslik)}</b>${x.deger && SI.tur !== 'sayi' ? ` <span class="soluk">· ${esc(x.deger)}</span>` : ''}
+            ${x.metin ? `<div class="soluk kucuk" style="margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap">${esc(x.metin)}</div>` : ''}<div class="soluk kucuk" style="margin-top:3px">${x.yayinda ? 'Sitede görünüyor' : 'Gizli'}</div></div>
+          <div class="dugmeler" style="margin:0">${['duyuru', 'etkinlik', 'mezun', 'oab', 'yerlesim', 'ogretmen'].includes(SI.tur) ? '' : `<button class="ikincil" data-siyukari="${x.id}" ${i ? '' : 'disabled'} aria-label="Yukarı taşı">↑</button><button class="ikincil" data-siasagi="${x.id}" ${i < L.length - 1 ? '' : 'disabled'} aria-label="Aşağı taşı">↓</button>`}
+            <button class="ikincil" data-siduz="${x.id}">Düzenle</button><button class="ikincil" data-sigoster="${x.id}">${x.yayinda ? 'Gizle' : 'Yayınla'}</button><button class="ikincil" data-sisil="${x.id}" style="color:#ff6b6b">Sil</button></div></div>`).join('') || '<div class="kart soluk">Bu bölümde henüz içerik yok; sitede görünmüyor.</div>'}`;
+    }
+    kok.innerHTML = bas('Okul Sitesi', 'Okul sitesindeki bölümler · yalnız idare yazar · boş bölüm sitede görünmez', '<a class="ikincil" href="okul/" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') +
+      `<div class="kart"><div class="cipler">${cip}</div><div id="idBilgi" class="id-bilgi"></div></div>${ic}`;
+  }
+  function siGirdi(ev) { const t = ev.target; if (t.dataset.sialan) { SI.f[t.dataset.sialan] = t.value; SI.degisti = true; } if (t.dataset.sisayfa || t.dataset.sisayfaad) SI.degisti = true; }
+  async function siGuncelle(id, alan) { const { error } = await C.sb.from('umal_site_icerik').update({ ...alan, guncel: new Date().toISOString(), ekleyen: C.eposta }).eq('id', id); if (error) throw error; Object.assign(SI.L.find(x => x.id === id) || {}, alan, { guncel: new Date().toISOString() }); }
+  async function siTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset;
+    try {
+      if (d.situr) { if (SI.degisti && !await onayla('Kaydedilmemiş değişiklik var. Yine de geçilsin mi?')) return true; SI.tur = d.situr; SI.duz = ''; SI.f = { tarih: siBugun() }; SI.degisti = false; siCiz(); return true; }
+      if (d.six === 'aktar') {
+        const var_ = new Set(SI.L.filter(x => x.tur === 'ogretmen' || x.tur === 'kadro').map(x => x.tur + '|' + x.baslik.toLocaleLowerCase('tr')));
+        const yeni = [], ekle = (tur, baslik, deger, yayinda) => { const k = tur + '|' + baslik.toLocaleLowerCase('tr'); if (!baslik || var_.has(k)) return; var_.add(k); yeni.push({ tur, baslik: baslik.slice(0, 160), deger: (deger || '').slice(0, 160) || null, yayinda, sira: 0, ekleyen: C.eposta }); };
+        ekle('kadro', MUDUR, 'Okul Müdürü', true);
+        let myNot = '';
+        try { const [y, o] = await Promise.all([C.sb.from('umal_yoneticiler').select('eposta,rol'), C.sb.from('umal_ogretmenler').select('eposta,ad')]);
+          if (y.error || o.error) throw (y.error || o.error); const ad = new Map((o.data || []).map(x => [x.eposta, x.ad]));
+          (y.data || []).filter(x => x.rol === 'yonetici').forEach(x => { const a = ad.get(x.eposta); if (a && a.toLocaleLowerCase('tr') !== MUDUR.toLocaleLowerCase('tr')) ekle('kadro', a, 'Müdür Yardımcısı', false); });
+        } catch (e) { myNot = ' Müdür yardımcıları yetki listesinden okunamadı; elle ekleyin.'; }
+        const P = ogretmenler(); P.forEach(t => ekle('ogretmen', t.ad, zmBrans(t.brans), true));
+        if (!P.length) myNot += ' Ders programı bulunamadı; öğretmenler eklenemedi.';
+        if (!yeni.length) { bilgi('Eklenecek yeni kişi yok; hepsi listede.' + myNot, myNot ? 'kirmizi' : 'yesil'); return true; }
+        const { data, error } = await C.sb.from('umal_site_icerik').insert(yeni).select(); if (error) throw error;
+        SI.L = SI.L.concat(data || []); siCiz();
+        const nO = yeni.filter(x => x.tur === 'ogretmen').length, nK = yeni.filter(x => x.tur === 'kadro').length;
+        bilgi(`${nO} öğretmen ve ${nK} yönetici eklendi.${yeni.some(x => !x.yayinda) ? ' Müdür yardımcısı olarak eklenenler gizli; Yönetim kadrosu sekmesinde kontrol edip yayınlayın.' : ''}${myNot}`, 'yesil'); return true;
+      }
+      if (d.six === 'vazgec') { SI.duz = ''; SI.f = { tarih: siBugun() }; SI.degisti = false; siCiz(); return true; }
+      if (d.six === 'kaydet') {
+        const T = SI_TUR[SI.tur], f = SI.f, kay = {};
+        for (const [a, et, uz] of T.alan) { const v = String(f[a] || '').trim(); kay[a] = v ? (uz ? v.slice(0, uz) : v) : null; }
+        if (!kay.baslik) { bilgi(T.alan.find(x => x[0] === 'baslik')[1] + ' boş olamaz.', 'kirmizi'); return true; }
+        if (SI.tur === 'etkinlik' && !kay.tarih) { bilgi('Etkinliğin tarihini seçin.', 'kirmizi'); return true; }
+        if (SI.tur === 'sayi' && !kay.deger) { bilgi('Sayıyı yazın.', 'kirmizi'); return true; }
+        if (SI.duz) { await siGuncelle(SI.duz, kay); bilgi('Kaydedildi.', 'yesil'); }
+        else { const sira = SI.L.filter(x => x.tur === SI.tur).length; const { data, error } = await C.sb.from('umal_site_icerik').insert({ tur: SI.tur, ...kay, sira, ekleyen: C.eposta }).select().single(); if (error) throw error; SI.L.push(data); }
+        const yeni = !SI.duz; SI.duz = ''; SI.f = { tarih: siBugun() }; SI.degisti = false; siCiz(); bilgi(yeni ? 'Eklendi; okul sitesinde görünüyor.' : 'Kaydedildi.', 'yesil'); return true;
+      }
+      if (d.siduz) { const x = SI.L.find(y => y.id === d.siduz); SI.duz = x.id; SI.f = { baslik: x.baslik, metin: x.metin || '', deger: x.deger || '', tarih: x.tarih || '' }; siCiz(); kok.querySelector('[data-sialan]').focus(); return true; }
+      if (d.sigoster) { const x = SI.L.find(y => y.id === d.sigoster); await siGuncelle(x.id, { yayinda: !x.yayinda }); siCiz(); bilgi(x.yayinda ? 'Sitede yeniden görünüyor.' : 'Sitede gizlendi.', 'yesil'); return true; }
+      if (d.sisil) { const x = SI.L.find(y => y.id === d.sisil); if (!await onayla(`"${x.baslik}" silinsin mi? Bu işlem geri alınamaz.`)) return true;
+        const { error } = await C.sb.from('umal_site_icerik').delete().eq('id', x.id); if (error) throw error; SI.L = SI.L.filter(y => y.id !== x.id); if (SI.duz === x.id) { SI.duz = ''; SI.f = { tarih: siBugun() }; } siCiz(); bilgi('Silindi.', 'yesil'); return true; }
+      if (d.siyukari || d.siasagi) { const L = SI.L.filter(x => x.tur === SI.tur), i = L.findIndex(x => x.id === (d.siyukari || d.siasagi)), j = d.siyukari ? i - 1 : i + 1; [L[i], L[j]] = [L[j], L[i]];
+        for (let k = 0; k < L.length; k++) if (L[k].sira !== k) { const { error } = await C.sb.from('umal_site_icerik').update({ sira: k }).eq('id', L[k].id); if (error) throw error; L[k].sira = k; }
+        SI.L = SI.L.filter(x => x.tur !== SI.tur).concat(L); siCiz(); return true; }
+      if (d.sisayfakaydet) { const k = d.sisayfakaydet, metin = (kok.querySelector(`[data-sisayfa="${k}"]`).value || '').trim().slice(0, 8000), adG = kok.querySelector(`[data-sisayfaad="${k}"]`), deger = adG ? adG.value.trim().slice(0, 80) || null : null;
+        const x = SI.L.find(y => y.tur === 'sayfa' && y.baslik === k);
+        if (x) await siGuncelle(x.id, { metin: metin || null, deger });
+        else { if (!metin) { bilgi('Önce metni yazın.', 'kirmizi'); return true; } const { data, error } = await C.sb.from('umal_site_icerik').insert({ tur: 'sayfa', baslik: k, metin, deger, ekleyen: C.eposta }).select().single(); if (error) throw error; SI.L.push(data); }
+        SI.degisti = false; siCiz(); bilgi(metin ? 'Kaydedildi; okul sitesinde görünüyor.' : 'Metin boş bırakıldı; bölüm sitede görünmez.', 'yesil'); return true; }
+      if (d.sisayfagoster) { const x = SI.L.find(y => y.tur === 'sayfa' && y.baslik === d.sisayfagoster); await siGuncelle(x.id, { yayinda: !x.yayinda }); siCiz(); bilgi(x.yayinda ? 'Sitede görünüyor.' : 'Sitede gizlendi.', 'yesil'); return true; }
+    } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); return true; }
+    return false;
+  }
+
   // ================================================================ 12) SİTE VİDEOLARI (27 Kasım 2026)
   // Video YouTube'a yüklenir, linki buraya yapıştırılır; okul sitesinin Videolar bölümünde görünür. Tablo: umal_site_video (yazma yalnız bas/yonetici).
   const VD = { L: [], on: '' };
@@ -1961,7 +2060,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -1969,13 +2068,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik }[aktif])(ev);
     };
     kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -1989,6 +2088,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'dyk') return dyk();
     if (id === 'dilek') return dilek();
     if (id === 'video') return video();
+    if (id === 'site') return siteIcerik();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;

@@ -61,7 +61,7 @@ nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100p
 <header class="ust"><div class="ust-ic">
   <a class="marka" href="#"><img src="../okul-logo.png" alt="Ümraniye Merkez Anadolu Lisesi amblemi"><div><b>Ümraniye Merkez Anadolu Lisesi</b><small>İSTANBUL · ÜMRANİYE · 1965</small></div></a>
   <nav><a href="#haberler">Haberler</a><a href="#videolar">Videolar</a><a href="#okulumuz">Okulumuz</a><a href="#saatler">Ders Saatleri</a><a href="#iletisim">İletişim</a><a href="#dilek">Dilek ve Şikâyet</a><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB Sitemiz</a><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></nav>
-  <a class="giris" href="../">Atlas Girişi</a>
+  <div style="display:flex;gap:10px;align-items:center"><button type="button" data-site-ara aria-label="Sitede ara" style="flex:none;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button><a class="giris" href="../">Atlas Girişi</a></div>
 </div></header>
 
 <section class="kahraman"><div class="k-ic">
@@ -88,6 +88,8 @@ nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100p
   <div data-videolar=""></div>
 </section>
 
+<div data-site-icerik="ust" data-bolum="bolum" data-alt="alt"></div>
+
 <section class="bolum" id="okulumuz">
   <h2>Okulumuz</h2><div class="alt">Vizyonumuz, misyonumuz ve okulumuza ilişkin bilgiler</div>
   <div class="iki">
@@ -105,6 +107,8 @@ nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100p
     </table>
   </div>
 </section>
+
+<div data-site-icerik="alt" data-bolum="bolum" data-alt="alt"></div>
 
 <section class="bolum" id="saatler">
   <h2>Ders Saatleri</h2><div class="alt">2026-2027 eğitim öğretim yılı ders zaman çizelgesi</div>
@@ -160,13 +164,14 @@ nav{flex-wrap:wrap;justify-content:flex-end;gap:6px 18px}@media (max-width:1100p
 <footer class="alt-bant">
   <div class="alt-ic">
     <div class="alt-marka"><img src="../okul-logo.png" alt=""><div><b>Ümraniye Merkez Anadolu Lisesi</b>Yamanevler Mah. Küçüksu Cad. No:32<br>Ümraniye / İstanbul · (216) 634 04 16</div></div>
-    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.meb.gov.tr" target="_blank" rel="noopener">Millî Eğitim Bakanlığı</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
-    <div><b>Atlas</b><a href="../">Atlas Girişi</a><br><a href="#saatler">Ders saatleri</a><br><a href="#dilek">Dilek ve şikâyet</a></div>
+    <div><b>Bağlantılar</b><a href="https://umraniyemerkezal.meb.k12.tr" target="_blank" rel="noopener">MEB okul sitemiz</a><br><a href="https://e-okul.meb.gov.tr" target="_blank" rel="noopener">e-Okul</a><br><a href="https://www.eba.gov.tr" target="_blank" rel="noopener">EBA</a><br><a href="https://mebbis.meb.gov.tr" target="_blank" rel="noopener">MEBBİS</a><br><a href="https://www.meb.gov.tr" target="_blank" rel="noopener">Millî Eğitim Bakanlığı</a><br><a href="https://www.instagram.com/umraniyemerkezanadolu/" target="_blank" rel="noopener">Instagram</a></div>
+    <div><b>Atlas</b><a href="../">Atlas Girişi</a><br><a href="#saatler">Ders saatleri</a><br><a href="#dilek">Dilek ve şikâyet</a><br><a href="kvkk.html">Kişisel verilerin korunması</a></div>
   </div>
   <div class="telif">© Ümraniye Merkez Anadolu Lisesi · Resmî duyurular ve belgeler için MEB okul sitemizi izleyiniz.</div>
 </footer>
-<script src="dilek.js?v=202611262300"></script>
+<script src="dilek.js?v=202611270705"></script>
 <script src="haberler.js?v=202611262300"></script>
 <script src="videolar.js?v=202611270600"></script>
+<script src="icerik.js?v=202611270700"></script>
 </body>
 </html>

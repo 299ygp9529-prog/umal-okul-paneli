@@ -23,7 +23,7 @@
       '<div><label for="dkIlt">Telefon ya da e-posta <span style="font-weight:400">(dönüş istiyorsanız)</span></label><input id="dkIlt" maxlength="120" autocomplete="email"></div></div>' +
       '<label for="dkMetin">Mesajınız</label><textarea id="dkMetin" maxlength="3000" placeholder="Dilek, öneri ya da şikâyetinizi yazınız"></textarea>' +
       '<div class="dk-tz" aria-hidden="true"><label>Web sitesi<input id="dkTz" tabindex="-1" autocomplete="off"></label></div>' +
-      '<div class="dk-alt"><small>Mesajınız yalnız okul idaresine iletilir. Ad ve iletişim bilgileri yalnız size dönüş yapmak için kullanılır ve kimseyle paylaşılmaz.</small><button class="dk-gonder" type="submit">Gönder</button></div>' +
+      '<div class="dk-alt"><small>Mesajınız yalnız okul idaresine iletilir. Ad ve iletişim bilgileri yalnız size dönüş yapmak için kullanılır ve kimseyle paylaşılmaz. <a href="' + (location.pathname.indexOf('/okul/') >= 0 ? '' : 'okul/') + 'kvkk.html" style="color:#14213d">Aydınlatma metni</a></small><button class="dk-gonder" type="submit">Gönder</button></div>' +
       '<div class="dk-bilgi" role="status"></div></form>';
     var f = kok.querySelector('form'), bilgi = f.querySelector('.dk-bilgi'), btn = f.querySelector('.dk-gonder');
     f.querySelector('.dk-tur').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; tur = b.dataset.t; f.querySelectorAll('.dk-tur button').forEach(function (x) { x.classList.toggle('s', x === b); }); });
@@ -36,7 +36,7 @@
         body: JSON.stringify({ p_tur: tur, p_kim: v('dkKim'), p_ad: v('dkAd'), p_iletisim: v('dkIlt'), p_konu: v('dkKonu'), p_metin: v('dkMetin'), p_tuzak: v('dkTz') }) })
         .then(function (r) { return r.ok ? null : r.json().then(function (j) { throw new Error(j && j.message ? j.message : 'Gönderilemedi'); }, function () { throw new Error('Gönderilemedi'); }); })
         .then(function () { kok.innerHTML = '<div class="dk"><div class="dk-ok"><b>Mesajınız okul idaresine iletildi.</b><br>Teşekkür ederiz.' + (v('dkIlt') ? ' Gerekirse size verdiğiniz iletişim bilgisinden dönüş yapılacaktır.' : '') + '</div></div>'; })
-        .catch(function (x) { btn.disabled = false; bilgi.style.color = '#b91c1c'; var m = x && x.message ? x.message : ''; bilgi.textContent = (!m || /fetch|network|load failed/i.test(m) ? 'Bağlantı kurulamadı' : m) + '. Lütfen biraz sonra yeniden deneyiniz ya da okulu arayınız: (216) 634 04 16'; });
+        .catch(function (x) { btn.disabled = false; bilgi.style.color = '#b91c1c'; var m = x && x.message ? x.message : ''; bilgi.textContent = (!m || /fetch|network|load failed/i.test(m) ? 'Bağlantı kurulamadı' : /schema cache|could not find|does not exist|function|permission|JWT|api ?key/i.test(m) ? 'Mesaj kutusu şu an hazırlanıyor, mesajınız gönderilemedi' : m) + '. Lütfen biraz sonra yeniden deneyiniz ya da okulu arayınız: (216) 634 04 16'; });
     });
   }
   function hepsi() { document.querySelectorAll('[data-dilek-kutusu]').forEach(kur); }
