@@ -44,6 +44,19 @@
 .oy-tablo{width:100%;border-collapse:collapse;margin-top:6px}.oy-tablo td{padding:7px 4px;border-top:1px solid var(--cizgi,#2a4468);font-size:13.5px}.oy-tablo td:last-child{text-align:right;font-weight:800}
 .oy-tablo tr.ben td{color:var(--neon,#22e8ff)}
 .oy-trn{border-color:rgba(255,212,59,.55);background:linear-gradient(135deg,rgba(255,212,59,.12),rgba(34,232,255,.06))}.oy-trn h3{margin:0 0 2px;font-size:17px}.oy-trn .oy-say{display:flex;gap:8px;margin:10px 0}.oy-trn .oy-say div{flex:1;background:rgba(0,0,0,.18);border-radius:12px;padding:8px 10px;text-align:center}.oy-trn .oy-say b{display:block;font-size:20px;color:#ffd43b}.oy-trn .oy-say small{color:var(--soluk,#9fb3cc);font-size:11.5px}
+.oy-tk{position:relative;overflow:hidden;border-radius:22px;padding:20px 18px 18px;margin-bottom:14px;background:radial-gradient(120% 90% at 85% 0%,#3b2a0a 0%,#16120a 45%,#0f1420 100%);border:1px solid rgba(255,206,92,.45);box-shadow:inset 0 0 0 1px rgba(255,206,92,.08),0 12px 40px rgba(255,190,60,.12)}
+.oy-tk-kupa{position:absolute;right:-12px;top:-6px;width:138px;pointer-events:none}.oy-tk-et{font-size:11px;letter-spacing:.22em;color:#f5c542;font-weight:800;position:relative}
+.oy-tk h3{font-size:26px;line-height:1.1;font-weight:800;color:#fff;margin:6px 0 4px;max-width:62%;position:relative}.oy-tk-alt{font-size:13px;color:#c9b98f;position:relative;max-width:64%}
+.oy-tk-pod{display:flex;align-items:flex-end;gap:8px;margin:18px 0 14px}.oy-tk-pod>div{flex:1;text-align:center}.oy-tk-pod>div.bir{flex:1.15}.oy-tk-pod small{display:block;font-size:12px;color:#d9d9d9;margin-bottom:2px}.oy-tk-pod .bir small{color:#f5c542}
+.oy-tk-pod b{display:flex;align-items:center;justify-content:center;border-radius:10px 10px 4px 4px;font-weight:800}.oy-tk-pod b.a{height:62px;font-size:17px;font-weight:900;color:#2a1a00;background:linear-gradient(#ffe28a,#d99a1e)}.oy-tk-pod b.g{height:44px;color:#1b2230;background:linear-gradient(#cfd6e0,#8b96a6)}.oy-tk-pod b.z{height:36px;color:#2a1408;background:linear-gradient(#e8b083,#a8643a)}
+.oy-tk-odul{margin:14px 0 4px;font-size:14px;color:#ffe28a;position:relative}
+.oy-tk-say{display:flex;gap:8px;margin:14px 0}.oy-tk-say div{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px}.oy-tk-say b{display:block;font-size:22px;font-weight:800;color:#fff}.oy-tk-say small{font-size:12px;color:#9fb3cc}
+.oy-tk-cip{display:flex;gap:6px;font-size:12px;color:#c9b98f;margin-bottom:14px;flex-wrap:wrap}.oy-tk-cip span{border:1px solid rgba(255,206,92,.3);border-radius:99px;padding:4px 10px}
+.oy-tk-btn{display:block;width:100%;box-sizing:border-box;border:0;border-radius:16px;padding:15px;font-size:17px;font-weight:800;color:#2a1a00;background:linear-gradient(180deg,#ffe08a,#f0b22c);box-shadow:0 6px 20px rgba(240,178,44,.35);cursor:pointer;text-align:center;font-family:inherit}
+.oy-tk-btn small{display:block;font-size:12.5px;font-weight:600;opacity:.8;margin-top:2px}.oy-tk-btn.ikinci{background:rgba(255,255,255,.08);color:#fff;box-shadow:none;border:1px solid rgba(255,206,92,.35)}.oy-tk-btn.tamam{background:rgba(62,240,138,.12);color:#5be39b;box-shadow:none;border:1px solid rgba(62,240,138,.45);cursor:default}
+.oy-tk-link{background:none;border:0;color:#9fb3cc;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:4px 0;font-family:inherit}
+.oy-tk-sampiyon{margin:16px 0 10px;padding:14px;border-radius:14px;background:rgba(255,206,92,.1);border:1px solid rgba(255,206,92,.35)}.oy-tk-sampiyon small{display:block;font-size:11px;letter-spacing:.2em;color:#f5c542;font-weight:800}.oy-tk-sampiyon b{display:block;font-size:22px;color:#fff}.oy-tk-sampiyon span{color:#c9b98f;font-size:13px}
+.oy-kural{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.5}.oy-kural b{color:#ffe28a}
 .oy-agac{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.oy-agac>div{min-width:150px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}.oy-agac .m{background:rgba(0,0,0,.2);border:1px solid var(--cizgi,#2a4468);border-radius:10px;padding:6px 8px;font-size:12.5px}.oy-agac .m div{display:flex;justify-content:space-between;gap:6px}.oy-agac .m .k{color:#5be39b;font-weight:700}.oy-agac .m.ben{border-color:var(--neon,#22e8ff)}
 .oy-cip{display:flex;gap:6px;flex-wrap:wrap}.oy-cip button{border:1px solid var(--cizgi,#2a4468);background:transparent;color:var(--soluk,#9fb3cc);border-radius:99px;padding:7px 12px;font-size:13px;cursor:pointer;font:inherit}
 .oy-cip button.s{background:rgba(34,232,255,.15);color:var(--neon,#22e8ff);border-color:var(--neon,#22e8ff)}
@@ -125,26 +138,57 @@
   const trnTurAd = t => t.durum === 'lig' ? `${t.aktif_tur}. tur (${t.lig_tur} turluk lig)` : t.durum === 'eleme' ? (({ 1: 'Final', 2: 'Yarı final', 4: 'Çeyrek final', 8: 'Son 16', 16: 'Son 32' })[trnEleme(t).filter(m => m.tur === t.aktif_tur).length] || 'Eleme') : '';
   const trnEleme = t => (t.maclar || []).filter(m => m.asama === 'eleme');
   const trnBenimMac = t => (t.maclar || []).filter(m => m.ben && m.tur === t.aktif_tur && m.b !== null)[0];
+  const KUPA = `<svg class="oy-tk-kupa" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="oyTkG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#f5c542"/><stop offset="1" stop-color="#a86b12"/></linearGradient></defs>
+    <path d="M38 20h44v20c0 16-10 28-22 28S38 56 38 40z" fill="url(#oyTkG)"/><path d="M38 26H24c0 14 8 22 18 22M82 26h14c0 14-8 22-18 22" fill="none" stroke="url(#oyTkG)" stroke-width="5"/>
+    <rect x="55" y="66" width="10" height="16" fill="url(#oyTkG)"/><path d="M44 82h32l4 12H40z" fill="url(#oyTkG)"/><path d="M60 30l3 6.5 7 .8-5.2 4.8 1.5 7-6.3-3.6-6.3 3.6 1.5-7-5.2-4.8 7-.8z" fill="#7a4b06" opacity=".55"/></svg>`;
+  function trnPodyum(t) {
+    const P = [...String(t.odul || '').matchAll(/(\d[\d.]*)\s*(TL|₺|lira)/gi)].map(m => m[1] + ' TL');
+    if (P.length < 3) return t.odul ? `<div class="oy-tk-odul">Ödül: ${esc(t.odul)}</div>` : '';
+    return `<div class="oy-tk-pod"><div><small>2.</small><b class="g">${esc(P[1])}</b></div><div class="bir"><small>1.</small><b class="a">${esc(P[0])}</b></div><div><small>3.</small><b class="z">${esc(P[2])}</b></div></div>`;
+  }
   function trnKart() {
     const t = trn; if (!t || t.durum === 'iptal') return '';
     const ben = (t.tablo || []).find(x => x.ben), kay = t.ben && t.ben.kayitli, m = trnBenimMac(t);
-    let ic = '';
-    if (t.durum === 'kayit') ic = `<div class="oy-say"><div><b>${t.kayitli}</b><small>kişi katıldı</small></div><div><b>${t.lig_tur}</b><small>tur lig + eleme</small></div>${t.kayit_bitis ? `<div><b style="font-size:14px;padding-top:4px">${esc(trnZaman(t.kayit_bitis))}</b><small>son kayıt</small></div>` : ''}</div>
-      ${kay ? `<div class="soluk kucuk">Kaydın alındı. Turnuva başlayınca ilk maçın burada görünecek.</div><button class="oy-kucuk-btn oy-hayir" style="margin-top:8px" data-trnayril="${t.id}">Kaydımı geri al</button>`
-            : `<button class="oy-btn ana" style="margin:4px 0 0" data-trnkatil="${t.id}"><i>🏆</i><span><b>Turnuvaya katıl</b><small>Bütün okul tek turnuva · kimse ilk maçta elenmez</small></span></button>`}`;
-    else if (t.durum === 'lig' || t.durum === 'eleme') ic = `<div class="soluk kucuk" style="margin-top:2px">${esc(trnTurAd(t))} · tur ${esc(trnZaman(t.tur_bitis))}'e kadar açık</div>
-      ${m ? `<button class="oy-btn ana" style="margin:10px 0 0" data-trnac="${m.oyun}"><i>♞</i><span><b>${m.odurum === 'suruyor' ? (m.sira === (m.a && m.a.no === C.no() ? 'a' : 'b') ? 'Turnuva maçın: sıra sende' : 'Turnuva maçın: rakipte') : 'Bu turdaki maçın bitti'}</b><small>Rakibin ${esc((m.a && m.a.no === C.no() ? m.b : m.a).ad)} · ${esc((m.a && m.a.no === C.no() ? m.b : m.a).sinif)}</small></span></button>`
-          : kay ? `<div class="soluk kucuk" style="margin-top:8px">${t.durum === 'eleme' && ben && !trnEleme(t).some(x => x.ben && x.tur === t.aktif_tur) ? 'Elemeye kalamadın ya da elendin; maçları izleyebilirsin.' : (t.maclar || []).some(x => x.ben && x.tur === t.aktif_tur && x.b === null) ? 'Bu tur rakipsiz kaldın: 1 puan kazandın (bay).' : 'Bu turda maçın yok.'}</div>` : '<div class="soluk kucuk" style="margin-top:8px">Bu turnuvaya katılmadın; tabloyu izleyebilirsin.</div>'}
-      ${ben ? `<div class="soluk kucuk" style="margin-top:8px">Sıralaman ${ben.sira}. · ${ben.puan} puan</div>` : ''}`;
-    else if (t.durum === 'bitti') ic = `<div style="margin-top:6px">Şampiyon: <b style="color:#ffd43b">${esc(t.sampiyon ? t.sampiyon.ad + ' · ' + t.sampiyon.sinif : '—')}</b></div>`;
-    return `<div class="oy-kart oy-trn"><h3>🏆 ${esc(t.ad)}</h3><div class="soluk kucuk">${esc(AD[t.tur])}${t.odul ? ' · Ödül: ' + esc(t.odul) : ''}</div>${ic}
-      ${t.durum !== 'kayit' ? `<button class="oy-kucuk-btn" style="margin-top:10px" data-x="turnuva">Tabloyu ve maçları gör</button>` : ''}</div>`;
+    const ust = `${KUPA}<div class="oy-tk-et">OKUL TURNUVASI · ${esc(AD[t.tur].toLocaleUpperCase('tr'))}</div><h3>${esc(t.ad)}</h3>`;
+    const kural = `<button class="oy-tk-link" data-x="kurallar">Nasıl oynanır? Kurallar</button>`;
+    const etiket = `<div class="oy-tk-cip"><span>${t.lig_tur} tur lig</span><span>ilk ${t.eleme_kisi} eleme</span><span>canlı final</span></div>`;
+    if (t.durum === 'kayit') {
+      const kalan = t.kayit_bitis ? Math.max(0, Math.ceil((new Date(t.kayit_bitis) - Date.now()) / 864e5)) : null;
+      const bitis = t.kayit_bitis ? new Date(t.kayit_bitis) : null;
+      return `<div class="oy-tk">${ust}<div class="oy-tk-alt">${bitis ? `Kayıtlar ${bitis.toLocaleDateString('tr', { day: 'numeric', month: 'long' })} ${bitis.toLocaleTimeString('tr', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')}'da kapanır` : 'Kayıtlar açık'}</div>
+        ${trnPodyum(t)}<div class="oy-tk-say"><div><b>${t.kayitli}</b><small>öğrenci kayıt oldu</small></div>${kalan !== null ? `<div><b>${kalan ? kalan + ' gün' : 'Bugün'}</b><small>${kalan ? 'kayda kalan süre' : 'son gün'}</small></div>` : ''}</div>${etiket}
+        ${kay ? `<div class="oy-tk-btn tamam">Kaydın alındı</div><div style="display:flex;justify-content:space-between;margin-top:8px">${kural}<button class="oy-tk-link" data-trnayril="${t.id}">Kaydımı geri al</button></div>`
+              : `<button class="oy-tk-btn" data-trnkatil="${t.id}">Turnuvaya katıl</button><div style="text-align:center;margin-top:8px">${kural}</div>`}</div>`;
+    }
+    if (t.durum === 'lig' || t.durum === 'eleme') {
+      const benA = m && m.a && m.a.no === C.no(), rak = m ? (benA ? m.b : m.a) : null, sirada = m && m.odurum === 'suruyor' && m.sira === (benA ? 'a' : 'b');
+      const bay = (t.maclar || []).some(x => x.ben && x.tur === t.aktif_tur && x.b === null);
+      const not = m ? '' : !kay ? 'Bu turnuvaya katılmadın; maçları ve tabloyu izleyebilirsin.' : bay ? 'Bu tur rakipsiz kaldın ve 1 puan kazandın.' : t.durum === 'eleme' ? 'Elemede maçın yok; maçları izleyebilirsin.' : 'Bu turda maçın yok.';
+      return `<div class="oy-tk">${ust}<div class="oy-tk-alt">${esc(trnTurAd(t))} · ${esc(trnZaman(t.tur_bitis))}'e kadar</div>
+        <div class="oy-tk-say">${ben ? `<div><b>${ben.sira}.</b><small>sıralaman</small></div><div><b>${ben.puan}</b><small>puan</small></div>` : `<div><b>${t.kayitli}</b><small>oyuncu</small></div>`}</div>
+        ${m ? `<button class="oy-tk-btn${sirada ? '' : ' ikinci'}" data-trnac="${m.oyun}">${m.odurum === 'suruyor' ? (sirada ? 'Turnuva maçın · sıra sende' : 'Turnuva maçın · rakipte') : 'Bu turdaki maçın bitti'}<small>Rakibin ${esc(rak ? rak.ad + ' · ' + rak.sinif : '')}</small></button>` : `<div class="oy-tk-alt" style="margin:4px 0 0">${esc(not)}</div>`}
+        <div style="display:flex;justify-content:space-between;margin-top:10px"><button class="oy-tk-link" data-x="turnuva">Tablo ve maçlar</button>${kural}</div></div>`;
+    }
+    if (t.durum === 'bitti') return `<div class="oy-tk">${ust}<div class="oy-tk-alt">Turnuva bitti</div><div class="oy-tk-sampiyon"><small>ŞAMPİYON</small><b>${esc(t.sampiyon ? t.sampiyon.ad : '—')}</b><span>${esc(t.sampiyon ? t.sampiyon.sinif : '')}</span></div><button class="oy-tk-link" data-x="turnuva">Tablo ve maçlar</button></div>`;
+    return '';
+  }
+  function trnKurallar() {
+    ekran = 'kurallar'; const t = trn || { lig_tur: 5, eleme_kisi: 16 };
+    kok.innerHTML = `<div class="oy"><button class="oy-kucuk-btn" data-x="lobi">‹ Oyunlar</button><h2 style="margin:12px 0 10px">Turnuva nasıl oynanır?</h2>
+      <div class="oy-kart"><ol class="oy-kural">
+        <li><b>Kayıt.</b> Oyunlar sayfasındaki turnuva kartından "Turnuvaya katıl" dersin. Kayıt süresince kaydını geri alabilirsin.</li>
+        <li><b>Lig (${t.lig_tur} tur).</b> Kimse elenmez. Her turda puanı sana yakın biriyle eşleşirsin. Galibiyet 1, beraberlik ½ puan. Tek sayıda oyuncu varsa biri o tur rakipsiz kalır ve 1 puan alır.</li>
+        <li><b>Maç zamanı.</b> Her tur bir gün açıktır. Maçını o gün içinde, istediğin zaman oynarsın; hamleni yapınca sıra rakibe geçer. Tur bittiğinde maç bitmemişse sırası gelen oyuncu kaybetmiş sayılır.</li>
+        <li><b>Eleme.</b> Ligin ilk ${t.eleme_kisi} oyuncusu elemeye kalır. Puan eşitliğinde rakiplerinin topladığı puan fazla olan önde olur. Elemede kaybeden elenir; berabere biten maç renkler değişerek yeniden oynanır.</li>
+        <li><b>Final.</b> Final maçı okulda tahtalarda canlı izlenir.</li>
+        <li><b>Ödüller.</b> ${t.odul ? esc(t.odul) + '. ' : ''}Her sınıf seviyesinin en iyisine de başarı belgesi verilir.</li>
+        <li><b>Saygı.</b> Maçta yalnız hazır ifadeler kullanılır. Maçı yarıda bırakmak yerine teslim olmak, rakibine saygıdır.</li></ol></div></div>`;
   }
   function trnCiz() {
     ekran = 'turnuva'; const t = trn; if (!t) { ekran = 'lobi'; return lobiCiz(); }
     const E = trnEleme(t), turlar = [...new Set(E.map(m => m.tur))].sort((a, b) => a - b), benM = (t.maclar || []).filter(m => m.ben && m.asama === 'lig');
     const kisi = (k, s) => k ? `<span>${esc(k.ad)} <small class="soluk">${esc(k.sinif || '')}</small></span>${s}` : '<span class="soluk">—</span>';
-    kok.innerHTML = `<div class="oy"><button class="oy-kucuk-btn" data-x="lobi">‹ Oyunlar</button><h2 style="margin:12px 0 2px">🏆 ${esc(t.ad)}</h2><div class="oy-alt">${esc(AD[t.tur])} · ${t.kayitli} katılımcı${t.durum === 'lig' || t.durum === 'eleme' ? ' · ' + esc(trnTurAd(t)) : t.durum === 'bitti' ? ' · bitti' : ''}</div>
+    kok.innerHTML = `<div class="oy"><button class="oy-kucuk-btn" data-x="lobi">‹ Oyunlar</button><h2 style="margin:12px 0 2px">${esc(t.ad)}</h2><div class="oy-alt">${esc(AD[t.tur])} · ${t.kayitli} katılımcı${t.durum === 'lig' || t.durum === 'eleme' ? ' · ' + esc(trnTurAd(t)) : t.durum === 'bitti' ? ' · bitti' : ''}</div>
       ${t.durum === 'bitti' ? `<div class="oy-kart oy-trn"><b>Şampiyon: ${esc(t.sampiyon ? t.sampiyon.ad + ' · ' + t.sampiyon.sinif : '—')}</b>${(t.seviye || []).length ? `<div class="soluk kucuk" style="margin-top:6px">Sınıf seviyelerinin en iyileri: ${t.seviye.map(x => `${esc(x.seviye)}. sınıflar ${esc(x.ad)} (${esc(x.sinif)})`).join(' · ')}</div>` : ''}</div>` : ''}
       ${E.length ? `<div class="oy-kart"><b>Eleme tablosu</b><div class="oy-agac" style="margin-top:8px">${turlar.map(tu => `<div>${E.filter(m => m.tur === tu).map(m => `<div class="m ${m.ben ? 'ben' : ''}"><div class="${m.sonuc === 'a' ? 'k' : ''}">${kisi(m.a, m.sonuc === 'a' ? '✓' : '')}</div><div class="${m.sonuc === 'b' ? 'k' : ''}">${kisi(m.b, m.sonuc === 'b' ? '✓' : '')}</div></div>`).join('')}</div>`).join('')}</div></div>` : ''}
       ${benM.length ? `<div class="oy-kart"><b>Lig maçlarım</b><table class="oy-tablo">${benM.map(m => { const ben_a = m.a && m.a.no === C.no(), r = ben_a ? m.b : m.a; const s = m.b === null ? 'bay · 1 puan' : m.sonuc === 'berabere' ? 'berabere' : m.sonuc ? ((m.sonuc === 'a') === ben_a ? 'kazandın' : 'kaybettin') : m.odurum === 'suruyor' ? 'sürüyor' : '—';
@@ -222,6 +266,7 @@
     if (d.kabul || d.red) { const r = await rpc('umal_oyun_cevap', { p_id: d.kabul || d.red, p_kabul: !!d.kabul }); if (!r.ok) { uyar(r.hata); return lobiYukle(); } const g = (durum.maclar || []).find(x => x.id === (d.kabul || d.red)); if (g && g.rakip) durt(g.rakip.no); if (d.kabul) return oyunAc(r.oyun); return lobiYukle(); }
     if (d.iptal) { await rpc('umal_oyun_iptal', { p_id: d.iptal }); return lobiYukle(); }
     if (d.x === 'turnuva') { await trnYukle(); return trnCiz(); }
+    if (d.x === 'kurallar') return trnKurallar();
     if (d.trnkatil || d.trnayril) { if (mesgul) return; mesgul = true; const { data } = await C.sb.rpc('umal_turnuva_katil', { p_no: C.no(), p_kod: C.kod(), p_id: d.trnkatil || d.trnayril, p_katil: !!d.trnkatil }).catch(() => ({ data: null })); mesgul = false;
       if (!data || !data.ok) return uyar((data && data.hata) || 'Bağlantı sorunu; tekrar dene.'); trn = data.turnuva; return lobiCiz(); }
     if (d.trnac) return trnOyunAc(d.trnac);
