@@ -7109,7 +7109,9 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     + 'elif merve özlem aslı hatice hülya meltem derya ebru sevgi songül nilgün filiz hande seda pınar tuğba kübra melek leyla aysel ayten nermin nesrin serpil sibel şule tülay ümran yıldız dilek gül gülay gülsüm nazan nihal canan cansu ceren damla dilara ece ecem eda ezgi feride gizem gonca hacer handan havva ilknur işıl kader kevser kezban lale mine müge nazlı neslihan nur nurcan nurten özge perihan rabia reyhan saadet sakine selma semra serap seval sevim sevda şenay şükran tuba tülin ülkü yasemin yeliz zerrin zübeyde nesibe şeyma beyza berna bahar banu aynur arzu ayla aylin belgin birsen burcu çiğdem demet didem esin esma fadime figen fulya gülcan güler güliz hilal hümeyra inci melike meryem münevver nagihan necla oya özden rukiye safiye sema şaziye tijen vildan yonca zuhal').split(' '));
   const nobetCinsTahmin = a => NOBET_KADIN.has(String(a).trim().split(/\s+/)[0].toLocaleLowerCase('tr')) ? 'K' : 'E';
   const nobetCins = (cins, a) => (cins && (cins[a] === 'K' || cins[a] === 'E')) ? cins[a] : nobetCinsTahmin(a);
-  function nobetDagit(Y, gunlerDe, dersGun0, cins0, tohum, karma = true) {
+  // 27 Kasım 2026: gunlerDe === 2 → her öğretmen haftada en az dersi olan güne (Ortaöğretim Kurumları Yönetmeliği: nöbet, dersin az olduğu gün dikkate alınarak verilir).
+  // dersSay0: öğretmen (küçük harf) → [Pzt..Cum ders saati sayısı]. Gün kapasiteleri çizelgedekiyle aynı kalır; kapasite dolarsa bir sonraki en az dersli gün.
+  function nobetDagit(Y, gunlerDe, dersGun0, cins0, tohum, karma = true, dersSay0 = {}) {
     const cins = new Proxy({}, { get: (_, a) => nobetCins(cins0, a) });
     const dersGun = new Proxy({}, { get: (_, a) => dersGun0[nobetAdK(a)] });
     let s = (tohum >>> 0) || 1; const R = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 1e9) / 1e9; };
@@ -7117,11 +7119,30 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const kap = Y.map(L => NOBET_DONGU.map(y => L[y].length)), eski = new Set();
     Y.forEach(L => NOBET_DONGU.forEach(y => { for (let i = 0; i < L[y].length; i++) for (let j = i + 1; j < L[y].length; j++) eski.add([L[y][i], L[y][j]].sort().join('|')); }));
     const simdiki = {}; Y.forEach((L, g) => NOBET_DONGU.forEach(y => L[y].forEach(a => { simdiki[a] = g; })));
-    let enIyi = null, enPuan = Infinity;
+    let enIyi = null, enPuan = Infinity, gun2 = null;
     for (let d = 0; d < 400; d++) {
       // 1) günler
       const gun = Y.map(() => []);
       if (!gunlerDe) Object.entries(simdiki).forEach(([a, g]) => gun[g].push(a));
+      else if (gunlerDe === 2 && gun2) gun2.forEach((L, g) => gun[g].push(...L));   // günler bir kez hesaplanır, yalnız yerler denenir
+      else if (gunlerDe === 2) {
+        let enT = Infinity;
+        for (let dn = 0; dn < 25; dn++) { const gun = Y.map(() => []);   // 25 denemenin toplam ders yükü en düşük olanı
+        const top = kap.map(k => k.reduce((t, x) => t + x, 0)), kalan = top.slice(), ck = Y.map(() => ({ K: 0, E: 0 })), yer = {};
+          const sira = karis(Object.keys(simdiki)).map(a => { const c = [0, 1, 2, 3, 4].map(g => nobetMaliyet(dersSay0, a, g)).sort((x, y) => x - y); return [a, c[1] - c[0] + R() * .01]; }).sort((x, y) => y[1] - x[1]).map(x => x[0]);
+          for (const a of sira) {
+            const c = cins[a], fazla = g => karma ? (ck[g][c] - top[g] / 2 >= 0) : 0;
+            const aday = [0, 1, 2, 3, 4].filter(g => kalan[g] > 0).sort((x, y) => nobetMaliyet(dersSay0, a, x) - nobetMaliyet(dersSay0, a, y) || fazla(x) - fazla(y) || kalan[y] - kalan[x] || R() - .5);
+            const g = aday.length ? aday[0] : simdiki[a]; gun[g].push(a); kalan[g]--; ck[g][c]++; yer[a] = g;
+          }
+          for (let tur = 0, iyi = true; iyi && tur < 60; tur++) { iyi = false;   // aynı cinsiyetten iki kişiyi takas ederek toplam ders yükünü düşür
+            for (let g1 = 0; g1 < 5; g1++) for (let g2 = g1 + 1; g2 < 5; g2++) for (const a of gun[g1].slice()) for (const b of gun[g2].slice()) {
+              if (yer[a] !== g1 || yer[b] !== g2 || (karma && cins[a] !== cins[b])) continue;
+              if (nobetMaliyet(dersSay0, a, g2) + nobetMaliyet(dersSay0, b, g1) < nobetMaliyet(dersSay0, a, g1) + nobetMaliyet(dersSay0, b, g2)) {
+                gun[g1][gun[g1].indexOf(a)] = b; gun[g2][gun[g2].indexOf(b)] = a; yer[a] = g2; yer[b] = g1; iyi = true; } } }
+            const T_ = gun.reduce((t, L, g) => t + L.reduce((u, a) => u + nobetMaliyet(dersSay0, a, g), 0), 0); if (T_ < enT) { enT = T_; gun2 = gun.map(L => L.slice()); } }
+        gun2.forEach((L, g) => gun[g].push(...L));
+      }
       else {
         const top = kap.map(k => k.reduce((t, x) => t + x, 0)), kalan = top.slice(), ck = Y.map(() => ({ K: 0, E: 0 }));
         const sira = karis(Object.keys(simdiki)).sort((a, b) => ((dersGun[a] || { size: 1 }).size) - ((dersGun[b] || { size: 1 }).size));
@@ -7148,10 +7169,18 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           if (cins[O[y][a]] === cins[O[y][b]]) puan += karma ? 3000 : 4; } });
         puan += Math.abs(T.length - kap[g].reduce((t, x) => t + x, 0)) * 200;
         if (gunlerDe) T.forEach(a => { if (dersGun[a] && dersGun[a].size && !dersGun[a].has(g)) puan += 5000; });
+        if (gunlerDe === 2) T.forEach(a => { puan += nobetMaliyet(dersSay0, a, g) * 100; });
         O.my = L.my || ''; return O; });
       if (puan < enPuan) { enPuan = puan; enIyi = Z; if (!puan) break; }
     }
     return enIyi;
+  }
+  // Öğretmenin o günkü ders saati; dersi olmayan güne (okulda değil) büyük maliyet; hiç dersi bilinmeyen öğretmen her güne eşit
+  function nobetMaliyet(dersSay0, a, g) { const d = dersSay0[nobetAdK(a)]; if (!d || !d.some(x => x > 0)) return 0; return d[g] > 0 ? d[g] : 60; }
+  function nobetUygunluk(Y, dersSay0) {   // kaç öğretmen en az dersi olan gününde nöbetçi
+    let n = 0, top = 0; Y.forEach((L, g) => NOBET_DONGU.forEach(y => (L[y] || []).forEach(a => { const d = dersSay0[nobetAdK(a)]; if (!d || !d.some(x => x > 0)) return; top++;
+      const en = Math.min(...d.filter(x => x > 0)); if (d[g] === en) n++; })));
+    return { n, top };
   }
   function nobetDonemGunler(n) {   // n: Kasım 2026'dan itibaren kaçıncı ay → o ayın gün gün yerleri
     const ilk = ayKod(new Date(NOBET_RESMI.baslangic + 'T12:00:00')), hedef = ilk + n;
@@ -7187,6 +7216,8 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
     const yonetir = D.rol === 'bas' || D.rol === 'yonetici';
     const dersGun = {};   // öğretmen → dersi olan günler
     for (const h of Object.values((D.program || {}).siniflar || {})) for (const [k, c] of Object.entries(h)) { const g = +k.split('-')[0]; if (g > 4) continue; for (const o of c.ogretmen || []) { const a = nobetAdK(o); (dersGun[a] = dersGun[a] || new Set()).add(g); } }
+    const dersSay = {}; { const S = {}; for (const h of Object.values((D.program || {}).siniflar || {})) for (const [k, c] of Object.entries(h)) { const g = +k.split('-')[0]; if (g > 4) continue; for (const o of c.ogretmen || []) { const a = nobetAdK(o); (S[a] = S[a] || new Set()).add(k); } }
+      for (const [a, K] of Object.entries(S)) { const d = [0, 0, 0, 0, 0]; K.forEach(k => { d[+k.split('-')[0]]++; }); dersSay[a] = d; } }   // 27 Kasım 2026: öğretmen → günlük ders saati
     let taslak = null, secAd = null, tohum = 0, dagitMod = null, karma = true;   // taslak: düzenlenen çizelge (kaydedilene kadar yalnız ekranda)
     const kopya = Y => Y.map(L => Object.fromEntries(Object.entries(L).map(([k, v]) => [k, Array.isArray(v) ? v.slice() : v])));
     const ayBas = n => n === 0 ? R.baslangic : (() => { const d = new Date(bas.getFullYear(), bas.getMonth() + n, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; })();
@@ -7226,6 +7257,8 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
             ? `${dagitMod !== null ? '<button class="ikincil" id="nbKaris">↻ Yeniden karıştır</button>' : ''}<button class="birincil" id="nbKaydet">Kaydet</button><button class="ikincil" id="nbVazgec">Vazgeç</button>`
             : `${yonetir && sekme === 'cizelge' ? `<button class="ikincil" id="nbDuzenle">✎ Düzenle</button><button class="ikincil" id="nbDagit">⟳ Baştan dağıt</button>${NOBET_KAYITLI.length ? '<button class="ikincil" id="nbResmi">Resmî çizelgeye dön</button>' : ''}` : ''}<button class="ikincil" id="nbYazdir">Yazdır</button>`}</div></div>
         <div class="kucuk" style="margin:6px 0 10px"><b class="turuncu">${esc(ayAd(ayIdx))}</b> · ${taslak ? '<span class="turuncu">Taslak (kaydedilmedi).</span> Bir öğretmene, sonra yer değiştireceği öğretmene ya da taşınacağı kutuya dokunun. Kaydedince bu aydan itibaren geçerli olur; sonraki aylar buna göre döner.' : esc(degisim) + (NOBET_KAYITLI.length ? ' · <span class="turuncu">panelden düzenlendi</span>' : '')}</div>${ic}</div>`;
+      if (sekme === 'cizelge' && yonetir && Object.keys(dersSay).length) {   // 27 Kasım 2026: kaç öğretmen en az dersi olan gününde
+        const u = nobetUygunluk(Y, dersSay), k = $('#nbIc .kart'); if (k && u.top) k.insertAdjacentHTML('beforeend', `<div class="kucuk" style="margin-top:8px">Ders programına göre <b class="${u.n === u.top ? 'yesil' : 'turuncu'}">${u.n} / ${u.top}</b> öğretmen haftada en az dersi olan gününde nöbetçi.${u.n < u.top && !taslak ? ' Hepsini uygun güne almak için <b>⟳ Baştan dağıt › Her öğretmeni en az dersi olan güne ver</b>.' : ''}</div>`); }
     };
     $('#icerik').innerHTML = `<div class="ust"><h1>Nöbet</h1><span class="soluk kucuk" style="align-self:center">Resmî çizelge · gün sabit · yer her ay bir üst kata</span></div><div id="nbIc"></div>`;
     $('#nbIc').onclick = async ev => {
@@ -7247,11 +7280,12 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
           <div class="dugmeler" style="justify-content:flex-start;flex-direction:column;align-items:stretch;gap:10px">
             <label class="ac" style="margin:0 0 4px"><input type="checkbox" id="nbKarma" ${karma ? 'checked' : ''}><span class="tik ${karma ? '' : 'k'}"></span><b>Her yerde bir kadın bir erkek</b> <small class="soluk">(cinsiyetler Öğretmenler sekmesinde)</small></label>
             <button class="birincil" id="nbD0">Yalnız yerleri ve nöbet arkadaşlarını karıştır<br><small style="font-weight:400">Herkes kendi nöbet gününde kalır</small></button>
-            <button class="ikincil" id="nbD1">Günleri de yeniden dağıt<br><small style="font-weight:400">Öğretmen yalnız dersi olan günlere verilir</small></button></div>`);
+            <button class="ikincil" id="nbD1">Günleri de yeniden dağıt<br><small style="font-weight:400">Öğretmen yalnız dersi olan günlere verilir</small></button>
+            <button class="ikincil" id="nbD2" style="border-color:var(--neon)">Her öğretmeni en az dersi olan güne ver<br><small style="font-weight:400">Ders programından; gün dolarsa bir sonraki en az dersli gün (yönetmelik: nöbet, dersin az olduğu gün dikkate alınarak verilir)</small></button></div>`);
         $('#nbKarma').onchange = e => { karma = e.target.checked; e.target.nextElementSibling.classList.toggle('k', !karma); };
-        const baslat = m => { $('#pencere').classList.add('gizli'); dagitMod = m; tohum = (Date.now() % 100000) + 1; taslak = nobetDagit(nobetDonemGunler(ayIdx), !!m, dersGun, cins, tohum, karma); secAd = null; ciz(); };
-        $('#nbD0').onclick = () => baslat(0); $('#nbD1').onclick = () => baslat(1); return; }
-      if (t.id === 'nbKaris' && dagitMod !== null) { tohum += 7919; taslak = nobetDagit(nobetDonemGunler(ayIdx), !!dagitMod, dersGun, cins, tohum, karma); secAd = null; ciz(); return; }
+        const baslat = m => { $('#pencere').classList.add('gizli'); if (m === 2 && !Object.keys(dersSay).length) { uyar('Ders programı bulunamadı. Önce ders programını yükleyin.'); return; } dagitMod = m; tohum = (Date.now() % 100000) + 1; taslak = nobetDagit(nobetDonemGunler(ayIdx), m === 2 ? 2 : !!m, dersGun, cins, tohum, karma, dersSay); secAd = null; ciz(); };
+        $('#nbD0').onclick = () => baslat(0); $('#nbD1').onclick = () => baslat(1); $('#nbD2').onclick = () => baslat(2); return; }
+      if (t.id === 'nbKaris' && dagitMod !== null) { tohum += 7919; taslak = nobetDagit(nobetDonemGunler(ayIdx), dagitMod === 2 ? 2 : !!dagitMod, dersGun, cins, tohum, karma, dersSay); secAd = null; ciz(); return; }
       if (t.id === 'nbKaydet' && taslak) {
         if (!await onayla(`${ayAd(ayIdx)} ayından itibaren nöbet çizelgesi bu hâliyle geçerli olacak. Kaydedilsin mi?`)) return;
         const b = ayBas(ayIdx), once = NOBET_KAYITLI.filter(x => x.baslangic < b && ayKod(new Date(x.baslangic + 'T12:00:00')) < ayKod(new Date(b + 'T12:00:00')));
