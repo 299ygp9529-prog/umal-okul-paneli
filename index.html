@@ -163,6 +163,17 @@ body.okul-site #giris > .kutu { margin-top: 0 !important; background: rgba(8,18,
 body.okul-site #giris > .kutu .not { display: none; }
 body.okul-site #osHero { display: block; }
 #osHero { display: none; position: absolute; left: clamp(32px, 5vw, 96px); top: 50%; transform: translateY(-50%); z-index: 2; max-width: min(46vw, 640px); color: #fff; font-family: Inter, system-ui, sans-serif; }
+/* 27 Kasım 2026: giriş kutusu ortada; solda okul adı, sağda Atatürk köşesi (yazı kutudan taşmaz) */
+body.okul-site #giris { justify-content: center !important; padding-right: 0 !important; }
+body.okul-site #osHero { max-width: min(28vw, 470px); }
+#osHero h1 { font-size: clamp(34px, 3.3vw, 52px) !important; }
+#osSag { display: none; }
+body.okul-site #osSag { display: block; position: absolute; right: clamp(32px, 4vw, 96px); top: 50%; transform: translateY(-50%); z-index: 2; width: min(25vw, 420px); }
+#osSag .gt-ata { position: static !important; margin: 0 !important; width: 100%; box-sizing: border-box; }
+#osSag .gt-ata figcaption { max-width: none !important; min-width: 0; flex: 1; }
+#osSag .gt-cerceve { height: clamp(84px, 11vh, 120px) !important; }
+#osSag .gt-ata q { font-size: clamp(15px, 1.15vw, 20px) !important; }
+#osSag .gt-ata cite { white-space: normal !important; letter-spacing: .1em !important; font-size: 10px !important; line-height: 1.5; }
 #osHero .os-yer { color: #e8a92a; font-weight: 700; letter-spacing: 2px; font-size: 13px; }
 #osHero h1 { font: 800 clamp(38px, 4.2vw, 60px)/1.06 Poppins, Inter, sans-serif; margin: 14px 0 16px; text-shadow: 0 4px 24px rgba(0,0,0,.45); }
 #osHero p { font-size: 17px; line-height: 1.6; color: #dbe2ee; max-width: 520px; margin: 0; }
@@ -249,13 +260,14 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
   var h = document.createElement('div'); h.id = 'osHero';
   h.innerHTML = '<div class="os-yer">ANADOLU LİSESİ · ÜMRANİYE</div><h1>Ümraniye Merkez<br>Anadolu Lisesi</h1><p>1965 yılından bu yana Ümraniye\'de eğitim veren, Millî Eğitim Bakanlığına bağlı dört yıllık Anadolu lisesi.</p><div class="os-dug"><a class="os-d1" href="#osOkul">Okulumuzu tanıyın</a><a class="os-d2" href="#osIlt">İletişim ve ulaşım</a></div>';
   g.appendChild(h);
+  var sag = document.createElement('div'); sag.id = 'osSag'; g.appendChild(sag);   // 27 Kasım 2026: giriş kutusu ortada, Atatürk köşesi sağda
   var genis = window.matchMedia ? matchMedia('(min-width: 1100px) and (min-height: 640px)') : null;
   function yuklu() { try { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone; } catch (e) { return false; } }
   var ata = g.querySelector('.gt-ata'), ataYer = ata ? ata.parentNode : null, ataSonra = ata ? ata.nextSibling : null;
   function bak() {
     var ac = genis && genis.matches && !yuklu() && !g.classList.contains('gizli');
     document.body.classList.toggle('okul-site', !!ac);
-    if (ata) { if (ac && ata.parentNode !== h) h.appendChild(ata); else if (!ac && ata.parentNode === h) ataYer.insertBefore(ata, ataSonra); }
+    if (ata) { if (ac && ata.parentNode !== sag) sag.appendChild(ata); else if (!ac && ata.parentNode === sag) ataYer.insertBefore(ata, ataSonra); }
     if (ac) { var f = alt.querySelector('iframe[data-src]'); if (f && !f.src) f.src = f.getAttribute('data-src'); }
   }
   new MutationObserver(bak).observe(g, { attributes: true, attributeFilter: ['class'] });
