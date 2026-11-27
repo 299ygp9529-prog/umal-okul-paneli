@@ -61,8 +61,13 @@
   async function idare(ctx) {
     X = ctx; if (!GOZ) { GOZ = new MutationObserver(() => etiketle($('#icerik'))); GOZ.observe($('#icerik'), { childList: true, subtree: true }); } const I = $('#icerik'); I.innerHTML = '<div class="ust"><h1>Ders Programı Hazırla</h1></div><div class="kart soluk">Yükleniyor…</div>';
     try { await Promise.all([projeYukle(), istekleriYukle()]); } catch (e) { I.innerHTML = `<div class="ust"><h1>Ders Programı Hazırla</h1></div><div class="kart">${esc(e.message)}</div>`; return; }
+    if (window.UMAL_DP_ICE) { window.UMAL_DP_ICE = false; SEK = 'taslak'; ICE_BEKLE = true; }   // Nöbet › Ders programı ekle: Taslak ve yayın açılınca yükleme ekranı
     ciz();
   }
+  let ICE_BEKLE = false;
+  async function disaridanAc() {   // 27 Kasım 2026: dışarıda hazırlanmış programı Excel'den taslak olarak al (dp-ice.js)
+    try { if (!window.UmalDPIce) await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'dp-ice.js?v=202611271000'; sc.onload = ok; sc.onerror = () => red(new Error('yüklenemedi')); document.head.appendChild(sc); });
+      window.UmalDPIce.ac(X, $('#dpIc'), () => taslakCiz()); } catch (e) { X.uyar('Açılamadı: ' + X.hataYaz(e)); } }
   async function istekleriYukle() { const { data } = await X.sb.rpc('umal_dp_istekler'); ISTEK = (data && data.ok && data.liste) || []; }
   function ciz() {
     const I = $('#icerik'), bek = ISTEK.filter(i => i.durum === 'bekliyor').length;
@@ -632,11 +637,14 @@
   async function taslakCiz() {
     const E = $('#dpIc'); E.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
     const { data } = await X.sb.rpc('umal_dp_al', { p_anahtar: '*' }); const L = (data && data.liste) || [];
-    E.innerHTML = `<div class="kart"><div class="dp-bas"><b>Taslaklar ve yedekler</b><span class="soluk kucuk">Yayınlanınca eski program yedeklenir; yedekten geri dönülebilir.</span></div>
+    E.innerHTML = `<div class="kart"><div class="dp-bas"><b>Dışarıdan program</b><button class="birincil kucuk" id="dpDisari" style="text-transform:none">Dışarıdan program yükle (Excel)</button></div><div class="soluk kucuk">Programı başka bir yerde hazırladıysanız Excel dosyasını yükleyin; taslak olarak buraya gelir, denetimden geçince yayınlarsınız.</div></div>
+      <div class="kart"><div class="dp-bas"><b>Taslaklar ve yedekler</b><span class="soluk kucuk">Yayınlanınca eski program yedeklenir; yedekten geri dönülebilir.</span></div>
       ${L.length ? L.map(t => `<div class="dp-ist"><div class="dp-ist-ust"><b>${esc(t.ad || t.anahtar)}</b><em class="${t.anahtar.startsWith('yedek:') ? 'uygulandi' : 'bekliyor'}">${t.anahtar.startsWith('yedek:') ? 'Yedek' : 'Taslak'}</em></div>
         <div class="soluk kucuk">${esc(new Date(t.guncel).toLocaleString(tr))}${t.ceza ? ` · ${t.ceza.sert ? `<b style="color:#ff8a8a">${t.ceza.sert} denetim hatası</b>` : 'denetimden geçti'}${t.ceza.ogretmen ? ` · boş gün ${t.ceza.bosGun}/${t.ceza.ogretmen}` : ''}${t.ceza.bosluk != null ? ` · boşluk ${t.ceza.bosluk} saat` : ''}` : ''}</div>
         <div class="dya-sec"><button class="ikincil kucuk" data-dpta="${esc(t.anahtar)}" style="text-transform:none">Aç</button><button class="birincil kucuk" data-dpty="${esc(t.anahtar)}" style="text-transform:none">${t.anahtar.startsWith('yedek:') ? 'Bu yedeğe geri dön' : 'Yayınla'}</button>${t.anahtar.startsWith('taslak:') ? `<button class="ikincil kucuk" data-dpts="${esc(t.anahtar)}" style="text-transform:none">Sil</button>` : ''}</div></div>`).join('') : '<div class="soluk">Henüz taslak yok. Yerleştir sekmesinden hazırlayıp kaydedin.</div>'}</div><div id="dpSonuc"></div>`;
     const al = async k => { const { data: d } = await X.sb.rpc('umal_dp_al', { p_anahtar: k }); return d && d.veri; };
+    if ($('#dpDisari')) $('#dpDisari').onclick = disaridanAc;
+    if (ICE_BEKLE) { ICE_BEKLE = false; disaridanAc(); return; }
     E.querySelectorAll('[data-dpta]').forEach(b => b.onclick = async () => { const v = await al(b.dataset.dpta); if (!v) return; const prog = (v.program || {}).siniflar || {};
       SON = { r: { ihlal: v.ihlal || [], degisen: (v.ozet || {}).degisen || 0 }, prog, ad: v.ad || '', geri: [], elle: true }; DUZ = null; GOR = { tur: 'sinif', kim: null }; sonucCiz(); $('#dpSonuc').scrollIntoView({ behavior: 'smooth' }); });
     E.querySelectorAll('[data-dpty]').forEach(b => b.onclick = async () => { const v = await al(b.dataset.dpty); const prog = v && (v.program || {}).siniflar; if (!prog) { X.uyar('Taslak boş.'); return; }
