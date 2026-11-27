@@ -1561,15 +1561,27 @@
     const kel = araNorm(q).split(/[\s,.;]+/).filter(Boolean); if (!kel.length) return [];
     return BOLUMLER.filter(bolIzin).map(b => { const ad = araNorm(b.ad), adK = ad.split(/\s+/), ek = araNorm(ARA_EK[b.id] || ''), ekK = ek.split(/\s+/); let p = 0;
       for (const k of kel) { if (ad.startsWith(k)) p += 6; else if (adK.some(w => w.startsWith(k))) p += 5; else if (ad.includes(k)) p += 3; else if (ekK.some(w => w.startsWith(k))) p += 2; else if (ek.includes(k)) p += 1; else return null; }
-      return [b, p - (b.ust ? .5 : 0)]; }).filter(Boolean).sort((a, c) => c[1] - a[1]).map(x => x[0]).slice(0, 12);
+      return [b, p - (b.ust ? .5 : 0)]; }).filter(Boolean).concat(araIdari(kel)).sort((a, c) => c[1] - a[1]).map(x => x[0]).slice(0, 12);
   }
+  // 27 Kasım 2026: İdari İşlemler içindeki paneller de aranır; sonuca basınca doğrudan o panel açılır (disiplin.js window.UMAL_IDARI_HEDEF'i okur)
+  const ARA_IDARI = [['site', 'Okul İnternet Sitesi', 'okul internet sitesi web site duyuru etkinlik takvim video kadro öğretmen müdür mesajı kulüp mezun yerleşim'], ['dilek', 'Dilek ve Şikâyetler', 'dilek şikayet öneri teşekkür site mesaj'],
+    ['devam', 'Devamsızlık', 'devamsızlık özürsüz özürlü veli bildirim'], ['dyk', 'DYK Programı', 'dyk kurs destekleme yetiştirme ek ders'], ['zumre', 'Zümre Tutanakları', 'zümre toplantı tutanak'], ['evrak', 'Evraklar', 'evrak izin belgesi faaliyet geç kalan dönem sonu kayıt dosyası zaman çizelgesi'],
+    ['sok', 'Şube Öğretmenler Kurulu', 'şök şube öğretmenler kurulu'], ['veli', 'Veli Toplantısı', 'veli toplantısı davet tutanak'], ['sinifOlustur', 'Sınıf Oluşturma', 'sınıf oluşturma şube dağılım'], ['kurul', 'Kurul ve Komisyonlar', 'kurul komisyon'],
+    ['telafi', 'Telafi Sınavı', 'telafi sınavı'], ['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'sorumluluk beceri sınavı']];
+  function araIdari(kel) {
+    const b0 = BOLUMLER.find(b => b.id === 'disiplin'); if (!b0 || !bolIzin(b0)) return [];
+    return ARA_IDARI.map(([h, ad0, ek0]) => { const ad = araNorm(ad0), adK = ad.split(/\s+/), ekK = araNorm(ek0).split(/\s+/); let p = 0;
+      for (const k of kel) { if (ad.startsWith(k)) p += 6; else if (adK.some(w => w.startsWith(k))) p += 5; else if (ad.includes(k)) p += 3; else if (ekK.some(w => w.startsWith(k))) p += 2; else return null; }
+      return [{ id: 'disiplin', ust: 'disiplin', ad: ad0, hedef: h, alt: 'İdari İşlemler' }, p]; }).filter(Boolean);
+  }
+  document.addEventListener('click', ev => { const h = ev.target.closest && ev.target.closest('[data-hedef]'); if (h) window.UMAL_IDARI_HEDEF = h.dataset.hedef; }, true);
   const araAlt = id => { const t = (ARA_EK[id] || '').split(' ').slice(0, 5).join(', '); return t; };
   function menuAraKur() {   // masaüstü: menünün üstünde arama kutusu
     if (telefon() || document.getElementById('menuAra')) return; const m = $('#menu'); if (!m) return;
     m.insertAdjacentHTML('beforebegin', `<div class="mn-ara"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg><input id="menuAra" type="search" placeholder="Ne yapmak istersin?" title="Ara (Ctrl+K)" autocomplete="off" aria-label="Atlas'ta ara"><kbd>Ctrl K</kbd></div>`);
     const i = $('#menuAra');
     const yaz = () => { const q = i.value.trim(); m.classList.toggle('mn-arama', !!q); if (!q) { menuYaz(); return; } const L = araSonuc(q);
-      m.innerHTML = L.length ? L.map((b, k) => `<button class="menu-oge mn-sonuc ${k === 0 ? 'mn-ilk' : ''}" data-b="${b.id}">${menuIk(b.ust || b.id)}<span class="mn-yazi"><span class="mad">${esc(b.ad)}</span><small class="mn-ack">${esc(araAlt(b.id))}</small></span></button>`).join('') : '<div class="soluk kucuk" style="padding:8px 12px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
+      m.innerHTML = L.length ? L.map((b, k) => `<button class="menu-oge mn-sonuc ${k === 0 ? 'mn-ilk' : ''}" data-b="${b.id}"${b.hedef ? ` data-hedef="${b.hedef}"` : ''}>${menuIk(b.ust || b.id)}<span class="mn-yazi"><span class="mad">${esc(b.ad)}</span><small class="mn-ack">${esc(b.alt || araAlt(b.id))}</small></span></button>`).join('') : '<div class="soluk kucuk" style="padding:8px 12px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
     i.addEventListener('input', yaz);
     i.addEventListener('keydown', ev => { if (ev.key === 'Enter') { const b = m.querySelector('.mn-sonuc'); if (b) { b.click(); } } else if (ev.key === 'Escape') { i.value = ''; m.classList.remove('mn-arama'); menuYaz(); i.blur(); } });
     m.addEventListener('click', ev => { if (ev.target.closest('.mn-sonuc') && i.value) setTimeout(() => { i.value = ''; m.classList.remove('mn-arama'); menuYaz(); }, 0); }, true);
@@ -1582,7 +1594,7 @@
     if (D._araQ) i.value = D._araQ;
     const yaz = () => { const q = i.value.trim(); D._araQ = q; const diger = [...d.children].filter(x => !x.classList.contains('tm-ara') && !x.classList.contains('tm-ara-sonuc'));
       diger.forEach(x => { x.style.display = q ? 'none' : ''; }); so.classList.toggle('gizli', !q); if (!q) { so.innerHTML = ''; return; }
-      const L = araSonuc(q); so.innerHTML = L.length ? `<div class="tm-gruplar">${L.map(b => `<button class="tm-gk" style="--g:#22e8ff" data-tb="${b.id}">${menuIk(b.ust || b.id)}<span class="tm-yazi"><span class="tm-gad">${esc(b.ad)}</span><small>${esc(araAlt(b.id))}</small></span></button>`).join('')}</div>` : '<div class="soluk" style="padding:14px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
+      const L = araSonuc(q); so.innerHTML = L.length ? `<div class="tm-gruplar">${L.map(b => `<button class="tm-gk" style="--g:#22e8ff" data-tb="${b.id}"${b.hedef ? ` data-hedef="${b.hedef}"` : ''}>${menuIk(b.ust || b.id)}<span class="tm-yazi"><span class="tm-gad">${esc(b.ad)}</span><small>${esc(b.alt || araAlt(b.id))}</small></span></button>`).join('')}</div>` : '<div class="soluk" style="padding:14px">Bulunamadı. Başka bir kelime deneyin.</div>'; };
     i.addEventListener('input', yaz); i.addEventListener('click', ev => ev.stopPropagation());
     if (i.value) yaz();
   }
@@ -6979,7 +6991,7 @@ small.e{display:block;font:600 5.8pt Inter;letter-spacing:.24em;color:#999}
   async function disiplinBolumu() {
     const yukle = src => new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => red(new Error('Disiplin paneli yüklenemedi')); document.head.appendChild(sc); });
     if (!window.UMAL_DISIPLIN_MADDE) await yukle('disiplin/maddeler.js?v=202611131200');
-    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611270810');
+    if (!window.UmalDisiplin) await yukle('disiplin/disiplin.js?v=202611270620');
     if (!window.UmalIdari) await yukle('disiplin/idari.js?v=202611270810');   // K-625: idari işlemler
     await ogrencileriYukle().catch(() => []);
     window.UmalDisiplin.ac($('#icerik'), { sb, eposta: D.eposta, rol: D.rol, foto, fotolariYukle, ogrencileriYukle, belgeOnizle, baslik, seviyeRenk, hataYaz, israrla, pencereAc,

@@ -1192,6 +1192,7 @@ p{margin:2mm 0;text-align:justify;line-height:1.5}.sag{text-align:right}.pus{bor
       kok.innerHTML = `<div class="kart"><b>Disiplin paneli henüz hazır değil.</b><div class="soluk" style="margin-top:6px">Supabase'de <b>20261113120000_umal_disiplin.sql</b> dosyasının çalıştırılması gerekiyor. (${esc(C.hataYaz(e))})</div></div>`; return;
     }
     S.yil = S.ayar.yil || S.yil;
+    if (window.UMAL_IDARI_HEDEF) { S.ekran = window.UMAL_IDARI_HEDEF; window.UMAL_IDARI_HEDEF = null; }   // 27 Kasım 2026: menü aramasından doğrudan panel
     bagla(); ciz();
   }
   window.UmalDisiplin = { ac, _test: { S, evrakSayfa, evrakKabuk, isGunuEkle, isGunuArasi, puanDurumu, siradaki, sure } };
