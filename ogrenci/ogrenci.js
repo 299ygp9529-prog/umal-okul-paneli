@@ -396,7 +396,7 @@
   const ANA = { son: '', anim: false };
   // 27 Kasım 2026: Oyunlar (satranç, mangala) — kod yalnız ilk açılışta yüklenir
   async function oyunAc() {
-    if (!window.UmalOyun) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = '../oyun/oyun.js?v=202611270900'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { uyar('Oyunlar yüklenemedi; bağlantını kontrol et.'); return; } }
+    if (!window.UmalOyun) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = '../oyun/oyun.js?v=202611272130'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { uyar('Oyunlar yüklenemedi; bağlantını kontrol et.'); return; } }
     goster('s-oyun'); window.scrollTo(0, 0);
     const g = $('#s-oyun [data-ana]'); if (g && !g.dataset.oy) { g.dataset.oy = '1'; g.addEventListener('click', () => window.UmalOyun && window.UmalOyun.kapat(), true); }
     window.UmalOyun.ac({ sb, kok: $('#oyunKok'), no: () => S.no, kod: () => S.kod, uyar, onayla });

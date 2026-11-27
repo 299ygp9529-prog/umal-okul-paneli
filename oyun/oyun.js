@@ -9,6 +9,7 @@
   const TAS = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
   let C = null, kok = null, X = null, durum = null, tur = 'satranc', ekran = 'lobi', oyun = null, secili = null, chessMod = null;
   let lobiZ = 0, oyunZ = 0, aramaZ = 0, kanalOyun = null, kanalBen = null, mesgul = false, sonIfade = '';
+  let trn = null, trnZ = 0;   // 27 Kasım 2026: okul turnuvası (SQL 20261127100000_umal_turnuva.sql çalışmadıysa hiç görünmez)
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const bas = a => String(a || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toLocaleUpperCase('tr');
   const RENK = ['#5b7aa3', '#2f7a5b', '#8a5a2b', '#7a4a8a', '#a0465a', '#3f6f8f'];
@@ -42,6 +43,8 @@
 .oy-kucuk-btn{border:0;border-radius:10px;padding:7px 12px;font-weight:800;font-size:12.5px;cursor:pointer}.oy-evet{background:var(--neon,#22e8ff);color:#06202a}.oy-hayir{background:transparent;color:var(--soluk,#9fb3cc);border:1px solid var(--cizgi,#2a4468)!important}
 .oy-tablo{width:100%;border-collapse:collapse;margin-top:6px}.oy-tablo td{padding:7px 4px;border-top:1px solid var(--cizgi,#2a4468);font-size:13.5px}.oy-tablo td:last-child{text-align:right;font-weight:800}
 .oy-tablo tr.ben td{color:var(--neon,#22e8ff)}
+.oy-trn{border-color:rgba(255,212,59,.55);background:linear-gradient(135deg,rgba(255,212,59,.12),rgba(34,232,255,.06))}.oy-trn h3{margin:0 0 2px;font-size:17px}.oy-trn .oy-say{display:flex;gap:8px;margin:10px 0}.oy-trn .oy-say div{flex:1;background:rgba(0,0,0,.18);border-radius:12px;padding:8px 10px;text-align:center}.oy-trn .oy-say b{display:block;font-size:20px;color:#ffd43b}.oy-trn .oy-say small{color:var(--soluk,#9fb3cc);font-size:11.5px}
+.oy-agac{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.oy-agac>div{min-width:150px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}.oy-agac .m{background:rgba(0,0,0,.2);border:1px solid var(--cizgi,#2a4468);border-radius:10px;padding:6px 8px;font-size:12.5px}.oy-agac .m div{display:flex;justify-content:space-between;gap:6px}.oy-agac .m .k{color:#5be39b;font-weight:700}.oy-agac .m.ben{border-color:var(--neon,#22e8ff)}
 .oy-cip{display:flex;gap:6px;flex-wrap:wrap}.oy-cip button{border:1px solid var(--cizgi,#2a4468);background:transparent;color:var(--soluk,#9fb3cc);border-radius:99px;padding:7px 12px;font-size:13px;cursor:pointer;font:inherit}
 .oy-cip button.s{background:rgba(34,232,255,.15);color:var(--neon,#22e8ff);border-color:var(--neon,#22e8ff)}
 .oy-girdi{width:100%;box-sizing:border-box;background:var(--koyu,#0f1c2e);border:1px solid var(--cizgi,#2a4468);border-radius:12px;padding:12px;color:#fff;font:inherit;font-size:16px;margin-bottom:10px}
@@ -80,13 +83,15 @@
     benKanal();
     await lobiYukle(); lobiZamanla();
   }
-  function kapat() { clearTimeout(lobiZ); clearTimeout(oyunZ); clearInterval(aramaZ); aramaZ = 0; oyunKanalKapat(); if (kanalBen) { try { C.sb.removeChannel(kanalBen); } catch (e) {} kanalBen = null; } ekran = 'kapali'; }
+  function kapat() { clearInterval(trnZ); trnZ = 0; clearTimeout(lobiZ); clearTimeout(oyunZ); clearInterval(aramaZ); aramaZ = 0; oyunKanalKapat(); if (kanalBen) { try { C.sb.removeChannel(kanalBen); } catch (e) {} kanalBen = null; } ekran = 'kapali'; }
   function benKanal() { if (kanalBen) return; try { kanalBen = C.sb.channel('oyuncu-' + C.no()).on('broadcast', { event: 'yeni' }, () => { if (ekran === 'lobi') lobiYukle(); else if (ekran === 'oyun' && oyun) oyunYenile(); }).subscribe(); } catch (e) {} }
   function durt(no) { if (!no) return; try { const k = C.sb.channel('oyuncu-' + no); k.subscribe(d => { if (d === 'SUBSCRIBED') { k.send({ type: 'broadcast', event: 'yeni', payload: {} }); setTimeout(() => { try { C.sb.removeChannel(k); } catch (e) {} }, 1500); } }); } catch (e) {} }
   function lobiZamanla() { clearTimeout(lobiZ); lobiZ = setTimeout(async () => { if (ekran === 'lobi' && !document.hidden) await lobiYukle(); if (ekran !== 'kapali') lobiZamanla(); }, 15000); }
 
   // ---------------------------------------------------------------- lobi
-  async function lobiYukle() { const r = await rpc('umal_oyun_durum'); if (ekran === 'kapali') return; if (!r.ok) { if (ekran === 'lobi') kok.innerHTML = `<div class="oy"><div class="oy-kart soluk">${esc(r.hata)}</div></div>`; return; } durum = r; if (ekran === 'lobi') lobiCiz(); }
+  async function trnYukle() { try { const { data, error } = await C.sb.rpc('umal_turnuva_durum', { p_no: C.no(), p_kod: C.kod() }); trn = !error && data && data.ok ? data.turnuva : null; } catch (e) { trn = null; } }
+  async function lobiYukle() { trnYukle().then(() => { if (ekran === 'lobi' && durum) lobiCiz(); else if (ekran === 'turnuva') trnCiz(); });
+    const r = await rpc('umal_oyun_durum'); if (ekran === 'kapali') return; if (!r.ok) { if (ekran === 'lobi') kok.innerHTML = `<div class="oy"><div class="oy-kart soluk">${esc(r.hata)}</div></div>`; return; } durum = r; if (ekran === 'lobi') lobiCiz(); }
   function macSatir(g) {
     const r = g.rakip || { ad: '?', no: '' }; let et = '', sag = '';
     if (g.durum === 'davet' && g.gelen) sag = `<span style="margin-left:auto;display:flex;gap:6px"><button class="oy-kucuk-btn oy-evet" data-kabul="${g.id}">Oyna</button><button class="oy-kucuk-btn oy-hayir" data-red="${g.id}">Hayır</button></span>`;
@@ -102,6 +107,7 @@
     const ayar = d.ayar || { davet: 'herkes', engel: [] };
     kok.innerHTML = `<div class="oy"><div class="oy-alt">Okulumuzun öğrencileriyle satranç ve mangala</div>
       ${d.kapali ? '<div class="oy-kart" style="border-color:rgba(255,212,59,.5)">Oyunlar okul idaresi tarafından şu an kapatıldı.</div>' : ''}
+      ${trnKart()}
       <div class="oy-sek">${Object.keys(AD).map(k => `<button class="${tur === k ? 's' : ''}" data-tur="${k}">${k === 'satranc' ? '♞︎ ' : '◍ '}${AD[k]}</button>`).join('')}</div>
       <button class="oy-btn ana" data-x="bul"><i>⚡</i><span><b>Rakip bul</b><small>Şu an ${AD[tur].toLocaleLowerCase('tr')} oynamak isteyen biriyle eşleş</small></span></button>
       <button class="oy-btn" data-x="davet"><i style="background:rgba(255,212,59,.15);color:#ffd43b">＋</i><span><b>Arkadaşını davet et</b><small>Ad ya da sınıfla ara</small></span></button>
@@ -113,6 +119,46 @@
         <div class="oy-cip">${[['herkes', 'Herkes'], ['sinif', 'Yalnız sınıfım'], ['kapali', 'Kimse']].map(([k, a]) => `<button class="${ayar.davet === k ? 's' : ''}" data-davetayar="${k}">${a}</button>`).join('')}</div>
         ${(ayar.engel || []).length ? `<div class="soluk kucuk" style="margin:12px 0 4px">Engellediklerin</div>${ayar.engel.map(e => `<div class="oy-mac" style="cursor:default"><span class="oy-av" style="background:${avRenk(e.no)}">${esc(bas(e.ad))}</span><span><b>${esc(e.ad)} · ${esc(e.sinif)}</b></span><button class="oy-kucuk-btn oy-hayir" style="margin-left:auto" data-engelkaldir="${esc(e.no)}">Kaldır</button></div>`).join('')}` : ''}</div></div>`;
   }
+
+  // ---------------------------------------------------------------- okul turnuvası
+  const trnZaman = t => { if (!t) return ''; const d = new Date(t); return d.toLocaleDateString('tr', { day: 'numeric', month: 'long' }) + ' ' + d.toLocaleTimeString('tr', { hour: '2-digit', minute: '2-digit' }); };
+  const trnTurAd = t => t.durum === 'lig' ? `${t.aktif_tur}. tur (${t.lig_tur} turluk lig)` : t.durum === 'eleme' ? (({ 1: 'Final', 2: 'Yarı final', 4: 'Çeyrek final', 8: 'Son 16', 16: 'Son 32' })[trnEleme(t).filter(m => m.tur === t.aktif_tur).length] || 'Eleme') : '';
+  const trnEleme = t => (t.maclar || []).filter(m => m.asama === 'eleme');
+  const trnBenimMac = t => (t.maclar || []).filter(m => m.ben && m.tur === t.aktif_tur && m.b !== null)[0];
+  function trnKart() {
+    const t = trn; if (!t || t.durum === 'iptal') return '';
+    const ben = (t.tablo || []).find(x => x.ben), kay = t.ben && t.ben.kayitli, m = trnBenimMac(t);
+    let ic = '';
+    if (t.durum === 'kayit') ic = `<div class="oy-say"><div><b>${t.kayitli}</b><small>kişi katıldı</small></div><div><b>${t.lig_tur}</b><small>tur lig + eleme</small></div>${t.kayit_bitis ? `<div><b style="font-size:14px;padding-top:4px">${esc(trnZaman(t.kayit_bitis))}</b><small>son kayıt</small></div>` : ''}</div>
+      ${kay ? `<div class="soluk kucuk">Kaydın alındı. Turnuva başlayınca ilk maçın burada görünecek.</div><button class="oy-kucuk-btn oy-hayir" style="margin-top:8px" data-trnayril="${t.id}">Kaydımı geri al</button>`
+            : `<button class="oy-btn ana" style="margin:4px 0 0" data-trnkatil="${t.id}"><i>🏆</i><span><b>Turnuvaya katıl</b><small>Bütün okul tek turnuva · kimse ilk maçta elenmez</small></span></button>`}`;
+    else if (t.durum === 'lig' || t.durum === 'eleme') ic = `<div class="soluk kucuk" style="margin-top:2px">${esc(trnTurAd(t))} · tur ${esc(trnZaman(t.tur_bitis))}'e kadar açık</div>
+      ${m ? `<button class="oy-btn ana" style="margin:10px 0 0" data-trnac="${m.oyun}"><i>♞</i><span><b>${m.odurum === 'suruyor' ? (m.sira === (m.a && m.a.no === C.no() ? 'a' : 'b') ? 'Turnuva maçın: sıra sende' : 'Turnuva maçın: rakipte') : 'Bu turdaki maçın bitti'}</b><small>Rakibin ${esc((m.a && m.a.no === C.no() ? m.b : m.a).ad)} · ${esc((m.a && m.a.no === C.no() ? m.b : m.a).sinif)}</small></span></button>`
+          : kay ? `<div class="soluk kucuk" style="margin-top:8px">${t.durum === 'eleme' && ben && !trnEleme(t).some(x => x.ben && x.tur === t.aktif_tur) ? 'Elemeye kalamadın ya da elendin; maçları izleyebilirsin.' : (t.maclar || []).some(x => x.ben && x.tur === t.aktif_tur && x.b === null) ? 'Bu tur rakipsiz kaldın: 1 puan kazandın (bay).' : 'Bu turda maçın yok.'}</div>` : '<div class="soluk kucuk" style="margin-top:8px">Bu turnuvaya katılmadın; tabloyu izleyebilirsin.</div>'}
+      ${ben ? `<div class="soluk kucuk" style="margin-top:8px">Sıralaman ${ben.sira}. · ${ben.puan} puan</div>` : ''}`;
+    else if (t.durum === 'bitti') ic = `<div style="margin-top:6px">Şampiyon: <b style="color:#ffd43b">${esc(t.sampiyon ? t.sampiyon.ad + ' · ' + t.sampiyon.sinif : '—')}</b></div>`;
+    return `<div class="oy-kart oy-trn"><h3>🏆 ${esc(t.ad)}</h3><div class="soluk kucuk">${esc(AD[t.tur])}${t.odul ? ' · Ödül: ' + esc(t.odul) : ''}</div>${ic}
+      ${t.durum !== 'kayit' ? `<button class="oy-kucuk-btn" style="margin-top:10px" data-x="turnuva">Tabloyu ve maçları gör</button>` : ''}</div>`;
+  }
+  function trnCiz() {
+    ekran = 'turnuva'; const t = trn; if (!t) { ekran = 'lobi'; return lobiCiz(); }
+    const E = trnEleme(t), turlar = [...new Set(E.map(m => m.tur))].sort((a, b) => a - b), benM = (t.maclar || []).filter(m => m.ben && m.asama === 'lig');
+    const kisi = (k, s) => k ? `<span>${esc(k.ad)} <small class="soluk">${esc(k.sinif || '')}</small></span>${s}` : '<span class="soluk">—</span>';
+    kok.innerHTML = `<div class="oy"><button class="oy-kucuk-btn" data-x="lobi">‹ Oyunlar</button><h2 style="margin:12px 0 2px">🏆 ${esc(t.ad)}</h2><div class="oy-alt">${esc(AD[t.tur])} · ${t.kayitli} katılımcı${t.durum === 'lig' || t.durum === 'eleme' ? ' · ' + esc(trnTurAd(t)) : t.durum === 'bitti' ? ' · bitti' : ''}</div>
+      ${t.durum === 'bitti' ? `<div class="oy-kart oy-trn"><b>Şampiyon: ${esc(t.sampiyon ? t.sampiyon.ad + ' · ' + t.sampiyon.sinif : '—')}</b>${(t.seviye || []).length ? `<div class="soluk kucuk" style="margin-top:6px">Sınıf seviyelerinin en iyileri: ${t.seviye.map(x => `${esc(x.seviye)}. sınıflar ${esc(x.ad)} (${esc(x.sinif)})`).join(' · ')}</div>` : ''}</div>` : ''}
+      ${E.length ? `<div class="oy-kart"><b>Eleme tablosu</b><div class="oy-agac" style="margin-top:8px">${turlar.map(tu => `<div>${E.filter(m => m.tur === tu).map(m => `<div class="m ${m.ben ? 'ben' : ''}"><div class="${m.sonuc === 'a' ? 'k' : ''}">${kisi(m.a, m.sonuc === 'a' ? '✓' : '')}</div><div class="${m.sonuc === 'b' ? 'k' : ''}">${kisi(m.b, m.sonuc === 'b' ? '✓' : '')}</div></div>`).join('')}</div>`).join('')}</div></div>` : ''}
+      ${benM.length ? `<div class="oy-kart"><b>Lig maçlarım</b><table class="oy-tablo">${benM.map(m => { const ben_a = m.a && m.a.no === C.no(), r = ben_a ? m.b : m.a; const s = m.b === null ? 'bay · 1 puan' : m.sonuc === 'berabere' ? 'berabere' : m.sonuc ? ((m.sonuc === 'a') === ben_a ? 'kazandın' : 'kaybettin') : m.odurum === 'suruyor' ? 'sürüyor' : '—';
+          return `<tr><td style="width:44px">${m.tur}. tur</td><td>${r ? esc(r.ad) + ' · ' + esc(r.sinif) : 'rakipsiz'}</td><td style="text-align:right">${s}${m.odurum === 'suruyor' && m.tur === t.aktif_tur ? ` <button class="oy-kucuk-btn" data-trnac="${m.oyun}">Oyna</button>` : ''}</td></tr>`; }).join('')}</table></div>` : ''}
+      <div class="oy-kart"><b>Lig sıralaması</b><div class="soluk kucuk">Galibiyet 1, beraberlik ½ puan. Eşitlikte rakiplerin puan toplamı önde.</div><table class="oy-tablo">${(t.tablo || []).map(x => `<tr class="${x.ben ? 'ben' : ''}"><td style="width:30px">${x.sira}</td><td>${esc(x.ad)} · ${esc(x.sinif || '')}</td><td style="text-align:right">${x.puan}</td></tr>`).join('')}</table></div></div>`;
+  }
+  async function trnOyunAc(id) {
+    const g = await C.sb.rpc('umal_turnuva_gir', { p_no: C.no(), p_kod: C.kod(), p_oyun: id }).then(r => r.data || {}).catch(() => ({ ok: true }));
+    if (!g.ok) return uyar(g.hata || 'Şu an girilemiyor.');
+    const r = await rpc('umal_oyun_al', { p_id: id }); if (!r.ok) return uyar(r.hata);
+    await oyunAc(r.oyun);
+    clearInterval(trnZ); trnZ = setInterval(() => { if (ekran !== 'oyun' || !oyun || oyun.id !== id || oyun.durum !== 'suruyor') { clearInterval(trnZ); trnZ = 0; return; } C.sb.rpc('umal_turnuva_gir', { p_no: C.no(), p_kod: C.kod(), p_oyun: id }).then(() => {}, () => {}); }, 60000);
+  }
+  const trnOyunu = id => !!trn && (trn.maclar || []).some(m => m.ben && m.oyun === id);
 
   // ---------------------------------------------------------------- davet
   let davetQ = '', davetSinif = true, davetL = [], davetZ = 0;
@@ -175,6 +221,11 @@
     if (d.davetet) { if (mesgul) return; mesgul = true; const r = await rpc('umal_oyun_davet', { p_tur: tur, p_rakip: d.davetet }); mesgul = false; if (!r.ok) return uyar(r.hata); durt(d.davetet); uyar('Davet gönderildi. Kabul edince Maçlarım\'da görünecek.'); await lobiYukle(); return lobiCiz(); }
     if (d.kabul || d.red) { const r = await rpc('umal_oyun_cevap', { p_id: d.kabul || d.red, p_kabul: !!d.kabul }); if (!r.ok) { uyar(r.hata); return lobiYukle(); } const g = (durum.maclar || []).find(x => x.id === (d.kabul || d.red)); if (g && g.rakip) durt(g.rakip.no); if (d.kabul) return oyunAc(r.oyun); return lobiYukle(); }
     if (d.iptal) { await rpc('umal_oyun_iptal', { p_id: d.iptal }); return lobiYukle(); }
+    if (d.x === 'turnuva') { await trnYukle(); return trnCiz(); }
+    if (d.trnkatil || d.trnayril) { if (mesgul) return; mesgul = true; const { data } = await C.sb.rpc('umal_turnuva_katil', { p_no: C.no(), p_kod: C.kod(), p_id: d.trnkatil || d.trnayril, p_katil: !!d.trnkatil }).catch(() => ({ data: null })); mesgul = false;
+      if (!data || !data.ok) return uyar((data && data.hata) || 'Bağlantı sorunu; tekrar dene.'); trn = data.turnuva; return lobiCiz(); }
+    if (d.trnac) return trnOyunAc(d.trnac);
+    if (d.ac && trnOyunu(d.ac)) return trnOyunAc(d.ac);
     if (d.ac) { const r = await rpc('umal_oyun_al', { p_id: d.ac }); if (!r.ok) return uyar(r.hata); return oyunAc(r.oyun); }
     if (d.davetayar) { await rpc('umal_oyun_ayar_kaydet', { p_davet: d.davetayar }); durum.ayar = Object.assign(durum.ayar || {}, { davet: d.davetayar }); return lobiCiz(); }
     if (d.engelkaldir) { await rpc('umal_oyun_ayar_kaydet', { p_engel_sil: d.engelkaldir }); return lobiYukle(); }

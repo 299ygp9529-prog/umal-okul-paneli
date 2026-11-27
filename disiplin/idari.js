@@ -32,13 +32,14 @@
     video: 'M3.5 6h17v12h-17zM10 9.5v5l4.5-2.5z',
     evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5',
     sosyal: 'M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8zM4 21h16',
+    turnuva: 'M7 4h10v4a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20.5h7M9.5 17h5v3.5h-5z',
     site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler'], ['sosyal', 'Sosyal Etkinlikler', 'kulüpler, etkinlikler, fotoğraf, belgeler'], ['turnuva', 'Okul Turnuvası', 'satranç / mangala: kayıt, lig, eleme, belgeler']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1384,6 +1385,74 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     return false;
   }
 
+  // ================================================================ 16) OKUL TURNUVASI (27 Kasım 2026)
+  // Satranç / mangala; bütün okul tek turnuva: kayıt → İsviçre usulü lig (kimse elenmez) → en iyi 16 ile eleme → şampiyon.
+  // Veri ve eşleştirme sunucuda (SQL 20261127100000_umal_turnuva.sql); burada idare turnuvayı açar, turları başlatır, tabloyu izler, belgeleri basar.
+  const TR = { V: null, gecmis: [] };
+  const trRpc = async (ad, p) => { const { data, error } = await C.sb.rpc(ad, p || {}); if (error) throw error; return data; };
+  const trYerel = d => { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; };
+  const trVarsayilanBitis = () => { const d = new Date(); if (d.getHours() >= 21) d.setDate(d.getDate() + 1); d.setHours(23, 59, 0, 0); return trYerel(d); };
+  const trZaman = t => t ? new Date(t).toLocaleString(tr, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+  const TR_OYUN = { satranc: 'Satranç', mangala: 'Mangala' };
+  async function turnuva() {
+    try { const r = await trRpc('umal_turnuva_yonetim', { p_id: null }); if (!r.ok) throw new Error(r.hata); TR.V = r.turnuva; TR.gecmis = r.gecmis || []; }
+    catch (e) { kok.innerHTML = bas('Okul Turnuvası') + `<div class="kart"><b>Turnuva sistemi henüz kurulmamış.</b><div class="soluk" style="margin-top:6px">Supabase → SQL Editor'de <code>20261127100000_umal_turnuva.sql</code> dosyasını bir kez çalıştırın, sonra bu sayfayı yenileyin.</div><div class="soluk kucuk" style="margin-top:6px">${esc(e.message || e)}</div></div>`; return; }
+    trCiz();
+  }
+  function trCiz() {
+    const t = TR.V;
+    if (!t || t.durum === 'iptal' || t.durum === 'bitti' && TR.goster === false) {
+      kok.innerHTML = bas('Okul Turnuvası', 'satranç ve mangala · bütün okul tek turnuva', t && t.durum === 'bitti' ? '<button class="ikincil" data-trx="sonGoster">Son turnuvanın sonuçları</button>' : '') +
+        `<div class="kart"><b style="font-size:15px">Yeni turnuva aç</b><div class="soluk kucuk" style="margin:4px 0 10px">Öğrenciler Atlas → Oyunlar'dan kayıt olur. Kayıttan sonra İsviçre usulü lig oynanır: kimse elenmez, her turda benzer puanlılar eşleşir. Ligin en iyileri elemeye kalır, final oynanır. Her tur bir gün açıktır; süre dolunca bitmemiş maçta sırası gelen kaybeder.</div>
+        <div class="id-form"><label>Turnuvanın adı<input id="trAd" value="Okul Satranç Turnuvası"></label><label>Oyun<select id="trOyun"><option value="satranc">Satranç</option><option value="mangala">Mangala</option></select></label>
+          <label>Lig tur sayısı<select id="trLig">${[3, 4, 5, 6, 7].map(n => `<option ${n === 5 ? 'selected' : ''}>${n}</option>`).join('')}</select></label><label>Elemeye kalan<select id="trEleme">${[4, 8, 16, 32].map(n => `<option ${n === 16 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+          <label>Son kayıt (isteğe bağlı)<input id="trKayit" type="datetime-local"></label><label>Aynı anda en çok oynayan<input id="trSinir" type="number" min="10" max="190" value="150"></label>
+          <label class="genis">Ödül<input id="trOdul" value="Birinciye 500 TL, ikinciye 300 TL, üçüncüye 200 TL"></label></div>
+        <div class="dugmeler" style="justify-content:flex-start;margin:12px 0 0"><button class="birincil" data-trx="olustur">Turnuvayı aç (kayıt başlar)</button></div><div id="idBilgi" class="id-bilgi"></div></div>
+        ${TR.gecmis.length ? `<div class="kart"><b>Geçmiş turnuvalar</b>${TR.gecmis.map(g => `<div class="soluk" style="margin-top:6px">${esc(g.ad)} · ${esc(tGos(String(g.olusturma).slice(0, 10)))} · ${esc({ kayit: 'kayıtta', lig: 'lig', eleme: 'eleme', bitti: 'bitti', iptal: 'iptal edildi' }[g.durum] || g.durum)}</div>`).join('')}</div>` : ''}`;
+      return;
+    }
+    const E = (t.maclar || []).filter(m => m.asama === 'eleme'), buTur = (t.maclar || []).filter(m => m.tur === t.aktif_tur), acik = buTur.filter(m => m.b && !m.sonuc).length;
+    const kisi = k => k ? `${esc(k.ad)} <span class="soluk">${esc(k.sinif || '')}</span>` : '<span class="soluk">rakipsiz (bay)</span>';
+    const durumYazi = { kayit: 'Kayıt sürüyor', lig: `Lig · ${t.aktif_tur}/${t.lig_tur}. tur`, eleme: `Eleme · ${buTur.length === 1 ? 'final' : buTur.length === 2 ? 'yarı final' : buTur.length === 4 ? 'çeyrek final' : 'son ' + buTur.length * 2}`, bitti: 'Bitti' }[t.durum];
+    const sonraki = t.durum === 'kayit' ? '1. turu başlat' : t.durum === 'lig' && t.aktif_tur < t.lig_tur ? `${t.aktif_tur + 1}. turu başlat` : t.durum === 'lig' ? 'Elemeye geç' : buTur.length <= 1 ? 'Turnuvayı bitir' : 'Sonraki eleme turunu başlat';
+    kok.innerHTML = bas('Okul Turnuvası', `${esc(t.ad)} · ${esc(TR_OYUN[t.tur])}${t.odul ? ' · ' + esc(t.odul) : ''}`, `<button class="ikincil" data-trx="yenile">Yenile</button>`) +
+      `<div class="id-say"><div><b>${t.kayitli}</b><span>katılımcı</span></div><div><b style="font-size:17px">${esc(durumYazi)}</b><span>${t.tur_bitis ? 'tur ' + esc(trZaman(t.tur_bitis)) + "'e kadar" : t.kayit_bitis ? 'son kayıt ' + esc(trZaman(t.kayit_bitis)) : 'durum'}</span></div>${t.durum !== 'kayit' && t.durum !== 'bitti' ? `<div><b>${buTur.filter(m => m.sonuc).length}/${buTur.length}</b><span>bu turda biten maç</span></div><div><b>${t.oynayan}/${t.sinir}</b><span>şu an oynayan</span></div>` : ''}</div>
+      ${t.durum !== 'bitti' ? `<div class="kart"><div class="id-satir"><b style="flex:1">${esc(sonraki)}</b>${sonraki !== 'Turnuvayı bitir' ? `<label class="soluk kucuk" style="display:flex;gap:6px;align-items:center">Bu tur şu zamana kadar açık<input id="trBitis" type="datetime-local" value="${trVarsayilanBitis()}"></label>` : ''}<button class="birincil" data-trx="ilerle">${esc(sonraki)}</button>${acik ? `<button class="ikincil" data-trx="zorla">Bitmemiş ${acik} maçı kapatıp ilerle</button>` : ''}</div>
+        <div class="soluk kucuk" style="margin-top:6px">${t.durum === 'kayit' ? 'Kayıtlar Atlas → Oyunlar → Turnuva kartından yapılır. Tanıtım için öğrencilere bu kartı gösterin.' : 'Süre dolunca bitmemiş maçlar kendiliğinden kapanır (sırası gelen kaybeder). Elemede beraberlik olursa renkler değişerek yeniden oynanır.'}</div><div id="idBilgi" class="id-bilgi"></div></div>` : `<div class="kart"><b style="font-size:16px">Şampiyon: ${esc(t.sampiyon ? t.sampiyon.ad + ' · ' + t.sampiyon.sinif : '—')}</b><div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0"><button class="birincil" data-trx="belge">Başarı belgelerini yazdır</button><button class="ikincil" data-trx="yeni">Yeni turnuva aç</button></div><div id="idBilgi" class="id-bilgi"></div></div>`}
+      ${E.length ? `<div class="kart"><b>Eleme tablosu</b><div style="display:flex;gap:12px;overflow-x:auto;margin-top:8px">${[...new Set(E.map(m => m.tur))].sort((a, b) => a - b).map(tu => `<div style="min-width:200px;display:flex;flex-direction:column;justify-content:space-around;gap:8px">${E.filter(m => m.tur === tu).map(m => `<div style="background:var(--koyu);border:1px solid var(--cizgi);border-radius:10px;padding:6px 9px;font-size:13px"><div style="${m.sonuc === 'a' ? 'color:#3ef08a;font-weight:700' : ''}">${kisi(m.a)}</div><div style="${m.sonuc === 'b' ? 'color:#3ef08a;font-weight:700' : ''}">${kisi(m.b)}</div>${!m.sonuc ? `<div class="soluk kucuk">${m.odurum === 'suruyor' ? 'sürüyor · ' + m.hamle + ' hamle' : ''}</div>` : ''}</div>`).join('')}</div>`).join('')}</div></div>` : ''}
+      ${t.durum === 'lig' && buTur.length ? `<div class="kart"><b>${t.aktif_tur}. tur maçları</b><div class="id-kaydir"><table class="ds-tablo" style="margin-top:6px"><tr><th>Masa</th><th>Oyuncu</th><th>Rakip</th><th>Durum</th></tr>${buTur.map(m => `<tr><td>${m.b ? m.masa : '—'}</td><td>${kisi(m.a)}</td><td>${kisi(m.b)}</td><td>${!m.b ? 'bay · 1 puan' : m.sonuc ? (m.sonuc === 'berabere' ? 'berabere' : (m.sonuc === 'a' ? esc(m.a.ad) : esc(m.b.ad)) + ' kazandı') : m.odurum === 'suruyor' ? `sürüyor · ${m.hamle} hamle` : '—'}</td></tr>`).join('')}</table></div></div>` : ''}
+      <div class="kart"><div class="id-satir"><b style="flex:1">${t.durum === 'kayit' ? 'Kayıt olanlar' : 'Lig sıralaması'} (${(t.tablo || []).length})</b>${(t.tablo || []).length ? '<button class="ikincil id-mini" data-trx="excel">Excel</button>' : ''}</div><div class="id-kaydir" style="max-height:520px"><table class="ds-tablo" style="margin-top:6px"><tr><th>#</th><th>Adı soyadı</th><th>Sınıf</th>${t.durum !== 'kayit' ? '<th>Puan</th><th>Rakip puanı</th>' : ''}<th>Oyun puanı</th></tr>${(t.tablo || []).map(x => `<tr><td>${x.sira}</td><td>${esc(x.ad || x.no)}</td><td>${esc(x.sinif || '')}</td>${t.durum !== 'kayit' ? `<td>${x.puan}</td><td>${x.bh}</td>` : ''}<td>${x.elo}</td></tr>`).join('')}</table></div></div>
+      ${(t.seviye || []).length && t.durum !== 'kayit' ? `<div class="kart"><b>Sınıf seviyelerinin en iyileri</b>${t.seviye.map(x => `<div style="margin-top:6px">${esc(x.seviye)}. sınıflar: <b>${esc(x.ad)}</b> <span class="soluk">${esc(x.sinif)} · ${x.puan} puan</span></div>`).join('')}</div>` : ''}
+      ${t.durum !== 'bitti' ? '<div class="dugmeler" style="justify-content:flex-start"><button class="bag" style="color:var(--kirmizi)" data-trx="iptal">Turnuvayı iptal et</button></div>' : ''}`;
+  }
+  async function trTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset; if (!d.trx) return false;
+    const t = TR.V;
+    try {
+      if (d.trx === 'yenile') { await turnuva(); return true; }
+      if (d.trx === 'sonGoster') { TR.goster = true; trCiz(); return true; }
+      if (d.trx === 'yeni') { TR.goster = false; TR.V = null; trCiz(); return true; }
+      if (d.trx === 'olustur') { const g = id => kok.querySelector('#' + id).value; const kb = g('trKayit');
+        const r = await trRpc('umal_turnuva_olustur', { p_ad: g('trAd'), p_tur: g('trOyun'), p_lig_tur: +g('trLig'), p_eleme_kisi: +g('trEleme'), p_kayit_bitis: kb ? new Date(kb).toISOString() : null, p_odul: g('trOdul'), p_sinir: +g('trSinir') || 150 });
+        if (!r.ok) { bilgi(r.hata, 'kirmizi'); return true; } await turnuva(); bilgi('Turnuva açıldı; öğrenciler Atlas → Oyunlar\'dan kayıt olabilir.', 'yesil'); return true; }
+      if (d.trx === 'ilerle' || d.trx === 'zorla') { const i = kok.querySelector('#trBitis'); const bitis = i && i.value ? new Date(i.value) : new Date(Date.now() + 3600e3);
+        if (d.trx === 'zorla' && !await onayla('Bu turda bitmemiş maçlar kapatılacak: sırası gelen öğrenci kaybetmiş sayılır. Devam edilsin mi?')) return true;
+        const r = await trRpc('umal_turnuva_ilerle', { p_id: t.id, p_bitis: bitis.toISOString(), p_zorla: d.trx === 'zorla' });
+        await turnuva(); bilgi(r.ok ? r.mesaj : r.hata, r.ok ? 'yesil' : 'kirmizi'); return true; }
+      if (d.trx === 'iptal') { if (!await onayla(`“${t.ad}” iptal edilsin mi? Süren maçlar kapanır, kayıtlar silinmez.`)) return true; await trRpc('umal_turnuva_iptal', { p_id: t.id }); await turnuva(); return true; }
+      if (d.trx === 'excel') { indir('Turnuva_' + t.ad.replace(/\s+/g, '_'), [['Sıra', 'Okul No', 'Adı Soyadı', 'Sınıf', 'Puan', 'Rakip puanı', 'Oyun puanı'], ...(t.tablo || []).map(x => [x.sira, x.no, x.ad, x.sinif, x.puan, x.bh, x.elo])]); return true; }
+      if (d.trx === 'belge') { const E = (t.maclar || []).filter(m => m.asama === 'eleme'), son = Math.max(...E.map(m => m.tur)), f = E.find(m => m.tur === son), yari = E.filter(m => m.tur === son - 1);
+        const kaz = m => m.sonuc === 'a' ? m.a : m.b, kay = m => m.sonuc === 'a' ? m.b : m.a;
+        const L = []; if (f) { L.push([kaz(f), 'birinci']); L.push([kay(f), 'ikinci']); }
+        yari.map(kay).filter(Boolean).sort((a, b) => { const s = no => ((t.tablo || []).find(x => x.no === no) || {}).sira || 999; return s(a.no) - s(b.no); }).slice(0, 1).forEach(k => L.push([k, 'üçüncü']));
+        (t.seviye || []).forEach(x => { if (!L.some(([k]) => k && k.ad === x.ad)) L.push([{ ad: x.ad, sinif: x.sinif }, `${x.seviye}. sınıflar birincisi`]); });
+        C.belgeOnizle(dyBelgeKabuk('Turnuva başarı belgeleri', L.filter(([k]) => k).map(([k, d_]) => seBelgeSayfa('BAŞARI BELGESİ', `Okulumuz ${esc(k.sinif || '')} sınıfı öğrencisi <b>${esc(k.ad)}</b>, okulumuzda düzenlenen “${esc(t.ad)}” ${esc(TR_OYUN[t.tur].toLocaleLowerCase(tr))} turnuvasında <b>${esc(d_)}</b> olmuştur. Gösterdiği başarıdan dolayı kendisini kutlarım.`)).join(''), false), 'Turnuva başarı belgeleri', false);
+        return true; }
+    } catch (e) { bilgi('İşlem yapılamadı: ' + (C.hataYaz ? C.hataYaz(e) : e.message || e), 'kirmizi'); return true; }
+    return false;
+  }
+
   // ================================================================ 14) EVDE EĞİTİM ALAN ÖĞRENCİLER (27 Kasım 2026)
   // Resmî yazı (PDF, Word ya da metni yapıştırarak) okunur: öğrenci okul listesinden bulunur, yazının sayısı/tarihi ve eğitim dönemi alınır;
   // öğrencinin aldığı dersler, haftalık saatleri ve dersin öğretmenleri sınıfının ders programından kendiliğinden yazılır.
@@ -2401,7 +2470,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti, sosyal: SE.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti, sosyal: SE.degisti, turnuva: false }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -2409,13 +2478,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik, turnuva: trTik }[aktif])(ev);
     };
     kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi, sosyal: seGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi, sosyal: seGirdi, turnuva: () => {} }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -2432,6 +2501,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'site') return siteIcerik();
     if (id === 'evde') return evde();
     if (id === 'sosyal') return sosyal();
+    if (id === 'turnuva') return turnuva();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
