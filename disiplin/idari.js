@@ -30,13 +30,14 @@
     dyk: 'M3.5 5.5h17v14h-17zM3.5 10h17M8 5.5v14M12 13h6M12 16.5h4',
     dilek: 'M4 5.5h16v11H9l-5 4zM8 9.5h8M8 12.5h5',
     video: 'M3.5 6h17v12h-17zM10 9.5v5l4.5-2.5z',
+    evde: 'M3.5 11.5 12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5',
     site: 'M3.5 5h17v14h-17zM3.5 9h17M7 7h0M10 7h0M7 12.5h6M7 15.5h10',
     sok: 'M4 4.5h11l5 5V19.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1ZM15 4.5V9.5h5M7 13h4M7 16.5h7M14.5 13.5l1.4 1.4 2.6-2.8',
     veli: 'M8 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM16.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM2.5 20c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6M13.5 20c.2-2.8 1.5-4.8 3.6-5.2 2.4-.4 4.2 1.6 4.4 5.2',
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler'], ['evde', 'Evde Eğitim Alan Öğrenciler', 'resmî yazıdan öğrenci, dersler ve öğretmenler']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1146,6 +1147,104 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   }
   function dlGirdi(ev) { if (ev.target.dataset.dlnot) DL.degisti = true; }
 
+  // ================================================================ 14) EVDE EĞİTİM ALAN ÖĞRENCİLER (27 Kasım 2026)
+  // Resmî yazı (PDF, Word ya da metni yapıştırarak) okunur: öğrenci okul listesinden bulunur, yazının sayısı/tarihi ve eğitim dönemi alınır;
+  // öğrencinin aldığı dersler, haftalık saatleri ve dersin öğretmenleri sınıfının ders programından kendiliğinden yazılır.
+  // Yazının kendisi saklanmaz; yalnız bu bilgiler umal_idari 'evde:<yıl>' içinde durur (yalnız idare görür). Sağlık bilgisi tutulmaz.
+  const EE = { yil: egitimYili(), V: { L: [] }, ac: '', degisti: false };
+  const eeNorm = s => String(s || '').replace(/İ/g, 'i').replace(/I/g, 'ı').toLocaleLowerCase(tr).replace(/[çğıöşü]/g, c => ({ 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' }[c])).replace(/\s+/g, ' ').trim();
+  const eeTarih = s => { const m = String(s).match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
+  async function evde() { EE.V = (await oku('evde:' + EE.yil)) || { L: [] }; EE.V.L = EE.V.L || []; EE.degisti = false; eeCiz(); }
+  function eeDersler(sinif) {   // sınıfın ders programından: ders → haftalık saat ve öğretmenler
+    const H = ((PRG && PRG.siniflar) || {})[sinif] || {}, M = new Map();
+    Object.entries(H).forEach(([k, h]) => { if (!h || !h.ders || +k.split('-')[0] > 4) return; const x = M.get(h.ders) || { ders: h.ders, saat: 0, ogretmen: [] }; x.saat++; (h.ogretmen || []).forEach(o => { if (!x.ogretmen.includes(o)) x.ogretmen.push(o); }); M.set(h.ders, x); });
+    return [...M.values()].sort((a, b) => b.saat - a.saat || a.ders.localeCompare(b.ders, tr));
+  }
+  function eeYaziCoz(metin) {   // yazıdan öğrenci(ler), sayı, tarih, konu, dönem, haftalık saat, adı geçen dersler
+    const n = ' ' + eeNorm(String(metin).replace(/['’`´][A-Za-zÇĞİÖŞÜçğıöşü]+/g, '')).replace(/[^a-z0-9.:/\-\s]/g, ' ').replace(/\s+/g, ' ') + ' ';   // "YILMAZ'ın" → yilmaz
+    const ogr = OGR.filter(o => { const a = eeNorm(o.ad).replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim(); return a.split(' ').length >= 2 && n.includes(' ' + a + ' '); });
+    const nolu = [...String(metin).matchAll(/(?:okul\s*(?:no|numaras[ıi])|öğrenci\s*no)\s*[:.]?\s*(\d{1,6})/gi)].map(m => m[1]);
+    nolu.forEach(no => { const o = OGR.find(x => String(x.no) === no); if (o && !ogr.includes(o)) ogr.push(o); });
+    const satir = re => { const m = String(metin).match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
+    const tarihler = [...String(metin).matchAll(/\b(\d{1,2})[./](\d{1,2})[./](\d{4})\b/g)].map(m => eeTarih(m[0]));
+    const aralik = String(metin).match(/(\d{1,2}[./]\d{1,2}[./]\d{4})\s*(?:[-–]|ile|ila|tarihinden)\s*(\d{1,2}[./]\d{1,2}[./]\d{4})/i);
+    const itibaren = String(metin).match(/(\d{1,2}[./]\d{1,2}[./]\d{4})\s*tarihinden\s*itibaren/i);
+    const yaziTarih = eeTarih(satir(/Tarih\s*:?\s*([0-9./]{8,10})/i)) || tarihler[0] || '';
+    const haftalik = satir(/haftal[ıi]k\s*(\d{1,2})\s*(?:\(\w+\)\s*)?(?:ders\s*)?saat/i);
+    const dersAdlari = new Set(); Object.values((PRG && PRG.siniflar) || {}).forEach(H => Object.values(H).forEach(h => { if (h && h.ders) dersAdlari.add(h.ders); }));
+    const gecen = [...dersAdlari].filter(d => { const k = eeNorm(d).replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(s|secmeli)\s+/, ''); return k.length >= 4 && n.includes(' ' + k + ' '); });
+    return { ogr, sayi: satir(/Say[ıi]\s*:?\s*([^\n]{3,80}?)(?:\s{2,}|\n|Tarih|$)/i), konu: satir(/Konu\s*:?\s*([^\n]{3,120})/i), tarih: yaziTarih,
+      bas: aralik ? eeTarih(aralik[1]) : itibaren ? eeTarih(itibaren[1]) : '', bit: aralik ? eeTarih(aralik[2]) : '', haftalik: haftalik ? +haftalik : 0, gecen };
+  }
+  function eeEkle(o, y) {
+    const D = eeDersler(o.sinif), gecen = new Set((y && y.gecen) || []);
+    const k = { id: uid(), no: o.no, ad: o.ad, sinif: o.sinif, sayi: (y && y.sayi) || '', konu: (y && y.konu) || '', tarih: (y && y.tarih) || '', bas: (y && y.bas) || '', bit: (y && y.bit) || '', haftalik: (y && y.haftalik) || 0,
+      dersler: D.map(d => ({ ders: d.ders, saat: d.saat, ogretmen: d.ogretmen, sec: gecen.size ? gecen.has(d.ders) : true, evde: '' })), not: '', eklendi: new Date().toISOString().slice(0, 10) };
+    const eski = EE.V.L.find(x => String(x.no) === String(o.no)); if (eski) Object.assign(eski, Object.fromEntries(Object.entries(k).filter(([a, v]) => a !== 'id' && (v || a === 'dersler')))); else EE.V.L.unshift(k);
+    EE.ac = (eski || k).id; EE.degisti = true; return { k: eski || k, D, gecen: gecen.size };
+  }
+  async function eeYaziIsle(ad, metin) {
+    const y = eeYaziCoz(metin);
+    if (!y.ogr.length) { EE.bekleyen = y; eeCiz(); bilgi(`${ad}: yazıda okul listesindeki bir öğrencinin adı bulunamadı. Öğrenciyi aşağıdan elle seçin; yazıdan okunan sayı, tarih ve dönem o öğrenciye yazılır.`, 'kirmizi'); return; }
+    const sonuc = y.ogr.map(o => eeEkle(o, y)); await eeKaydet(); eeCiz();
+    bilgi(`${sonuc.map(s => `${s.k.ad} (${s.k.sinif})`).join(', ')} eklendi: ${sonuc.map(s => s.D.length).join('/')} ders sınıfın ders programından yazıldı${sonuc.some(s => s.gecen) ? '; yazıda adı geçen dersler seçili geldi' : ''}${y.bas ? `, eğitim ${tGos(y.bas)}${y.bit ? ' – ' + tGos(y.bit) : ' tarihinden itibaren'}` : ''}. Kontrol edip gerekirse düzeltin.`, 'yesil');
+  }
+  async function eeDosya(ev) { const t = ev.target; if (!t.dataset || !t.dataset.eedosya || !t.files.length) return; const f = t.files[0]; t.value = '';
+    try { const R = await dosyaSatirlar(f); await eeYaziIsle(f.name, R.map(r => (Array.isArray(r) ? r : [r]).join(' ')).join('\n')); } catch (e) { uyar(`${f.name}: ${e.message || e}. Yazının metnini kopyalayıp "Yazının metnini yapıştır" ile girebilirsiniz.`); } }
+  async function eeKaydet() { await yaz('evde:' + EE.yil, EE.V); EE.degisti = false; }
+  function eeCiz() {
+    const L = EE.V.L, ogrSec = `<select id="eeOgr" style="min-width:240px"><option value="">Öğrenci seçin…</option>${OGR.slice().sort((a, b) => sinifSira(a.sinif, b.sinif) || a.ad.localeCompare(b.ad, tr)).map(o => `<option value="${esc(o.no)}">${esc(o.sinif)} · ${esc(o.no)} · ${esc(o.ad)}</option>`).join('')}</select>`;
+    kok.innerHTML = bas('Evde Eğitim Alan Öğrenciler', `${esc(EE.yil)} · resmî yazıdan öğrenci, aldığı dersler ve öğretmenleri · yalnız idare görür`, `${L.length ? '<button class="ikincil" data-eex="yazdirHepsi">Listeyi yazdır</button>' : ''}`) +
+      `<div class="kart"><b style="font-size:15px">Resmî yazıyı yükleyin</b><div class="soluk kucuk" style="margin:4px 0 10px">İlçe millî eğitimden gelen evde eğitim yazısını (PDF ya da Word) seçin. Atlas yazıdaki öğrenciyi okul listesinden bulur, yazının sayısını, tarihini ve eğitim dönemini alır; öğrencinin aldığı dersleri, haftalık saatlerini ve öğretmenlerini sınıfının ders programından yazar. Taranmış (resim) PDF okunamaz; o zaman metni yapıştırın ya da öğrenciyi elle seçin. Yazının kendisi saklanmaz.</div>
+        <div class="dugmeler" style="justify-content:flex-start;margin:0;flex-wrap:wrap"><label class="birincil" style="cursor:pointer">Resmî yazı seç<input type="file" data-eedosya="1" accept=".pdf,.docx,.txt" hidden></label><button class="ikincil" data-eex="yapistir">Yazının metnini yapıştır</button></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><span class="soluk kucuk">ya da elle:</span>${ogrSec}<button class="ikincil" data-eex="elle">Ekle</button></div><div id="idBilgi" class="id-bilgi"></div></div>
+      ${L.length ? L.map(eeKart).join('') : '<div class="kart soluk">Henüz evde eğitim alan öğrenci eklenmedi.</div>'}`;
+  }
+  function eeKart(k) {
+    const ac = EE.ac === k.id, secS = k.dersler.filter(d => d.sec), top = secS.reduce((t, d) => t + (+d.evde || d.saat), 0);
+    const ust = `<button data-eeac="${esc(k.id)}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%"><b style="font-size:15px">${esc(k.ad)}</b><span class="soluk">${esc(k.sinif)} · ${esc(k.no)}</span><span class="soluk kucuk" style="margin-left:auto">${k.bas ? esc(tGos(k.bas)) + (k.bit ? ' – ' + esc(tGos(k.bit)) : ' →') : 'dönem girilmedi'} · ${secS.length} ders${ac ? '' : ' ›'}</span></button>`;
+    if (!ac) return `<div class="kart">${ust}</div>`;
+    const alan = (a, et, tip) => `<label>${et}<input ${tip ? `type="${tip}"` : ''} data-eealan="${esc(k.id)}|${a}" value="${esc(k[a] || '')}"></label>`;
+    return `<div class="kart" style="border-color:rgba(34,232,255,.45)">${ust}
+      <div class="id-form" style="margin-top:12px">${alan('sayi', 'Yazının sayısı')}${alan('tarih', 'Yazının tarihi', 'date')}${alan('konu', 'Konu')}${alan('bas', 'Evde eğitim başlangıcı', 'date')}${alan('bit', 'Bitişi', 'date')}${alan('haftalik', 'Yazıdaki haftalık ders saati', 'number')}</div>
+      <span class="id-et">Aldığı dersler (sınıfının ders programından) · evde eğitimde verilecekleri işaretleyin</span>
+      <div style="overflow-x:auto"><table class="id-tablo" style="width:100%;border-collapse:collapse;font-size:14px"><thead><tr><th style="text-align:left;padding:6px">✓</th><th style="text-align:left;padding:6px">Ders</th><th style="padding:6px">Okulda haftalık</th><th style="padding:6px">Evde haftalık</th><th style="text-align:left;padding:6px">Öğretmen</th></tr></thead><tbody>
+      ${k.dersler.map((d, i) => `<tr style="border-top:1px solid rgba(255,255,255,.08);${d.sec ? '' : 'opacity:.45'}"><td style="padding:6px"><button class="nb-cins ${d.sec ? 'k' : ''}" data-eesec="${esc(k.id)}|${i}" aria-label="${esc(d.ders)} seç" style="min-width:26px">${d.sec ? '✓' : ''}</button></td><td style="padding:6px">${esc(d.ders)}</td><td style="padding:6px;text-align:center">${d.saat}</td><td style="padding:6px;text-align:center"><input type="number" min="0" max="10" data-eeevde="${esc(k.id)}|${i}" value="${esc(d.evde)}" placeholder="${d.saat}" style="width:64px;text-align:center"></td><td style="padding:6px">${esc(d.ogretmen.map(o => C.baslik(o)).join(', '))}</td></tr>`).join('') || `<tr><td colspan="5" class="soluk" style="padding:8px">${esc(k.sinif)} için ders programında ders bulunamadı.</td></tr>`}</tbody></table></div>
+      <div class="soluk kucuk" style="margin-top:6px">Seçili ${secS.length} ders · evde haftalık toplam ${top} saat${k.haftalik ? ` · yazıdaki haftalık saat <b class="${top === +k.haftalik ? 'yesil' : 'turuncu'}">${k.haftalik}</b>` : ''}. "Evde haftalık" boşsa okuldaki saat sayılır.</div>
+      <label style="display:block;margin-top:10px">Not <span class="soluk kucuk">(yalnız idare görür; sağlık bilgisi yazmayın)</span><textarea data-eenot="${esc(k.id)}" rows="2" style="width:100%">${esc(k.not || '')}</textarea></label>
+      <div class="dugmeler" style="justify-content:flex-start;margin:10px 0 0;flex-wrap:wrap"><button class="birincil" data-eekaydet="1">Kaydet</button><button class="ikincil" data-eeyaz="${esc(k.id)}">Çizelgeyi yazdır</button><button class="ikincil" data-eeyenile="${esc(k.id)}">Dersleri programdan yeniden al</button><button class="ikincil" data-eesil="${esc(k.id)}" style="color:#ff6b6b">Sil</button></div></div>`;
+  }
+  function eeGirdi(ev) { const t = ev.target, d = t.dataset;
+    if (d.eealan) { const [id, a] = d.eealan.split('|'), k = EE.V.L.find(x => x.id === id); if (k) { k[a] = a === 'haftalik' ? (+t.value || 0) : t.value; EE.degisti = true; } }
+    if (d.eeevde) { const [id, i] = d.eeevde.split('|'), k = EE.V.L.find(x => x.id === id); if (k) { k.dersler[+i].evde = t.value; EE.degisti = true; } }
+    if (d.eenot) { const k = EE.V.L.find(x => x.id === d.eenot); if (k) { k.not = t.value.slice(0, 1000); EE.degisti = true; } } }
+  function eeBelge(L) {
+    return dyBelgeKabuk('Evde eğitim çizelgesi', L.map(k => { const S = k.dersler.filter(d => d.sec);
+      return `<section class="sy">${dyUst()}<h1>EVDE EĞİTİM HİZMETİ DERS VE ÖĞRETMEN ÇİZELGESİ</h1>
+        <table><tbody><tr><th style="width:42mm;text-align:left">Öğrencinin adı soyadı</th><td>${esc(k.ad)}</td><th style="width:30mm;text-align:left">Sınıfı / No</th><td>${esc(k.sinif)} / ${esc(k.no)}</td></tr>
+        <tr><th style="text-align:left">Dayanak yazı</th><td colspan="3">${k.tarih ? esc(tGos(k.tarih)) + ' tarihli ' : ''}${k.sayi ? esc(k.sayi) + ' sayılı ' : ''}yazı${k.konu ? ' · ' + esc(k.konu) : ''}</td></tr>
+        <tr><th style="text-align:left">Evde eğitim süresi</th><td colspan="3">${k.bas ? esc(tGos(k.bas)) + (k.bit ? ' – ' + esc(tGos(k.bit)) : ' tarihinden itibaren') : ''}</td></tr></tbody></table>
+        <table style="margin-top:5mm"><thead><tr><th style="width:8mm">#</th><th>Ders</th><th style="width:24mm">Okulda haftalık</th><th style="width:24mm">Evde haftalık</th><th>Görevlendirilen öğretmen</th><th style="width:30mm">İmza</th></tr></thead><tbody>
+        ${S.map((d, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${esc(d.ders)}</td><td style="text-align:center">${d.saat}</td><td style="text-align:center">${esc(d.evde || d.saat)}</td><td>${esc(d.ogretmen.map(o => C.baslik(o)).join(', '))}</td><td></td></tr>`).join('')}
+        <tr><td></td><td><b>Toplam</b></td><td style="text-align:center"><b>${S.reduce((t, d) => t + d.saat, 0)}</b></td><td style="text-align:center"><b>${S.reduce((t, d) => t + (+d.evde || d.saat), 0)}</b></td><td colspan="2"></td></tr></tbody></table>
+        <div class="imz"><div></div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`; }).join(''), false);
+  }
+  async function eeTik(ev) {
+    const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset;
+    if (d.eeac) { EE.ac = EE.ac === d.eeac ? '' : d.eeac; eeCiz(); return true; }
+    if (d.eex === 'elle') { const no = (kok.querySelector('#eeOgr') || {}).value, o = OGR.find(x => String(x.no) === String(no)); if (!o) { bilgi('Önce öğrenciyi seçin.', 'kirmizi'); return true; }
+      const r = eeEkle(o, EE.bekleyen || null); EE.bekleyen = null; await eeKaydet(); eeCiz(); bilgi(`${o.ad} eklendi; ${r.D.length} ders sınıfının ders programından yazıldı.`, 'yesil'); return true; }
+    if (d.eex === 'yapistir') { C.pencereAc(`<h2 style="margin-top:0">Yazının metnini yapıştırın</h2><div class="soluk kucuk" style="margin-bottom:8px">PDF'i açıp metnin tamamını seçin (Ctrl+A), kopyalayın ve buraya yapıştırın.</div><textarea id="eeYap" rows="12" style="width:100%;box-sizing:border-box" data-bicim="yok"></textarea><div class="dugmeler"><button class="birincil" id="eeYapOk">Oku</button></div>`);
+      document.getElementById('eeYapOk').onclick = async () => { const t = document.getElementById('eeYap').value; if (!t.trim()) return; C.pencereKapat(); await eeYaziIsle('Yapıştırılan yazı', t); }; return true; }
+    if (d.eesec) { const [id, i] = d.eesec.split('|'), k = EE.V.L.find(x => x.id === id); if (k) { k.dersler[+i].sec = !k.dersler[+i].sec; EE.degisti = true; eeCiz(); } return true; }
+    if (d.eekaydet) { try { await eeKaydet(); bilgi('Kaydedildi.', 'yesil'); } catch (e) { bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); } return true; }
+    if (d.eeyenile) { const k = EE.V.L.find(x => x.id === d.eeyenile); if (!k) return true; const eski = new Map(k.dersler.map(x => [x.ders, x])); k.dersler = eeDersler(k.sinif).map(x => ({ ...x, sec: eski.has(x.ders) ? eski.get(x.ders).sec : true, evde: eski.has(x.ders) ? eski.get(x.ders).evde : '' })); EE.degisti = true; eeCiz(); bilgi('Dersler güncel ders programından yeniden alındı. Kaydet\'e basmayı unutmayın.', 'yesil'); return true; }
+    if (d.eesil) { const k = EE.V.L.find(x => x.id === d.eesil); if (!k || !await onayla(`${k.ad} evde eğitim listesinden silinsin mi?`)) return true; EE.V.L = EE.V.L.filter(x => x !== k); await eeKaydet(); eeCiz(); return true; }
+    if (d.eeyaz) { const k = EE.V.L.find(x => x.id === d.eeyaz); if (k) C.belgeOnizle(eeBelge([k]), 'Evde eğitim · ' + k.ad, false); return true; }
+    if (d.eex === 'yazdirHepsi') { C.belgeOnizle(eeBelge(EE.V.L), 'Evde eğitim alan öğrenciler', false); return true; }
+    return false;
+  }
+
   // ================================================================ 13) OKUL SİTESİ İÇERİKLERİ (27 Kasım 2026)
   // Okul sitesindeki duyuru, etkinlik takvimi, sayılar, müdür mesajı, kadro, rehberlik, kayıt, yerleşim, kulüp, mezun ve okul aile birliği bölümleri.
   // Tablo: umal_site_icerik (yazma yalnız bas/yonetici). İçeriği olmayan bölüm sitede görünmez.
@@ -2065,7 +2164,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 
   // ---------------------------------------------------------------- yönlendirme
   let aktif = null;
-  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti }[aktif]);
+  const degisti = () => ({ sorumluluk: SB.degisti, telafi: TF.degisti, kurul: KR.degisti, sinifOlustur: SO.degisti, veli: VT.degisti, sok: SK.degisti, evrak: EV.degisti, zumre: ZM.degisti, devam: DV.degisti, dyk: DY.degisti, dilek: DL.degisti, video: false, site: SI.degisti, evde: EE.degisti }[aktif]);
   async function ac(id, el, ctx, geriBilgi) {
     C = ctx; kok = el; geri = geriBilgi; aktif = id; stil();
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
@@ -2073,13 +2172,13 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     OGR = (OGR || []).filter(o => /^\d+-/.test(o.sinif || ''));
     kok.onclick = async ev => {
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
-      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik }[aktif])(ev);
+      ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
-    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi }[aktif])(ev);
+    kok.oninput = ev => ({ sorumluluk: sbGirdi, telafi: tfGirdi, kurul: krGirdi, sinifOlustur: soGirdi, veli: vtGirdi, sok: skGirdi, evrak: evGirdi, zumre: zmGirdi, devam: dvGirdi, dyk: dyGirdi, dilek: dlGirdi, video: vdGirdi, site: siGirdi, evde: eeGirdi }[aktif])(ev);
     kok.onkeydown = ev => { if (aktif === 'kurul') krEnter(ev); };
     if (id === 'sorumluluk') return sorumluluk();
     if (id === 'telafi') return telafi();
@@ -2094,6 +2193,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
     if (id === 'dilek') return dilek();
     if (id === 'video') return video();
     if (id === 'site') return siteIcerik();
+    if (id === 'evde') return evde();
   }
   function stil() {
     if (document.getElementById('idariStil')) return;
