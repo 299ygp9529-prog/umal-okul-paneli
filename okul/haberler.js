@@ -1,6 +1,7 @@
 /* Okul sitesi haberleri (26 Kasım 2026). Yeni haber en üste eklenir. Adresler okul/ klasörüne göredir. */
 (function () {
   var HABERLER = [
+    { tarih: '27 KASIM 2026 · SON DAKİKA', baslik: "Çanakkale'deydik: Tarihin kalbinde unutulmaz bir gün", ozet: "Öğrencilerimiz Çanakkale Savaşları Gelibolu Tarihi Alanı'nı ziyaret etti; Şehitler Abidesi'nde saygı duruşunda bulunduk. Gezimizi fotoğraflarla anlattık.", gorsel: 'haber/canakkale-2.jpg', adres: 'haber/canakkale-gezisi.html' },
     { tarih: '26 KASIM 2026', baslik: 'Atlas artık yayında', ozet: 'Okul paneli ve sınıflardaki Atlas Tahta yayında. İdare, öğretmen, rehberlik ve velilerin Atlas ile neler yapabildiğini haberimizde bulabilirsiniz.', gorsel: 'haber/atlas-yayinda.jpg', adres: 'haber/atlas-yayinda.html' }
   ];
   var CSS = '.hb{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}.hb a{display:block;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 6px 20px rgba(15,26,48,.08);text-decoration:none;color:#1f2937;transition:transform .2s,box-shadow .2s}' +
