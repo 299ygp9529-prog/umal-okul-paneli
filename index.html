@@ -175,6 +175,16 @@ body.okul-site #osSag { display: block; position: absolute; right: clamp(32px, 4
 #osSag .gt-ata q { font-size: clamp(15px, 1.15vw, 20px) !important; }
 #osSag .gt-ata cite { white-space: normal !important; letter-spacing: .1em !important; font-size: 10px !important; line-height: 1.5; }
 body.okul-site #osHero { top: 46%; }
+#osSag .os-sd { background: rgba(8,18,38,.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(198,40,40,.55); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); font-family: Inter, system-ui, sans-serif; }
+#osSag .os-sd-k { display: none; color: #fff; text-decoration: none; } #osSag .os-sd-k.acik { display: block; animation: osSdGir .5s ease; }
+@keyframes osSdGir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+#osSag .os-sd-res { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; } #osSag .os-sd-res img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
+#osSag .os-sd-k:hover img { transform: scale(1.04); }
+#osSag .os-sd-et { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 7px; background: #c62828; color: #fff; font-weight: 800; font-size: 11.5px; letter-spacing: 1.2px; padding: 5px 11px; border-radius: 99px; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+#osSag .os-sd-et i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: osSdNabiz 1.4s infinite; } @keyframes osSdNabiz { 50% { opacity: .25; } }
+#osSag .os-sd-yazi { display: block; padding: 14px 18px 16px; } #osSag .os-sd-yazi small { display: block; color: #e8a92a; font-weight: 700; font-size: 12px; letter-spacing: .6px; }
+#osSag .os-sd-yazi strong { display: block; font: 700 clamp(16px, 1.25vw, 20px)/1.3 Poppins, Inter, sans-serif; margin: 5px 0 8px; } #osSag .os-sd-yazi em { font-style: normal; font-weight: 700; font-size: 13.5px; color: #22e8ff; }
+#osSag .os-sd-nok { display: flex; gap: 6px; justify-content: center; padding: 0 0 12px; } #osSag .os-sd-nok button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: rgba(255,255,255,.3); cursor: pointer; } #osSag .os-sd-nok button.s { background: #fff; width: 20px; border-radius: 4px; }
 #osHero .gt-ata { width: 100%; box-sizing: border-box; margin-top: 26px !important; }
 #osHero .gt-ata figcaption { max-width: none !important; min-width: 0; flex: 1; }
 #osHero .gt-cerceve { height: clamp(80px, 11vh, 116px) !important; }
@@ -255,7 +265,7 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
 </div>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.bg-ac[open]").forEach(function(d){if(!d.contains(e.target))d.removeAttribute("open");});});</script>
 <script src="okul/dilek.js?v=202611270705"></script>
-<script src="okul/haberler.js?v=202611270740"></script>
+<script src="okul/haberler.js?v=202611270755"></script>
 <script src="okul/videolar.js?v=202611270600"></script>
 <script src="okul/icerik.js?v=202611270700"></script>
 <script>/* okul sitesi modu: bilgisayar + giriş ekranı açık + uygulama olarak yüklenmemiş */
@@ -266,7 +276,17 @@ body.okul-site #osAlt { display: block; background: #f6f4ef; color: #1f2937; fon
   var h = document.createElement('div'); h.id = 'osHero';
   h.innerHTML = '<div class="os-yer">ANADOLU LİSESİ · ÜMRANİYE</div><h1>Ümraniye Merkez<br>Anadolu Lisesi</h1><p>1965 yılından bu yana Ümraniye\'de eğitim veren, Millî Eğitim Bakanlığına bağlı dört yıllık Anadolu lisesi.</p><div class="os-dug"><a class="os-d1" href="#osOkul">Okulumuzu tanıyın</a><a class="os-d2" href="#osIlt">İletişim ve ulaşım</a></div>';
   g.appendChild(h);
-  var sag = document.createElement('div'); sag.id = 'osSag'; g.appendChild(sag);   // 27 Kasım 2026: giriş kutusu ortada, Atatürk köşesi sağda
+  var sag = document.createElement('div'); sag.id = 'osSag'; g.appendChild(sag);   // 27 Kasım 2026: sağda yeni haberler (okul/haberler.js › son: true)
+  (function sonDakika() {
+    var L = (window.UMAL_HABERLER || []).filter(function (x) { return x.son; }); if (!L.length) return;
+    var e = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    sag.innerHTML = '<div class="os-sd">' + L.map(function (x, i) { return '<a class="os-sd-k' + (i ? '' : ' acik') + '" href="okul/' + e(x.adres) + '"><span class="os-sd-res"><img src="okul/' + e(x.gorsel) + '" alt=""><b class="os-sd-et"><i></i>YENİ</b></span><span class="os-sd-yazi"><small>' + e(String(x.tarih).split(' · ')[0]) + '</small><strong>' + e(x.baslik) + '</strong><em>Haberi oku ›</em></span></a>'; }).join('') +
+      (L.length > 1 ? '<div class="os-sd-nok">' + L.map(function (_, i) { return '<button type="button" aria-label="' + (i + 1) + '. haber" class="' + (i ? '' : 's') + '" data-sd="' + i + '"></button>'; }).join('') + '</div>' : '') + '</div>';
+    if (L.length < 2) return; var n = 0;
+    var git = function (k) { n = (k + L.length) % L.length; sag.querySelectorAll('.os-sd-k').forEach(function (a, i) { a.classList.toggle('acik', i === n); }); sag.querySelectorAll('[data-sd]').forEach(function (b, i) { b.classList.toggle('s', i === n); }); };
+    sag.addEventListener('click', function (ev) { var b = ev.target.closest('[data-sd]'); if (b) git(+b.getAttribute('data-sd')); });
+    setInterval(function () { if (!document.hidden && document.body.classList.contains('okul-site')) git(n + 1); }, 7000);
+  })();
   var genis = window.matchMedia ? matchMedia('(min-width: 1100px) and (min-height: 640px)') : null;
   function yuklu() { try { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone; } catch (e) { return false; } }
   var ata = g.querySelector('.gt-ata'), ataYer = ata ? ata.parentNode : null, ataSonra = ata ? ata.nextSibling : null;
