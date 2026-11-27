@@ -36,7 +36,7 @@
   };
   const ikon = (k, b = 22) => `<svg viewBox="0 0 24 24" width="${b}" height="${b}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${IK[k] || ''}"/></svg>`;
   const MODULLER = [['sorumluluk', 'Sorumluluk ve Beceri Sınavı', 'öğrenci ve ders, dağıtım, raporlar'], ['telafi', 'Telafi Sınavı', 'takvimden aktar, gün gün düzenle'], ['kurul', 'Kurul ve Komisyonlar', 'branşa göre öneri, yazdırma'],
-    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, müdür mesajı, kadro, kulüpler'], ['video', 'Site Videoları', 'YouTube linkiyle okul sitesine video']];
+    ['sinifOlustur', 'Sınıf Oluşturma', 'dengeli şube dağılımı'], ['veli', 'Veli Toplantısı', 'davet, katılım, tutanak'], ['sok', 'Şube Öğretmenler Kurulu', 'ŞÖK dosyası: tutanak, imza, değerlendirme'], ['evrak', 'Evraklar', 'sınıf rehberlik listesi, izin belgesi, faaliyetli öğrenci belgesi, geç kalan çizelgesi, dönem sonu iş ve işlemleri, öğrenci kayıt dosyası, ders zaman çizelgesi'], ['zumre', 'Zümre Tutanakları', 'eylül, şubat, haziran toplantıları · MEB yazısından gündem'], ['devam', 'Devamsızlık', 'e-Okul listesinden uyarılar, veli bildirimi (md. 36)'], ['dyk', 'DYK Programı', 'okul dersleri sonrası kurs programı, öğretmen programları'], ['dilek', 'Dilek ve Şikâyetler', 'okul sitesinden gelen mesajlar'], ['site', 'Okul İnternet Sitesi', 'duyuru, etkinlik takvimi, videolar, müdür mesajı, kadro, kulüpler']];
 
   // ---------------------------------------------------------------- veri
   async function oku(anahtar) {
@@ -1171,7 +1171,8 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   }
   function siCiz() {
     const T = SI_TUR[SI.tur], L = SI.L.filter(x => x.tur === SI.tur); if (SI.tur === 'ogretmen') L.sort((a, b) => (a.deger || '').localeCompare(b.deger || '', tr) || a.baslik.localeCompare(b.baslik, tr));
-    const cip = Object.entries(SI_TUR).map(([k, v]) => `<button class="cip ${SI.tur === k ? 'secili' : ''}" data-situr="${k}">${v.ad}${k !== 'sayfa' ? ' · ' + SI.L.filter(x => x.tur === k).length : ''}</button>`).join('');
+    if (SI.tur === 'video') { vdCiz(); return; }
+    const cip = siCipler();
     let ic = '';
     if (SI.tur === 'sayfa') {
       ic = SI_SAYFA.map(([k, ad, alt]) => { const x = SI.L.find(y => y.tur === 'sayfa' && y.baslik === k) || {}; return `<div class="kart"><b style="font-size:15px">${ad}</b><div class="soluk kucuk" style="margin:3px 0 8px">${alt}${x.guncel ? ' · son güncelleme ' + esc(new Date(x.guncel).toLocaleDateString('tr-TR')) : ''}</div>
@@ -1193,12 +1194,16 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
     kok.innerHTML = bas('Okul İnternet Sitesi', 'Okul sitesindeki bölümler · yalnız idare yazar · boş bölüm sitede görünmez', '<a class="ikincil" href="okul/" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') +
       `<div class="kart"><div class="cipler">${cip}</div><div id="idBilgi" class="id-bilgi"></div></div>${ic}`;
   }
-  function siGirdi(ev) { const t = ev.target; if (t.dataset.sialan) { SI.f[t.dataset.sialan] = t.value; SI.degisti = true; } if (t.dataset.sisayfa || t.dataset.sisayfaad) SI.degisti = true; }
+  function siCipler() { return Object.entries(SI_TUR).map(([k, v]) => `<button class="cip ${SI.tur === k ? 'secili' : ''}" data-situr="${k}">${v.ad}${k !== 'sayfa' ? ' · ' + SI.L.filter(x => x.tur === k).length : ''}</button>`).join('') + `<button class="cip ${SI.tur === 'video' ? 'secili' : ''}" data-situr="video">Videolar${VD.yuklendi ? ' · ' + VD.L.length : ''}</button>`; }
+  function siGirdi(ev) { if (SI.tur === 'video') return vdGirdi(ev); const t = ev.target; if (t.dataset.sialan) { SI.f[t.dataset.sialan] = t.value; SI.degisti = true; } if (t.dataset.sisayfa || t.dataset.sisayfaad) SI.degisti = true; }
   async function siGuncelle(id, alan) { const { error } = await C.sb.from('umal_site_icerik').update({ ...alan, guncel: new Date().toISOString(), ekleyen: C.eposta }).eq('id', id); if (error) throw error; Object.assign(SI.L.find(x => x.id === id) || {}, alan, { guncel: new Date().toISOString() }); }
   async function siTik(ev) {
     const b = ev.target.closest('button'); if (!b) return false; const d = b.dataset;
     try {
-      if (d.situr) { if (SI.degisti && !await onayla('Kaydedilmemiş değişiklik var. Yine de geçilsin mi?')) return true; SI.tur = d.situr; SI.duz = ''; SI.f = { tarih: siBugun() }; SI.degisti = false; siCiz(); return true; }
+      if (d.situr) { if (SI.degisti && !await onayla('Kaydedilmemiş değişiklik var. Yine de geçilsin mi?')) return true; SI.tur = d.situr; SI.duz = ''; SI.f = { tarih: siBugun() }; SI.degisti = false;
+        if (SI.tur === 'video' && !VD.yuklendi) { const { data, error } = await C.sb.from('umal_site_video').select('*').order('sira').order('tarih', { ascending: false }); if (error) throw error; VD.L = data || []; VD.yuklendi = true; }
+        siCiz(); return true; }
+      if (SI.tur === 'video') return vdTik(ev);
       if (d.six === 'aktar') {
         const var_ = new Set(SI.L.filter(x => x.tur === 'ogretmen' || x.tur === 'kadro').map(x => x.tur + '|' + x.baslik.toLocaleLowerCase('tr')));
         const yeni = [], ekle = (tur, baslik, deger, yayinda) => { const k = tur + '|' + baslik.toLocaleLowerCase('tr'); if (!baslik || var_.has(k)) return; var_.add(k); yeni.push({ tur, baslik: baslik.slice(0, 160), deger: (deger || '').slice(0, 160) || null, yayinda, sira: 0, ekleyen: C.eposta }); };
@@ -1246,18 +1251,18 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
 
   // ================================================================ 12) SİTE VİDEOLARI (27 Kasım 2026)
   // Video YouTube'a yüklenir, linki buraya yapıştırılır; okul sitesinin Videolar bölümünde görünür. Tablo: umal_site_video (yazma yalnız bas/yonetici).
-  const VD = { L: [], on: '' };
+  const VD = { L: [], on: '', yuklendi: false };
   const vdKimlik = s => { s = String(s || '').trim(); const m = s.match(/(?:youtu\.be\/|[?&]v=|\/(?:shorts|embed|live|v)\/)([\w-]{11})/); return m ? m[1] : /^[\w-]{11}$/.test(s) ? s : ''; };
   const vdKapak = id => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
   async function video() {
     kok.innerHTML = '<div class="soluk">Yükleniyor…</div>';
     const { data, error } = await C.sb.from('umal_site_video').select('*').order('sira').order('tarih', { ascending: false });
     if (error) { kok.innerHTML = bas('Site Videoları') + `<div class="kart">${/umal_site_video|relation|does not exist|schema cache/i.test(error.message || '') ? 'Bu bölüm için veritabanı kurulumu gerekiyor: <b>veritabani/sql/20261127060000_umal_site_video.sql</b> dosyası Supabase SQL düzenleyicisinde bir kez çalıştırılmalı.' : esc(C.hataYaz(error))}</div>`; return; }
-    VD.L = data || []; vdCiz();
+    VD.L = data || []; VD.yuklendi = true; vdCiz();
   }
   function vdCiz() {
     const L = VD.L, on = VD.on;
-    kok.innerHTML = bas('Site Videoları', 'Okul sitesinin Videolar bölümü · yalnız idare ekler', '<a class="ikincil" href="okul/#videolar" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') +
+    kok.innerHTML = (aktif === 'site' ? bas('Okul İnternet Sitesi', 'Okul sitesindeki bölümler · yalnız idare yazar · boş bölüm sitede görünmez', '<a class="ikincil" href="okul/#videolar" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>') + `<div class="kart"><div class="cipler">${siCipler()}</div></div>` : bas('Site Videoları', 'Okul sitesinin Videolar bölümü · yalnız idare ekler', '<a class="ikincil" href="okul/#videolar" target="_blank" rel="noopener" style="text-decoration:none">Sitede gör</a>')) +
       `<div class="kart"><b style="font-size:15px">Yeni video</b>
         <div class="soluk kucuk" style="margin:4px 0 10px">1) Videoyu YouTube'a yükleyin (telefondan YouTube uygulaması › + › Video). 2) Paylaş › Bağlantıyı kopyala. 3) Buraya yapıştırın, başlık yazın, Yayınla'ya basın.</div>
         <div class="id-form"><label class="genis">YouTube linki<input id="vdLink" placeholder="https://youtu.be/..." autocomplete="off" value="${esc(VD.link || '')}"></label>
