@@ -436,7 +436,7 @@
       const an = $('#kutular [data-git="s-anket"]'); if (an && !acikForm && S.formlar.length && !an.querySelector('.k-tik')) an.insertAdjacentHTML('beforeend', '<span class="k-tik" aria-label="Tamamlandı"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>');
       if (sessiz !== true && !ANA.anim) { ANA.anim = true; const k_ = $('#kutular'); k_.classList.remove('giris-an'); void k_.offsetWidth; k_.classList.add('giris-an'); setTimeout(() => k_.classList.remove('giris-an'), 1200); }   // açılış süzülmesi yalnız uygulama ilk açılınca
       } }
-    zilCiz(); seriCiz();
+    zilCiz(); seriCiz(); bsCiz(); anaDuzen();   // K-1026: Bugün şeridi + uzun ekranda yerleşim
     rvAnaCiz(); dyAnaCiz(); tuAnaCiz();
     if (sessiz === true) return;
     goster('liste'); window.scrollTo(0, 0);
@@ -1523,6 +1523,52 @@
   }
   const TIRMAN = '<svg class="tirman" viewBox="0 0 170 110" aria-hidden="true"><defs><linearGradient id="trG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b4f86" stop-opacity=".0"/><stop offset="1" stop-color="#2b4f86" stop-opacity=".75"/></linearGradient></defs><path d="M0 110 L60 92 L95 70 L120 52 L150 30 L170 22 L170 110Z" fill="url(#trG)"/><g fill="#0b1426"><circle cx="128" cy="22" r="4.2"/><path d="M124 27h7l3 14 6 8-2 2-7-7-1 12 4 14h-4l-5-13-4 13h-4l4-17 0-14-3 3-4 9-3-1 5-11z"/><rect x="118" y="27" width="8" height="12" rx="2.5"/><path d="M140 40l7 28" stroke="#0b1426" stroke-width="1.6"/></g></svg>';   // K-800: günün sözünde tırmanan silüet
   // K-800: çalışma serisi ve haftalık hedef (öğrencinin kendi verisinden)
+  // K-1026: ana sayfada "Bugün" şeridi — şu anki / sıradaki ders, ders yoksa sonraki okul gününün ilk dersi; yakın sınav (büyük sınav kartı yoksa)
+  function bsCiz() {
+    const k = $('#bugunSerit'); if (!k) return;
+    const P = S.program || {}, s = simdi(), g = gunIdx(s), t = s.getHours() * 60 + s.getMinutes(), saat = x => x.replace(':', '.');
+    const hc = c => esc((c.ogretmen || []).map(hoca).join(', '));
+    let et = '', ders = '', alt = '', zb = '', zk = '', renk = '#7ff6ff';
+    const tatil = OTATIL && OTATIL.tatil && g <= 4 ? OTATIL.tatil : null;
+    if (ozel() || !Object.keys(P).length) { k.classList.add('gizli'); k.innerHTML = ''; k.dataset.h = ''; return; }
+    const BD = g <= 4 && !tatil ? bugunDersleri() : [], su = BD.find(x => x.d === 'simdi'), sr = BD.find(x => x.d === 'sira');
+    if (su) { const c = P[g + '-' + su.n], [, b] = zil(g, su.n), sn = BD.find(x => x.n > su.n);
+      et = 'Şu an · ' + su.n + '. ders'; ders = esc(su.ders); alt = sn ? 'Sonra ' + esc(sn.ders) : 'Bugünün son dersi'; zb = saat(b); zk = 'biter'; renk = dersRenk(su.ders); }
+    else if (sr) { const c = P[g + '-' + sr.n], kal = dk(sr.a) - t;
+      et = 'Sıradaki ders · ' + sr.n + '. ders'; ders = esc(sr.ders); alt = hc(c) || (sr.n + '. ders'); zb = kal <= 60 ? kal + ' dk' : saat(sr.a); zk = kal <= 60 ? 'sonra' : 'başlar'; renk = dersRenk(sr.ders); }
+    else {   // bugün ders yok ya da bitti: sonraki okul gününün ilk dersi
+      for (let i = 1; i <= 7; i++) { const gg = (g + i) % 7; if (gg > 4) continue; let n = 1; while (n <= 8 && !(P[gg + '-' + n] && P[gg + '-' + n].ders)) n++; if (n > 8) continue;
+        const c = P[gg + '-' + n]; et = (i === 1 ? 'Yarın' : GUN[gg]) + ' ilk ders'; ders = esc(c.ders); alt = hc(c) || (n + '. ders'); zb = saat(zil(gg, n)[0]); zk = n + '. ders'; renk = dersRenk(c.ders); break; }
+      if (tatil) alt = esc(tatil.ad || 'Bugün tatil') + ' · ' + alt;
+      else if (g <= 4 && BD.length) alt = 'Bugünkü derslerin bitti · ' + alt;
+    }
+    if (!ders) { k.classList.add('gizli'); k.innerHTML = ''; k.dataset.h = ''; return; }
+    let sv = '';
+    if ($('#bugunKart').classList.contains('gizli')) { const nx = sinavlarim().filter(x => !bitti(x))[0];
+      if (nx) { const gun = Math.round((new Date(nx.tarih + 'T12:00') - new Date(iso(s) + 'T12:00')) / 864e5); if (gun <= 14) sv = `<span class="bs-sv"><i></i>Sıradaki sınav · <b>${esc(nx.ad)}</b> · ${gun <= 0 ? 'bugün ' + saat(nx.bas) : gun === 1 ? 'yarın' : gun + ' gün sonra'}</span>`; } }
+    const h = `<button type="button" class="bs-ic" style="--r:${renk}"><span class="bs-z"><b>${zb}</b><small>${zk}</small></span><span class="bs-m"><small>${et}</small><b>${ders}</b><span>${alt}</span></span><svg class="bs-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg></button>${sv}`;
+    if (k.dataset.h !== h) { k.dataset.h = h; k.innerHTML = h; k.querySelector('.bs-ic').onclick = () => { const b = document.createElement('button'); b.dataset.git = 's-program'; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } }; }
+    k.classList.remove('gizli');
+  }
+  // K-1026: uzun ekranda kutuların altında boşluk kalmasın — satır aralığı açılır (en çok 20 px), Bugün şeridi ve Günün sözü alt çubuğun hemen üstüne yaslanır.
+  // Kısa ekranda hiçbir şey değişmez. Yükseklik 100svh'den ölçülür (Safari araç çubuğu açılıp kapanınca oynamaz).
+  const AD = { p: null, w: 0 };
+  function anaDuzen() {
+    const L = $('#liste'), K = $('#kutular'); if (!L || !K) return;
+    const kapat = () => { L.classList.remove('uzun'); L.style.removeProperty('--liste-min'); K.style.removeProperty('--k-ek'); };
+    if (!document.body.classList.contains('ogr-alt') || L.classList.contains('gizli') || ozel()) { kapat(); return; }
+    if (!AD.p) { AD.p = document.createElement('div'); AD.p.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100svh;visibility:hidden;pointer-events:none'; document.body.appendChild(AD.p); }
+    kapat(); const H = AD.p.offsetHeight || innerHeight, ab = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--alt-bos')) || 132;
+    const r = L.getBoundingClientRect(), ust = r.top + scrollY, bos = H - ab - (r.bottom + scrollY);
+    if (bos < 24) return;
+    const sat = new Set([...K.children].filter(e => e.offsetParent).map(e => e.offsetTop)).size;
+    if (sat > 1) K.style.setProperty('--k-ek', Math.min(20, Math.floor(bos * .6 / (sat - 1))) + 'px');
+    L.style.setProperty('--liste-min', Math.floor(H - ab - ust) + 'px'); L.classList.add('uzun');
+  }
+  try { const ro = new ResizeObserver(() => { cancelAnimationFrame(AD.r); AD.r = requestAnimationFrame(anaDuzen); });   // ana sayfada bir kart açılıp kapanınca (bildirim, duyuru, gezi) yerleşim yeniden hesaplanır
+    ['#kutular', '#tzAnaKart', '#bugunKart', '#rvAnaKart', '#duyAnaKart', '#bldKart', '#obilKart', '#gbAnaKart', '#selam', '#gununSozu', '#bugunSerit'].forEach(q => { const e = $(q); if (e) ro.observe(e); }); } catch (e) {}
+  addEventListener('resize', () => { if (innerWidth === AD.w) return; AD.w = innerWidth; clearTimeout(AD.t); AD.t = setTimeout(anaDuzen, 250); });
+  addEventListener('orientationchange', () => setTimeout(anaDuzen, 500));
   function seriCiz() { const k = $('#seriKart'); if (!k || ozel() && !PL.veri) { if (k) k.classList.add('gizli'); return; }
     const gunler = new Set((SO.L || []).map(x => x.t)), bugun = simdi(); let plVar = false;
     const plGun = d => { try { const G = gunGorevleri(iso(pzt(d)), gunIdx(d)); if (G.length) plVar = true; return G.some(x => puan(x) > 0); } catch (e) { return false; } };
