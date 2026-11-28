@@ -61,7 +61,7 @@
 .kd-dug{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.kd-dug button{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-weight:800;font-size:12.5px;cursor:pointer;background:#f5c542;color:#2a1a00}.kd-dug button.ik{background:transparent;color:#c9d6e6;border:1px solid #2a4468}
 .kd-ort{position:fixed;inset:0;z-index:9000;background:rgba(5,10,18,.72);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
 .kd-pen{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:#101b2c;border:1px solid #2a4468;border-bottom:0;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));color:#fff}
-.kd-pen h3{margin:0 0 4px;font-size:20px}.kd-pen .ust{display:flex;gap:14px;margin-bottom:14px}.kd-pen .ust .kd-kap{width:104px;flex:none}
+.kd-pen{position:relative}.kd-kapat{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:1px solid #2a4468;background:#0b1524;color:#c9d6e6;display:grid;place-items:center;cursor:pointer;padding:0;z-index:2}.kd-kapat:hover{color:#fff;border-color:#f5c542}.kd-pen h3{margin:0 0 4px;font-size:20px;padding-right:44px}.kd-pen .ust>div{padding-right:40px}.kd-pen .ust{display:flex;gap:14px;margin-bottom:14px}.kd-pen .ust .kd-kap{width:104px;flex:none}
 .kd-pen label{display:block;font-size:12.5px;font-weight:700;color:#9fb3cc;margin:12px 0 5px}
 .kd-pen input[type=text],.kd-pen textarea,.kd-pen select{width:100%;background:#0b1524;border:1px solid #2a4468;border-radius:12px;color:#fff;font:inherit;font-size:15px;padding:11px 12px;outline:none}
 .kd-pen textarea{min-height:74px;resize:vertical}.kd-pen input:focus,.kd-pen textarea:focus,.kd-pen select:focus{border-color:#f5c542}
@@ -182,7 +182,7 @@
   // ---------------------------------------------------------------- pencereler
   function pencere(ic) {
     kapatPen(); const o = document.createElement('div'); o.className = 'kd-ort'; o.id = 'kdOrt';
-    o.innerHTML = `<div class="kd-pen">${ic}</div>`; o.addEventListener('click', e => { if (e.target === o) kapatPen(); });
+    o.innerHTML = `<div class="kd-pen"><button type="button" class="kd-kapat" data-kapat aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${ic}</div>`; o.addEventListener('click', e => { if (e.target === o) kapatPen(); });
     document.body.appendChild(o); return o.firstChild;
   }
   function kapatPen() { kameraDur(); const o = document.getElementById('kdOrt'); if (o) o.remove(); }
@@ -283,6 +283,7 @@
   async function tik(e) {
     const t = e.target.closest('button'); if (!t || yuk) return;
     const d = t.dataset;
+    if (d.kapat !== undefined) { kapatPen(); return; }
     if (d.sek) { sek = d.sek; ciz(); window.scrollTo(0, 0); return; }
     if (d.tur !== undefined && t.closest('.kd-cip') && !t.closest('.kd-pen')) { turSec = d.tur; ciz(); return; }
     if (d.k) { detay(d.k); return; }
@@ -309,7 +310,7 @@
     ac(ctx) {
       C = ctx; kok = ctx.kok; stil(); sek = 'kesfet'; ara = ''; turSec = '';
       if (!kok.dataset.kd) { kok.dataset.kd = '1'; kok.addEventListener('click', tik); }
-      if (!document.body.dataset.kd) { document.body.dataset.kd = '1'; document.body.addEventListener('click', e => { if (e.target.closest('#kdOrt')) tik(e); }); }
+      if (!document.body.dataset.kd) { document.body.dataset.kd = '1'; document.body.addEventListener('click', e => { if (e.target.closest('#kdOrt')) tik(e); }); document.addEventListener('keydown', e => { if (e.key === 'Escape') kapatPen(); }); }
       kok.innerHTML = '<div class="kd"><div class="kd-bos">Yükleniyor…</div></div>'; yukle();
     },
     kapat() { kapatPen(); }
