@@ -3186,3 +3186,61 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
   #yenileDug.yd-yeni { box-shadow: 0 0 0 2px #ffd43b, 0 0 14px rgba(255,212,59,.6); }
 }
 @media (min-width: 761px) { #yenileDug .yen-ik { width: 20px; height: 20px; } }
+
+/* K-1028 (öğrenci K-1025 ile aynı): öğretmen/yönetici alt sekme çubuğu — yeni görünüm (yalnız görünüm; sekmeler, sıra, rozetler, gizlenme kuralları aynı).
+   Ölçü düzeni: kapsül 64 px, iç pay 5 px, aktif yüzey 54 px; köşeler eş merkezli (27 = 22 + 5).
+   Renkler: zemin lacivert #0B1424 ailesi · pasif #91A5BF · aktif yüzey buz mavisi #BCEFFF · aktif içerik lacivert #0B2545.
+   Betik #ogtAlt'a .oa2 ekler; stil ya da betik önbellekte eski kalırsa bu kurallar devreye girmez, eski görünüm sürer. */
+@media (max-width: 760px) {
+  body.ogt-alt #ogtAlt.oa2 {
+    --oa-ic: 5px; --oa-yay: cubic-bezier(.3, 1.22, .42, 1); --oa-sure: .34s;
+    left: clamp(10px, 3.4vw, 16px); right: clamp(10px, 3.4vw, 16px);
+    bottom: max(clamp(16px, 4.6vw, 20px), env(safe-area-inset-bottom));   /* tabana yapışmaz: kapsül yüzer */
+    max-width: 520px; margin: 0 auto;
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);   /* sekmeler hep eşit; içerik genişliği sütunu büyütmez */
+    padding: var(--oa-ic); gap: 0; border-radius: 27px;
+    background: linear-gradient(180deg, rgba(24, 37, 61, .94), rgba(14, 23, 41, .96));
+    border: .5px solid rgba(176, 208, 242, .17);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 1px 2px rgba(1, 5, 14, .35), 0 16px 36px -12px rgba(1, 5, 14, .7);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    body.ogt-alt:not(.hafif) #ogtAlt.oa2 { background: linear-gradient(180deg, rgba(23, 36, 59, .86), rgba(13, 22, 39, .92)); -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3); }
+  }
+  @supports (transition-timing-function: linear(0, 1)) {   /* gerçek yay eğrisi: tepki 0,32 sn, sönüm 0,82 (taşma ≈ %1) */
+    body.ogt-alt #ogtAlt.oa2 { --oa-sure: .46s; --oa-yay: linear(0, .062, .2, .362, .519, .655, .766, .85, .911, .953, .98, .997, 1.006, 1.01, 1.011, 1.01, 1.009, 1.007, 1.005, 1.004, 1.003, 1.002, 1.001, 1); }
+  }
+  #ogtAlt.oa2 .oa-yuzey {
+    left: 0; top: var(--oa-ic); bottom: var(--oa-ic); width: 0; z-index: 0; opacity: 0; border-radius: 22px;
+    background: linear-gradient(180deg, #d4f5ff 0%, #bcefff 50%, #a9e3f8 100%);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .8), inset 0 -.5px 0 rgba(11, 37, 69, .1), 0 0 0 .5px rgba(2, 8, 20, .3), 0 1px 2px rgba(2, 8, 20, .28), 0 6px 14px -8px rgba(2, 8, 20, .5);
+    transition: transform var(--oa-sure) var(--oa-yay), width var(--oa-sure) var(--oa-yay), opacity .2s ease;
+    will-change: transform;
+  }
+  #ogtAlt.oa2 .oa-yuzey.ilk { transition: opacity .2s ease; }
+  #ogtAlt.oa2 button, #ogtAlt.oa2 button.secili {
+    z-index: 1; justify-content: flex-start; gap: 3px; height: 54px; min-width: 0; padding: 8px 0 0; border-radius: 22px;
+    background: none !important; box-shadow: none !important; color: #91a5bf;
+    font: 500 10.5px/13px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, "Segoe UI", sans-serif; letter-spacing: .01em;
+    white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: color .22s ease;
+  }
+  #ogtAlt.oa2 button span { font-size: inherit; line-height: inherit; }
+  #ogtAlt.oa2 button svg { width: 24px; height: 24px; flex: none; overflow: visible; transition: transform .16s ease; }
+  #ogtAlt.oa2 .oa-c, #ogtAlt.oa2 .oa-d { transition: opacity .2s ease; }
+  #ogtAlt.oa2 .oa-c path[fill-opacity] { display: none; }   /* pasif simge yalnız ince çizgi (dolgu yok) */
+  #ogtAlt.oa2 button.secili { color: #0b2545; }
+  #ogtAlt.oa2 button.secili span { font-weight: 600; }
+  #ogtAlt.oa2 button.secili .oa-c { opacity: 0; }
+  #ogtAlt.oa2 button.secili .oa-d { opacity: 1 !important; }
+  #ogtAlt.oa2 button.secili svg { animation: oaGirT var(--oa-sure) var(--oa-yay) both; }
+  #ogtAlt.oa2 button:active svg { transform: scale(.92); }
+  #ogtAlt.oa2 .oa-sayi { top: 3px; left: calc(50% + 3px); z-index: 2; min-width: 16px; height: 16px; padding: 0 4.5px; border-radius: 8px; background: #ff453a; font: 600 10px/16px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif; letter-spacing: 0; box-shadow: 0 0 0 1.5px #121d32; transition: box-shadow .22s ease; }
+  #ogtAlt.oa2 button.secili .oa-sayi { box-shadow: 0 0 0 1.5px #c6f2ff; }
+}
+@keyframes oaGirT { from { transform: scale(.86); } to { transform: scale(1); } }
+@media (max-width: 374px) { #ogtAlt.oa2 button, #ogtAlt.oa2 button.secili { font-size: 10px; letter-spacing: 0; } }
+@media (max-width: 339px) { body.ogt-alt #ogtAlt.oa2 { left: 8px; right: 8px; } #ogtAlt.oa2 button, #ogtAlt.oa2 button.secili { font-size: 9.5px; } }
+@media (prefers-reduced-motion: reduce) { #ogtAlt.oa2 .oa-yuzey { transition: opacity .2s ease !important; } #ogtAlt.oa2 button.secili svg { animation: none !important; } }
+@media (prefers-contrast: more) { #ogtAlt.oa2 button { color: #b8c7da; } body.ogt-alt #ogtAlt.oa2 { border-color: rgba(200, 225, 250, .5); } }
+@media (prefers-reduced-transparency: reduce) { html body.ogt-alt #ogtAlt.oa2 { background: #131f35 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
+
+@media (max-width: 760px) { body.ogt-alt main, body.ogt-alt .tumu-menu { padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important; } }
