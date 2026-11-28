@@ -1860,7 +1860,7 @@
   document.querySelectorAll('section > .ust2').forEach(u => { if (u.querySelector('.ust2-yen')) return; const sag = document.createElement('span'); sag.className = 'ust2-sag';
     const ek = [...u.children].slice(2); ek.forEach(e => sag.appendChild(e));
     const b = document.createElement('button'); b.type = 'button'; b.className = 'ust2-yen'; b.title = 'Yenile'; b.setAttribute('aria-label', 'Yenile');
-    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5A8 8 0 1 1 17.3 5.6"/><path d="M20 4v5h-5"/></svg>';
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.6 13.4A6.8 6.8 0 1 1 14.6 5.7"/><path d="M13.6 2.6 19.6 6 13.9 9.6Z" fill="currentColor" stroke-width="1.2"/></svg>';
     b.onclick = () => { b.classList.add('donuyor'); const y = $('#yenileUst'); if (y) y.click(); }; sag.appendChild(b); u.appendChild(sag); });
   function ayAc() { ayCiz(); goster('s-ayar'); window.scrollTo(0, 0); }
   $('#ayIc') && ($('#ayIc').onclick = async ev => { const b = ev.target.closest('[data-ay]'); if (!b) return; const k = b.dataset.ay;

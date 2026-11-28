@@ -640,3 +640,12 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
 .gi-bek .gi-adim { max-width: 460px; margin-left: auto; margin-right: auto; }
 .gi-bek.red .gi-hal { animation: none; border-color: rgba(255,138,149,.5); } .gi-bek.red .gi-sure { display: none; }
 .gi-adim { display: flex; gap: 10px; text-align: left; margin-top: 14px; font-size: 14px; color: #c9d6e6; } .gi-adim b { flex: none; width: 24px; height: 24px; border-radius: 50%; background: rgba(34,232,255,.15); color: #22e8ff; display: grid; place-items: center; font-size: 12.5px; }
+
+/* 28 Kasım 2026: Yenile düğmesi — mavi cam görünüm, yenilerken döner */
+#yenileUst, .ust2-yen { position: relative; overflow: hidden; color: #e6f7ff; border-radius: 14px; border: 1px solid rgba(140,225,255,.6);
+  background: linear-gradient(155deg, #2bb8f2 0%, #0d5fa3 48%, #072f5e 100%);
+  box-shadow: 0 0 14px rgba(30,180,255,.42), 0 3px 9px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -3px 8px rgba(0,20,50,.45); }
+#yenileUst::before, .ust2-yen::before { content: ''; position: absolute; left: -20%; top: -60%; width: 140%; height: 95%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0)); transform: rotate(-12deg); pointer-events: none; }
+#yenileUst svg, .ust2-yen svg { position: relative; width: 23px; height: 23px; filter: drop-shadow(0 0 4px rgba(120,220,255,.9)); }
+#yenileUst:hover, .ust2-yen:hover { background: linear-gradient(155deg, #3cc4f8 0%, #1170b8 48%, #08386d 100%); }
+#yenileUst:active, .ust2-yen:active { transform: scale(.95); }
