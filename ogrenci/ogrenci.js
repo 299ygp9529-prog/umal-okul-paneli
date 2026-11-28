@@ -76,7 +76,7 @@
     onbYaz(); const onbCizildi = S.onbCiz; S.onbCiz = false; clearTimeout(onbYaz.z); onbYaz.z = setTimeout(onbAnaYaz, 8000);
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
-    if (onbCizildi && aktifEkran() !== 'liste' && aktifEkran() !== 'giris') anaCiz(true); else anaCiz(); tuYukle(); bldCiz(); obYukle(); tzoKontrol(true); blYukle().then(() => { if (!hashGit()) anaCiz(true); });   // önbellekten çizildiyse öğrencinin açtığı ekran bozulmaz if (window.UmalBildirim && S.kod && S.no !== '1907' && S.sinif !== 'ÖZEL') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); if (S.sinif === 'ÖZEL') rhYukle().then(() => { if (!$('#s-plan').classList.contains('gizli')) anaCiz(); }); /* K-923 */ bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
+    if (onbCizildi && aktifEkran() !== 'liste' && aktifEkran() !== 'giris') anaCiz(true); else anaCiz(); tuYukle(); bldCiz(); obYukle(); tzoKontrol(true); blYukle().then(() => { if (!hashGit()) anaCiz(true); }); setTimeout(dyYukle, 1500);   // 28 Kasım 2026: okunmamış duyuru açılışta tam ekran   // önbellekten çizildiyse öğrencinin açtığı ekran bozulmaz if (window.UmalBildirim && S.kod && S.no !== '1907' && S.sinif !== 'ÖZEL') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); if (S.sinif === 'ÖZEL') rhYukle().then(() => { if (!$('#s-plan').classList.contains('gizli')) anaCiz(); }); /* K-923 */ bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
   // 28 Kasım 2026: giriş isteği — kodu olmayan öğrenci istek gönderir; onaylanınca kod bu cihaza gelir ve giriş kendiliğinden yapılır
@@ -1173,7 +1173,20 @@
     if (!data || !data.ok) return false;
     const eski = JSON.stringify(DY.L); DY.L = data.duyurular || [];
     if (eski !== JSON.stringify(DY.L) && !$('#liste').classList.contains('gizli')) anaCiz(true);
-    return true;
+    dyTam(); return true;
+  }
+  // 28 Kasım 2026: okunmamış duyuru tam ekran görünür; "Okudum" deyince okundu işaretlenir, sıradaki varsa o gelir (önce önemliler, sonra yeniler)
+  function dyTam() {
+    let el = document.getElementById('duyEkran'); const m = S.kod && S.sinif !== 'ÖZEL' ? DY.L.find(x => !x.okundu) : null;
+    if (!m) { if (el) el.remove(); return; }
+    if (document.getElementById('acilEkran') || document.getElementById('sifreEkran')) { clearTimeout(dyTam.z); dyTam.z = setTimeout(dyTam, 3000); return; }   // acil duyuru ve ilk şifre önce
+    if (el && el.dataset.id === m.id) return; if (el) el.remove();
+    el = document.createElement('div'); el.id = 'duyEkran'; el.dataset.id = m.id; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = `<div class="duy-ic"><div class="duy-ust">${svg('duy')}<span>${m.onemli ? 'ÖNEMLİ DUYURU' : 'DUYURU'}</span></div><h1></h1><div class="duy-alt"></div><div class="duy-metin"></div><button class="birincil" id="duyOk">Okudum</button><small>Ümraniye Merkez Anadolu Lisesi</small></div>`;
+    el.querySelector('h1').textContent = m.baslik || ''; el.querySelector('.duy-alt').textContent = (m.yazan || 'Okul idaresi') + ' · ' + dyTarih(m.tarih); el.querySelector('.duy-metin').textContent = m.metin || '';
+    document.body.appendChild(el); try { sesCal('yeni'); } catch (e) {}
+    el.querySelector('#duyOk').onclick = async () => { const b = el.querySelector('#duyOk'); b.disabled = true; b.textContent = 'Kaydediliyor…'; m.okundu = true;
+      await dyYukle([m.id]); el.remove(); dyTam(); };
   }
   const dyYeni = () => DY.L.some(d => !d.okundu);
   function dyAnaCiz() {
@@ -1954,7 +1967,7 @@
     // 28 Kasım 2026 (hız ve trafik): önce tek istekte küçük imzalar sorulur; yalnız değişen indirilir. İmza alınamazsa (SQL yoksa) eskisi gibi hepsi.
     let nb = null; try { const { data } = await sb.rpc('umal_ogrenci_nabiz', { p_no: S.no, p_kod: S.kod }); if (data && data.ok) nb = data; } catch (e) {}
     const NB = S.nabiz || (S.nabiz = {}), degisti = k => { if (!nb) return true; if (NB[k] === nb[k]) return false; NB[k] = nb[k]; return true; };
-    if (degisti('acil')) acilYukle(); if (degisti('obil')) obYukle();   // K-905: acil durum ve idare mesajı yazarken de gelsin
+    if (degisti('acil')) acilYukle(); if (degisti('obil')) obYukle(); if (nb && nb.duyuru !== undefined && degisti('duyuru') && NB.duyuruIlk) dyYukle(); if (nb) NB.duyuruIlk = true;   // yeni duyuru 20 sn içinde tam ekran   // K-905: acil durum ve idare mesajı yazarken de gelsin
     if (yaziyor()) return;
     canliSay++;
     const rvDegisti = degisti('randevu') ? await rvYukle(false) : false;

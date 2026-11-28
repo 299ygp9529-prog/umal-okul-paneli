@@ -667,3 +667,14 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
   body.ogr-alt #ogrAlt { left: 8px; right: 8px; bottom: calc(4px + env(safe-area-inset-bottom)); }
   body.ogr-alt main { padding-bottom: var(--alt-bos, 132px) !important; }
 }
+
+/* 28 Kasım 2026: Duyurular ana sayfadan kaldırıldı; yeni duyuru tam ekran gelir, "Okudum" ile kapanır */
+#kutular > [data-git="duy"], #duyAnaKart { display: none !important; }
+#duyEkran { position: fixed; inset: 0; z-index: 9995; background: radial-gradient(circle at 50% 28%, #0f3a5c, #0d1726 70%); display: grid; place-items: center; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation: duyGel .25s ease-out; }
+@keyframes duyGel { from { opacity: 0; transform: scale(.98); } }
+#duyEkran .duy-ic { width: min(560px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; text-align: center; border: 1.5px solid rgba(34,232,255,.55); border-radius: 22px; padding: 26px 20px 18px; background: rgba(13,23,38,.88); box-shadow: 0 0 0 6px rgba(34,232,255,.08), 0 0 50px rgba(34,160,255,.25); }
+#duyEkran .duy-ust { display: inline-flex; align-items: center; gap: 8px; color: #7fe9ff; font-weight: 900; letter-spacing: .12em; font-size: 14px; } #duyEkran .duy-ust svg { width: 20px; height: 20px; }
+#duyEkran h1 { margin: 14px 0 4px; font-size: 25px; line-height: 1.25; overflow-wrap: anywhere; }
+#duyEkran .duy-alt { color: var(--soluk); font-size: 13.5px; }
+#duyEkran .duy-metin { margin: 16px 0 22px; font-size: 17.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+#duyEkran button { width: 100%; padding: 14px; font-size: 17px; } #duyEkran small { display: block; margin-top: 12px; color: var(--soluk); font-size: 12px; }
