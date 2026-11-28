@@ -679,42 +679,58 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
 #duyEkran .duy-metin { margin: 16px 0 22px; font-size: 17.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
 #duyEkran button { width: 100%; padding: 14px; font-size: 17px; } #duyEkran small { display: block; margin-top: 12px; color: var(--soluk); font-size: 12px; }
 
-/* K-1025: alt sekme çubuğu yeniden tasarım — derin lacivert tek kapsül, ince kontur, kontrollü cam;
-   aktif sekme buz mavisi yumuşak köşeli yüzey (tek öğe, sekmeler arasında yaylı kayar), lacivert ikon; pasifte soğuk gri-mavi ince çizgi ikon.
-   İşlev, sıra, rozetler ve alt boşluk aynı; yalnız görünüm. */
+/* K-1025: alt sekme çubuğu — yeni görünüm (yalnız görünüm; sekmeler, sıra, rozetler, gizlenme kuralları aynı).
+   Ölçü düzeni: kapsül 64 px, iç pay 5 px, aktif yüzey 54 px; köşeler eş merkezli (27 = 22 + 5).
+   Renkler: zemin lacivert #0B1424 ailesi · pasif #91A5BF · aktif yüzey buz mavisi #BCEFFF · aktif içerik lacivert #0B2545.
+   Betik #ogrAlt'a .oa2 ekler; stil ya da betik önbellekte eski kalırsa bu kurallar devreye girmez, eski görünüm sürer. */
 @media (max-width: 760px) {
-  body.ogr-alt #ogrAlt {
-    padding: 6px; gap: 0; border-radius: 28px;
-    background: linear-gradient(180deg, rgba(20, 34, 56, .92), rgba(11, 20, 36, .94));
-    border: .5px solid rgba(188, 239, 255, .14);
-    box-shadow: 0 10px 30px rgba(3, 8, 18, .55), inset 0 .5px 0 rgba(255, 255, 255, .06);
+  body.ogr-alt #ogrAlt.oa2 {
+    --oa-ic: 5px; --oa-yay: cubic-bezier(.3, 1.22, .42, 1); --oa-sure: .34s;
+    left: clamp(10px, 3.4vw, 16px); right: clamp(10px, 3.4vw, 16px);
+    bottom: max(clamp(16px, 4.6vw, 20px), env(safe-area-inset-bottom));   /* tabana yapışmaz: kapsül yüzer */
+    max-width: 520px; margin: 0 auto;
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);   /* sekmeler hep eşit; içerik genişliği sütunu büyütmez */
+    padding: var(--oa-ic); gap: 0; border-radius: 27px;
+    background: linear-gradient(180deg, rgba(24, 37, 61, .94), rgba(14, 23, 41, .96));
+    border: .5px solid rgba(176, 208, 242, .17);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 1px 2px rgba(1, 5, 14, .35), 0 16px 36px -12px rgba(1, 5, 14, .7);
   }
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    html:not(.hafif) body.ogr-alt #ogrAlt { background: linear-gradient(180deg, rgba(20, 34, 56, .78), rgba(11, 20, 36, .86)); -webkit-backdrop-filter: blur(16px) saturate(1.25); backdrop-filter: blur(16px) saturate(1.25); }
+    html:not(.hafif) body.ogr-alt #ogrAlt.oa2 { background: linear-gradient(180deg, rgba(23, 36, 59, .86), rgba(13, 22, 39, .92)); -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3); }
   }
-  #ogrAlt .oa-yuzey {
-    position: absolute; top: 6px; bottom: 6px; left: 0; width: 0; z-index: 0; border-radius: 22px; opacity: 0; pointer-events: none;
-    background: linear-gradient(180deg, #d6f6ff 0%, #bcefff 45%, #a6def6 100%);
-    box-shadow: 0 1px 2px rgba(3, 10, 22, .28), 0 4px 12px rgba(120, 200, 240, .12), inset 0 .5px 0 rgba(255, 255, 255, .7);
-    transition: transform .32s cubic-bezier(.3, 1.22, .42, 1), width .32s cubic-bezier(.3, 1.22, .42, 1), opacity .2s ease;
+  @supports (transition-timing-function: linear(0, 1)) {   /* gerçek yay eğrisi: tepki 0,32 sn, sönüm 0,82 (taşma ≈ %1) */
+    body.ogr-alt #ogrAlt.oa2 { --oa-sure: .46s; --oa-yay: linear(0, .062, .2, .362, .519, .655, .766, .85, .911, .953, .98, .997, 1.006, 1.01, 1.011, 1.01, 1.009, 1.007, 1.005, 1.004, 1.003, 1.002, 1.001, 1); }
+  }
+  #ogrAlt.oa2 .oa-yuzey {
+    left: 0; top: var(--oa-ic); bottom: var(--oa-ic); width: 0; z-index: 0; opacity: 0; border-radius: 22px;
+    background: linear-gradient(180deg, #d4f5ff 0%, #bcefff 50%, #a9e3f8 100%);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .8), inset 0 -.5px 0 rgba(11, 37, 69, .1), 0 0 0 .5px rgba(2, 8, 20, .3), 0 1px 2px rgba(2, 8, 20, .28), 0 6px 14px -8px rgba(2, 8, 20, .5);
+    transition: transform var(--oa-sure) var(--oa-yay), width var(--oa-sure) var(--oa-yay), opacity .2s ease;
     will-change: transform;
   }
-  #ogrAlt .oa-yuzey.ilk { transition: none; }
-  body #ogrAlt button {
-    z-index: 1; gap: 4px; padding: 9px 0 8px; border-radius: 22px; background: none !important; box-shadow: none !important;
-    color: #91a5bf; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
-    font-size: 11px; font-weight: 500; letter-spacing: .01em; line-height: 1.15; white-space: nowrap;
-    transition: color .25s ease; -webkit-tap-highlight-color: transparent;
+  #ogrAlt.oa2 .oa-yuzey.ilk { transition: opacity .2s ease; }
+  #ogrAlt.oa2 button, #ogrAlt.oa2 button.secili {
+    z-index: 1; justify-content: flex-start; gap: 3px; height: 54px; min-width: 0; padding: 8px 0 0; border-radius: 22px;
+    background: none !important; box-shadow: none !important; color: #91a5bf;
+    font: 500 10.5px/13px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, "Segoe UI", sans-serif; letter-spacing: .01em;
+    white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: color .22s ease;
   }
-  body #ogrAlt button svg { width: 24px; height: 24px; stroke-width: 1.6; transition: transform .3s cubic-bezier(.3, 1.22, .42, 1); }
-  body #ogrAlt button svg [fill-opacity] { opacity: 0; transition: opacity .25s ease; }
-  body #ogrAlt button span { font-size: 11px; transition: font-weight .2s; }
-  body #ogrAlt button.secili { color: #0b2647; }
-  body #ogrAlt button.secili span { font-weight: 650; }
-  body #ogrAlt button.secili svg { stroke-width: 1.8; }
-  body #ogrAlt button.secili svg [fill-opacity] { opacity: 1; fill-opacity: .16; }
-  body #ogrAlt button:active svg { transform: scale(.94); }
-  #ogrAlt .oa-sayi { box-shadow: 0 0 0 2px #0e1a2e; background: #ff4f63; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; font-weight: 700; }
+  #ogrAlt.oa2 button span { font-size: inherit; line-height: inherit; }
+  #ogrAlt.oa2 button svg { width: 24px; height: 24px; flex: none; overflow: visible; transition: transform .16s ease; }
+  #ogrAlt.oa2 .oa-c, #ogrAlt.oa2 .oa-d { transition: opacity .2s ease; }
+  #ogrAlt.oa2 .oa-c path[fill-opacity] { display: none; }   /* pasif simge yalnız ince çizgi (dolgu yok) */
+  #ogrAlt.oa2 button.secili { color: #0b2545; }
+  #ogrAlt.oa2 button.secili span { font-weight: 600; }
+  #ogrAlt.oa2 button.secili .oa-c { opacity: 0; }
+  #ogrAlt.oa2 button.secili .oa-d { opacity: 1 !important; }
+  #ogrAlt.oa2 button.secili svg { animation: oaGir var(--oa-sure) var(--oa-yay) both; }
+  #ogrAlt.oa2 button:active svg { transform: scale(.92); }
+  #ogrAlt.oa2 .oa-sayi { top: 3px; left: calc(50% + 3px); z-index: 2; min-width: 16px; height: 16px; padding: 0 4.5px; border-radius: 8px; background: #ff453a; font: 600 10px/16px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif; letter-spacing: 0; box-shadow: 0 0 0 1.5px #121d32; transition: box-shadow .22s ease; }
+  #ogrAlt.oa2 button.secili .oa-sayi { box-shadow: 0 0 0 1.5px #c6f2ff; }
 }
-@media (max-width: 350px) { body #ogrAlt button span { font-size: 10px; letter-spacing: 0; } }
-@media (prefers-reduced-motion: reduce) { #ogrAlt .oa-yuzey, body #ogrAlt button svg { transition: none !important; } }
+@keyframes oaGir { from { transform: scale(.86); } to { transform: scale(1); } }
+@media (max-width: 374px) { #ogrAlt.oa2 button, #ogrAlt.oa2 button.secili { font-size: 10px; letter-spacing: 0; } }
+@media (max-width: 339px) { body.ogr-alt #ogrAlt.oa2 { left: 8px; right: 8px; } #ogrAlt.oa2 button, #ogrAlt.oa2 button.secili { font-size: 9.5px; } }
+@media (prefers-reduced-motion: reduce) { #ogrAlt.oa2 .oa-yuzey { transition: opacity .2s ease !important; } #ogrAlt.oa2 button.secili svg { animation: none !important; } }
+@media (prefers-contrast: more) { #ogrAlt.oa2 button { color: #b8c7da; } body.ogr-alt #ogrAlt.oa2 { border-color: rgba(200, 225, 250, .5); } }
+@media (prefers-reduced-transparency: reduce) { html body.ogr-alt #ogrAlt.oa2 { background: #131f35 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
