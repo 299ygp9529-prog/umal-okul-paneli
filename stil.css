@@ -3244,3 +3244,15 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
 @media (prefers-reduced-transparency: reduce) { html body.ogt-alt #ogtAlt.oa2 { background: #131f35 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
 
 @media (max-width: 760px) { body.ogt-alt main, body.ogt-alt .tumu-menu { padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important; } }
+
+/* K-1029: aynı görev kolundaki kutucuklar eşit boyda.
+   1) Arama kutusu ("Ne yapmak istersin?") her rolde ve modda aynı boy: menü ekrana sığmayınca esnek sütunda sıkışıp 24 px'e iniyordu; artık sıkışmaz (telefon 46 px, bilgisayar 52 px).
+   2) Telefonda üst şerit düğmeleri (Yenile · Atlas · Çıkış) tek ölçü: 42×42, 13 px köşe, 8 px aralık (biri kare, biri daire, biri hap değil). Şerit 360 px genişliğe kadar tek satır. Bilgisayar düzeni aynı. */
+.mn-ara, .tm-ara { flex: none; }
+@media (max-width: 760px) {
+  .yan .kullanici { gap: 8px; }
+  .yan .as-tepe { width: 42px; height: 42px; border-radius: 13px; box-sizing: border-box; border: 1px solid rgba(34, 232, 255, .38); background: radial-gradient(circle at 50% 38%, #1c2f52, #0d1830); box-shadow: 0 0 10px rgba(34, 232, 255, .16); }
+  .yan #cikis { width: 42px; height: 42px; padding: 0; gap: 0; justify-content: center; border-radius: 13px; box-sizing: border-box; font-size: 0; box-shadow: 0 0 10px rgba(255, 200, 40, .22); }
+  .yan #cikis svg { width: 21px; height: 21px; }
+}
+@media (max-width: 384px) { .yan .ust-ad small { letter-spacing: .06em; } }
