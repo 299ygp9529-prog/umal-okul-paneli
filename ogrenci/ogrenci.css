@@ -763,3 +763,10 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
 #duyEkran .duy-metin a { color: #7fe9ff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 /* K-1032: telefonda Ses ve Çıkış üst şeritte hiç görünmez (Ayarlar'da). Yenilemede alt çubuk sınıfı gelmeden bir an görünüp düzeni kaydırıyorlardı. */
 @media (max-width: 760px) { #sesUst, #cikisUst { display: none !important; } }
+/* K-1030: telefonda arka planda neonlu pençe izi (sabit, hareketsiz tek resim: pence.svg); kutular hafif saydam, zayıf telefonda kutular opak kalır */
+@media (max-width: 760px) {
+  body.ogr-alt { background: transparent; }
+  body.ogr-alt::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("../pence.svg?v=1") center / cover no-repeat; }
+  html:not(.hafif) body.ogr-alt #kutular > button { background: linear-gradient(rgba(23, 41, 68, .78), rgba(17, 30, 52, .78)) !important; }
+  html:not(.hafif) body.ogr-alt #gununSozu { background: linear-gradient(160deg, rgba(23, 44, 77, .78), rgba(16, 28, 51, .78) 70%) !important; }
+}

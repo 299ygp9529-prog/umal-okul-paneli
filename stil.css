@@ -3256,3 +3256,10 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
   .yan #cikis svg { width: 21px; height: 21px; }
 }
 @media (max-width: 384px) { .yan .ust-ad small { letter-spacing: .06em; } }
+
+/* K-1030 (öğrencideki gibi): telefonda arka planda neonlu pençe izi — sabit, hareketsiz tek resim */
+@media (max-width: 760px) {
+  body.ogt-alt { background: transparent; }
+  body.ogt-alt::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("pence.svg?v=1") center / cover no-repeat; }
+  body.ogt-alt .tumu-menu { background: rgba(8, 16, 28, .55); }   /* menü ekranında pençe izi arkadan seçilir */
+}
