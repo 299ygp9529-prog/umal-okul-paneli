@@ -761,3 +761,5 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
 @media (max-width: 760px) { .izg > button.k-tam { grid-column: 1 / -1; } }
 /* K-1031: tam ekran duyuruda bağlantı */
 #duyEkran .duy-metin a { color: #7fe9ff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+/* K-1032: telefonda Ses ve Çıkış üst şeritte hiç görünmez (Ayarlar'da). Yenilemede alt çubuk sınıfı gelmeden bir an görünüp düzeni kaydırıyorlardı. */
+@media (max-width: 760px) { #sesUst, #cikisUst { display: none !important; } }
