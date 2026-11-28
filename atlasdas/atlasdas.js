@@ -5,6 +5,7 @@
    Kullanım: UmalAtlasdas.ac({ sb, kok, ogretmen:false, no:()=>.., kod:()=>.., uyar, onayla }) */
 (function () {
   'use strict';
+  let TD = null;   // K-1036: Atlas'tan İste verisi
   let C = null, kok = null, D = null, sek = 'kesfet', ara = '', turSec = '', yuk = false, kamera = null;
   const TURLER = ['Roman', 'Hikâye', 'Bilim', 'Tarih', 'Şiir', 'Kişisel gelişim', 'Çizgi roman', 'Klasik', 'Ders', 'Diğer'];
   const DERECE = [[30, 'Onur Atlasdaşı'], [15, 'Usta Atlasdaş'], [5, 'Gönüllü Atlasdaş'], [0, 'Atlasdaş']];
@@ -34,6 +35,17 @@
 .kd-der{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:#ffe28a;border:1px solid rgba(255,206,92,.35);border-radius:99px;padding:5px 11px}
 .kd-sek{display:flex;gap:4px;background:#0f1c2e;border:1px solid #22385a;border-radius:16px;padding:4px;margin-bottom:14px}
 .kd-sek button{flex:1;border:0;background:transparent;color:#9fb3cc;font:inherit;font-weight:700;font-size:14.5px;padding:10px 6px;border-radius:12px;cursor:pointer;position:relative}
+.kt-kah{border-radius:20px;padding:16px;margin-bottom:12px;background:radial-gradient(120% 100% at 90% 0%,#3a2c10 0%,#141a26 55%,#0f1420 100%);border:1px solid rgba(255,206,92,.35);text-align:left}.kt-kah h3{margin:0 0 4px;font-size:18px;color:#fff}.kt-kah p{margin:0;color:#c9d6e6;font-size:13px}
+.kt-adim{display:flex;gap:6px;margin-top:12px}.kt-adim span{flex:1;font-size:11px;color:#ffe28a;background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.3);border-radius:10px;padding:6px 4px;text-align:center;line-height:1.25}
+.kt-k{background:#13233a;border:1px solid #22385a;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left}.kt-u{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.kt-u b{font-size:15.5px;color:#fff}.kt-u small{display:block;color:#9fb3cc;font-size:12.5px;margin-top:2px}
+.kt-c{flex:none;font-size:11px;font-weight:700;border-radius:99px;padding:4px 9px;white-space:nowrap}.kt-c.c1{background:rgba(34,232,255,.12);color:#7fe9ff;border:1px solid rgba(34,232,255,.35)}.kt-c.c2{background:rgba(62,240,138,.12);color:#8ff0b8;border:1px solid rgba(62,240,138,.4)}.kt-c.c3{background:rgba(245,197,66,.14);color:#ffe28a;border:1px solid rgba(245,197,66,.45)}.kt-c.c4{background:rgba(255,90,106,.12);color:#ff9aa5;border:1px solid rgba(255,90,106,.4)}
+.kt-bar{height:7px;border-radius:9px;background:#0b1626;margin:11px 0 4px;overflow:hidden}.kt-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#f5c542,#ffe28a)}
+.kt-alt{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:#c9d6e6;margin-top:8px}.kt-dg{display:flex;gap:6px;flex:none}
+.kt-ben,.kt-o,.kt-r{border:1.5px solid #f5c542;color:#ffe28a;background:transparent;border-radius:11px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer}.kt-ben.on{background:#f5c542;color:#2a1a00}span.kt-ben{border-color:#2a4468;color:#9fb3cc;cursor:default}
+.kt-o{background:#3ef08a;border-color:#3ef08a;color:#04210f}.kt-r{border-color:#2a4468;color:#c9d6e6}
+.kt-sinir{display:block;width:100%;text-align:left;border:1px solid rgba(255,206,92,.35);background:#141a26;color:#c9d6e6;border-radius:14px;padding:11px 14px;font:inherit;font-size:14px;margin-bottom:12px;cursor:pointer}.kt-sinir b{color:#ffe28a}
+.kt-uy{margin-top:10px;border-radius:14px;padding:12px;background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.4);font-size:13px;color:#ffe28a;text-align:left}.kt-uy b{color:#fff}
+.kd-sek button{white-space:nowrap}.kd-sek i{top:-7px!important;right:-3px!important;box-shadow:0 0 0 2px #0f1c2e}@media (max-width:420px){.kd-sek button{font-size:13px;padding:10px 3px}}
 .kd-sek button.s{background:#f5c542;color:#2a1a00}.kd-sek i{font-style:normal;position:absolute;top:3px;right:8px;min-width:18px;height:18px;border-radius:9px;background:#ff5a6a;color:#fff;font-size:11px;line-height:18px;padding:0 5px}
 .kd-ara{display:flex;align-items:center;gap:8px;background:#0f1c2e;border:1px solid #22385a;border-radius:14px;padding:0 12px;margin-bottom:10px}.kd-ara input{flex:1;background:none;border:0;color:#fff;font:inherit;font-size:15px;padding:12px 0;outline:none}
 .kd-cip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}.kd-cip button{flex:none;border:1px solid #2a4468;background:transparent;color:#c9d6e6;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
@@ -121,8 +133,8 @@
     let h = `<div class="kd"><div class="kd-bas">${RAF}<div class="kd-et">UMAL KİTAPLIĞI</div><h2>Atlasdaş</h2><p>Kitabını rafa koy, arkadaşının kitabını oku. Okulun kitaplığını birlikte büyütüyoruz.</p>
       <div class="kd-say"><div><b>${sc.kitap || 0}</b><small>kitap rafta</small></div><div><b>${sc.paylasim || 0}</b><small>paylaşım</small></div><div><b>${sc.kisi || 0}</b><small>Atlasdaş</small></div></div>
       <div class="kd-der">${IK.rozet}${derece(verdi)}${verdi ? ' · ' + verdi + ' kitap paylaştın' : ''}</div></div>
-      <div class="kd-sek"><button data-sek="kesfet" class="${sek === 'kesfet' ? 's' : ''}">Keşfet</button><button data-sek="rafim" class="${sek === 'rafim' ? 's' : ''}">Rafım</button><button data-sek="istek" class="${sek === 'istek' ? 's' : ''}">İstekler${gelenBek ? '<i>' + gelenBek + '</i>' : ''}</button></div>`;
-    if (sek === 'kesfet') h += kesfet(); else if (sek === 'rafim') h += rafim(); else h += istekler();
+      <div class="kd-sek"><button data-sek="kesfet" class="${sek === 'kesfet' ? 's' : ''}">Keşfet</button><button data-sek="rafim" class="${sek === 'rafim' ? 's' : ''}">Rafım</button><button data-sek="istek" class="${sek === 'istek' ? 's' : ''}">İstekler${gelenBek ? '<i>' + gelenBek + '</i>' : ''}</button><button data-sek="talep" class="${sek === 'talep' ? 's' : ''}">Atlas'tan İste${C.ogretmen && TD && TD.liste ? (n => n ? '<i>' + n + '</i>' : '')(TD.liste.filter(x => x.durum === 'onay').length) : ''}</button></div>`;
+    if (sek === 'kesfet') h += kesfet(); else if (sek === 'rafim') h += rafim(); else if (sek === 'talep') h += talep(); else h += istekler();
     kok.innerHTML = h + '</div>';
     const ai = kok.querySelector('#kdAra'); if (ai) { ai.oninput = () => { ara = ai.value; const l = kok.querySelector('#kdListe'); if (l) l.innerHTML = liste(); }; }
   }
@@ -175,6 +187,71 @@
     h += `<div class="kd-bl">Kitaplarıma gelen istekler</div>` + (g.length ? g.map(i => istekSatir(i, true)).join('') : '<div class="kd-bos">Henüz istek yok.</div>');
     h += `<div class="kd-bl">İstediğim kitaplar</div>` + (v.length ? v.map(i => istekSatir(i, false)).join('') : '<div class="kd-bos">Keşfet bölümünden beğendiğin bir kitabı iste.</div>');
     return h + `<div class="kd-not">Ödünç süresi 3 haftadır. Kitabı okulda elden verin; veren "Teslim ettim", geri alan "Geri aldım" der. Aynı anda en çok 3 kitap isteyebilirsin.</div>`;
+  }
+
+  // ---------------------------------------------------------------- K-1036: Atlas'tan İste
+  // Öğrenci bulamadığı kitabı ister; herhangi bir öğretmen onaylayınca listede görünür, diğer öğrenciler katılır; idare sipariş eder, rafa koyar.
+  async function talepYukle() { const d = await rpc('talep_durum'); TD = d.ok ? d : { hata: d.hata || 'Bağlantı kurulamadı.' }; if (sek === 'talep') ciz(); }
+  const TDURUM = { onay: ['Öğretmen onayı bekliyor', 'c1'], acik: ['Toplanıyor', 'c2'], siparis: ['Sipariş edildi', 'c3'], rafta: ['Rafa kondu', 'c2'], red: ['Onaylanmadı', 'c4'] };
+  function talepSat(t) {
+    const S_ = TD.sinir, [ad, cl] = TDURUM[t.durum] || ['', ''], dolu = S_ ? Math.min(1, t.sayi / S_) : 0;
+    let alt = S_ ? `${t.sayi} / ${S_} kişi${t.sayi >= S_ ? ' · tamamlandı' : ' · ' + (S_ - t.sayi) + ' kişi kaldı'}` : `${t.sayi} kişi istiyor`;
+    let dug = '';
+    if (!C.ogretmen && (t.durum === 'acik' || t.durum === 'siparis')) dug = t.benim ? '<span class="kt-ben">Senin isteğin</span>' : `<button class="kt-ben${t.ben ? ' on' : ''}" data-tkatil="${esc(t.id)}" data-v="${t.ben ? 0 : 1}">${t.ben ? '✓ İstiyorum' : 'Ben de istiyorum'}</button>`;
+    if (t.durum === 'onay' || t.durum === 'red') alt = t.durum === 'red' ? (t.red_neden ? esc(t.red_neden) : 'Bu kitap uygun bulunmadı.') : 'Onaylanınca arkadaşların da görüp katılabilir.';
+    if (C.ogretmen) {
+      const k = t.isteyen ? kisi(t.isteyen) : '';
+      if (t.durum === 'onay') dug = `<button class="kt-o" data-tis="${esc(t.id)}" data-ne="onayla">Onayla</button><button class="kt-r" data-tis="${esc(t.id)}" data-ne="reddet">Reddet</button>`;
+      else if (TD.idare && t.durum === 'acik') dug = `<button class="kt-r" data-tis="${esc(t.id)}" data-ne="siparis">Sipariş edildi</button>`;
+      else if (TD.idare && t.durum === 'siparis') dug = `<button class="kt-r" data-tis="${esc(t.id)}" data-ne="rafta">Rafa kondu</button><button class="kt-r" data-tis="${esc(t.id)}" data-ne="geri">Geri al</button>`;
+      alt = (t.durum === 'onay' ? `İsteyen: ${k}${t.neden ? ' · “' + esc(t.neden) + '”' : ''}` : alt + ((t.siniflar || []).length ? ' · ' + esc(t.siniflar.slice(0, 6).join(', ')) + (t.siniflar.length > 6 ? '…' : '') : ''));
+    }
+    return `<div class="kt-k"><div class="kt-u"><div><b>${esc(t.ad)}</b><small>${esc([t.yazar, t.tur].filter(Boolean).join(' · '))}</small></div><span class="kt-c ${cl}">${ad}</span></div>
+      ${S_ && t.durum !== 'onay' && t.durum !== 'red' ? `<div class="kt-bar"><i style="width:${Math.round(dolu * 100)}%"></i></div>` : ''}
+      <div class="kt-alt"><span>${alt}</span>${dug ? '<span class="kt-dg">' + dug + '</span>' : ''}</div></div>`;
+  }
+  function talep() {
+    if (!TD) { talepYukle(); return '<div class="kd-bos">Yükleniyor…</div>'; }
+    if (TD.hata) return `<div class="kd-bos">${esc(TD.hata)}</div>`;
+    const L = TD.liste || [];
+    let h = `<div class="kt-kah"><h3>${C.ogretmen ? 'Öğrencilerin kitap istekleri' : 'Bulamadığın kitabı iste'}</h3><p>${C.ogretmen ? 'Öğrencilerin bulamadığı kitaplar. Bir öğretmenin onayıyla listede görünür; yeterince öğrenci isteyince okul alır.' : 'Yeterince arkadaşın da isterse okul kitabı alır, Atlasdaş rafına koyar.'}</p>
+      <div class="kt-adim"><span>1 · ${C.ogretmen ? 'Öğrenci ister' : 'Sen iste'}</span><span>2 · ${C.ogretmen ? 'Öğretmen onaylar' : 'Arkadaşların katılsın'}</span><span>3 · ${TD.sinir ? TD.sinir + ' kişide okul alır' : 'Okul alır'}</span></div></div>`;
+    if (C.ogretmen && TD.kurucu) h += `<button class="kt-sinir" data-tsinir>Alım sınırı: <b>${TD.sinir ? TD.sinir + ' kişi' : 'yok'}</b> · değiştir</button>`;
+    if (!C.ogretmen) h += `<button class="kd-btn" data-tekle>+ Kitap iste</button>`;
+    const grup = (b, l) => l.length ? `<div class="kd-bl">${b}</div>` + l.map(talepSat).join('') : '';
+    if (C.ogretmen) {
+      h += grup('Onay bekleyen', L.filter(x => x.durum === 'onay')) + grup('Açık istekler', L.filter(x => x.durum === 'acik')) + grup('Sipariş edildi', L.filter(x => x.durum === 'siparis')) + grup('Son 60 gün', L.filter(x => x.durum === 'rafta' || x.durum === 'red'));
+      if (!L.length) h += '<div class="kd-bos">Henüz kitap isteği yok.</div>';
+    } else {
+      h += grup('Senin bekleyen isteklerin', L.filter(x => x.benim && (x.durum === 'onay' || x.durum === 'red'))) + grup('İstenen kitaplar', L.filter(x => x.durum === 'acik' || x.durum === 'siparis')) + grup('Rafa kondu', L.filter(x => x.durum === 'rafta'));
+      if (!L.length) h += '<div class="kd-bos">Henüz istenen kitap yok. İlk isteği sen yap.</div>';
+    }
+    return h;
+  }
+  function talepForm() {
+    const p = pencere(`<h3>Kitap iste</h3><div class="kd-not" style="margin:0 0 10px">Bir öğretmenin onayından sonra listede görünür; arkadaşların da katılabilir.</div>
+      <label>Kitabın adı</label><input type="text" id="ktAd" maxlength="160" autocomplete="off"><div id="ktBenzer"></div>
+      <label>Yazarı</label><input type="text" id="ktYazar" maxlength="120" placeholder="Biliyorsan yaz">
+      <label>Türü</label><select id="ktTur"><option value="">Seç</option>${TURLER.map(t => `<option>${t}</option>`).join('')}</select>
+      <label>Neden istiyorsun? (isteğe bağlı)</label><textarea id="ktNeden" maxlength="300"></textarea>
+      <div style="height:14px"></div><button class="kd-btn" data-tgonder>İsteği gönder</button>`);
+    const a = p.querySelector('#ktAd'); a.focus(); a.oninput = () => {
+      const q = norm(a.value).replace(/[^a-z0-9]/g, ''), b = document.getElementById('ktBenzer');
+      const m = q.length >= 3 ? (TD && TD.liste || []).find(t => (t.durum === 'acik' || t.durum === 'siparis') && (n => n.includes(q) || q.includes(n))(norm(t.ad).replace(/[^a-z0-9]/g, ''))) : null;
+      b.innerHTML = m ? `<div class="kt-uy">Bu kitap zaten istenmiş: <b>${esc(m.ad)}${m.yazar ? ' · ' + esc(m.yazar) : ''}</b> (${m.sayi} kişi).<br>Yeni istek açmak yerine katıl, sayı daha hızlı dolsun.${m.ben || m.benim ? '<div style="margin-top:8px;color:#8ff0b8">Bu isteğe zaten katıldın.</div>' : `<button class="kd-btn" style="margin:10px 0 0" data-tkatil="${esc(m.id)}" data-v="1" data-kapa="1">Ben de istiyorum</button>`}</div>` : '';
+    };
+  }
+  async function talepGonder(btn) {
+    const v = id => (document.getElementById(id) || {}).value || '';
+    if (v('ktAd').trim().length < 2) { uyar('Kitabın adını yaz.'); return; }
+    btn.disabled = true; const r = await rpc('talep_ekle', { p_ad: v('ktAd'), p_yazar: v('ktYazar') || null, p_tur: v('ktTur') || null, p_neden: v('ktNeden') || null }); btn.disabled = false;
+    if (!r.ok) { uyar(r.hata || 'Gönderilemedi.'); return; }
+    kapatPen(); uyar(r.katildi ? 'Bu kitap zaten istenmişti; sen de katıldın.' : 'İsteğin gönderildi. Bir öğretmen onaylayınca listede görünecek.'); talepYukle();
+  }
+  function sinirForm() {
+    pencere(`<h3>Alım sınırı</h3><div class="kd-not" style="margin:0 0 10px">Bir kitabı kaç öğrenci isteyince okul alsın? Boş bırakırsan sınır olmaz.</div>
+      <label>Kişi sayısı</label><input type="number" id="ktSinir" min="2" max="500" inputmode="numeric" value="${TD && TD.sinir ? TD.sinir : ''}" placeholder="Sınır yok">
+      <div style="height:14px"></div><button class="kd-btn" data-tsinirkaydet>Kaydet</button>`);
   }
 
   // ---------------------------------------------------------------- pencereler
@@ -282,7 +359,17 @@
     const t = e.target.closest('button'); if (!t || yuk) return;
     const d = t.dataset;
     if (d.kapat !== undefined) { kapatPen(); return; }
-    if (d.sek) { sek = d.sek; ciz(); window.scrollTo(0, 0); return; }
+    if (d.sek) { sek = d.sek; if (sek === 'talep') TD = TD && !TD.hata ? TD : null; ciz(); if (sek === 'talep' && TD) talepYukle(); window.scrollTo(0, 0); return; }
+    if (d.tekle !== undefined) { talepForm(); return; }
+    if (d.tgonder !== undefined) { talepGonder(t); return; }
+    if (d.tsinir !== undefined) { sinirForm(); return; }
+    if (d.tsinirkaydet !== undefined) { const n = +(document.getElementById('ktSinir') || {}).value || null; t.disabled = true; const r = await rpc('talep_sinir', { p_sinir: n }); t.disabled = false; if (!r.ok) { uyar(r.hata); return; } kapatPen(); talepYukle(); return; }
+    if (d.tkatil) { t.disabled = true; const r = await rpc('talep_katil', { p_talep: d.tkatil, p_katil: d.v === '1' }); t.disabled = false; if (!r.ok) { uyar(r.hata); return; } if (d.kapa) { kapatPen(); uyar('İsteğe katıldın.'); } talepYukle(); return; }
+    if (d.tis) {
+      const soru = { onayla: 'Bu kitap isteği onaylansın mı? Bütün öğrenciler görüp katılabilecek.', reddet: 'Bu kitap isteği reddedilsin mi? İsteyen öğrenci "Onaylanmadı" olarak görür.', siparis: 'Bu kitap sipariş edildi olarak işaretlensin mi?', rafta: 'Kitap geldi ve Atlasdaş rafına kondu mu?', geri: 'Sipariş işareti geri alınsın mı?' }[d.ne];
+      if (soru && !(await onayla(soru))) return;
+      t.disabled = true; const r = await rpc('talep_islem', { p_talep: d.tis, p_islem: d.ne }); t.disabled = false; if (!r.ok) { uyar(r.hata); return; } talepYukle(); return;
+    }
     if (d.tur !== undefined && t.closest('.kd-cip') && !t.closest('.kd-pen')) { turSec = d.tur; ciz(); return; }
     if (d.k) { detay(d.k); return; }
     if (d.ekle !== undefined) { form(); return; }
@@ -306,7 +393,7 @@
 
   window.UmalAtlasdas = {
     ac(ctx) {
-      C = ctx; kok = ctx.kok; stil(); sek = 'kesfet'; ara = ''; turSec = '';
+      C = ctx; kok = ctx.kok; stil(); sek = 'kesfet'; ara = ''; turSec = ''; TD = null; if (ctx.ogretmen) rpc('talep_durum').then(d => { if (d.ok) { TD = d; if (D) ciz(); } });   // öğretmende onay bekleyen sayısı sekmede görünsün
       if (!kok.dataset.kd) { kok.dataset.kd = '1'; kok.addEventListener('click', tik); }
       if (!document.body.dataset.kd) { document.body.dataset.kd = '1'; document.body.addEventListener('click', e => { if (e.target.closest('#kdOrt')) tik(e); }); document.addEventListener('keydown', e => { if (e.key === 'Escape') kapatPen(); }); }
       kok.innerHTML = '<div class="kd"><div class="kd-bos">Yükleniyor…</div></div>'; yukle();
