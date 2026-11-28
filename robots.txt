@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://umalatlas.com.tr/sitemap.xml
