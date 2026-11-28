@@ -25,6 +25,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
+  try { const nc = navigator.hardwareConcurrency || 8, dm = navigator.deviceMemory || 8; if (nc <= 4 || dm <= 3 || matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('hafif'); } catch (e) {}   // 28 Kasım 2026 (hız): zayıf telefonda ağır görsel efektler hafifler
   document.addEventListener('umal-ek-yuklendi', () => { try { if (!$('#s-sinav').classList.contains('gizli')) { sinavCiz(); haritaCiz(); } if (!$('#s-gezi').classList.contains('gizli')) gzCiz(); } catch (e) {} });   // 28 Kasım 2026 (hız): sonradan yüklenen senaryo / bilet ekranı açıksa yeniden çizilir
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
@@ -2010,10 +2011,10 @@
     const git = id => { if (id === 'liste') { YIGIN.length = 0; anaCiz(); return; } if (id === 's-msj') { if (ozel()) { rehAc(); return; } msAc(); return; } /* K-922: özel öğrencide Mesajlar öğretmeniyle yazışma */ if (id === 's-ayar') { ayAc(); return; }
       const b = document.createElement('button'); b.dataset.git = id; $('#kutular').appendChild(b); try { b.click(); } finally { b.remove(); } };
     n.onclick = ev => { const b = ev.target.closest('[data-oa]'); if (!b) return; if ((b.dataset.oa === aktifEkran() || (ozel() && b.dataset.oa === 's-msj' && aktifEkran() === 's-reh')) && b.dataset.oa !== 's-msj') { window.scrollTo(0, 0); return; } git(b.dataset.oa); setTimeout(guncelle, 50); };
-    const guncelle = () => { const a = aktifEkran(), acik = !!S.kod && a && a !== 'giris'; document.body.classList.toggle('ogr-alt', acik);
+    const guncelle = () => { if (document.hidden) return; const a = aktifEkran(), acik = !!S.kod && a && a !== 'giris'; document.body.classList.toggle('ogr-alt', acik);   // 28 Kasım 2026 (hız): arka plandayken çalışmaz
       { const oz = S.sinif === 'ÖZEL'; n.querySelectorAll('[data-oa="s-program"], [data-oa="s-sinav"]').forEach(b => { b.hidden = oz; }); const an = n.querySelector('[data-oa="liste"] span'); if (an) an.textContent = oz ? 'Planım' : 'Ana sayfa'; }   // K-923: özel öğrencide okul sekmeleri yok
-      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a || (a === 's-reh' && ozel() && b.dataset.oa === 's-msj'))); const k = ozel() ? RH.mesajlar.filter(m => !m.okundu && !m.ben).length : msYeni(), e = n.querySelector('.oa-sayi'); e.textContent = k > 99 ? '99+' : String(k); e.classList.toggle('gizli', !k);
-      const a_ = n.querySelector('.oa-ay'), y_ = bdYeni(); if (a_) { a_.textContent = String(y_); a_.classList.toggle('gizli', !y_); } };
+      n.querySelectorAll('[data-oa]').forEach(b => b.classList.toggle('secili', b.dataset.oa === a || (a === 's-reh' && ozel() && b.dataset.oa === 's-msj'))); const k = ozel() ? RH.mesajlar.filter(m => !m.okundu && !m.ben).length : msYeni(), e = n.querySelector('.oa-sayi'), kY = k > 99 ? '99+' : String(k); if (e.textContent !== kY) e.textContent = kY; e.classList.toggle('gizli', !k);
+      const a_ = n.querySelector('.oa-ay'), y_ = bdYeni(); if (a_) { if (a_.textContent !== String(y_)) a_.textContent = String(y_); a_.classList.toggle('gizli', !y_); } };
     setInterval(guncelle, 1000); guncelle();
     const yaziMi = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range|file|color)$/i.test(el.type || '')));
     document.addEventListener('focusin', ev => { if (yaziMi(ev.target)) document.body.classList.add('klavye-acik'); });

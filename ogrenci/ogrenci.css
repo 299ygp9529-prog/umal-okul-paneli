@@ -653,3 +653,9 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
    açıp kapatırken bu değer kademeli değişiyor, sayfanın boyu da onunla değişip içerik 3 kez sıçrıyordu (?altsiz denemesinde titreme yok).
    Alt boşluk artık sabit (en büyük değere göre); alt sekme çubuğunun kendi konumu aynı kalır. */
 @media (max-width: 760px) { body.ogr-alt main { padding-bottom: 132px !important; } }
+
+/* 28 Kasım 2026 (hız): zayıf telefonlarda (4 çekirdek ya da az bellek) ya da "hareketi azalt" açıkken ağır efektler hafifler; güçlü telefonda görünüm aynı */
+html.hafif #kutular.giris-an > button { animation: none !important; }
+html.hafif #kutular > button, html.hafif .kart, html.hafif #ogrAlt { box-shadow: none !important; }
+html.hafif #yenileUst, html.hafif .ust2-yen { box-shadow: 0 0 0 1px rgba(255,255,255,.95) !important; }
+html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
