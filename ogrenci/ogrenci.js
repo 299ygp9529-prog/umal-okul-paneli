@@ -27,7 +27,6 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  try { if (new URLSearchParams(location.search).has('altsiz')) document.documentElement.classList.add('altsiz'); } catch (e) {}   // 28 Kasım 2026: titreme denemesi — ?altsiz ile alt sekme çubuğu gizlenir (geçici)
   const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz', 's-oyun', 's-atlasdas', 's-gist'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();

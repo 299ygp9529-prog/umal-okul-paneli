@@ -649,14 +649,7 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
 #yenileUst svg, .ust2-yen svg { position: relative; width: 31px; height: 31px; filter: drop-shadow(0 0 1px rgba(60,170,255,.6)); }
 #yenileUst:hover, .ust2-yen:hover { background: radial-gradient(120% 120% at 30% 20%, #ffffff 0%, #f1f7ff 45%, #d3e4f9 80%, #b7d2f3 100%); }
 #yenileUst:active, .ust2-yen:active { transform: scale(.95); }
-
-/* 28 Kasım 2026: iPhone Safari'de sert kaydırınca titreme. Sayfa boyu ekrana çok yakınken tarayıcı çubukları kapanınca sayfa sığıyor,
-   kaydırma geri sıçrıyor, çubuklar yeniden açılıyor (döngü). Sayfa en az "çubuklar kapalıyken" ekran boyu kadar olunca döngü bitiyor. */
-body { min-height: 100vh; min-height: 100lvh; }
-
-/* 28 Kasım 2026: titreme denemesi (geçici) — yalnız ?altsiz adresinde */
-html.altsiz #ogrAlt { display: none !important; } html.altsiz body.ogr-alt main { padding-bottom: 24px !important; }
 /* 28 Kasım 2026: titreme kök nedeni — sayfanın alt boşluğu env(safe-area-inset-bottom)'a bağlıydı. Safari sayfa sonunda alt çubuğunu
    açıp kapatırken bu değer kademeli değişiyor, sayfanın boyu da onunla değişip içerik 3 kez sıçrıyordu (?altsiz denemesinde titreme yok).
    Alt boşluk artık sabit (en büyük değere göre); alt sekme çubuğunun kendi konumu aynı kalır. */
-@media (max-width: 760px) { body.ogr-alt main { padding-bottom: 132px !important; } html.altsiz body.ogr-alt main { padding-bottom: 24px !important; } }
+@media (max-width: 760px) { body.ogr-alt main { padding-bottom: 132px !important; } }
