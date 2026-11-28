@@ -757,3 +757,5 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
   #liste.uzun > #bugunSerit.gizli + #gununSozu { margin-top: auto; }
   #liste.uzun > #gununSozu { margin-bottom: 0; }
 }
+/* K-1027: son sırada tek kalan kutu tam satır */
+@media (max-width: 760px) { .izg > button.k-tam { grid-column: 1 / -1; } }

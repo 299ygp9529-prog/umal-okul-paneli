@@ -1553,8 +1553,16 @@
   // K-1026: uzun ekranda kutuların altında boşluk kalmasın — satır aralığı açılır (en çok 20 px), Bugün şeridi ve Günün sözü alt çubuğun hemen üstüne yaslanır.
   // Kısa ekranda hiçbir şey değişmez. Yükseklik 100svh'den ölçülür (Safari araç çubuğu açılıp kapanınca oynamaz).
   const AD = { p: null, w: 0 };
+  // K-1027: kutu sayısı tek olunca son sırada yalnız kalan kutu tam satır olur (yanında boş yer kalmaz). Yalnız telefonda (iki sütunlu düzen).
+  function tekKutu(K) {
+    K.querySelectorAll(':scope > .k-tam').forEach(e => e.classList.remove('k-tam'));
+    if (!document.body.classList.contains('ogr-alt') || getComputedStyle(K).gridTemplateColumns.split(' ').length !== 2) return;
+    const S_ = new Map(); [...K.children].forEach(e => { if (!e.offsetParent) return; const t = e.offsetTop; S_.set(t, (S_.get(t) || []).concat(e)); });
+    S_.forEach(L => { if (L.length === 1 && !L[0].classList.contains('genis') && L[0].tagName === 'BUTTON') L[0].classList.add('k-tam'); });
+  }
   function anaDuzen() {
     const L = $('#liste'), K = $('#kutular'); if (!L || !K) return;
+    if (!L.classList.contains('gizli')) tekKutu(K);
     const kapat = () => { L.classList.remove('uzun'); L.style.removeProperty('--liste-min'); K.style.removeProperty('--k-ek'); };
     if (!document.body.classList.contains('ogr-alt') || L.classList.contains('gizli') || ozel()) { kapat(); return; }
     if (!AD.p) { AD.p = document.createElement('div'); AD.p.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100svh;visibility:hidden;pointer-events:none'; document.body.appendChild(AD.p); }
