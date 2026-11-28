@@ -69,7 +69,7 @@
     if (data.oturum) kod = data.oturum;   // K-904: bundan sonra şifre değil oturum anahtarı
     Object.assign(S, { no, kod, ad: data.ad, sinif: data.sinif, formlar: data.formlar || [] });
     oturumYaz(no, kod);   // K-576: sayfa yenilenince çıkış olmasın
-    onbYaz(); const onbCizildi = S.onbCiz; S.onbCiz = false;
+    onbYaz(); const onbCizildi = S.onbCiz; S.onbCiz = false; clearTimeout(onbYaz.z); onbYaz.z = setTimeout(onbAnaYaz, 8000);
     $('#kod').value = ''; bilgi.textContent = '';
     sifreDenetle();
     if (onbCizildi && aktifEkran() !== 'liste' && aktifEkran() !== 'giris') anaCiz(true); else anaCiz(); tuYukle(); bldCiz(); obYukle(); tzoKontrol(true); blYukle().then(() => { if (!hashGit()) anaCiz(true); });   // önbellekten çizildiyse öğrencinin açtığı ekran bozulmaz if (window.UmalBildirim && S.kod && S.no !== '1907' && S.sinif !== 'ÖZEL') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); if (S.sinif === 'ÖZEL') rhYukle().then(() => { if (!$('#s-plan').classList.contains('gizli')) anaCiz(); }); /* K-923 */ bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
@@ -198,7 +198,11 @@
   const ONB_AN = 'umalOnbellek';
   function onbYaz() { try { const v = JSON.stringify({ no: S.no, ad: S.ad, sinif: S.sinif, formlar: S.formlar || [], t: Date.now() }); (S.hatirla ? localStorage : sessionStorage).setItem(ONB_AN, v); } catch (e) {} }
   function onbOku(no) { for (const st of [sessionStorage, localStorage]) { try { const v = JSON.parse(st.getItem(ONB_AN) || 'null'); if (v && v.no === no && v.ad && Date.now() - (v.t || 0) < 14 * 864e5) return v; } catch (e) {} } return null; }
-  function onbSil() { try { sessionStorage.removeItem(ONB_AN); } catch (e) {} try { localStorage.removeItem(ONB_AN); } catch (e) {} }
+  function onbSil() { for (const st of [sessionStorage, localStorage]) { try { st.removeItem(ONB_AN); st.removeItem(ONB_AN + 'Ana'); } catch (e) {} } }
+  // Ana sayfa kutularının son hâli (sayılar, etiketler) de tutulur; açılışta önce bu gösterilir, veriler gelince kutular yeniden çizilir
+  function onbAnaYaz() { try { const k = document.getElementById('kutular'); if (!S.kod || !k || !k.children.length) return; (S.hatirla ? localStorage : sessionStorage).setItem(ONB_AN + 'Ana', JSON.stringify({ no: S.no, h: k.innerHTML, t: Date.now() })); } catch (e) {} }
+  function onbAnaOku(no) { for (const st of [sessionStorage, localStorage]) { try { const v = JSON.parse(st.getItem(ONB_AN + 'Ana') || 'null'); if (v && v.no === no && v.h && Date.now() - (v.t || 0) < 3 * 864e5) return v.h; } catch (e) {} } return ''; }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onbAnaYaz(); });
   function oturumYaz(no, kod) {
     const v = JSON.stringify({ no, kod, t: Date.now() });
     try { sessionStorage.setItem('umalOturum', v); } catch (e) {}
@@ -1983,7 +1987,7 @@
       if (!g) { try { const l = JSON.parse(localStorage.getItem('umalOturum') || 'null'); if (l && Date.now() - (l.t || 0) < 30 * 864e5) { g = l; S.hatirla = true; } } catch (e) {} }
       if (g && g.no && g.kod) { otoGiris = true; try { if (sessionStorage.getItem('umalSelam')) S.selamlandi = true; } catch (e) {} $('#no').value = g.no; if (anahtarMi(g.kod)) girisAnahtar = g.kod; else $('#kod').value = g.kod.length > 4 ? g.kod.slice(0, 4) + '-' + g.kod.slice(4) : g.kod; $('#hatirla').classList.toggle('secili', !!S.hatirla); setTimeout(() => $('#girisBtn').click(), 0);
         const onb = anahtarMi(g.kod) && !location.hash.slice(1) ? onbOku(g.no) : null;   // 28 Kasım 2026 (hız)
-        if (onb) setTimeout(() => { if (S.kod) return; Object.assign(S, { no: g.no, kod: g.kod, ad: onb.ad, sinif: onb.sinif, formlar: onb.formlar || [], onbCiz: true }); document.documentElement.classList.remove('oturumlu'); try { anaCiz(); } catch (e) { S.onbCiz = false; } }, 0); } } catch (e) {}
+        if (onb) setTimeout(() => { if (S.kod) return; Object.assign(S, { no: g.no, kod: g.kod, ad: onb.ad, sinif: onb.sinif, formlar: onb.formlar || [], onbCiz: true }); document.documentElement.classList.remove('oturumlu'); try { anaCiz(); const h = onbAnaOku(g.no), k = $('#kutular'); if (h && k) { k.innerHTML = h; ANA.son = ''; } } catch (e) { S.onbCiz = false; } }, 0); } } catch (e) {}
     if (!otoGiris) document.documentElement.classList.remove('oturumlu');
   })();
   goster('giris');
