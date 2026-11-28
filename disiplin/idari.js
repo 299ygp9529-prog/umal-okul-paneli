@@ -1942,7 +1942,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   // DYK ek ders çizelgesi (26 Kasım 2026): ay seçilir; her öğretmen için programdaki DYK günleri tarih tarih kendiliğinden dolar.
   // Girilmeyen ders "girmedi" yapılır ya da saati değiştirilir; tatil günleri sütundan kapatılır. Kayıt: DY.M.E = { g: {tarih: {öğretmen: saat}}, t: {tarih: 1|0} }
   const DY_RESMI = ['10-29', '01-01', '04-23', '05-01', '05-19', '07-15'];   // sabit tarihli resmî tatiller (dinî bayramlar ve ara tatil elle işaretlenir)
-  const dySekme = () => `<div class="id-adimlar">${[['program', 'Haftalık program'], ['ek', 'Ek ders çizelgesi']].map(([k, ad]) => `<button data-dysek="${k}" ${DY.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('dyk', 18)}${ad}</button>`).join('')}</div>`;
+  const dySekme = () => `<div class="id-adimlar">${[['program', 'Haftalık program'], ['ek', 'Ek ders çizelgesi'], ['atama', 'Öğrenci atama']].map(([k, ad]) => `<button data-dysek="${k}" ${DY.sek === k ? 'class="secili" style="border-color:#ffd43b;color:#ffe580"' : ''}>${ikon('dyk', 18)}${ad}</button>`).join('')}</div>`;
   const dyTatil = t => { const E = DY.M.E || {}, v = (E.t || {})[t]; return v === 1 || (v !== 0 && DY_RESMI.includes(t.slice(5))); };
   function dyAyGunleri(ay) { const [y, m] = ay.split('-').map(Number), G = []; for (let d = new Date(y, m - 1, 1, 12); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) { const w = (d.getDay() + 6) % 7; if (w < 5) G.push({ t: d.toISOString().slice(0, 10), w }); } return G; }
   function dyEkHesap(ay) {   // { G: [tarih], O: [{ad, plan:{t:n}, yap:{t:n}, P, Y}] }
@@ -1983,6 +1983,7 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
   }
   function dyCiz() {
     if (DY.sek === 'ek') return dyEkCiz();
+    if (DY.sek === 'atama') return dyAtaCiz();
     const K = DY.M.K, F = DY.f, O = ogretmenler(), cak = dyCakisma(), fl = norm(DY.filtre);
     const og = new Map(); for (const k of K) if (k.ogretmen) og.set(k.ogretmen, (og.get(k.ogretmen) || 0) + 1);
     const goster = k => !fl || norm(`${k.ders} ${k.ogretmen} ${k.grup} ${k.salon}`).includes(fl);
@@ -2012,6 +2013,228 @@ table.i tr,li,p{break-inside:avoid}.sat i{display:block;height:7.5mm;border-bott
         <div style="overflow-x:auto"><table class="liste" style="table-layout:fixed;min-width:760px;width:100%"><colgroup><col style="width:96px">${DY_GUN.map(() => '<col>').join('')}</colgroup><thead><tr><th>Saat</th>${DY_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>
         ${DY.D.map((d, i) => `<tr><td style="vertical-align:top"><b>${i + 1}. ders</b><div class="soluk kucuk">${zcS(d.g)}–${zcS(d.c)}</div></td>${DY_GUN.map((_, g) => `<td style="vertical-align:top">${K.filter(k => +k.gun === g && +k.dilim === i + 1 && goster(k)).map(k => `<button data-dyk="${esc(k.id)}" style="display:block;width:100%;text-align:left;margin:0 0 5px;padding:6px 8px;border-radius:8px;cursor:pointer;font:inherit;color:inherit;background:${cak.has(k.id) ? 'rgba(239,68,68,.18)' : DY.sec === k.id ? 'rgba(34,232,255,.18)' : 'rgba(255,255,255,.05)'};border:1px solid ${cak.has(k.id) ? '#ef4444' : DY.sec === k.id ? '#22e8ff' : 'rgba(255,255,255,.12)'}"><b>${esc(k.ders || '—')}</b><div class="kucuk">${esc(C.baslik(k.ogretmen || ''))}</div><div class="soluk kucuk">${esc([k.grup, k.salon].filter(Boolean).join(' · '))}</div></button>`).join('')}<button class="bag kucuk" data-dyhucre="${g}|${i + 1}">+ ekle</button></td>`).join('')}</tr>`).join('')}
         </tbody></table></div></div></div>`;
+  }
+  // DYK öğrenci atama çözücüsü (28 Kasım 2026): dersler 24 kişilik gruplara bölünür, gruplara saat verilir, öğrenciler çakışmasız gruplara dağıtılır;
+  // saat yerleşimi ve öğrenci dağıtımı dönüşümlü iyileştirilir, en iyi sonuç tutulur.
+  function dykAta(D, S, kap, mevcut, tohum, sec) {
+    sec = sec || {}; const GA = sec.gunAyri === false ? 0 : 200, trc = (g, s) => { if (!sec.tercih || !g.ogretmen) return 0; const T = sec.tercih(g.ogretmen); return T && T.size && !T.has(SL[s].gun) ? 0.5 : 0; };
+    let r = (tohum || 1) >>> 0; const rnd = () => ((r = (Math.imul(r, 1103515245) + 12345) >>> 0) / 4294967296);
+    const SL = []; for (const g of S.gun) for (let d = 1; d <= S.dilim; d++) SL.push({ gun: g, dilim: d });
+    const NS = SL.length;
+    const G = [], dersG = [];
+    D.forEach((c, ci) => {
+      const n = Math.max(1, +c.grup || Math.ceil(c.ogr.length / kap)); dersG[ci] = [];
+      for (let i = 0; i < n; i++) { const g = { id: G.length, ders: c.ad, ci, sira: i + 1, adet: n, ogretmen: (c.ogretmen && c.ogretmen.length) ? c.ogretmen[i % c.ogretmen.length] : '', saat: Math.max(1, Math.min(c.saat || 2, S.gun.length)), sl: [], uye: 0 }; G.push(g); dersG[ci].push(g); }
+    });
+    // öğrenciler
+    const OI = new Map(); D.forEach((c, ci) => c.ogr.forEach(no => { if (!OI.has(no)) OI.set(no, []); if (!OI.get(no).includes(ci)) OI.get(no).push(ci); }));
+    const OG = [...OI.entries()].map(([no, L]) => ({ no, L, sec: {} }));      // sec[ci] = grup
+    OG.sort((a, b) => b.L.length - a.L.length);
+    const ogrtDolu = new Set((mevcut || []).map(m => m.ogretmen + '|' + m.gun + '|' + m.dilim));
+
+    // ders birlikteliği (iki ders kaç ortak öğrenci)
+    const ND = D.length, W = Array.from({ length: ND }, () => new Float64Array(ND));
+    for (const o of OG) for (const a of o.L) for (const b of o.L) if (a !== b) W[a][b]++;
+
+    // A0: başlangıç slot yerleşimi — oturumları sırayla en ucuz slota koy (ders birlikteliği ağırlığıyla)
+    const slotDers = Array.from({ length: NS }, () => new Float64Array(ND));  // slottaki derse ait grup "payı"
+    const tSlot = new Map();  // ogretmen|sl -> adet
+    const tKey = (t, s) => t + '|' + s;
+    const gunSay = (g, gun, haric) => g.sl.filter((s, i) => i !== haric && SL[s].gun === gun).length;
+    const slotMal = (g, s, haric) => {
+      let c = 0; const pay = 1 / g.adet;
+      for (let d = 0; d < ND; d++) if (slotDers[s][d]) c += W[g.ci][d] * slotDers[s][d] * pay;
+      c += slotDers[s][g.ci] * 40;                       // kardeş gruplar aynı saatte olmasın (esneklik)
+      if (g.ogretmen) { c += ((tSlot.get(tKey(g.ogretmen, s)) || 0)) * 1000; if (ogrtDolu.has(g.ogretmen + '|' + SL[s].gun + '|' + SL[s].dilim)) c += 1000; }
+      c += gunSay(g, SL[s].gun, haric) * GA + trc(g, s);  // aynı grup aynı gün iki kez olmasın; öğretmenin okulda olduğu gün
+      return c;
+    };
+    const koy = (g, s) => { g.sl.push(s); slotDers[s][g.ci] += 1 / g.adet; if (g.ogretmen) tSlot.set(tKey(g.ogretmen, s), (tSlot.get(tKey(g.ogretmen, s)) || 0) + 1); };
+    const kaldir = (g, i) => { const s = g.sl[i]; g.sl.splice(i, 1); slotDers[s][g.ci] -= 1 / g.adet; if (g.ogretmen) tSlot.set(tKey(g.ogretmen, s), tSlot.get(tKey(g.ogretmen, s)) - 1); return s; };
+    const sira = G.slice().sort((a, b) => W[b.ci].reduce((x, y) => x + y, 0) / b.adet - W[a.ci].reduce((x, y) => x + y, 0) / a.adet);
+    for (const g of sira) for (let k = 0; k < g.saat; k++) { let en = Infinity, sec = []; for (let s = 0; s < NS; s++) { const m = slotMal(g, s, -1); if (m < en - 1e-9) { en = m; sec = [s]; } else if (m < en + 1e-9) sec.push(s); } koy(g, sec[Math.floor(rnd() * sec.length)]); }
+
+    // B: öğrencileri gruplara dağıt (çakışmasız kombinasyon ara, kapasiteye uy)
+    const occ = new Map();  // no -> Int8Array(NS)
+    const ata = (o, ci, g) => { const old = o.sec[ci]; const A = occ.get(o.no); if (old) { old.uye--; for (const s of old.sl) A[s]--; } o.sec[ci] = g; if (g) { g.uye++; for (const s of g.sl) A[s]++; } };
+    const ogrPaket = (o) => {
+      // o'nun tüm derslerini boşalt, en iyi kombinasyonu DFS ile seç
+      for (const ci of o.L) ata(o, ci, null);
+      const A = occ.get(o.no); let en = Infinity, enSec = null; const cur = []; let say = 0;
+      const L = o.L.slice().sort((a, b) => dersG[a].length - dersG[b].length);
+      const dfs = (i, c) => {
+        if (c >= en || say > 4000) return; if (i === L.length) { en = c; enSec = cur.slice(); return; }
+        const ci = L[i]; const gs = dersG[ci].slice().sort(() => rnd() - 0.5);
+        for (const g of gs) { say++;
+          let cc = 0; for (const s of g.sl) cc += A[s];
+          if (g.uye >= kap) cc += 50;
+          for (const s of g.sl) A[s]++; cur.push(g); dfs(i + 1, c + cc); cur.pop(); for (const s of g.sl) A[s]--;
+        }
+      };
+      dfs(0, 0);
+      L.forEach((ci, i) => ata(o, ci, enSec[i]));
+      return en;
+    };
+    for (const o of OG) occ.set(o.no, new Int8Array(NS));
+    // başlangıç: dengeli
+    for (const o of OG) ogrPaket(o);
+    const ogrCezaHesap = () => { let c = 0; for (const o of OG) { const A = occ.get(o.no); for (let s = 0; s < NS; s++) if (A[s] > 1) c += A[s] - 1; } return c; };
+    const tasma = () => G.reduce((x, g) => x + Math.max(0, g.uye - kap), 0);
+
+    // A/B dönüşümlü iyileştirme
+    const gOgr = (g) => OG.filter(o => o.sec[g.ci] === g);
+    const ekCeza = () => { let c = 0; for (const v of tSlot.values()) if (v > 1) c += (v - 1) * 20; for (const g of G) for (let i = 0; i < g.sl.length; i++) { if (GA && gunSay(g, SL[g.sl[i]].gun, i)) c += 2; if (g.ogretmen && ogrtDolu.has(g.ogretmen + '|' + SL[g.sl[i]].gun + '|' + SL[g.sl[i]].dilim)) c += 20; } return c; };
+    const toplam = () => ogrCezaHesap() * 1 + tasma() * 50 + ekCeza();
+    let enIyi = null, enC = Infinity;
+    const kaydet = () => { enIyi = { sl: G.map(g => g.sl.slice()), sec: OG.map(o => ({ ...o.sec })) }; };
+    const geri = () => { for (const o of OG) for (const ci of o.L) ata(o, ci, null); G.forEach((g, i) => { while (g.sl.length) kaldir(g, 0); enIyi.sl[i].forEach(s => koy(g, s)); }); OG.forEach((o, i) => { for (const ci of o.L) ata(o, ci, enIyi.sec[i][ci]); }); };
+    for (let tur = 0; tur < 60; tur++) {
+      const c = toplam(); if (c < enC) { enC = c; kaydet(); } if (c === 0) break;
+      // A: her oturumu, grubun gerçek üyelerine göre en iyi slota taşı
+      for (const g of G.slice().sort(() => rnd() - 0.5)) {
+        const uyeler = gOgr(g);
+        for (let i = 0; i < g.sl.length; i++) {
+          // üyeleri bu oturumdan çıkar
+          const s0 = g.sl[i]; for (const o of uyeler) occ.get(o.no)[s0]--;
+          let en = Infinity, sec = [];
+          for (let s = 0; s < NS; s++) {
+            let m = 0; if (g.ogretmen) { m += ((tSlot.get(tKey(g.ogretmen, s)) || 0) - (s === s0 ? 1 : 0)) * 1000; if (ogrtDolu.has(g.ogretmen + '|' + SL[s].gun + '|' + SL[s].dilim)) m += 1000; }
+            m += gunSay(g, SL[s].gun, i) * GA + trc(g, s); for (const o of uyeler) if (occ.get(o.no)[s] > 0) m++;
+            if (m < en - 1e-9) { en = m; sec = [s]; } else if (m < en + 1e-9) sec.push(s);
+          }
+          const yeni = rnd() < 0.05 ? Math.floor(rnd() * NS) : sec[Math.floor(rnd() * sec.length)];
+          kaldir(g, i); g.sl.splice(i, 0, yeni); slotDers[yeni][g.ci] += 1 / g.adet; if (g.ogretmen) tSlot.set(tKey(g.ogretmen, yeni), (tSlot.get(tKey(g.ogretmen, yeni)) || 0) + 1);
+          for (const o of uyeler) occ.get(o.no)[yeni]++;
+        }
+      }
+      // B: çakışan öğrencileri yeniden yerleştir
+      for (const o of OG.slice().sort(() => rnd() - 0.5)) { const A = occ.get(o.no); let k = false; for (let s = 0; s < NS; s++) if (A[s] > 1) { k = true; break; } if (k || tur % 5 === 0) ogrPaket(o); }
+      for (const g of G) if (g.uye > kap) { for (const o of gOgr(g)) { if (g.uye <= kap) break; ogrPaket(o); } }
+    }
+    if (toplam() > enC) geri();
+    // öğretmen çakışması sayısı
+    let ogrtCeza = 0; for (const [k, v] of tSlot) if (v > 1) ogrtCeza += v - 1;
+    for (const g of G) for (const s of g.sl) if (g.ogretmen && ogrtDolu.has(g.ogretmen + '|' + SL[s].gun + '|' + SL[s].dilim)) ogrtCeza++;
+    const cakisan = [];
+    for (const o of OG) { const M = new Map(); for (const ci of o.L) { const g = o.sec[ci]; if (!g) continue; for (const s of g.sl) { if (!M.has(s)) M.set(s, []); M.get(s).push(g); } } for (const [s, v] of M) if (v.length > 1) cakisan.push({ no: o.no, gun: SL[s].gun, dilim: SL[s].dilim, gruplar: v.map(g => g.ders + ' ' + g.sira) }); }
+    const out = G.map(g => ({ id: g.id, ders: g.ders, sira: g.sira, adet: g.adet, ogretmen: g.ogretmen, ogr: gOgr(g).map(o => o.no), s: g.sl.map(s => SL[s]).sort((a, b) => a.gun - b.gun || a.dilim - b.dilim) }));
+    return { G: out, cakisan, ogrCeza: ogrCezaHesap(), ogrtCeza, tasma: tasma(), gunTekrar: G.filter(g => new Set(g.sl.map(s => SL[s].gun)).size < g.sl.length).length };
+  }
+  // DYK › Öğrenci atama (28 Kasım 2026): başvuru Excel'i (sütun başı ders, altında öğrenciler) → 24 kişilik gruplar, çakışmasız haftalık program.
+  // Mevcut programa dokunmaz; "Programa ekle" ile DY.M.K'ya eklenir, grup üyeleri DY.M.G[anahtar] = { ders, harf, ogretmen, ogr: [no] } olarak saklanır.
+  const DYA_KAP = 24, dyHarf = i => String.fromCharCode(64 + i);
+  DY.A = { dosya: '', D: [], yok: [], Z: null, ara: '', tohum: 1, tercih: true, gunAyri: true, eklendi: false, calisiyor: false };
+  function dyaEsle(v) {   // hücre → öğrenci no (okul no, "no ad", ya da ad soyad)
+    const t = String(v == null ? '' : v).trim(); if (!t) return null;
+    const m = t.match(/^\d{1,6}/); if (m) { const o = OGR.find(x => String(x.no) === String(+m[0])); if (o) return String(o.no); }
+    const n = norm(t.replace(/^\d+\s*[-.)]?\s*/, '')); if (!n) return null;
+    const L = OGR.filter(o => norm(o.ad) === n); return L.length === 1 ? String(L[0].no) : null;
+  }
+  function dyaOku(R) {
+    const bas_ = R.findIndex(r => (r || []).some(x => String(x == null ? '' : x).trim())); if (bas_ < 0) return { D: [], yok: [] };
+    const H = R[bas_].map(x => String(x == null ? '' : x).trim()), D = [], yok = [];
+    H.forEach((ad, j) => { if (!ad) return; const ogr = [];
+      for (const r of R.slice(bas_ + 1)) { const v = (r || [])[j]; if (v == null || !String(v).trim()) continue; const no = dyaEsle(v); if (no) { if (!ogr.includes(no)) ogr.push(no); } else yok.push({ ham: String(v).trim(), ders: ad }); }
+      if (ogr.length || yok.some(y => y.ders === ad)) D.push({ ad, ogr, saat: 2, grup: Math.max(1, Math.ceil(ogr.length / DYA_KAP)), ogretmen: [] }); });
+    return { D, yok };
+  }
+  async function dyDosya(ev) {
+    const t = ev.target, d = t.dataset || {};
+    if (d.dyadosya && t.files && t.files[0]) { const f = t.files[0];
+      try { const R = await dosyaSatirlar(f), x = dyaOku(R); if (!x.D.length) { uyar('Dosyada ders sütunu bulunamadı. İlk satırda ders adları, altında öğrenciler olmalı.'); return; }
+        Object.assign(DY.A, { dosya: f.name, D: x.D, yok: x.yok, Z: null, eklendi: false }); dyCiz(); } catch (e) { uyar('Dosya okunamadı: ' + (e.message || e)); }
+      t.value = ''; return; }
+    if (d.dyaogr !== undefined) { const c = DY.A.D[+d.dyaogr], v = t.value.trim(); if (c && v && !c.ogretmen.includes(v)) { c.ogretmen.push(v); DY.A.Z = null; } dyCiz(); return; }
+    if (d.dyafix !== undefined) { const j = DY.A.yok.findIndex(y_ => y_.ham + '|' + y_.ders === d.dyafix), y = DY.A.yok[j], m = t.value.trim().match(/^\d+/), o = m && OGR.find(x => String(x.no) === m[0]); if (!y || !o) return;
+      const c = DY.A.D.find(c_ => c_.ad === y.ders); if (c && !c.ogr.includes(String(o.no))) c.ogr.push(String(o.no)); DY.A.yok.splice(j, 1); DY.A.Z = null; dyCiz(); return; }
+    if (d.dyasec) { DY.A[d.dyasec] = t.checked; DY.A.Z = null; dyCiz(); return; }
+  }
+  function dyaCoz() {
+    const A = DY.A, mevcut = DY.M.K.filter(k => k.ogretmen).map(k => ({ ogretmen: k.ogretmen, gun: +k.gun, dilim: +k.dilim })), onb = new Map();
+    const tercih = A.tercih ? (ad => { if (!onb.has(ad)) onb.set(ad, new Set(dyOgrGunler(ad).filter(x => x.cikista).map(x => x.gun))); return onb.get(ad); }) : null;
+    const D = A.D.filter(c => c.ogr.length).map(c => ({ ad: c.ad, saat: Math.max(1, Math.min(5, +c.saat || 2)), grup: Math.max(1, +c.grup || 1), ogretmen: c.ogretmen, ogr: c.ogr.slice() }));
+    let en = null, enP = Infinity;   // birkaç deneme, en az çakışmalı olan
+    for (let k = 0; k < 3 && enP > 0; k++) { const z = dykAta(D.map(c => ({ ...c, ogr: c.ogr.slice() })), { gun: [0, 1, 2, 3, 4], dilim: DY.D.length }, DYA_KAP, mevcut, A.tohum * 7 + k, { tercih, gunAyri: A.gunAyri });
+      const p = z.ogrtCeza * 1000 + z.tasma * 100 + z.ogrCeza * 10 + (A.gunAyri ? z.gunTekrar : 0); if (p < enP) { enP = p; en = z; } }
+    return en;
+  }
+  const dyaOgr = no => OGR.find(o => String(o.no) === String(no)) || { no, ad: '', sinif: '' };
+  const dyaZaman = g => g.s.map(s => `${DY_KISA[s.gun]} ${s.dilim}. ders`).join(', ');
+  function dyAtaCiz() {
+    const A = DY.A, Z = A.Z, O = ogretmenler();
+    const ust = bas('DYK Programı', `${egitimYili()} · başvuru listesinden öğrencileri gruplara atama ve çakışmasız program`, '<button class="ikincil" data-dyx="aornek">Örnek Excel indir</button>') + dySekme() +
+      `<div class="kart id-not">Başvuru Excel'ini yükleyin: <b>her sütunun başında ders adı, altında o dersi seçen öğrenciler</b> (okul numarası ya da adı soyadı). Her ders ${DYA_KAP} kişilik gruplara bölünür; öğrenciler, <b>hiçbir öğrencinin ve öğretmenin aynı saatte iki dersi olmayacak</b> şekilde gruplara dağıtılır ve haftalık program kurulur. Mevcut programa dokunulmaz; "Programa ekle" deyince eklenir.</div>`;
+    const dosyaDug = ad => `<label class="ikincil" style="cursor:pointer;margin-left:auto">${ad}<input type="file" data-dyadosya="1" accept=".xlsx,.xls,.csv,.txt" style="display:none"></label>`;
+    if (!A.D.length) { kok.innerHTML = ust + `<div class="kart"><div class="dya-adim"><i>1</i><b>Başvuru listesi</b><span class="soluk kucuk">Excel, CSV</span>${dosyaDug('Excel dosyasını seç')}</div><div id="idBilgi" class="id-bilgi"></div></div>`; return; }
+    const top = A.D.reduce((t, c) => t + c.ogr.length, 0), kisi = new Set(A.D.flatMap(c => c.ogr)).size;
+    let h = ust + `<div class="kart"><div class="dya-adim"><i>1</i><b>Başvuru listesi</b><span class="soluk kucuk">${esc(A.dosya)} · ${kisi} öğrenci · ${A.D.length} ders · ${top} başvuru</span>${dosyaDug('Başka dosya yükle')}</div>
+      ${A.yok.length ? `<div class="soluk kucuk" style="margin-top:8px;line-height:1.9">Eşleşmeyen ${A.yok.length} kayıt (düzeltilmezse yok sayılır):<datalist id="dyaOgrL">${OGR.map(o => `<option value="${esc(o.no + ' · ' + C.baslik(o.ad) + ' · ' + o.sinif)}">`).join('')}</datalist>
+        ${A.yok.map((y, i) => `<div><b class="kirmizi">"${esc(y.ham)}"</b> (${esc(y.ders)}) → <input list="dyaOgrL" data-dyafix="${esc(y.ham + '|' + y.ders)}" placeholder="öğrenciyi seçin" style="max-width:260px;padding:3px 8px"></div>`).join('')}</div>` : ''}</div>
+      <div class="kart"><div class="dya-adim"><i>2</i><b>Ders ayarları</b><span class="soluk kucuk">grup sayısı ${DYA_KAP} kişiye göre önerildi, değiştirebilirsiniz · öğretmenler gruplara sırayla verilir</span></div>
+      <datalist id="dyOgr">${O.map(o => `<option value="${esc(o.ad)}">${esc(o.brans || '')}</option>`).join('')}</datalist>
+      <div style="overflow-x:auto"><table class="liste" style="margin-top:10px;min-width:640px"><thead><tr><th>Ders</th><th style="text-align:center">Başvuru</th><th style="text-align:center">Grup</th><th style="text-align:center">Haftalık saat</th><th>Öğretmen(ler)</th></tr></thead><tbody>
+      ${A.D.map((c, i) => `<tr><td><b>${esc(c.ad)}</b></td><td style="text-align:center">${c.ogr.length}</td><td style="text-align:center"><input type="number" min="1" max="30" data-dyag="${i}|grup" value="${c.grup}" style="width:60px;text-align:center;padding:4px"></td><td style="text-align:center"><input type="number" min="1" max="5" data-dyag="${i}|saat" value="${c.saat}" style="width:60px;text-align:center;padding:4px"></td>
+        <td>${c.ogretmen.map((t, j) => `<button class="cip secili" data-dyaosil="${i}|${j}" style="margin:2px">${esc(C.baslik(t))} ×</button>`).join('')}<input list="dyOgr" data-dyaogr="${i}" placeholder="+ öğretmen" style="max-width:170px;padding:4px 8px"></td></tr>`).join('')}</tbody></table></div>
+      <div class="id-satir" style="gap:14px;margin-top:12px;flex-wrap:wrap"><label style="margin:0;display:flex;gap:6px;align-items:center;flex-direction:row"><input type="checkbox" data-dyasec="tercih" ${A.tercih ? 'checked' : ''}> Öğretmenin ders programına bak (çıkışta okulda olduğu günleri tercih et)</label>
+        <label style="margin:0;display:flex;gap:6px;align-items:center;flex-direction:row"><input type="checkbox" data-dyasec="gunAyri" ${A.gunAyri ? 'checked' : ''}> Aynı grubun iki dersi aynı güne düşmesin</label>
+        <button class="birincil" data-dyx="acoz" style="margin-left:auto">${A.calisiyor ? 'Hesaplanıyor…' : 'Programı oluştur'}</button></div><div id="idBilgi" class="id-bilgi"></div></div>`;
+    if (Z) {
+      const ogrSay = new Set(Z.G.flatMap(g => g.ogr)).size, cakOgr = new Set(Z.cakisan.map(c => c.no));
+      const kut = g => `<div class="dya-kut"><b>${esc(g.ders)} ${dyHarf(g.sira)}</b> <span class="soluk kucuk">${g.ogr.length} öğr.</span><div class="kucuk">${esc(C.baslik(g.ogretmen || '—'))}</div></div>`;
+      const an = norm(A.ara), bul = an ? Z.G.flatMap(g => g.ogr).filter((v, i, a) => a.indexOf(v) === i).map(dyaOgr).filter(o => String(o.no) === A.ara.trim() || (an.length > 2 && norm(o.ad).includes(an))).slice(0, 5) : [];
+      h += `<div class="kart"><div class="dya-adim"><i>3</i><b>Önerilen program</b><span class="soluk kucuk">hafta içi · ${DY.D.length} ders saati · beğenmezseniz "Yeniden dene"</span></div>
+        <div class="dya-ozet"><div><span class="soluk kucuk">Grup</span><b>${Z.G.length}</b></div><div><span class="soluk kucuk">Yerleşen öğrenci</span><b>${ogrSay}</b></div><div><span class="soluk kucuk">Öğrenci çakışması</span><b style="color:${Z.ogrCeza ? '#ff6b6b' : '#3ef08a'}">${Z.ogrCeza}</b></div><div><span class="soluk kucuk">Öğretmen çakışması</span><b style="color:${Z.ogrtCeza ? '#ff6b6b' : '#3ef08a'}">${Z.ogrtCeza}</b></div><div><span class="soluk kucuk">En kalabalık grup</span><b style="${Z.tasma ? 'color:#ff6b6b' : ''}">${Math.max(0, ...Z.G.map(g => g.ogr.length))}</b></div></div>
+        ${Z.ogrCeza || Z.ogrtCeza || Z.tasma ? `<div class="kucuk kirmizi" style="margin:0 0 10px;line-height:1.6">${Z.ogrtCeza ? `Öğretmen çakışması: bir öğretmene haftada ${DY.D.length * 5} saatten fazla ya da mevcut DYK saatleriyle çakışan ders düştü; o derse öğretmen ekleyin. ` : ''}${Z.tasma ? `${Z.tasma} öğrenci ${DYA_KAP} kişiyi aşan gruplarda; grup sayısını artırın. ` : ''}${cakOgr.size ? `Çakışan öğrenciler: ${[...cakOgr].slice(0, 15).map(n => { const o = dyaOgr(n); return esc(`${n} ${C.baslik(o.ad)}`); }).join(', ')}${cakOgr.size > 15 ? ` ve ${cakOgr.size - 15} öğrenci daha` : ''}. "Yeniden dene", grup sayısını artırmak ya da haftalık saati azaltmak çözebilir.` : ''}</div>` : ''}
+        <div style="overflow-x:auto"><table class="liste" style="table-layout:fixed;min-width:900px;width:100%"><colgroup><col style="width:96px">${DY_GUN.map(() => '<col>').join('')}</colgroup><thead><tr><th>Saat</th>${DY_GUN.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>
+        ${DY.D.map((d, i) => `<tr><td style="vertical-align:top"><b>${i + 1}. ders</b><div class="soluk kucuk">${zcS(d.g)}–${zcS(d.c)}</div></td>${DY_GUN.map((_, gi) => `<td style="vertical-align:top">${Z.G.filter(g => g.s.some(x => x.gun === gi && x.dilim === i + 1)).sort((a, b) => a.ders.localeCompare(b.ders, tr) || a.sira - b.sira).map(kut).join('')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <div class="id-satir" style="gap:8px;margin-top:12px;flex-wrap:wrap;align-items:flex-start"><input data-dyaara="1" value="${esc(A.ara)}" placeholder="Öğrenci ara (no ya da ad)" style="max-width:240px"><div id="dyaAraSonuc" class="kucuk" style="line-height:1.7">${dyaAraYazi(bul)}</div></div>
+        <div class="dugmeler" style="justify-content:flex-start;margin-top:14px;flex-wrap:wrap"><button class="birincil" data-dyx="aekle">${A.eklendi ? 'Programa eklendi ✓' : 'Programa ekle'}</button><button class="ikincil" data-dyx="ayeni">Yeniden dene</button><button class="ikincil" data-dyx="agrup">Grup listelerini yazdır</button><button class="ikincil" data-dyx="aogr">Öğrenci programlarını yazdır</button><button class="ikincil" data-dyx="aexcel">Excel olarak indir</button></div>
+        <div class="soluk kucuk" style="margin-top:8px">Aynı saatte ${Math.max(0, ...DY.D.flatMap((_, i) => DY_GUN.map((__, gi) => Z.G.filter(g => g.s.some(x => x.gun === gi && x.dilim === i + 1)).length)))} gruba kadar ders var; derslikleri programa ekledikten sonra "Haftalık program" sekmesinden yazabilirsiniz.</div></div>`;
+    }
+    kok.innerHTML = h;
+  }
+  function dyaAraYazi(L) {
+    const Z = DY.A.Z; if (!Z || !L.length) return DY.A.ara.trim() ? '<span class="soluk">Öğrenci bulunamadı.</span>' : '';
+    return L.map(o => `<div>${esc(o.no)} · ${esc(C.baslik(o.ad))} · ${esc(o.sinif)} → ${Z.G.filter(g => g.ogr.includes(String(o.no))).map(g => `<b>${esc(g.ders)} ${dyHarf(g.sira)}</b> (${esc(dyaZaman(g))})`).join(' · ')}</div>`).join('');
+  }
+  function dyaGrupBelge() {
+    const Z = DY.A.Z, G = Z.G.slice().sort((a, b) => a.ders.localeCompare(b.ders, tr) || a.sira - b.sira);
+    return dyBelgeKabuk('DYK grup listeleri', G.map(g => { const L = g.ogr.map(dyaOgr).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
+      return `<section class="sy">${dyUst()}<h1>DESTEKLEME VE YETİŞTİRME KURSU GRUP LİSTESİ</h1><div style="font-size:10.5pt;margin-bottom:3mm;line-height:1.6"><b>Ders:</b> ${esc(g.ders)} · <b>Grup:</b> ${dyHarf(g.sira)} · <b>Öğretmen:</b> ${esc(C.baslik(g.ogretmen || ''))}<br><b>Gün ve saat:</b> ${esc(g.s.map(s => `${DY_GUN[s.gun]} ${s.dilim}. ders (${dySaat(s.dilim)})`).join(', '))} · <b>Öğrenci sayısı:</b> ${L.length}</div>
+        <table><thead><tr><th style="width:9mm">#</th><th style="width:18mm">No</th><th>Adı soyadı</th><th style="width:18mm">Sınıf</th>${[1, 2, 3, 4, 5].map(() => '<th style="width:15mm"></th>').join('')}</tr></thead><tbody>${L.map((o, i) => `<tr><td style="text-align:center">${i + 1}</td><td style="text-align:center">${esc(o.no)}</td><td>${esc(C.baslik(o.ad))}</td><td style="text-align:center">${esc(o.sinif)}</td>${[1, 2, 3, 4, 5].map(() => '<td></td>').join('')}</tr>`).join('')}</tbody></table>
+        <div class="imz"><div>${esc(C.baslik(g.ogretmen || ''))}<br>Kurs öğretmeni</div><div>${esc(MUDUR)}<br>Okul Müdürü</div></div></section>`; }).join(''), false);
+  }
+  function dyaOgrBelge() {
+    const Z = DY.A.Z, L = [...new Set(Z.G.flatMap(g => g.ogr))].map(dyaOgr).sort((a, b) => sinifSira(a.sinif, b.sinif) || (+a.no) - (+b.no));
+    return dyBelgeKabuk('DYK öğrenci programları', `<style>.op{border:.3mm solid #8fa3bf;border-radius:2mm;padding:3mm 4mm;margin-bottom:4mm;break-inside:avoid}.op h2{font-size:11pt;margin:0 0 2mm}.op td,.op th{font-size:9pt;padding:1.2mm 2mm}</style><section class="sy">
+      ${L.map(o => `<div class="op"><h2>${esc(C.baslik(o.ad))} · ${esc(o.sinif)} · No ${esc(o.no)}</h2><table><thead><tr><th>Ders</th><th>Grup</th><th>Öğretmen</th><th>Gün ve saat</th></tr></thead><tbody>${Z.G.filter(g => g.ogr.includes(String(o.no))).sort((a, b) => (a.s[0] || {}).gun - (b.s[0] || {}).gun).map(g => `<tr><td>${esc(g.ders)}</td><td style="text-align:center">${dyHarf(g.sira)}</td><td>${esc(C.baslik(g.ogretmen || ''))}</td><td>${esc(g.s.map(s => `${DY_GUN[s.gun]} ${dySaat(s.dilim)}`).join(', '))}</td></tr>`).join('')}</tbody></table></div>`).join('')}</section>`, false);
+  }
+  async function dyaTik(x, d) {
+    const A = DY.A;
+    if (d.dyaosil) { const [i, j] = d.dyaosil.split('|').map(Number); A.D[i].ogretmen.splice(j, 1); A.Z = null; dyCiz(); return true; }
+    if (x === 'aornek') { indir('DYK başvuru örneği', [['Matematik', 'Fizik', 'Kimya'], ['1001', '1001', '1003'], ['1002', '1004', ''], ['Ayşe Yılmaz', '', '']]); return true; }
+    if (x === 'acoz' || x === 'ayeni') {
+      if (!A.D.some(c => c.ogr.length)) { bilgi('Önce başvuru listesini yükleyin.', 'kirmizi'); return true; }
+      if (x === 'ayeni') A.tohum++;
+      A.calisiyor = true; dyCiz(); await new Promise(r => setTimeout(r, 40));
+      try { A.Z = dyaCoz(); A.eklendi = false; } catch (e) { A.calisiyor = false; dyCiz(); bilgi('Program kurulamadı: ' + (e.message || e), 'kirmizi'); return true; }
+      A.calisiyor = false; dyCiz(); const p = kok.querySelector('.dya-ozet'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' }); return true; }
+    const Z = A.Z; if (!Z) return false;
+    if (x === 'aekle') {
+      if (A.eklendi) { uyar('Bu program zaten eklendi. Yeniden eklemek için "Yeniden dene" ya da "Programı oluştur" deyin.'); return true; }
+      const n = Z.G.reduce((t, g) => t + g.s.length, 0);
+      if (!await onayla(`${Z.G.length} grup, haftada ${n} ders saati DYK programına eklensin mi? Mevcut kurslar silinmez, değişmez.` + (Z.ogrCeza || Z.ogrtCeza ? '\n\nDikkat: programda hâlâ çakışma var.' : ''))) return true;
+      DY.M.G = DY.M.G || {};
+      for (const g of Z.G) { const ak = 'g' + Math.random().toString(36).slice(2, 9); DY.M.G[ak] = { ders: g.ders, harf: dyHarf(g.sira), ogretmen: g.ogretmen, ogr: g.ogr.slice(), t: new Date().toISOString().slice(0, 10) };
+        for (const s of g.s) DY.M.K.push({ id: Math.random().toString(36).slice(2, 10), gun: s.gun, dilim: s.dilim, ders: g.ders, ogretmen: g.ogretmen, grup: `${dyHarf(g.sira)} grubu (${g.ogr.length} öğr.)`, salon: '', ag: ak }); }
+      DY.degisti = true; try { await dyKaydet(); A.eklendi = true; dyCiz(); bilgi(`${n} ders saati programa eklendi ve kaydedildi. "Haftalık program" sekmesinden derslikleri yazabilirsiniz.`, 'yesil'); } catch (e) { dyCiz(); bilgi('Kaydedilemedi: ' + C.hataYaz(e), 'kirmizi'); }
+      return true; }
+    if (x === 'agrup') { C.belgeOnizle(dyaGrupBelge(), 'DYK grup listeleri', false); return true; }
+    if (x === 'aogr') { C.belgeOnizle(dyaOgrBelge(), 'DYK öğrenci programları', false); return true; }
+    if (x === 'aexcel') { const R = [['No', 'Adı soyadı', 'Sınıf', 'Ders', 'Grup', 'Öğretmen', 'Gün ve saat']];
+      for (const g of Z.G.slice().sort((a, b) => a.ders.localeCompare(b.ders, tr) || a.sira - b.sira)) for (const no of g.ogr) { const o = dyaOgr(no); R.push([o.no, C.baslik(o.ad), o.sinif, g.ders, dyHarf(g.sira), C.baslik(g.ogretmen || ''), g.s.map(s => `${DY_GUN[s.gun]} ${dySaat(s.dilim)}`).join(', ')]); }
+      indir('DYK öğrenci atama', R); return true; }
+    return false;
   }
   function dyBelgeKabuk(baslik, govde, yatay) {
     return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${esc(baslik)}</title><style>
@@ -2051,6 +2274,7 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
     if (d.dyx === 'ekyazdir') { C.belgeOnizle(dyEkBelge(), 'DYK ek ders çizelgesi', true); return true; }
     if (d.dyx === 'ekexcel') { const H = dyEkHesap(DY.ay); indir(`DYK ek ders ${DY.ay}`, [['Adı soyadı', 'Branşı', ...H.G.map(g => g.t.split('-').reverse().join('.')), 'Plan', 'Yapılan'], ...H.O.map(o => [C.baslik(o.ad), zmBrans((ogretmenler().find(x => x.ad === o.ad) || {}).brans || ''), ...H.G.map(g => g.t in o.plan ? (dyTatil(g.t) ? 'T' : o.yap[g.t]) : ''), o.P, o.Y])]); return true; }
     if (d.dyfil !== undefined) { DY.filtre = d.dyfil; dyCiz(); return true; }
+    if (DY.sek === 'atama' && (d.dyaosil || /^a(ornek|coz|yeni|ekle|grup|ogr|excel)$/.test(d.dyx || ''))) return dyaTik(d.dyx, d);
     const x = d.dyx; if (!x) return false;
     if (x === 'ekle' || x === 'guncelle') {
       if (!F.ders.trim() && !F.ogretmen.trim()) { bilgi('Ders ya da öğretmen yazın.', 'kirmizi'); return true; }
@@ -2083,6 +2307,8 @@ h1{text-align:center;font-size:14pt;margin:3mm 0 4mm;letter-spacing:.4px}table{b
   }
   function dyGirdi(ev) { const t = ev.target, d = t.dataset;
     if (d.dyay) { if (/^\d{4}-\d{2}$/.test(t.value)) { DY.ay = t.value; dyCiz(); } return; }
+    if (d.dyag) { const [i, k] = d.dyag.split('|'), c = DY.A.D[+i]; if (c) { c[k] = Math.max(1, +t.value || 1); DY.A.Z = null; } return; }
+    if (d.dyaara) { DY.A.ara = t.value; const b_ = kok.querySelector('#dyaAraSonuc'), an = norm(t.value); if (b_ && DY.A.Z) b_.innerHTML = dyaAraYazi(an ? [...new Set(DY.A.Z.G.flatMap(g => g.ogr))].map(dyaOgr).filter(o => String(o.no) === t.value.trim() || (an.length > 2 && norm(o.ad).includes(an))).slice(0, 5) : []); return; }
     if (d.dyek) { const [tarih, ad] = d.dyek.split('|'), E = DY.M.E = DY.M.E || {}; E.g = E.g || {}; const plan = DY.M.K.filter(k => k.ogretmen === ad && +k.gun === (new Date(tarih + 'T12:00:00').getDay() + 6) % 7).length, v = Math.max(0, Math.min(12, +t.value || 0));
       E.g[tarih] = E.g[tarih] || {}; if (t.value !== '' && v !== plan) E.g[tarih][ad] = v; else delete E.g[tarih][ad]; if (!Object.keys(E.g[tarih]).length) delete E.g[tarih];
       const td = t.closest('td'); if (td) td.style.background = v === 0 ? 'rgba(239,68,68,.15)' : v !== plan ? 'rgba(255,212,59,.13)' : ''; DY.degisti = true; dyEkKaydet(); return; }
@@ -2683,7 +2909,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
       if (ev.target.closest('[data-id-geri]')) { if (degisti() && !await onayla('Kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) return; aktif = null; kok.onclick = kok.oninput = kok.onkeydown = kok.onchange = null; geri.fn(); return; }
       ({ sorumluluk: sbTik, telafi: tfTik, kurul: krTik, sinifOlustur: soTik, veli: vtTik, sok: skTik, evrak: evTik, zumre: zmTik, devam: dvTik, dyk: dyTik, dilek: dlTik, video: vdTik, site: siTik, evde: eeTik, sosyal: seTik, turnuva: trTik, tahliye: thTik, ariza: lmTik, kutuphane: lmTik, ziyaretci: lmTik, demirbas: lmTik, mezun: lmTik }[aktif])(ev);
     };
-    kok.onchange = async ev => { const t = ev.target; if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (LMC[aktif]) { const t_ = ev.target; if (t_.dataset && (t_.dataset.lmfoto || t_.dataset.lmexcel)) return lmDosya(ev); return lmGirdi(ev); } if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
+    kok.onchange = async ev => { const t = ev.target; if (aktif === 'dyk') return dyDosya(ev); if (aktif === 'evde') return eeDosya(ev); if (aktif === 'sosyal') return seDosya(ev); if (LMC[aktif]) { const t_ = ev.target; if (t_.dataset && (t_.dataset.lmfoto || t_.dataset.lmexcel)) return lmDosya(ev); return lmGirdi(ev); } if (aktif === 'evrak') return evDosya(ev); if (aktif === 'zumre') return zmDosya(ev); if (aktif === 'devam') return dvDosya(ev); if (aktif !== 'veli' || !t.dataset || !t.dataset.vtdosya || !t.files.length) return; const M = VT.M; let top = 0, hata = '';
       for (const f of t.files) { try { const sat = /\.xlsx$/i.test(f.name) ? await C.xlsxSatirlar(f) : /\.(xls|html?|xml)$/i.test(f.name) ? await C.xlsSatirlar(f) : (await f.text()).split(/\r?\n/).map(x => x.split(x.includes('\t') ? '\t' : x.includes(';') ? ';' : ',').map(z => z.replace(/^"|"$/g, '')));
           const r = vtDevamOku(sat); if (r.n) { M.devam = Object.assign(M.devam || {}, r.R); top += r.n; } else hata = `${f.name}: ${r.hata}`; } catch (e) { hata = `${f.name}: okunamadı (${e.message || e})`; } }
       VT.degisti = true; vtCiz(); if (top) bilgi(`${top} öğrencinin devamsızlığı yüklendi. Kaydet'e basmayı unutmayın.`, 'yesil'); if (hata) uyar(hata); };
@@ -2737,6 +2963,7 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6
 .id-iki{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}.id-kurullar{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:10px}.id-kurul{display:flex;flex-direction:column;gap:6px}.id-kurul>.id-satir:first-child>input{flex:1 1 100%}
 .id-uyeler{display:flex;flex-wrap:wrap;gap:5px}.id-uye{display:inline-flex;align-items:center;gap:4px;background:var(--koyu);border:1px solid var(--cizgi);border-radius:9px;padding:3px 4px 3px 8px;font-size:13px}.id-uye input{width:96px;padding:2px 6px;font-size:12px;border-radius:7px}.id-uye button{background:none;border:0;color:var(--kirmizi);cursor:pointer}
 .id-sube{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}.id-sube .kart{border-top:3px solid var(--sv,#22e8ff);padding:10px 12px;margin:0}.id-sube b{display:block;font-size:18px}.id-sube span{display:block}.id-sube small{color:var(--soluk)}.id-sube .uyari{border-top-color:#ff9a3a}
+.dya-adim{display:flex;align-items:center;gap:10px;font-size:15px;flex-wrap:wrap}.dya-adim i{font-style:normal;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--neon);color:#04222b;font-weight:900}.dya-ozet{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.dya-ozet>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 14px}.dya-ozet b{display:block;font-size:22px}.dya-kut{margin:0 0 5px;padding:5px 7px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
 .id-adimlar{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.id-adimlar button{display:flex;align-items:center;gap:7px;background:var(--kart);border:1px solid var(--cizgi);border-radius:12px;padding:7px 12px;color:#a9bcd8;cursor:pointer;font-weight:700;font-size:13px}.id-adimlar span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--koyu);font-size:12px}.id-adimlar button.secili{border-color:var(--neon);color:#fff}.id-adimlar button.secili span{background:var(--neon);color:#04222b}
 .id-takip{background:var(--koyu);border:1px solid var(--cizgi);border-radius:10px;padding:6px 8px;margin-bottom:6px}
 @media (max-width:760px){.id-sb{grid-template-columns:1fr}.id-yan{position:static}.id-iki{grid-template-columns:1fr}.id-kurullar{grid-template-columns:1fr}}`;
