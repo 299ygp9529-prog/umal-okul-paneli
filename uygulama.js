@@ -4756,7 +4756,8 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
     $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk" style="white-space:nowrap;font-size:min(14px,3.45vw)">Öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div id="gistKutu"></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
-    gistCiz(); await girisKodlari();
+    gistCiz(); clearInterval(window.__gistZ); window.__gistZ = setInterval(() => { if (!$('#gistKutu')) return clearInterval(window.__gistZ); if (!document.hidden && !document.querySelector('#gistKutu [data-gist]:disabled')) gistCiz(); }, 10000);   // 28 Kasım 2026: yeni istekler kendiliğinden görünsün
+    await girisKodlari();
   }
   // 28 Kasım 2026: öğrenci giriş istekleri — sınıf öğretmeni kendi sınıfını, rehberlik ve idare bütün okulu görür; onaylanınca kod öğrencinin telefonuna gider
   async function gistCiz() {

@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="UMAL Öğrenci">
 <script src="../supabase.min.js?v=2.45.4"></script>
 <script src="../bildirim.js?v=202611191405"></script>
-<link rel="stylesheet" href="ogrenci.css?v=202611280740">
+<link rel="stylesheet" href="ogrenci.css?v=202611280800">
 <style>#acilis { display: none; } html.oturumlu #giris { display: none !important; }
 html.ogr-yenile #acilis:not(.tikli) { display: none !important; }   /* K-788: yenilemede tam ekran açılış yok; Atlas kartı "Yenilendi" der */
 .atl-onay { position: fixed; left: 50%; top: calc(104px + env(safe-area-inset-top)); z-index: 60; display: flex; align-items: center; gap: 12px; width: min(92vw, 380px); padding: 10px 20px 10px 10px; border-radius: 22px; background: linear-gradient(180deg, rgba(22,40,66,.97), rgba(13,25,43,.97)); border: 1px solid rgba(110,231,168,.55); box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 26px rgba(62,240,138,.22); transform: translate(-50%, -30px) scale(.92); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
@@ -100,9 +100,9 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
       <button class="birincil" id="gistGonder" style="margin-top:16px;width:100%">İsteği gönder</button><div id="gistBilgi" class="bilgi"></div>
       <button type="button" class="ikincil" id="gistGeri" style="margin-top:6px">Girişe dön</button>
       <div class="not" style="margin-top:14px">Başkasının adıyla istek göndermek yasaktır; her istek kaydedilir ve onaylayan öğretmen seni tanır.</div></div>
-    <div id="gistBek" class="gi-bek gizli"><div class="gi-hal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3v3.5a4 4 0 0 0 1.6 3.2L12 12l2.4-2.3A4 4 0 0 0 16 6.5V3M8 21v-3.5a4 4 0 0 1 1.6-3.2L12 12l2.4 2.3a4 4 0 0 1 1.6 3.2V21"/></svg></div><h1 id="gistBaslik">İsteğin alındı</h1><div class="soluk" id="gistKim"></div><div class="gi-sure">Onay hemen gelmez; öğretmenin okulda gördüğünde onaylar. Bu birkaç saat ya da bir gün sürebilir. Bu sayfayı kapatabilirsin.</div>
+    <div id="gistBek" class="gi-bek gizli"><div class="gi-hal"></div><h1 id="gistBaslik">İsteğin iletildi</h1><div class="soluk" id="gistKim"></div><div class="gi-sure">Öğretmenine bildirim gitti. Onaylanınca bu sayfa kendiliğinden girer.</div>
       <div class="gi-adim"><b>1</b><span>Sınıf öğretmenin, rehberlik ya da idare isteğini onaylayacak. Okulda hatırlatabilirsin.</span></div>
-      <div class="gi-adim"><b>2</b><span>Onaylandıktan sonra Atlas'ı bu telefonda açtığında kendiliğinden girersin.</span></div>
+      <div class="gi-adim"><b>2</b><span>Sayfayı kapatırsan sonra bu telefonda yeniden açınca kaldığın yerden devam eder.</span></div>
       <div class="gi-adim"><b>3</b><span>İlk girişte kendi şifreni belirlersin.</span></div>
       <div id="gistDurum" class="bilgi"></div><div class="gi-dug"><button type="button" class="birincil" id="gistDon">Girişe dön</button><button type="button" class="ikincil" id="gistIptal">İsteği geri al</button></div></div>
   </section>
@@ -198,7 +198,7 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../senaryo/senaryo.js?v=202611160950"></script>
 <script src="../gezi-bilet.js?v=202611171320"></script>
 <script src="../sohbet-klavye.js?v=202611211330"></script>
-<script src="ogrenci.js?v=202611280740"></script>
+<script src="ogrenci.js?v=202611280800"></script>
 <script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).catch(() => {}));</script>
 </body>
 </html>

@@ -77,7 +77,7 @@
   const giYaz = v => { try { v ? localStorage.setItem('umalGirisIstek', JSON.stringify(v)) : localStorage.removeItem('umalGirisIstek'); } catch (e) {} };
   const giAdBas = a => String(a || '').toLocaleLowerCase('tr').replace(/(^|\s)\S/g, x => x.toLocaleUpperCase('tr'));
   function giBekle(v) {
-    goster('s-gist'); $('#gistForm').classList.add('gizli'); $('#gistBek').classList.remove('gizli', 'red'); $('#gistBaslik').textContent = 'İsteğin alındı';
+    goster('s-gist'); $('#gistForm').classList.add('gizli'); $('#gistBek').classList.remove('gizli', 'red'); $('#gistBaslik').textContent = 'İsteğin iletildi';
     $('#gistKim').textContent = giAdBas(v.ad) + (v.sinif ? ' · ' + v.sinif : ''); $('#gistDurum').textContent = ''; $('#gistIptal').textContent = 'İsteği geri al';
     clearTimeout(GI.z); giSor();
   }
@@ -94,7 +94,7 @@
       $('#gistDurum').textContent = d.durum === 'red' ? 'Sınıf öğretmenine ya da rehberliğe başvur.' : (d.durum === 'suresi' ? 'Bir hafta içinde onaylanmadı. Yeniden istek gönderebilirsin.' : 'Yeniden istek gönderebilirsin.');
       $('#gistIptal').textContent = 'Girişe dön'; return;
     }
-    GI.z = setTimeout(giSor, document.hidden ? 30000 : 8000);
+    GI.z = setTimeout(giSor, document.hidden ? 30000 : 4000);
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#s-gist').classList.contains('gizli') && giOku()) { clearTimeout(GI.z); giSor(); } });
   if ($('#gistAc')) {
