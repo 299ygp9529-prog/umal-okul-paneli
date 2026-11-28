@@ -3263,3 +3263,9 @@ body.hafif .op-nobet .nb-cerceve, body.hafif .op-nobet::after, body.hafif .op-no
   body.ogt-alt::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("pence.svg?v=1") center / cover no-repeat; }
   body.ogt-alt .tumu-menu { background: rgba(8, 16, 28, .55); }   /* menü ekranında pençe izi arkadan seçilir */
 }
+
+/* K-1033 (öğrencideki gibi): telefonda okul logosu arkada renkli filigran (pençe izinin yerine); üst şeritteki dönen logo kalktı, ad sola yaslı */
+@media (max-width: 760px) {
+  body.ogt-alt .yan > .logo3d { display: none !important; }
+  body.ogt-alt::before { background: url("okul-logo.webp") center 50% / min(86vw, 420px) no-repeat; opacity: .10; }
+}

@@ -770,3 +770,8 @@ html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
   html:not(.hafif) body.ogr-alt #kutular > button { background: linear-gradient(rgba(23, 41, 68, .78), rgba(17, 30, 52, .78)) !important; }
   html:not(.hafif) body.ogr-alt #gununSozu { background: linear-gradient(160deg, rgba(23, 44, 77, .78), rgba(16, 28, 51, .78) 70%) !important; }
 }
+/* K-1033: telefonda okul logosu arkada renkli filigran (pençe izinin yerine); üst şeritteki logo kalktı, okul adı sola yaslı */
+@media (max-width: 760px) {
+  body.ogr-alt .ust > img[src*="okul-logo"] { display: none !important; }
+  body.ogr-alt::before { background: url("../okul-logo.webp") center 47% / min(86vw, 420px) no-repeat; opacity: .10; }
+}
