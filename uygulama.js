@@ -4552,7 +4552,7 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   // 27 Kasım 2026: Atlasdaş — öğretmenler de rafına kitap koyar, ödünç alır; uygunsuz kitabı kaldırır (öğrenci tarafıyla aynı ekran)
   async function atlasdasBolumu() {
     D.altG = false; const I = $('#icerik'); I.innerHTML = '<div class="kart soluk">Yükleniyor…</div>';
-    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'atlasdas/atlasdas.js?v=202611280600'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { I.innerHTML = '<div class="kart">Atlasdaş yüklenemedi; bağlantınızı kontrol edin.</div>'; return; } }
+    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = 'atlasdas/atlasdas.js?v=202611280710'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { I.innerHTML = '<div class="kart">Atlasdaş yüklenemedi; bağlantınızı kontrol edin.</div>'; return; } }
     I.innerHTML = '<div class="ust"><h1>Atlasdaş</h1></div><div id="kdKok"></div>';
     window.UmalAtlasdas.ac({ sb, kok: $('#kdKok'), ogretmen: true, uyar, onayla });
   }
