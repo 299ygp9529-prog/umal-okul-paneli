@@ -77,7 +77,7 @@
   const giYaz = v => { try { v ? localStorage.setItem('umalGirisIstek', JSON.stringify(v)) : localStorage.removeItem('umalGirisIstek'); } catch (e) {} };
   const giAdBas = a => String(a || '').toLocaleLowerCase('tr').replace(/(^|\s)\S/g, x => x.toLocaleUpperCase('tr'));
   function giBekle(v) {
-    goster('s-gist'); $('#gistForm').classList.add('gizli'); $('#gistBek').classList.remove('gizli', 'red'); $('#gistBaslik').textContent = 'İsteğin iletildi';
+    goster('s-gist'); $('#gistForm').classList.add('gizli'); $('#gistBek').classList.remove('gizli', 'red'); $('#gistBaslik').textContent = 'İsteğin alındı';
     $('#gistKim').textContent = giAdBas(v.ad) + (v.sinif ? ' · ' + v.sinif : ''); $('#gistDurum').textContent = ''; $('#gistIptal').textContent = 'İsteği geri al';
     clearTimeout(GI.z); giSor();
   }
@@ -100,6 +100,7 @@
   if ($('#gistAc')) {
     $('#gistAc').onclick = () => { const v = giOku(); if (v) return giBekle(v); goster('s-gist'); $('#gistForm').classList.remove('gizli'); $('#gistBek').classList.add('gizli'); $('#gistBilgi').textContent = ''; $('#gistNo').value = $('#no').value.trim(); ($('#gistNo').value ? $('#gistAd') : $('#gistNo')).focus(); };
     $('#gistGeri').onclick = () => goster('giris');
+    $('#gistDon').onclick = () => { clearTimeout(GI.z); goster('giris'); };   // istek bekler; düğmeye yeniden basınca bekleme ekranı açılır
     $('#gistIptal').onclick = async () => { const v = giOku(); clearTimeout(GI.z); if (v) { try { await sb.rpc('umal_giris_istek_iptal', { p_id: v.id, p_jeton: v.jeton }); } catch (e) {} giYaz(null); } goster('giris'); };
     $('#gistGonder').onclick = async () => {
       const no = $('#gistNo').value.replace(/\D/g, ''), ad = $('#gistAd').value.trim(), b = $('#gistBilgi'); b.classList.remove('hata');
