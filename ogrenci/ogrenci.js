@@ -1183,7 +1183,7 @@
     if (el && el.dataset.id === m.id) return; if (el) el.remove();
     el = document.createElement('div'); el.id = 'duyEkran'; el.dataset.id = m.id; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     el.innerHTML = `<div class="duy-ic"><div class="duy-ust">${svg('duy')}<span>${m.onemli ? 'ÖNEMLİ DUYURU' : 'DUYURU'}</span></div><h1></h1><div class="duy-alt"></div><div class="duy-metin"></div><button class="birincil" id="duyOk">Okudum</button><small>Ümraniye Merkez Anadolu Lisesi</small></div>`;
-    el.querySelector('h1').textContent = m.baslik || ''; el.querySelector('.duy-alt').textContent = (m.yazan || 'Okul idaresi') + ' · ' + dyTarih(m.tarih); el.querySelector('.duy-metin').textContent = m.metin || '';
+    el.querySelector('h1').textContent = m.baslik || ''; el.querySelector('.duy-alt').textContent = (m.yazan || 'Okul idaresi') + ' · ' + dyTarih(m.tarih); el.querySelector('.duy-metin').innerHTML = linkle(m.metin || '');   // K-1031: tam ekran duyuruda bağlantıya dokunulabilir (metin önce kaçışlanır)
     document.body.appendChild(el); try { sesCal('yeni'); } catch (e) {}
     el.querySelector('#duyOk').onclick = async () => { const b = el.querySelector('#duyOk'); b.disabled = true; b.textContent = 'Kaydediliyor…'; m.okundu = true;
       await dyYukle([m.id]); el.remove(); dyTam(); };
