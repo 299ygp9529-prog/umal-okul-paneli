@@ -653,3 +653,6 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
 /* 28 Kasım 2026: iPhone Safari'de sert kaydırınca titreme. Sayfa boyu ekrana çok yakınken tarayıcı çubukları kapanınca sayfa sığıyor,
    kaydırma geri sıçrıyor, çubuklar yeniden açılıyor (döngü). Sayfa en az "çubuklar kapalıyken" ekran boyu kadar olunca döngü bitiyor. */
 body { min-height: 100vh; min-height: 100lvh; }
+
+/* 28 Kasım 2026: titreme denemesi (geçici) — yalnız ?altsiz adresinde */
+html.altsiz #ogrAlt { display: none !important; } html.altsiz body.ogr-alt main { padding-bottom: 24px !important; }
