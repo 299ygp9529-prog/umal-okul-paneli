@@ -632,8 +632,8 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
 .rh-yaz textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* K-948c: dar ekranda ipucu yazısı alt satıra kırılmasın */
 
 /* 28 Kasım 2026: giriş isteği */
-.gi-ist { display: block; width: 100%; margin-top: 14px; padding: 13px; border-radius: 14px; border: 1px dashed rgba(34,232,255,.55); background: rgba(34,232,255,.06); color: #bff6ff; font: inherit; font-weight: 700; font-size: 15px; text-align: center; cursor: pointer; }
-.gi-ist small { display: block; font-weight: 500; color: var(--soluk); font-size: 12.5px; margin-top: 3px; }
+.gi-ist { display: block; width: 100%; margin-top: 14px; padding: 13px; border-radius: 14px; border: 0; background: linear-gradient(180deg, #ff9f43, #f07f12); box-shadow: 0 4px 14px rgba(240,127,18,.28); color: #fff; font: inherit; font-weight: 700; font-size: 15px; text-align: center; cursor: pointer; }
+.gi-ist small { display: block; font-weight: 500; color: rgba(255,255,255,.92); font-size: 12.5px; margin-top: 3px; } .gi-ist:active { transform: scale(.98); }
 .gi-bek { text-align: center; padding: 6px 2px; } .gi-hal { width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(34,232,255,.25); border-top-color: #22e8ff; margin: 8px auto 16px; animation: giDon 1.1s linear infinite; } @keyframes giDon { to { transform: rotate(360deg); } }
 .gi-sure { margin: 14px auto 4px; max-width: 460px; background: rgba(34,232,255,.08); border: 1px solid rgba(34,232,255,.3); color: #c8f6ff; border-radius: 14px; padding: 11px 14px; font-size: 14px; line-height: 1.5; }
 .gi-dug { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; } .gi-bek.red #gistDon { display: none; }
