@@ -467,7 +467,7 @@
   }
   // 27 Kasım 2026: Atlasdaş — öğrencilerin kendi kitaplarından oluşan ortak kitaplık (kod ilk açılışta yüklenir)
   async function kdAc() {
-    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = '../atlasdas/atlasdas.js?v=202611280815'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { uyar('Atlasdaş yüklenemedi; bağlantını kontrol et.'); return; } }
+    if (!window.UmalAtlasdas) { try { await new Promise((ok, red) => { const sc = document.createElement('script'); sc.src = '../atlasdas/atlasdas.js?v=202611281107'; sc.onload = ok; sc.onerror = red; document.head.appendChild(sc); }); } catch (e) { uyar('Atlasdaş yüklenemedi; bağlantını kontrol et.'); return; } }
     goster('s-atlasdas'); window.scrollTo(0, 0);
     const g = $('#s-atlasdas [data-ana]'); if (g && !g.dataset.kd) { g.dataset.kd = '1'; g.addEventListener('click', () => window.UmalAtlasdas && window.UmalAtlasdas.kapat(), true); }
     window.UmalAtlasdas.ac({ sb, kok: $('#kdKok'), no: () => S.no, kod: () => S.kod, uyar, onayla });
