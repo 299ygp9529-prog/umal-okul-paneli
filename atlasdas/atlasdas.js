@@ -29,7 +29,7 @@
 .kd{max-width:620px;margin:0 auto;padding-bottom:24px;color:#fff}.kd *,.kd-ort *{box-sizing:border-box}.kd-kap:has(.kd-dur) .uret small{visibility:hidden}
 .kd-bas{position:relative;overflow:hidden;border-radius:22px;padding:18px 18px 16px;margin-bottom:14px;background:radial-gradient(120% 100% at 90% 0%,#3a2c10 0%,#141a26 55%,#0f1420 100%);border:1px solid rgba(255,206,92,.4)}
 .kd-bas svg.kd-raf{position:absolute;right:10px;top:12px;width:112px;opacity:.95;pointer-events:none}
-.kd-et{font-size:11px;letter-spacing:.22em;color:#f5c542;font-weight:800}.kd-bas h2{margin:4px 0 2px;font-size:26px;font-weight:800}.kd-bas p{margin:0;color:#c9b98f;font-size:13px;max-width:64%}
+.kd-bas{text-align:left}.kd-et{font-size:11px;letter-spacing:.22em;color:#f5c542;font-weight:800;text-align:left}.kd-bas h2{margin:4px 0 2px;font-size:26px;font-weight:800;color:#fff;text-align:left;padding-right:120px}.kd-bas p{margin:0;color:#c9b98f;font-size:13px;line-height:1.45;text-align:left;padding-right:124px;max-width:none}
 .kd-say{display:flex;gap:8px;margin-top:14px}.kd-say div{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:9px 11px}.kd-say b{display:block;font-size:20px;font-weight:800}.kd-say small{font-size:11.5px;color:#9fb3cc}
 .kd-der{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:#ffe28a;border:1px solid rgba(255,206,92,.35);border-radius:99px;padding:5px 11px}
 .kd-sek{display:flex;gap:4px;background:#0f1c2e;border:1px solid #22385a;border-radius:16px;padding:4px;margin-bottom:14px}
