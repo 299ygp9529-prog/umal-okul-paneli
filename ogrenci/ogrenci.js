@@ -26,6 +26,10 @@
   const tr = 'tr-TR';
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   try { const nc = navigator.hardwareConcurrency || 8, dm = navigator.deviceMemory || 8; if (nc <= 4 || dm <= 3 || matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('hafif'); } catch (e) {}   // 28 Kasım 2026 (hız): zayıf telefonda ağır görsel efektler hafifler
+  // 28 Kasım 2026: alt sekme çubuğunun kapladığı yer açılışta bir kez ölçülür; içerik çubuğun 10 px üstünde biter (kaydırırken yeniden ölçülmez)
+  function altBosOlc() { const n = document.getElementById('ogrAlt'); if (!n || !document.body.classList.contains('ogr-alt')) return false; const r = n.getBoundingClientRect(); if (!r.height) return false;
+    document.documentElement.style.setProperty('--alt-bos', Math.round(r.height + Math.max(0, window.innerHeight - r.bottom) + 10) + 'px'); return true; }
+  { let d = 0; const t = setInterval(() => { if (altBosOlc() || ++d > 40) clearInterval(t); }, 250); addEventListener('orientationchange', () => setTimeout(altBosOlc, 400)); }
   document.addEventListener('umal-ek-yuklendi', () => { try { if (!$('#s-sinav').classList.contains('gizli')) { sinavCiz(); haritaCiz(); } if (!$('#s-gezi').classList.contains('gizli')) gzCiz(); } catch (e) {} });   // 28 Kasım 2026 (hız): sonradan yüklenen senaryo / bilet ekranı açıksa yeniden çizilir
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını

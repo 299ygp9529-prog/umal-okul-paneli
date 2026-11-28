@@ -659,3 +659,11 @@ html.hafif #kutular.giris-an > button { animation: none !important; }
 html.hafif #kutular > button, html.hafif .kart, html.hafif #ogrAlt { box-shadow: none !important; }
 html.hafif #yenileUst, html.hafif .ust2-yen { box-shadow: 0 0 0 1px rgba(255,255,255,.95) !important; }
 html.hafif #yenileUst svg, html.hafif .ust2-yen svg { filter: none !important; }
+
+/* 28 Kasım 2026: ana sayfada "Çalışma serin / Haftalık hedef" kartı kaldırıldı; alt sekme çubuğu ekranın altına yakın (4 px), içerik çubuğun hemen üstünde biter.
+   Alt boşluk açılışta bir kez ölçülür (--alt-bos); kaydırırken değişmez (titreme olmasın). */
+#seriKart { display: none !important; }
+@media (max-width: 760px) {
+  body.ogr-alt #ogrAlt { left: 8px; right: 8px; bottom: calc(4px + env(safe-area-inset-bottom)); }
+  body.ogr-alt main { padding-bottom: var(--alt-bos, 132px) !important; }
+}
