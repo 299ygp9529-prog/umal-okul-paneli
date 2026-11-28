@@ -1947,10 +1947,13 @@
   let canliSay = 0;
   setInterval(async () => {
     if (!S.kod || document.hidden) return;
-    acilYukle(); obYukle();   // K-905: acil durum ve idare mesajı yazarken de gelsin
+    // 28 Kasım 2026 (hız ve trafik): önce tek istekte küçük imzalar sorulur; yalnız değişen indirilir. İmza alınamazsa (SQL yoksa) eskisi gibi hepsi.
+    let nb = null; try { const { data } = await sb.rpc('umal_ogrenci_nabiz', { p_no: S.no, p_kod: S.kod }); if (data && data.ok) nb = data; } catch (e) {}
+    const NB = S.nabiz || (S.nabiz = {}), degisti = k => { if (!nb) return true; if (NB[k] === nb[k]) return false; NB[k] = nb[k]; return true; };
+    if (degisti('acil')) acilYukle(); if (degisti('obil')) obYukle();   // K-905: acil durum ve idare mesajı yazarken de gelsin
     if (yaziyor()) return;
     canliSay++;
-    const rvDegisti = await rvYukle(false);
+    const rvDegisti = degisti('randevu') ? await rvYukle(false) : false;
     if (RH.yuklendi) sesDenetle();   // K-617: ilk tur yalnız öğrenir, sonrakilerde yeni gelen için çalar
     if (RV.gorunum === 'randevu' && !$('#s-reh').classList.contains('gizli')) { if (rvYeni()) rvYukle(true); rvCiz(); }
     else if (RV.gorunum === '' && !$('#s-reh').classList.contains('gizli') && rvDegisti) rehAc();
