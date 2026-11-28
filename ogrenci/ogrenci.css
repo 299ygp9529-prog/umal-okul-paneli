@@ -656,3 +656,7 @@ body { min-height: 100vh; min-height: 100lvh; }
 
 /* 28 Kasım 2026: titreme denemesi (geçici) — yalnız ?altsiz adresinde */
 html.altsiz #ogrAlt { display: none !important; } html.altsiz body.ogr-alt main { padding-bottom: 24px !important; }
+/* 28 Kasım 2026: titreme kök nedeni — sayfanın alt boşluğu env(safe-area-inset-bottom)'a bağlıydı. Safari sayfa sonunda alt çubuğunu
+   açıp kapatırken bu değer kademeli değişiyor, sayfanın boyu da onunla değişip içerik 3 kez sıçrıyordu (?altsiz denemesinde titreme yok).
+   Alt boşluk artık sabit (en büyük değere göre); alt sekme çubuğunun kendi konumu aynı kalır. */
+@media (max-width: 760px) { body.ogr-alt main { padding-bottom: 132px !important; } html.altsiz body.ogr-alt main { padding-bottom: 24px !important; } }
