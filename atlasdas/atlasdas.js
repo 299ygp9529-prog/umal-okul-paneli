@@ -43,12 +43,12 @@
 .kd-izg{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:12px}
 .kd-k{background:none;border:0;padding:0;color:#fff;text-align:left;font:inherit;cursor:pointer;min-width:0}
 .kd-kap{position:relative;aspect-ratio:2/3;border-radius:6px 12px 12px 6px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.35),inset 4px 0 0 rgba(0,0,0,.25);background:#1b2a40}
-.kd-kap img{width:100%;height:100%;object-fit:cover;display:block}
+.kd-kap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
 .kd-kap .uret{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:12px 10px 10px 14px}
 .kd-kap .uret b{font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.15;font-weight:700;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .kd-kap .uret small{font-size:10.5px;opacity:.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .kd-kap .uret:before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.18)}
-.kd-dur{position:absolute;left:6px;right:6px;bottom:6px;font-size:11px;font-weight:800;text-align:center;border-radius:8px;padding:4px;backdrop-filter:blur(4px)}
+.kd-dur{position:absolute;z-index:2;left:6px;right:6px;bottom:6px;font-size:11px;font-weight:800;text-align:center;border-radius:8px;padding:4px;backdrop-filter:blur(4px)}
 .kd-dur.od{background:rgba(15,20,32,.82);color:#9fb3cc}.kd-dur.is{background:rgba(245,197,66,.92);color:#2a1a00}.kd-dur.bn{background:rgba(34,232,255,.88);color:#06202a}
 .kd-k>b{display:block;font-size:13.5px;margin-top:7px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.kd-k>small{display:block;font-size:11.5px;color:#9fb3cc;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kd-bos{text-align:center;color:#9fb3cc;padding:26px 14px;border:1px dashed #2a4468;border-radius:16px;font-size:14px;line-height:1.5}
@@ -131,7 +131,7 @@
     const q = norm(ara).trim();
     return (D.kesfet || []).filter(k => (!turSec || k.tur === turSec) && (!q || norm(k.ad + ' ' + (k.yazar || '') + ' ' + (k.sahip && k.sahip.ad)).includes(q)));
   }
-  function liste() { let l = filtre(); if (!ara && !turSec && l.some(k => k.sahip && k.sahip.ogretmen) && l.some(k => !(k.sahip && k.sahip.ogretmen))) l = l.filter(k => !(k.sahip && k.sahip.ogretmen)); return l.length ? `<div class="kd-izg">${l.map(kart).join('')}</div>` : `<div class="kd-bos">${ara || turSec ? 'Aradığın kitap henüz rafta yok.' : 'Raf henüz boş. İlk kitabı sen koy!'}</div>`; }
+  function liste() { const l = filtre(); return l.length ? `<div class="kd-izg">${l.map(kart).join('')}</div>` : `<div class="kd-bos">${ara || turSec ? 'Aradığın kitap henüz rafta yok.' : 'Raf henüz boş. İlk kitabı sen koy!'}</div>`; }
   function kesfet() {
     let h = '';
     if (C.ogretmen && (D.bildirilen || []).length) {
@@ -141,8 +141,6 @@
     const turler = [...new Set((D.kesfet || []).map(k => k.tur).filter(Boolean))];
     h += `<div class="kd-ara">${IK.ara}<input id="kdAra" type="search" placeholder="Kitap, yazar ya da arkadaş ara" value="${esc(ara)}" autocomplete="off"></div>`;
     if (turler.length) h += `<div class="kd-cip"><button data-tur="" class="${turSec ? '' : 's'}">Tümü</button>${turler.map(t => `<button data-tur="${esc(t)}" class="${turSec === t ? 's' : ''}">${esc(t)}</button>`).join('')}</div>`;
-    const ogr = (D.kesfet || []).filter(k => k.sahip && k.sahip.ogretmen);
-    if (ogr.length && !ara && !turSec) h += `<div class="kd-bl">Öğretmenlerimizin rafı</div><div class="kd-serit">${ogr.slice(0, 20).map(kart).join('')}</div><div class="kd-bl">Tüm kitaplar</div>`;
     return h + `<div id="kdListe">${liste()}</div>`;
   }
   function rafim() {
