@@ -1857,10 +1857,12 @@
       ${v ? `<div class="ay-surum">Atlas · sürüm ${esc(v)}</div>` : ''}`;
   }
   // K-796: her ekranın sağ üstünde Yenile (ana sayfadaki düğmeyle aynı iş)
+  // 28 Kasım 2026: Yenile simgesi (beyaz cam düğme, iki mavi ok); her düğmede renk geçişi kimlikleri ayrı
+  function YENI_IK(k) { return '<svg class="yen-ik" viewBox="0 0 24 24" fill="none" stroke-linecap="round" aria-hidden="true"><defs><linearGradient id="ygKKa" gradientUnits="userSpaceOnUse" x1="5" y1="12" x2="21" y2="5"><stop offset="0" stop-color="#5cc8ff"/><stop offset=".55" stop-color="#1f7fe6"/><stop offset="1" stop-color="#0a3a9e"/></linearGradient><linearGradient id="ygKKb" gradientUnits="userSpaceOnUse" x1="19" y1="12" x2="3" y2="19"><stop offset="0" stop-color="#5cc8ff"/><stop offset=".55" stop-color="#1f7fe6"/><stop offset="1" stop-color="#0a3a9e"/></linearGradient></defs><path d="M5 12A7 7 0 0 1 16.95 7.05" stroke="url(#ygKKa)" stroke-width="3"/><path d="M14.26 9.45L19.35 9.45L19.35 4.36Z" fill="url(#ygKKa)" stroke="url(#ygKKa)" stroke-width=".6" stroke-linejoin="round"/><path d="M19 12A7 7 0 0 1 7.05 16.95" stroke="url(#ygKKb)" stroke-width="3"/><path d="M9.74 14.55L4.65 14.55L4.65 19.64Z" fill="url(#ygKKb)" stroke="url(#ygKKb)" stroke-width=".6" stroke-linejoin="round"/></svg>'.replace(/KK/g, k); } YENI_IK.n = 0;
   document.querySelectorAll('section > .ust2').forEach(u => { if (u.querySelector('.ust2-yen')) return; const sag = document.createElement('span'); sag.className = 'ust2-sag';
     const ek = [...u.children].slice(2); ek.forEach(e => sag.appendChild(e));
     const b = document.createElement('button'); b.type = 'button'; b.className = 'ust2-yen'; b.title = 'Yenile'; b.setAttribute('aria-label', 'Yenile');
-    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.6 13.4A6.8 6.8 0 1 1 14.6 5.7"/><path d="M13.6 2.6 19.6 6 13.9 9.6Z" fill="currentColor" stroke-width="1.2"/></svg>';
+    b.innerHTML = YENI_IK('B' + (++YENI_IK.n));
     b.onclick = () => { b.classList.add('donuyor'); const y = $('#yenileUst'); if (y) y.click(); }; sag.appendChild(b); u.appendChild(sag); });
   function ayAc() { ayCiz(); goster('s-ayar'); window.scrollTo(0, 0); }
   $('#ayIc') && ($('#ayIc').onclick = async ev => { const b = ev.target.closest('[data-ay]'); if (!b) return; const k = b.dataset.ay;

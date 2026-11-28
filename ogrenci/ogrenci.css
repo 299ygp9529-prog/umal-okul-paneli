@@ -641,11 +641,11 @@ main .gonder-dug { width: auto !important; min-width: 140px !important; max-widt
 .gi-bek.red .gi-hal { animation: none; border-color: rgba(255,138,149,.5); } .gi-bek.red .gi-sure { display: none; }
 .gi-adim { display: flex; gap: 10px; text-align: left; margin-top: 14px; font-size: 14px; color: #c9d6e6; } .gi-adim b { flex: none; width: 24px; height: 24px; border-radius: 50%; background: rgba(34,232,255,.15); color: #22e8ff; display: grid; place-items: center; font-size: 12.5px; }
 
-/* 28 Kasım 2026: Yenile düğmesi — mavi cam görünüm, yenilerken döner */
-#yenileUst, .ust2-yen { position: relative; overflow: hidden; color: #e6f7ff; border-radius: 14px; border: 1px solid rgba(140,225,255,.6);
-  background: linear-gradient(155deg, #2bb8f2 0%, #0d5fa3 48%, #072f5e 100%);
-  box-shadow: 0 0 14px rgba(30,180,255,.42), 0 3px 9px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -3px 8px rgba(0,20,50,.45); }
-#yenileUst::before, .ust2-yen::before { content: ''; position: absolute; left: -20%; top: -60%; width: 140%; height: 95%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0)); transform: rotate(-12deg); pointer-events: none; }
-#yenileUst svg, .ust2-yen svg { position: relative; width: 23px; height: 23px; filter: drop-shadow(0 0 4px rgba(120,220,255,.9)); }
-#yenileUst:hover, .ust2-yen:hover { background: linear-gradient(155deg, #3cc4f8 0%, #1170b8 48%, #08386d 100%); }
+/* 28 Kasım 2026: Yenile düğmesi — beyaz buzlu cam, iki mavi ok; yenilerken döner */
+#yenileUst, .ust2-yen { position: relative; border-radius: 13px; border: 0; color: #1f7fe6;
+  background: radial-gradient(120% 120% at 30% 20%, #ffffff 0%, #e9f1fd 40%, #c6dbf6 75%, #a9c8f0 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.95), 0 0 14px rgba(40,130,255,.5), 3px 4px 12px rgba(20,110,255,.35), inset 0 -2px 6px rgba(80,130,210,.35); }
+#yenileUst::after, .ust2-yen::after { content: ''; position: absolute; inset: 2px; border-radius: 11px; border: 1px solid rgba(255,255,255,.75); pointer-events: none; }
+#yenileUst svg, .ust2-yen svg { position: relative; width: 31px; height: 31px; filter: drop-shadow(0 0 1px rgba(60,170,255,.6)); }
+#yenileUst:hover, .ust2-yen:hover { background: radial-gradient(120% 120% at 30% 20%, #ffffff 0%, #f1f7ff 45%, #d3e4f9 80%, #b7d2f3 100%); }
 #yenileUst:active, .ust2-yen:active { transform: scale(.95); }
