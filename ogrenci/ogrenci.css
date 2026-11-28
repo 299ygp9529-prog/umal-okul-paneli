@@ -630,3 +630,10 @@ body.ozel #s-plan > .ust2 { display: none; } body.ozel #rplan .rp-kart { margin-
 @media (min-width: 1000px) { #s-plan { max-width: 620px; margin-left: auto; margin-right: auto; } }
 main .gonder-dug { width: auto !important; min-width: 140px !important; max-width: none !important; height: 46px !important; padding: 0 20px !important; margin: 0 !important; border-radius: 13px !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; font-size: 16px !important; font-weight: 800; flex: none; } main .rp-deger .gonder-dug { display: flex !important; margin: 12px 0 0 auto !important; }   /* K-948c: sayfadaki iki Gönder (öğretmene mesaj + haftalık değerlendirme) aynı boy, aynı simge, aynı görünüm — telefonda ve geniş ekranda */
 .rh-yaz textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* K-948c: dar ekranda ipucu yazısı alt satıra kırılmasın */
+
+/* 28 Kasım 2026: giriş isteği */
+.gi-ist { display: block; width: 100%; margin-top: 14px; padding: 13px; border-radius: 14px; border: 1px dashed rgba(34,232,255,.55); background: rgba(34,232,255,.06); color: #bff6ff; font: inherit; font-weight: 700; font-size: 15px; text-align: center; cursor: pointer; }
+.gi-ist small { display: block; font-weight: 500; color: var(--soluk); font-size: 12.5px; margin-top: 3px; }
+.gi-bek { text-align: center; padding: 6px 2px; } .gi-hal { width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(34,232,255,.25); border-top-color: #22e8ff; margin: 8px auto 16px; animation: giDon 1.1s linear infinite; } @keyframes giDon { to { transform: rotate(360deg); } }
+.gi-bek.red .gi-hal { animation: none; border-color: rgba(255,138,149,.5); }
+.gi-adim { display: flex; gap: 10px; text-align: left; margin-top: 14px; font-size: 14px; color: #c9d6e6; } .gi-adim b { flex: none; width: 24px; height: 24px; border-radius: 50%; background: rgba(34,232,255,.15); color: #22e8ff; display: grid; place-items: center; font-size: 12.5px; }

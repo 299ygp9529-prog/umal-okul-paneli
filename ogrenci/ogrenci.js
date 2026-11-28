@@ -27,7 +27,7 @@
   const baslik = s => String(s || '').toLocaleLowerCase(tr).replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase(tr));
   const S = { no: '', kod: '', ad: '', sinif: '', formlar: [], form: null, c: [], hatirla: true };   // K-797: öğrenci kolayca çıkmasın (girişte varsayılan açık)
   // K-716cy: Geri daima bir önceki ekrana — ekran yığını
-  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz', 's-oyun', 's-atlasdas'], YIGIN = []; let geriDonus = false;
+  const EKRANLAR = ['s-gbl', 'giris', 'liste', 'form', 'bitti', 's-sinav', 's-program', 's-anket', 's-reh', 's-duy', 's-plan', 's-soru', 's-notlar', 's-gezi', 's-dd', 's-bsk', 's-gbil', 's-ilan', 's-bld', 's-msj', 's-bild', 's-ayar', 's-telsiz', 's-oyun', 's-atlasdas', 's-gist'], YIGIN = []; let geriDonus = false;
   const aktifEkran = () => EKRANLAR.find(x => { const e = $('#' + x); return e && !e.classList.contains('gizli'); });
   const goster = id => { const o = aktifEkran();
     if (id === 'liste' || id === 'giris') YIGIN.length = 0;
@@ -71,6 +71,50 @@
     anaCiz(); tuYukle(); bldCiz(); obYukle(); tzoKontrol(true); blYukle().then(() => { if (!hashGit()) anaCiz(true); }); if (window.UmalBildirim && S.kod && S.no !== '1907' && S.sinif !== 'ÖZEL') UmalBildirim.karsila({ sb, kim: 'ogrenci', no: S.no, kod: S.kod, tamam: () => { BLD.d = 'acik'; BLD.taze = true; bldCiz(); } }); msYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); if (S.sinif === 'ÖZEL') rhYukle().then(() => { if (!$('#s-plan').classList.contains('gizli')) anaCiz(); }); /* K-923 */ bdYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); gzYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); mektuplarYukle(); ozetYukle(); acilYukle(); noYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); ddYukle().then(d => { if (d && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rhYukle(false).then(ok => { if (ok && !$('#liste').classList.contains('gizli')) anaCiz(true); }); rvYukle(false); dyYukle(); if (soAktif()) soYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); plYukle().then(() => { if (!$('#liste').classList.contains('gizli')) anaCiz(true); }); selamla();
   };
   // K-716bz: şifre rakamdan oluşur → rakam klavyesi; ilk girişte okulun verdiği harfli kod için klavye değişir
+  // 28 Kasım 2026: giriş isteği — kodu olmayan öğrenci istek gönderir; onaylanınca kod bu cihaza gelir ve giriş kendiliğinden yapılır
+  const GI = { z: null };
+  const giOku = () => { try { return JSON.parse(localStorage.getItem('umalGirisIstek') || 'null'); } catch (e) { return null; } };
+  const giYaz = v => { try { v ? localStorage.setItem('umalGirisIstek', JSON.stringify(v)) : localStorage.removeItem('umalGirisIstek'); } catch (e) {} };
+  const giAdBas = a => String(a || '').toLocaleLowerCase('tr').replace(/(^|\s)\S/g, x => x.toLocaleUpperCase('tr'));
+  function giBekle(v) {
+    goster('s-gist'); $('#gistForm').classList.add('gizli'); $('#gistBek').classList.remove('gizli', 'red'); $('#gistBaslik').textContent = 'İsteğin iletildi';
+    $('#gistKim').textContent = giAdBas(v.ad) + (v.sinif ? ' · ' + v.sinif : ''); $('#gistDurum').textContent = ''; $('#gistIptal').textContent = 'İsteği geri al';
+    clearTimeout(GI.z); giSor();
+  }
+  async function giSor() {
+    const v = giOku(); if (!v || $('#s-gist').classList.contains('gizli')) return;
+    let d = null; try { const r = await sb.rpc('umal_giris_istek_durum', { p_id: v.id, p_jeton: v.jeton }); d = r.data; } catch (e) {}
+    if (d && d.durum === 'alindi' && d.kod) {
+      giYaz(null); $('#gistBaslik').textContent = 'Onaylandı'; $('#gistDurum').textContent = 'Giriş yapılıyor…';
+      goster('giris'); $('#no').value = d.no; $('#kod').value = d.kod; $('#girisBtn').click(); return;
+    }
+    if (d && ['red', 'iptal', 'suresi', 'yok', 'alindi'].includes(d.durum)) {
+      giYaz(null); $('#gistBek').classList.add('red');
+      $('#gistBaslik').textContent = d.durum === 'red' ? 'İsteğin onaylanmadı' : 'İsteğin kapandı';
+      $('#gistDurum').textContent = d.durum === 'red' ? 'Sınıf öğretmenine ya da rehberliğe başvur.' : (d.durum === 'suresi' ? 'Bir hafta içinde onaylanmadı. Yeniden istek gönderebilirsin.' : 'Yeniden istek gönderebilirsin.');
+      $('#gistIptal').textContent = 'Girişe dön'; return;
+    }
+    GI.z = setTimeout(giSor, document.hidden ? 30000 : 8000);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#s-gist').classList.contains('gizli') && giOku()) { clearTimeout(GI.z); giSor(); } });
+  if ($('#gistAc')) {
+    $('#gistAc').onclick = () => { const v = giOku(); if (v) return giBekle(v); goster('s-gist'); $('#gistForm').classList.remove('gizli'); $('#gistBek').classList.add('gizli'); $('#gistBilgi').textContent = ''; $('#gistNo').value = $('#no').value.trim(); ($('#gistNo').value ? $('#gistAd') : $('#gistNo')).focus(); };
+    $('#gistGeri').onclick = () => goster('giris');
+    $('#gistIptal').onclick = async () => { const v = giOku(); clearTimeout(GI.z); if (v) { try { await sb.rpc('umal_giris_istek_iptal', { p_id: v.id, p_jeton: v.jeton }); } catch (e) {} giYaz(null); } goster('giris'); };
+    $('#gistGonder').onclick = async () => {
+      const no = $('#gistNo').value.replace(/\D/g, ''), ad = $('#gistAd').value.trim(), b = $('#gistBilgi'); b.classList.remove('hata');
+      if (!no) { b.textContent = 'Okul numaranı yaz.'; b.classList.add('hata'); return; }
+      if (ad.split(/\s+/).length < 2) { b.textContent = 'Adını ve soyadını yaz.'; b.classList.add('hata'); return; }
+      const jeton = Array.from(crypto.getRandomValues(new Uint8Array(24)), x => x.toString(16).padStart(2, '0')).join('');
+      $('#gistGonder').disabled = true; b.textContent = 'Gönderiliyor…';
+      let d = null; try { const r = await sb.rpc('umal_giris_istek_gonder', { p_no: no, p_ad: ad, p_jeton: jeton }); d = r.error ? null : r.data; } catch (e) {}
+      $('#gistGonder').disabled = false;
+      if (!d) { b.textContent = 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.'; b.classList.add('hata'); return; }
+      if (!d.ok) { b.textContent = d.hata || 'İstek gönderilemedi.'; b.classList.add('hata'); return; }
+      b.textContent = ''; const v = { id: d.id, jeton, no, ad: d.ad, sinif: d.sinif }; giYaz(v); giBekle(v);
+    };
+    [$('#gistNo'), $('#gistAd')].forEach(e => e.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#gistGonder').click(); }));
+  }
   if ($('#kodGec')) $('#kodGec').onclick = () => { const k = $('#kod'), harf = k.getAttribute('inputmode') === 'numeric';
     if (harf) { k.setAttribute('inputmode', 'text'); k.removeAttribute('pattern'); k.type = 'text'; k.classList.remove('pin-gizli'); k.setAttribute('autocapitalize', 'characters'); k.placeholder = 'XXXX-XXXX'; $('#kodGec').textContent = 'Rakam şifremle gireceğim'; }
     else { k.setAttribute('inputmode', 'numeric'); k.setAttribute('pattern', '[0-9]*'); k.type = 'text'; k.classList.add('pin-gizli'); k.setAttribute('autocapitalize', 'off'); k.placeholder = '6 haneli şifren'; $('#kodGec').textContent = 'Eski harfli kodum var'; }
@@ -1929,6 +1973,7 @@
     if (!otoGiris) document.documentElement.classList.remove('oturumlu');
   })();
   goster('giris');
+  try { const v_ = giOku(); if (v_ && !document.documentElement.classList.contains('oturumlu')) giBekle(v_); } catch (e) {}   // 28 Kasım 2026: bekleyen giriş isteği varsa bekleme ekranı
   // K-508: karttaki QR okutulunca (#n=…&k=…) numara ve kod kendiliğinden yazılır, giriş yapılır; adres çubuğundan hemen silinir
   try {
     const h = new URLSearchParams(location.hash.slice(1)), n = (h.get('n') || '').replace(/\D/g, ''), k = (h.get('k') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');

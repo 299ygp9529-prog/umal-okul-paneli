@@ -4755,8 +4755,26 @@ table.liste { width: calc(100% - 28mm); margin: 0 14mm; border-collapse: collaps
   }
   // ------------------------------------------------------------------ K-498: Öğrenci giriş kodları (rehberlik)
   async function ogrenciGirisi() {
-    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk" style="white-space:nowrap;font-size:min(14px,3.45vw)">Öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
-    await girisKodlari();
+    $('#icerik').innerHTML = `<div class="ust" style="align-items:center"><h1>Öğrenci Girişi</h1><span class="soluk" style="white-space:nowrap;font-size:min(14px,3.45vw)">Öğrenciler <b class="neon">umalatlas.com.tr/ogrenci</b> adresinden girer</span></div><div id="gistKutu"></div><div class="kart" id="girisIc" style="margin-top:12px"></div>`;
+    gistCiz(); await girisKodlari();
+  }
+  // 28 Kasım 2026: öğrenci giriş istekleri — sınıf öğretmeni kendi sınıfını, rehberlik ve idare bütün okulu görür; onaylanınca kod öğrencinin telefonuna gider
+  async function gistCiz() {
+    const K = $('#gistKutu'); if (!K) return;
+    let L = []; try { const { data, error } = await sb.rpc('umal_giris_istek_liste'); if (!error && Array.isArray(data)) L = data; } catch (e) {}
+    if (!$('#gistKutu')) return;
+    if (!L.length) { K.innerHTML = ''; return; }
+    const zm = t => { const d = new Date(t), b = new Date(); return (d.toDateString() === b.toDateString() ? 'Bugün ' : d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) + ' ') + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); };
+    K.innerHTML = `<div class="kart er-liste" style="margin-top:12px"><b class="neon">Giriş istekleri · ${L.length}</b><span class="soluk kucuk"> Kodu olmayan öğrenciler istek gönderdi. Ad ve numara okul listesiyle eşleşti; isteği gönderenin gerçekten o öğrenci olduğundan eminseniz onaylayın. Kod öğrencinin telefonuna kendiliğinden gider.</span>${L.map(x => `<div class="er-satir"><div><b>${esc(baslik(x.ad))} · ${esc(x.sinif)} · ${esc(x.no)}</b><small class="soluk">${esc(zm(x.zaman))} · ${x.kodu_var ? `<span style="color:#ffb867;font-weight:700">Bu numaranın kodu var${x.girdi ? ', ' + (+x.giris_sayisi || 0) + ' kez giriş yapılmış' : ''}. Onaylarsanız eski şifre geçersiz olur.</span>` : 'ilk giriş'}</small></div><span style="display:flex;gap:8px;flex:none"><button class="birincil" data-gist="${esc(x.id)}" data-onay="1">Onayla</button><button class="ikincil" data-gist="${esc(x.id)}" data-onay="">Reddet</button></span></div>`).join('')}</div>`;
+    K.querySelectorAll('[data-gist]').forEach(b => b.onclick = async () => {
+      const on = !!b.dataset.onay, x = L.find(y => y.id === b.dataset.gist);
+      if (!on && !await onayla(baslik(x.ad) + ' adlı öğrencinin giriş isteği reddedilsin mi?')) return;
+      if (on && x.kodu_var && !await onayla(baslik(x.ad) + ' için yeni kod verilsin mi? Eski şifresi geçersiz olur, açık oturumları kapanır.')) return;
+      K.querySelectorAll('[data-gist]').forEach(y => y.disabled = true);
+      const { data, error } = await sb.rpc('umal_giris_istek_karar', { p_id: b.dataset.gist, p_onay: on });
+      if (error || !data || !data.ok) uyar((on ? 'Onaylanamadı: ' : 'Reddedilemedi: ') + (error ? hataYaz(error) : (data && data.hata) || ''));
+      else if (on) atlasOnay('Onaylandı', 'Kod öğrencinin telefonuna gidiyor');
+      gistCiz(); });
   }
   async function girisKodlari() {
     const kutu = $('#girisIc'); if (!kutu) return;
