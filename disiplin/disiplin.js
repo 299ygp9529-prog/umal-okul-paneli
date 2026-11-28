@@ -149,7 +149,7 @@
 @media (max-width:1100px){.ds-is{grid-template-columns:1fr 1fr;row-gap:6px}.ds-is-sure{justify-self:start}}
 .ds-kt{display:flex;flex-direction:column;border:1px solid #6b5a1e;border-radius:12px;overflow:hidden;margin-top:6px}.ds-kt-s{display:grid;grid-template-columns:minmax(180px,36%) 1fr;border-top:1px solid #3a3218}.ds-kt-s:first-child{border-top:0}
 .ds-kt-l{background:#2a2410;color:#f1d98a;font-size:13px;padding:8px 10px;line-height:1.35}.ds-kt-l b{color:#ffe7a1}.ds-kt-d{padding:6px 8px;min-width:0;background:rgba(232,198,107,.04)}.ds-kt-d input,.ds-kt-d textarea{width:100%;box-sizing:border-box}.ds-kt-d textarea{min-height:0!important;height:auto;resize:vertical}.ds-kt-d>span{display:block;padding:4px 2px;font-size:14px}
-.ds-kt-s.gizli{display:none}.ds-kt-ek{margin-top:14px}.ds-kt-ek summary{cursor:pointer;font-weight:700;color:var(--neon);padding:6px 0}@media (max-width:760px){.ds-kt-s{grid-template-columns:1fr}}
+.ds-kt-s.gizli{display:none}.ds-hz{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ds-hz .cip{font-size:12.5px;padding:5px 10px}.ds-ek-bos{border-color:#ffb867 !important;box-shadow:0 0 0 2px rgba(255,184,103,.25)}.ds-kt-ek{margin-top:14px}.ds-kt-ek summary{cursor:pointer;font-weight:700;color:var(--neon);padding:6px 0}@media (max-width:760px){.ds-kt-s{grid-template-columns:1fr}}
 @media (max-width:760px){.ds-is{grid-template-columns:1fr}.ds-is>button.birincil,.ds-is>button.ikincil{min-width:0;width:100%}.ds-hiz-satir{flex-wrap:wrap}.ds-sayac{grid-template-columns:1fr 1fr}.ds-katman,.ds-tut,.ds-ist{grid-template-columns:1fr}.ds-katman section{border-right:0}.ds-tablo{font-size:13px}.ds-izgara{grid-template-columns:1fr}.ds-belge{grid-template-columns:1fr 1fr}.ds-iki,.ds-uc{grid-template-columns:1fr}}`;
     document.head.appendChild(st);
   }
@@ -308,6 +308,8 @@
       const mK = MADDE().find(y => y[0] === (x.madde || v.madde)), svA = a.savunma || {}, kart = S.kart[r.ogr_no] || {}, onc = oncekiCezalar(r.ogr_no, r.id);
       const cesitOn = m_ => m_ ? m_[1].toLocaleUpperCase(tr) + ' CEZASINI GEREKTİREN DAVRANIŞ' : '';
       const sat = (l, h, id) => `<div class="ds-kt-s"${id ? ` id="${id}"` : ''}><div class="ds-kt-l">${l}</div><div class="ds-kt-d">${h}</div></div>`;
+      // 28 Kasım 2026: EK-1 satırlarında hızlı seçim çipleri (yazmak da serbest)
+      const hz = (id, L) => `<div class="ds-hz">${L.map(t => `<button type="button" class="cip" data-hz="${id}" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
       const gir = (id, val, ph) => `<input id="${id}" value="${esc(val || '')}"${ph ? ` placeholder="${esc(ph)}"` : ''}>`, yaz_ = (id, val, n, ph) => `<textarea id="${id}" rows="${n || 2}"${ph ? ` placeholder="${esc(ph)}"` : ''}>${esc(val || '')}</textarea>`;
       ic = `<div class="ds-kt">
         ${sat('<b>KARAR NO</b>', `<div style="display:flex;gap:8px">${gir('f_no', kararNo, 'ör. 2026/07')}<button type="button" class="ikincil" id="f_noAl" style="white-space:nowrap">Karar no al</button></div>`)}
@@ -337,19 +339,19 @@
         <label>Oylama</label><div class="ds-cipler" id="f_oy">${['Oy birliği', 'Oy çokluğu'].map(o => `<button type="button" class="cip ${(x.oy || 'Oy birliği') === o ? 'secili' : ''}" data-oy="${o}">${o}</button>`).join('')}</div>
         <label>Toplantıya katılan üyeler</label><div class="ds-cipler" id="f_uye">${uyeler.length ? uyeler.map(u => `<button type="button" class="cip ${!x.katilan || x.katilan.includes(u) ? 'secili' : ''}" data-u="${esc(u)}">${esc(u)}</button>`).join('') : '<span class="soluk kucuk">Kurul üyeleri “Kurul ve okul bilgileri”nden girilir.</span>'}</div>
         ${onc.length ? `<div class="ds-madde" style="margin-top:10px"><b>Önceki dosyalar:</b> ${onc.map(o => `${esc(o.dosya_no)} ${esc(o.veri.adim.kurul.yaptirim)}`).join(' · ')}</div>` : ''}
-        <details class="ds-kt-ek" ${x.tc || x.basari ? 'open' : ''}><summary>Öğrencinin bilgileri (karar belgesi · EK-1)</summary><div class="ds-kt">
+        <details class="ds-kt-ek" open><summary>Öğrencinin bilgileri (karar belgesi · EK-1) · hepsini doldurun</summary><div class="ds-kt">
         ${sat('TC kimlik no', gir('f_tc', x.tc, 'isteğe bağlı'))}
         ${sat('Doğum tarihi ve yeri', gir('f_dogumK', x.dogum !== undefined ? x.dogum : kartDogum(r.ogr_no)))}
         ${sat('Sınıfı, alanı/dalı ve okul numarası', gir('f_sinifK', x.sinifNo !== undefined ? x.sinifNo : `${v.ogr.sinif} - ${r.ogr_no}`))}
         ${sat('Paralı veya parasız yatılı ya da gündüzlü olduğu', gir('f_yatili', x.yatili !== undefined ? x.yatili : 'Gündüzlü'))}
-        ${sat('Başarı durumu', gir('f_basari', x.basari, 'ör. Orta'))}
-        ${sat('Sağlık durumu', gir('f_saglik', x.saglik, 'ör. İyi'))}
-        ${sat('Ailesinin ekonomik durumu', gir('f_ekonomik', x.ekonomik, 'ör. İyi'))}
-        ${sat('Ailesi ile birlikte oturup oturmadığı', gir('f_aile', x.aile, 'ör. Ailesiyle birlikte oturuyor'))}
-        ${sat('Anne-babasının sağ olup olmadığı', gir('f_sag', x.anneBabaSag, 'ör. Anne/baba sağ'))}
-        ${sat('Anne-babasının öz olup olmadığı', gir('f_oz', x.anneBabaOz, 'ör. Öz'))}
-        ${sat('Ailesinin yanında okuyup okumadığı', gir('f_yaninda', x.yaninda, 'ör. Ailesinin yanında okuyor'))}
-        ${sat('Büyüyüp yetiştiği çevre', gir('f_cevre', x.cevre, 'ör. İl merkezi'))}
+        ${sat('Başarı durumu', gir('f_basari', x.basari, 'ör. Orta') + hz('f_basari', ['Çok iyi', 'İyi', 'Orta', 'Zayıf']))}
+        ${sat('Sağlık durumu', gir('f_saglik', x.saglik, 'ör. İyi') + hz('f_saglik', ['İyi', 'Sağlık sorunu var']))}
+        ${sat('Ailesinin ekonomik durumu', gir('f_ekonomik', x.ekonomik, 'ör. İyi') + hz('f_ekonomik', ['İyi', 'Orta', 'Zayıf']))}
+        ${sat('Ailesi ile birlikte oturup oturmadığı', gir('f_aile', x.aile, 'ör. Ailesiyle birlikte oturuyor') + hz('f_aile', ['Ailesiyle birlikte oturuyor', 'Ailesinden ayrı oturuyor']))}
+        ${sat('Anne-babasının sağ olup olmadığı', gir('f_sag', x.anneBabaSag, 'ör. Anne/baba sağ') + hz('f_sag', ['Anne ve baba sağ', 'Annesi vefat etmiş', 'Babası vefat etmiş']))}
+        ${sat('Anne-babasının öz olup olmadığı', gir('f_oz', x.anneBabaOz, 'ör. Öz') + hz('f_oz', ['Öz', 'Üvey anne', 'Üvey baba']))}
+        ${sat('Ailesinin yanında okuyup okumadığı', gir('f_yaninda', x.yaninda, 'ör. Ailesinin yanında okuyor') + hz('f_yaninda', ['Ailesinin yanında okuyor', 'Ailesinin yanında okumuyor']))}
+        ${sat('Büyüyüp yetiştiği çevre', gir('f_cevre', x.cevre, 'ör. İl merkezi') + hz('f_cevre', ['İl merkezi', 'İlçe merkezi', 'Köy']))}
         ${sat('Ailesinin oturduğu yer / ikamet adresi', yaz_('f_ikamet', x.ikamet !== undefined ? x.ikamet : [kart.adres, kart.veliTel ? 'Tel No: ' + kart.veliTel : ''].filter(Boolean).join('\n'), 2))}
         ${sat('Şimdiye kadar aldığı cezalar ve genel durumu', yaz_('f_gecmis', x.gecmis !== undefined ? x.gecmis : (onc.length ? onc.map(o => `${o.dosya_no} ${o.veri.adim.kurul.yaptirim}`).join('; ') : ''), 2, 'ör. Daha önce ceza almamıştır'))}
         </div></details>`;
@@ -381,6 +383,7 @@
         document.getElementById('f_gerekce').value = `${v.ogr.sinif} sınıfı ${r.ogr_no} numaralı öğrenci ${C.baslik(v.ogr.ad)} hakkında; ${tUzun(v.olay.tarih)} tarihinde${v.olay.yer ? ' (' + v.olay.yer + ')' : ''} gerçekleşen olaydaki "${(v.olay.ozet || '').replace(/\.$/, '')}" şeklindeki davranışının, Millî Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliğinin ${mk || '…'} bendinde yer alan "${m_ ? m_[2] : '…'}" fiilini oluşturduğu; öğrencinin ${sv}, tanık ifadeleri ve dosyadaki belgeler birlikte değerlendirilerek; öğrencinin yaşı, üstün yararı, olayın oluş şekli ve daha önceki durumu dikkate alınarak ${yy === 'Ceza verilmesine yer olmadığı' ? 'ceza verilmesine yer olmadığına' : yy === 'Yazılı uyarı' ? 'yazılı olarak uyarılmasına' : `"${yy || '…'}${yy === 'Okuldan kısa süreli uzaklaştırma' && gun ? ' (' + gun + ' gün)' : ''}" cezası ile cezalandırılmasına`} karar verilmiştir.`; };
       document.getElementById('f_yap').onclick = ev => { const b_ = ev.target.closest('[data-y]'); if (!b_) return; document.querySelectorAll('#f_yap .cip').forEach(c => c.classList.toggle('secili', c === b_)); document.getElementById('f_gunK').classList.toggle('gizli', b_.dataset.y !== 'Okuldan kısa süreli uzaklaştırma'); kt(); };
       document.getElementById('f_oy').onclick = ev => { const b_ = ev.target.closest('[data-oy]'); if (!b_) return; document.querySelectorAll('#f_oy .cip').forEach(c => c.classList.toggle('secili', c === b_)); };
+      document.querySelectorAll('[data-hz]').forEach(b_ => b_.onclick = () => { const e = document.getElementById(b_.dataset.hz); e.value = b_.dataset.t; e.classList.remove('ds-ek-bos'); e.dispatchEvent(new Event('input')); });
       const uy = document.getElementById('f_uye'); if (uy) uy.onclick = ev => { const b_ = ev.target.closest('[data-u]'); if (b_) b_.classList.toggle('secili'); };
     }
     const g = id => { const e = document.getElementById(id); return e ? (e.type === 'checkbox' ? e.checked : e.value.trim()) : ''; };
@@ -399,6 +402,10 @@
         const yaptirim = ys.dataset.y, gun = parseInt(g('f_gun'), 10) || null;
         if (yaptirim === 'Okuldan kısa süreli uzaklaştırma' && !(gun >= 1 && gun <= 5)) { window.UmalSor.uyar('Uzaklaştırma 1–5 gün olmalı.'); return; }
         if (!g('f_gerekce')) { window.UmalSor.uyar('Kararın gerekçesini yazın.'); return; }
+        { const EK = [['f_dogumK', 'Doğum tarihi ve yeri'], ['f_sinifK', 'Sınıfı ve okul numarası'], ['f_yatili', 'Yatılı / gündüzlü'], ['f_basari', 'Başarı durumu'], ['f_saglik', 'Sağlık durumu'], ['f_ekonomik', 'Ailesinin ekonomik durumu'], ['f_aile', 'Ailesi ile birlikte oturup oturmadığı'], ['f_sag', 'Anne-babasının sağ olup olmadığı'], ['f_oz', 'Anne-babasının öz olup olmadığı'], ['f_yaninda', 'Ailesinin yanında okuyup okumadığı'], ['f_cevre', 'Büyüyüp yetiştiği çevre'], ['f_ikamet', 'İkamet adresi'], ['f_gecmis', 'Şimdiye kadar aldığı cezalar']];
+          const bos = EK.filter(([id]) => !g(id));   // 28 Kasım 2026: karar formunun EK-1 bilgileri boş kalmasın
+          if (bos.length) { bos.forEach(([id]) => { const e = document.getElementById(id); if (e) e.classList.add('ds-ek-bos'); });
+            if (!await window.UmalSor.onayla(`Karar formunda ${bos.length} bilgi boş: ${bos.map(z => z[1]).join(', ')}. Boş haliyle kaydedilsin mi? (Hayır derseniz ilk boş alana götürülürsünüz.)`)) { const e = document.getElementById(bos[0][0]); if (e) { e.scrollIntoView({ block: 'center' }); e.focus(); } return; } } }
         a.kurul = { tarih: t, karar_no: g('f_no'), yer: g('f_yer'), yaptirim, gun: yaptirim === 'Okuldan kısa süreli uzaklaştırma' ? gun : null, madde: g('f_madde'), hafif: g('f_hafif'), agir: g('f_agir'), gerekce: g('f_gerekce'),
           katilan: [...document.querySelectorAll('#f_uye .cip.secili')].map(c => c.dataset.u), oy: (document.querySelector('#f_oy .cip.secili') || {}).dataset ? document.querySelector('#f_oy .cip.secili').dataset.oy : 'Oy birliği',
           // K-974: karar formunun diğer satırları
