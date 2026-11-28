@@ -195,10 +195,13 @@ html.oturumlu #acilis, #acilis.tikli { display: flex; position: fixed; inset: 0;
 <script src="../bicim.js?v=202611200110"></script>
 <script src="sozler.js?v=202611146200"></script>
 <link rel="stylesheet" href="../senaryo/senaryo.css?v=202611160830">
-<script src="../senaryo/senaryo.js?v=202611160950"></script>
-<script src="../gezi-bilet.js?v=202611171320"></script>
+<script>/* 28 Kasım 2026 (hız): ana sayfada gerekmeyen iki dosya sayfa açıldıktan sonra, telefon boşta kalınca yüklenir */
+(function () { var L = ['../senaryo/senaryo.js?v=202611160950', '../gezi-bilet.js?v=202611171320'], n = 0;
+  function yukle() { L.forEach(function (u) { var s = document.createElement('script'); s.src = u; s.onload = s.onerror = function () { if (++n === L.length) document.dispatchEvent(new Event('umal-ek-yuklendi')); }; document.head.appendChild(s); }); }
+  function bekle() { if (window.requestIdleCallback) requestIdleCallback(yukle, { timeout: 2500 }); else setTimeout(yukle, 1200); }
+  if (document.readyState === 'complete') bekle(); else addEventListener('load', bekle); })();</script>
 <script src="../sohbet-klavye.js?v=202611211330"></script>
-<script src="ogrenci.js?v=202611281010"></script>
+<script src="ogrenci.js?v=202611281100"></script>
 <script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).catch(() => {}));</script>
 </body>
 </html>
